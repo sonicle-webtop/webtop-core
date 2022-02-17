@@ -99,7 +99,7 @@ Ext.define('Sonicle.webtop.core.sdk.HiddenFolders', {
 				xtype: 'actioncolumn',
 				width: 30,
 				items: [{
-					iconCls: 'fa fa-minus-circle',
+					iconCls: 'fas fa-minus-circle',
 					tooltip: WT.res('act-remove.lbl'),
 					handler: function(s, ri) {
 						s.getStore().removeAt(ri);

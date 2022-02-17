@@ -22,7 +22,6 @@
 .wt-text-bigger20 { font-size:1.2em; }
 .wt-text-ellipsis { text-overflow: ellipsis; overflow: hidden; white-space: nowrap; }
 
-.wt-fa { font-family: 'FontAwesome' !important; }
 .wt-no-opacity { opacity: 1 !important; }
 .wt-hidden { display: none; }
 .wt-v-middle { vertical-align: middle; }

@@ -131,7 +131,7 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainLauncherLinks', {
 					xtype: 'soactioncolumn',
 					items: [
 						{
-							iconCls: 'fa fa-trash-o',
+							iconCls: 'far fa-trash-alt',
 							tooltip: WT.res('act-remove.lbl'),
 							handler: function(g, ridx) {
 								var rec = g.getStore().getAt(ridx);
@@ -145,7 +145,7 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainLauncherLinks', {
 				me.addAct('add', {
 					text: WT.res('act-add.lbl'),
 					tooltip: null,
-					iconCls: 'wt-icon-add-xs',
+					iconCls: 'wt-icon-add',
 					handler: function() {
 						me.addLauncherLinkUI();
 					}

@@ -115,7 +115,7 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainLicenses', {
 				}, {
 					xtype: 'soiconcolumn',
 					dataIndex: 'status',
-					header: WTF.headerWithGlyphIcon('fa fa-check-square-o'),
+					header: WTF.headerWithGlyphIcon('far fa-check-square'),
 					getIconCls: function(v, rec) {
 						if (rec.isValid()) {
 							if (rec.isExpireSoon()) {
@@ -149,7 +149,7 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainLicenses', {
 				}, /*{
 					xtype: 'soiconcolumn',
 					dataIndex: 'valid',
-					header: WTF.headerWithGlyphIcon('fa fa-check-square-o'),
+					header: WTF.headerWithGlyphIcon('far fa-check-square'),
 					getIconCls: function(v, rec) {
 						var status = rec.getStatus();
 						switch(status) {
@@ -199,7 +199,7 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainLicenses', {
 				}, {
 					xtype: 'soiconcolumn',
 					dataIndex: 'autoLease',
-					header: WTF.headerWithGlyphIcon('fa fa-cog'),
+					header: WTF.headerWithGlyphIcon('fas fa-cog'),
 					getIconCls: function(v, rec) {
 						if (rec.isLeaseUnbounded()) return 'wt-pointer-default';
 						return v ? 'wtadm-icon-licenseAutoLease-on' : 'wtadm-icon-licenseAutoLease-off';
@@ -231,7 +231,7 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainLicenses', {
 							buildDetails: function(values) {
 								var s = '';
 								if (values['builtIn'] === true) {
-									s += '<span class="wt-theme-text-greyed" style="font-size:0.8em;">' + me.mys.res('domainLicenses.gp.details.builtin') + '</span>' ;
+									s += '<span class="wt-theme-text-lighter2" style="font-size:0.8em;">' + me.mys.res('domainLicenses.gp.details.builtin') + '</span>' ;
 								} else {
 									if (!Ext.isEmpty(values['hwId'])) {
 										if (s.length !== 0) s += ' | ';
@@ -255,13 +255,13 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainLicenses', {
 					xtype: 'soactioncolumn',
 					items: [
 						{
-							iconCls: 'fa fa-user-plus',
+							iconCls: 'fas fa-user-plus',
 							tooltip: me.mys.res('act-assignLicenseLease.lbl'),
 							handler: function(g, ridx) {
 								var rec = g.getStore().getAt(ridx);
 								me.assignLicenseLeaseUI(rec);
 							},
-							isDisabled: function(s, ridx, cidx, itm, rec) {
+							isActionDisabled: function(s, ridx, cidx, itm, rec) {
 								if (rec.isBuiltIn()) return true;
 								if (!rec.isLeaseUnbounded()) {
 									return rec.get('leasesCount') >= rec.get('maxLease');
@@ -269,55 +269,55 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainLicenses', {
 								return true;
 							}
 						}, {
-							glyph: 'xf00c@FontAwesome',
+							iconCls: 'fas fa-check',
 							tooltip: me.mys.res('act-activateLicense.lbl'),
 							handler: function(g, ridx) {
 								var rec = g.getStore().getAt(ridx);
 								me.activateLicenseUI(rec);
 							},
-							isDisabled: function(s, ridx, cidx, itm, rec) {
+							isActionDisabled: function(s, ridx, cidx, itm, rec) {
 								if (rec.isBuiltIn()) return true;
 								return rec.isActivated();
-								//return rec.get('activated') === true;
 							},
 							getClass: function(v, meta, rec) {
-								return rec.isActivated() ? Ext.baseCSSPrefix + 'hidden-display' : '';
-								//return rec.get('activated') === true ? Ext.baseCSSPrefix + 'hidden-display' : '';
+								var cls = 'fas fa-check ';
+								if (rec.isActivated()) cls += (Ext.baseCSSPrefix + 'hidden-display');
+								return cls;
 							}
 						}, {
-							glyph: 'xf09c@FontAwesome',
+							iconCls: 'fas fa-unlock',
 							tooltip: me.mys.res('act-deactivateLicense.lbl'),
 							handler: function(g, ridx) {
 								var rec = g.getStore().getAt(ridx);
 								me.deactivateLicenseUI(rec);
 							},
-							isDisabled: function(s, ridx, cidx, itm, rec) {
+							isActionDisabled: function(s, ridx, cidx, itm, rec) {
 								if (rec.isBuiltIn()) return true;
 								return !rec.isActivated();
-								//return rec.get('activated') === false;
 							},
 							getClass: function(v, meta, rec) {
-								return !rec.isActivated() ? Ext.baseCSSPrefix + 'hidden-display' : '';
-								//return rec.get('activated') === false ? Ext.baseCSSPrefix + 'hidden-display' : '';
+								var cls = 'fas fa-unlock ';
+								if (!rec.isActivated()) cls += (Ext.baseCSSPrefix + 'hidden-display');
+								return cls;
 							}
 						}, {
-							glyph: 'xf044@FontAwesome',
+							iconCls: 'far fa-edit',
 							tooltip: me.mys.res('act-changeLicense.lbl'),
 							handler: function(g, ridx) {
 								var rec = g.getStore().getAt(ridx);
 								me.changeLicenseUI(rec);
 							},
-							isDisabled: function(s, ridx, cidx, itm, rec) {
+							isActionDisabled: function(s, ridx, cidx, itm, rec) {
 								return rec.isBuiltIn();
 							}
 						}, {
-							glyph: 'xf014@FontAwesome',
+							iconCls: 'far fa-trash-alt',
 							tooltip: WT.res('act-remove.lbl'),
 							handler: function(g, ridx) {
 								var rec = g.getStore().getAt(ridx);
 								me.deleteLicenseUI(rec);
 							},
-							isDisabled: function(s, ridx, cidx, itm, rec) {
+							isActionDisabled: function(s, ridx, cidx, itm, rec) {
 								return rec.isBuiltIn();
 							}
 						}
@@ -349,7 +349,7 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainLicenses', {
 								xtype: 'soactioncolumn',
 								items: [
 									{
-										iconCls: 'fa fa-user-times',
+										iconCls: 'fas fa-user-times',
 										tooltip: me.mys.res('act-revokeLicenseLease.lbl'),
 										handler: function(g, ridx) {
 											var rec = g.getStore().getAt(ridx);
@@ -366,7 +366,7 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainLicenses', {
 				me.addAct('add', {
 					text: WT.res('act-add.lbl'),
 					tooltip: null,
-					iconCls: 'wt-icon-add-xs',
+					iconCls: 'wt-icon-add',
 					handler: function() {
 						me.addLicenseUI();
 					}

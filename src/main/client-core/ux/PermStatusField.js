@@ -37,7 +37,7 @@ Ext.define('Sonicle.webtop.core.ux.PermStatusField', {
 	alias: 'widget.wtpermstatusfield',
 	
 	plugins: ['sofieldtooltip'],
-	clsFormat: 'wt-icon-permission-{0}-xs',
+	clsFormat: 'wt-icon-permission-{0}',
 	
 	/**
 	 * @cfg {String} userText

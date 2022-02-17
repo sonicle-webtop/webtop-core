@@ -183,24 +183,25 @@ Ext.define('Sonicle.webtop.core.app.RTCManager', {
 				(video?WT.res('rtc.videocall.incoming.tit'):WT.res('rtc.audiocall.incoming.tit'))+": "+WT.res(WT.ID, 'rtc.call.incoming.text',session.peer.bare),
 				{
 					buttons: [
-						{ glyph: 'xf095@FontAwesome', iconCls: 'wt-color-success', action: 'audio', 
+						{
+							iconCls: 'fas fa-phone wt-color-success', action: 'audio', 
 							handler: function() {
 								toast.close();
 								me.acceptIncomingCall(session);
 							}
-						}, 
-						{ glyph: 'xf03d@FontAwesome', iconCls: 'wt-color-success', action: 'video', 
+						}, {
+							iconCls: 'fas fa-video wt-color-success', action: 'video', 
 							handler: function() {
 								toast.close();
 								me.acceptIncomingCall(session,true);
 							}
-						}, 
-						{ glyph: 'xf095@FontAwesome', iconCls: 'fa-rotate-90 wt-color-alert',
-								handler: function() {
-									me.stopAudioRing();
-									session.decline();
-									toast.close();
-								}
+						}, {
+							iconCls: 'fas fa-phone fa-rotate-90 wt-color-alert',
+							handler: function() {
+								me.stopAudioRing();
+								session.decline();
+								toast.close();
+							}
 						}
 					],
 					autoClose: false

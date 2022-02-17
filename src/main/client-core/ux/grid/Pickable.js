@@ -136,7 +136,7 @@ Ext.define('Sonicle.webtop.core.ux.grid.Pickable', {
 			align: 'center',
 			width: 50,
 			items: [{
-				iconCls: 'fa fa-minus-circle',
+				iconCls: 'fas fa-minus-circle',
 				tooltip: WT.res('act-remove.lbl'),
 				handler: function (gp, ri) {
 					gp.getStore().removeAt(ri);

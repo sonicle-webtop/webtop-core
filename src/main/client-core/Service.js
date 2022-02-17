@@ -267,7 +267,7 @@ Ext.define('Sonicle.webtop.core.Service', {
 			me.addAct('toolbox', 'manageActivities', {
 				text: WT.res('activities.tit'),
 				tooltip: null,
-				iconCls: 'wt-icon-activity-xs',
+				iconCls: 'wt-icon-activity',
 				handler: function() {
 					me.showActivities();
 				}
@@ -277,7 +277,7 @@ Ext.define('Sonicle.webtop.core.Service', {
 			me.addAct('toolbox', 'manageCausals', {
 				text: WT.res('causals.tit'),
 				tooltip: null,
-				iconCls: 'wt-icon-causal-xs',
+				iconCls: 'wt-icon-causal',
 				handler: function() {
 					me.showCausals();
 				}

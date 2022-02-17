@@ -186,7 +186,7 @@ Ext.define('Sonicle.webtop.core.sdk.ModelView', {
 		me.addAct('saveClose', {
 			text: WT.res('act-saveClose.lbl'),
 			tooltip: null,
-			iconCls: 'wt-icon-saveClose-xs',
+			iconCls: 'wt-icon-saveClose',
 			handler: function() {
 				me.saveView(true);
 			}
@@ -198,12 +198,12 @@ Ext.define('Sonicle.webtop.core.sdk.ModelView', {
 			items.push({
 				xtype: 'splitbutton',
 				text: WT.res('act-saveClose.lbl'),
-				iconCls: 'wt-icon-saveClose-xs',
+				iconCls: 'wt-icon-saveClose',
 				menu: [
 					me.addAct('save', {
 						text: WT.res('act-save.lbl'),
 						tooltip: null,
-						iconCls: 'wt-icon-save-xs',
+						iconCls: 'wt-icon-save',
 						handler: function() {
 							me.saveView(false);
 						}

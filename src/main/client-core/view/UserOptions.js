@@ -461,7 +461,7 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 					}
 				}
 			}, 
-			WTF.remoteCombo('id', 'desc', {
+			WTF.localCombo('id', 'desc', {
 				bind: {
 					value: '{record.upiGender}',
 					disabled: '{!foCanManageUpi}'
@@ -951,7 +951,7 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 						me.addAct('showSyncDeviceInfo', {
 							text: WT.res('opts.sync.details.tit'),
 							tooltip: null,
-							iconCls: 'wt-icon-info-xs',
+							iconCls: 'fas fa-info-circle',
 							handler: function() {
 								var sm = me.lref('gpsync').getSelectionModel();
 								me.showSyncDeviceInfo(sm.getSelection()[0]);

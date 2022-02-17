@@ -218,10 +218,10 @@ Ext.define('Sonicle.webtop.core.admin.view.DbUpgrader', {
 	
 	updateInfo: function(o) {
 		var me = this;
-		me.lref('tbipending').setText(me.mys.res('dbUpgrader.tbi-pending.lbl') + ': ' + o.pendingCount);
-		me.lref('tbiok').setText(me.mys.res('dbUpgrader.tbi-ok.lbl') + ': ' + o.okCount);
-		me.lref('tbiskipped').setText(me.mys.res('dbUpgrader.tbi-skipped.lbl') + ': ' + o.skippedCount);
-		me.lref('tbitag').setText(me.mys.res('dbUpgrader.tbi-tag.lbl') + ': ' + o.upgradeTag);
+		me.lref('tbipending').setHtml(me.mys.res('dbUpgrader.tbi-pending.lbl') + ': ' + o.pendingCount);
+		me.lref('tbiok').setHtml(me.mys.res('dbUpgrader.tbi-ok.lbl') + ': ' + o.okCount);
+		me.lref('tbiskipped').setHtml(me.mys.res('dbUpgrader.tbi-skipped.lbl') + ': ' + o.skippedCount);
+		me.lref('tbitag').setHtml(me.mys.res('dbUpgrader.tbi-tag.lbl') + ': ' + o.upgradeTag);
 	},
 	
 	executeStmt: function(mode) {

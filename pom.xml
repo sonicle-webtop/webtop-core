@@ -18,6 +18,8 @@
 		<webtop.service.i18n.tx.push.languages>it</webtop.service.i18n.tx.push.languages>
 		<webtop.service.i18n.tx.pull.languages>es,fr,de,hr,hu</webtop.service.i18n.tx.pull.languages>
 		<webtop.service.restApi.oas>openapi-v1.json</webtop.service.restApi.oas>
+		<!-- SENCHA -->
+		<sencha.properties.target>sencha75</sencha.properties.target>
 	</properties>
 	
 	<repositories>
@@ -462,12 +464,12 @@
 		<dependency>
 			<groupId>com.sonicle.extjs</groupId>
 			<artifactId>sonicle-extjs</artifactId>
-			<version>6.2.0</version>
+			<version>3.0</version>
 		</dependency>
 		<dependency>
 			<groupId>com.sonicle.extjs</groupId>
 			<artifactId>sonicle-extjs-extensions</artifactId>
-			<version>[6.2.0,6.3.0)</version>
+			<version>[3.0.0,4.0.0)</version>
 		</dependency>
 		<dependency>
 			<groupId>com.sonicle.libraries</groupId>

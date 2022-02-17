@@ -276,9 +276,11 @@ public class CoreManager extends BaseManager {
 		
 		// Add built-in themes
 		themes.put("crisp", new UITheme("crisp", "Crisp", true));
-		//themes.put("triton", new UITheme("triton", "Triton", false));
+		themes.put("triton", new UITheme("triton", "Triton", false));
 		themes.put("neptune", new UITheme("neptune", "Neptune", true));
-		//themes.put("aria", new UITheme("aria", "Aria", false));
+		themes.put("aria", new UITheme("aria", "Aria", false));
+		themes.put("graphite", new UITheme("graphite", "Graphite", false));
+		//themes.put("material", new UITheme("material", "Material", false));
 		themes.put("classic", new UITheme("classic", "Classic", false));
 		themes.put("gray", new UITheme("gray", "Gray", false));
 		

@@ -154,7 +154,7 @@ Ext.define('Sonicle.webtop.core.ux.field.htmleditor.TemplateTool', {
 								xtype: 'soactioncolumn',
 								items: [
 									{
-										glyph: 'xf044@FontAwesome',
+										iconCls: 'far fa-edit',
 										tooltip: WT.res('act-edit.lbl'),
 										handler: function(g, ridx) {
 											var sto = g.getStore(),
@@ -167,7 +167,7 @@ Ext.define('Sonicle.webtop.core.ux.field.htmleditor.TemplateTool', {
 											}, me);
 										}
 									}, {
-										glyph: 'xf014@FontAwesome',
+										iconCls: 'far fa-trash-alt',
 										tooltip: WT.res('act-remove.lbl'),
 										handler: function(g, ridx) {
 											var sto = g.getStore(),

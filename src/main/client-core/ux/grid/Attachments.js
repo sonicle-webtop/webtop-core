@@ -168,7 +168,7 @@ Ext.define('Sonicle.webtop.core.ux.grid.Attachments', {
 			xtype: 'soiconcolumn',
 			dataIndex: me.typeField,
 			hideable: false,
-			header: WTF.headerWithGlyphIcon('fa fa-file-o'),
+			header: WTF.headerWithGlyphIcon('far fa-file'),
 			getIconCls: function(v, rec) {
 				var ext = Sonicle.String.substrAfterLast(rec.get(me.filenameField), '.');
 				return WTF.fileTypeCssIconCls(ext);
@@ -180,7 +180,7 @@ Ext.define('Sonicle.webtop.core.ux.grid.Attachments', {
 			dataIndex: me.filenameField,
 			hideable: false,
 			header: me.filenameText,
-			tdCls: 'wt-theme-text-lnk',
+			tdCls: 'wt-theme-text-hyperlink',
 			flex: 3,
 			listeners: {
 				linkclick: function(s, ridx, rec) {
@@ -195,7 +195,7 @@ Ext.define('Sonicle.webtop.core.ux.grid.Attachments', {
 		}, {
 			xtype: 'wtactioncolumn',
 			items: [{
-				iconCls: 'fa fa-cloud-download',
+				iconCls: 'fas fa-cloud-download-alt',
 				tooltip: WT.res('act-download.lbl'),
 				handler: function(g, ridx) {
 					var rec = g.getStore().getAt(ridx);
@@ -203,7 +203,7 @@ Ext.define('Sonicle.webtop.core.ux.grid.Attachments', {
 				},
 				hidden: WT.plTags.mobile
 			}, {
-				iconCls: 'fa fa-trash-o',
+				iconCls: 'far fa-trash-alt',
 				tooltip: WT.res('act-remove.lbl'),
 				handler: function(g, ridx) {
 					var rec = g.getStore().getAt(ridx);

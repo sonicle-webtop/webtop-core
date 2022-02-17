@@ -299,19 +299,20 @@ Ext.define('Sonicle.webtop.core.ux.IMBigChat', {
 		return {
 			xtype: 'toolbar',
 			ui: 'footer',
-			items: [{
+			items: [
+				{
 					xtype: 'button',
 					ui: 'default-toolbar',
-					glyph: 'xf118@FontAwesome',
+					iconCls: 'far fa-smile wt-theme-glyph',
 					tooltip: WT.res('wtimchat.btn-emoji.tip'),
 					enableToggle: true,
 					toggleHandler: function(s, state) {
 						var cmp = me.lref('pnlemojis');
 						if (state) {
-							s.setGlyph('xf078@FontAwesome');
+							s.setIconCls('fas fa-caret-down wt-theme-glyph');
 							cmp.expand();
 						} else {
-							s.setGlyph('xf118@FontAwesome');
+							s.setIconCls('far fa-smile wt-theme-glyph');
 							cmp.collapse();
 						}
 					}

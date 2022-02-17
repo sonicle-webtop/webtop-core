@@ -43,7 +43,7 @@ Ext.define('Sonicle.webtop.core.view.ChangePassword', {
 	
 	dockableConfig: {
 		title: '{changePassword.tit@com.sonicle.webtop.core}',
-		iconCls: 'wt-icon-changePassword-xs',
+		iconCls: 'wt-icon-changePassword',
 		width: 340,
 		height: 165,
 		modal: true,

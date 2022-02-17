@@ -103,7 +103,7 @@ Ext.define('Sonicle.webtop.core.view.CustomFields', {
 							html: me.res('customFields.free.txt', me.fieldsLimit)
 						}, {
 							xtype: 'button',
-							glyph: 'xf05a@FontAwesome',
+							iconCls: 'fas fa-info-circle wt-theme-glyph',
 							handler: function() {
 								WT.info(me.res('customFields.info.free', me.fieldsLimit));
 							}
@@ -168,7 +168,7 @@ Ext.define('Sonicle.webtop.core.view.CustomFields', {
 				}, {
 					xtype: 'checkcolumn',
 					dataIndex: 'searchable',
-					header: WTF.headerWithGlyphIcon('fa fa-binoculars'),
+					header: WTF.headerWithGlyphIcon('fas fa-binoculars'),
 					tooltip: me.res('customFields.gp.searchable.lbl'),
 					disabled: true,
 					disabledCls : '',
@@ -176,7 +176,7 @@ Ext.define('Sonicle.webtop.core.view.CustomFields', {
 				}, {
 					xtype: 'checkcolumn',
 					dataIndex: 'previewable',
-					header: WTF.headerWithGlyphIcon('fa fa-newspaper-o'),
+					header: WTF.headerWithGlyphIcon('far fa-newspaper'),
 					tooltip: me.res('customFields.gp.previewable.lbl'),
 					disabled: true,
 					disabledCls : '',
@@ -194,14 +194,14 @@ Ext.define('Sonicle.webtop.core.view.CustomFields', {
 					xtype: 'soactioncolumn',
 					items: [
 						{
-							iconCls: 'fa fa-clone',
+							iconCls: 'far fa-clone',
 							tooltip: WT.res('act-clone.lbl'),
 							handler: function(g, ridx) {
 								var rec = g.getStore().getAt(ridx);
 								me.cloneCustomFieldUI(rec);
 							}
 						}, {
-							iconCls: 'fa fa-trash-o',
+							iconCls: 'far fa-trash-alt',
 							tooltip: WT.res('act-remove.lbl'),
 							handler: function(g, ridx) {
 								var rec = g.getStore().getAt(ridx);
@@ -218,7 +218,7 @@ Ext.define('Sonicle.webtop.core.view.CustomFields', {
 						disabled: '{!foAddEnabled}'
 					},
 					text: WT.res('act-add.lbl'),
-					iconCls: 'wt-icon-add-xs',
+					iconCls: 'wt-icon-add',
 					handler: function() {
 						me.addCustomFieldUI();
 					}

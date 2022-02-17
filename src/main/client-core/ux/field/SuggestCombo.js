@@ -53,16 +53,18 @@ Ext.define('Sonicle.webtop.core.ux.field.SuggestCombo', {
 		suggestionContext: ''
 	},
 	
-	valuePublishEvent: ['change', 'blur'], // add blur event to avoid loosing value changes when blurring field before server query
+	//valuePublishEvent: ['change', 'blur'], // add blur event to avoid loosing value changes when blurring field before server query
 	preventEnterFiringOnPickerExpanded: true,
 	
 	typeAhead: false,
 	minChars: 2,
 	autoSelect: false,
+	autoSelectMatches: false,
 	queryMode: 'remote',
 	triggerAction: 'all',
 	forceSelection: false,
 	selectOnFocus: true,
+	selectOnTab: false,
 	editable: true,
 	hideTrigger: true,
 	valueField: 'id',
@@ -86,6 +88,7 @@ Ext.define('Sonicle.webtop.core.ux.field.SuggestCombo', {
 		var me = this;
 		Ext.apply(me, {
 			store: {
+				autoLoad: true,
 				model: 'WTA.ux.data.ValueModel',
 				proxy: WTF.apiProxy(me.sid, 'ManageSuggestions', 'data', {
 					extraParams: {

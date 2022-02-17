@@ -1,79 +1,79 @@
+@import url("xtheme-override.css");
+@import url("xtheme-classic-override.css");
 
 .wt-viewport-body {}
 .wt-vieport-dock { background-color: #dfe9f6; }
 .wt-portal-body {}
 
 /*
- * Background color for body (regular, lighten/darken, alternative)
+ * Background colors
  */
-.wt-theme-bg { background-color: #fff; }
-.wt-theme-bg-more { background-color: #dfe9f6; }
-.wt-theme-bg-alt { background-color: #dfe9f6; }/*???????????*/
+.wt-theme-bg1 { background-color: #ffffff; } /* Background 1 */
+.wt-theme-bg2 { background-color: #dfe9f6; } /* Background 2 */
+.wt-theme-bg-alt { background-color: #eff6fb; } /* Alternative background (typically with more contrast) */
+.wt-theme-dialog-bg { background-color: #ced9e7; } /* Dialog background */
+.wt-theme-field-bg { background-color: #ffffff; } /* Text fields background */
 
 /*
  * Text color for body (regular, title/header)
  */
-.wt-theme-text { color: #000; }
-.wt-theme-text-lighter1 { color: #4D4D4D; } /* Conventionally dark grey */
+.wt-theme-text { color: #000000; }
+.wt-theme-text-lighter1 { color: #4d4d4d; } /* Conventionally dark grey */
 .wt-theme-text-lighter2 { color: #808080; } /* Conventionally light grey */
-.wt-theme-text-greyed { color: #808080; } /* Deprecated by text-lighter */
 .wt-theme-text-ok { color: #4da07d; } /* Conventionally green */
 .wt-theme-text-warn { color: #e9b665; } /* Conventionally yellow */
 .wt-theme-text-error { color: #cc4b31; } /* Conventionally red */
 .wt-theme-text-off { color: #b4b4b4; } /* Conventionally grey */
 .wt-theme-text-alt { color: #529fbe; } /* Conventionally cyan/blue */
-
-.wt-theme-text-tit { color: #04468c; }
-.wt-theme-text-sub { color: #888; }
-.wt-theme-text-lnk { color: #0078d7; }
+.wt-theme-text-header1 { color: #04468c; }
+.wt-theme-text-subtitle { color: #888888; }
+.wt-theme-text-hyperlink { color: #0078d7; }
+.wt-theme-glyph { color: #999999 !Important; } /* #333333 with alpha 0.5 */
+.wt-theme-glyph-lighter { color: #bababa; } /* #666666 with alpha 0.45 */
 
 /*
- * Background color for header (regular, lighten/darken, alternative)
+ * Background color for header (regular, lighten/darken)
  */
 .wt-theme-header-bg { background-color: #d5e2f2; }
-.wt-theme-header-bg-more { background-color: #dfe9f6; }
-.wt-theme-header-bg-alt { background-color: #3892d4; }/*???????????*/
+/*.wt-theme-header-bg-more { background-color: #dfe9f6; }*/
+/*.wt-theme-header-bg-alt { background-color: #3892d4; }*/
 
 /*
  * Text color for header (regular, alternative)
  */
 .wt-theme-header-text { color: #04468c; }
-.wt-theme-header-text-alt { color: #fff; }/*???????????*/
 
+/*
+ * Style pressed glyphs
+ */
 .wt-theme-btn-pressed .x-btn-glyph {
 	color: #04468c !important;
 }
-
-
-
-/*
- * Background: 1:light, 2:medium/less-light, 3:dark/alternative
- * Generally light to not provide excessive contrast
- */
-.wt-theme-bg-1 { background-color: #dfe9f6; }
-.wt-theme-bg-2 { background-color: #dfe9f6; }
-.wt-theme-bg-3 { background-color: #dfe9f6; }
-
-/*
- * Header colors: 1:light, 2:medium, 3:dark
- */
-.wt-theme-hd-1 { background-color: #dfe9f6; }
-.wt-theme-hd-2 { background-color: #ced9e7; }
-.wt-theme-hd-3 { background-color: #cecece; }
-
-.wt-theme-txt-hi { color: #157fcc; }
-
-.wt-menu-bgroup-body .x-table-layout {
+/* Adjust menu buttongroup items centering */
+.wt-menu-bgroup-body > .x-table-layout {
 	margin: auto;
 }
-
-
-/* Tree: avoid icon fall to left side, due to missing left padding */
-.x-grid-cell-inner-treecolumn {
-	padding-left: 3px;
+/*
+ * Adjust colorsquare tick centering
+ */
+.wt-tree-colorsquare-framed.x-tree-checkbox-checked:after {
+    top: -0px;
 }
-
-/* Trigger: fix left-border when displayed on the right (thanks to Sonicle.overrides.form.field.Text) */
-.x-form-trigger-wrap > .x-form-trigger:first-child {
-	border-left: 1px solid #b5b8c8;
+.wt-tree-colorsquare-default.x-tree-checkbox-checked:after {
+    top: -1px;
+}
+/*
+ * Adjust action colors: base color is too strong
+ */
+.x-action-col-icon {
+    color: #bababa; /* #666666 with alpha 0.45 */
+}
+.x-action-col-icon:hover {
+	color: #666666;
+}
+/*
+ * Adjust button glyph color: missing in original css definitions
+ */
+.x-btn-icon-el {
+	color: #666666;
 }

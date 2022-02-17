@@ -95,7 +95,7 @@ Ext.define('Sonicle.webtop.core.ux.SelectTagsBox', {
 					dataIndex: 'name',
 					renderer: function(val, meta, rec) {
 						var SoS = Sonicle.String;
-						return '<i class="fa fa-tag" aria-hidden="true" style="font-size:1.2em;color:' + SoS.deflt(rec.get('color'), me.defaultColor) + '"></i>&nbsp;&nbsp;' + SoS.deflt(rec.get('name'), '');
+						return '<i class="fas fa-tag" aria-hidden="true" style="font-size:1.2em;color:' + SoS.deflt(rec.get('color'), me.defaultColor) + '"></i>&nbsp;&nbsp;' + SoS.deflt(rec.get('name'), '');
 					},
 					flex: 1
 				}

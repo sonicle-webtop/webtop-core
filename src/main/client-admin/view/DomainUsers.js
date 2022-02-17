@@ -117,9 +117,9 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainUsers', {
 				}, {
 					xtype: 'soiconcolumn',
 					dataIndex: 'exist',
-					header: WTF.headerWithGlyphIcon('fa fa-user'),
+					header: WTF.headerWithGlyphIcon('fas fa-user'),
 					getIconCls: function(v,rec) {
-						return v ? 'wt-icon-ok-xs' : '';
+						return v ? 'wt-icon-ok' : '';
 					},
 					getTip: function(v) {
 						return v ? me.mys.res('domainUsers.gp.exist.tip', WT.getPlatformName()) : null;
@@ -136,7 +136,7 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainUsers', {
 				me.addAct('add', {
 					text: WT.res('act-add.lbl'),
 					tooltip: null,
-					iconCls: 'wt-icon-add-xs',
+					iconCls: 'wt-icon-add',
 					menu: [
 						me.addAct('addEmpty', {
 							text: me.mys.res('domainUsers.act-addEmpty.lbl'),
@@ -152,7 +152,7 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainUsers', {
 				me.addAct('remove', {
 					text: WT.res('act-remove.lbl'),
 					tooltip: null,
-					iconCls: 'wt-icon-remove-xs',
+					iconCls: 'wt-icon-remove',
 					disabled: true,
 					menu: [
 						me.addAct('removeClean', {
@@ -179,7 +179,7 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainUsers', {
 				me.addAct('enable', {
 					text: WT.res('act-enable.lbl'),
 					tooltip: null,
-					iconCls: 'wt-icon-item-enable-xs',
+					iconCls: 'wt-icon-item-enable',
 					disabled: true,
 					handler: function() {
 						var sel = me.getSelectedUsers();
@@ -189,7 +189,7 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainUsers', {
 				me.addAct('disable', {
 					text: WT.res('act-disable.lbl'),
 					tooltip: null,
-					iconCls: 'wt-icon-item-disable-xs',
+					iconCls: 'wt-icon-item-disable',
 					disabled: true,
 					handler: function() {
 						var sel = me.getSelectedUsers();
@@ -269,7 +269,7 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainUsers', {
 		me.addAct('changePassword', {
 			text: WT.res('act-changePassword.lbl'),
 			tooltip: null,
-			iconCls: 'wt-icon-changePassword-xs',
+			iconCls: 'wt-icon-changePassword',
 			disabled: true,
 			handler: function() {
 				var sel = me.getSelectedUsers();
@@ -279,7 +279,7 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainUsers', {
 		me.addAct('editOptions', {
 			text: WT.res('opts.tit'),
 			tooltip: null,
-			iconCls: 'wt-icon-options-xs',
+			iconCls: 'wt-icon-options',
 			disabled: true,
 			handler: function() {
 				var sel = me.getSelectedUsers();

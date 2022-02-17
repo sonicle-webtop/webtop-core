@@ -96,7 +96,7 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainGroups', {
 				me.addAct('add', {
 					text: WT.res('act-add.lbl'),
 					tooltip: null,
-					iconCls: 'wt-icon-add-xs',
+					iconCls: 'wt-icon-add',
 					handler: function() {
 						me.addGroupUI(null);
 					}
@@ -104,7 +104,7 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainGroups', {
 				me.addAct('remove', {
 					text: WT.res('act-remove.lbl'),
 					tooltip: null,
-					iconCls: 'wt-icon-remove-xs',
+					iconCls: 'wt-icon-remove',
 					disabled: true,
 					handler: function() {
 						var rec = me.getSelectedGroup();

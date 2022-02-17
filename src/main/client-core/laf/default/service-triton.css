@@ -1,0 +1,60 @@
+@import url("xtheme-override.css");
+@import url("xtheme-triton-override.css");
+
+.wt-viewport-body {}
+.wt-vieport-dock { background-color: #fafafa; }
+.wt-portal-body { background-color: #e0ebf3; }
+
+/*
+ * Background colors
+ */
+.wt-theme-bg1 { background-color: #ffffff; } /* Background 1 */
+.wt-theme-bg2 { background-color: #fafafa; } /* Background 2 */
+.wt-theme-bg-alt { background-color: #eff6fb; } /* Alternative background (typically with more contrast) */
+.wt-theme-dialog-bg { background-color: #ffffff; } /* Dialog background */
+.wt-theme-field-bg { background-color: #ffffff; } /* Text fields background */
+
+/*
+ * Text color for body (regular, title/header)
+ */
+.wt-theme-text { color: #000000; }
+.wt-theme-text-lighter1 { color: #4d4d4d; } /* Conventionally dark grey */
+.wt-theme-text-lighter2 { color: #808080; } /* Conventionally light grey */
+.wt-theme-text-ok { color: #4da07d; } /* Conventionally green */
+.wt-theme-text-warn { color: #e9b665; } /* Conventionally yellow */
+.wt-theme-text-error { color: #cc4b31; } /* Conventionally red */
+.wt-theme-text-off { color: #b4b4b4; } /* Conventionally grey */
+.wt-theme-text-alt { color: #529fbe; } /* Conventionally cyan/blue */
+.wt-theme-text-header1 { color: #157fcc; }
+.wt-theme-text-subtitle { color: #888888; }
+.wt-theme-text-hyperlink { color: #0078d7; }
+.wt-theme-glyph { color: #999999 !Important; } /* #333333 with alpha 0.5 */
+.wt-theme-glyph-lighter { color: #c2c2c2; } /* #666666 with alpha 0.4 */
+
+/*
+ * Background color for header (regular, lighten/darken, alternative)
+ */
+.wt-theme-header-bg { background-color: #fafafa; }
+/*.wt-theme-header-bg-more { background-color: #e6e6e6; }*/
+/*.wt-theme-header-bg-alt { background-color: #3892d4; }*/
+
+/*
+ * Text color for header (regular, alternative)
+ */
+.wt-theme-header-text { color: #157fcc; } /* regular */
+
+/*
+ * Style pressed glyphs
+ */
+.wt-theme-btn-pressed .x-btn-glyph {
+	color: #157fcc !important;
+}
+/*
+ * Adjust action colors: base color is too strong
+ */
+.x-action-col-icon {
+    color: #c2c2c2; /* #666666 with alpha 0.4 */
+}
+.x-action-col-icon:hover {
+	color: #666666;
+}

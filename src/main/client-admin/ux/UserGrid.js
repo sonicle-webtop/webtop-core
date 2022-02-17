@@ -94,13 +94,13 @@ Ext.define('Sonicle.webtop.core.admin.ux.UserGrid', {
 		var me = this;
 		me.addAct = new Ext.Action({
 			text: WT.res('act-add.lbl'),
-			iconCls: 'wt-icon-add-xs',
+			iconCls: 'wt-icon-add',
 			handler: me.onAddClick,
 			scope: me
 		});
 		me.removeAction = new Ext.Action({
 			text: WT.res('act-remove.lbl'),
-			iconCls: 'wt-icon-remove-xs',
+			iconCls: 'wt-icon-remove',
 			disabled: true,
 			handler: me.onRemoveClick,
 			scope: me

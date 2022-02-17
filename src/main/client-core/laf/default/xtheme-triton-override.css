@@ -1,0 +1,14 @@
+
+/* Panels: reduce default margin between items lowering bottom-margin */
+.x-autocontainer-form-item,
+.x-anchor-form-item,
+.x-vbox-form-item,
+.x-table-form-item {
+    margin-bottom: 5px;
+}
+
+/* TextFields: show more text lowering LR padding */
+.x-form-text-default {
+    padding-left: 5px;
+    padding-right: 5px;
+}

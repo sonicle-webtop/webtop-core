@@ -124,7 +124,7 @@ Ext.define('Sonicle.webtop.core.sdk.FormView', {
 		me.addAct('saveClose', {
 			text: WT.res('act-saveClose.lbl'),
 			tooltip: null,
-			iconCls: 'wt-icon-saveClose-xs',
+			iconCls: 'wt-icon-saveClose',
 			handler: function() {
 				me.doSave(true);
 			}
@@ -143,12 +143,12 @@ Ext.define('Sonicle.webtop.core.sdk.FormView', {
 			items.push({
 				xtype: 'splitbutton',
 				text: WT.res('act-saveClose.lbl'),
-				iconCls: 'wt-icon-saveClose-xs',
+				iconCls: 'wt-icon-saveClose',
 				menu: [
 					me.addAct('save', {
 						text: WT.res('act-save.lbl'),
 						tooltip: null,
-						iconCls: 'wt-icon-save-xs',
+						iconCls: 'wt-icon-save',
 						handler: function() {
 							me.doSave(false);
 						}
@@ -164,11 +164,11 @@ Ext.define('Sonicle.webtop.core.sdk.FormView', {
 				tbar: [{
 					xtype: 'splitbutton',
 					text: WT.res('act-saveClose.lbl'),
-					iconCls: 'wt-icon-saveClose-xs',
+					iconCls: 'wt-icon-saveClose',
 					menu: [
 						me.addAct('save', {
 							text: WT.res('act-save.lbl'),
-							iconCls: 'wt-icon-save-xs',
+							iconCls: 'wt-icon-save',
 							handler: function() {
 								me.doSave(false);
 							}

@@ -118,7 +118,7 @@ Ext.define('Sonicle.webtop.core.view.Tags', {
 				me.addAct('add', {
 					text: WT.res('act-add.lbl'),
 					tooltip: null,
-					iconCls: 'wt-icon-add-xs',
+					iconCls: 'wt-icon-add',
 					handler: function() {
 						me.addTagUI();
 					}
@@ -180,22 +180,22 @@ Ext.define('Sonicle.webtop.core.view.Tags', {
 								pub = '';
 						
 						if ('shared' === rec.get('visibility')) {
-							pub = '&nbsp;<i class="fa fa-share-alt wt-source" aria-hidden="true" data-qtip="' + Ext.String.htmlEncode(WT.res('tags.visibility.shared.tip')) + '"></i>';
+							pub = '&nbsp;<i class="fas fa-share-alt wt-source" aria-hidden="true" data-qtip="' + Ext.String.htmlEncode(WT.res('tags.visibility.shared.tip')) + '"></i>';
 						}
-						return '<i class="fa fa-tag" aria-hidden="true" style="font-size:1.2em;color:' + color + '"></i>&nbsp;&nbsp;' + name + pub;
+						return '<i class="fas fa-tag" aria-hidden="true" style="font-size:1.2em;color:' + color + '"></i>&nbsp;&nbsp;' + name + pub;
 					},
 					flex: 1
 				}, {
 					xtype: 'soactioncolumn',
 					items: [
 						{
-							iconCls: 'fa fa-edit',
+							iconCls: 'far fa-edit',
 							tooltip: WT.res('act-edit.lbl'),
 							handler: function(g, ridx) {
 								var rec = g.getStore().getAt(ridx);
 								me.editTagUI(rec);
 							},
-							isDisabled: function(s, ridx, cidx, itm, rec) {
+							isActionDisabled: function(s, ridx, cidx, itm, rec) {
 								if ('private' === rec.get('visibility')) {
 									return rec.get('builtIn');
 								} else {
@@ -203,13 +203,13 @@ Ext.define('Sonicle.webtop.core.view.Tags', {
 								}
 							}
 						}, {
-							iconCls: 'fa fa-trash-o',
+							iconCls: 'far fa-trash-alt',
 							tooltip: WT.res('act-remove.lbl'),
 							handler: function(g, ridx) {
 								var rec = g.getStore().getAt(ridx);
 								me.deleteTagUI(rec);
 							},
-							isDisabled: function(s, ridx, cidx, itm, rec) {
+							isActionDisabled: function(s, ridx, cidx, itm, rec) {
 								if ('private' === rec.get('visibility')) {
 									return rec.get('builtIn');
 								} else {

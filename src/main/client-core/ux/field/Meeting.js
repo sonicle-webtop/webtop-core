@@ -82,7 +82,7 @@ Ext.define('Sonicle.webtop.core.ux.field.Meeting', {
 			triggers['open'] = WTF.openTrigger({
 				weight: 1,
 				tooltip: icfg.openText || WT.res('wtmeetingfield.join'),
-				extraCls: 'fa fa-video-camera'
+				extraCls: 'fas fa-video'
 			});
 		}
 		cfg.triggers = SoU.mergeTriggers(icfg.triggers, triggers);

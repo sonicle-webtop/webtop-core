@@ -112,7 +112,7 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainSettings', {
 				me.addAct('remove', {
 					text: WT.res('act-remove.lbl'),
 					tooltip: null,
-					iconCls: 'wt-icon-remove-xs',
+					iconCls: 'wt-icon-remove',
 					disabled: true,
 					handler: function() {
 						var rec = me.lref('gp').getSelection()[0];

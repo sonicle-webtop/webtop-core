@@ -1065,6 +1065,9 @@ public class WebTopSession {
 		//js.appManifest.addCss(EXTJS_PATH + "packages/sencha-charts/build/" + extBaseTheme + "/resources/" + "sencha-charts-all" + extRtl + extDebug + ".css");	
 		js.appManifest.addJs(EXTJS_PATH + "packages/ux/" + js.appManifest.toolkit + "/" + "ux" + extDebug + ".js");
 		js.appManifest.addCss(EXTJS_PATH + "packages/ux/" + js.appManifest.toolkit + "/" + extBaseTheme + "/resources/" + "ux-all" + extRtl + extDebug + ".css");
+		js.appManifest.addCss(EXTJS_PATH + "packages/font-awesome/resources/" + "font-awesome-all" + extRtl + extDebug + ".css");
+		js.appManifest.addCss(EXTJS_PATH + "packages/font-ext/resources/" + "font-ext-all" + extRtl + extDebug + ".css");
+		js.appManifest.addCss(EXTJS_PATH + "packages/font-pictos/resources/" + "font-pictos-all" + extRtl + extDebug + ".css");
 		
 		// Include Sonicle ExtJs Extensions references
 		if (WebTopProps.getSoExtJsExtensionsDevMode(wta.getProperties())) {
@@ -1151,9 +1154,7 @@ public class WebTopSession {
 	
 	private void fillServiceCssReferences(JsWTS js, ServiceManifest manifest, String theme, String lookAndFeel) {
 		js.appManifest.addCss(manifest.getPackageLookAndFeelUrl(lookAndFeel) + "/" + "service.css");
-		js.appManifest.addCss(manifest.getPackageLookAndFeelUrl(lookAndFeel) + "/" + "service-override.css");
 		js.appManifest.addCss(manifest.getPackageLookAndFeelUrl(lookAndFeel) + "/" + "service-" + theme + ".css");
-		js.appManifest.addCss(manifest.getPackageLookAndFeelUrl(lookAndFeel) + "/" + "service-override-" + theme + ".css");
 	}
 	
 	private List<String> sortServiceIdsByOrder(final CoreServiceSettings.ServicesOrder so, List<String> ids) {

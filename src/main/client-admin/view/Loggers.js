@@ -83,7 +83,7 @@ Ext.define('Sonicle.webtop.core.admin.view.Loggers', {
 							ret = me.mys.res('loggers.gp.name.root');
 						}
 						if (rec.isPending()) {
-							ret += '<span class="wt-theme-text-greyed" style="font-size:0.8em;">&nbsp;&nbsp;' + me.mys.res('loggers.gp.name.pending') + '</span>' ;
+							ret += '<span class="wt-theme-text-lighter2" style="font-size:0.8em;">&nbsp;&nbsp;' + me.mys.res('loggers.gp.name.pending') + '</span>' ;
 						}
 						return ret;
 					},
@@ -103,9 +103,9 @@ Ext.define('Sonicle.webtop.core.admin.view.Loggers', {
 					header: me.mys.res('loggers.gp.actions.lbl'),
 					items: [
 						{
-							glyph: 'xf1b0@FontAwesome',
+							iconCls: 'fas fa-paw',
 							tooltip: 'TRACE',
-							isDisabled: function(s, ridx, cidx, itm, rec) {
+							isActionDisabled: function(s, ridx, cidx, itm, rec) {
 								if (rec.isRoot()) return true;
 								return 'TRACE' === rec.get('level');
 							},
@@ -114,9 +114,9 @@ Ext.define('Sonicle.webtop.core.admin.view.Loggers', {
 								me.setLevelUI(rec, 'TRACE');
 							}
 						}, {
-							glyph: 'xf188@FontAwesome',
+							iconCls: 'fas fa-bug',
 							tooltip: 'DEBUG',
-							isDisabled: function(s, ridx, cidx, itm, rec) {
+							isActionDisabled: function(s, ridx, cidx, itm, rec) {
 								if (rec.isRoot()) return true;
 								return 'DEBUG' === rec.get('level');
 							},
@@ -125,9 +125,9 @@ Ext.define('Sonicle.webtop.core.admin.view.Loggers', {
 								me.setLevelUI(rec, 'DEBUG');
 							}
 						}, {
-							glyph: 'xf05a@FontAwesome',
+							iconCls: 'fas fa-info-circle',
 							tooltip: 'INFO',
-							isDisabled: function(s, ridx, cidx, itm, rec) {
+							isActionDisabled: function(s, ridx, cidx, itm, rec) {
 								if (rec.isRoot()) return true;
 								return 'INFO' === rec.get('level');
 							},
@@ -136,9 +136,9 @@ Ext.define('Sonicle.webtop.core.admin.view.Loggers', {
 								me.setLevelUI(rec, 'INFO');
 							}
 						}, {
-							glyph: 'xf071@FontAwesome',
+							iconCls: 'fas fa-exclamation-triangle',
 							tooltip: 'WARN',
-							isDisabled: function(s, ridx, cidx, itm, rec) {
+							isActionDisabled: function(s, ridx, cidx, itm, rec) {
 								if (rec.isRoot()) return true;
 								return 'WARN' === rec.get('level');
 							},
@@ -147,9 +147,9 @@ Ext.define('Sonicle.webtop.core.admin.view.Loggers', {
 								me.setLevelUI(rec, 'WARN');
 							}
 						}, {
-							glyph: 'xf057@FontAwesome',
+							iconCls: 'fas fa-times-circle',
 							tooltip: 'ERROR',
-							isDisabled: function(s, ridx, cidx, itm, rec) {
+							isActionDisabled: function(s, ridx, cidx, itm, rec) {
 								if (rec.isRoot()) return true;
 								return 'ERROR' === rec.get('level');
 							},
@@ -158,9 +158,9 @@ Ext.define('Sonicle.webtop.core.admin.view.Loggers', {
 								me.setLevelUI(rec, 'ERROR');
 							}
 						}, {
-							glyph: 'xf011@FontAwesome',
+							iconCls: 'fas fa-power-off',
 							tooltip: 'OFF',
-							isDisabled: function(s, ridx, cidx, itm, rec) {
+							isActionDisabled: function(s, ridx, cidx, itm, rec) {
 								if (rec.isRoot()) return true;
 								return 'OFF' === rec.get('level');
 							},
@@ -169,9 +169,9 @@ Ext.define('Sonicle.webtop.core.admin.view.Loggers', {
 								me.setLevelUI(rec, 'OFF');
 							}
 						}, {
-							glyph: 'xf0e2@FontAwesome',
+							iconCls: 'fas fa-undo',
 							tooltip: me.mys.res('loggers.gp.actions.restore.tip'),
-							isDisabled: function(s, ridx, cidx, itm, rec) {
+							isActionDisabled: function(s, ridx, cidx, itm, rec) {
 								if (rec.isRoot()) return true;
 								return Ext.isEmpty(rec.get('overLevel'));
 							},
@@ -187,7 +187,7 @@ Ext.define('Sonicle.webtop.core.admin.view.Loggers', {
 				me.addAct('add', {
 					text: WT.res('act-add.lbl'),
 					tooltip: null,
-					iconCls: 'wt-icon-add-xs',
+					iconCls: 'wt-icon-add',
 					handler: function() {
 						me.addLoggerUI();
 					}

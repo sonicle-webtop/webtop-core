@@ -44,7 +44,7 @@ Ext.define('Sonicle.webtop.core.view.Activities', {
 	
 	dockableConfig: {
 		title: '{activities.tit}',
-		iconCls: 'wt-icon-activity-xs',
+		iconCls: 'wt-icon-activity',
 		width: 600,
 		height: 400,
 		modal: true
@@ -72,7 +72,7 @@ Ext.define('Sonicle.webtop.core.view.Activities', {
 				xtype: 'soiconcolumn',
 				dataIndex: 'activityId',
 				getIconCls: function(v,rec) {
-					return rec.get('readOnly') ? me.mys.cssIconCls('activity-ro', 'xs') : null;
+					return rec.get('readOnly') ? 'wt-icon-lock' : null;
 				},
 				getTip: function(v,rec) {
 					return rec.get('readOnly') ? me.mys.res('activities.gp.readOnly.true') : null;
@@ -105,14 +105,14 @@ Ext.define('Sonicle.webtop.core.view.Activities', {
 			tbar: [
 				me.addAct('add', {
 					text: WT.res('act-add.lbl'),
-					iconCls: 'wt-icon-add-xs',
+					iconCls: 'wt-icon-add',
 					handler: function() {
 						me.addActivity();
 					}
 				}),
-				me.addAct('remove', {
-					text: WT.res('act-remove.lbl'),
-					iconCls: 'wt-icon-remove-xs',
+				me.addAct('delete', {
+					text: WT.res('act-delete.lbl'),
+					iconCls: 'wt-icon-delete',
 					disabled: true,
 					handler: function() {
 						var sm = me.lref('gp').getSelectionModel();
@@ -139,7 +139,7 @@ Ext.define('Sonicle.webtop.core.view.Activities', {
 		me.getViewModel().bind({
 			bindTo: '{gp.selection}'
 		}, function(sel) {
-			me.getAct('remove').setDisabled((sel) ? false : true);
+			me.getAct('delete').setDisabled((sel) ? false : true);
 		});
 	},
 	

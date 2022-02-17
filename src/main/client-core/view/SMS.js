@@ -39,7 +39,7 @@ Ext.define('Sonicle.webtop.core.view.SMS', {
 	
 	dockableConfig: {
 		title: '{SMS.tit}',
-		iconCls: 'wt-icon-sms-xs',
+		iconCls: 'wt-icon-sms',
 		width: 450,
 		height: 300
 	},

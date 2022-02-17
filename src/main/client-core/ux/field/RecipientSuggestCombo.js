@@ -100,6 +100,7 @@ Ext.define('Sonicle.webtop.core.ux.field.RecipientSuggestCombo', {
 		var me = this;
 		Ext.apply(me, {
 			store: {
+				autoLoad: true,
 				model: 'WTA.model.InternetRecipient',
 				proxy: WTF.apiProxy(WT.ID, 'ManageInternetRecipients', 'recipients', {
 					extraParams: {

@@ -157,7 +157,7 @@ Ext.define('Sonicle.webtop.core.ux.RecipientsGrid', {
 					width: 40,
 					dataIndex: 'recipientContactId', 
 					renderer: function(value, md, record, ri, ci, s, view) {
-						return (value && value>0?WTF.headerWithGlyphIcon('fa fa-link'):"");
+						return (value && value>0?WTF.headerWithGlyphIcon('fas fa-link'):"");
 					}
 				}
 			]

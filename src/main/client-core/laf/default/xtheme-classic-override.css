@@ -1,0 +1,10 @@
+
+/* Tree: avoid icon fall to left side, due to missing left padding */
+.x-grid-cell-inner-treecolumn {
+	padding-left: 3px;
+}
+
+/* Trigger: fix left-border when displayed on the right (thanks to Sonicle.overrides.form.field.Text) */
+.x-form-trigger-wrap > .x-form-trigger:first-child {
+	border-left: 1px solid #b5b8c8;
+}

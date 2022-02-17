@@ -99,7 +99,7 @@ Ext.define('Sonicle.webtop.core.ux.NotificationButton', {
 			}, {
 				xtype: 'actioncolumn',
 				items: [{
-					iconCls: 'wt-icon-notification-remove-xs',
+					iconCls: 'fas fa-trash',
 					tooltip: WT.res('wtnotificationbutton.grid.remove.tip'),
 					handler: function(s, rindx) {
 						me.removeGridRecord(s, s.getStore().getAt(rindx));

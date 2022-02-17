@@ -60,6 +60,7 @@ Ext.define('Sonicle.webtop.core.ux.MeetingBox', {
 		var me = this;
 		return {
 			xtype: 'wtfieldspanel',
+			bodyCls: 'wt-theme-dialog-bg',
 			referenceHolder: true,
 			defaults: {
 				labelAlign: 'top'
@@ -110,7 +111,7 @@ Ext.define('Sonicle.webtop.core.ux.MeetingBox', {
 						}, {
 							xtype: 'button',
 							ui: 'default-toolbar',
-							glyph: 'xf017@FontAwesome',
+							iconCls: 'far fa-clock wt-theme-glyph',
 							tooltip: me.nowTooltip,
 							handler: function() {
 								me.customPrompt.lookupReference('date').setValue(new Date());

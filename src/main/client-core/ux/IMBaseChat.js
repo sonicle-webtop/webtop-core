@@ -209,7 +209,7 @@ Ext.define('Sonicle.webtop.core.ux.IMBaseChat', {
 			xtype: 'button',
 			ui: 'default-toolbar',
 			tooltip: WT.res('wtimchat.btn-send.tip'),
-			glyph: 'xf1d9@FontAwesome',
+			iconCls: 'far fa-paper-plane wt-theme-glyph',
 			handler: function() {
 				var fld = me.messageFld();
 				me.sendMessage(fld.getValue());

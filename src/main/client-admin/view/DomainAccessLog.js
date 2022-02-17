@@ -33,7 +33,6 @@
 Ext.define('Sonicle.webtop.core.admin.view.DomainAccessLog', {
 	extend: 'WTA.sdk.DockableView',
 	requires: [
-		'Sonicle.data.BufferedStore',
 		'Sonicle.webtop.core.admin.model.GridDomainAccessLog',
 		'WTA.ux.field.Search'
 	],
@@ -104,7 +103,7 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainAccessLog', {
 						return me.mys.res('domainAccessLog.gp.status.'+sta+'.tip');
 					},
 					iconSize: WTU.imgSizeToPx('xs'),
-					header: WTF.headerWithGlyphIcon('fa fa-check-square-o'),
+					header: WTF.headerWithGlyphIcon('far fa-check-square'),
 					width: 40
 				}, {
 					dataIndex: 'sessionId',
@@ -233,7 +232,7 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainAccessLog', {
 								xtype: 'soactioncolumn',
 								items: [
 									{
-										iconCls: 'fa fa-globe',
+										iconCls: 'fas fa-globe',
 										tooltip: me.mys.res('domainAccessLog.gp.act-geolocateIp.tip'),
 										handler: function(g, ridx) {
 											var sto = g.getStore(),
@@ -252,12 +251,12 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainAccessLog', {
 												}
 											});
 										},
-										isDisabled: function(s, ridx, cidx, itm, rec) {
+										isActionDisabled: function(s, ridx, cidx, itm, rec) {
 											if (!geoAvail || rec.get('geoInfo') === true) return true;
 											return !rec.get('isAddressPublic');
 										}
 									}, {
-										iconCls: 'fa fa-clipboard',
+										iconCls: 'far fa-clipboard',
 										tooltip: me.mys.res('domainAccessLog.gp.act-copy.tip'),
 										handler: function(g, ridx) {
 											var rec = g.getStore().getAt(ridx);

@@ -98,7 +98,7 @@ Ext.define('Sonicle.webtop.core.view.CustomPanel', {
 				me.addAct('saveClose', {
 					text: WT.res('act-saveClose.lbl'),
 					tooltip: null,
-					iconCls: 'wt-icon-saveClose-xs',
+					iconCls: 'wt-icon-saveClose',
 					handler: function() {
 						me.saveView(true);
 					}
@@ -216,7 +216,7 @@ Ext.define('Sonicle.webtop.core.view.CustomPanel', {
 							features: [
 								{
 									ftype: 'sorowlookup',
-									lookupStore: me.lookupStore
+									store: me.lookupStore
 								}
 							],
 							columns: [
@@ -227,10 +227,12 @@ Ext.define('Sonicle.webtop.core.view.CustomPanel', {
 									dataIndex: 'id',
 									hideText: false,
 									getText: function(val, rec) {
-										return rec.lookupRecord ? me.res('store.customFieldType.'+rec.lookupRecord.get('type')) : val;
+										var lrec = rec.lookupRecord();
+										return lrec ? me.res('store.customFieldType.'+lrec.get('type')) : val;
 									},
 									getIconCls: function(val, rec) {
-										return rec.lookupRecord ? me.mys.cssIconCls('customField-'+rec.lookupRecord.get('type')) : val;
+										var lrec = rec.lookupRecord();
+										return lrec ? me.mys.cssIconCls('customField-'+lrec.get('type')) : val;
 									},
 									iconSize: WTU.imgSizeToPx('xs'),
 									header: me.res('customPanel.gp-fields.type.lbl'),
@@ -239,14 +241,15 @@ Ext.define('Sonicle.webtop.core.view.CustomPanel', {
 									dataIndex: 'id',
 									header: me.res('customPanel.gp-fields.name.lbl'),
 									renderer: function(val, meta, rec) {
-										return rec.lookupRecord ? rec.lookupRecord.get('name') : val;
+										var lrec = rec.lookupRecord();
+										return lrec ? lrec.get('name') : val;
 									},
 									flex: 1
 								}, {
 									xtype: 'soactioncolumn',
 									items: [
 										{
-											iconCls: 'fa fa-trash-o',
+											iconCls: 'far fa-trash-alt',
 											tooltip: WT.res('act-remove.lbl'),
 											handler: function(g, ridx) {
 												var rec = g.getStore().getAt(ridx);
@@ -261,7 +264,7 @@ Ext.define('Sonicle.webtop.core.view.CustomPanel', {
 								me.addAct('add', {
 									text: WT.res('act-add.lbl'),
 									tooltip: null,
-									iconCls: 'wt-icon-add-xs',
+									iconCls: 'wt-icon-add',
 									handler: function() {
 										me.showFieldPicker();
 									}

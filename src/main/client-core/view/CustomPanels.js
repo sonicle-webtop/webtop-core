@@ -127,7 +127,7 @@ Ext.define('Sonicle.webtop.core.view.CustomPanels', {
 						header: me.res('customPanels.gp.tags.lbl'),
 						tagsStore: me.getTagsStore(),
 						emptyText: WT.res(me.serviceId, 'customPanels.gp.tags.emp'),
-						emptyCls: 'wt-theme-text-greyed',
+						emptyCls: 'wt-theme-text-lighter2',
 						flex: 1
 					}, {
 						dataIndex: 'fieldsCount',
@@ -142,14 +142,14 @@ Ext.define('Sonicle.webtop.core.view.CustomPanels', {
 						xtype: 'soactioncolumn',
 						items: [
 							{
-								iconCls: 'fa fa-clone',
+								iconCls: 'far fa-clone',
 								tooltip: WT.res('act-clone.lbl'),
 								handler: function(g, ridx) {
 									var rec = g.getStore().getAt(ridx);
 									me.cloneCustomPanelUI(rec);
 								}
 							}, {
-								iconCls: 'fa fa-trash-o',
+								iconCls: 'far fa-trash-alt',
 								tooltip: WT.res('act-remove.lbl'),
 								handler: function(g, ridx) {
 									var rec = g.getStore().getAt(ridx);
@@ -164,7 +164,7 @@ Ext.define('Sonicle.webtop.core.view.CustomPanels', {
 				me.addAct('add', {
 					text: WT.res('act-add.lbl'),
 					tooltip: null,
-					iconCls: 'wt-icon-add-xs',
+					iconCls: 'wt-icon-add',
 					handler: function() {
 						me.addCustomPanelUI();
 					}

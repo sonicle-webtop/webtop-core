@@ -41,7 +41,7 @@ Ext.define('Sonicle.webtop.core.sdk.Sharing', {
 	
 	dockableConfig: {
 		title: '{sharing.tit@com.sonicle.webtop.core}',
-		iconCls: 'wt-icon-sharing-xs',
+		iconCls: 'wt-icon-sharing',
 		width: 450,
 		height: 380
 	},

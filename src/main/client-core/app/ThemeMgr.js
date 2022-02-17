@@ -41,7 +41,11 @@ Ext.define('Sonicle.webtop.core.app.ThemeMgr', {
 		'crisp': 'neptune',
 		'crisp-touch': 'crisp',
 		'classic': 'classic',
-		'gray': 'classic'
+		'gray': 'classic',
+		'aria': 'aria',
+		'graphite': 'graphite',
+		'material': 'material',
+		'triton': 'triton'
 	},
 	
 	metrics: {

@@ -62,7 +62,7 @@ Ext.define('Sonicle.webtop.core.ux.panel.CustomFieldsEditor', {
 				//parseWidth = function(s) { return Number.parseInt(s) + me.defaultLabelWidth; },
 				cfg;
 		
-		//if (showTip) label += ' <i class="fa fa-info-circle" aria-hidden="true"></i>';
+		//if (showTip) label += ' <i class="fas fa-info-circle" aria-hidden="true"></i>';
 		
 		if (Sonicle.String.isIn(ftype, ['text', 'textarea', 'number', 'date', 'time', 'combobox'])) {
 			cfg = {
@@ -180,7 +180,7 @@ Ext.define('Sonicle.webtop.core.ux.panel.CustomFieldsEditor', {
 				label = field.label,
 				foObj = {}, cfgObj = {}, otype, cfg, fo;
 		
-		//if (showTip) label += ' <i class="fa fa-info-circle" aria-hidden="true"></i>';
+		//if (showTip) label += ' <i class="fas fa-info-circle" aria-hidden="true"></i>';
 		
 		if (Sonicle.String.isIn(ftype, ['text', 'textarea', 'number', 'date', 'time', 'combobox'])) {
 			cfg = {

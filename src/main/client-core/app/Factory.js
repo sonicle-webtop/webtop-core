@@ -840,17 +840,18 @@ Ext.define('Sonicle.webtop.core.app.Factory', {
 			if (evalValueFn(cfg.shouldCustomize, null, val, rec, false) === true) {
 				var co = evalValueFn(cfg.getColor, cfg.colorField, val, rec, null),
 						obj = {};
-				meta.iconCls = 'x-tree-checkbox';
+				meta.iconCls = 'wt-tree-colorsquare x-tree-checkbox';
 				if (co === '#FFFFFF') {
-					meta.iconCls += ' wt-tree-checkbox-white';
+					meta.iconCls += ' wt-tree-colorsquare-framed';
 				} else {
+					meta.iconCls += ' wt-tree-colorsquare-default';
 					obj = {
 						borderColor: co,
 						backgroundColor: co
 					};
 				}
 				iconStyle = Ext.DomHelper.generateStyles(obj);
-				meta.tdCls = 'wt-grid-cell-treecolumn-colored';
+				//meta.tdCls = 'wt-grid-cell-treecolumn-colored';
 			}
 			meta.iconStyle = iconStyle;
 			if (Ext.isFunction(cfg.renderer)) {
@@ -883,22 +884,23 @@ Ext.define('Sonicle.webtop.core.app.Factory', {
 		};
 		
 		return function(val, meta, rec, ridx, cidx, sto, view) {
-			var cbxCls = '', cbxStyle;
+			var cbxCls = 'wt-tree-colorsquare', cbxStyle;
 			if (evalValueFn(cfg.shouldCustomize, null, val, rec, false) === true) {
 				var co = evalValueFn(cfg.getColor, cfg.colorField, val, rec, null),
 						cofore = Sonicle.ColorUtils.bestForeColor(co, 0.64),
 						obj = {};
 				
 				if (co === '#FFFFFF') {
-					cbxCls = 'wt-tree-checkbox-white';
+					cbxCls += ' wt-tree-colorsquare-framed';
 				} else {
+					cbxCls += ' wt-tree-colorsquare-default';
 					obj = {	borderColor: co	};
 				}
-				cbxCls += (cofore === '#000000' ? ' wt-tree-checkbox-darkmark' : ' wt-tree-checkbox-lightmark');
+				cbxCls += (cofore === '#000000' ? ' wt-tree-colorsquare-darkmark' : ' wt-tree-colorsquare-lightmark');
 				if (rec.get('checked')) obj.backgroundColor = co;
 				cbxStyle = Ext.DomHelper.generateStyles(obj);
 				meta.iconCls = 'wt-hidden';
-				meta.tdCls = 'wt-grid-cell-treecolumn-colored';
+				//meta.tdCls = 'wt-grid-cell-treecolumn-colored';
 			}
 			meta.customCheckboxCls = cbxCls;
 			meta.checkboxStyle = cbxStyle;

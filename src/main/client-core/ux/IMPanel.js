@@ -206,14 +206,14 @@ Ext.define('Sonicle.webtop.core.ux.IMPanel', {
 							xtype: 'soactioncolumn',
 							items: [
 								{
-									glyph: 'xf08e@FontAwesome',
+									iconCls: 'fas fa-external-link-alt',
 									tooltip: WT.res('act-open.lbl'),
 									handler: function(g, ridx) {
 										var rec = g.getStore().getAt(ridx);
 										me.fireChatDblClickFromRec(rec);
 									}
 								}, {
-									glyph: 'xf014@FontAwesome',
+									iconCls: 'far fa-trash-alt',
 									tooltip: WT.res('act-remove.lbl'),
 									handler: function(g, ridx) {
 										var rec = g.getStore().getAt(ridx);
@@ -303,7 +303,7 @@ Ext.define('Sonicle.webtop.core.ux.IMPanel', {
 						xtype: 'soactioncolumn',
 						items: [
 							{
-								glyph: 'xf08e@FontAwesome',
+								iconCls: 'fas fa-external-link-alt',
 								tooltip: WT.res('wtimpanel.act-openFriendChat.lbl'),
 								handler: function(g, ridx) {
 									var rec = g.getStore().getAt(ridx);

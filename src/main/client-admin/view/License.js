@@ -97,7 +97,7 @@ Ext.define('Sonicle.webtop.core.admin.view.License', {
 							},
 							listConfig: {
 								displayField: 'productName',
-								groupCls: 'wt-theme-text-greyed',
+								groupCls: 'wt-theme-text-lighter2',
 								sourceCls: 'wt-source'
 							},
 							sourceField: 'productCode',

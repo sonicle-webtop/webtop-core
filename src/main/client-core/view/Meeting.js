@@ -99,12 +99,12 @@ Ext.define('Sonicle.webtop.core.view.Meeting', {
 						{
 							xtype: 'sotext',
 							text: me.mys.res('meeting.info.tit'),
-							cls: 'wt-theme-text-tit',
+							cls: 'wt-theme-text-header1',
 							style: 'font-size:1.2em'
 						}, {
 							xtype: 'sotext',
 							text: me.mys.res('meeting.info.txt'),
-							cls: 'wt-theme-text-sub',
+							cls: 'wt-theme-text-subtitle',
 							style: 'font-size:0.9em'
 						}, {
 							xtype: 'sospacer'
@@ -128,17 +128,17 @@ Ext.define('Sonicle.webtop.core.view.Meeting', {
 					    {
 							xtype: 'button',
 							text: me.mys.res('meeting.btn-share.lbl'),
-							iconCls: 'fa fa-share-alt',
+							iconCls: 'fas fa-share-alt',
 							menu: [
 								{
 									text: me.mys.res('meeting.btn-share.mni-copy.lbl'),
-									iconCls: 'fa fa-bullseye',
+									iconCls: 'fas fa-bullseye',
 									handler: function() {
 										me.shareByCopy();
 									}
 								}, {
 									text: me.mys.res('meeting.btn-share.mni-email.lbl'),
-									iconCls: 'fa fa-envelope-o',
+									iconCls: 'far fa-envelope',
 									disabled: !me.getMApi(),
 									handler: function() {
 										me.shareByEmail();
@@ -146,7 +146,7 @@ Ext.define('Sonicle.webtop.core.view.Meeting', {
 									}
 								}, {
 									text: me.mys.res('meeting.btn-share.mni-event.lbl'),
-									iconCls: 'fa fa-calendar-check-o',
+									iconCls: 'far fa-calendar-check',
 									disabled: !me.getCApi(),
 									handler: function() {
 										me.shareByEvent();
@@ -159,7 +159,7 @@ Ext.define('Sonicle.webtop.core.view.Meeting', {
 								disabled: '{!foHasLink}'
 							},
 							text: me.mys.res('meeting.btn-start.lbl'),
-							iconCls: 'fa fa-video-camera',
+							iconCls: 'fas fa-video',
 							handler: function() {
 								Sonicle.URLMgr.open(me.getVM().get('data.link'), true);
 								me.closeView(false);

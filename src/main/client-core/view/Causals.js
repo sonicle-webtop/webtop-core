@@ -44,7 +44,7 @@ Ext.define('Sonicle.webtop.core.view.Causals', {
 	
 	dockableConfig: {
 		title: '{causals.tit}',
-		iconCls: 'wt-icon-causal-xs',
+		iconCls: 'wt-icon-causal',
 		width: 600,
 		height: 400,
 		modal: true
@@ -72,7 +72,7 @@ Ext.define('Sonicle.webtop.core.view.Causals', {
 				xtype: 'soiconcolumn',
 				dataIndex: 'causalId',
 				getIconCls: function(v,rec) {
-					return rec.get('readOnly') ? me.mys.cssIconCls('causal-ro', 'xs') : null;
+					return rec.get('readOnly') ? 'wt-icon-lock' : null;
 				},
 				getTip: function(v,rec) {
 					return rec.get('readOnly') ? me.mys.res('causals.gp.readOnly.true') : null;
@@ -109,14 +109,14 @@ Ext.define('Sonicle.webtop.core.view.Causals', {
 			tbar: [
 				me.addAct('add', {
 					text: WT.res('act-add.lbl'),
-					iconCls: 'wt-icon-add-xs',
+					iconCls: 'wt-icon-add',
 					handler: function() {
 						me.addCausal();
 					}
 				}),
-				me.addAct('remove', {
-					text: WT.res('act-remove.lbl'),
-					iconCls: 'wt-icon-remove-xs',
+				me.addAct('delete', {
+					text: WT.res('act-delete.lbl'),
+					iconCls: 'wt-icon-delete',
 					disabled: true,
 					handler: function() {
 						var sm = me.lref('gp').getSelectionModel();
@@ -143,7 +143,7 @@ Ext.define('Sonicle.webtop.core.view.Causals', {
 		me.getViewModel().bind({
 			bindTo: '{gp.selection}'
 		}, function(sel) {
-			me.getAct('remove').setDisabled((sel) ? false : true);
+			me.getAct('delete').setDisabled((sel) ? false : true);
 		});
 	},
 	

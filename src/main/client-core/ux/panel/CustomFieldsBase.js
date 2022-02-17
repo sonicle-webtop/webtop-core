@@ -161,12 +161,12 @@ Ext.define('Sonicle.webtop.core.ux.panel.CustomFieldsBase', {
 			items: [{
 				xtype: 'label',
 				text: this.emptyItemTitle,
-				cls: 'wt-theme-text-tit',
+				cls: 'wt-theme-text-header1',
 				style: 'font-size:1.2em'
 			}, {
 				xtype: 'label',
 				text: this.emptyItemText,
-				cls: 'wt-theme-text-sub',
+				cls: 'wt-theme-text-subtitle',
 				style: 'font-size:0.9em'
 			}]
 		};
@@ -210,7 +210,8 @@ Ext.define('Sonicle.webtop.core.ux.panel.CustomFieldsBase', {
 		},
 		
 		buildFieldFormulaName: function(prefix, panelId, fieldId, ftype) {
-			return 'fo-' + prefix + '-' + ftype + Ext.String.leftPad(panelId, 2, '0') + fieldId;
+			var cptlz = Ext.String.capitalize;
+			return 'fo' + cptlz(prefix) + cptlz(ftype) + Ext.String.leftPad(panelId, 2, '0') + fieldId;
 		}
 		
 		/*

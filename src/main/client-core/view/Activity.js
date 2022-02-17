@@ -39,7 +39,7 @@ Ext.define('Sonicle.webtop.core.view.Activity', {
 	
 	dockableConfig: {
 		title: '{activity.tit}',
-		iconCls: 'wt-icon-activity-xs',
+		iconCls: 'wt-icon-activity',
 		width: 430,
 		height: 220
 	},

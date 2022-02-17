@@ -62,7 +62,7 @@ Ext.define('Sonicle.webtop.core.ux.grid.TileList', {
 	 */
 	linkifyValue: false,
 	
-	clipboardIconCls: 'fa fa-clone',
+	clipboardIconCls: 'far fa-clone',
 	
 	clipboardTooltipText: 'Copy to clipboard',
 	labelTexts: undefined,
@@ -80,7 +80,7 @@ Ext.define('Sonicle.webtop.core.ux.grid.TileList', {
 			{
 				xtype: 'templatecolumn',
 				tpl: [
-					'<div class="wt-cell-caption wt-theme-text-sub" style="padding-bottom:3px">{[this.getLabel(values)]}</div>',
+					'<div class="wt-cell-caption wt-theme-text-subtitle" style="padding-bottom:3px">{[this.getLabel(values)]}</div>',
 					'<span class="{[this.getValueCls()]}">{[this.getValue(values)]}</span>',
 					{
 						getLabel: function(values) {
@@ -93,7 +93,7 @@ Ext.define('Sonicle.webtop.core.ux.grid.TileList', {
 							//return Ext.isEmpty(me.labelField) ? '' : this.value(me.labelTexts[values[me.labelField]]);
 						},
 						getValueCls: function() {
-							return me.linkifyValue ? 'wt-theme-text-lnk' : '';
+							return me.linkifyValue ? 'wt-theme-text-hyperlink' : '';
 						},
 						getValue: function(values) {
 							return Ext.isEmpty(me.valueField) ? '' : this.value(values[me.valueField]);

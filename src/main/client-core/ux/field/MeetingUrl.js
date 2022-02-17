@@ -64,7 +64,7 @@ Ext.define('Sonicle.webtop.core.ux.field.MeetingUrl', {
 			}, {
 				xtype: 'button',
 				ui: 'default-toolbar',
-				iconCls: 'fa fa-clone',
+				iconCls: 'far fa-clone',
 				tooltip: WT.res('wtmeetingfield.copy'),
 				margin: '0 2 0 0',
 				handler: function(s, e) {
@@ -74,7 +74,7 @@ Ext.define('Sonicle.webtop.core.ux.field.MeetingUrl', {
 			}, {
 				xtype: 'button',
 				ui: 'default-toolbar',
-				iconCls: 'fa fa-video-camera',
+				iconCls: 'fas fa-video',
 				tooltip: WT.res('wtmeetingfield.join'),
 				handler: function(s, e) {
 					Sonicle.URLMgr.open(me.value, true);

@@ -40,7 +40,7 @@ Ext.define('Sonicle.webtop.core.view.Causal', {
 	
 	dockableConfig: {
 		title: '{causal.tit}',
-		iconCls: 'wt-icon-causal-xs',
+		iconCls: 'wt-icon-causal',
 		width: 430,
 		height: 250
 	},
@@ -93,6 +93,7 @@ Ext.define('Sonicle.webtop.core.view.Causal', {
 					bind: '{record.masterDataId}',
 					autoLoadOnValue: true,
 					store: {
+						autoLoad: true,
 						model: 'WTA.model.Simple',
 						proxy: WTF.proxy(WT.ID, 'LookupCustomersSuppliers')
 					},

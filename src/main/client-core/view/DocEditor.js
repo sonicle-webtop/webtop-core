@@ -286,7 +286,7 @@ Ext.define('Sonicle.webtop.core.view.DocEditor', {
 					}
 				},
 				events: {
-					onDocumentReady: Ext.bind(me.onEdDocumentReady, me),
+					//onDocumentReady: Ext.bind(me.onEdDocumentReady, me),
 					onDocumentStateChange: Ext.bind(me.onEdDocumentStateChange, me)
 				}
 			});
@@ -308,7 +308,7 @@ Ext.define('Sonicle.webtop.core.view.DocEditor', {
 				xtype: 'toolbar',
 				items: [{
 					xtype: 'tbtext',
-					html: WTF.headerWithGlyphIcon('fa fa-eye') + '&nbsp;' + WT.res('docEditor.tbi-viewMode.lbl')
+					html: WTF.headerWithGlyphIcon('far fa-eye') + '&nbsp;' + WT.res('docEditor.tbi-viewMode.lbl')
 				}, '->', {
 					xtype: 'button',
 					text: 'Switch to edit mode',
@@ -320,7 +320,7 @@ Ext.define('Sonicle.webtop.core.view.DocEditor', {
 				}, '->', {
 					xtype: 'button',
 					tooltip: WT.res('act-close.lbl'),
-					glyph: 'xf00d@FontAwesome',
+					iconCls: 'fas fa-times wt-theme-glyph',
 					handler: function(s) {
 						me.removeDocked(s.up('toolbar', 1));
 					}

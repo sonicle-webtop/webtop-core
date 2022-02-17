@@ -259,7 +259,7 @@ Ext.define('Sonicle.webtop.core.view.main.Abstract', {
 			}
 		}, /*{
 			xtype: 'button',
-			glyph: 0xf0c9,
+			iconCls: 'fas fa-bars',
 			menu: {
 				items: [{
 					xtype: 'panel',
@@ -279,12 +279,13 @@ Ext.define('Sonicle.webtop.core.view.main.Abstract', {
 			}
 		},*/ {
 			xtype: 'button',
-			glyph: 0xf0c9,
+			iconCls: 'fas fa-bars wt-theme-glyph',
 			arrowVisible: false,
 			menu: {
 				xtype: 'menu',
 				plain: true,
-				items: [{
+				items: [
+					{
 						xtype: 'label',
 						text: WT.getVar('userDisplayName'),
 						cls: 'wt-menu-userdetails-main'
@@ -292,58 +293,66 @@ Ext.define('Sonicle.webtop.core.view.main.Abstract', {
 						xtype: 'label',
 						text: WT.getVar('userId'),
 						cls: 'wt-menu-userdetails-sub'
-				}, '-', {
-					xtype: 'buttongroup',
-					ui: WTA.ThemeMgr.getBase(WT.getTheme()) === 'classic' ? 'default-panel' : 'default',
-					bodyCls: 'wt-menu-bgroup-body',
-					columns: 2,
-					defaults: {
-						xtype: 'button',
-						scale: 'large',
-						iconAlign: 'center',
-						handler: 'onMenuButtonClick'
-					},
-					items: [{
-						itemId: 'options',
-						tooltip: WT.res('menu.options.tip'),
-						iconCls: 'wt-menu-options',
-						width: '4em',
-						height: '4em'
-					}, {
-						itemId: 'addons',
-						tooltip: WT.res('menu.addons.tip'),
-						iconCls: 'wt-menu-addons',
-						width: '4em',
-						height: '4em'
-					}, {
-						itemId: 'whatsnew',
-						tooltip: WT.res('menu.whatsnew.tip'),
-						disabled: !WT.getVar('wtWhatsnewEnabled'),
-						iconCls: 'wt-menu-whatsnew',
-						width: '4em',
-						height: '4em'
-					}, {
-						itemId: 'feedback',
-						tooltip: WT.res('menu.feedback.tip'),
-						disabled: !WT.isPermitted('FEEDBACK', 'MANAGE'),
-						iconCls: 'wt-menu-feedback',
-						width: '4em',
-						height: '4em'
-					}/*, {
-						itemId: 'help',
-						tooltip: WT.res('menu.help.tip'),
-						iconCls: 'wt-menu-help',
-						width: '4em',
-						height: '4em'
-					}*/, {
-						itemId: 'logout',
-						colspan: 2,
-						width: '100%',
-						scale: 'small',
-						tooltip: WT.res('menu.logout.tip'),
-						iconCls: 'wt-menu-logout'
-					}]
-				}]
+					}, 
+					'-',
+					{
+						xtype: 'buttongroup',
+						ui: WTA.ThemeMgr.getBase(WT.getTheme()) === 'classic' ? 'default-panel' : 'default',
+						border: false,
+						frame: false,
+						cls: 'wt-menu-bgroup',
+						bodyCls: 'wt-menu-bgroup-body',
+						columns: 2,
+						defaults: {
+							xtype: 'button',
+							scale: 'large',
+							iconAlign: 'center',
+							handler: 'onMenuButtonClick'
+						},
+						items: [
+							{
+								itemId: 'options',
+								tooltip: WT.res('menu.options.tip'),
+								iconCls: 'wt-menu-options',
+								width: '4em',
+								height: '4em'
+							}, {
+								itemId: 'addons',
+								tooltip: WT.res('menu.addons.tip'),
+								iconCls: 'wt-menu-addons',
+								width: '4em',
+								height: '4em'
+							}, {
+								itemId: 'whatsnew',
+								tooltip: WT.res('menu.whatsnew.tip'),
+								disabled: !WT.getVar('wtWhatsnewEnabled'),
+								iconCls: 'wt-menu-whatsnew',
+								width: '4em',
+								height: '4em'
+							}, {
+								itemId: 'feedback',
+								tooltip: WT.res('menu.feedback.tip'),
+								disabled: !WT.isPermitted('FEEDBACK', 'MANAGE'),
+								iconCls: 'wt-menu-feedback',
+								width: '4em',
+								height: '4em'
+							}/*, {
+								itemId: 'help',
+								tooltip: WT.res('menu.help.tip'),
+								iconCls: 'wt-menu-help',
+								width: '4em',
+								height: '4em'
+							}*/, {
+								itemId: 'logout',
+								colspan: 2,
+								width: '100%',
+								scale: 'small',
+								tooltip: WT.res('menu.logout.tip'),
+								iconCls: 'wt-menu-logout fas fa-sign-out-alt'
+							}
+						]
+					}
+				]
 
 
 				/*
