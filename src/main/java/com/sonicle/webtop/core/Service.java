@@ -290,7 +290,7 @@ public class Service extends BaseService implements EventListener {
 		if (!StringUtils.isBlank(boshUrl)) {
 			co.put("boshUrl", boshUrl);
 		}
-		String iceServers = ss.getWebRTC_ICEServers();
+		String iceServers = ss.getWebRTCIceServersAsStrings();
 		if (iceServers != null) {
 			co.put("iceServers", iceServers);
 		}

@@ -143,11 +143,15 @@ public class CoreServiceSettings extends BaseServiceSettings {
 		return getBoolean(SMTP_AUTH, false);
 	}
 	
-	public String getWebRTC_ICEServers() {
-		String value = getString(WEBRTC_ICE_SERVERS, null);
-        return value;
-    }
-    
+	public List<WebRTCIceServer> getWebRTCIceServers() {
+		return getObject(WEBRTC_ICE_SERVERS, new WebRTCIceServer.List(), WebRTCIceServer.List.class);
+	}
+	
+	public String getWebRTCIceServersAsStrings() {
+		WebRTCIceServer.List servers = getObject(WEBRTC_ICE_SERVERS, new WebRTCIceServer.List(), WebRTCIceServer.List.class);
+		return WebRTCIceServer.List.toJson(servers);
+	}
+	
 	public String getXMPPHost() {
         return getString(XMPP_HOST, "localhost");
     }

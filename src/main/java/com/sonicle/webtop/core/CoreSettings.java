@@ -988,4 +988,20 @@ public class CoreSettings {
 			}
 		}
 	}
+	
+	public static class WebRTCIceServer {
+		public String url;
+		public String username;
+		public String credential;
+		
+		public static class List extends ArrayList<WebRTCIceServer> {
+			public static WebRTCIceServer.List fromJson(String value) {
+				return JsonResult.gson().fromJson(value, WebRTCIceServer.List.class);
+			}
+
+			public static String toJson(WebRTCIceServer.List value) {
+				return JsonResult.gson().toJson(value, WebRTCIceServer.List.class);
+			}
+		}
+	}
 }
