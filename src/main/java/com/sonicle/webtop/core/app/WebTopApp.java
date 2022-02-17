@@ -346,7 +346,7 @@ public final class WebTopApp {
 			throw new WTRuntimeException(ex, "Error initializing VFS");
 		}
 		
-		this.conMgr = ConnectionManager.initialize(this, etcPath); // Connection Manager
+		this.conMgr = ConnectionManager.initialize(this); // Connection Manager
 		this.setMgr = SettingsManager.initialize(this); // Settings Manager
 		this.sesMgr = SessionManager.initialize(this); // Session Manager
 		

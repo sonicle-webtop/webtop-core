@@ -62,12 +62,11 @@ public class ConnectionManager implements IConnectionProvider {
 	 * Initialization method. This method should be called once.
 	 * 
 	 * @param wta WebTopApp instance.
-	 * @param configPath The optional path in which to look for configuration.
 	 * @return The instance.
 	 */
-	public static synchronized ConnectionManager initialize(WebTopApp wta, String configPath) {
+	public static synchronized ConnectionManager initialize(WebTopApp wta) {
 		if (initialized) throw new RuntimeException("Initialization already done");
-		ConnectionManager conm = new ConnectionManager(wta, configPath);
+		ConnectionManager conm = new ConnectionManager(wta);
 		initialized = true;
 		logger.info("Initialized");
 		return conm;
@@ -87,9 +86,9 @@ public class ConnectionManager implements IConnectionProvider {
 	 * Instances of this class must be created using static initialize method.
 	 * @param wta WebTopApp instance.
 	 */
-	private ConnectionManager(WebTopApp wta, String appEtcPath) {
+	private ConnectionManager(WebTopApp wta) {
 		this.wta = wta;
-		init(appEtcPath);
+		init();
 	}
 	
 	/**
@@ -114,14 +113,27 @@ public class ConnectionManager implements IConnectionProvider {
 		logger.info("Cleaned up");
 	}
 	
-	private void init(String appEtcPath) {
+	private void init() {
 		String path = null;
 		File file = null;
 		
-		// Loads dataSources configuration
-		if (!StringUtils.isBlank(appEtcPath)) {
-			path = PathUtils.concatPaths(appEtcPath, CONFIG_NAME);
+		// Locate data sources configuration file:
+		// 1 - look into custom webappsEtc directory
+		//   1.1 look for '/path/to/webappsEtc/myWebappFullName/data-sources.xml'
+		//   1.2 look for '/path/to/webappsEtc/data-sources.xml'
+		// 2 - fallback on default configuration inside webapp
+		//   2.1 look for '../META-INF/data-sources.xml'
+		
+		if (!StringUtils.isBlank(wta.getEtcPath())) {
+			path = PathUtils.concatPathParts(wta.getEtcPath(), CONFIG_NAME);
 			file = new File(path);
+		}
+		if ((file == null) || !file.exists()) {
+			String etcDir = WebTopProps.getEtcDir(wta.getProperties());
+			if (!StringUtils.isBlank(etcDir)) {
+				path = PathUtils.concatPathParts(etcDir, CONFIG_NAME);
+				file = new File(path);
+			}
 		}
 		if ((file == null) || !file.exists()) {
 			path = wta.getContextResourcePath(DEFAULT_CONFIG_RESOURCE_PATH);
@@ -136,19 +148,6 @@ public class ConnectionManager implements IConnectionProvider {
 		} catch(Exception ex) {
 			throw new RuntimeException("Unable to load dataSources configuration file", ex);
 		}
-		
-		
-		/*
-		String configResource = "/META-INF/data-sources.xml";
-		config = new DataSourcesConfig();
-		try {
-			logger.debug("Loading dataSources configuration at [{}]", path);
-			URL url = wta.getContextResource(configResource);
-			config.parseConfiguration(url);
-		} catch(Exception ex) {
-			throw new RuntimeException("Unable to load dataSources configuration file", ex);
-		}
-		*/
 		
 		// Setup core sources
 		logger.debug("Setting-up core dataSources...");
