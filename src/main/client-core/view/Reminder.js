@@ -33,7 +33,7 @@
  */
 Ext.define('Sonicle.webtop.core.view.Reminder', {
 	alternateClassName: 'WTA.view.Reminder',
-	extend: 'WTA.sdk.DockableView',
+	extend: 'WTA.sdk.UIView',
 	requires: [
 		'Sonicle.webtop.core.model.ReminderAlert',
 		'Sonicle.webtop.core.store.Snooze'
@@ -76,18 +76,22 @@ Ext.define('Sonicle.webtop.core.view.Reminder', {
 					xtype: 'button',
 					text: WT.res('reminder.btn-snooze.lbl'),
 					iconCls: 'wt-icon-snooze',
+					bind: {
+						disabled: '{!gpreminders.selection}'
+					},
 					handler: function() {
-						var sm = me.lref('gpreminders').getSelectionModel();
-						if (sm.hasSelection()) me.snoozeReminder(sm.getSelection());
+						me.snoozeReminder(me.lref('gpreminders').getSelectionModel().getSelection());
 					}
 				},
 				'->',
 				{
 					xtype: 'button',
 					text: WT.res('reminder.btn-ignore.lbl'),
+					bind: {
+						disabled: '{!gpreminders.selection}'
+					},
 					handler: function() {
-						var sm = me.lref('gpreminders').getSelectionModel();
-						if (sm.hasSelection()) me.deleteReminder(sm.getSelection());
+						me.ignoreReminder(me.lref('gpreminders').getSelectionModel().getSelection());
 					}
 				}
 			]
@@ -153,41 +157,62 @@ Ext.define('Sonicle.webtop.core.view.Reminder', {
 		});
 	},
 	
-	snoozeReminder: function(recs) {
-		var me = this,
-				cbo = me.lref('cbosnooze'),
-				sto = me.getViewModel().getStore('reminders'),
-				json = [];
-		
-		if (recs.length > 0) {
-			Ext.iterate(recs, function(rec) {
-				json.push(rec.getData({serialize: true}));
-			});
-			WT.ajaxReq(WT.ID, 'SnoozeReminder', {
-				params: {
-					now: Ext.Date.format(new Date(), 'Y-m-d H:i:s'),
-					snooze: cbo.getValue()
-				},
-				jsonData: json,
-				callback: function(success) {
-					if (success) sto.remove(recs);
-					if (sto.getCount()===0) me.closeView();
-				}
-			});
-		}
+	canCloseView: function() {
+		// Override default canCloseView, stopping close if there are some
+		// selected reminder rows: this will allow to snooze them in 
+		// overridden showConfirm method below.
+		return !this.lref('gpreminders').getSelectionModel().hasSelection();
 	},
 	
-	deleteReminder: function(rec) {
-		var me = this,
-				sto = me.getViewModel().getStore('reminders');
-		sto.remove(rec);
-		if (sto.getCount()===0) me.closeView();
+	showConfirm: function() {
+		// Override default showConfirm, hiding default message prompt but 
+		// snoozing seleted reminders row in automated way.
+		this.snoozeReminder(this.lref('gpreminders').getSelectionModel().getSelection(), true);
 	},
 	
-	openReminderUI: function(rec) {
-		var sapi = WT.getServiceApi(rec.get('serviceId'));
-		if (sapi && Ext.isFunction(sapi.openReminder)) {
-			sapi.openReminder(rec.get('type'), rec.get('instanceId'));
+	privates: {
+		snoozeReminder: function(recs, exit) {
+			var me = this,
+					cbo = me.lref('cbosnooze'),
+					sto = me.getViewModel().getStore('reminders'),
+					json = [];
+
+			if (Ext.isArray(recs) && recs.length > 0) {
+				Ext.iterate(recs, function(rec) {
+					json.push(rec.getData({serialize: true}));
+				});
+				WT.ajaxReq(WT.ID, 'SnoozeReminder', {
+					params: {
+						now: Ext.Date.format(new Date(), 'Y-m-d H:i:s'),
+						snooze: cbo.getValue()
+					},
+					jsonData: json,
+					callback: function(success) {
+						if (exit === true && success) {
+							me.closeView(false);
+						} else {
+							if (success) sto.remove(recs);
+							if (sto.getCount() === 0) me.closeView(false);
+						}
+					}
+				});
+			}
+		},
+
+		ignoreReminder: function(recs) {
+			var me = this,
+					sto = me.getViewModel().getStore('reminders');
+			if (Ext.isArray(recs) && recs.length > 0) {
+				sto.remove(recs);
+			}
+			if (sto.getCount() === 0) me.closeView(false);
+		},
+
+		openReminderUI: function(rec) {
+			var sapi = WT.getServiceApi(rec.get('serviceId'));
+			if (sapi && Ext.isFunction(sapi.openReminder)) {
+				sapi.openReminder(rec.get('type'), rec.get('instanceId'));
+			}
 		}
 	},
 	
