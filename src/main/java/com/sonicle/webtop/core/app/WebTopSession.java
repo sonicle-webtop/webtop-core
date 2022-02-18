@@ -1051,31 +1051,33 @@ public class WebTopSession {
 		String extRtl = rtl ? "-rtl" : "";
 		String extDebug = WebTopProps.getExtJsDebug(wta.getProperties()) ? "-debug" : "";
 		String extTheme = theme;
-		String extBaseTheme = StringUtils.removeEnd(theme, "-touch");
+		String extThemeName = StringUtils.removeEnd(theme, "-touch");
+		String extBaseTheme = UIBoot.getBaseExtJSTheme(extThemeName);
 		String extLang = "-" + locale.getLanguage();
+		
+		// Main: library + locales
 		js.appManifest.addJs(EXTJS_PATH + "ext-all" + extRtl + extDebug + ".js");
 		js.appManifest.addJs(EXTJS_PATH + js.appManifest.toolkit + "/locale/" + "locale" + extLang + extDebug + ".js");
-		//js.appManifest.addJs(EXTJS_PATH + "packages/ext-locale/build/" + "ext-locale" + extLang + extDebug + ".js"); // ExtJs library localization
+		// Themes: library (overrides) + styles
 		js.appManifest.addJs(EXTJS_PATH + js.appManifest.toolkit + "/" + "theme-" + extTheme + "/" + "theme-" + extTheme + extDebug + ".js");
 		js.appManifest.addCss(EXTJS_PATH + js.appManifest.toolkit + "/" + "theme-" + extTheme + "/resources/" + "theme-" + extTheme + "-all" + extRtl + extDebug + ".css");
-		//js.appManifest.addJs(EXTJS_PATH + "packages/" + "ext-theme-" + extTheme + "/build/" + "ext-theme-" + extTheme + extDebug + ".js"); // ExtJs theme overrides
-		//js.appManifest.addCss(EXTJS_PATH + "packages/" + "ext-theme-" + extTheme + "/build/resources/" + "ext-theme-" + extTheme + "-all" + extRtl + extDebug + ".css");
+		// Charts: library + styles
 		js.appManifest.addJs(EXTJS_PATH + "packages/charts/" + js.appManifest.toolkit + "/" + "charts" + extDebug + ".js");
 		js.appManifest.addCss(EXTJS_PATH + "packages/charts/" + js.appManifest.toolkit + "/" + extBaseTheme + "/resources/" + "charts-all" + extRtl + extDebug + ".css");
-		//js.appManifest.addCss(EXTJS_PATH + "packages/sencha-charts/build/" + extBaseTheme + "/resources/" + "sencha-charts-all" + extRtl + extDebug + ".css");	
+		// UX: library + styles
 		js.appManifest.addJs(EXTJS_PATH + "packages/ux/" + js.appManifest.toolkit + "/" + "ux" + extDebug + ".js");
 		js.appManifest.addCss(EXTJS_PATH + "packages/ux/" + js.appManifest.toolkit + "/" + extBaseTheme + "/resources/" + "ux-all" + extRtl + extDebug + ".css");
+		// Fonts: styles
 		js.appManifest.addCss(EXTJS_PATH + "packages/font-awesome/resources/" + "font-awesome-all" + extRtl + extDebug + ".css");
 		js.appManifest.addCss(EXTJS_PATH + "packages/font-ext/resources/" + "font-ext-all" + extRtl + extDebug + ".css");
 		js.appManifest.addCss(EXTJS_PATH + "packages/font-pictos/resources/" + "font-pictos-all" + extRtl + extDebug + ".css");
-		
-		// Include Sonicle ExtJs Extensions references
+		// Sonicle ExtJs Extensions
 		if (WebTopProps.getSoExtJsExtensionsDevMode(wta.getProperties())) {
 			js.appManifest.addPath("Sonicle", EXTJS_PATH + "packages/sonicle-extensions/src");
 		} else {
 			js.appManifest.addJs(EXTJS_PATH + "packages/sonicle-extensions/" + "sonicle-extensions" + extDebug + ".js");
 		}
-		js.appManifest.addCss(EXTJS_PATH + "packages/sonicle-extensions/" + extBaseTheme + "/resources/" + "sonicle-extensions-all" + extRtl + extDebug + ".css");
+		js.appManifest.addCss(EXTJS_PATH + "packages/sonicle-extensions/" + extThemeName + "/resources/" + "sonicle-extensions-all" + extRtl + extDebug + ".css");
 		
 		// Override default Ext error handling in order to avoid application hang.
 		// NB: This is only necessary when using ExtJs debug file!
