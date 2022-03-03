@@ -70,6 +70,13 @@
 		</dependency>
 		http://www.slf4j.org/legacy.html#jul-to-slf4j
 		-->
+		<!--
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>log4j-over-slf4j</artifactId>
+			<version>${slf4j.version}</version>
+		</dependency>
+		-->
 		<dependency>
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-core</artifactId>
@@ -102,7 +109,7 @@
 		</dependency>
 		<dependency>
 			<groupId>com.zaxxer</groupId>
-			<artifactId>HikariCP-java7</artifactId>
+			<artifactId>HikariCP</artifactId>
 			<version>${hikaricp.version}</version>
 		</dependency>
 		<dependency>
