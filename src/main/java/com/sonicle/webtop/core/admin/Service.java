@@ -1348,7 +1348,7 @@ public class Service extends BaseService {
 			
 		} catch(Throwable t) {
 			if (t instanceof WTException) {
-				logger.warn("Cannot read log file", t);
+				logger.debug("Cannot read log file", t);
 			} else {
 				logger.error("Error in GetLogContent", t);
 			}
