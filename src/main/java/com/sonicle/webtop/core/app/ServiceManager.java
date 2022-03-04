@@ -115,6 +115,7 @@ import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.commons.configuration2.tree.ImmutableNode;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.time.StopWatch;
+import org.joda.time.DateTimeZone;
 
 /**
  *
@@ -1444,7 +1445,7 @@ public class ServiceManager {
 		try {
 			logger.trace("[{}]: {}", statement.getUpgradeStatementId(), statement.getStatementBody());
 			stmt = statementCon.createStatement();
-			statement.setRunTimestamp(DateTimeUtils.now(true));
+			statement.setRunTimestamp(DateTimeUtils.now(true).withZone(DateTimeZone.getDefault()).toLocalDateTime());
 			int ret = stmt.executeUpdate(statement.getStatementBody());
 			statement.setRunStatus(OUpgradeStatement.RUN_STATUS_OK);
 			statement.setRunMessage(MessageFormat.format("Affected rows: {0}", ret));
