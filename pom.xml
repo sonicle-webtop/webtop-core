@@ -123,9 +123,9 @@
 			<version>${shiro.version}</version>
 		</dependency>
 		<dependency>
-			<groupId>org.secnod.shiro</groupId>
-			<artifactId>shiro-jersey</artifactId>
-			<version>0.2.0</version>
+			<groupId>org.apache.shiro</groupId>
+			<artifactId>shiro-jaxrs</artifactId>
+			<version>${shiro.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.glassfish.jersey.core</groupId>

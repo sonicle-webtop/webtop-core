@@ -65,11 +65,10 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 import javax.ws.rs.ext.ExceptionMapper;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.shiro.web.jaxrs.ShiroFeature;
 import org.glassfish.jersey.internal.util.collection.StringKeyIgnoreCaseMultivaluedMap;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.model.Resource;
-import org.secnod.shiro.jaxrs.ShiroExceptionMapper;
-import org.secnod.shiro.jersey.SubjectFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -87,9 +86,8 @@ public class ServiceApiJaxRsResourceApplication extends ResourceConfig {
 		WebTopApp wta = WebTopApp.getInstance();
 		if (wta == null) throw new WTRuntimeException("WTA is null");
 		
-		register(new SubjectFactory());
+		register(ShiroFeature.class); // Add Shiro integration
 		//register(new ServiceModelProcessor());
-		register(new ShiroExceptionMapper());
 		register(new AuthExceptionMapper()); // Needed for legacy encpoints (in new ones is not applicable due to explicit throws in resource)
 		register(new WTExceptionMapper()); // Needed for legacy encpoints (in new ones is not applicable due to explicit throws in resource)
 		register(org.glassfish.jersey.jackson.JacksonFeature.class);
