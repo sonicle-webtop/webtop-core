@@ -166,7 +166,10 @@ Ext.define('Sonicle.webtop.core.ux.AddressBook', {
 			params: {
 				sources: me.sourceId==="*"?[]:[ me.sourceId ],
 				query: me.lookupReference("query").getValue(),
-				limit: 0
+				limit: 0,
+				includeAuto: false,
+				includeWebTop: true,
+				alphabeticSort: true
 			}
 		});
 	},
