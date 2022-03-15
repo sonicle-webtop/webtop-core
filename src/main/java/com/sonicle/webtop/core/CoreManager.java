@@ -3028,16 +3028,16 @@ public class CoreManager extends BaseManager {
 	 * @return
 	 * @throws WTException 
 	 */
-	public List<Recipient> listProviderRecipients(RecipientFieldType fieldType, String queryText, int max, boolean builtInProvidersAtTheEnd) throws WTException {
+	public List<Recipient> listProviderRecipients(RecipientFieldType fieldType, String queryText, int max, boolean builtInProvidersAtTheEnd, boolean includeAuto, boolean includeWebTop) throws WTException {
 		final ArrayList<String> ids = new ArrayList<>();
 		if (!builtInProvidersAtTheEnd) {
-			if (autoRcptProviderEnabled) ids.add(RECIPIENT_PROVIDER_AUTO_SOURCE_ID);
-			if (webtopRcptProviderEnabled) ids.add(RECIPIENT_PROVIDER_WEBTOP_SOURCE_ID);
+			if (autoRcptProviderEnabled && includeAuto) ids.add(RECIPIENT_PROVIDER_AUTO_SOURCE_ID);
+			if (webtopRcptProviderEnabled && includeWebTop) ids.add(RECIPIENT_PROVIDER_WEBTOP_SOURCE_ID);
 		}
 		ids.addAll(listRecipientProviderSourceIds());
 		if (builtInProvidersAtTheEnd) {
-			if (autoRcptProviderEnabled) ids.add(RECIPIENT_PROVIDER_AUTO_SOURCE_ID);
-			if (webtopRcptProviderEnabled) ids.add(RECIPIENT_PROVIDER_WEBTOP_SOURCE_ID);
+			if (autoRcptProviderEnabled && includeAuto) ids.add(RECIPIENT_PROVIDER_AUTO_SOURCE_ID);
+			if (webtopRcptProviderEnabled && includeWebTop) ids.add(RECIPIENT_PROVIDER_WEBTOP_SOURCE_ID);
 		}
 		return listProviderRecipients(fieldType, ids, queryText, max);
 	}

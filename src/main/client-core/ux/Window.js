@@ -36,21 +36,33 @@ Ext.define('Sonicle.webtop.core.ux.Window', {
 	extend: 'Ext.window.Window',
 	alias: ['widget.wtwindow'],
 	
+	/**
+	 * @event beforeminimize
+	 * Fires before minimizing the window, usually because the user has clicked the minimize tool.
+	 * Return false from any listener to stop the minimizing process being completed.
+	 * @param {Ext.window.Window} this
+	 */
+	
 	canRestore: function() {
-		return (this.hidden);
+		return this.hidden;
 	},
 	
 	canMaximize: function() {
-		return (this.maximize)&& (!this.hidden);
+		return this.maximize && !this.hidden;
 	},
 	
 	canMinimize: function() {
-		return  (!this.hidden);
+		return !this.hidden;
 	},
 	
 	minimize: function() {
 		var me = this;
-		if(!me.canMinimize()) return;
-		me.hide();
+		if (me.canMinimize()) {
+			if (me.fireEvent('beforeminimize', me) !== false) {
+				me.hide();
+				return me.callParent();
+			}
+		}
+		return me;
 	}
 });

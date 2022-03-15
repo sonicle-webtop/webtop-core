@@ -178,6 +178,7 @@ import com.sonicle.webtop.vfs.model.SharingLink;
 import java.io.StringReader;
 import java.net.URI;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.HashMap;
 import org.apache.commons.vfs2.FileObject;
 import org.jivesoftware.smack.tcp.XMPPTCPConnectionConfiguration;
@@ -1591,13 +1592,16 @@ public class Service extends BaseService implements EventListener {
 			String crud = ServletUtils.getStringParameter(request, "crud", Crud.READ);
 			String query = ServletUtils.getStringParameter(request, "query", "");
 			boolean builtInAtTheEnd = ServletUtils.getBooleanParameter(request, "autoLast", false);
+			boolean includeAuto = ServletUtils.getBooleanParameter(request, "includeAuto", true);
+			boolean includeWebTop = ServletUtils.getBooleanParameter(request, "includeWebTop", true);
+			boolean alphabeticSort = ServletUtils.getBooleanParameter(request, "alphabeticSort", false);
 			RecipientFieldType rft = ServletUtils.getEnumParameter(request, "rftype", RecipientFieldType.EMAIL, RecipientFieldType.class);
 			if (crud.equals(Crud.READ)) {
 				int limit = ServletUtils.getIntParameter(request, "limit", 100);
 				if (limit==0) limit=Integer.MAX_VALUE;
 
 				if (sources.isEmpty()) {
-					items = coreMgr.listProviderRecipients(rft, query, limit, builtInAtTheEnd);
+					items = coreMgr.listProviderRecipients(rft, query, limit, builtInAtTheEnd, includeAuto, includeWebTop);
 				} else {
 					items = coreMgr.listProviderRecipients(rft, sources, query, limit);
 				}
@@ -1608,6 +1612,20 @@ public class Service extends BaseService implements EventListener {
 						r.setAddress(compileFaxPattern(r));
 					}
 				}
+				
+				if (alphabeticSort) items.sort(new Comparator<Recipient>() {
+					public int compare(Recipient o1, Recipient o2) {
+						String s1="";
+						if (o1.getPersonal()!=null) s1=o1.getPersonal();
+						s1+="<"+o1.getAddress()+">";
+						
+						String s2="";
+						if (o2.getPersonal()!=null) s2=o2.getPersonal();
+						s2+="<"+o1.getAddress()+">";
+						
+						return s1.compareTo(s2);
+					}
+				});
 				
 				new JsonResult("recipients", items, items.size()).printTo(out);
 				

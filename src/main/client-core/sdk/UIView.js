@@ -168,6 +168,8 @@ Ext.define('Sonicle.webtop.core.sdk.UIView', {
 			ct.on('show', me.onCtShow, me);
 			ct.on('beforeclose', me.onCtBeforeClose, me);
 			ct.on('close', me.onCtClose, me);
+			ct.on('beforemaximize', me.onBeforeMaximizeRestore, me);
+			ct.on('beforerestore', me.onBeforeMaximizeRestore, me);
 			
 			// Le toolbar non vengono più applicate al container ma bensì alla vista
 			// stessa, ora la view è un panel non più un component
@@ -213,6 +215,8 @@ Ext.define('Sonicle.webtop.core.sdk.UIView', {
 			ct.un('beforeclose', me.onCtBeforeClose, me);
 			ct.un('close', me.onCtClose, me);
 			ct.un('hide', me.onCtHide, me);
+			ct.un('beforemaximize', me.onBeforeMaximizeRestore, me);
+			ct.un('beforerestore', me.onBeforeMaximizeRestore, me);
 		} else if (ct.isXType('panel')) {
 			me.un('show', me.onCtShow, me);
 			me.un('beforeclose', me.onCtBeforeClose, me);
@@ -449,6 +453,14 @@ Ext.define('Sonicle.webtop.core.sdk.UIView', {
 			var me = this,
 					sid = Ext.isString(me.mys) ? me.mys : me.mys.ID;
 			return key ? WT.resTpl(sid, key) : null;
+		},
+		
+		onBeforeMaximizeRestore: function() {
+			/**
+			 * Before the user maximize or restore a window, we explicitly blur active component to avoid to lose changed values WT-1033
+			 */
+			var el = document.activeElement;
+			if (el) el.blur();
 		}
 	}
 });
