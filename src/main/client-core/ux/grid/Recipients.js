@@ -48,6 +48,14 @@ Ext.define('Sonicle.webtop.core.ux.grid.Recipients', {
 	
 	hideHeaders: true,
 	
+	config: {
+		/**
+		 * @cfg {Boolean} readOnly
+		 * `true` to mark this as readOnly, disabling rows editing.
+		 */
+		readOnly: false
+	},
+	
 	/**
 	 * @cfg {String} sid
 	 * Webtop service ID.
@@ -143,6 +151,9 @@ Ext.define('Sonicle.webtop.core.ux.grid.Recipients', {
 				clicksToEdit: 1,
 				autoEncode: true,
 				listeners: {
+					beforeedit: function() {
+						if (me.getReadOnly() === true) return false;
+					},
 					rcpteditstart: function(s, rec, ed) {
 						if (!Ext.isEmpty(me.recipientLinkField) && rec && ed && ed.field.isXType('wtrcptsuggestcombo')) {
 							ed.field.setIdValue(rec.get(me.recipientLinkField));
