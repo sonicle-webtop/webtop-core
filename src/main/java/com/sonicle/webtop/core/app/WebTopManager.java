@@ -40,7 +40,7 @@ import com.sonicle.commons.LangUtils;
 import com.sonicle.commons.PathUtils;
 import com.sonicle.commons.URIUtils;
 import com.sonicle.commons.cache.AbstractBulkCache;
-import com.sonicle.commons.concurrent.KeyedReentrantLocksNew;
+import com.sonicle.commons.concurrent.KeyedReentrantLocks;
 import com.sonicle.commons.db.DbUtils;
 import com.sonicle.commons.l4j.ProductLicense;
 import com.sonicle.commons.time.DateTimeUtils;
@@ -188,7 +188,7 @@ public final class WebTopManager {
 	public static final String GROUPID_PEC_ACCOUNTS = "pec-accounts";
 	
 	private final CacheDomainInfo domainCache = new CacheDomainInfo();
-	private final KeyedReentrantLocksNew<String> lockSecretGet = new KeyedReentrantLocksNew<>();
+	private final KeyedReentrantLocks<String> lockSecretGet = new KeyedReentrantLocks<>();
 	private final Map<String, ProductLicense> productLicenseCache = new ConcurrentHashMap<>();
 	
 	private final Object lock1 = new Object();

@@ -32,7 +32,7 @@
  */
 package com.sonicle.webtop.core.app.shiro;
 
-import com.sonicle.commons.concurrent.KeyedReentrantLocksNew;
+import com.sonicle.commons.concurrent.KeyedReentrantLocks;
 import com.sonicle.commons.net.IPUtils;
 import com.sonicle.commons.time.DateTimeUtils;
 import com.sonicle.commons.web.ServletUtils;
@@ -89,7 +89,7 @@ public class WTFormAuthFilter extends FormAuthenticationFilter {
 	public static final String COOKIE_DEVICEID = "DID";
 	public static final String COOKIE_WEBTOP_CLIENTID = "CID";
 	
-	private final KeyedReentrantLocksNew<String> lockSessionId = new KeyedReentrantLocksNew<>();
+	private final KeyedReentrantLocks<String> lockSessionId = new KeyedReentrantLocks<>();
 	
 	@Override
 	protected boolean onLoginSuccess(AuthenticationToken token, Subject subject, ServletRequest request, ServletResponse response) throws Exception {

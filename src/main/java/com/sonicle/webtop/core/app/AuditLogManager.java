@@ -37,7 +37,7 @@ import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.sonicle.commons.EnumUtils;
 import com.sonicle.commons.InternetAddressUtils;
-import com.sonicle.commons.concurrent.KeyedReentrantLocksNew;
+import com.sonicle.commons.concurrent.KeyedReentrantLocks;
 import com.sonicle.commons.db.DbUtils;
 import com.sonicle.commons.http.HttpClientUtils;
 import com.sonicle.commons.net.IPUtils;
@@ -125,7 +125,7 @@ public class AuditLogManager {
 			.expireAfterWrite(10, TimeUnit.MINUTES)
 			.maximumSize(100)
 			.build();
-	private final KeyedReentrantLocksNew<String> lockKnownDevice = new KeyedReentrantLocksNew<>();
+	private final KeyedReentrantLocks<String> lockKnownDevice = new KeyedReentrantLocks<>();
 	
 	/**
 	 * Private constructor.
