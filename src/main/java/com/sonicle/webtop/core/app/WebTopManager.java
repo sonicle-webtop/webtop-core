@@ -40,7 +40,7 @@ import com.sonicle.commons.LangUtils;
 import com.sonicle.commons.PathUtils;
 import com.sonicle.commons.URIUtils;
 import com.sonicle.commons.cache.AbstractBulkCache;
-import com.sonicle.commons.concurrent.KeyedReentrantLocks;
+import com.sonicle.commons.concurrent.KeyedReentrantLocksNew;
 import com.sonicle.commons.db.DbUtils;
 import com.sonicle.commons.l4j.ProductLicense;
 import com.sonicle.commons.time.DateTimeUtils;
@@ -188,7 +188,7 @@ public final class WebTopManager {
 	public static final String GROUPID_PEC_ACCOUNTS = "pec-accounts";
 	
 	private final CacheDomainInfo domainCache = new CacheDomainInfo();
-	private final KeyedReentrantLocks lockSecretGet = new KeyedReentrantLocks<String>();
+	private final KeyedReentrantLocksNew<String> lockSecretGet = new KeyedReentrantLocksNew<>();
 	private final Map<String, ProductLicense> productLicenseCache = new ConcurrentHashMap<>();
 	
 	private final Object lock1 = new Object();
@@ -828,10 +828,12 @@ public final class WebTopManager {
 	
 	public String getUserSecret(UserProfileId profileId) throws WTException {
 		UserDAO useDao = UserDAO.getInstance();
-		Connection con = null;
 		
 		try {
-			try (KeyedReentrantLocks.KeyedLock lock = lockSecretGet.acquire(profileId.toString())) {
+			lockSecretGet.lock(profileId.toString());
+			Connection con = null;
+			
+			try {
 				con = wta.getConnectionManager().getConnection();
 				OUser ouser = useDao.selectSecretByProfile(con, profileId.getDomainId(), profileId.getUserId());
 				if (ouser == null) throw new WTException("User not found [{}]", profileId);
@@ -844,12 +846,15 @@ public final class WebTopManager {
 					}
 				}
 				return secret;
+				
+			} catch(Throwable t) {
+				throw ExceptionUtils.wrapThrowable(t);
+			} finally {
+				DbUtils.closeQuietly(con);
 			}
-			
-		} catch(Throwable t) {
-			throw ExceptionUtils.wrapThrowable(t);
+
 		} finally {
-			DbUtils.closeQuietly(con);
+			lockSecretGet.unlock(profileId.toString());
 		}
 	}
 	

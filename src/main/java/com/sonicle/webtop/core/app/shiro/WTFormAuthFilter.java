@@ -32,7 +32,7 @@
  */
 package com.sonicle.webtop.core.app.shiro;
 
-import com.sonicle.commons.concurrent.KeyedReentrantLocks;
+import com.sonicle.commons.concurrent.KeyedReentrantLocksNew;
 import com.sonicle.commons.net.IPUtils;
 import com.sonicle.commons.time.DateTimeUtils;
 import com.sonicle.commons.web.ServletUtils;
@@ -59,6 +59,7 @@ import com.sonicle.webtop.core.util.IdentifierUtils;
 import inet.ipaddr.IPAddress;
 import java.io.IOException;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
@@ -88,7 +89,7 @@ public class WTFormAuthFilter extends FormAuthenticationFilter {
 	public static final String COOKIE_DEVICEID = "DID";
 	public static final String COOKIE_WEBTOP_CLIENTID = "CID";
 	
-	private final KeyedReentrantLocks lockSessionId = new KeyedReentrantLocks<String>();
+	private final KeyedReentrantLocksNew<String> lockSessionId = new KeyedReentrantLocksNew<>();
 	
 	@Override
 	protected boolean onLoginSuccess(AuthenticationToken token, Subject subject, ServletRequest request, ServletResponse response) throws Exception {
@@ -114,10 +115,15 @@ public class WTFormAuthFilter extends FormAuthenticationFilter {
 		UserProfileId profileId = new UserProfileId(((UsernamePasswordDomainToken)token).getDomain(), ((UsernamePasswordDomainToken)token).getUsername());
 		WebTopSession webtopSession = SessionContext.getCurrent();
 		if (webtopSession != null) {
-			try (KeyedReentrantLocks.KeyedLock lock = lockSessionId.tryAcquire(webtopSession.getId(), 60 * 1000)) {
-				if (lock != null) {
-					initDeviceId(profileId, httpRequest, httpResponse, webtopSession.getSession());
-				}
+			final String sessionId = webtopSession.getId();
+			try {
+				lockSessionId.tryLock(sessionId, 60, TimeUnit.SECONDS);
+				initDeviceId(profileId, httpRequest, httpResponse, webtopSession.getSession());
+				
+			} catch (InterruptedException ex) {
+				// Do nothing...
+			} finally {
+				lockSessionId.unlock(sessionId);
 			}
 			
 			// Legacy ClientID, in future this will be replaced by DeviceID!

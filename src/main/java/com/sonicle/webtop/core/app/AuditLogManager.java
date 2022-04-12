@@ -37,7 +37,7 @@ import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.sonicle.commons.EnumUtils;
 import com.sonicle.commons.InternetAddressUtils;
-import com.sonicle.commons.concurrent.KeyedReentrantLocks;
+import com.sonicle.commons.concurrent.KeyedReentrantLocksNew;
 import com.sonicle.commons.db.DbUtils;
 import com.sonicle.commons.http.HttpClientUtils;
 import com.sonicle.commons.net.IPUtils;
@@ -125,7 +125,7 @@ public class AuditLogManager {
 			.expireAfterWrite(10, TimeUnit.MINUTES)
 			.maximumSize(100)
 			.build();
-	private final KeyedReentrantLocks lockKnownDevice = new KeyedReentrantLocks<String>();
+	private final KeyedReentrantLocksNew<String> lockKnownDevice = new KeyedReentrantLocksNew<>();
 	
 	/**
 	 * Private constructor.
@@ -304,8 +304,8 @@ public class AuditLogManager {
 		if (!initialized) return false;
 		
 		final String key = profileId.toString() + deviceId;
-		try (KeyedReentrantLocks.KeyedLock lock = lockKnownDevice.tryAcquire(key, 60 * 1000)) {
-			if (lock == null) return false;
+		try {
+			lockKnownDevice.tryLock(key, 60, TimeUnit.SECONDS);
 			
 			AuditKnownDeviceDAO akdDao = AuditKnownDeviceDAO.getInstance();
 			Connection con = null;
@@ -317,13 +317,18 @@ public class AuditLogManager {
 					akdDao.insert(con, profileId.getDomainId(), profileId.getUserId(), deviceId, BaseDAO.createRevisionTimestamp());
 				}
 				return ret == 1;
-				
+
 			} catch(Throwable t) {
 				throw ExceptionUtils.wrapThrowable(t);
 			} finally {
 				DbUtils.closeQuietly(con);
-			}	
-		}	
+			}
+			
+		} catch (InterruptedException ex) {
+			return false;
+		} finally {
+			lockKnownDevice.unlock(key);
+		}
 	}
 	
 	public IPLookupResponse getIPGeolocationData(final String domainId, final String ipAddress) {
