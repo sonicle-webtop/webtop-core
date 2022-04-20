@@ -642,6 +642,18 @@ Ext.define('Sonicle.webtop.core.app.WTPrivate', {
 	},
 	
 	/**
+	 * Convenience function to prompt warning before following a link.
+	 * @param {String} href The link to follow.
+	 */
+	handleConfirmAndFollowLink: function(href) {
+		WT.confirm(WT.res('com.sonicle.webtop.core','confirm.followLink')+"\n\n"+href, function(bid) {
+			if (bid === 'yes') window.open(href);
+		},{
+			config: { icon: Ext.Msg.WARNING  } 
+		});
+	},
+	
+	/**
 	 * Convenience function to run a phone call through the configured pbx.
 	 * @param {String} number The number to call.
 	 */
