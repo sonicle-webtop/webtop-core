@@ -648,7 +648,8 @@ Ext.define('Sonicle.webtop.core.app.WTPrivate', {
 	handleConfirmAndFollowLink: function(href) {
 		WT.confirm(WT.res('com.sonicle.webtop.core','confirm.followLink')+"\n\n"+href, function(bid) {
 			if (bid === 'yes') window.open(href);
-		},{
+		},
+		this, {
 			config: { icon: Ext.Msg.WARNING  } 
 		});
 	},
