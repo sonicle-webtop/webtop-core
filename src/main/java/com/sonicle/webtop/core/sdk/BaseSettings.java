@@ -59,6 +59,8 @@ public abstract class BaseSettings {
 	public abstract boolean setInteger(String key, Integer value);
 	public abstract Long getLong(String key, Long defaultValue);
 	public abstract boolean setLong(String key, Long value);
+	public abstract Float getFloat(String key, Float defaultValue);
+	public abstract boolean setFloat(String key, Float value);
 	
 	public <T>T getObject(String key, T defaultValue, Class<T> type) {
 		String value = getString(key, null);

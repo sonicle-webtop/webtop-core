@@ -120,6 +120,16 @@ public abstract class BaseUserSettings extends BaseSettings {
 		return setm.setUserSetting(profileId.getDomainId(), profileId.getUserId(), serviceId, key, value);
 	}
 	
+	@Override
+	public Float getFloat(String key, Float defaultValue) {
+		return LangUtils.value(setm.getUserSetting(profileId.getDomainId(), profileId.getUserId(), serviceId, key), defaultValue);
+	}
+	
+	@Override
+	public boolean setFloat(String key, Float value) {
+		return setm.setUserSetting(profileId.getDomainId(), profileId.getUserId(), serviceId, key, value);
+	}
+	
 	public boolean clear(String key) {
 		return setm.deleteUserSetting(profileId.getDomainId(), profileId.getUserId(), serviceId, key);
 	}

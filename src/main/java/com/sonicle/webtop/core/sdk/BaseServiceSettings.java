@@ -114,4 +114,15 @@ public abstract class BaseServiceSettings extends BaseSettings {
 	public boolean setLong(String key, Long value) {
 		return setMgr.setServiceSetting(domainId, serviceId, key, value);
 	}
+	
+	@Override
+	public Float getFloat(String key, Float defaultValue) {
+		return LangUtils.value(setMgr.getServiceSetting(domainId, serviceId, key), defaultValue);
+	}
+	
+	@Override
+	public boolean setFloat(String key, Float value) {
+		return setMgr.setServiceSetting(domainId, serviceId, key, value);
+	}
+	
 }
