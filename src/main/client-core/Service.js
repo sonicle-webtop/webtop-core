@@ -52,6 +52,13 @@ Ext.define('Sonicle.webtop.core.Service', {
 	],
 	
 	vwrem: null,
+	api: null,
+	
+	getApiInstance: function() {
+		var me = this;
+		if (!me.api) me.api = Ext.create('Sonicle.webtop.core.ServiceApi', {service: me});
+		return me.api;
+	},
 	
 	init: function() {
 		var me = this, dparts = {}, cont = [];
@@ -872,6 +879,35 @@ Ext.define('Sonicle.webtop.core.Service', {
 				//value: 'this'
 			}
 		});
+	},
+	
+	showAuditLog: function(serviceId, context, action, referenceId, dataToStringFunction, opts) {
+		var me = this,
+				opts = opts || {};
+		
+		WT.ajaxReq(WT.ID, 'LookupAudit', {
+			params: {
+				auditServiceId: serviceId,
+				auditContext: context,
+				auditAction: action,
+				auditReferenceId: referenceId
+			},
+			callback: function(success,json) {
+				if (success) {
+					var value = Ext.callback(dataToStringFunction, me, [json.data]);
+					WT.confirm(opts.text || WT.res('act-auditActions.lbl'), null, me, {
+						buttons: Ext.Msg.OK,
+						title: WT.res('audit.info.tit'),
+						instClass: 'Sonicle.webtop.core.ux.AuditWindow',
+						config: {
+							value: value
+						}
+					});
+				} else {
+					WT.error(json.message);
+				}
+			}
+		});	
 	},
 	
 	privates: {

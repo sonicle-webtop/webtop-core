@@ -591,6 +591,12 @@ public class WT {
 		logMgr.write(RunContext.getRunProfileId(), SessionContext.getCurrentId(), serviceId, context, action, entries);
 	}
 	
+	public static void renameAuditLogReference(final String serviceId, final String context, final String oldReference, final String newReference) {
+		AuditLogManager logMgr = getWTA().getAuditLogManager();
+		if (logMgr == null) return;
+		logMgr.renameReference(RunContext.getRunProfileId(), serviceId, context, oldReference, newReference);
+	}
+	
 	public static void notify(UserProfileId profileId, ServiceMessage message) {
 		WT.notify(profileId, message, false);
 	}

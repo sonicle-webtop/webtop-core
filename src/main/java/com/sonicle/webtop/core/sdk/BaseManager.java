@@ -328,6 +328,16 @@ public abstract class BaseManager {
 		if (isAuditEnabled()) WT.writeAuditLog(SERVICE_ID, context, action, entries);
 	}
 	
+	/**
+	 * Rename the reference in the previous audit-log entries.
+	 * @param context A string that identifies the context involved.
+	 * @param oldReference A string that uniquely identifies the old item (of context above) that suffered the action.
+	 * @param newReference A string that uniquely identifies the new item (of context above) that suffered the action.
+	 */
+	public void renameAuditLogReference(final String context, final String oldReference, final String newReference) {
+		if (isAuditEnabled()) WT.renameAuditLogReference(SERVICE_ID, context, oldReference, newReference);
+	}
+	
 	public Session getMailSession() {
 		WebTopSession wts = SessionContext.getCurrent(false);
 		Session s=(wts != null) ? wts.getMailSession() : null;

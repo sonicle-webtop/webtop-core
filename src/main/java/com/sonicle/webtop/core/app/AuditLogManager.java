@@ -210,6 +210,27 @@ public class AuditLogManager {
 		});
 	}
 	
+	public void renameReference(UserProfileId profileId, String serviceId, String context, String oldReference, String newReference) {
+		if (!initialized) return;
+		CoreServiceSettings css = new CoreServiceSettings(wta.getSettingsManager(), CoreManifest.ID, profileId.getDomainId());
+		boolean impersonated = RunContext.isImpersonated();
+		
+		if (impersonated && !css.isAuditLogImpersonated()) return;
+		WT.runPrivileged(() -> {
+			AuditLogDAO dao = AuditLogDAO.getInstance();
+			Connection con = null;
+
+			try {
+				con = WT.getCoreConnection();
+				dao.updateReferences(con, serviceId, profileId.getDomain(), context, oldReference, newReference);
+			} catch(SQLException | DAOException ex) {
+				logger.error("DB error", ex);
+			} finally {
+				DbUtils.closeQuietly(con);
+			}
+		});
+	}
+	
 	public boolean isKnownDeviceVerificationEnabled(final UserProfileId profileId) {
 		return isKnownDeviceVerificationEnabled(profileId.getDomainId());
 	}

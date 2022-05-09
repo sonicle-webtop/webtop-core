@@ -40,7 +40,10 @@ import com.sonicle.commons.LangUtils;
 import com.sonicle.commons.URIUtils;
 import com.sonicle.commons.beans.VirtualAddress;
 import com.sonicle.commons.db.DbUtils;
+import com.sonicle.commons.time.DateTimeUtils;
 import com.sonicle.commons.web.json.CompositeId;
+import com.sonicle.commons.web.json.JsonResult;
+import com.sonicle.commons.web.json.JsonUtils;
 import com.sonicle.commons.web.json.ipstack.IPLookupResponse;
 import com.sonicle.security.Principal;
 import com.sonicle.security.auth.directory.AbstractDirectory;
@@ -160,11 +163,13 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import jakarta.mail.internet.InternetAddress;
+import java.util.HashMap;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.client.utils.URIBuilder;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
+import org.joda.time.format.DateTimeFormatter;
 import org.slf4j.Logger;
 
 /**
@@ -776,7 +781,12 @@ public class CoreManager extends BaseManager {
 			Activity ret = doActivityUpdate(true, con, activity);
 			
 			if (isAuditEnabled()) {
-				writeAuditLog(AuditContext.ACTIVITY, AuditAction.CREATE, ret.getActivityId(), null);
+				writeAuditLog(
+					AuditContext.ACTIVITY,
+					AuditAction.CREATE,
+					ret.getActivityId(),
+					JsonUtils.toJson("description", ret.getDescription())
+				);
 			}
 			
 			return ret;
@@ -800,7 +810,12 @@ public class CoreManager extends BaseManager {
 			if (ret == null) throw new WTNotFoundException("Activity not found [{}]", activity.getActivityId());
 			
 			if (isAuditEnabled()) {
-				writeAuditLog(AuditContext.ACTIVITY, AuditAction.UPDATE, ret.getActivityId(), null);
+				writeAuditLog(
+					AuditContext.ACTIVITY,
+					AuditAction.UPDATE,
+					ret.getActivityId(),
+					JsonUtils.toJson("description", ret.getDescription())
+				);
 			}
 			
 			return ret;
@@ -911,7 +926,12 @@ public class CoreManager extends BaseManager {
 			Causal ret = doCausalUpdate(true, con, causal);
 			
 			if (isAuditEnabled()) {
-				writeAuditLog(AuditContext.ACTIVITY, AuditAction.CREATE, ret.getCausalId(), null);
+				writeAuditLog(
+					AuditContext.CAUSAL,
+					AuditAction.CREATE,
+					ret.getCausalId(),
+					JsonUtils.toJson("description", ret.getDescription())
+				);
 			}
 			
 			return ret;
@@ -935,7 +955,12 @@ public class CoreManager extends BaseManager {
 			if (ret == null) throw new WTNotFoundException("Causal not found [{}]", causal.getCausalId());
 			
 			if (isAuditEnabled()) {
-				writeAuditLog(AuditContext.CAUSAL, AuditAction.UPDATE, ret.getCausalId(), null);
+				writeAuditLog(
+					AuditContext.CAUSAL,
+					AuditAction.UPDATE,
+					ret.getCausalId(),
+					JsonUtils.toJson("description", ret.getDescription())
+				);
 			}
 			
 			return ret;
@@ -1233,8 +1258,17 @@ public class CoreManager extends BaseManager {
 			Tag ret = doTagUpdate(true, con, tag);
 			
 			eventManager.fireEvent(new TagChangedEvent(this, ChangedEvent.Operation.CREATE));
+			HashMap<String, String> tagDetails = new HashMap<>();
+			tagDetails.put("description", ret.getName());
+			tagDetails.put("color", ret.getColor());
+			
 			if (isAuditEnabled()) {
-				writeAuditLog(AuditContext.TAG, AuditAction.CREATE, ret.getTagId(), ret.getName());
+				writeAuditLog(
+					AuditContext.TAG,
+					AuditAction.CREATE,
+					ret.getTagId(),
+					JsonResult.gson().toJson(tagDetails)
+				);
 			}
 			
 			return ret;
@@ -1271,8 +1305,17 @@ public class CoreManager extends BaseManager {
 			if (ret == null) throw new WTNotFoundException("Tag not found [{}]", tag.getTagId());
 			
 			eventManager.fireEvent(new TagChangedEvent(this, ChangedEvent.Operation.UPDATE));
+			HashMap<String, String> tagDetails = new HashMap<>();
+			tagDetails.put("description", ret.getName());
+			tagDetails.put("color", ret.getColor());
+			
 			if (isAuditEnabled()) {
-				writeAuditLog(AuditContext.TAG, AuditAction.UPDATE, ret.getTagId(), null);
+				writeAuditLog(
+					AuditContext.TAG,
+					AuditAction.UPDATE,
+					ret.getTagId(),
+					JsonResult.gson().toJson(tagDetails)
+				);
 			}
 			
 			return ret;
@@ -1311,6 +1354,26 @@ public class CoreManager extends BaseManager {
 		} finally {
 			DbUtils.closeQuietly(con);
 		}
+	}
+	
+	public HashMap<String,List<String>> compareTags(List<String> oldTags, List<String> newTags) {
+		HashMap<String, List<String>> audit = new HashMap<>();
+		
+		if (!oldTags.isEmpty() && !newTags.isEmpty()) {
+			for (int i = 0; i < oldTags.size(); i++) {
+				int index = newTags.indexOf(oldTags.get(i));
+				if (index > -1) {
+					oldTags.remove(i);
+					newTags.remove(index);
+					i--;
+				}
+			}
+		}
+
+		if (!newTags.isEmpty()) audit.put("set", newTags);
+		if (!oldTags.isEmpty()) audit.put("unset", oldTags);
+		
+		return audit;
 	}
 	
 	public Map<String, CustomPanel> listCustomPanels(final String serviceId) throws WTException {
@@ -1806,12 +1869,16 @@ public class CoreManager extends BaseManager {
 	}
 	
 	private AuditLog createAuditLog(String domainId, OAuditLog olog) {
-		AuditLog log=new AuditLog();
+		AuditLog log = new AuditLog();
+		UserProfileId uid = new UserProfileId(domainId,olog.getUserId());
+		
+		DateTimeZone userTz = DateTimeZone.forID(WT.getUserData(uid).getTimeZoneId());
+		DateTimeFormatter ymdhmsZoneFmt = DateTimeUtils.createYmdHmsFormatter(userTz);
 		
 		log.setAuditLogId(olog.getAuditLogId());
-		log.setTimestamp(olog.getTimestamp());
+		log.setTimestamp(ymdhmsZoneFmt.print(olog.getTimestamp()));
 		log.setUserId(olog.getUserId());
-		log.setUserName(WT.getUserData(new UserProfileId(domainId,olog.getUserId())).getDisplayName());
+		log.setUserName(WT.getUserData(uid).getDisplayName());
 		log.setServiceId(olog.getServiceId());
 		log.setContext(olog.getContext());
 		log.setAction(olog.getAction());

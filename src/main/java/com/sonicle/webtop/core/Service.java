@@ -818,7 +818,7 @@ public class Service extends BaseService implements EventListener {
 			UserProfile profile = getEnv().getProfile();
 			String serviceId = ServletUtils.getStringParameter(request, "auditServiceId", true);
 			String context = ServletUtils.getStringParameter(request, "auditContext", true);
-			String action = ServletUtils.getStringParameter(request, "auditAction", true);
+			String action = ServletUtils.getStringParameter(request, "auditAction", false);
 			String referenceId = ServletUtils.getStringParameter(request, "auditReferenceId", true);
 			
 			List<AuditLog> items=new ArrayList<>();
