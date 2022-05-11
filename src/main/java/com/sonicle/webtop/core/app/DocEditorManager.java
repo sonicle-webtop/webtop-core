@@ -70,8 +70,8 @@ import org.slf4j.LoggerFactory;
  *
  * @author malbinola
  */
-public class DocEditorManager extends AbstractAppManager {
-	private static final Logger logger = LoggerFactory.getLogger(DocEditorManager.class);
+public class DocEditorManager extends AbstractAppManager<DocEditorManager> {
+	private static final Logger LOGGER = LoggerFactory.getLogger(DocEditorManager.class);
 	private static final String DOCUMENTTYPE_TEXT = "text";
 	private static final Set<String> EXTENSIONS_TEXT = Collections.unmodifiableSet(new HashSet<>(Arrays.asList(
 		"doc", "docm", "docx", "dot", "dotm", "dotx", "epub", "fodt", "htm", "html", "mht", "odt", "ott", "pdf", "rtf", "txt", "djvu", "xps"
@@ -94,8 +94,13 @@ public class DocEditorManager extends AbstractAppManager {
 	DocEditorManager(WebTopApp wta, final long timeToLiveMillis) {
 		super(wta);
 		this.timeToLiveMillis = timeToLiveMillis;
-		logger.info("Initialized");
-		logger.debug("timeToLive: {}", timeToLiveMillis);
+		initialized();
+		LOGGER.debug("timeToLive: {}", timeToLiveMillis);
+	}
+
+	@Override
+	protected Logger internalGetLogger() {
+		return LOGGER;
 	}
 	
 	@Override
@@ -104,65 +109,75 @@ public class DocEditorManager extends AbstractAppManager {
 		sessionIdByEditingId.clear();
 		editingIdsBySessionId.clear();
 		expirationCandidates.clear();
-		logger.info("Cleaned up");
 	}
 	
 	public DocumentConfig registerDocumentHandler(String sessionId, BaseDocEditorDocumentHandler docHandler, String filename, long lastModifiedTime) throws WTException, FileSystemException {
-		lock.lock();
+		readyLock();
 		try {
-			internalCleanupExpired(System.currentTimeMillis());
-			String documentType = getDocumentType(filename);
-			if (documentType == null) throw new WTException("File is not supported by DocumentEditor [{}]", filename);
-			String ext = FilenameUtils.getExtension(filename);
-			
-			String editingId = buildEditingId(RunContext.getRunProfileId());
-			String secret = wta.getDocumentServerSecretOut(docHandler.getTargetProfileId().getDomainId());
-			//TODO: read the algo from a dedicated setting
-			String token = StringUtils.isBlank(secret) ? null : generateToken(secret.getBytes(StandardCharsets.UTF_8), SignatureAlgorithm.HS256);
-			String domainPublicName = WT.getDomainPublicName(docHandler.getTargetProfileId().getDomainId());
-			String key = buildDocumentKey(docHandler.getDocumentUniqueId(), lastModifiedTime);
-			String baseUrl = wta.getDocumentServerLoopbackUrl();
-			String url = generateUrl(baseUrl, domainPublicName, sessionId, editingId).toString();
-			String callbackUrl = buildCallbackUrl(baseUrl, domainPublicName, sessionId, editingId).toString();
-			
-			logger.debug("Registering DocumentHandler [{}, {}, {}, {} -> {}]", editingId, docHandler.getTargetProfileId().getDomainId(), sessionId, docHandler.getDocumentUniqueId(), filename);
-			editingIdsBySessionId.put(sessionId, editingId);
-			sessionIdByEditingId.put(editingId, sessionId);
-			handlers.put(editingId, docHandler);
-			
-			logger.debug("Document URL: {}", url);
-			logger.debug("Document callback URL: {}", callbackUrl);
-			logger.debug("JWT: {}", token);
-			
-			return new DocumentConfig(editingId, token, documentType, UriParser.decode(filename), ext, key, url, callbackUrl, docHandler.isWriteSupported());
-		
-		} catch(URISyntaxException ex) {
-			logger.error("Unable to build URL", ex);
-			return null;
+			try {
+				internalCleanupExpired(System.currentTimeMillis());
+				String documentType = getDocumentType(filename);
+				if (documentType == null) throw new WTException("File is not supported by DocumentEditor [{}]", filename);
+				String ext = FilenameUtils.getExtension(filename);
+
+				String editingId = buildEditingId(RunContext.getRunProfileId());
+				String secret = getWebTopApp().getDocumentServerSecretOut(docHandler.getTargetProfileId().getDomainId());
+				//TODO: read the algo from a dedicated setting
+				String token = StringUtils.isBlank(secret) ? null : generateToken(secret.getBytes(StandardCharsets.UTF_8), SignatureAlgorithm.HS256);
+				String domainPublicName = WT.getDomainPublicName(docHandler.getTargetProfileId().getDomainId());
+				String key = buildDocumentKey(docHandler.getDocumentUniqueId(), lastModifiedTime);
+				String baseUrl = getWebTopApp().getDocumentServerLoopbackUrl();
+				String url = generateUrl(baseUrl, domainPublicName, sessionId, editingId).toString();
+				String callbackUrl = buildCallbackUrl(baseUrl, domainPublicName, sessionId, editingId).toString();
+
+				LOGGER.debug("Registering DocumentHandler [{}, {}, {}, {} -> {}]", editingId, docHandler.getTargetProfileId().getDomainId(), sessionId, docHandler.getDocumentUniqueId(), filename);
+				editingIdsBySessionId.put(sessionId, editingId);
+				sessionIdByEditingId.put(editingId, sessionId);
+				handlers.put(editingId, docHandler);
+
+				LOGGER.debug("Document URL: {}", url);
+				LOGGER.debug("Document callback URL: {}", callbackUrl);
+				LOGGER.debug("JWT: {}", token);
+
+				return new DocumentConfig(editingId, token, documentType, UriParser.decode(filename), ext, key, url, callbackUrl, docHandler.isWriteSupported());
+
+			} catch(URISyntaxException ex) {
+				LOGGER.error("Unable to build URL", ex);
+				return null;
+			}
 		} finally {
-			lock.unlock();
+			readyUnlock();
 		}
 	}
 	
 	public void unregisterDocumentHandler(String editingId) {
-		lock.lock();
 		try {
-			logger.debug("Unregistering DocumentHandler [{}]", editingId);
-			String sessionId = sessionIdByEditingId.remove(editingId);
-			editingIdsBySessionId.remove(sessionId);
-			handlers.remove(editingId);
-		} finally {
-			lock.unlock();
+			readyLock();
+			try {
+				LOGGER.debug("Unregistering DocumentHandler [{}]", editingId);
+				String sessionId = sessionIdByEditingId.remove(editingId);
+				editingIdsBySessionId.remove(sessionId);
+				handlers.remove(editingId);
+			} finally {
+				readyUnlock();
+			}
+		} catch (WTException ex1) {
+			LOGGER.trace("Not ready", ex1);
 		}
 	}
 	
 	public BaseDocEditorDocumentHandler getDocumentHandler(String editingId) {
-		lock.lock();
 		try {
-			return handlers.get(editingId);
-		} finally {
-			lock.unlock();
+			readyLock();
+			try {
+				return handlers.get(editingId);
+			} finally {
+				readyUnlock();
+			}
+		} catch (WTException ex1) {
+			LOGGER.trace("Not ready", ex1);
 		}
+		return null;
 	}
 	
 	public String buildDocumentKey(String documentUniqueId, long lastModifiedTime) {
@@ -171,13 +186,17 @@ public class DocEditorManager extends AbstractAppManager {
 	}
 	
 	void cleanupOnSessionDestroy(String sessionId) {
-		lock.lock();
 		try {
-			if (editingIdsBySessionId.containsKey(sessionId)) {
-				expirationCandidates.put(sessionId, System.currentTimeMillis());
+			readyLock();
+			try {
+				if (editingIdsBySessionId.containsKey(sessionId)) {
+					expirationCandidates.put(sessionId, System.currentTimeMillis());
+				}
+			} finally {
+				readyUnlock();
 			}
-		} finally {
-			lock.unlock();
+		} catch (WTException ex1) {
+			LOGGER.trace("Not ready", ex1);
 		}
 	}
 	
@@ -188,7 +207,7 @@ public class DocEditorManager extends AbstractAppManager {
 			if (now >= (entry.getValue() + timeToLiveMillis)) {
 				final String sessionId = entry.getKey();
 				if (editingIdsBySessionId.containsKey(sessionId)) {
-					logger.debug("Expiring entries for session {}", sessionId);
+					LOGGER.debug("Expiring entries for session {}", sessionId);
 					internalRemoveBySession(sessionId);
 				}
 			}
@@ -199,7 +218,7 @@ public class DocEditorManager extends AbstractAppManager {
 	private void internalRemoveBySession(String sessionId) {
 		Collection<String> editingIds = editingIdsBySessionId.remove(sessionId);
 		for (String editingId : editingIds) {
-			logger.debug("Cleaning DocumentHandler [{}]", editingId);
+			LOGGER.debug("Cleaning DocumentHandler [{}]", editingId);
 			sessionIdByEditingId.remove(editingId);
 			handlers.remove(editingId);
 		}

@@ -579,10 +579,22 @@ public class WT {
 		return getWTA().getGlobalMailSession(domainId);
 	}
 	
+	public static <C extends Enum<C>, A extends Enum<A>> void writeAuditLog(final String serviceId, final C context, final A action, final Object reference, final Object data) {
+		AuditLogManager logMgr = getWTA().getAuditLogManager();
+		if (logMgr == null) return;
+		logMgr.write(RunContext.getRunProfileId(), SessionContext.getCurrentId(), serviceId, context, action, reference, data);
+	}
+	
 	public static void writeAuditLog(final String serviceId, final String context, final String action, final String reference, final String data) {
 		AuditLogManager logMgr = getWTA().getAuditLogManager();
 		if (logMgr == null) return;
 		logMgr.write(RunContext.getRunProfileId(), SessionContext.getCurrentId(), serviceId, context, action, reference, data);
+	}
+	
+	public static <C extends Enum<C>, A extends Enum<A>> void writeAuditLog(final String serviceId, final C context, final A action, final Collection<AuditReferenceDataEntry> entries) {
+		AuditLogManager logMgr = getWTA().getAuditLogManager();
+		if (logMgr == null) return;
+		logMgr.write(RunContext.getRunProfileId(), SessionContext.getCurrentId(), serviceId, context, action, entries);
 	}
 	
 	public static void writeAuditLog(final String serviceId, final String context, final String action, final Collection<AuditReferenceDataEntry> entries) {
@@ -591,10 +603,28 @@ public class WT {
 		logMgr.write(RunContext.getRunProfileId(), SessionContext.getCurrentId(), serviceId, context, action, entries);
 	}
 	
-	public static void renameAuditLogReference(final String serviceId, final String context, final String oldReference, final String newReference) {
+	public static <C extends Enum<C>, A extends Enum<A>> AuditLogManager.Batch auditLogGetBatch(final String serviceId, final C context, final A action) {
+		AuditLogManager logMgr = getWTA().getAuditLogManager();
+		if (logMgr == null) return null;
+		return logMgr.getBatch(RunContext.getRunProfileId(), SessionContext.getCurrentId(), serviceId, context, action);
+	}
+	
+	public static AuditLogManager.Batch auditLogGetBatch(final String serviceId, final String context, final String action) {
+		AuditLogManager logMgr = getWTA().getAuditLogManager();
+		if (logMgr == null) return null;
+		return logMgr.getBatch(RunContext.getRunProfileId(), SessionContext.getCurrentId(), serviceId, context, action);
+	}
+	
+	public static <C extends Enum<C>> void auditLogRebaseReference(final String serviceId, final C context, final Object oldReference, final Object newReference) {
 		AuditLogManager logMgr = getWTA().getAuditLogManager();
 		if (logMgr == null) return;
-		logMgr.renameReference(RunContext.getRunProfileId(), serviceId, context, oldReference, newReference);
+		logMgr.rebaseReference(RunContext.getRunProfileId(), serviceId, context, oldReference, newReference);
+	}
+	
+	public static void auditLogRebaseReference(final String serviceId, final String context, final String oldReference, final String newReference) {
+		AuditLogManager logMgr = getWTA().getAuditLogManager();
+		if (logMgr == null) return;
+		logMgr.rebaseReference(RunContext.getRunProfileId(), serviceId, context, oldReference, newReference);
 	}
 	
 	public static void notify(UserProfileId profileId, ServiceMessage message) {

@@ -272,7 +272,7 @@ public class CoreManager extends BaseManager {
 		return cfieldsLicensed ? -1 : MAX_CFIELDS_FREE;
 	}
 	
-	public IPLookupResponse getIPGeolocationData(final String ipAddress) {
+	public IPLookupResponse getIPGeolocationData(final String ipAddress) throws WTException {
 		return wta.getAuditLogManager().getIPGeolocationData(getTargetProfileId().getDomainId(), ipAddress);
 	}
 	
@@ -781,7 +781,7 @@ public class CoreManager extends BaseManager {
 			Activity ret = doActivityUpdate(true, con, activity);
 			
 			if (isAuditEnabled()) {
-				writeAuditLog(
+				auditLogWrite(
 					AuditContext.ACTIVITY,
 					AuditAction.CREATE,
 					ret.getActivityId(),
@@ -810,7 +810,7 @@ public class CoreManager extends BaseManager {
 			if (ret == null) throw new WTNotFoundException("Activity not found [{}]", activity.getActivityId());
 			
 			if (isAuditEnabled()) {
-				writeAuditLog(
+				auditLogWrite(
 					AuditContext.ACTIVITY,
 					AuditAction.UPDATE,
 					ret.getActivityId(),
@@ -842,7 +842,7 @@ public class CoreManager extends BaseManager {
 			if (!ret) throw new WTNotFoundException("Activity not found [{}]", activityId);
 			
 			if (isAuditEnabled()) {
-				writeAuditLog(AuditContext.ACTIVITY, AuditAction.DELETE, activityId, null);
+				auditLogWrite(AuditContext.ACTIVITY, AuditAction.DELETE, activityId, null);
 			}
 			
 			return ret;
@@ -926,7 +926,7 @@ public class CoreManager extends BaseManager {
 			Causal ret = doCausalUpdate(true, con, causal);
 			
 			if (isAuditEnabled()) {
-				writeAuditLog(
+				auditLogWrite(
 					AuditContext.CAUSAL,
 					AuditAction.CREATE,
 					ret.getCausalId(),
@@ -955,7 +955,7 @@ public class CoreManager extends BaseManager {
 			if (ret == null) throw new WTNotFoundException("Causal not found [{}]", causal.getCausalId());
 			
 			if (isAuditEnabled()) {
-				writeAuditLog(
+				auditLogWrite(
 					AuditContext.CAUSAL,
 					AuditAction.UPDATE,
 					ret.getCausalId(),
@@ -987,7 +987,7 @@ public class CoreManager extends BaseManager {
 			if (!ret) throw new WTNotFoundException("Causal not found [{}]", causalId);
 			
 			if (isAuditEnabled()) {
-				writeAuditLog(AuditContext.CAUSAL, AuditAction.DELETE, causalId, null);
+				auditLogWrite(AuditContext.CAUSAL, AuditAction.DELETE, causalId, null);
 			}
 			
 			return ret;
@@ -1263,7 +1263,7 @@ public class CoreManager extends BaseManager {
 			tagDetails.put("color", ret.getColor());
 			
 			if (isAuditEnabled()) {
-				writeAuditLog(
+				auditLogWrite(
 					AuditContext.TAG,
 					AuditAction.CREATE,
 					ret.getTagId(),
@@ -1310,7 +1310,7 @@ public class CoreManager extends BaseManager {
 			tagDetails.put("color", ret.getColor());
 			
 			if (isAuditEnabled()) {
-				writeAuditLog(
+				auditLogWrite(
 					AuditContext.TAG,
 					AuditAction.UPDATE,
 					ret.getTagId(),
@@ -1346,7 +1346,7 @@ public class CoreManager extends BaseManager {
 			
 			eventManager.fireEvent(new TagChangedEvent(this, ChangedEvent.Operation.DELETE));
 			if (isAuditEnabled()) {
-				writeAuditLog(AuditContext.TAG, AuditAction.DELETE, tagId, null);
+				auditLogWrite(AuditContext.TAG, AuditAction.DELETE, tagId, null);
 			}
 			
 		} catch (Throwable t) {
@@ -1456,7 +1456,7 @@ public class CoreManager extends BaseManager {
 			CustomPanel ret = doCustomPanelUpdate(true, con, customPanel);
 			
 			if (isAuditEnabled()) {
-				writeAuditLog(AuditContext.CUSTOMPANEL, AuditAction.CREATE, new CompositeId(ret.getServiceId(), ret.getPanelId()).toString(), null);
+				auditLogWrite(AuditContext.CUSTOMPANEL, AuditAction.CREATE, new CompositeId(ret.getServiceId(), ret.getPanelId()).toString(), null);
 			}
 			
 			return ret;
@@ -1484,7 +1484,7 @@ public class CoreManager extends BaseManager {
 			if (ret == null) throw new WTNotFoundException("Custom-panel not found [{}, {}]", customPanel.getServiceId(), customPanel.getPanelId());
 			
 			if (isAuditEnabled()) {
-				writeAuditLog(AuditContext.CUSTOMPANEL, AuditAction.UPDATE, new CompositeId(ret.getServiceId(), ret.getPanelId()).toString(), null);
+				auditLogWrite(AuditContext.CUSTOMPANEL, AuditAction.UPDATE, new CompositeId(ret.getServiceId(), ret.getPanelId()).toString(), null);
 			}
 			
 			return ret;
@@ -1510,7 +1510,7 @@ public class CoreManager extends BaseManager {
 			if (!ret) throw new WTNotFoundException("Custom-panel not found [{}, {}]", serviceId, panelId);
 			
 			if (isAuditEnabled()) {
-				writeAuditLog(AuditContext.CUSTOMPANEL, AuditAction.UPDATE, new CompositeId(serviceId, panelId).toString(), null);
+				auditLogWrite(AuditContext.CUSTOMPANEL, AuditAction.UPDATE, new CompositeId(serviceId, panelId).toString(), null);
 			}
 			
 			return ret;
@@ -1536,7 +1536,7 @@ public class CoreManager extends BaseManager {
 			if (!ret) throw new WTNotFoundException("Custom-panel not found [{}, {}]", serviceId, panelId);
 			
 			if (isAuditEnabled()) {
-				writeAuditLog(AuditContext.CUSTOMPANEL, AuditAction.DELETE, new CompositeId(serviceId, panelId).toString(), null);
+				auditLogWrite(AuditContext.CUSTOMPANEL, AuditAction.DELETE, new CompositeId(serviceId, panelId).toString(), null);
 			}
 			
 			return ret;
@@ -1654,7 +1654,7 @@ public class CoreManager extends BaseManager {
 			CustomField ret = doCustomFieldUpdate(true, con, customField);
 			
 			if (isAuditEnabled()) {
-				writeAuditLog(AuditContext.CUSTOMFIELD, AuditAction.CREATE, new CompositeId(ret.getServiceId(), ret.getFieldId()).toString(), null);
+				auditLogWrite(AuditContext.CUSTOMFIELD, AuditAction.CREATE, new CompositeId(ret.getServiceId(), ret.getFieldId()).toString(), null);
 			}
 			
 			return ret;
@@ -1682,7 +1682,7 @@ public class CoreManager extends BaseManager {
 			if (ret == null) throw new WTNotFoundException("Custom-field not found [{}, {}]", customField.getServiceId(), customField.getFieldId());
 			
 			if (isAuditEnabled()) {
-				writeAuditLog(AuditContext.CUSTOMFIELD, AuditAction.UPDATE, new CompositeId(ret.getServiceId(), ret.getFieldId()).toString(), null);
+				auditLogWrite(AuditContext.CUSTOMFIELD, AuditAction.UPDATE, new CompositeId(ret.getServiceId(), ret.getFieldId()).toString(), null);
 			}
 			
 			return ret;
@@ -1710,7 +1710,7 @@ public class CoreManager extends BaseManager {
 			cupfDao.deleteByField(con, fieldId);
 			
 			if (isAuditEnabled()) {
-				writeAuditLog(AuditContext.CUSTOMFIELD, AuditAction.DELETE, new CompositeId(serviceId, fieldId).toString(), null);
+				auditLogWrite(AuditContext.CUSTOMFIELD, AuditAction.DELETE, new CompositeId(serviceId, fieldId).toString(), null);
 			}
 			DbUtils.commitQuietly(con);
 			return ret;
@@ -3298,7 +3298,7 @@ public class CoreManager extends BaseManager {
 			
 			eventManager.fireEvent(new TagChangedEvent(this, ChangedEvent.Operation.DELETE));
 			if (isAuditEnabled()) {
-				writeAuditLog(AuditContext.TAG, AuditAction.DELETE, "*", pid);
+				auditLogWrite(AuditContext.TAG, AuditAction.DELETE, "*", pid);
 			}
 			
 		} catch (Throwable t) {
@@ -3502,13 +3502,5 @@ public class CoreManager extends BaseManager {
 	
 	private enum AuditAction {
 		CREATE, UPDATE, DELETE, MOVE
-	}
-	
-	private void writeAuditLog(AuditContext context, AuditAction action, Object reference, Object data) {
-		writeAuditLog(EnumUtils.getName(context), EnumUtils.getName(action), (reference != null) ? String.valueOf(reference) : null, (data != null) ? String.valueOf(data) : null);
-	}
-	
-	private void writeAuditLog(AuditContext context, AuditAction action, Collection<AuditReferenceDataEntry> entries) {
-		writeAuditLog(EnumUtils.getName(context), EnumUtils.getName(action), entries);
 	}
 }

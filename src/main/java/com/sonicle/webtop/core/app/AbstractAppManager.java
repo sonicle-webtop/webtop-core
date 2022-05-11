@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Sonicle S.r.l.
+ * Copyright (C) 2022 Sonicle S.r.l.
  *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by
@@ -28,34 +28,78 @@
  * version 3, these Appropriate Legal Notices must retain the display of the
  * Sonicle logo and Sonicle copyright notice. If the display of the logo is not
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
- * display the words "Copyright (C) 2018 Sonicle S.r.l.".
+ * display the words "Copyright (C) 2022 Sonicle S.r.l.".
  */
 package com.sonicle.webtop.core.app;
 
-import com.sonicle.commons.concurrent.ReentrantPriorityLock;
+import com.sonicle.webtop.core.sdk.WTException;
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
+import org.slf4j.Logger;
 
 /**
  *
  * @author malbinola
+ * @param <T>
  */
-public abstract class AbstractAppManager {
-	protected ReentrantPriorityLock lock = new ReentrantPriorityLock();
-	protected boolean ready = true;
-	protected WebTopApp wta;
+public abstract class AbstractAppManager<T> {
+	private final ReentrantReadWriteLock readyLock = new ReentrantReadWriteLock();
+	private boolean ready = false;
+	private WebTopApp wta;
 	
 	AbstractAppManager(WebTopApp wta) {
 		this.wta = wta;
 	}
 	
-	void cleanup() {
-		lock.lock(ReentrantPriorityLock.Priority.HIGH);
+	protected abstract Logger internalGetLogger();
+	protected abstract void internalAppManagerCleanup();
+	
+	protected void initialized() {
+		this.ready = true;
+		internalGetLogger().info("Initialized");
+	}
+	
+	protected WebTopApp getWebTopApp() {
+		return wta;
+	}
+	
+	protected Connection getConnection(final String namespace) throws SQLException {
+		return getWebTopApp().getConnectionManager().getConnection(namespace);
+	}
+	
+	protected Connection getConnection(final String namespace, final boolean autoCommit) throws SQLException {
+		return getWebTopApp().getConnectionManager().getConnection(namespace, autoCommit);
+	}
+	
+	protected void readyLock() throws WTException {
+		try {
+			readyLock.readLock().lockInterruptibly();
+			if (!ready) throw new WTException("Manager cannot handle your request");
+			
+		} catch (InterruptedException ex) {
+			throw new WTException(ex);
+		}
+	}
+	
+	protected void readyUnlock() {
+		readyLock.readLock().unlock();
+	}
+	
+	/**
+	 * Clears internal structures marking this Manager as NOT ready.
+	 * @return Always return `null` reference, for clearing reference easily.
+	 */
+	T cleanup() {
+		readyLock.writeLock().lock();
 		try {
 			this.ready = false;
 			internalAppManagerCleanup();
 		} finally {
-			lock.unlock();
+			this.wta = null;
+			readyLock.writeLock().unlock();
+			internalGetLogger().info("Cleaned up");
 		}
+		return (T)null;
 	}
-	
-	protected abstract void internalAppManagerCleanup();
 }

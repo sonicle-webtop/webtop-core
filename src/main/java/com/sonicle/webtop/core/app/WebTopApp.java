@@ -348,6 +348,7 @@ public final class WebTopApp {
 		
 		this.conMgr = ConnectionManager.initialize(this); // Connection Manager
 		this.setMgr = SettingsManager.initialize(this); // Settings Manager
+		this.auditLogMgr = new AuditLogManager(this);
 		this.sesMgr = SessionManager.initialize(this); // Session Manager
 		
 		// Checks home directory
@@ -387,7 +388,6 @@ public final class WebTopApp {
 		}
 		
 		//comm = ComponentsManager.initialize(this); // Components Manager
-		this.auditLogMgr = AuditLogManager.initialize(this);
 		this.licMgr = LicenseManager.initialize(this, this.scheduler);
 		this.wtMgr = WebTopManager.initialize(this);
 		
@@ -423,14 +423,14 @@ public final class WebTopApp {
 		// Session Manager
 		sesMgr.cleanup();
 		sesMgr = null;
-		//docEditorMgr.cleanup();
-		//docEditorMgr = null;
+		docEditorMgr = docEditorMgr.cleanup();
 		// Report Manager
 		rptMgr.cleanup();
 		rptMgr = null;
 		// OTP Manager
 		otpMgr.cleanup();
 		otpMgr = null;
+		auditLogMgr = auditLogMgr.cleanup();
 		// Settings Manager
 		setMgr.cleanup();
 		setMgr = null;

@@ -34,6 +34,7 @@
 package com.sonicle.webtop.core.sdk;
 
 import com.sonicle.webtop.core.CoreServiceSettings;
+import com.sonicle.webtop.core.app.AuditLogManager;
 import com.sonicle.webtop.core.app.CoreManifest;
 import com.sonicle.webtop.core.app.RunContext;
 import com.sonicle.webtop.core.app.SessionContext;
@@ -309,13 +310,38 @@ public abstract class BaseManager {
 	
 	/**
 	 * Writes a new entry into audit-log in order to trace user activity.
+	 * @param <C>
+	 * @param <A>
+	 * @param context An Enum that identifies the context involved.
+	 * @param action An Enum that identifies the action performed.
+	 * @param reference An optional string that uniquely identifies the item (of context above) that suffered the action.
+	 * @param data An optional data (eg. JSON payload) to complete info about operation.
+	 */
+	public <C extends Enum<C>, A extends Enum<A>> void auditLogWrite(final C context, final A action, final Object reference, final Object data) {
+		if (isAuditEnabled()) WT.writeAuditLog(SERVICE_ID, context, action, reference, data);
+	}
+	
+	/**
+	 * Writes a new entry into audit-log in order to trace user activity.
 	 * @param context A string that identifies the context involved.
 	 * @param action A string that identifies the action performed.
 	 * @param reference An optional string that uniquely identifies the item (of context above) that suffered the action.
 	 * @param data An optional data (eg. JSON payload) to complete info about operation.
 	 */
-	public void writeAuditLog(final String context, final String action, final String reference, final String data) {
+	public void auditLogWrite(final String context, final String action, final String reference, final String data) {
 		if (isAuditEnabled()) WT.writeAuditLog(SERVICE_ID, context, action, reference, data);
+	}
+	
+	/**
+	 * Writes new multiple entry into audit-log in order to trace user activity.
+	 * @param <C>
+	 * @param <A>
+	 * @param context An Enum that identifies the context involved.
+	 * @param action An Enum that identifies the action performed.
+	 * @param entries A collection of multiple reference/data objects.
+	 */
+	public <C extends Enum<C>, A extends Enum<A>> void auditLogWrite(final C context, final A action, final Collection<AuditReferenceDataEntry> entries) {
+		if (isAuditEnabled()) WT.writeAuditLog(SERVICE_ID, context, action, entries);
 	}
 	
 	/**
@@ -324,8 +350,41 @@ public abstract class BaseManager {
 	 * @param action A string that identifies the action performed.
 	 * @param entries A collection of multiple reference/data objects.
 	 */
-	public void writeAuditLog(final String context, final String action, final Collection<AuditReferenceDataEntry> entries) {
+	public void auditLogWrite(final String context, final String action, final Collection<AuditReferenceDataEntry> entries) {
 		if (isAuditEnabled()) WT.writeAuditLog(SERVICE_ID, context, action, entries);
+	}
+	
+	/**
+	 * Creates an interface for writing audit-logs in batched mode.
+	 * @param <C>
+	 * @param <A>
+	 * @param context An Enum that identifies the context involved.
+	 * @param action An Enum that identifies the action performed.
+	 * @return The Batch object interface
+	 */
+	public <C extends Enum<C>, A extends Enum<A>> AuditLogManager.Batch auditLogGetBatch(final C context, final A action) {
+		return isAuditEnabled() ? WT.auditLogGetBatch(SERVICE_ID, context, action) : null;
+	}
+	
+	/**
+	 * Creates an interface for writing audit-logs in batched mode.
+	 * @param context A string that identifies the context involved.
+	 * @param action A string that identifies the action performed.
+	 * @return The Batch object interface
+	 */
+	public AuditLogManager.Batch auditLogGetBatch(final String context, final String action) {
+		return isAuditEnabled() ? WT.auditLogGetBatch(SERVICE_ID, context, action) : null;
+	}
+	
+	/**
+	 * Updates the reference written in previous log-entries (useful for not hiding data, eg. when renaming a folder and the the reference is the folder name)
+	 * @param <C>
+	 * @param context An Enum that identifies the context involved.
+	 * @param oldReference A string that uniquely identifies the old item (of context above) that suffered the action.
+	 * @param newReference A string that uniquely identifies the new item (of context above) that suffered the action.
+	 */
+	public <C extends Enum<C>> void auditLogRebaseReference(final C context, final Object oldReference, final Object newReference) {
+		if (isAuditEnabled()) WT.auditLogRebaseReference(SERVICE_ID, context, oldReference, newReference);
 	}
 	
 	/**
@@ -334,8 +393,8 @@ public abstract class BaseManager {
 	 * @param oldReference A string that uniquely identifies the old item (of context above) that suffered the action.
 	 * @param newReference A string that uniquely identifies the new item (of context above) that suffered the action.
 	 */
-	public void renameAuditLogReference(final String context, final String oldReference, final String newReference) {
-		if (isAuditEnabled()) WT.renameAuditLogReference(SERVICE_ID, context, oldReference, newReference);
+	public void auditLogRebaseReference(final String context, final String oldReference, final String newReference) {
+		if (isAuditEnabled()) WT.auditLogRebaseReference(SERVICE_ID, context, oldReference, newReference);
 	}
 	
 	public Session getMailSession() {
