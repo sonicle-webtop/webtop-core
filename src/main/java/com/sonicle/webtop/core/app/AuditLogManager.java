@@ -36,7 +36,6 @@ import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.sonicle.commons.EnumUtils;
 import com.sonicle.commons.InternetAddressUtils;
-import com.sonicle.commons.LangUtils;
 import com.sonicle.commons.concurrent.KeyedReentrantLocks;
 import com.sonicle.commons.db.DbUtils;
 import com.sonicle.commons.http.HttpClientUtils;
@@ -215,7 +214,7 @@ public class AuditLogManager extends AbstractAppManager<AuditLogManager> {
 				if (isImpersonated && !logImpersonatedEnabled(profileId)) {
 					return null;
 				} else {
-					return new Batch(this, profileId.getDomain(), buildAuditUserId(profileId, isImpersonated), sessionId, serviceId, context, action, 5);
+					return new Batch(this, profileId.getDomain(), buildAuditUserId(profileId, isImpersonated), sessionId, serviceId, context, action, 50);
 				}
 			} finally {
 				readyUnlock();
