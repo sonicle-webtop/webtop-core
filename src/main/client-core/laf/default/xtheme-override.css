@@ -12,21 +12,28 @@
 	margin-left: 4px;
 }
 
-/* Fix disabled style for fieldsets */
+/* Fieldset: provide better disabled style */
 .x-fieldset.x-item-disabled {
 	opacity: 0.3
 }
 
+/* Toolbar: provide better margins */
 .x-toolbar .x-toolbar-item {
     margin-right: 2px;
 }
-
 .x-toolbar .x-toolbar-separator-horizontal {
 	margin-left: 2px !important;
     margin-right: 4px !important;
 	padding-right: 2px !important;
 }
 
+/* Trigger: fixes */
+.x-form-trigger {
+	line-height: inherit; /* Fix icon vertical alignment a little in FF */
+    display: table-cell; /* Fix inputEl crushing due to FontAwesome5 icon in Chrome */
+}
+
+/* Grid: center empty text */
 .x-grid-empty {
 	text-align: center;
 }
