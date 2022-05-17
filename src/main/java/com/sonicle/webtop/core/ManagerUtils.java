@@ -144,11 +144,6 @@ public class ManagerUtils {
 		return tgt;
 	}
 	
-	static Tag createTag(OTag src) {
-		if (src == null) return null;
-		return fillTag(new Tag(), src);
-	}
-	
 	static <T extends Tag> T fillTag(T tgt, OTag src) {
 		if ((tgt != null) && (src != null)) {
 			tgt.setTagId(src.getTagId());

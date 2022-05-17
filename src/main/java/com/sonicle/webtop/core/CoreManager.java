@@ -1210,7 +1210,7 @@ public class CoreManager extends BaseManager {
 			con = WT.getConnection(SERVICE_ID);
 			LinkedHashMap<String, Tag> items = new LinkedHashMap<>();
 			for (OTag otag : tagDao.selectByDomainOwners(con, targetDomainId, tagOptionsToUserIds(options)).values()) {
-				items.put(otag.getTagId(), ManagerUtils.createTag(otag));
+				items.put(otag.getTagId(), ManagerUtils.fillTag(new Tag(), otag));
 			}
 			return items;
 			
@@ -1231,7 +1231,7 @@ public class CoreManager extends BaseManager {
 			
 			con = WT.getConnection(SERVICE_ID);
 			OTag otag = tagDao.selectByDomainTag(con, targetDomainId, tagId);
-			return ManagerUtils.createTag(otag);
+			return otag == null ? null : ManagerUtils.fillTag(new Tag(), otag);
 			
 		} catch (Throwable t) {
 			throw ExceptionUtils.wrapThrowable(t);
@@ -3368,7 +3368,7 @@ public class CoreManager extends BaseManager {
 			ret = tagDao.update(con, otag);
 		}
 		
-		return (ret == 1) ? ManagerUtils.createTag(otag) : null;
+		return (ret == 1) ? ManagerUtils.fillTag(new Tag(), otag) : null;
 	}
 	
 	private boolean doTagDelete(Connection con, String domainId, String tagId) throws WTException {
