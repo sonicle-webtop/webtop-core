@@ -28,8 +28,6 @@
 .wt-theme-text-header1 { color: #157fcc; }
 .wt-theme-text-subtitle { color: #888888; }
 .wt-theme-text-hyperlink { color: #0078d7; }
-.wt-theme-glyph { color: #999999 !Important; } /* #333333 with alpha 0.5 */
-.wt-theme-glyph-lighter { color: #c2c2c2; } /* #666666 with alpha 0.4 */
 
 /*
  * Background color for header (regular, lighten/darken, alternative)
@@ -44,13 +42,16 @@
 .wt-theme-header-text { color: #157fcc; } /* regular */
 
 /*
- * Style pressed glyphs
+ * By convention, FontAwesome CSS classes used as iconCls in objects are styled 
+ * as glyphs (lighter colored), like using ExtJS's glyph config. This is done in 
+ * ad-hoc override in "xtheme-override.css" that applies a new opacity for all 
+ * FontAwesome classes (fas, far).
+ * With this class we provide a way to reset opacity to its initial value.
  */
-.wt-theme-btn-pressed .x-btn-glyph {
-	color: #157fcc !important;
-}
+.wt-theme-glyph-reset { opacity: initial !important; }
+
 /*
- * Adjust action colors: base color is too strong
+ * Adjust action colors: base color is too light and add hover color
  */
 .x-action-col-icon {
     color: #c2c2c2; /* #666666 with alpha 0.4 */

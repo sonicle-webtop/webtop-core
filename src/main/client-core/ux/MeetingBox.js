@@ -111,7 +111,7 @@ Ext.define('Sonicle.webtop.core.ux.MeetingBox', {
 						}, {
 							xtype: 'button',
 							ui: 'default-toolbar',
-							iconCls: 'far fa-clock wt-theme-glyph',
+							iconCls: 'far fa-clock',
 							tooltip: me.nowTooltip,
 							handler: function() {
 								me.customPrompt.lookupReference('date').setValue(new Date());

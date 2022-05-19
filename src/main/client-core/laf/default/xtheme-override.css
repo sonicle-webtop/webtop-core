@@ -37,3 +37,29 @@
 .x-grid-empty {
 	text-align: center;
 }
+
+/* Icons: force glyph behaviour (light opacity) when using FontAwesome classes as icons */
+.x-btn-icon-el.fas {
+    opacity: 0.6;
+}
+.x-btn-icon-el.far {
+    opacity: 0.6;
+}
+.x-menu-item-icon.fas {
+    opacity: 0.6;
+}
+.x-menu-item-icon.far {
+    opacity: 0.6;
+}
+.x-tab-icon-el.fas {
+    opacity: 0.6;
+}
+.x-tab-icon-el.far {
+    opacity: 0.6;
+}
+.x-form-trigger.fas {
+    opacity: 0.4;
+}
+.x-form-trigger.far {
+    opacity: 0.4;
+}

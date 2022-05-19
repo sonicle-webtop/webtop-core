@@ -279,7 +279,7 @@ Ext.define('Sonicle.webtop.core.view.main.Abstract', {
 			}
 		},*/ {
 			xtype: 'button',
-			iconCls: 'fas fa-bars wt-theme-glyph',
+			iconCls: 'fas fa-bars',
 			arrowVisible: false,
 			menu: {
 				xtype: 'menu',
@@ -348,7 +348,7 @@ Ext.define('Sonicle.webtop.core.view.main.Abstract', {
 								width: '100%',
 								scale: 'small',
 								tooltip: WT.res('menu.logout.tip'),
-								iconCls: 'wt-menu-logout fas fa-sign-out-alt'
+								iconCls: 'wt-menu-logout wt-opacity-100 fas fa-sign-out-alt'
 							}
 						]
 					}

@@ -303,16 +303,16 @@ Ext.define('Sonicle.webtop.core.ux.IMBigChat', {
 				{
 					xtype: 'button',
 					ui: 'default-toolbar',
-					iconCls: 'far fa-smile wt-theme-glyph',
+					iconCls: 'far fa-smile',
 					tooltip: WT.res('wtimchat.btn-emoji.tip'),
 					enableToggle: true,
 					toggleHandler: function(s, state) {
 						var cmp = me.lref('pnlemojis');
 						if (state) {
-							s.setIconCls('fas fa-caret-down wt-theme-glyph');
+							s.setIconCls('fas fa-caret-down');
 							cmp.expand();
 						} else {
-							s.setIconCls('far fa-smile wt-theme-glyph');
+							s.setIconCls('far fa-smile');
 							cmp.collapse();
 						}
 					}

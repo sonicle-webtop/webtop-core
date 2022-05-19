@@ -320,7 +320,7 @@ Ext.define('Sonicle.webtop.core.view.DocEditor', {
 				}, '->', {
 					xtype: 'button',
 					tooltip: WT.res('act-close.lbl'),
-					iconCls: 'fas fa-times wt-theme-glyph',
+					iconCls: 'fas fa-times',
 					handler: function(s) {
 						me.removeDocked(s.up('toolbar', 1));
 					}

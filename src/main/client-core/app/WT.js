@@ -979,9 +979,9 @@ Ext.define('Sonicle.webtop.core.app.WT', {
 			Ext.iterate(opts.buttons, function(bcfg) {
 				if (bcfg.glyph) {
 					if (Ext.isString(bcfg.iconCls)) {
-						bcfg.iconCls += ' wt-no-opacity';
+						bcfg.iconCls += ' wt-opacity-100';
 					} else {
-						bcfg.iconCls = 'wt-no-opacity';
+						bcfg.iconCls = 'wt-opacity-100';
 					}
 				}
 				items.push(Ext.apply({}, bcfg, {

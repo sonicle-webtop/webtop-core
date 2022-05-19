@@ -103,7 +103,7 @@ Ext.define('Sonicle.webtop.core.view.CustomFields', {
 							html: me.res('customFields.free.txt', me.fieldsLimit)
 						}, {
 							xtype: 'button',
-							iconCls: 'fas fa-info-circle wt-theme-glyph',
+							iconCls: 'fas fa-info-circle',
 							handler: function() {
 								WT.info(me.res('customFields.info.free', me.fieldsLimit));
 							}
