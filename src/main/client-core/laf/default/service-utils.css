@@ -23,8 +23,9 @@
 .wt-text-ellipsis { text-overflow: ellipsis; overflow: hidden; white-space: nowrap; }
 
 .wt-opacity-100 { opacity: 1 !important; }
-.wt-opacity-60 { opacity: 0.6; }
-.wt-opacity-50 { opacity: 0.5; }
-.wt-opacity-40 { opacity: 0.4; }
+.wt-opacity-70 { opacity: 0.7 !important; }
+.wt-opacity-60 { opacity: 0.6 !important; }
+.wt-opacity-50 { opacity: 0.5 !important; }
+.wt-opacity-40 { opacity: 0.4 !important; }
 .wt-hidden { display: none; }
 .wt-v-middle { vertical-align: middle; }
