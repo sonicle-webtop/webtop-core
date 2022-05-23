@@ -166,6 +166,14 @@
 .wt-icon-dock-right-gray { background-image: url('dock-right-gray_16.svg') !important; background-size: contain; }
 .wt-icon-dock-bottom { background-image: url('dock-bottom_16.svg') !important; background-size: contain; }
 .wt-icon-dock-bottom-gray { background-image: url('dock-bottom-gray_16.svg') !important; background-size: contain; }
+.wt-icon-calDays-1 { background-image: url('cal-days-1_16.svg') !important; background-size: contain; }
+.wt-icon-calDays-5 { background-image: url('cal-days-5_16.svg') !important; background-size: contain; }
+.wt-icon-calDays-7 { background-image: url('cal-days-7_16.svg') !important; background-size: contain; }
+.wt-icon-calDays-14 { background-image: url('cal-days-14_16.svg') !important; background-size: contain; }
+.wt-icon-calDays-30 { background-image: url('cal-days-60_16.svg') !important; background-size: contain; }
+.wt-icon-calDays-31 { background-image: url('cal-days-31_16.svg') !important; background-size: contain; }
+.wt-icon-calDays-60 { background-image: url('cal-days-60_16.svg') !important; background-size: contain; }
+.wt-icon-calDays-90 { background-image: url('cal-days-90_16.svg') !important; background-size: contain; }
 
 .wt-icon-browser-checkPermission { background-image: url('browser-checkperms_16.svg') !important; background-size: contain; }
 .wt-icon-emoji { background-image: url('emoji_16.svg') !important; background-size: contain; }
