@@ -156,7 +156,7 @@ public class Otp extends AbstractServlet {
 		LogbackHelper.Level level = otpSuccess ? LogbackHelper.Level.INFO : LogbackHelper.Level.ERROR;
 		
 		AuditLogManager.logAuth(level, clientIp, sessionId, profileId, action);
-		wta.getAuditLogManager().write(profileId, sessionId, CoreManifest.ID, "AUTH", action, null, JsonResult.gson().toJson(new MapItem().add("ip", clientIp)));
+		wta.getAuditLogManager().write(profileId, null, sessionId, CoreManifest.ID, "AUTH", action, null, JsonResult.gson().toJson(new MapItem().add("ip", clientIp)));
 	}
 	
 	private boolean skipOTP(WebTopApp wta, UserProfileId pid, HttpServletRequest request) {

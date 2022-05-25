@@ -181,7 +181,7 @@ public class SessionManager implements PushConnection.MessageStorage {
 					}
 					String clientIp = SessionContext.getClientRemoteIP(session);
 					AuditLogManager.logAuth(LogbackHelper.Level.DEBUG, clientIp, sessionId, profileId, action);
-					auditLogMgr.write(profileId, sessionId, CoreManifest.ID, "AUTH", action, null, JsonResult.gson().toJson(new MapItem().add("ip", clientIp)));
+					auditLogMgr.write(profileId, null, sessionId, CoreManifest.ID, "AUTH", action, null, JsonResult.gson().toJson(new MapItem().add("ip", clientIp)));
 				}
 			}
 		}

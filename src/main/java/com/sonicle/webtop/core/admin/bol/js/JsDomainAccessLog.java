@@ -42,8 +42,8 @@ import org.joda.time.DateTime;
 public class JsDomainAccessLog {
 	public String sessionId;
 	public String userId;
-	public DateTime date;
-	public Double minutes;
+	public DateTime timestamp;
+	public Integer duration;
 	public Boolean authenticated;
 	public Boolean failure;
 	public Integer loginErrors;
@@ -51,8 +51,8 @@ public class JsDomainAccessLog {
 	public JsDomainAccessLog(DomainAccessLog item) {
 		this.sessionId = item.getSessionId();
 		this.userId = item.getUserId();
-		this.date = item.getDate();
-		this.minutes = item.getMinutes();
+		this.timestamp = item.getTimestamp();
+		this.duration = item.getDuration();
 		this.authenticated = item.getAuthenticated();
 		this.failure = item.getFailure();
 		this.loginErrors = item.getLoginErrors();

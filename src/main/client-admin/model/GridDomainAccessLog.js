@@ -41,8 +41,8 @@ Ext.define('Sonicle.webtop.core.admin.model.GridDomainAccessLog', {
 	fields: [
 		WTF.roField('sessionId', 'string'),
 		WTF.roField('userId', 'string'),
-		WTF.roField('date', 'date'),
-		WTF.roField('minutes', 'float'),
+		WTF.roField('timestamp', 'date'),
+		WTF.roField('duration', 'float'),
 		WTF.roField('authenticated', 'boolean'),
 		WTF.roField('failure', 'boolean'),
 		WTF.roField('loginErrors', 'int')

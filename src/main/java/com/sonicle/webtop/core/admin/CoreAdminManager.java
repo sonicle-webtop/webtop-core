@@ -33,10 +33,10 @@
  */
 package com.sonicle.webtop.core.admin;
 
-import com.sonicle.commons.EnumUtils;
+import com.sonicle.commons.beans.SortInfo;
 import com.sonicle.commons.db.DbUtils;
 import com.sonicle.commons.qbuilders.conditions.Condition;
-import com.sonicle.commons.web.json.extjs.SortParam;
+import com.sonicle.commons.time.DateTimeRange;
 import com.sonicle.webtop.core.app.CoreManifest;
 import com.sonicle.webtop.core.app.LicenseManager;
 import com.sonicle.webtop.core.app.LogbackPropertyDefiner;
@@ -49,11 +49,10 @@ import com.sonicle.webtop.core.app.WebTopApp;
 import com.sonicle.webtop.core.app.WebTopProps;
 import com.sonicle.webtop.core.app.util.ExceptionUtils;
 import com.sonicle.webtop.core.app.util.LogbackHelper;
-import com.sonicle.webtop.core.bol.ODomainAccessLog;
+import com.sonicle.webtop.core.bol.VDomainAccessLog;
 import com.sonicle.webtop.core.bol.ODomain;
 import com.sonicle.webtop.core.bol.ODomainAccessLogDetail;
 import com.sonicle.webtop.core.bol.OGroup;
-import com.sonicle.webtop.core.bol.OLicense;
 import com.sonicle.webtop.core.config.bol.OPecBridgeFetcher;
 import com.sonicle.webtop.core.config.bol.OPecBridgeRelay;
 import com.sonicle.webtop.core.bol.OSettingDb;
@@ -65,7 +64,6 @@ import com.sonicle.webtop.core.bol.model.DomainSetting;
 import com.sonicle.webtop.core.bol.model.GroupEntity;
 import com.sonicle.webtop.core.bol.model.Role;
 import com.sonicle.webtop.core.bol.model.RoleEntity;
-import com.sonicle.webtop.core.bol.model.SessionInfo;
 import com.sonicle.webtop.core.bol.model.SystemSetting;
 import com.sonicle.webtop.core.bol.model.UserEntity;
 import com.sonicle.webtop.core.dal.DAOException;
@@ -73,10 +71,8 @@ import com.sonicle.webtop.core.config.dal.PecBridgeFetcherDAO;
 import com.sonicle.webtop.core.config.dal.PecBridgeRelayDAO;
 import com.sonicle.webtop.core.dal.BaseDAO;
 import com.sonicle.webtop.core.dal.DomainAccessLogDAO;
-import com.sonicle.webtop.core.dal.DAOIntegrityViolationException;
 import com.sonicle.webtop.core.dal.DomainAccessLogPredicateVisitor;
 import com.sonicle.webtop.core.dal.UpgradeStatementDAO;
-import static com.sonicle.webtop.core.jooq.core.Tables.VW_AUTH_DETAILS;
 import com.sonicle.webtop.core.model.DomainAccessLog;
 import com.sonicle.webtop.core.model.DomainAccessLogDetail;
 import com.sonicle.webtop.core.model.DomainAccessLogQuery;
@@ -100,14 +96,13 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import net.sf.qualitycheck.Check;
 import org.apache.commons.lang.StringUtils;
-import org.jooq.Field;
-import org.jooq.SortField;
+import org.joda.time.DateTime;
 import org.slf4j.Logger;
 
 /**
@@ -1200,32 +1195,32 @@ public class CoreAdminManager extends BaseManager {
 		}
 	}
 	
-	public ListDomainAccessLogResult listAccessLog(String domainId, Integer page, Integer limit, SortParam sortBy, Condition<DomainAccessLogQuery> conditionPredicate, Boolean returnFullCount) throws WTException {
-		DomainAccessLogDAO domainAccLogDao = DomainAccessLogDAO.getInstance();
+	public ListDomainAccessLogResult listAccessLog(String domainId, DateTimeRange range, Condition<DomainAccessLogQuery> conditionPredicate, SortInfo sortInfo, int page, int limit, boolean returnFullCount) throws WTException {
+		Check.notEmpty(domainId, "domainId");
+		Check.notNull(range, "range");
+		Check.notNull(conditionPredicate, "conditionPredicate");
+		DomainAccessLogDAO alDao = DomainAccessLogDAO.getInstance();
 		Connection con = null;
 		
 		RunContext.ensureIsSysAdmin();
 		
 		try {
 			org.jooq.Condition condition = BaseDAO.createCondition(conditionPredicate, new DomainAccessLogPredicateVisitor()
-					.withIgnoreCase(true)
-					.withForceStringLikeComparison(true)
+				.withIgnoreCase(true)
+				.withForceStringLikeComparison(true)
 			);
 			
 			Integer offset = ManagerUtils.toOffset(page, limit);			
 			con = WT.getConnection(SERVICE_ID);
 			
 			Integer fullCount = null;
-			if (returnFullCount) fullCount = domainAccLogDao.countByDomainIdCondition(con, domainId, condition);
-			
+			if (returnFullCount) fullCount = alDao.countByDomainCondition(con, domainId, range.from, range.to, condition);
 			ArrayList<DomainAccessLog> items = new ArrayList<>();
-			SortField<?> sField = toAccessLogSort(sortBy);
-			
-			for (ODomainAccessLog oAccLog : domainAccLogDao.getByDomainIdCondition(con, domainId, sField, limit, offset, condition)) {
-				items.add(ManagerUtils.createDomainAccessLog(oAccLog));
+			for (VDomainAccessLog vdal : alDao.selectByDomainCondition(con, domainId, range.from, range.to, condition, sortInfo, limit, offset)) {
+				items.add(ManagerUtils.fillDomainAccessLog(new DomainAccessLog(),  vdal));
 			}
-			
 			return new ListDomainAccessLogResult(items, fullCount);
+			
 		} catch (Throwable t) {
 			throw ExceptionUtils.wrapThrowable(t);
 		} finally {
@@ -1233,7 +1228,7 @@ public class CoreAdminManager extends BaseManager {
 		}
 	}
 	
-	public ListDomainAccessLogDetailResult listAccessLogDetail(String sessionId, String domainId, String userId, Boolean returnFullCount) throws WTException {
+	public ListDomainAccessLogDetailResult listAccessLogDetail(String sessionId, String domainId, String userId, boolean returnFullCount) throws WTException {
 		DomainAccessLogDAO domainAccLogDao = DomainAccessLogDAO.getInstance();
 		Connection con = null;
 		
@@ -1255,37 +1250,6 @@ public class CoreAdminManager extends BaseManager {
 			throw ExceptionUtils.wrapThrowable(t);
 		} finally {
 			DbUtils.closeQuietly(con);
-		}
-	}
-	
-	public SortField<?> toAccessLogSort(SortParam sortBy) {
-		Field<?> field = null;
-		
-		switch (sortBy.property) {
-			case "sessionId":
-				field = VW_AUTH_DETAILS.SESSION_ID;
-				break;
-			case "userId":
-				field = VW_AUTH_DETAILS.USER_ID;
-				break;
-			case "date":
-				field = VW_AUTH_DETAILS.DATE;
-				break;
-			case "minutes":
-				field = VW_AUTH_DETAILS.MINUTES;
-				break;
-			case "authenticated":
-				field = VW_AUTH_DETAILS.AUTHENTICATED;
-				break;
-			case "loginErrors":
-				field = VW_AUTH_DETAILS.LOGIN_ERRORS;
-				break;
-		}
-		
-		if (SortParam.Direction.ASC.equals(sortBy.direction)) {
-			return field.asc();
-		} else {
-			return field.desc();
 		}
 	}
 	

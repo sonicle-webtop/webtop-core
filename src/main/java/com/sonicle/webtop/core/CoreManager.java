@@ -164,6 +164,7 @@ import java.util.Map;
 import java.util.Set;
 import jakarta.mail.internet.InternetAddress;
 import java.util.HashMap;
+import net.sf.qualitycheck.Check;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.client.utils.URIBuilder;
 import org.joda.time.DateTime;
@@ -1849,19 +1850,23 @@ public class CoreManager extends BaseManager {
 		return (ret == 1) ? ManagerUtils.createCustomField(ofield) : null;
 	}
 	
-	public List<AuditLog> listAuditLog(String domainId, String serviceId, String context, String action, String referenceId) throws WTException {
+	public List<AuditLog> listAuditLog(final String serviceId, final String context, final String action, final String referenceId) throws WTException {
+		Check.notEmpty(serviceId, "serviceId");
+		Check.notEmpty(context, "context");
+		Check.notEmpty(referenceId, "referenceId");
 		AuditLogDAO logDao = AuditLogDAO.getInstance();
 		ArrayList<AuditLog> items = new ArrayList<>();
 		Connection con = null;
 		
 		try {
+			String domainId = getTargetProfileId().getDomainId();
 			con = WT.getCoreConnection();
-			for(OAuditLog olog : logDao.selectByReferenceId(con, domainId, serviceId, context, action, referenceId)) {
+			for (OAuditLog olog : logDao.selectByReferenceId(con, domainId, serviceId, context, action, referenceId)) {
 				items.add(createAuditLog(domainId, olog));
 			}
 			return items;
 			
-		} catch(SQLException | DAOException ex) {
+		} catch (SQLException | DAOException ex) {
 			throw new WTException(ex, "DB error");
 		} finally {
 			DbUtils.closeQuietly(con);
@@ -1869,12 +1874,11 @@ public class CoreManager extends BaseManager {
 	}
 	
 	private AuditLog createAuditLog(String domainId, OAuditLog olog) {
-		AuditLog log = new AuditLog();
-		UserProfileId uid = new UserProfileId(domainId,olog.getUserId());
-		
+		UserProfileId uid = new UserProfileId(domainId, olog.getUserId());
 		DateTimeZone userTz = DateTimeZone.forID(WT.getUserData(uid).getTimeZoneId());
 		DateTimeFormatter ymdhmsZoneFmt = DateTimeUtils.createYmdHmsFormatter(userTz);
 		
+		AuditLog log = new AuditLog();
 		log.setAuditLogId(olog.getAuditLogId());
 		log.setTimestamp(ymdhmsZoneFmt.print(olog.getTimestamp()));
 		log.setUserId(olog.getUserId());

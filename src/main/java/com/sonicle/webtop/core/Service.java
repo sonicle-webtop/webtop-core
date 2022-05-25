@@ -815,22 +815,20 @@ public class Service extends BaseService implements EventListener {
 	
 	public void processLookupAudit(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
 		try {
-			UserProfile profile = getEnv().getProfile();
 			String serviceId = ServletUtils.getStringParameter(request, "auditServiceId", true);
 			String context = ServletUtils.getStringParameter(request, "auditContext", true);
 			String action = ServletUtils.getStringParameter(request, "auditAction", false);
 			String referenceId = ServletUtils.getStringParameter(request, "auditReferenceId", true);
 			
-			List<AuditLog> items=new ArrayList<>();
-			for(AuditLog log: coreMgr.listAuditLog(profile.getDomainId(), serviceId, context, action, referenceId)) {
+			List<AuditLog> items = new ArrayList<>();
+			for (AuditLog log: coreMgr.listAuditLog(serviceId, context, action, referenceId)) {
 				items.add(log);
 			}
+			new JsonResult(items).printTo(out);
 			
-			new JsonResult(items, items.size()).printTo(out);
-			
-		} catch (Exception ex) {
-			logger.error("Error in LookupAudit", ex);
-			new JsonResult(ex).printTo(out);
+		} catch (Throwable t) {
+			logger.error("Error in LookupAudit", t);
+			new JsonResult(t).printTo(out);
 		}
 	}
 	

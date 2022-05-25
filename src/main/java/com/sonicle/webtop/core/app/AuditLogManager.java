@@ -50,6 +50,7 @@ import com.sonicle.webtop.core.app.sdk.AuditReferenceDataEntry;
 import com.sonicle.webtop.core.app.util.EmailNotification;
 import com.sonicle.webtop.core.app.util.ExceptionUtils;
 import com.sonicle.webtop.core.app.util.LogbackHelper;
+import com.sonicle.webtop.core.bol.OAccessLog;
 import com.sonicle.webtop.core.bol.OAuditLog;
 import com.sonicle.webtop.core.bol.OIPGeoCache;
 import com.sonicle.webtop.core.dal.AuditKnownDeviceDAO;
@@ -126,11 +127,11 @@ public class AuditLogManager extends AbstractAppManager<AuditLogManager> {
 		}
 	}
 	
-	public <C extends Enum<C>, A extends Enum<A>> void write(final UserProfileId profileId, final String sessionId, final String serviceId, final C context, final A action, final Collection<AuditReferenceDataEntry> entries) {
-		write(profileId, sessionId, serviceId, EnumUtils.getValue(context), EnumUtils.getValue(action), entries);
+	public <C extends Enum<C>, A extends Enum<A>> void write(final UserProfileId profileId, final String softwareName, final String sessionId, final String serviceId, final C context, final A action, final Collection<AuditReferenceDataEntry> entries) {
+		write(profileId, softwareName, sessionId, serviceId, EnumUtils.getValue(context), EnumUtils.getValue(action), entries);
 	}
 	
-	public void write(final UserProfileId profileId, final String sessionId, final String serviceId, final String context, final String action, final Collection<AuditReferenceDataEntry> entries) {
+	public void write(final UserProfileId profileId, final String softwareName, final String sessionId, final String serviceId, final String context, final String action, final Collection<AuditReferenceDataEntry> entries) {
 		Check.notNull(profileId, "profileId");
 		Check.notEmpty(serviceId, "serviceId");
 		Check.notEmpty(context, "context");
@@ -143,7 +144,7 @@ public class AuditLogManager extends AbstractAppManager<AuditLogManager> {
 				if (isImpersonated && !logImpersonatedEnabled(profileId)) return;
 				WT.runPrivileged(() -> {
 					try {
-						internalWriteSync(profileId.getDomain(), buildAuditUserId(profileId, isImpersonated), sessionId, serviceId, context, action, entries);
+						internalWriteSync(profileId.getDomain(), buildAuditUserId(profileId, isImpersonated), softwareName, sessionId, serviceId, context, action, entries);
 					} catch (WTException ex) {
 						LOGGER.error("Unable to write entries", ex);
 					}
@@ -156,11 +157,11 @@ public class AuditLogManager extends AbstractAppManager<AuditLogManager> {
 		}
 	}
 	
-	public <C extends Enum<C>, A extends Enum<A>> void write(final UserProfileId profileId, final String sessionId, final String serviceId, final C context, final A action, final Object reference, final Object data) {
-		write(profileId, sessionId, serviceId, EnumUtils.getValue(context), EnumUtils.getValue(action), reference, data);
+	public <C extends Enum<C>, A extends Enum<A>> void write(final UserProfileId profileId, final String softwareName, final String sessionId, final String serviceId, final C context, final A action, final Object reference, final Object data) {
+		write(profileId, softwareName, sessionId, serviceId, EnumUtils.getValue(context), EnumUtils.getValue(action), reference, data);
 	}
 	
-	public void write(final UserProfileId profileId, final String sessionId, final String serviceId, final String context, final String action, final Object reference, final Object data) {
+	public void write(final UserProfileId profileId, final String softwareName, final String sessionId, final String serviceId, final String context, final String action, final Object reference, final Object data) {
 		Check.notNull(profileId, "profileId");
 		Check.notEmpty(serviceId, "serviceId");
 		Check.notEmpty(context, "context");
@@ -173,7 +174,7 @@ public class AuditLogManager extends AbstractAppManager<AuditLogManager> {
 				if (isImpersonated && !logImpersonatedEnabled(profileId)) return;
 				WT.runPrivileged(() -> {
 					try {
-						internalWriteSync(profileId.getDomain(), buildAuditUserId(profileId, isImpersonated), sessionId, serviceId, context, action, reference, data);
+						internalWriteSync(profileId.getDomain(), buildAuditUserId(profileId, isImpersonated), softwareName, sessionId, serviceId, context, action, reference, data);
 					} catch (WTException ex) {
 						LOGGER.error("Unable to write entries", ex);
 					}
@@ -186,8 +187,8 @@ public class AuditLogManager extends AbstractAppManager<AuditLogManager> {
 		}
 	}
 	
-	public <C extends Enum<C>, A extends Enum<A>> Batch getBatch(final UserProfileId profileId, final String sessionId, final String serviceId, final C context, final A action) {
-		return getBatch(profileId, sessionId, serviceId, EnumUtils.getValue(context), EnumUtils.getValue(action));
+	public <C extends Enum<C>, A extends Enum<A>> Batch getBatch(final UserProfileId profileId, final String softwareName, final String sessionId, final String serviceId, final C context, final A action) {
+		return getBatch(profileId, softwareName, sessionId, serviceId, EnumUtils.getValue(context), EnumUtils.getValue(action));
 	}
 	
 	/**
@@ -195,13 +196,14 @@ public class AuditLogManager extends AbstractAppManager<AuditLogManager> {
 	 * Entries will be trasparently managed/saved in groups of 100 items maximizing 
 	 * performances when you have a huge amount of entries.
 	 * @param profileId The UserProfileId.
+	 * @param softwareName The SW name doing the update. Optional.
 	 * @param sessionId The session reference. Optional.
 	 * @param serviceId The Service ID.
 	 * @param context
 	 * @param action
 	 * @return 
 	 */
-	public Batch getBatch(final UserProfileId profileId, final String sessionId, final String serviceId, final String context, final String action) {
+	public Batch getBatch(final UserProfileId profileId, final String softwareName, final String sessionId, final String serviceId, final String context, final String action) {
 		Check.notNull(profileId, "profileId");
 		Check.notEmpty(serviceId, "serviceId");
 		Check.notEmpty(context, "context");
@@ -214,7 +216,7 @@ public class AuditLogManager extends AbstractAppManager<AuditLogManager> {
 				if (isImpersonated && !logImpersonatedEnabled(profileId)) {
 					return null;
 				} else {
-					return new Batch(this, profileId.getDomain(), buildAuditUserId(profileId, isImpersonated), sessionId, serviceId, context, action, 50);
+					return new Batch(this, profileId.getDomain(), buildAuditUserId(profileId, isImpersonated), softwareName, sessionId, serviceId, context, action, 50);
 				}
 			} finally {
 				readyUnlock();
@@ -410,13 +412,13 @@ public class AuditLogManager extends AbstractAppManager<AuditLogManager> {
 		}
 	}
 	
-	private void batchWrite(final String domainId, final String userId, final String sessionId, final String serviceId, final String context, final String action, final Collection<AuditReferenceDataEntry> entries) {
+	private void batchWrite(final String domainId, final String userId, final String softwareName, final String sessionId, final String serviceId, final String context, final String action, final Collection<AuditReferenceDataEntry> entries) {
 		try {
 			readyLock();
 			try {
 				WT.runPrivileged(() -> {
 					try {
-						internalWriteSync(domainId, userId, sessionId, serviceId, context, action, entries);
+						internalWriteSync(domainId, userId, softwareName, sessionId, serviceId, context, action, entries);
 					} catch (WTException ex) {
 						LOGGER.error("Unable to write entries", ex);
 					}
@@ -429,23 +431,41 @@ public class AuditLogManager extends AbstractAppManager<AuditLogManager> {
 		}
 	}
 	
-	private int internalWriteSync(final String domainId, final String userId, final String sessionId, final String serviceId, final String context, final String action, final Object reference, final Object data) throws WTException {
+	private int internalWriteSync(final String domainId, final String userId, final String softwareName, final String sessionId, final String serviceId, final String context, final String action, final Object reference, final Object data) throws WTException {
 		AuditLogDAO audDao = AuditLogDAO.getInstance();
 		Connection con = null;
 		
 		try {
 			con = WT.getCoreConnection();
-			OAuditLog oal = new OAuditLog();
-			oal.setTimestamp(BaseDAO.createRevisionTimestamp());
-			oal.setDomainId(domainId);
-			oal.setUserId(userId);
-			oal.setSessionId(sessionId);
-			oal.setServiceId(serviceId);
-			oal.setContext(context);
-			oal.setAction(action);
-			oal.setReferenceId(reference != null ? String.valueOf(reference) : null);
-			oal.setData(data != null ? String.valueOf(data) : null);
-			return audDao.insert(con, oal);
+			
+			if (CoreManifest.ID.equals(serviceId) && "AUTH".equals(context)) {
+				OAccessLog oacc = new OAccessLog();
+				oacc.setTimestamp(BaseDAO.createRevisionTimestamp());
+				oacc.setDomainId(domainId);
+				oacc.setUserId(userId);
+				oacc.setSoftwareName(softwareName);
+				oacc.setSessionId(sessionId);
+				oacc.setServiceId(serviceId);
+				oacc.setContext(context);
+				oacc.setAction(action);
+				oacc.setReferenceId(reference != null ? String.valueOf(reference) : null);
+				oacc.setData(data != null ? String.valueOf(data) : null);
+				return audDao.insertAccess(con, oacc);
+				
+			} else {
+				OAuditLog oal = new OAuditLog();
+				oal.setTimestamp(BaseDAO.createRevisionTimestamp());
+				oal.setDomainId(domainId);
+				oal.setUserId(userId);
+				oal.setSoftwareName(softwareName);
+				oal.setSessionId(sessionId);
+				oal.setServiceId(serviceId);
+				oal.setContext(context);
+				oal.setAction(action);
+				oal.setReferenceId(reference != null ? String.valueOf(reference) : null);
+				oal.setData(data != null ? String.valueOf(data) : null);
+				return audDao.insert(con, oal);
+			}
 
 		} catch (Throwable t) {
 			throw ExceptionUtils.wrapThrowable(t);
@@ -454,21 +474,37 @@ public class AuditLogManager extends AbstractAppManager<AuditLogManager> {
 		}
 	}
 	
-	private int[] internalWriteSync(final String domainId, final String userId, final String sessionId, final String serviceId, final String context, final String action, final Collection<AuditReferenceDataEntry> entries) throws WTException {
+	private int[] internalWriteSync(final String domainId, final String userId, final String softwareName, final String sessionId, final String serviceId, final String context, final String action, final Collection<AuditReferenceDataEntry> entries) throws WTException {
 		AuditLogDAO audDao = AuditLogDAO.getInstance();
 		Connection con = null;
 		
 		try {
 			con = WT.getCoreConnection();
-			OAuditLog oalBase = new OAuditLog();
-			oalBase.setTimestamp(BaseDAO.createRevisionTimestamp());
-			oalBase.setDomainId(domainId);
-			oalBase.setUserId(userId);
-			oalBase.setServiceId(serviceId);
-			oalBase.setContext(context);
-			oalBase.setAction(action);
-			oalBase.setSessionId(sessionId);
-			return audDao.batchInsert(con, oalBase, entries);
+			
+			if (CoreManifest.ID.equals(serviceId) && "AUTH".equals(context)) {
+				OAccessLog oaccBase = new OAccessLog();
+				oaccBase.setTimestamp(BaseDAO.createRevisionTimestamp());
+				oaccBase.setDomainId(domainId);
+				oaccBase.setUserId(userId);
+				oaccBase.setSoftwareName(softwareName);
+				oaccBase.setSessionId(sessionId);
+				oaccBase.setServiceId(serviceId);
+				oaccBase.setContext(context);
+				oaccBase.setAction(action);
+				return audDao.batchInsertAccess(con, oaccBase, entries);
+				
+			} else {
+				OAuditLog oalBase = new OAuditLog();
+				oalBase.setTimestamp(BaseDAO.createRevisionTimestamp());
+				oalBase.setDomainId(domainId);
+				oalBase.setUserId(userId);
+				oalBase.setSoftwareName(softwareName);
+				oalBase.setSessionId(sessionId);
+				oalBase.setServiceId(serviceId);
+				oalBase.setContext(context);
+				oalBase.setAction(action);
+				return audDao.batchInsert(con, oalBase, entries);
+			}
 
 		} catch (Throwable t) {
 			throw ExceptionUtils.wrapThrowable(t);
@@ -504,6 +540,7 @@ public class AuditLogManager extends AbstractAppManager<AuditLogManager> {
 		private final AuditLogManager auditLogManager;
 		private final String domainId;
 		private final String userId;
+		private final String softwareName;
 		private final String sessionId;
 		private final String serviceId;
 		private final String context;
@@ -512,10 +549,11 @@ public class AuditLogManager extends AbstractAppManager<AuditLogManager> {
 		private LinkedList<AuditReferenceDataEntry> buffer;
 		private final Object lock = new Object();
 		
-		private Batch(AuditLogManager auditLogManager, String domainId, String userId, String sessionId, String serviceId, String context, String action, int batchSize) {
+		private Batch(AuditLogManager auditLogManager, String domainId, String userId, String softwareName, String sessionId, String serviceId, String context, String action, int batchSize) {
 			this.auditLogManager = Check.notNull(auditLogManager, "auditLogManager");
 			this.domainId = Check.notEmpty(domainId, "domainId");
 			this.userId = Check.notEmpty(userId, "userId");
+			this.softwareName = softwareName;
 			this.sessionId = sessionId;
 			this.serviceId = Check.notEmpty(serviceId, "serviceId");
 			this.context = Check.notEmpty(context, "context");
@@ -547,7 +585,7 @@ public class AuditLogManager extends AbstractAppManager<AuditLogManager> {
 					// Writes entries divided into groups of batch-size
 					for (i = 0; i < (size / batchSize); i++) {
 						int start = i * batchSize;		
-						auditLogManager.batchWrite(domainId, userId, sessionId, serviceId, context, action, buffer.subList(start, start + batchSize));
+						auditLogManager.batchWrite(domainId, userId, softwareName, sessionId, serviceId, context, action, buffer.subList(start, start + batchSize));
 					}
 					// Initializes new buffer with remaining entries (if any)
 					int remaining = size % batchSize;
@@ -565,7 +603,7 @@ public class AuditLogManager extends AbstractAppManager<AuditLogManager> {
 				// The buffer here can contain only a number of items lower than batch-size
 				if (!buffer.isEmpty()) {
 					// Writes the whole buffer and re-init it...
-					auditLogManager.batchWrite(domainId, userId, sessionId, serviceId, context, action, buffer);
+					auditLogManager.batchWrite(domainId, userId, softwareName, sessionId, serviceId, context, action, buffer);
 					this.buffer = new LinkedList<>();
 				}
 			}

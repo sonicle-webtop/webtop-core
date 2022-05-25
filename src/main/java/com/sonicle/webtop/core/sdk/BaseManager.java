@@ -318,7 +318,7 @@ public abstract class BaseManager {
 	 * @param data An optional data (eg. JSON payload) to complete info about operation.
 	 */
 	public <C extends Enum<C>, A extends Enum<A>> void auditLogWrite(final C context, final A action, final Object reference, final Object data) {
-		if (isAuditEnabled()) WT.writeAuditLog(SERVICE_ID, context, action, reference, data);
+		if (isAuditEnabled()) WT.writeAuditLog(softwareName, SERVICE_ID, context, action, reference, data);
 	}
 	
 	/**
@@ -329,7 +329,7 @@ public abstract class BaseManager {
 	 * @param data An optional data (eg. JSON payload) to complete info about operation.
 	 */
 	public void auditLogWrite(final String context, final String action, final String reference, final String data) {
-		if (isAuditEnabled()) WT.writeAuditLog(SERVICE_ID, context, action, reference, data);
+		if (isAuditEnabled()) WT.writeAuditLog(softwareName, SERVICE_ID, context, action, reference, data);
 	}
 	
 	/**
@@ -341,7 +341,7 @@ public abstract class BaseManager {
 	 * @param entries A collection of multiple reference/data objects.
 	 */
 	public <C extends Enum<C>, A extends Enum<A>> void auditLogWrite(final C context, final A action, final Collection<AuditReferenceDataEntry> entries) {
-		if (isAuditEnabled()) WT.writeAuditLog(SERVICE_ID, context, action, entries);
+		if (isAuditEnabled()) WT.writeAuditLog(softwareName, SERVICE_ID, context, action, entries);
 	}
 	
 	/**
@@ -351,7 +351,7 @@ public abstract class BaseManager {
 	 * @param entries A collection of multiple reference/data objects.
 	 */
 	public void auditLogWrite(final String context, final String action, final Collection<AuditReferenceDataEntry> entries) {
-		if (isAuditEnabled()) WT.writeAuditLog(SERVICE_ID, context, action, entries);
+		if (isAuditEnabled()) WT.writeAuditLog(softwareName, SERVICE_ID, context, action, entries);
 	}
 	
 	/**
@@ -363,7 +363,7 @@ public abstract class BaseManager {
 	 * @return The Batch object interface
 	 */
 	public <C extends Enum<C>, A extends Enum<A>> AuditLogManager.Batch auditLogGetBatch(final C context, final A action) {
-		return isAuditEnabled() ? WT.auditLogGetBatch(SERVICE_ID, context, action) : null;
+		return isAuditEnabled() ? WT.auditLogGetBatch(softwareName, SERVICE_ID, context, action) : null;
 	}
 	
 	/**
@@ -373,7 +373,7 @@ public abstract class BaseManager {
 	 * @return The Batch object interface
 	 */
 	public AuditLogManager.Batch auditLogGetBatch(final String context, final String action) {
-		return isAuditEnabled() ? WT.auditLogGetBatch(SERVICE_ID, context, action) : null;
+		return isAuditEnabled() ? WT.auditLogGetBatch(softwareName, SERVICE_ID, context, action) : null;
 	}
 	
 	/**

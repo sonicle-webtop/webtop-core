@@ -67,7 +67,7 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainAccessLog', {
 			reference: 'gp',
 			store: {
 				type: 'buffered',
-				autoLoad: true,
+				autoLoad: false,
 				model: 'Sonicle.webtop.core.admin.model.GridDomainAccessLog',
 				proxy: WTF.apiProxy(me.mys.ID, 'ManageDomainAccessLog', null, {
 					extraParams: {
@@ -78,7 +78,7 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainAccessLog', {
 					}
 				}),
 				sorters: [{
-					property: 'date',
+					property: 'timestamp',
 					direction: 'DESC'
 				}],
 				pageSize: 50,
@@ -86,7 +86,8 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainAccessLog', {
 				trailingBufferZone: 50
 			},
 			viewConfig: {
-				enableTextSelection: true
+				enableTextSelection: true,
+				emptyText: me.mys.res('domainAccessLog.gp.emptyText.lbl')
 			},
 			columns: [
 				{
@@ -123,7 +124,7 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainAccessLog', {
 					flex: 2
 				}, {
 					xtype: 'datecolumn',
-					dataIndex: 'date',
+					dataIndex: 'timestamp',
 					format: WT.getShortDateFmt() + ' ' +  WT.getLongTimeFmt(),
 					sortable: true,
 					groupable: false,
@@ -131,7 +132,7 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainAccessLog', {
 					header: me.res('domainAccessLog.gp.date.lbl'),
 					width: 180
 				}, {
-					dataIndex: 'minutes',
+					dataIndex: 'duration',
 					emptyCellText: '-',
 					sortable: true,
 					groupable: false,
@@ -271,6 +272,42 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainAccessLog', {
 				}
 			],
 			tbar: [
+				{
+					xtype: 'button',
+					tooltip: {title: me.res('domainAccessLog.viewOptions.today.tip.tit'), text: me.res('domainAccessLog.viewOptions.today.tip.txt')},
+					iconCls: 'wt-icon-calDays-1',
+					handler: function() {
+						me.prepareSearchDates(0);
+					}
+				}, {
+					xtype: 'button',
+					tooltip: {title: me.res('domainAccessLog.viewOptions.prev7.tip.tit'), text: me.res('domainAccessLog.viewOptions.prev7.tip.txt')},
+					iconCls: 'wt-icon-calDays-7',
+					handler: function() {
+						me.prepareSearchDates(7);
+					}
+				}, {
+					xtype: 'button',
+					tooltip: {title: me.res('domainAccessLog.viewOptions.prev14.tip.tit'), text: me.res('domainAccessLog.viewOptions.prev14.tip.txt')},
+					iconCls: 'wt-icon-calDays-14',
+					handler: function() {
+						me.prepareSearchDates(14);
+					}
+				}, {
+					xtype: 'button',
+					tooltip: {title: me.res('domainAccessLog.viewOptions.prev30.tip.tit'), text: me.res('domainAccessLog.viewOptions.prev30.tip.txt')},
+					iconCls: 'wt-icon-calDays-30',
+					handler: function() {
+						me.prepareSearchDates(30);
+					}
+				}, {
+					xtype: 'button',
+					tooltip: {title: me.res('domainAccessLog.viewOptions.prev90.tip.tit'), text: me.res('domainAccessLog.viewOptions.prev90.tip.txt')},
+					iconCls: 'wt-icon-calDays-90',
+					handler: function() {
+						me.prepareSearchDates(90);
+					}
+				},
 				'->',
 				{
 					xtype: 'wtsearchfield',
@@ -332,6 +369,9 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainAccessLog', {
 				me.getAct('refresh')
 			]
 		});
+		me.on('afterrender', function() {
+			me.prepareSearchDates(0);
+		});
 	},
 	
 	initActions: function() {
@@ -364,6 +404,40 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainAccessLog', {
 		sto = me.lref('gp').getStore();
 		if (opts.query !== undefined) Ext.apply(pars, {query: opts.query});
 		WTU.loadWithExtraParams(sto, pars);
+	},
+	
+	prepareSearchDates: function(offset) {
+		var me = this,
+				dt = new Date(),
+				dateFormat = 'Y-m-d',
+				toDate = Ext.Date.format(dt, dateFormat),
+				fromDate;
+		
+		if (offset%30 == 0) {
+			fromDate = Ext.Date.format(Sonicle.Date.add(dt, { months: -(offset/30) }, true), dateFormat);
+		} else {
+			fromDate = Ext.Date.format(Sonicle.Date.add(dt, { days: -offset }, true), dateFormat);
+		}
+		
+		me.setSearchDates(fromDate, toDate);
+	},
+	
+	setSearchDates: function(fromDate, toDate) {
+		var me = this,
+				fldSearch = me.lref('fldsearch'),
+				searchString = fldSearch.getSearchString();
+		
+		if (fromDate) {
+			searchString.removeKeyword('dateFrom', false);
+			searchString.addEntry('dateFrom', fromDate, false);
+		}
+		
+		if (toDate) {
+			searchString.removeKeyword('dateTo', false);
+			searchString.addEntry('dateTo', toDate, false);
+		}
+		
+		fldSearch.setSearchString(searchString, true);
 	}
 	
 	/*
@@ -396,4 +470,3 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainAccessLog', {
 	}
 	*/
 });
-

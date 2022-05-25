@@ -33,11 +33,17 @@
  */
 package com.sonicle.webtop.core.admin;
 
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
 import com.license4j.ActivationStatus;
 import com.license4j.ValidationStatus;
+import com.sonicle.commons.AlgoUtils.MD5HashBuilder;
 import com.sonicle.commons.LangUtils;
+import com.sonicle.commons.beans.SortInfo;
 import com.sonicle.commons.l4j.HardwareID;
 import com.sonicle.commons.l4j.ProductLicense;
+import com.sonicle.commons.time.DateTimeRange;
+import com.sonicle.commons.time.DateTimeUtils;
 import com.sonicle.commons.web.Crud;
 import com.sonicle.commons.web.ServletUtils;
 import com.sonicle.commons.web.json.CId;
@@ -48,7 +54,9 @@ import com.sonicle.commons.web.json.Payload;
 import com.sonicle.commons.web.json.PayloadAsList;
 import com.sonicle.commons.web.json.bean.QueryObj;
 import com.sonicle.commons.web.json.extjs.ExtTreeNode;
+import com.sonicle.commons.web.json.extjs.GridMetadata;
 import com.sonicle.commons.web.json.extjs.ResultMeta;
+import com.sonicle.commons.web.json.extjs.SortMeta;
 import com.sonicle.commons.web.json.extjs.SortParam;
 import com.sonicle.security.auth.DirectoryManager;
 import com.sonicle.security.auth.directory.AbstractDirectory;
@@ -134,13 +142,16 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.ListIterator;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.jivesoftware.smack.util.FileUtils;
+import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
+import org.joda.time.Days;
 import org.slf4j.Logger;
 
 /**
@@ -1375,6 +1386,11 @@ public class Service extends BaseService {
 		}
 	}
 	
+	private final Cache<String, Integer> cacheManageGridContactsTotalCount = Caffeine.newBuilder()
+		.expireAfterWrite(500, TimeUnit.MILLISECONDS)
+		.maximumSize(10)
+		.build();
+	
 	public void processManageDomainAccessLog(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
 		ArrayList<JsDomainAccessLog> items = new ArrayList<>();
 		
@@ -1382,23 +1398,57 @@ public class Service extends BaseService {
 			UserProfile up = getEnv().getProfile();
 			DateTimeZone utz = up.getTimeZone();
 			
-			String crud = ServletUtils.getStringParameter(request, "crud", true);
 			String domainId = ServletUtils.getStringParameter(request, "domainId", true);
-			Integer page = ServletUtils.getIntParameter(request, "page", true);
-			Integer limit = ServletUtils.getIntParameter(request, "limit", 50);
-			ListDomainAccessLogResult result = null;
-			SortParam.List sortParams = ServletUtils.getObjectParameter(request, "sort", null, SortParam.List.class);
-			QueryObj queryObj = ServletUtils.getObjectParameter(request, "query", new QueryObj(), QueryObj.class);
-			
-			if (crud.equals(Crud.READ)) {
-				result = coreadm.listAccessLog(domainId, page, limit, sortParams.get(0), DomainAccessLogQuery.createCondition(queryObj, utz), true);
-				for (DomainAccessLog domainAccLog : result.items) {
-					items.add(new JsDomainAccessLog(domainAccLog));
+			String crud = ServletUtils.getStringParameter(request, "crud", true);
+			if (Crud.READ.equals(crud)) {
+				QueryObj queryObj = ServletUtils.getObjectParameter(request, "query", new QueryObj(), QueryObj.class);
+				SortMeta.List sortMeta = ServletUtils.getObjectParameter(request, "sort", new SortMeta.List(), SortMeta.List.class);
+				int page = ServletUtils.getIntParameter(request, "page", true);
+				int limit = ServletUtils.getIntParameter(request, "limit", 50);
+				
+				DateTime from = null, to = null;
+				for (QueryObj.ConditionEntry entry : queryObj.getConditions()) {
+					if ("dateFrom".equals(entry.keyword)) {
+						from = DateTimeUtils.createYmdFormatter(utz).parseDateTime(entry.value).withTimeAtStartOfDay();
+					} else if ("dateTo".equals(entry.keyword)) {
+						to = DateTimeUtils.createYmdFormatter(utz).parseDateTime(entry.value).plusDays(1).withTimeAtStartOfDay();
+					}
+				}
+				queryObj.removeCondition("dateFrom");
+				queryObj.removeCondition("dateTo");
+				
+				if (from == null || to == null || Math.abs(Days.daysBetween(from, to).getDays()) > 365) {
+					new JsonResult().printTo(out);
+				} else {
+					SortInfo sortInfo = !sortMeta.isEmpty() ? sortMeta.get(0).toSortInfo() : SortInfo.desc("timestamp");
+					
+					String reqId = new MD5HashBuilder()
+						.append(domainId)
+						.append(ServletUtils.getStringParameter(request, "query", null))
+						.append(ServletUtils.getStringParameter(request, "sort", null))
+						.build();
+
+					Integer cachedTotalCount = cacheManageGridContactsTotalCount.getIfPresent(reqId);
+					ListDomainAccessLogResult result = coreadm.listAccessLog(domainId, new DateTimeRange(from, to), DomainAccessLogQuery.createCondition(queryObj, utz), sortInfo, page, limit, cachedTotalCount == null);
+					int totalCount;
+					if (cachedTotalCount != null) {
+						totalCount = cachedTotalCount;
+					} else {
+						cacheManageGridContactsTotalCount.put(reqId, result.fullCount);
+						totalCount = result.fullCount;
+					}
+
+					for (DomainAccessLog domainAccLog : result.items) {
+						items.add(new JsDomainAccessLog(domainAccLog));
+					}
+					new JsonResult(items, totalCount)
+						.setPage(page)
+						.setMetaData(new GridMetadata()
+							.setSortInfo(sortInfo)
+						)
+						.printTo(out);
 				}
 			}
-			
-			new JsonResult(items, result.fullCount).printTo(out);
-			
 		} catch(Throwable t) {
 			logger.error("Error in ManageDomainAccessLog", t);
 			new JsonResult(t).printTo(out);

@@ -32,7 +32,7 @@
  */
 package com.sonicle.webtop.core.admin;
 
-import com.sonicle.webtop.core.bol.ODomainAccessLog;
+import com.sonicle.webtop.core.bol.VDomainAccessLog;
 import com.sonicle.webtop.core.bol.ODomainAccessLogDetail;
 import com.sonicle.webtop.core.model.DomainAccessLog;
 import com.sonicle.webtop.core.model.DomainAccessLogDetail;
@@ -46,17 +46,12 @@ public class ManagerUtils {
 		return limit * (page-1);
 	}
 	
-	static DomainAccessLog createDomainAccessLog(ODomainAccessLog src) {
-		if (src == null) return null;
-		return fillDomainAccessLog(new DomainAccessLog(), src);
-	}
-	
-	static <T extends DomainAccessLog> T fillDomainAccessLog(T tgt, ODomainAccessLog src) {
+	static <T extends DomainAccessLog> T fillDomainAccessLog(T tgt, VDomainAccessLog src) {
 		if ((tgt != null) && (src != null)) {
 			tgt.setSessionId(src.getSessionId());
 			tgt.setUserId(src.getUserId());
-			tgt.setDate(src.getDate());
-			tgt.setMinutes(src.getMinutes());
+			tgt.setTimestamp(src.getTimestamp());
+			tgt.setDuration(src.getDuration());
 			tgt.setAuthenticated(src.getAuthenticated());
 			tgt.setFailure(src.getFailure());
 			tgt.setLoginErrors(src.getLoginErrors());
