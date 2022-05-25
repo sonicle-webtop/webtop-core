@@ -42,7 +42,7 @@ Ext.define('Sonicle.webtop.core.view.Causal', {
 		title: '{causal.tit}',
 		iconCls: 'wt-icon-causal',
 		width: 430,
-		height: 250
+		height: 260
 	},
 	modelName: 'Sonicle.webtop.core.model.Causal',
 	viewModel: {
@@ -102,7 +102,21 @@ Ext.define('Sonicle.webtop.core.view.Causal', {
 					},
 					fieldLabel: me.mys.res('causal.fld-masterData.lbl'),
 					anchor: '100%'
-				})
+				}),
+				me.mys.hasAudit() ? {
+					xtype: 'statusbar',
+					items: [
+						me.addAct('causalAuditLog', {
+							text: null,
+							tooltip: WT.res('act-auditLog.lbl'),
+							iconCls: 'fas fa-history',
+							handler: function() {
+								me.mys.openAuditUI(me.getModel().getId(), 'CAUSAL');
+							},
+							scope: me
+						})
+					]
+				} : null
 			]
 		});
 		me.on('viewload', me.onViewLoad);
@@ -111,6 +125,14 @@ Ext.define('Sonicle.webtop.core.view.Causal', {
 	onViewLoad: function(s, success) {
 		if(!success) return;
 		var me = this;
+		
+		if (me.mys.hasAudit()) {
+			if (me.isMode(me.MODE_NEW)) {
+				me.getAct('causalAuditLog').setDisabled(true);
+			} else {
+				me.getAct('causalAuditLog').setDisabled(false);
+			}
+		}
 		
 		me.lref('flddescription').focus(true);
 	}

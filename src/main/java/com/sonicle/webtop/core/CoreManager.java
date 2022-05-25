@@ -3297,9 +3297,9 @@ public class CoreManager extends BaseManager {
 			tagDao.deleteByProfile(con, pid.getDomainId(), pid.getUserId());
 			
 			eventManager.fireEvent(new TagChangedEvent(this, ChangedEvent.Operation.DELETE));
-			if (isAuditEnabled()) {
-				auditLogWrite(AuditContext.TAG, AuditAction.DELETE, "*", pid);
-			}
+//			if (isAuditEnabled()) {
+//				auditLogWrite(AuditContext.TAG, AuditAction.DELETE, "*", pid);
+//			}
 			
 		} catch (Throwable t) {
 			throw ExceptionUtils.wrapThrowable(t);

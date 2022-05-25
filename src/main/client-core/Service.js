@@ -881,6 +881,46 @@ Ext.define('Sonicle.webtop.core.Service', {
 		});
 	},
 	
+	hasAudit: function() {
+		var me = this;
+		return me.getVar('hasAudit');
+	},
+	
+	openAuditUI: function(referenceId, context) {
+		var me = this;
+
+		WT.getServiceApi(WT.ID).showAuditLog(me.ID, context, null, referenceId, function(data) {
+			var str = '', logDate, actionString, eldata;
+
+			Ext.each(data,function(el) {
+				logDate = Ext.Date.parseDate(el.timestamp, 'Y-m-d H:i:s');
+				actionString = Ext.String.format('auditLog.{0}.{1}', context, el.action);
+				str += Ext.String.format('{0} - {1} - {2} ({3})\n', Ext.Date.format(logDate, WT.getShortDateTimeFmt()), me.res(actionString), el.userName, el.userId);
+				str += me.auditDetailsFormat(el.data, context);
+			});
+			return str;
+		});
+	},
+	
+	auditDetailsFormat: function(data, context) {
+		var me = this,
+				eldata = Ext.JSON.decode(data),
+				str = '';
+		
+		if (eldata) {
+			switch (context) {
+				case 'ACTIVITY':
+				case 'CAUSAL':
+					if (!Ext.isEmpty(eldata.description)) str += Ext.String.format('\t{0}: {1}\n', me.res('auditLog.description.lbl'), eldata.description);
+					break;
+				case 'TAG':
+					if (!Ext.isEmpty(eldata.color)) str += Ext.String.format('\t{0}: {1}\n', me.res('auditLog.color.lbl'), eldata.color);
+					if (!Ext.isEmpty(eldata.description)) str += Ext.String.format('\t{0}: {1}\n', me.res('auditLog.description.lbl'), eldata.description);
+			}
+		}
+		return str;
+	},
+	
 	showAuditLog: function(serviceId, context, action, referenceId, dataToStringFunction, opts) {
 		var me = this,
 				opts = opts || {};

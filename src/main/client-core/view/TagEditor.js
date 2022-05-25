@@ -77,7 +77,7 @@ Ext.define('Sonicle.webtop.core.view.TagEditor', {
 	
 	dockableConfig: {
 		width: 280,
-		height: 150,
+		//height: see below...
 		modal: true
 	},
 	
@@ -95,6 +95,11 @@ Ext.define('Sonicle.webtop.core.view.TagEditor', {
 	
 	constructor: function(cfg) {
 		var me = this;
+		Ext.merge(cfg || {}, {
+            dockableConfig: {
+               height: WT.getVar('hasAudit') ? 180 : 150
+			}
+		});
 		me.callParent([cfg]);
 		me.setViewTitle(me.mode === 'edit' ? WT.res('tagEditor.edit.tit') : WT.res('tagEditor.new.tit'));
 	},
@@ -159,7 +164,20 @@ Ext.define('Sonicle.webtop.core.view.TagEditor', {
 					],
 					fieldLabel: me.mys.res('tagEditor.fld-visibility.lbl'),
 					labelWidth: 80
-				}
+				}, me.mys.hasAudit() ? {
+					xtype: 'statusbar',
+					items: [
+						me.addAct('tagAuditLog', {
+							text: null,
+							tooltip: WT.res('act-auditLog.lbl'),
+							iconCls: 'fas fa-history',
+							handler: function() {
+								me.mys.openAuditUI(me.getVM().get('data.id'), 'TAG');
+							},
+							scope: me
+						})
+					]
+				} : null
 			],
 			buttons: [
 				{
@@ -189,6 +207,16 @@ Ext.define('Sonicle.webtop.core.view.TagEditor', {
 	
 	privates: {
 		onViewShow: function(s) {
+			var me = this;
+			
+			if (me.mys.hasAudit()) {
+				if (me.mode === 'new') {
+					me.getAct('tagAuditLog').setDisabled(true);
+				} else {
+					me.getAct('tagAuditLog').setDisabled(false);
+				}
+			}
+			
 			this.lref('fldname').focus(true);
 		}
 	}

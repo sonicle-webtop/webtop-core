@@ -252,7 +252,16 @@ Ext.define('Sonicle.webtop.core.view.CustomField', {
                     	bind: {
                     		html: 'ID: {record.fieldId}'
                     	}
-                    }
+                    },
+					me.mys.hasAudit() ? me.addAct('customFieldAuditLog', {
+						text: null,
+						tooltip: WT.res('act-auditLog.lbl'),
+						iconCls: 'fas fa-history',
+						handler: function() {
+							me.mys.openAuditUI(me.getModel().getId(), 'CUSTOMFIELD');
+						},
+						scope: me
+					}) : null
         		]
         	}
         });
@@ -446,6 +455,15 @@ Ext.define('Sonicle.webtop.core.view.CustomField', {
 		onViewLoad: function(s, success) {
 			var me = this,
 					mo = me.getModel();
+			
+			if (me.mys.hasAudit()) {
+				if (me.isMode(me.MODE_NEW)) {
+					me.getAct('customFieldAuditLog').setDisabled(true);
+				} else {
+					me.getAct('customFieldAuditLog').setDisabled(false);
+				}
+			}
+			
 			me.lref('fldname').focus(true);
 		},
 		

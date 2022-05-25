@@ -41,7 +41,7 @@ Ext.define('Sonicle.webtop.core.view.Activity', {
 		title: '{activity.tit}',
 		iconCls: 'wt-icon-activity',
 		width: 430,
-		height: 220
+		height: 230
 	},
 	modelName: 'Sonicle.webtop.core.model.Activity',
 	viewModel: {
@@ -89,7 +89,21 @@ Ext.define('Sonicle.webtop.core.view.Activity', {
 					},
 					fieldLabel: me.mys.res('activity.fld-user.lbl'),
 					anchor: '100%'
-				})
+				}),
+				me.mys.hasAudit() ? {
+					xtype: 'statusbar',
+					items: [
+						me.addAct('activityAuditLog', {
+							text: null,
+							tooltip: WT.res('act-auditLog.lbl'),
+							iconCls: 'fas fa-history',
+							handler: function() {
+								me.mys.openAuditUI(me.getModel().getId(), 'ACTIVITY');
+							},
+							scope: me
+						})
+					]
+				} : null
 			]
 		});
 		me.on('viewload', me.onViewLoad);
@@ -98,6 +112,14 @@ Ext.define('Sonicle.webtop.core.view.Activity', {
 	onViewLoad: function(s, success) {
 		if(!success) return;
 		var me = this;
+		
+		if (me.mys.hasAudit()) {
+			if (me.isMode(me.MODE_NEW)) {
+				me.getAct('activityAuditLog').setDisabled(true);
+			} else {
+				me.getAct('activityAuditLog').setDisabled(false);
+			}
+		}
 		
 		me.lref('flddescription').focus(true);
 	}

@@ -273,7 +273,20 @@ Ext.define('Sonicle.webtop.core.view.CustomPanel', {
 						}
 					],
 					flex: 1
-				}
+				}, me.mys.hasAudit() ? {
+					xtype: 'statusbar',
+					items: [
+						me.addAct('customPanelAuditLog', {
+							text: null,
+							tooltip: WT.res('act-auditLog.lbl'),
+							iconCls: 'fas fa-history',
+							handler: function() {
+								me.mys.openAuditUI(me.getModel().getId(), 'CUSTOMPANEL');
+							},
+							scope: me
+						})
+					]
+				} : null
 			]
 		});
 		me.on('viewload', me.onViewLoad);
@@ -308,6 +321,15 @@ Ext.define('Sonicle.webtop.core.view.CustomPanel', {
 		onViewLoad: function(s, success) {
 			var me = this,
 					mo = me.getModel();
+			
+			if (me.mys.hasAudit()) {
+				if (me.isMode(me.MODE_NEW)) {
+					me.getAct('customPanelAuditLog').setDisabled(true);
+				} else {
+					me.getAct('customPanelAuditLog').setDisabled(false);
+				}
+			}
+			
 			me.lref('fldname').focus(true);
 		},
 		
