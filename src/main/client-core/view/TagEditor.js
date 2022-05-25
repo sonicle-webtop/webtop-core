@@ -97,7 +97,8 @@ Ext.define('Sonicle.webtop.core.view.TagEditor', {
 		var me = this;
 		Ext.merge(cfg || {}, {
             dockableConfig: {
-               height: WT.getVar('hasAudit') ? 180 : 150
+				// Keep WT.getVar: mys is NOT ready here in constructor
+				height: WT.hasAuditUI() ? 180 : 150
 			}
 		});
 		me.callParent([cfg]);
@@ -164,7 +165,7 @@ Ext.define('Sonicle.webtop.core.view.TagEditor', {
 					],
 					fieldLabel: me.mys.res('tagEditor.fld-visibility.lbl'),
 					labelWidth: 80
-				}, me.mys.hasAudit() ? {
+				}, me.mys.hasAuditUI() ? {
 					xtype: 'statusbar',
 					items: [
 						me.addAct('tagAuditLog', {
@@ -209,7 +210,7 @@ Ext.define('Sonicle.webtop.core.view.TagEditor', {
 		onViewShow: function(s) {
 			var me = this;
 			
-			if (me.mys.hasAudit()) {
+			if (me.mys.hasAuditUI()) {
 				if (me.mode === 'new') {
 					me.getAct('tagAuditLog').setDisabled(true);
 				} else {

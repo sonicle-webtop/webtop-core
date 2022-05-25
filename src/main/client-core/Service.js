@@ -881,11 +881,6 @@ Ext.define('Sonicle.webtop.core.Service', {
 		});
 	},
 	
-	hasAudit: function() {
-		var me = this;
-		return me.getVar('hasAudit');
-	},
-	
 	openAuditUI: function(referenceId, context) {
 		var me = this;
 

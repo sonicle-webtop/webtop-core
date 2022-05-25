@@ -128,6 +128,7 @@ import com.sonicle.webtop.core.model.Tag;
 import com.sonicle.webtop.core.model.UILayout;
 import com.sonicle.webtop.core.model.UILookAndFeel;
 import com.sonicle.webtop.core.model.UITheme;
+import com.sonicle.webtop.core.products.AuditProduct;
 import com.sonicle.webtop.core.products.TMCEPremiumProduct;
 import com.sonicle.webtop.core.util.AppLocale;
 import com.sonicle.webtop.core.sdk.BaseService;
@@ -277,43 +278,43 @@ public class Service extends BaseService implements EventListener {
 	@Override
 	public ServiceVars returnServiceVars() {
 		UserProfile profile = getEnv().getProfile();
-		ServiceVars co = new ServiceVars();
+		ServiceVars vars = new ServiceVars();
 		
 		// New HTMLEditor activation flag: temporary until full transition!!!
-		co.put("useNewHTMLEditor", us.getUseNewHTMLEditor());
+		vars.put("useNewHTMLEditor", us.getUseNewHTMLEditor());
 		
 		boolean docServerEnabled = getDocumentServerEnabled();
-		co.put("docServerEnabled", docServerEnabled);
+		vars.put("docServerEnabled", docServerEnabled);
 		if (docServerEnabled) {
-			co.put("docServerPublicUrl", ss.getDocumentServerPublicUrl());
+			vars.put("docServerPublicUrl", ss.getDocumentServerPublicUrl());
 		}
 		String boshUrl = ss.getXMPPBoshUrl();
 		if (!StringUtils.isBlank(boshUrl)) {
-			co.put("boshUrl", boshUrl);
+			vars.put("boshUrl", boshUrl);
 		}
 		String iceServers = ss.getWebRTCIceServersAsStrings();
 		if (iceServers != null) {
-			co.put("iceServers", iceServers);
+			vars.put("iceServers", iceServers);
 		}
 		
-		co.put("customFieldsLimit", coreMgr.getCustomFieldsMaxNo());
-		co.put("wtAddonNotifier", addonNotifier());
-		co.put("wtWhatsnewEnabled", ss.getWhatsnewEnabled());
+		vars.put("customFieldsLimit", coreMgr.getCustomFieldsMaxNo());
+		vars.put("wtAddonNotifier", addonNotifier());
+		vars.put("wtWhatsnewEnabled", ss.getWhatsnewEnabled());
 		//co.put("wtForcePasswordChange", ss.getOTPEnabled());
-		co.put("wtOtpEnabled", ss.getOTPEnabled());
-		co.put("wtLauncherLinks", ss.getLauncherLinksAsString());
+		vars.put("wtOtpEnabled", ss.getOTPEnabled());
+		vars.put("wtLauncherLinks", ss.getLauncherLinksAsString());
 		
 		// HTMLEditor configuration
-		co.put("wtEditorFonts", ss.getEditorFonts());
-		co.put("wtEditorFontSizes", ss.getEditorFontSizes());
-		co.put("wtEditorPasteMode", EnumUtils.toSerializedName(ss.getEditorPasteImportMode()));
+		vars.put("wtEditorFonts", ss.getEditorFonts());
+		vars.put("wtEditorFontSizes", ss.getEditorFontSizes());
+		vars.put("wtEditorPasteMode", EnumUtils.toSerializedName(ss.getEditorPasteImportMode()));
 		if (TMCEPremiumProduct.installed()) {
-			co.put("wtEditorPP", WT.isLicensed(ProductUtils.getProduct(SERVICE_ID, TMCEPremiumProduct.PRODUCT_ID, profile.getDomainId())));
-			co.put("wtEditorACE", WT.isLicensed(ProductUtils.getProduct(SERVICE_ID, TMCEPremiumProduct.PRODUCT_ID, profile.getDomainId())));
+			vars.put("wtEditorPP", WT.isLicensed(ProductUtils.getProduct(SERVICE_ID, TMCEPremiumProduct.PRODUCT_ID, profile.getDomainId())));
+			vars.put("wtEditorACE", WT.isLicensed(ProductUtils.getProduct(SERVICE_ID, TMCEPremiumProduct.PRODUCT_ID, profile.getDomainId())));
 		}
-		co.put("wtGeolocationProvider", EnumUtils.toSerializedName(ss.getGeolocationProvider()));
+		vars.put("wtGeolocationProvider", EnumUtils.toSerializedName(ss.getGeolocationProvider()));
 		
-		co.put("wtPopMeetingProviders", ss.getPopularMeetingProviders());
+		vars.put("wtPopMeetingProviders", ss.getPopularMeetingProviders());
 		Meeting.Provider meetingProvider = null;
 		String meetingConfig = null;
 		if (RunContext.isPermitted(true, SERVICE_ID, "MEETING", "CREATE")) {
@@ -322,15 +323,15 @@ public class Service extends BaseService implements EventListener {
 				meetingConfig = JsSVMeetingProviderConfig.toJson(new JsSVMeetingProviderConfig((CoreSettings.MeetingJitsiConfig)ss.getMeetingProviderConfig(meetingProvider)));
 			}
 		}
-		co.put("wtMeetingProvider", EnumUtils.toSerializedName(meetingProvider));
-		co.put("wtMeetingConfig", meetingConfig);
+		vars.put("wtMeetingProvider", EnumUtils.toSerializedName(meetingProvider));
+		vars.put("wtMeetingConfig", meetingConfig);
 		
 		try {
 			JsTagGrid.List items = new JsTagGrid.List();
 			for (Tag tag : coreMgr.listTags(ListTagsOpt.ALL).values()) {
 				items.add(new JsTagGrid(tag));
 			}
-			co.put("wtTags", JsTagGrid.List.toJson(items));
+			vars.put("wtTags", JsTagGrid.List.toJson(items));
 		} catch (Throwable t) {
 			logger.error("Unable to prepare Tags data", t);
 		}
@@ -338,48 +339,49 @@ public class Service extends BaseService implements EventListener {
 		for (AppLocale apploc : WT.getInstalledLocales()) {
 			String patterns=lookupResource(apploc.getLocale(),CoreLocaleKey.DETECT_ATTACH_PATTERNS);
 			if (patterns!=null && !patterns.equals(CoreLocaleKey.DETECT_ATTACH_PATTERNS))
-				co.put("editorAttachPatterns-"+apploc.getId().substring(0,2), patterns);
+				vars.put("editorAttachPatterns-"+apploc.getId().substring(0,2), patterns);
 		}
 		
-		co.put("domainInternetName", WT.getDomainInternetName(profile.getDomainId()));
-		co.put("profileId", profile.getStringId());
-		co.put("domainId", profile.getDomainId());
-		co.put("userId", profile.getUserId());
-		co.put("userDisplayName", profile.getDisplayName());
-		co.put("theme", us.getTheme());
-		co.put("laf", us.getLookAndFeel());
-		co.put("layout", us.getLayout());
-		co.put("viewportHeaderScale", EnumUtils.toSerializedName(us.getViewportHeaderScale()));
-		co.put("startupService", us.getStartupService());
-		co.put("desktopNotification", us.getDesktopNotification());
+		vars.put("domainInternetName", WT.getDomainInternetName(profile.getDomainId()));
+		vars.put("profileId", profile.getStringId());
+		vars.put("domainId", profile.getDomainId());
+		vars.put("userId", profile.getUserId());
+		vars.put("userDisplayName", profile.getDisplayName());
+		vars.put("theme", us.getTheme());
+		vars.put("laf", us.getLookAndFeel());
+		vars.put("layout", us.getLayout());
+		vars.put("viewportHeaderScale", EnumUtils.toSerializedName(us.getViewportHeaderScale()));
+		vars.put("startupService", us.getStartupService());
+		vars.put("desktopNotification", us.getDesktopNotification());
 		
-		co.put("ajaxSpecialTimeout", ss.getAjaxSpecialTimeout());
-		co.put("ajaxLongTimeout", ss.getAjaxLongTimeout());
-		co.put("language", us.getLanguageTag());
-		co.put("timezone", us.getTimezone());
-		co.put("startDay", us.getStartDay());
-		co.put("shortDateFormat", us.getShortDateFormat());
-		co.put("longDateFormat", us.getLongDateFormat());
-		co.put("shortTimeFormat", us.getShortTimeFormat());
-		co.put("longTimeFormat", us.getLongTimeFormat());
-		co.put("imEnabled", !RunContext.isImpersonated() && RunContext.isPermitted(true, CoreManifest.ID, "WEBCHAT", "ACCESS"));
-		co.put("imPresenceStatus", EnumUtils.toSerializedName(us.getIMPresenceStatus()));
-		co.put("imStatusMessage", us.getIMStatusMessage());
-		co.put("imUploadMaxFileSize", us.getIMUploadMaxFileSize(true));
-		co.put("imSoundOnFriendConnect", us.getIMSoundOnFriendConnect());
-		co.put("imSoundOnFriendDisconnect", us.getIMSoundOnFriendDisconnect());
-		co.put("imSoundOnMessageReceived", us.getIMSoundOnMessageReceived());
-		co.put("imSoundOnMessageSent", us.getIMSoundOnMessageSent());
-		co.put("pbxConfigured",coreMgr.pbxConfigured());
+		vars.put("ajaxSpecialTimeout", ss.getAjaxSpecialTimeout());
+		vars.put("ajaxLongTimeout", ss.getAjaxLongTimeout());
+		vars.put("language", us.getLanguageTag());
+		vars.put("timezone", us.getTimezone());
+		vars.put("startDay", us.getStartDay());
+		vars.put("shortDateFormat", us.getShortDateFormat());
+		vars.put("longDateFormat", us.getLongDateFormat());
+		vars.put("shortTimeFormat", us.getShortTimeFormat());
+		vars.put("longTimeFormat", us.getLongTimeFormat());
+		vars.put("imEnabled", !RunContext.isImpersonated() && RunContext.isPermitted(true, CoreManifest.ID, "WEBCHAT", "ACCESS"));
+		vars.put("imPresenceStatus", EnumUtils.toSerializedName(us.getIMPresenceStatus()));
+		vars.put("imStatusMessage", us.getIMStatusMessage());
+		vars.put("imUploadMaxFileSize", us.getIMUploadMaxFileSize(true));
+		vars.put("imSoundOnFriendConnect", us.getIMSoundOnFriendConnect());
+		vars.put("imSoundOnFriendDisconnect", us.getIMSoundOnFriendDisconnect());
+		vars.put("imSoundOnMessageReceived", us.getIMSoundOnMessageReceived());
+		vars.put("imSoundOnMessageSent", us.getIMSoundOnMessageSent());
+		vars.put("pbxConfigured",coreMgr.pbxConfigured());
 		if (coreMgr.smsConfigured()) {
-			co.put("smsConfigured",true);
-			co.put("smsProvider",coreMgr.smsGetProvider().getName());
+			vars.put("smsConfigured",true);
+			vars.put("smsProvider",coreMgr.smsGetProvider().getName());
 		}
 		
+		vars.put("auditUi", WT.isLicensed(coreMgr.AUDIT_PRODUCT, profile.getUserId()) > 0);
 		//TODO: manage licensing
-		co.put("hasAudit",coreMgr.isAuditEnabled()&&(RunContext.isImpersonated()||RunContext.isPermitted(true, CoreManifest.ID, "AUDIT")));
+		vars.put("hasAudit",coreMgr.isAuditEnabled()&&(RunContext.isImpersonated()||RunContext.isPermitted(true, CoreManifest.ID, "AUDIT")));
 		
-		return co;
+		return vars;
 	}
 	
 	@Override

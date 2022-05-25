@@ -90,7 +90,7 @@ Ext.define('Sonicle.webtop.core.view.Activity', {
 					fieldLabel: me.mys.res('activity.fld-user.lbl'),
 					anchor: '100%'
 				}),
-				me.mys.hasAudit() ? {
+				me.mys.hasAuditUI() ? {
 					xtype: 'statusbar',
 					items: [
 						me.addAct('activityAuditLog', {
@@ -113,7 +113,7 @@ Ext.define('Sonicle.webtop.core.view.Activity', {
 		if(!success) return;
 		var me = this;
 		
-		if (me.mys.hasAudit()) {
+		if (me.mys.hasAuditUI()) {
 			if (me.isMode(me.MODE_NEW)) {
 				me.getAct('activityAuditLog').setDisabled(true);
 			} else {

@@ -76,18 +76,7 @@ public abstract class BaseManager {
 		//TODO: evaluate whether to create a dedicated dummy user for this (eg. wt-public@domain, ...)
 		if (!RunContext.isSysAdmin() && targetProfileId != null) {
 			AUDIT_PRODUCT = new AuditProduct(targetProfileId.getDomainId());
-			boolean enabled = false;
-			if (WT.isLicensed(AUDIT_PRODUCT)) {
-				enabled = new CoreServiceSettings(CoreManifest.ID, targetProfile.getDomainId()).isAuditEnabled(); 
-				if (enabled) {
-					CoreServiceSettings scss = new CoreServiceSettings(SERVICE_ID, targetProfile.getDomainId());
-					if (scss.hasAuditEnabled()) {
-						enabled = scss.isAuditEnabled();
-					}
-				}
-				if (enabled) enabled = WT.isLicensed(AUDIT_PRODUCT, targetProfileId.getUserId()) > 0;
-			}
-			this.auditEnabled = enabled;
+			this.auditEnabled = WT.isLicensed(new AuditProduct(targetProfileId.getDomainId()));
 		} else {
 			AUDIT_PRODUCT = null;
 		}

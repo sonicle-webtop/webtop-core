@@ -103,7 +103,7 @@ Ext.define('Sonicle.webtop.core.view.Causal', {
 					fieldLabel: me.mys.res('causal.fld-masterData.lbl'),
 					anchor: '100%'
 				}),
-				me.mys.hasAudit() ? {
+				me.mys.hasAuditUI() ? {
 					xtype: 'statusbar',
 					items: [
 						me.addAct('causalAuditLog', {
@@ -126,7 +126,7 @@ Ext.define('Sonicle.webtop.core.view.Causal', {
 		if(!success) return;
 		var me = this;
 		
-		if (me.mys.hasAudit()) {
+		if (me.mys.hasAuditUI()) {
 			if (me.isMode(me.MODE_NEW)) {
 				me.getAct('causalAuditLog').setDisabled(true);
 			} else {

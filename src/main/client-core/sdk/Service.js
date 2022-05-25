@@ -284,5 +284,13 @@ Ext.define('Sonicle.webtop.core.sdk.Service', {
 	 */
 	handlePushMessage: function(msg) {
 		this.fireEventArgs(this.buildPushMessageEventName(msg), [msg, msg.payload]);
+	},
+	
+	/**
+	 * Returns if Audit UI should be enabled
+	 * @returns {Boolean}
+	 */
+	hasAuditUI: function() {
+		return !!WT.getVar('auditUi');
 	}
 });

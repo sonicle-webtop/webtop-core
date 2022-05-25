@@ -266,16 +266,6 @@ public class CoreSettings {
 	 */
 	public static final String XMPP_BOSH_URL = "xmpp.bosh.url";
 	
-	
-	/**
-	 * [domain+system][*]
-	 * [boolean]
-	 * Activates activity auditing globally.
-	 * Setting this key to 'false' specifically for a service ID, 
-	 * it will disable audit logging only for actions related to that service.
-	 */
-	public static final String AUDIT_ENABLED = "audit.enabled";
-	
 	/**
 	 * [domain+system]
 	 * [boolean]

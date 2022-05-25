@@ -200,14 +200,6 @@ public class CoreServiceSettings extends BaseServiceSettings {
 		return getBoolean(LOGIN_HIDE_WEBAPPNAME, false);
 	}
 	
-	public boolean isAuditEnabled() {
-		return getBoolean(AUDIT_ENABLED, false);
-	}
-	
-	public boolean hasAuditEnabled() {		
-		return getSetting(AUDIT_ENABLED) != null;
-	}
-	
 	public boolean isAuditLogImpersonated() {
 		return getBoolean(AUDIT_LOGIMPERSONATED, false);
 	}

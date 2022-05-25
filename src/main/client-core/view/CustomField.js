@@ -253,7 +253,7 @@ Ext.define('Sonicle.webtop.core.view.CustomField', {
                     		html: 'ID: {record.fieldId}'
                     	}
                     },
-					me.mys.hasAudit() ? me.addAct('customFieldAuditLog', {
+					me.mys.hasAuditUI() ? me.addAct('customFieldAuditLog', {
 						text: null,
 						tooltip: WT.res('act-auditLog.lbl'),
 						iconCls: 'fas fa-history',
@@ -456,7 +456,7 @@ Ext.define('Sonicle.webtop.core.view.CustomField', {
 			var me = this,
 					mo = me.getModel();
 			
-			if (me.mys.hasAudit()) {
+			if (me.mys.hasAuditUI()) {
 				if (me.isMode(me.MODE_NEW)) {
 					me.getAct('customFieldAuditLog').setDisabled(true);
 				} else {

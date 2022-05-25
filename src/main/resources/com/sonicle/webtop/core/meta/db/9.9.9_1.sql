@@ -141,4 +141,12 @@ $BODY$
 -- ----------------------------
 -- Clear OLD audit_log
 -- ----------------------------
+DROP VIEW IF EXISTS "core"."vw_auth_details";
+DROP VIEW IF EXISTS "core"."vw_access_log";
 DROP TABLE IF EXISTS "core"."audit_log.old";
+
+-- ----------------------------
+-- Clear deprecated settings
+-- ----------------------------
+DELETE FROM "core"."settings" WHERE "key" = 'audit.enabled';
+DELETE FROM "core"."domain_settings" WHERE "key" = 'audit.enabled';

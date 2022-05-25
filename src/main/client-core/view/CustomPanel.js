@@ -273,7 +273,7 @@ Ext.define('Sonicle.webtop.core.view.CustomPanel', {
 						}
 					],
 					flex: 1
-				}, me.mys.hasAudit() ? {
+				}, me.mys.hasAuditUI() ? {
 					xtype: 'statusbar',
 					items: [
 						me.addAct('customPanelAuditLog', {
@@ -322,7 +322,7 @@ Ext.define('Sonicle.webtop.core.view.CustomPanel', {
 			var me = this,
 					mo = me.getModel();
 			
-			if (me.mys.hasAudit()) {
+			if (me.mys.hasAuditUI()) {
 				if (me.isMode(me.MODE_NEW)) {
 					me.getAct('customPanelAuditLog').setDisabled(true);
 				} else {
