@@ -38,7 +38,6 @@ Ext.define('Sonicle.webtop.core.admin.model.DomainSetting', {
 	idProperty: 'id',
 	fields: [
 		WTF.field('id', 'string', false),
-		WTF.field('domainId', 'string', false),
 		WTF.field('serviceId', 'string', false),
 		WTF.field('key', 'string', false),
 		WTF.field('value', 'string', true),
