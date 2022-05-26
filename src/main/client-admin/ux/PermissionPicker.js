@@ -35,6 +35,7 @@ Ext.define('Sonicle.webtop.core.admin.ux.PermissionPicker', {
 	extend: 'Ext.panel.Panel',
 	alias: ['widget.wtadmpermissionpicker'],
 	requires: [
+		'Sonicle.util.DistinctFilter',
 		'Sonicle.webtop.core.model.ServiceLkp',
 		'Sonicle.webtop.core.model.ServicePermissionLkp'
 	],
@@ -93,7 +94,7 @@ Ext.define('Sonicle.webtop.core.admin.ux.PermissionPicker', {
 			text: WT.res('act-ok.lbl'),
 			handler: function() {
 				me.fireEvent('okclick', me);
-				if(me.isValid()) me.firePick();
+				if (me.isValid()) me.firePick();
 			}
 		}, {
 			text: WT.res('act-cancel.lbl'),
@@ -115,6 +116,11 @@ Ext.define('Sonicle.webtop.core.admin.ux.PermissionPicker', {
 					model: 'Sonicle.webtop.core.model.ServiceLkp',
 					proxy: WTF.proxy(WT.ID, 'LookupServices')
 				},
+				listeners: {
+					beforeselect: function() {
+						me.lookupReference('fldgroupname').getFilters().getByKey('distinctGroup').resetDistinctValues();
+					}
+				},
 				fieldLabel: WT.res(WT.ID + '.admin', 'wtadmpermissionpicker.serviceId.lbl')
 			}),
 			WTF.localCombo('groupName', 'groupName', {
@@ -129,10 +135,18 @@ Ext.define('Sonicle.webtop.core.admin.ux.PermissionPicker', {
 				},
 				bind: {
 					disabled: '{!fldservice.value}',
-					filters: [{
-						property: 'serviceId',
-						value: '{fldservice.value}'
-					}]
+					filters: [
+						{
+							property: 'serviceId',
+							value: '{fldservice.value}'
+						},
+						new Sonicle.util.DistinctFilter({
+							id: 'distinctGroup',
+							filterFn: function(item) {
+								return this.filterIfDistinct(item.get('groupName'));
+							}
+						})
+					]
 				},
 				disabled: true,
 				fieldLabel: WT.res(WT.ID + '.admin', 'wtadmpermissionpicker.groupName.lbl')
@@ -148,13 +162,15 @@ Ext.define('Sonicle.webtop.core.admin.ux.PermissionPicker', {
 				},
 				bind: {
 					disabled: '{!fldgroupname.value}',
-					filters: [{
-						property: 'serviceId',
-						value: '{fldservice.value}'
-					}, {
-						property: 'groupName',
-						value: '{fldgroupname.value}'
-					}]
+					filters: [
+						{
+							property: 'serviceId',
+							value: '{fldservice.value}'
+						}, {
+							property: 'groupName',
+							value: '{fldgroupname.value}'
+						}
+					]
 				},
 				disabled: true,
 				fieldLabel: WT.res(WT.ID + '.admin', 'wtadmpermissionpicker.action.lbl')
@@ -169,14 +185,14 @@ Ext.define('Sonicle.webtop.core.admin.ux.PermissionPicker', {
 				act = me.lookupReference('fldaction').getValue(),
 				handler = me.handler;
 		me.fireEvent('pick', me, sid, gname, act);
-		if(handler) handler.call(me.scope || me, me, sid, gname, act);
+		if (handler) handler.call(me.scope || me, me, sid, gname, act);
 	},
 	
 	isValid: function() {
 		var me = this;
-		if(!me.lookupReference('fldservice').isValid()) return false;
-		if(!me.lookupReference('fldgroupname').isValid()) return false;
-		if(!me.lookupReference('fldaction').isValid()) return false;
+		if (!me.lookupReference('fldservice').isValid()) return false;
+		if (!me.lookupReference('fldgroupname').isValid()) return false;
+		if (!me.lookupReference('fldaction').isValid()) return false;
 		return true;
 	}
 });
