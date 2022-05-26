@@ -57,7 +57,6 @@ import com.sonicle.commons.web.json.extjs.ExtTreeNode;
 import com.sonicle.commons.web.json.extjs.GridMetadata;
 import com.sonicle.commons.web.json.extjs.ResultMeta;
 import com.sonicle.commons.web.json.extjs.SortMeta;
-import com.sonicle.commons.web.json.extjs.SortParam;
 import com.sonicle.security.auth.DirectoryManager;
 import com.sonicle.security.auth.directory.AbstractDirectory;
 import com.sonicle.security.auth.directory.DirectoryCapability;
