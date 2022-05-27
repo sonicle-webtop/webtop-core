@@ -1,17 +1,17 @@
-$	5.14.1
-	%	Versione 5.14.1
+$	5.14.0
+	%	Versione 5.14.0
 	*	<h1>Nuovo Modulo Audit</h1>
 		<p>E' disponibile un nuovo modulo di tracciamento delle operazioni su posta, calendari, contatti e attività.<br>
 		Con questo modulo è possiile visualizzare la storia di una email, chi l'ha visualizzata, chi ha risposto e/o intoltrato,
 		chi l'ha spostata e dove, oppure sapere chi ha creato o modificato un appuntamento, un contatto o una attività, e molto altro.<br>
 		Modulo acquistabile su licenza.
 		</p>
-		<img src="5.14.1_audit.png"/>
+		<img src="5.14.0_audit.png"/>
 	*	<h1>Vista Log Accessi per gli Amministratori migliorata</h1>
 		<p>La visualizzazione degli accessi nel portale amministratori è stata notevolmente migliorata, sia per quanto
 		riguarda la velocità di risposta, sia aggiungendo dei tasti di selezione immediata per il range temporale desiderato.
 		</p>
-		<img src="5.14.1_accesslog.png"/>
+		<img src="5.14.0_accesslog.png"/>
 $	5.10.0
 	%	Versione 5.10.0
 	*	<h1>Integrazione Jitsi Meet</h1>

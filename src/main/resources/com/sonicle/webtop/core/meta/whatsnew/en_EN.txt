@@ -1,17 +1,17 @@
-$	5.14.1
-	%	Version 5.14.1
+$	5.14.0
+	%	Version 5.14.0
 	*	<h1>New Audit Module</h1>
 		<p>A new module is available to track all operations on mail, calendar, contacts and tasks.<br>
 		With this module you may view the history of an email, who read it, who answered and/or forwarded,
 		who moved it and where, or you may know who created or modified an appointement, a contact or a task, and much more.<br>
 		This module is purchasable under license.
 		</p>
-		<img src="5.14.1_audit.png"/>
+		<img src="5.14.0_audit.png"/>
 	*	<h1>Improved Access Log View for Administrators</h1>
 		<p>The access log view inside the administrators portal has been greatly improved, both regarding the query performance,
 		and by adding quick buttons to select the desired time range.
 		</p>
-		<img src="5.14.1_accesslog.png"/>
+		<img src="5.14.0_accesslog.png"/>
 $	5.10.0
 	%	Version 5.10.0
 	*	<h1>Jitsi Meet integration</h1>
