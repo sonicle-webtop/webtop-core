@@ -142,9 +142,7 @@ Ext.define('Sonicle.webtop.core.admin.ux.PermissionPicker', {
 						},
 						new Sonicle.util.DistinctFilter({
 							id: 'distinctGroup',
-							filterFn: function(item) {
-								return this.filterIfDistinct(item.get('groupName'));
-							}
+							property: 'groupName'
 						})
 					]
 				},
