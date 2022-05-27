@@ -119,6 +119,7 @@ Ext.define('Sonicle.webtop.core.admin.view.DbUpgrader', {
 					disabled: '{!gp.selection}'
 				},
 				grow: true,
+				growMax: 200,
 				fieldLabel: me.mys.res('dbUpgrader.stmtBody.lbl')
 			}, {
 				xtype: 'displayfield',
@@ -135,6 +136,7 @@ Ext.define('Sonicle.webtop.core.admin.view.DbUpgrader', {
 				},
 				editable: false,
 				grow: true,
+				growMax: 100,
 				fieldLabel: me.mys.res('dbUpgrader.runMessage.lbl')
 			}, {
 				xtype: 'textareafield',
@@ -144,6 +146,7 @@ Ext.define('Sonicle.webtop.core.admin.view.DbUpgrader', {
 				},
 				editable: false,
 				grow: true,
+				growMax: 100,
 				fieldLabel: me.mys.res('dbUpgrader.comments.lbl')
 			}, {
 				xtype: 'grid',

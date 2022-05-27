@@ -54,7 +54,7 @@ import org.apache.commons.lang3.StringUtils;
  * @author malbinola
  */
 public class SqlUpgradeScript {
-	private static final Pattern PATTERN_JAR_FILENAME = Pattern.compile("^(([0-9]+(?:\\.[0-9]+){1,2})_([0-9]+))\\.sql$");
+	private static final Pattern PATTERN_JAR_FILENAME = Pattern.compile("^(([0-9]+(?:\\.[0-9]+){1,2})_([0-9]+\\$?))\\.sql$");
 	private static final Pattern PATTERN_FILE_FILENAME = Pattern.compile("^(.+)\\.sql$");
 	private String resourceName = null;
 	private String fileName = null;
@@ -81,8 +81,13 @@ public class SqlUpgradeScript {
 			this.fileVersion = new ServiceVersion();
 			this.fileSequence = "";
 			
+			boolean rawContent = false;
+			if (StringUtils.endsWith(fileName, "$")) {
+				rawContent = true;
+			}
+			
 			fr = new FileReader(file);
-			readFile(fr, true);
+			readFile(fr, rawContent, true);
 			
 		} finally {
 			IOUtils.closeQuietly(fr);
@@ -102,6 +107,14 @@ public class SqlUpgradeScript {
 			this.resourceName = jarResourceName;
 			this.fileName = matcher.group(1);
 			this.fileVersion = new ServiceVersion(matcher.group(2));
+			boolean rawContent = false;
+			String fs = matcher.group(3);
+			if (StringUtils.endsWith(fs, "$")) {
+				rawContent = true;
+				this.fileSequence = StringUtils.substringBeforeLast(fs, "$");
+			} else {
+				this.fileSequence = fs;
+			}
 			this.fileSequence = matcher.group(3);
 			
 			is = LangUtils.findClassLoader(getClass()).getResourceAsStream(jarResourceName);
@@ -109,7 +122,7 @@ public class SqlUpgradeScript {
 				is = getClass().getResourceAsStream(jarResourceName);
 				if (is == null) throw new ResourceNotFoundException("Null InputStream!");
 			}
-			readFile(new InputStreamReader(is, "ISO-8859-15"), true);
+			readFile(new InputStreamReader(is, "ISO-8859-15"), rawContent, true);
 			//br = new BufferedReader(new InputStreamReader(is, "ISO-8859-15"));
 			//readFile(br);
 		} finally {
@@ -138,32 +151,21 @@ public class SqlUpgradeScript {
 		return statements;
 	}
 	
-	private void readFile(InputStreamReader readable, boolean flatNewLines) throws IOException {
+	private void readFile(InputStreamReader readable, boolean rawContent, boolean flatNewLines) throws IOException {
 		this.statements = new ArrayList<>();
 		StringBuilder sb = null, sbsql = null;
 		String lines[] = null;
 		
-		Scanner s = new Scanner(readable);
-		s.useDelimiter("(;( )?(\r)?\n)");
-		//s.useDelimiter("(;( )?(\r)?\n)|(--\n)");
-		while (s.hasNext()) {
-			String block = s.next();
-			block = StringUtils.replace(block, "\r", "");
-			if(!StringUtils.isEmpty(block)) {
-				// Remove remaining ; at the end of the block (only if this block is the last one)
-				if(!s.hasNext() && StringUtils.endsWith(block, ";")) block = StringUtils.left(block, block.length()-1);
-				
-				sb = new StringBuilder();
-				sbsql = new StringBuilder();
-				lines = StringUtils.split(block, "\n");
-				for(String line: lines) {
+		if (rawContent) {
+			String line = null;
+			sb = new StringBuilder();
+			sbsql = new StringBuilder();
+			BufferedReader br = new BufferedReader(readable);
+			while ((line = br.readLine()) != null) {
+				if (!StringUtils.isEmpty(line)) {
 					if (AnnotationLine.matches(line)) {
 						if (DataSourceAnnotationLine.matches(line)) {
 							statements.add(new DataSourceAnnotationLine(line));
-						} else if (IgnoreErrorsAnnotationLine.matches(line)) {
-							statements.add(new IgnoreErrorsAnnotationLine(line));
-						} else if (RequireAdminAnnotationLine.matches(line)) {
-							statements.add(new RequireAdminAnnotationLine(line));
 						} else {
 							throw new IOException("Bad line: " + line);
 						}
@@ -171,13 +173,51 @@ public class SqlUpgradeScript {
 						sb.append(line);
 						sb.append("\n");
 					} else {
-						sbsql.append(StringUtils.trim(line));
+						sbsql.append(line);
 						sbsql.append(" ");
-						if(!flatNewLines) sbsql.append("\n");
 					}
 				}
-				if(sb.length() > 0) statements.add(new CommentLine(StringUtils.removeEnd(sb.toString(), "\n")));
-				if(sbsql.length() > 0) statements.add(new SqlLine(StringUtils.removeEnd(sbsql.toString(), "\n")));
+			}
+			if(sb.length() > 0) statements.add(new CommentLine(StringUtils.removeEnd(sb.toString(), "\n")));
+			if(sbsql.length() > 0) statements.add(new SqlLine(StringUtils.removeEnd(sbsql.toString(), "\n")));
+		
+		} else {
+			Scanner s = new Scanner(readable);
+			s.useDelimiter("(;( )?(\r)?\n)");
+			//s.useDelimiter("(;( )?(\r)?\n)|(--\n)");
+			while (s.hasNext()) {
+				String block = s.next();
+				block = StringUtils.replace(block, "\r", "");
+				if(!StringUtils.isEmpty(block)) {
+					// Remove remaining ; at the end of the block (only if this block is the last one)
+					if(!s.hasNext() && StringUtils.endsWith(block, ";")) block = StringUtils.left(block, block.length()-1);
+
+					sb = new StringBuilder();
+					sbsql = new StringBuilder();
+					lines = StringUtils.split(block, "\n");
+					for(String line: lines) {
+						if (AnnotationLine.matches(line)) {
+							if (DataSourceAnnotationLine.matches(line)) {
+								statements.add(new DataSourceAnnotationLine(line));
+							} else if (IgnoreErrorsAnnotationLine.matches(line)) {
+								statements.add(new IgnoreErrorsAnnotationLine(line));
+							} else if (RequireAdminAnnotationLine.matches(line)) {
+								statements.add(new RequireAdminAnnotationLine(line));
+							} else {
+								throw new IOException("Bad line: " + line);
+							}
+						} else if(CommentLine.matches(line)) {
+							sb.append(line);
+							sb.append("\n");
+						} else {
+							sbsql.append(StringUtils.trim(line));
+							sbsql.append(" ");
+							if(!flatNewLines) sbsql.append("\n");
+						}
+					}
+					if(sb.length() > 0) statements.add(new CommentLine(StringUtils.removeEnd(sb.toString(), "\n")));
+					if(sbsql.length() > 0) statements.add(new SqlLine(StringUtils.removeEnd(sbsql.toString(), "\n")));
+				}
 			}
 		}
 	}
