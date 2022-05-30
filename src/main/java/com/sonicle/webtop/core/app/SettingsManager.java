@@ -39,32 +39,29 @@ import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 import com.sonicle.commons.db.DbUtils;
 import com.sonicle.commons.web.json.CId;
-import com.sonicle.webtop.core.bol.DomainSettingRow;
 import com.sonicle.webtop.core.sdk.interfaces.IServiceSettingReader;
 import com.sonicle.webtop.core.bol.ODomainSetting;
 import com.sonicle.webtop.core.bol.OSetting;
 import com.sonicle.webtop.core.bol.OSettingDb;
 import com.sonicle.webtop.core.bol.OUserSetting;
-import com.sonicle.webtop.core.bol.SettingRow;
-import com.sonicle.webtop.core.bol.model.DomainSetting;
-import com.sonicle.webtop.core.bol.model.SystemSetting;
+import com.sonicle.webtop.core.bol.VDomainSetting;
+import com.sonicle.webtop.core.bol.VSetting;
 import com.sonicle.webtop.core.dal.DAOException;
 import com.sonicle.webtop.core.dal.DomainSettingDAO;
 import com.sonicle.webtop.core.dal.SettingDAO;
 import com.sonicle.webtop.core.dal.SettingDbDAO;
 import com.sonicle.webtop.core.dal.UserSettingDAO;
+import com.sonicle.webtop.core.model.SettingEntry;
 import com.sonicle.webtop.core.sdk.UserProfileId;
 import com.sonicle.webtop.core.sdk.interfaces.IServiceSettingManager;
 import com.sonicle.webtop.core.sdk.interfaces.ISettingManager;
 import com.sonicle.webtop.core.sdk.interfaces.IUserSettingManager;
 import java.sql.Connection;
-import java.text.CharacterIterator;
-import java.text.StringCharacterIterator;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
-import org.apache.commons.io.FileUtils;
+import net.sf.qualitycheck.Check;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 
@@ -477,18 +474,18 @@ public final class SettingsManager implements IServiceSettingReader, IServiceSet
 		return ret;
 	}
 	
-	public List<SystemSetting> listSettings(boolean hidden) {
-		ArrayList<SystemSetting> items = new ArrayList<>();
-		SettingDAO dao = SettingDAO.getInstance();
+	public List<SettingEntry> listSettings(final boolean includeHidden) {
+		SettingDAO setDao = SettingDAO.getInstance();
 		Connection con = null;
 		
 		try {
 			con = wta.getConnectionManager().getConnection(CoreManifest.ID);
-			for(SettingRow setting : dao.selectAll(con, hidden)) {
-				items.add(new SystemSetting(setting));
+			ArrayList<SettingEntry> items = new ArrayList<>();
+			for (VSetting vset : setDao.view(con, includeHidden)) {
+				 items.add(new SettingEntry(vset.getServiceId(), vset.getKey(), vset.getValue(), vset.getType(), vset.getHelp()));
 			}
 			return items;
-
+			
 		} catch (Throwable t) {
 			LOGGER.debug("Unable to read settings", t);
 			throw new RuntimeException(t);
@@ -497,18 +494,19 @@ public final class SettingsManager implements IServiceSettingReader, IServiceSet
 		}
 	}
 	
-	public List<DomainSetting> listSettings(String domainId, boolean hidden) {
-		ArrayList<DomainSetting> items = new ArrayList<>();
-		DomainSettingDAO dao = DomainSettingDAO.getInstance();
+	public List<SettingEntry> listSettings(final String domainId, final boolean includeHidden) {
+		Check.notEmpty(domainId, "domainId");
+		DomainSettingDAO dsetDao = DomainSettingDAO.getInstance();
 		Connection con = null;
 		
 		try {
 			con = wta.getConnectionManager().getConnection(CoreManifest.ID);
-			for(DomainSettingRow setting : dao.selectAll(con, hidden)) {
-				items.add(new DomainSetting(setting));
+			ArrayList<SettingEntry> items = new ArrayList<>();
+			for (VDomainSetting vdset : dsetDao.viewByDomain(con, domainId, includeHidden)) {
+				 items.add(new SettingEntry(vdset.getServiceId(), vdset.getKey(), vdset.getValue(), vdset.getType(), vdset.getHelp()));
 			}
 			return items;
-
+			
 		} catch (Throwable t) {
 			LOGGER.debug("Unable to read settings", t);
 			throw new RuntimeException(t);

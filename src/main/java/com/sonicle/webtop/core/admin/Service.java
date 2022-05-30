@@ -103,16 +103,15 @@ import com.sonicle.webtop.core.bol.js.JsPecBridgeRelay;
 import com.sonicle.webtop.core.bol.js.JsRole;
 import com.sonicle.webtop.core.bol.js.JsRoleLkp;
 import com.sonicle.webtop.core.bol.js.JsServiceProductLkp;
+import com.sonicle.webtop.core.bol.js.JsSettingEntry;
 import com.sonicle.webtop.core.bol.js.JsSimple;
 import com.sonicle.webtop.core.bol.js.JsUser;
 import com.sonicle.webtop.core.bol.model.DirectoryUser;
 import com.sonicle.webtop.core.model.DomainEntity;
-import com.sonicle.webtop.core.bol.model.DomainSetting;
 import com.sonicle.webtop.core.bol.model.GroupEntity;
 import com.sonicle.webtop.core.bol.model.Role;
 import com.sonicle.webtop.core.bol.model.RoleEntity;
 import com.sonicle.webtop.core.bol.model.RoleWithSource;
-import com.sonicle.webtop.core.bol.model.SystemSetting;
 import com.sonicle.webtop.core.bol.model.UserEntity;
 import com.sonicle.webtop.core.bol.model.UserOptionsServiceData;
 import com.sonicle.webtop.core.model.DomainAccessLog;
@@ -123,6 +122,7 @@ import com.sonicle.webtop.core.model.ListDomainAccessLogResult;
 import com.sonicle.webtop.core.model.LoggerEntry;
 import com.sonicle.webtop.core.model.ProductId;
 import com.sonicle.webtop.core.model.ServiceLicense;
+import com.sonicle.webtop.core.model.SettingEntry;
 import com.sonicle.webtop.core.sdk.BaseService;
 import com.sonicle.webtop.core.sdk.ServiceManifest;
 import com.sonicle.webtop.core.sdk.ServiceManifest.Product;
@@ -388,39 +388,39 @@ public class Service extends BaseService {
 		try {
 			String crud = ServletUtils.getStringParameter(request, "crud", true);
 			if (crud.equals(Crud.READ)) {
-				List<SystemSetting> items = coreadm.listSystemSettings(false);
+				List<SettingEntry> items = coreadm.listSystemSettings(false);
 				new JsonResult(items, items.size()).printTo(out);
 				
 			} else if (crud.equals(Crud.CREATE)) {
-				PayloadAsList<SystemSetting.List> pl = ServletUtils.getPayloadAsList(request, SystemSetting.List.class);
-				SystemSetting setting = pl.data.get(0);
+				PayloadAsList<JsSettingEntry.List> pl = ServletUtils.getPayloadAsList(request, JsSettingEntry.List.class);
+				SettingEntry setting = pl.data.get(0);
 				
-				if (!coreadm.updateSystemSetting(setting.serviceId, setting.key, setting.value)) {
-					throw new WTException("Cannot insert setting [{}, {}]", setting.serviceId, setting.key);
+				if (!coreadm.updateSystemSetting(setting.getServiceId(), setting.getKey(), setting.getValue())) {
+					throw new WTException("Cannot insert setting [{}, {}]", setting.getServiceId(), setting.getKey());
 				} else {
 					//FIXME: Evaluate to create new field in Domain data for public.url
-					if (CoreManifest.ID.equals(setting.serviceId) && "public.url".equals(setting.key)) {
+					if (CoreManifest.ID.equals(setting.getServiceId()) && "public.url".equals(setting.getKey())) {
 						coreadm.refreshDomainCache();
 					}
 				}
 				
-				OSettingDb info = coreadm.getSettingInfo(setting.serviceId, setting.key);
+				OSettingDb info = coreadm.getSettingInfo(setting.getServiceId(), setting.getKey());
 				if(info != null) {
-					setting = new SystemSetting(setting.serviceId, setting.key, setting.value, info.getType(), info.getHelp());
+					setting = new SettingEntry(setting.getServiceId(), setting.getKey(), setting.getValue(), info.getType(), info.getHelp());
 				} else {
-					setting = new SystemSetting(setting.serviceId, setting.key, setting.value, null, null);
+					setting = new SettingEntry(setting.getServiceId(), setting.getKey(), setting.getValue(), null, null);
 				}
 				new JsonResult(setting).printTo(out);
 				
 			} else if (crud.equals(Crud.UPDATE)) {
-				PayloadAsList<SystemSetting.List> pl = ServletUtils.getPayloadAsList(request, SystemSetting.List.class);
-				SystemSetting setting = pl.data.get(0);
+				PayloadAsList<JsSettingEntry.List> pl = ServletUtils.getPayloadAsList(request, JsSettingEntry.List.class);
+				SettingEntry setting = pl.data.get(0);
 				
-				final CompositeId ci = new CompositeId(2).parse(setting.id);
-				final String sid = ci.getToken(0);
-				final String key = ci.getToken(1);
+				final CId cid = new CId(setting.getId(), 2);
+				final String sid = cid.getToken(0);
+				final String key = cid.getToken(1);
 
-				if (!coreadm.updateSystemSetting(sid, setting.key, setting.value)) {
+				if (!coreadm.updateSystemSetting(sid, setting.getKey(), setting.getValue())) {
 					throw new WTException("Cannot update setting [{0}, {1}]", sid, key);
 				} else {
 					//FIXME: Evaluate to create new field in Domain data for public.url
@@ -428,18 +428,18 @@ public class Service extends BaseService {
 						coreadm.refreshDomainCache();
 					}
 				}
-				if (!StringUtils.equals(key, setting.key)) {
+				if (!StringUtils.equals(key, setting.getKey())) {
 					coreadm.deleteSystemSetting(sid, key);
 				}
 				new JsonResult().printTo(out);
 				
 			} else if (crud.equals(Crud.DELETE)) {
-				PayloadAsList<SystemSetting.List> pl = ServletUtils.getPayloadAsList(request, SystemSetting.List.class);
-				SystemSetting setting = pl.data.get(0);
+				PayloadAsList<JsSettingEntry.List> pl = ServletUtils.getPayloadAsList(request, JsSettingEntry.List.class);
+				SettingEntry setting = pl.data.get(0);
 				
-				final CompositeId ci = new CompositeId(2).parse(setting.id);
-				final String sid = ci.getToken(0);
-				final String key = ci.getToken(1);
+				final CId cid = new CId(setting.getId(), 2);
+				final String sid = cid.getToken(0);
+				final String key = cid.getToken(1);
 				
 				if (!coreadm.deleteSystemSetting(sid, key)) {
 					throw new WTException("Cannot delete setting [{}, {}]", sid, key);
@@ -514,33 +514,33 @@ public class Service extends BaseService {
 			String domainId = ServletUtils.getStringParameter(request, "domainId", true);
 			String crud = ServletUtils.getStringParameter(request, "crud", true);
 			if (crud.equals(Crud.READ)) {
-				List<DomainSetting> items = coreadm.listDomainSettings(domainId, false);
+				List<SettingEntry> items = coreadm.listDomainSettings(domainId, false);
 				new JsonResult(items, items.size()).printTo(out);
 				
 			} else if (crud.equals(Crud.CREATE)) {
-				PayloadAsList<DomainSetting.List> pl = ServletUtils.getPayloadAsList(request, DomainSetting.List.class);
-				DomainSetting setting = pl.data.get(0);
+				PayloadAsList<JsSettingEntry.List> pl = ServletUtils.getPayloadAsList(request, JsSettingEntry.List.class);
+				SettingEntry setting = pl.data.get(0);
 				
-				if (!coreadm.updateDomainSetting(domainId, setting.serviceId, setting.key, setting.value)) {
-					throw new WTException("Cannot insert setting [{0}, {1}]", setting.serviceId, setting.key);
+				if (!coreadm.updateDomainSetting(domainId, setting.getServiceId(), setting.getKey(), setting.getValue())) {
+					throw new WTException("Cannot insert setting [{0}, {1}]", setting.getServiceId(), setting.getKey());
 				} else {
 					//FIXME: Evaluate to create new field in Domain data for public.url
-					if (CoreManifest.ID.equals(setting.serviceId) && "public.url".equals(setting.key)) {
+					if (CoreManifest.ID.equals(setting.getServiceId()) && "public.url".equals(setting.getKey())) {
 						coreadm.refreshDomainCache();
 					}
 				}
-				setting = new DomainSetting(setting.domainId, setting.serviceId, setting.key, setting.value, null, null);
+				setting = new SettingEntry(setting.getServiceId(), setting.getKey(), setting.getValue(), null, null);
 				new JsonResult(setting).printTo(out);
 				
 			} else if (crud.equals(Crud.UPDATE)) {
-				PayloadAsList<DomainSetting.List> pl = ServletUtils.getPayloadAsList(request, DomainSetting.List.class);
-				DomainSetting setting = pl.data.get(0);
+				PayloadAsList<JsSettingEntry.List> pl = ServletUtils.getPayloadAsList(request, JsSettingEntry.List.class);
+				SettingEntry setting = pl.data.get(0);
 				
-				final CompositeId ci = new CompositeId(2).parse(setting.id);
-				final String sid = ci.getToken(0);
-				final String key = ci.getToken(1);
+				final CId cid = new CId(setting.getId(), 2);
+				final String sid = cid.getToken(0);
+				final String key = cid.getToken(1);
 
-				if (!coreadm.updateDomainSetting(domainId, sid, setting.key, setting.value)) {
+				if (!coreadm.updateDomainSetting(domainId, sid, setting.getKey(), setting.getValue())) {
 					throw new WTException("Cannot update setting [{0}, {1}]", sid, key);
 				} else {
 					//FIXME: Evaluate to create new field in Domain data for public.url
@@ -548,18 +548,18 @@ public class Service extends BaseService {
 						coreadm.refreshDomainCache();
 					}
 				}
-				if (!StringUtils.equals(key, setting.key)) {
+				if (!StringUtils.equals(key, setting.getKey())) {
 					coreadm.deleteDomainSetting(domainId, sid, key);
 				}
 				new JsonResult().printTo(out);
 				
 			} else if (crud.equals(Crud.DELETE)) {
-				PayloadAsList<DomainSetting.List> pl = ServletUtils.getPayloadAsList(request, DomainSetting.List.class);
-				DomainSetting setting = pl.data.get(0);
+				PayloadAsList<JsSettingEntry.List> pl = ServletUtils.getPayloadAsList(request, JsSettingEntry.List.class);
+				SettingEntry setting = pl.data.get(0);
 				
-				final CompositeId ci = new CompositeId(2).parse(setting.id);
-				final String sid = ci.getToken(0);
-				final String key = ci.getToken(1);
+				final CId cid = new CId(setting.getId(), 2);
+				final String sid = cid.getToken(0);
+				final String key = cid.getToken(1);
 
 				if (!coreadm.deleteDomainSetting(domainId, sid, key)) {
 					throw new WTException("Cannot delete setting [{0}, {1}]", sid, key);

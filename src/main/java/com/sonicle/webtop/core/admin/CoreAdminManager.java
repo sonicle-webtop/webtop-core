@@ -60,11 +60,9 @@ import com.sonicle.webtop.core.bol.OUpgradeStatement;
 import com.sonicle.webtop.core.bol.OUser;
 import com.sonicle.webtop.core.bol.model.DirectoryUser;
 import com.sonicle.webtop.core.model.DomainEntity;
-import com.sonicle.webtop.core.bol.model.DomainSetting;
 import com.sonicle.webtop.core.bol.model.GroupEntity;
 import com.sonicle.webtop.core.bol.model.Role;
 import com.sonicle.webtop.core.bol.model.RoleEntity;
-import com.sonicle.webtop.core.bol.model.SystemSetting;
 import com.sonicle.webtop.core.bol.model.UserEntity;
 import com.sonicle.webtop.core.dal.DAOException;
 import com.sonicle.webtop.core.config.dal.PecBridgeFetcherDAO;
@@ -83,6 +81,7 @@ import com.sonicle.webtop.core.model.LoggerEntry;
 import com.sonicle.webtop.core.model.ProductId;
 import com.sonicle.webtop.core.model.PublicImage;
 import com.sonicle.webtop.core.model.ServiceLicense;
+import com.sonicle.webtop.core.model.SettingEntry;
 import com.sonicle.webtop.core.sdk.BaseManager;
 import com.sonicle.webtop.core.sdk.UserProfile;
 import com.sonicle.webtop.core.sdk.UserProfileId;
@@ -102,7 +101,6 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import net.sf.qualitycheck.Check;
 import org.apache.commons.lang.StringUtils;
-import org.joda.time.DateTime;
 import org.slf4j.Logger;
 
 /**
@@ -128,11 +126,11 @@ public class CoreAdminManager extends BaseManager {
 	}
 	
 	/**
-	 * Lists all system settings.
-	 * @param includeHidden True to also return settings marked as hidden.
-	 * @return The settings list.
+	 * Lists all System settings.
+	 * @param includeHidden Set to `true` also return hidden settings.
+	 * @return List of settings
 	 */
-	public List<SystemSetting> listSystemSettings(boolean includeHidden) {
+	public List<SettingEntry> listSystemSettings(boolean includeHidden) {
 		RunContext.ensureIsSysAdmin();
 		
 		SettingsManager setm = wta.getSettingsManager();
@@ -254,12 +252,13 @@ public class CoreAdminManager extends BaseManager {
 	}
 	
 	/**
-	 * Lists all settings for a specific platform domain.
+	 * Lists all settings for a specific platform Domain.
 	 * @param domainId The domain ID.
-	 * @param includeHidden True to also return settings marked as hidden.
-	 * @return The settings list.
+	 * @param includeHidden Set to `true` also return hidden settings.
+	 * @return List of settings
 	 */
-	public List<DomainSetting> listDomainSettings(String domainId, boolean includeHidden) {
+	public List<SettingEntry> listDomainSettings(final String domainId, final boolean includeHidden) {
+		Check.notEmpty(domainId, "domainId");
 		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
 		RunContext.ensureIsWebTopAdmin();
 		
