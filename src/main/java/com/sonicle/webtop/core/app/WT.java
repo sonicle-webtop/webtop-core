@@ -749,7 +749,7 @@ public class WT {
 		LoggerUtils.clearCustomDC();
 	}
 	
-	public static ProductLicense findProductLicense(BaseServiceProduct product) {
+	public static ProductLicense findProductLicense(final BaseServiceProduct product) {
 		if (product == null) return null;
 		return getWTA().getLicenseManager().getProductLicense(product);
 	}
@@ -760,7 +760,8 @@ public class WT {
 	 * @param product The product to check.
 	 * @return True if a license is installed and valid, false otherwise.
 	 */
-	public static boolean isLicensed(BaseServiceProduct product) {
+	public static boolean isLicensed(final BaseServiceProduct product) {
+		if (product == null) return false;
 		return getWTA().getLicenseManager().checkLicense(product);
 	}
 	
@@ -777,11 +778,18 @@ public class WT {
 	 *  -2 lease assignment issues (no left or insert errors)
 	 *  -3 auto-lease deactivated
 	 */
-	public static int isLicensed(BaseServiceProduct product, String userId) {
+	public static int isLicensed(final BaseServiceProduct product, final String userId) {
+		if (product == null) return 0;
 		return getWTA().getLicenseManager().checkLicenseLease(product, userId);
 	}
 	
-	public static boolean isLicenseUsageFail(BaseServiceProduct product, String userId) {
+	/**
+	 * Checks if specified product is not licensed for usage failure error.
+	 * @param product The product to check.
+	 * @param userId The user to check.
+	 * @return True if usage is the cause of failure
+	 */
+	public static boolean isLicenseUsageFail(final BaseServiceProduct product, final String userId) {
 		if (product != null) {
 			int ret = isLicensed(product, userId);
 			return (ret == 2) || (ret == -1) || (ret == -2);
