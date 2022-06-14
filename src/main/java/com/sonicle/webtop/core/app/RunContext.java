@@ -42,6 +42,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
+import net.sf.qualitycheck.Check;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.UnavailableSecurityManagerException;
@@ -57,7 +58,21 @@ import org.apache.shiro.web.subject.WebSubject;
  */
 public class RunContext {
 	
-	static PrincipalCollection buildPrincipalCollection(UserProfileId profileId) {
+	public static UserProfileId getSysAdminProfileId() {
+		return new UserProfileId(WebTopManager.SYSADMIN_DOMAINID, WebTopManager.SYSADMIN_USERID);
+	}
+	
+	public static UserProfileId buildDomainAdminProfileId(final String domainId) {
+		return new UserProfileId(Check.notEmpty(domainId, "domainId"), WebTopManager.DOMAINADMIN_USERID);
+	}
+	
+	public static Subject buildSubject(final SecurityManager securityManager, final UserProfileId profileId) {
+		return new Subject.Builder(securityManager)
+			.principals(buildPrincipalCollection(profileId.getDomainId(), profileId.getUserId()))
+			.buildSubject();
+	}
+	
+	static PrincipalCollection buildPrincipalCollection(final UserProfileId profileId) {
 		Subject subject = getSubject();
 		if ((subject != null) && profileId.equals(getRunProfileId(subject))) {
 			return subject.getPrincipals();
@@ -66,26 +81,16 @@ public class RunContext {
 		}
 	}
 	
-	static SimplePrincipalCollection buildPrincipalCollection(String domainId, String userId) {
+	static SimplePrincipalCollection buildPrincipalCollection(final String domainId, final String userId) {
 		Principal principal = new Principal(domainId, userId);
 		return new SimplePrincipalCollection(principal, WTRealm.NAME);
 		//return new SimplePrincipalCollection(principal, "com.sonicle.webtop.core.shiro.WTRealm");
 	}
 	
-	public static Subject buildSubject(SecurityManager securityManager, UserProfileId profileId) {
-		return new Subject.Builder(securityManager)
-				.principals(buildPrincipalCollection(profileId.getDomainId(), profileId.getUserId()))
-				.buildSubject();
-	}
-	
-	public static WebSubject buildWebSubject(SecurityManager securityManager, ServletRequest request, ServletResponse response, UserProfileId profileId) {
+	public static WebSubject buildWebSubject(final SecurityManager securityManager, final ServletRequest request, final ServletResponse response, final UserProfileId profileId) {
 		WebSubject.Builder builder = new WebSubject.Builder(securityManager, request, response);
 		builder.principals(buildPrincipalCollection(profileId.getDomainId(), profileId.getUserId()));
 		return builder.buildWebSubject();
-	}
-	
-	public static UserProfileId getSysAdminProfileId() {
-		return new UserProfileId(WebTopManager.SYSADMIN_DOMAINID, WebTopManager.SYSADMIN_USERID);
 	}
 	
 	/**
@@ -109,7 +114,7 @@ public class RunContext {
 	 * @param subject The Subject to work on it.
 	 * @return Subject's Principal
 	 */
-	public static Principal getPrincipal(Subject subject) {
+	public static Principal getPrincipal(final Subject subject) {
 		return (subject == null) ? null : (Principal)subject.getPrincipal();
 	}
 	
@@ -130,7 +135,7 @@ public class RunContext {
 	 * @param subject The Subject to work on it.
 	 * @return True if impersonated, false otherwise
 	 */
-	public static boolean isImpersonated(Subject subject) {
+	public static boolean isImpersonated(final Subject subject) {
 		if (subject == null) return false;
 		Principal principal = (Principal)subject.getPrincipal();
 		if (principal == null) return false;
@@ -150,7 +155,7 @@ public class RunContext {
 	 * @param subject The Subject to work on it.
 	 * @return Subject's profile ID
 	 */
-	public static UserProfileId getRunProfileId(Subject subject) {
+	public static UserProfileId getRunProfileId(final Subject subject) {
 		Principal principal = getPrincipal(subject);
 		return (principal == null) ? null : new UserProfileId(principal.getName());
 	}
@@ -160,7 +165,7 @@ public class RunContext {
 	 * @param role Role UID to check.
 	 * @return True if role is satisfied, false otherwise
 	 */
-	public static boolean hasRole(String role) {
+	public static boolean hasRole(final String role) {
 		Subject subject = getSubject();
 		return (subject != null) ? hasRole(subject.getPrincipals(), role) : false;
 	}
@@ -170,7 +175,7 @@ public class RunContext {
 	 * @param roles Role UIDs to check at same time.
 	 * @return True if all role are satisfied, false otherwise
 	 */
-	public static boolean hasAllRoles(Collection<String> roles) {
+	public static boolean hasAllRoles(final Collection<String> roles) {
 		Subject subject = getSubject();
 		return (subject != null) ? hasAllRoles(subject.getPrincipals(), roles) : false;
 	}
@@ -181,7 +186,7 @@ public class RunContext {
 	 * @param role Role UID to check.
 	 * @return True if role is satisfied, false otherwise
 	 */
-	public static boolean hasRole(Subject subject, String role) {
+	public static boolean hasRole(final Subject subject, final String role) {
 		return hasRole(subject.getPrincipals(), role);
 	}
 	
@@ -191,7 +196,7 @@ public class RunContext {
 	 * @param roles Role UIDs to check at same time.
 	 * @return True if all role are satisfied, false otherwise
 	 */
-	public static boolean hasAllRoles(Subject subject, Collection<String> roles) {
+	public static boolean hasAllRoles(final Subject subject, final Collection<String> roles) {
 		return hasAllRoles(subject.getPrincipals(), roles);
 	}
 	
@@ -201,66 +206,175 @@ public class RunContext {
 	 * @param role Role UID to check.
 	 * @return True if role is satisfied, false otherwise
 	 */
-	public static boolean hasRole(UserProfileId profileId, String role) {
+	public static boolean hasRole(final UserProfileId profileId, final String role) {
 		return hasRole(buildPrincipalCollection(profileId), role);
 	}
 	
 	/**
-	 * Checks if the passed profile ID has all the specified roles.
+	 * Checks if specified profile ID has all the specified roles.
 	 * @param profileId The profile ID to check.
 	 * @param roles Role UIDs to check at same time.
 	 * @return True if all role are satisfied, false otherwise
 	 */
-	public static boolean hasAllRoles(UserProfileId profileId, Collection<String> roles) {
+	public static boolean hasAllRoles(final UserProfileId profileId, final Collection<String> roles) {
 		return hasAllRoles(buildPrincipalCollection(profileId), roles);
 	}
 	
-	public static void ensureIsWebTopAdmin() throws AuthException {
-		ensureIsWebTopAdmin(getSubject());
-	}
-	
-	public static void ensureIsWebTopAdmin(Subject subject) throws AuthException {
-		ensureIsWebTopAdmin(subject.getPrincipals());
-	}
-	
-	public static void ensureIsWebTopAdmin(UserProfileId profileId) throws AuthException {
-		ensureIsWebTopAdmin(buildPrincipalCollection(profileId));
-	}
-	
-	public static boolean isWebTopAdmin() {
-		return isWebTopAdmin(getSubject());
-	}
-	
-	public static boolean isWebTopAdmin(Subject subject) {
-		return isWebTopAdmin(subject.getPrincipals());
-	}
-	
-	public static boolean isWebTopAdmin(UserProfileId profileId) {
-		return isWebTopAdmin(buildPrincipalCollection(profileId));
-	}
-	
-	public static void ensureIsSysAdmin() throws AuthException {
-		ensureIsSysAdmin(getSubject());
-	}
-	
-	public static void ensureIsSysAdmin(Subject subject) throws AuthException {
-		ensureIsSysAdmin(subject.getPrincipals());
-	}
-	
-	public static void ensureIsSysAdmin(UserProfileId profileId) throws AuthException {
-		ensureIsSysAdmin(buildPrincipalCollection(profileId));
-	}
-	
+	/**
+	 * Checks if executing Subject is the System Administrator.
+	 * @return `true` if evaluation passed, `false` otherwise
+	 */
 	public static boolean isSysAdmin() {
 		return isSysAdmin(getSubject());
 	}
 	
-	public static boolean isSysAdmin(Subject subject) {
+	/**
+	 * Checks if specified Subject is the System Administrator.
+	 * @param subject The Subject to be evaluated.
+	 * @return `true` if evaluation passed, `false` otherwise
+	 */
+	public static boolean isSysAdmin(final Subject subject) {
 		return isSysAdmin(subject.getPrincipals());
 	}
 	
-	public static boolean isSysAdmin(UserProfileId profileId) {
+	/**
+	 * Checks if specified Profile refers to System Administrator.
+	 * @param profileId The Profile to be evaluated.
+	 * @return `true` if evaluation passed, `false` otherwise
+	 */
+	public static boolean isSysAdmin(final UserProfileId profileId) {
 		return isSysAdmin(buildPrincipalCollection(profileId));
+	}
+	
+	/**
+	 * Checks if executing Subject has role of WebTop Administrator.
+	 * @return `true` if evaluation passed, `false` otherwise
+	 */
+	public static boolean isWebTopAdmin() {
+		return isWebTopAdmin(getSubject());
+	}
+	
+	/**
+	 * Checks if specified Subject has role of WebTop Administrator.
+	 * @param subject The Subject to be evaluated.
+	 * @return `true` if evaluation passed, `false` otherwise
+	 */
+	public static boolean isWebTopAdmin(final Subject subject) {
+		return isWebTopAdmin(subject.getPrincipals());
+	}
+	
+	/**
+	 * Checks if specified Profile has role of WebTop Administrator.
+	 * @param profileId The Profile to be evaluated.
+	 * @return `true` if evaluation passed, `false` otherwise
+	 */
+	public static boolean isWebTopAdmin(final UserProfileId profileId) {
+		return isWebTopAdmin(buildPrincipalCollection(profileId));
+	}
+	
+	/**
+	 * Make sure that executing Subject is the System Administrator, 
+	 * otherwise a dedicated exception is thrown.
+	 * @throws AuthException
+	 */
+	public static void ensureIsSysAdmin() throws AuthException {
+		ensureIsSysAdmin(getSubject());
+	}
+	
+	/**
+	 * Make sure that specified Subject is the System Administrator, 
+	 * otherwise a dedicated exception is thrown.
+	 * @param subject The Subject to be evaluated.
+	 * @throws AuthException 
+	 */
+	public static void ensureIsSysAdmin(final Subject subject) throws AuthException {
+		ensureIsSysAdmin(subject.getPrincipals());
+	}
+	
+	/**
+	 * Make sure that specified Profile is the System Administrator, 
+	 * otherwise a dedicated exception is thrown.
+	 * @param profileId The Profile to be evaluated.
+	 * @throws AuthException 
+	 */
+	public static void ensureIsSysAdmin(final UserProfileId profileId) throws AuthException {
+		ensureIsSysAdmin(buildPrincipalCollection(profileId));
+	}
+	
+	/**
+	 * Make sure that executing Subject has role of WebTop Administrator, 
+	 * otherwise a dedicated exception is thrown.
+	 * @throws AuthException
+	 */
+	public static void ensureIsWebTopAdmin() throws AuthException {
+		ensureIsWebTopAdmin(getSubject());
+	}
+	
+	/**
+	 * Make sure that specified Subject has role of WebTop Administrator, 
+	 * otherwise a dedicated exception is thrown.
+	 * @param subject The Subject to be evaluated.
+	 * @throws AuthException 
+	 */
+	public static void ensureIsWebTopAdmin(final Subject subject) throws AuthException {
+		ensureIsWebTopAdmin(subject.getPrincipals());
+	}
+	
+	/**
+	 * Make sure that specified Profile has role of WebTop Administrator, 
+	 * otherwise a dedicated exception is thrown.
+	 * @param profileId The Profile to be evaluated.
+	 * @throws AuthException 
+	 */
+	public static void ensureIsWebTopAdmin(final UserProfileId profileId) throws AuthException {
+		ensureIsWebTopAdmin(buildPrincipalCollection(profileId));
+	}
+	
+	/**
+	 * Checks if executing Subject has role of WebTop Administrator 
+	 * and belongs to specified Domain.
+	 * @param domainId The Domain to be evaluated.
+	 * @return `true` if evaluation passed, `false` otherwise
+	 */
+	public static boolean isWebTopDomainAdmin(final String domainId) {
+		return isWebTopDomainAdmin(getSubject(), domainId);
+	}
+	
+	/**
+	 * Checks if passed Subject has role of WebTop Administrator 
+	 * and belongs to specified Domain.
+	 * @param subject The Subject to be evaluated.
+	 * @param domainId The Domain to be evaluated.
+	 * @return `true` if evaluation passed, `false` otherwise
+	 */
+	public static boolean isWebTopDomainAdmin(final Subject subject, final String domainId) {
+		Check.notNull(subject, "subject");
+		Check.notEmpty(domainId, "domainId");
+		return isSysAdmin(subject) || (isWebTopAdmin(subject) && getRunProfileId(subject).hasDomain(domainId));
+	}
+	
+	/**
+	 * Make sure that executing Subject has role of WebTop Administrator 
+	 * and belongs to specified Domain.
+	 * @param domainId The Domain to be evaluated.
+	 * @throws AuthException 
+	 */
+	public static void ensureIsWebTopDomainAdmin(final String domainId) throws AuthException {
+		ensureIsWebTopDomainAdmin(getSubject(), domainId);
+	}
+	
+	/**
+	 * Make sure that specified Subject has role of WebTop Administrator 
+	 * and belongs to specified Domain.
+	 * @param subject The Subject to be evaluated.
+	 * @param domainId The Domain to be evaluated.
+	 * @throws AuthException 
+	 */
+	public static void ensureIsWebTopDomainAdmin(final Subject subject, final String domainId) throws AuthException {
+		Check.notNull(subject, "subject");
+		Check.notEmpty(domainId, "domainId");
+		ensureIsWebTopAdmin(subject.getPrincipals());
+		if (!isSysAdmin(subject) && !getRunProfileId(subject).hasDomain(domainId)) throw new AuthException("WebTopAdmin must belong to '{}' domain", domainId);
 	}
 	
 	public static boolean isPermitted(boolean strict, String ref) {

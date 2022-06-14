@@ -555,105 +555,92 @@ public class CoreAdminManager extends BaseManager {
 		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
 		RunContext.ensureIsWebTopAdmin();
 		
-		licMgr.revokeLicenseLease(domainId, productId, userIds);
+		licMgr.revokeLicenseLease(getTargetProfileId().getDomainId(), productId, userIds);
 	}
 	
-	public Map<String, DataSourceType> listDataSourceTypes(final String domainId) throws WTException {
+	public Map<String, DataSourceType> listDataSourceTypes() throws WTException {
 		DataSourcesManager dsMgr = wta.getDataSourcesManager();
-		
-		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
-		RunContext.ensureIsWebTopAdmin();
-		
-		return dsMgr.listDataSourceTypes(domainId);
+		String domainId = getTargetProfileId().getDomainId();
+
+		RunContext.ensureIsWebTopDomainAdmin(domainId);
+		return dsMgr.listDataSourceTypes(getTargetProfileId().getDomainId());
 	}
 	
-	public Map<String, DataSourcePooled> listDataSources(final String domainId) throws WTException {
+	public Map<String, DataSourcePooled> listDataSources() throws WTException {
 		DataSourcesManager dsMgr = wta.getDataSourcesManager();
-		
-		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
-		RunContext.ensureIsWebTopAdmin();
-		
-		return dsMgr.listDataSources(domainId);
+		String domainId = getTargetProfileId().getDomainId();
+
+		RunContext.ensureIsWebTopDomainAdmin(domainId);
+		return dsMgr.listDataSources(getTargetProfileId().getDomainId());
 	}
 	
-	public DataSource getDataSource(final String domainId, final String dataSourceId) throws WTException {
+	public DataSource getDataSource(final String dataSourceId) throws WTException {
 		DataSourcesManager dsMgr = wta.getDataSourcesManager();
-		
-		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
-		RunContext.ensureIsWebTopAdmin();
-		
-		return dsMgr.getDataSource(domainId, dataSourceId);
+		String domainId = getTargetProfileId().getDomainId();
+
+		RunContext.ensureIsWebTopDomainAdmin(domainId);
+		return dsMgr.getDataSource(getTargetProfileId().getDomainId(), dataSourceId);
 	}
 	
-	public DataSource addDataSource(final String domainId, final DataSourceBase dataSource) throws WTException {
+	public DataSource addDataSource(final DataSourceBase dataSource) throws WTException {
 		DataSourcesManager dsMgr = wta.getDataSourcesManager();
-		
-		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
-		RunContext.ensureIsWebTopAdmin();
-		
+		String domainId = getTargetProfileId().getDomainId();
+
+		RunContext.ensureIsWebTopDomainAdmin(domainId);
 		return dsMgr.addDataSource(domainId, dataSource);
 	}
 	
-	public void updateDataSource(final String domainId, final String dataSourceId, final DataSourceBase dataSource, final boolean setPassword) throws WTException {
+	public void updateDataSource(final String dataSourceId, final DataSourceBase dataSource, final boolean setPassword) throws WTException {
 		DataSourcesManager dsMgr = wta.getDataSourcesManager();
-		
-		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
-		RunContext.ensureIsWebTopAdmin();
-		
-		dsMgr.updateDataSource(domainId, dataSourceId, dataSource, setPassword);
+		String domainId = getTargetProfileId().getDomainId();
+
+		RunContext.ensureIsWebTopDomainAdmin(domainId);
+		dsMgr.updateDataSource(getTargetProfileId().getDomainId(), dataSourceId, dataSource, setPassword);
 	}
 	
-	public void deleteDataSource(final String domainId, final String dataSourceId) throws WTException {
+	public void deleteDataSource(final String dataSourceId) throws WTException {
 		DataSourcesManager dsMgr = wta.getDataSourcesManager();
-		
-		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
-		RunContext.ensureIsWebTopAdmin();
-		
-		dsMgr.deleteDataSource(domainId, dataSourceId);
+		String domainId = getTargetProfileId().getDomainId();
+
+		RunContext.ensureIsWebTopDomainAdmin(domainId);
+		dsMgr.deleteDataSource(getTargetProfileId().getDomainId(), dataSourceId);
 	}
 	
-	public void checkDataSourceConnection(final String domainId, final String dataSourceId) throws WTException {
+	public void checkDataSourceConnection(final String dataSourceId) throws WTException {
 		DataSourcesManager dsMgr = wta.getDataSourcesManager();
-		
-		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
-		RunContext.ensureIsWebTopAdmin();
-		
-		dsMgr.checkDataSourceConnection(domainId, dataSourceId);
+		String domainId = getTargetProfileId().getDomainId();
+
+		RunContext.ensureIsWebTopDomainAdmin(domainId);
+		dsMgr.checkDataSourceConnection(getTargetProfileId().getDomainId(), dataSourceId);
 	}
 	
-	public void checkDataSourceConnection(final String domainId, final String dataSourceType, final String serverName, final Integer serverPort, final String databaseName, final String username, final String password, final Map<String, String> props) throws WTException {
+	public void checkDataSourceConnection(final String dataSourceType, final String serverName, final Integer serverPort, final String databaseName, final String username, final String password, final Map<String, String> props) throws WTException {
 		DataSourcesManager dsMgr = wta.getDataSourcesManager();
-		
-		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
-		RunContext.ensureIsWebTopAdmin();
-		
-		dsMgr.checkDataSourceConnection(domainId, dataSourceType, serverName, serverPort, databaseName, username, password, props);
+		String domainId = getTargetProfileId().getDomainId();
+
+		RunContext.ensureIsWebTopDomainAdmin(domainId);
+		dsMgr.checkDataSourceConnection(getTargetProfileId().getDomainId(), dataSourceType, serverName, serverPort, databaseName, username, password, props);
 	}
 	
-	public DataSourceQuery getDataSourceQuery(final String domainId, final String queryId) throws WTException {
-		Check.notEmpty(domainId, "domainId");
+	public DataSourceQuery getDataSourceQuery(final String queryId) throws WTException {
 		Check.notEmpty(queryId, "queryId");
 		DataSourcesManager dsMgr = wta.getDataSourcesManager();
-		
-		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
-		RunContext.ensureIsWebTopAdmin();
-		
-		return dsMgr.getDataSourceQuery(domainId, queryId);
+		String domainId = getTargetProfileId().getDomainId();
+
+		RunContext.ensureIsWebTopDomainAdmin(domainId);
+		return dsMgr.getDataSourceQuery(getTargetProfileId().getDomainId(), queryId);
 	}
 	
-	public DataSourceQuery addDataSourceQuery(final String domainId, final String dataSourceId, final DataSourceQueryBase query) throws WTException {
-		Check.notEmpty(domainId, "domainId");
+	public DataSourceQuery addDataSourceQuery(final String dataSourceId, final DataSourceQueryBase query) throws WTException {
 		Check.notEmpty(dataSourceId, "dataSourceId");
 		DataSourcesManager dsMgr = wta.getDataSourcesManager();
-		
-		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
-		RunContext.ensureIsWebTopAdmin();
-		
-		return dsMgr.addDataSourceQuery(domainId, dataSourceId, query);
+		String domainId = getTargetProfileId().getDomainId();
+
+		RunContext.ensureIsWebTopDomainAdmin(domainId);
+		return dsMgr.addDataSourceQuery(getTargetProfileId().getDomainId(), dataSourceId, query);
 	}
 	
-	public void updateDataSourceQuery(final String domainId, final String queryId, final DataSourceQueryBase query) throws WTException {
-		Check.notEmpty(domainId, "domainId");
+	public void updateDataSourceQuery(final String queryId, final DataSourceQueryBase query) throws WTException {
 		Check.notEmpty(queryId, "queryId");
 		Check.notNull(query, "query");
 		DataSourcesManager dsMgr = wta.getDataSourcesManager();
@@ -661,29 +648,29 @@ public class CoreAdminManager extends BaseManager {
 		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
 		RunContext.ensureIsWebTopAdmin();
 		
-		dsMgr.updateDataSourceQuery(domainId, queryId, query);
+		dsMgr.updateDataSourceQuery(getTargetProfileId().getDomainId(), queryId, query);
 	}
 	
-	public void deleteDataSourceQuery(final String domainId, final String queryId) throws WTException {
-		Check.notEmpty(domainId, "domainId");
+	public void deleteDataSourceQuery(final String queryId) throws WTException {
 		Check.notEmpty(queryId, "queryId");
 		DataSourcesManager dsMgr = wta.getDataSourcesManager();
 		
 		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
 		RunContext.ensureIsWebTopAdmin();
 		
-		dsMgr.deleteDataSourceQuery(domainId, queryId);
+		dsMgr.deleteDataSourceQuery(getTargetProfileId().getDomainId(), queryId);
 	}
 	
-	public DataSourceBase.ExecuteQueryResult<RowsAndCols> executeDataSourceRawQuery(final String domainId, final String dataSourceId, final String rawSql, final Map<String, String> placeholdersValues, final PageInfo pagination, final boolean debugReport) throws WTException {
-		return executeDataSourceRawQuery(domainId, dataSourceId, rawSql, placeholdersValues, pagination, debugReport, new FilterableArrayListHandler());
+	public DataSourceBase.ExecuteQueryResult<RowsAndCols> executeDataSourceRawQuery(final String dataSourceId, final String rawSql, final Map<String, String> placeholdersValues, final PageInfo pagination, final boolean debugReport) throws WTException {
+		return executeDataSourceRawQuery(dataSourceId, rawSql, placeholdersValues, pagination, debugReport, new FilterableArrayListHandler());
 	}
 	
-	public <T> DataSourceBase.ExecuteQueryResult<T> executeDataSourceRawQuery(final String domainId, final String dataSourceId, final String rawSql, final Map<String, String> placeholdersValues, final PageInfo pagination, final boolean debugReport, final ResultSetHandler<T> resultSetHandler) throws WTException {
+	public <T> DataSourceBase.ExecuteQueryResult<T> executeDataSourceRawQuery(final String dataSourceId, final String rawSql, final Map<String, String> placeholdersValues, final PageInfo pagination, final boolean debugReport, final ResultSetHandler<T> resultSetHandler) throws WTException {
 		Check.notEmpty(dataSourceId, "dataSourceId");
 		Check.notNull(resultSetHandler, "resultSetHandler");
 		
 		try {
+			String domainId = getTargetProfileId().getDomainId();
 			ensureProfileDomain(domainId);
 			
 			DataSourcesManager dsMgr = wta.getDataSourcesManager();
