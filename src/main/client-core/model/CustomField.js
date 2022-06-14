@@ -34,6 +34,7 @@
 Ext.define('Sonicle.webtop.core.model.CustomField', {
 	extend: 'WTA.ux.data.BaseModel',
 	requires: [
+		'Sonicle.String',
 		'Sonicle.data.writer.Json',
 		'Sonicle.webtop.core.model.CustomFieldProp',
 		'Sonicle.webtop.core.model.CustomFieldValue',
@@ -63,11 +64,22 @@ Ext.define('Sonicle.webtop.core.model.CustomField', {
 		WTF.field('description', 'string', true),
 		WTF.field('type', 'string', false),
 		WTF.field('searchable', 'boolean', false, {defaultValue: false}),
-		WTF.field('previewable', 'boolean', false, {defaultValue: false})
+		WTF.field('previewable', 'boolean', false, {defaultValue: false}),
+		WTF.field('queryId', 'string', true, {
+			validators: [{
+				type: 'sopresence',
+				ifField: 'type',
+				ifFieldValues: ['comboboxds', 'tagds']
+			}]
+		})
 	],
 	hasMany: [
 		WTF.hasMany('props', 'Sonicle.webtop.core.model.CustomFieldProp'),
 		WTF.hasMany('values', 'Sonicle.webtop.core.model.CustomFieldValue'),
 		WTF.hasMany('labelI18n', 'Sonicle.webtop.core.model.I18nValue')
-	]
+	],
+	
+	isDataBindableType: function() {
+		return Sonicle.String.isIn(this.get('type'), ['comboboxds', 'tagds']);
+	}
 });

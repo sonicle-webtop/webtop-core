@@ -34,9 +34,25 @@ Ext.define('Sonicle.webtop.core.view.CustomField', {
 	alternateClassName: 'WTA.view.CustomField',
 	extend: 'WTA.sdk.ModelView',
 	requires: [
+		'Sonicle.Object',
+		'Sonicle.String',
+		'Sonicle.Utils',
+		'Sonicle.grid.column.Action',
 		'Sonicle.grid.plugin.DDOrdering',
+		'Sonicle.form.field.ComboBox',
+		'Sonicle.form.field.pickerpanel.Picker',
+		'Sonicle.plugin.FieldChangeDetector',
+		'Sonicle.plugin.FieldAvailabilityCheck',
+		'WTA.model.DataSourceQueryLkp',
 		'Sonicle.webtop.core.model.CustomField',
+		'Sonicle.webtop.core.model.CustomFieldLkp',
+		'Sonicle.webtop.core.model.CustomFieldExpMemberLkp',
 		'Sonicle.webtop.core.store.CustomFieldType'
+	],
+	uses: [
+		'WTA.ux.picker.CFDataSourceDataDependsOn',
+		'WTA.ux.picker.CFContactPickerDataDependsOn',
+		'WTA.ux.picker.CustomFieldExpr'
 	],
 	
 	/**
@@ -69,174 +85,364 @@ Ext.define('Sonicle.webtop.core.view.CustomField', {
 		});
 		me.callParent([cfg]);
 		
+		me.queryStore = Ext.create('Ext.data.Store', {
+			autoLoad: true,
+			model: 'WTA.model.DataSourceQueryLkp',
+			proxy: WTF.proxy(WT.ID, 'LookupDataSourceQueries'),
+			listeners: {
+				load: function(s) {
+					if (s.loadCount === 1) {
+						var mo = me.getModel();
+						if (mo && mo.isDataBindableType()) {
+							// Make sure that query IDs are properly decoded in grid
+							me.lref('tabmain').getComponent('props').getView().refresh();
+						}
+					}
+				}
+			}
+		});
+		me.queryFieldsStore = Ext.create('Ext.data.ArrayStore', {
+			proxy: WTF.proxy(WT.ID, 'LookupDataSourceQueryFields'),
+			fields: ['name'],
+			listeners: {
+				beforeload: function(s) {
+					var mo = me.getModel(), prec;
+					if (mo && (prec = mo.props().getById('queryId'))) {
+						WTU.applyExtraParams(s, {
+							queryId: prec.get('value')
+						});
+					}
+				}
+			}
+		});
+		me.queryPlaceholdersStore = Ext.create('Ext.data.ArrayStore', {
+			proxy: WTF.proxy(WT.ID, 'LookupDataSourceQueryPlaceholders'),
+			fields: ['name'],
+			listeners: {
+				beforeload: function(s) {
+					var mo = me.getModel(), prec;
+					if (mo && (prec = mo.props().getById('queryId'))) {
+						WTU.applyExtraParams(s, {
+							queryId: prec.get('value')
+						});
+					}
+				}
+			}
+		});
+		me.dependsOnFieldStore = Ext.create('Ext.data.JsonStore', {
+			autoLoad: true,
+			model: 'Sonicle.webtop.core.model.CustomFieldLkp',
+			proxy: WTF.proxy(WT.ID, 'LookupCustomFields', null, {
+				extraParams: {
+					serviceId: me.serviceId
+				}
+			})
+		});
+		
 		WTU.applyFormulas(me.getVM(), {
-			searchable: WTF.checkboxBind('record', 'searchable'),
-			previewable: WTF.checkboxBind('record', 'previewable'),
+			//searchable: WTF.checkboxBind('record', 'searchable'),
+			//previewable: WTF.checkboxBind('record', 'previewable'),
 			foEnableValues: WTF.foGetFn('record', 'type', function(v) {
-				return Ext.isEmpty(v) ? false : ['combobox', 'radios'].indexOf(v) !== -1;
+				return Ext.isEmpty(v) ? false : ['combobox', 'radios', 'tag'].indexOf(v) !== -1;
 			}),
 			foMainLabel: WTF.foRecordTwoWay('record', 'labelI18n', 'txt', WT.getLanguage())
 		});
 		
 		me.typeProps = {
-			'text': {
-				required: {
-					displayName: me.mys.res('customField.gp-props.required'),
-					type: 'boolean',
-					defaultValue: false
-				},
-				minLength: {
-					displayName: me.mys.res('customField.gp-props.minLength'),
-					type: 'number',
-					defaultValue: null
-				},
-				maxLength: {
-					displayName: me.mys.res('customField.gp-props.maxLength'),
-					type: 'number',
-					defaultValue: null
-				},
-				emptyText: {
-					displayName: me.mys.res('customField.gp-props.emptyText'),
-					type: 'string',
-					defaultValue: null
-				},
-				maskRe: {
-					displayName: me.mys.res('customField.gp-props.maskRe'),
-					type: 'string',
-					defaultValue: null
-				},
-				validationRe: {
-					displayName: me.mys.res('customField.gp-props.validationRe'),
-					type: 'string',
-					defaultValue: null
-				},
-				width: {
-					displayName: me.mys.res('customField.gp-props.width'),
-					type: 'number',
-					defaultValue: null
-				},
-				anchor: {
-					displayName: me.mys.res('customField.gp-props.anchor'),
-					type: 'string',
-					defaultValue: null
-				}
-			},
-			'textarea': {
-				required: {
-					displayName: me.mys.res('customField.gp-props.required'),
-					type: 'boolean',
-					defaultValue: false
-				},
-				minLength: {
-					displayName: me.mys.res('customField.gp-props.minLength'),
-					type: 'number',
-					defaultValue: null
-				},
-				maxLength: {
-					displayName: me.mys.res('customField.gp-props.maxLength'),
-					type: 'number',
-					defaultValue: null
-				},
-				emptyText: {
-					displayName: me.mys.res('customField.gp-props.emptyText'),
-					type: 'string',
-					defaultValue: null
-				},
-				width: {
-					displayName: me.mys.res('customField.gp-props.width'),
-					type: 'number',
-					defaultValue: null
-				},
-				anchor: {
-					displayName: me.mys.res('customField.gp-props.anchor'),
-					type: 'string',
-					defaultValue: null
-				},
-				autoGrow: {
-					displayName: me.mys.res('customField.gp-props.autoGrow'),
-					type: 'boolean',
-					defaultValue: false
-				}
-			},
-			'number': {
-				required: {
-					displayName: me.mys.res('customField.gp-props.required'),
-					type: 'boolean',
-					defaultValue: false
-				},
-				minValue: {
-					displayName: me.mys.res('customField.gp-props.minValue'),
-					type: 'number',
-					defaultValue: null
-				},
-				maxValue: {
-					displayName: me.mys.res('customField.gp-props.maxValue'),
-					type: 'number',
-					defaultValue: null
-				},
-				allowDecimals: {
-					displayName: me.mys.res('customField.gp-props.allowDecimals'),
-					type: 'boolean',
-					defaultValue: false
-				},
-				emptyText: {
-					displayName: me.mys.res('customField.gp-props.emptyText'),
-					type: 'string',
-					defaultValue: null
-				},
-				width: {
-					displayName: me.mys.res('customField.gp-props.width'),
-					type: 'number',
-					defaultValue: null
-				},
-				anchor: {
-					displayName: me.mys.res('customField.gp-props.anchor'),
-					type: 'string',
-					defaultValue: null
-				}
-			},
-			'date': {
-				required: {
-					displayName: me.mys.res('customField.gp-props.required'),
-					type: 'boolean',
-					defaultValue: false
-				}
-			},
-			'time': {
-				required: {
-					displayName: me.mys.res('customField.gp-props.required'),
-					type: 'boolean',
-					defaultValue: false
-				}
-			},
-			'combobox': {
-				required: {
-					displayName: me.mys.res('customField.gp-props.required'),
-					type: 'boolean',
-					defaultValue: false
-				},
-				queryable: {
-					displayName: me.mys.res('customField.gp-props.queryable'),
-					type: 'boolean',
-					defaultValue: false
-				},
-				emptyText: {
-					displayName: me.mys.res('customField.gp-props.emptyText'),
-					type: 'string',
-					defaultValue: null
-				},
-				width: {
-					displayName: me.mys.res('customField.gp-props.width'),
-					type: 'number',
-					defaultValue: null
-				},
-				anchor: {
-					displayName: me.mys.res('customField.gp-props.anchor'),
-					type: 'string',
-					defaultValue: null
-				}
-			}
+			'text': me.propsBuilder(
+				'searchable', 'previewable', 'required', 'minLength', 'maxLength', 'maskRe', 'validationRe', 'emptyText', 'width', 'anchor', 'disabledExpr'
+			),
+			'textarea': me.propsBuilder(
+				'searchable', 'previewable', 'required', 'minLength', 'maxLength', 'autoGrow', 'emptyText', 'width', 'anchor', 'disabledExpr'
+			),
+			'number': me.propsBuilder(
+				'searchable', 'previewable', 'required', 'minValue', 'maxValue', 'allowDecimals', 'emptyText', 'width', 'anchor', 'disabledExpr'
+			),
+			'date': me.propsBuilder(
+				'searchable', 'previewable', 'required', 'disabledExpr', 'onChangeExpr'
+			),
+			'time': me.propsBuilder(
+				'searchable', 'previewable', 'required', 'disabledExpr', 'onChangeExpr'
+			),
+			'combobox': me.propsBuilder(
+				'searchable', 'previewable', 'required', 'queryable', 'emptyText', 'width', 'anchor', 'disabledExpr', 'onChangeExpr'
+			),
+			'comboboxds': me.propsBuilder(
+				'searchable', 'previewable', 'required', 'queryable', 'emptyText', 'width', 'anchor', 'queryId', 'valueField', 'displayField', 'pageSize', 'dataDependsOn', 'disabledExpr', 'onChangeExpr'
+			),
+			'tag': me.propsBuilder(
+				'searchable', 'previewable', 'required', 'emptyText', 'width', 'anchor', 'disabledExpr', 'onChangeExpr'
+			),
+			'tagds': me.propsBuilder(
+				'searchable', 'previewable', 'required', 'emptyText', 'width', 'anchor', 'queryId', 'valueField', 'displayField', 'disabledExpr', 'onChangeExpr'
+			),
+			'contactpicker': me.propsBuilder(
+				'searchable', 'previewable', 'required', 'emptyText', 'contactPickerNewButton', 'displayTpl', 'width', 'anchor', 'dataDependsOn', 'disabledExpr', 'onChangeExpr', 'contactPickerCategoryIds', 'contactPickerAddContactApiDataExpr'
+			)
 		};
+	},
+	
+	propsBuilder: function(names) {
+		var me = this, obj = {}, name;
+		Ext.iterate(arguments, function(prop) {
+			name = prop;
+			//TODO: support overrides!
+			//if (Ext.isObject(prop)) {...
+			if ('searchable' === name) {
+				obj[name] = {
+					displayName: me.res('customField.gp-props.searchable'),
+					type: 'boolean',
+					renderer: me.booleanYesNoRenderer(),
+					editor: me.booleanYesNoEditor(),
+					defaultValue: false
+				};
+			} else if ('previewable' === name) {
+				obj[name] = {
+					displayName: me.res('customField.gp-props.previewable'),
+					type: 'boolean',
+					renderer: me.booleanYesNoRenderer(),
+					editor: me.booleanYesNoEditor(),
+					defaultValue: false
+				};
+			} else if ('queryable' === name) {
+				obj[name] = {
+					displayName: me.res('customField.gp-props.queryable'),
+					type: 'boolean',
+					renderer: me.booleanYesNoRenderer(),
+					editor: me.booleanYesNoEditor(),
+					defaultValue: false
+				};
+			} else if ('required' === name) {
+				obj[name] = {
+					displayName: me.res('customField.gp-props.required'),
+					type: 'boolean',
+					renderer: me.booleanYesNoRenderer(),
+					editor: me.booleanYesNoEditor(),
+					defaultValue: false
+				};
+			} else if ('emptyText' === name) {
+				obj[name] = {
+					displayName: me.res('customField.gp-props.emptyText'),
+					type: 'string',
+					defaultValue: null
+				};
+			} else if ('width' === name) {
+				obj[name] = {
+					displayName: me.res('customField.gp-props.width'),
+					type: 'number',
+					defaultValue: null
+				};
+			} else if ('anchor' === name) {
+				obj[name] = {
+					displayName: me.res('customField.gp-props.anchor'),
+					type: 'string',
+					defaultValue: null
+				};
+			} else if ('autoGrow' === name) {
+				obj[name] = {
+					displayName: me.res('customField.gp-props.autoGrow'),
+					type: 'boolean',
+					renderer: me.booleanYesNoRenderer(),
+					editor: me.booleanYesNoEditor(),
+					defaultValue: false
+				};
+			} else if ('minLength' === name) {
+				obj[name] = {
+					displayName: me.res('customField.gp-props.minLength'),
+					type: 'number',
+					defaultValue: null
+				};
+			} else if ('maxLength' === name) {
+				obj[name] = {
+					displayName: me.res('customField.gp-props.maxLength'),
+					type: 'number',
+					defaultValue: null
+				};
+			} else if ('minValue' === name) {
+				obj[name] = {
+					displayName: me.res('customField.gp-props.minValue'),
+					type: 'number',
+					defaultValue: null
+				};
+			} else if ('maxValue' === name) {
+				obj[name] = {
+					displayName: me.res('customField.gp-props.maxValue'),
+					type: 'number',
+					defaultValue: null
+				};
+			} else if ('allowDecimals' === name) {
+				obj[name] = {
+					displayName: me.res('customField.gp-props.allowDecimals'),
+					type: 'boolean',
+					renderer: me.booleanYesNoRenderer(),
+					editor: me.booleanYesNoEditor(),
+					defaultValue: false
+				};
+			} else if ('maskRe' === name) {
+				obj[name] = {
+					displayName: me.res('customField.gp-props.maskRe'),
+					type: 'string',
+					defaultValue: null
+				};
+			} else if ('validationRe' === name) {
+				obj[name] = {
+					displayName: me.res('customField.gp-props.validationRe'),
+					type: 'string',
+					defaultValue: null
+				};
+			} else if ('queryId' === name) {
+				obj[name] = {
+					displayName: me.res('customField.gp-props.queryId'),
+					type: 'string',
+					renderer: function(v) {
+						var rec = me.queryStore.getById(v);
+						return rec ? Ext.htmlEncode(rec.get('desc')) : me.emptyTextRenderer('customField.gp-props.queryId.emp')(v);
+					},
+					editor: WTF.localCombo('id', 'desc', {
+						xtype: 'socombobox',
+						store: me.queryStore,
+						sourceField: 'dsName'
+					}),
+					defaultValue: null
+				};
+			} else if ('valueField' === name) {
+				obj[name] = {
+					displayName: me.res('customField.gp-props.valueField'),
+					type: 'string',
+					editor: WTF.localCombo('name', 'name', {
+						forceSelection: false,
+						autoLoadOnQuery: true,
+						store: me.queryFieldsStore
+					}),
+					defaultValue: null
+				};
+			} else if ('displayField' === name) {
+				obj[name] = {
+					displayName: me.res('customField.gp-props.displayField'),
+					type: 'string',
+					editor: WTF.localCombo('name', 'name', {
+						forceSelection: false,
+						autoLoadOnQuery: true,
+						store: me.queryFieldsStore
+					}),
+					defaultValue: null
+				};
+			} else if ('displayTpl' === name) {
+				obj[name] = {
+					displayName: me.res('customField.gp-props.displayTpl'),
+					type: 'string',
+					defaultValue: null
+				};
+			} else if ('dataDependsOn' === name) {
+				obj[name] = {
+					displayName: me.res('customField.gp-props.dataDependsOn'),
+					type: 'string',
+					editable: false,
+					getRenderer: Ext.pass(me.dataDependsOnRenderer, [false]),
+					getEditor: Ext.pass(me.dataDependsOnEditor, [me]),
+					defaultValue: null
+				};
+			} else if ('pageSize' === name) {
+				obj[name] = {
+					displayName: me.res('customField.gp-props.pageSize'),
+					type: 'number',
+					renderer: me.emptyTextRenderer('customField.gp-props.pageSize.emp'),
+					editor: {
+						xtype: 'numberfield',
+						minValue: 1,
+						maxValue: 1000,
+						allowDecimals: false
+					},
+					defaultValue: null
+				};
+			} else if ('disabledExpr' === name) {
+				// https://github.com/EricSmekens/jsep
+				// https://github.com/TomFrost/Jexl
+				// https://stackoverflow.com/questions/15590702/how-to-get-minified-output-with-browserify
+				// https://stackoverflow.com/questions/16172035/browserify-use-module-exports-if-required-otherwise-expose-global
+				// https://pegjs.org/online
+				// https://docs.rukovoditel.net/index.php?p=72
+				// https://www.youtube.com/watch?v=Qzpjq008cBY
+				// https://docs.microsoft.com/en-us/power-apps/maker/canvas-apps/controls/control-drop-down
+				obj[name] = {
+					displayName: me.res('customField.gp-props.disabledExpr'),
+					type: 'string',
+					renderer: me.exprRenderer(),
+					editor: {
+						xtype: 'sopickerpanelfield',
+						matchFieldWidth: false,
+						renderer: me.exprRenderer(true),
+						pickerEditorClass: 'WTA.ux.picker.CustomFieldExpr',
+						pickerEditorConfig: {
+							multiline: false
+						}
+					},
+					defaultValue: null
+				};
+			} else if ('onChangeExpr' === name) {
+				// https://github.com/EricSmekens/jsep
+				// https://github.com/TomFrost/Jexl
+				obj[name] = {
+					displayName: me.res('customField.gp-props.onChangeExpr'),
+					type: 'string',
+					renderer: me.exprRenderer(),
+					editor: {
+						xtype: 'sopickerpanelfield',
+						matchFieldWidth: false,
+						renderer: me.exprRenderer(true),
+						pickerEditorClass: 'WTA.ux.picker.CustomFieldExpr',
+						pickerEditorConfig: {
+							multiline: true
+						}
+					},
+					defaultValue: null
+				};
+			} else if ('contactPickerCategoryIds' === name) {
+				obj[name] = {
+					displayName: me.res('customField.gp-props.contactPickerCategoryIds'),
+					type: 'string',
+					editor: {
+						xtype: 'tagfield',
+						store: {
+							model: 'WTA.ux.data.ValueModel'
+						},
+						getValueMode: 'string',
+						autoLoadOnValue: true,
+						createNewOnEnter: true,
+						createNewOnBlur: true,
+						filterPickList: false,
+						forceSelection: false,
+						hideTrigger: true
+					},
+					defaultValue: null
+				};
+			} else if ('contactPickerNewButton' === name) {
+				obj[name] = {
+					displayName: me.res('customField.gp-props.contactPickerNewButton'),
+					type: 'boolean',
+					renderer: me.booleanYesNoRenderer(),
+					editor: me.booleanYesNoEditor(),
+					defaultValue: true
+				};
+			} else if ('contactPickerAddContactApiDataExpr' === name) {
+				obj[name] = {
+					displayName: me.res('customField.gp-props.contactPickerAddContactApiDataExpr'),
+					type: 'string',
+					renderer: me.exprRenderer(),
+					editor: {
+						xtype: 'sopickerpanelfield',
+						matchFieldWidth: false,
+						renderer: me.exprRenderer(true),
+						pickerEditorClass: 'WTA.ux.picker.CustomFieldExpr',
+						pickerEditorConfig: {
+							multiline: false
+						}
+					},
+					defaultValue: null
+				};
+			}
+		});
+		return obj;
 	},
 	
 	initComponent: function() {
@@ -247,12 +453,6 @@ Ext.define('Sonicle.webtop.core.view.CustomField', {
         	bbar: {
         		xtype: 'statusbar',
         		items: [
-                    {
-                    	xtype: 'tbtext',
-                    	bind: {
-                    		html: 'ID: {record.fieldId}'
-                    	}
-                    },
 					me.mys.hasAuditUI() ? me.addAct('customFieldAuditLog', {
 						text: null,
 						tooltip: WT.res('act-auditLog.lbl'),
@@ -261,13 +461,19 @@ Ext.define('Sonicle.webtop.core.view.CustomField', {
 							me.mys.openAuditUI(me.getModel().getId(), 'CUSTOMFIELD');
 						},
 						scope: me
-					}) : null
+					}) : null,
+					WTF.recordInfoButton({
+						getTooltip: function() {
+							return Ext.String.format('ID: {0}', Sonicle.String.coalesce(me.getModel().get('fieldId'), '?'));
+						}
+					})
         		]
         	}
         });
 		
 		me.callParent(arguments);
 		
+		var propviewGroup = Ext.id(null, 'custfield-propview-');
 		me.add({
 			region: 'center',
 			xtype: 'container',
@@ -290,6 +496,34 @@ Ext.define('Sonicle.webtop.core.view.CustomField', {
 							bind: '{record.name}',
 							fieldLabel: me.mys.res('customField.fld-name.lbl'),
 							emptyText: me.mys.res('customField.fld-name.emp'),
+							plugins: [
+								{
+									ptype: 'sofieldchangedetector',
+									handler: function() {
+										if (me.isMode(me.MODE_EDIT) && me.getModel().getModified('name') !== undefined) {
+											WT.warn(me.res('customField.warn.rename'));
+										}
+									}
+								}, {
+									ptype: 'sofieldavailabilitycheck',
+									baseIconCls: 'wt-opacity-50',
+									availableTooltipText: WT.res('sofieldavailabilitycheck.availableTooltipText'),
+									unavailableTooltipText: WT.res('sofieldavailabilitycheck.unavailableTooltipText'),
+									checkAvailability: function(value, done) {
+										if (me.getModel().getModified('name') === undefined) return false;
+										WT.ajaxReq(WT.ID, 'ManageCustomField', {
+											params: {
+												crud: 'check',
+												fieldServiceId: me.serviceId,
+												name: value
+											},
+											callback: function(success, json) {
+												done(success ? json.data : json.message);
+											}
+										});
+									}
+								}
+							],
 							anchor: '100%'
 						}, {
 							xtype: 'textareafield',
@@ -303,31 +537,17 @@ Ext.define('Sonicle.webtop.core.view.CustomField', {
 							anchor: '100%'
 						}, 
 						WTF.lookupCombo('id', 'desc', {
+							xtype: 'socombo',
 							bind: '{record.type}',
 							store: {
 								type: 'wtcustomfieldtype',
 								autoLoad: true
 							},
+							iconField: 'icon',
 							fieldLabel: me.mys.res('customField.fld-type.lbl'),
 							emptyText: me.mys.res('customField.fld-type.emp'),
-							anchor: '100%',
-							listeners: {
-								select: function() {
-
-								}
-							}
-						}),
-						{
-							xtype: 'checkbox',
-							bind: '{searchable}',
-							hideEmptyLabel: false,
-							boxLabel: me.mys.res('customField.fld-searchable.lbl')
-						}, {
-							xtype: 'checkbox',
-							bind: '{previewable}',
-							hideEmptyLabel: false,
-							boxLabel: me.mys.res('customField.fld-previewable.lbl')
-						}
+							anchor: '100%'
+						})
 					]
 				}, {
 					xtype: 'wttabpanel',
@@ -336,15 +556,51 @@ Ext.define('Sonicle.webtop.core.view.CustomField', {
 						{
 							xtype: 'propertygrid',
 							itemId: 'props',
-							title: me.mys.res('customField.props.tit'),
+							title: me.res('customField.props.tit'),
 							bind: {
 								store: '{record.props}'
 							},
 							viewConfig: {
 								deferEmptyText: false,
-								emptyText: me.mys.res('customField.gp-props.emp')
+								emptyText: me.res('customField.gp-props.emp')
 							},
-							nameColumnWidth: 150,
+							features: [
+								{
+									ftype: 'grouping',
+									groupHeaderTpl: [
+										'{name:this.nameRes}',
+										{
+											nameRes: function(name) {
+												return me.res('customField.gp-props.group.'+name);
+											}
+										}
+									]
+								}
+							],
+							tbar: [
+								{
+									xtype: 'sotogglebutton',
+									toggleGroup: propviewGroup,
+									offIconCls: 'wt-icon-propView-hier-gray',
+									onIconCls: 'wt-icon-propView-hier',
+									allowDepress: false,
+									pressed: true,
+									toggleHandler: function(s, pressed) {
+										if (pressed) me.updatePropView('hier');
+									}
+								}, {
+									xtype: 'sotogglebutton',
+									toggleGroup: propviewGroup,
+									offIconCls: 'wt-icon-propView-sorted-gray',
+									onIconCls: 'wt-icon-propView-sorted',
+									allowDepress: false,
+									pressed: false,
+									toggleHandler: function(s, pressed) {
+										if (pressed) me.updatePropView('sorted');
+									}
+								}
+							],
+							nameColumnWidth: 180,
 							inferTypes: false,
 							sortableColumns: false,
 							border: false,
@@ -372,24 +628,26 @@ Ext.define('Sonicle.webtop.core.view.CustomField', {
 							columns: [
 								{
 									dataIndex: 'key',
-									header: me.mys.res('customField.gp-values.key.lbl'),
+									header: me.res('customField.gp-values.key.lbl'),
 									editor: 'textfield',
 									flex: 1
 								}, {
 									dataIndex: 'desc',
-									header: me.mys.res('customField.gp-values.desc.lbl'),
+									header: me.res('customField.gp-values.desc.lbl'),
 									editor: 'textfield',
 									flex: 1
 								}, {
-									xtype: 'wtactioncolumn',
-									items: [{
-										iconCls: 'far fa-trash-alt',
-										tooltip: WT.res('act-remove.lbl'),
-										handler: function(g, ridx) {
-											var rec = g.getStore().getAt(ridx);
-											me.deleteValueUI(rec);
+									xtype: 'soactioncolumn',
+									items: [
+										{
+											iconCls: 'far fa-trash-alt',
+											tooltip: WT.res('act-remove.lbl'),
+											handler: function(g, ridx) {
+												var rec = g.getStore().getAt(ridx);
+												me.deleteValueUI(rec);
+											}
 										}
-									}],
+									],
 									width: 50
 								}
 							],
@@ -421,16 +679,22 @@ Ext.define('Sonicle.webtop.core.view.CustomField', {
 							],
 							border: false
 						}
+						
 					],
 					flex: 1
 				}
 			]
 		});
 		me.on('viewload', me.onViewLoad);
-		
 		vm.bind('{record.type}', me.onTypeChange, me);
-		vm.bind('{record.searchable}', me.onSearchableChange, me);
 		vm.bind('{foEnableValues}', me.onEnableValuesChange, me);
+	},
+	
+	doDestroy: function() {
+		var me = this,
+			mo = me.getModel();
+		if (mo) mo.props().on('update', me.onPropsStoreUpdate, me);
+		me.callParent();
 	},
 	
 	addValueUI: function() {
@@ -454,7 +718,23 @@ Ext.define('Sonicle.webtop.core.view.CustomField', {
 	privates: {
 		onViewLoad: function(s, success) {
 			var me = this,
-					mo = me.getModel();
+				SoO = Sonicle.Object,
+				mo = me.getModel(),
+				props, prec;
+			
+			if (success) {
+				me.updatePropView('hier');
+				props = mo.props();
+				if (me.isMode(me.MODE_EDIT)) {
+					prec = props.getById('searchable');
+					if (prec) prec.set('value', SoO.stringValue(mo.get('searchable')), {dirty: false});
+					prec = props.getById('previewable');
+					if (prec) prec.set('value', SoO.stringValue(mo.get('previewable')), {dirty: false});
+					prec = props.getById('queryId');
+					if (prec) prec.set('value', SoO.stringValue(mo.get('queryId')), {dirty: false});
+				}
+				props.on('update', me.onPropsStoreUpdate, me);
+			}
 			
 			if (me.mys.hasAuditUI()) {
 				if (me.isMode(me.MODE_NEW)) {
@@ -463,49 +743,16 @@ Ext.define('Sonicle.webtop.core.view.CustomField', {
 					me.getAct('customFieldAuditLog').setDisabled(false);
 				}
 			}
-			
 			me.lref('fldname').focus(true);
 		},
 		
 		onTypeChange: function(nv, ov) {
 			var me = this,
-					mo = me.getModel(),
-					sto = mo ? mo.props() : null,
-					pgp = me.lref('tabmain').getComponent('props'),
-					sourceCfg = me.generateSourceConfig(nv),
-					recs, pgp, keys;
-
-			if (sourceCfg) {
-				pgp.sourceConfig = sourceCfg;
-				pgp.configure(sourceCfg);
-			}
+				mo = me.getModel(),
+				pgrid = me.lref('tabmain').getComponent('props'),
+				sourceConfig = me.generateSourceConfig(nv);
 			
-			if (pgp.sourceConfig && sto) {
-				recs = [];
-				sto.each(function(rec) {
-					if (!Ext.isDefined(sourceCfg[rec.getId()])) recs.push(rec);
-				});
-				if (recs.length > 0) sto.remove(recs);
-				
-				recs = [];
-				Ext.iterate(pgp.sourceConfig, function(name, obj) {
-					if (!sto.getById(name)) {
-						recs.push(sto.createModel({name: name, value: obj.defaultValue}));
-					}
-				});
-				if (recs.length > 0) sto.add(recs);
-				
-				keys = Ext.Object.getAllKeys(pgp.sourceConfig).reverse();
-				sto.sort({
-					sorterFn: function(rec1, rec2) {
-                        var iof1 = keys.indexOf(rec1.getId()),
-								iof2 = keys.indexOf(rec2.getId());
-						return (iof1 > iof2) ? -1 : ((iof1 < iof2) ? 1 : 0);
-					},
-					desc: 'ASC'
-				});
-			}
-			
+			Sonicle.Utils.configurePropertyGrid(pgrid, sourceConfig, mo ? mo.props() : null);
 			if (me.isMode(me.MODE_EDIT) && ov) {
 				if (['text', 'textarea'].indexOf(nv) !== -1 && ['text', 'textarea'].indexOf(ov) === -1) {
 					WT.warn(me.mys.res('customField.fld-type.confirm'));
@@ -513,28 +760,189 @@ Ext.define('Sonicle.webtop.core.view.CustomField', {
 			}
 		},
 		
-		onSearchableChange: function(nv, ov) {
-			if (ov !== undefined && nv === true) {
-				WT.info(this.mys.res('customField.info.searchable'));
+		onPropsStoreUpdate: function(s, rec, op) {
+			var me = this;
+			if (op === Ext.data.Model.EDIT) {
+				var name = rec.get('name'),
+					value = rec.get('value'),
+					mo = me.getModel();
+				if ('searchable' === name) {
+					mo.set(name, value);
+					if (value === true) {
+						WT.info(me.res('customField.info.searchable') + (me.hasParentDependency() ? '\n' + me.res('customField.info.searchable.dependent') : ''));
+					}
+				} else if ('previewable' === name) {
+					mo.set(name, value);
+				} else if ('queryId' === name) {
+					mo.set(name, value);
+					if (Ext.isEmpty(value)) {
+						me.queryFieldsStore.removeAll(true);
+						me.queryPlaceholdersStore.removeAll(true);
+					} else {
+						me.queryFieldsStore.load();
+						me.queryPlaceholdersStore.load();
+					}
+				}
 			}
 		},
 
 		onEnableValuesChange: function(nv, ov) {
 			if (!nv) this.lref('tabmain').getLayout().setActiveItem('props');
 		},
+		
+		hasParentDependency: function() {
+			var mo = this.getModel(), prec;
+			if (mo) {
+				prec = mo.props().getById('dataDependsOn');
+				if (prec) return Ext.isObject(Ext.JSON.decode(prec.get('value'), true));
+			}
+			return false;
+		},
+		
+		updatePropView: function(view) {
+			var me = this,
+				sto = me.getModel().props();
+			if ('sorted' === view) {
+				sto.setGrouper(null);
+				sto.sort({
+					direction: 'ASC',
+					sorterFn: function(r1, r2) {
+						var res = function(rec) { return me.res('customField.gp-props.'+rec.get('name')); },
+							ord1 = res(r1),
+							ord2 = res(r2);
+						return (ord1 > ord2) ? 1 : (ord1 === ord2 ? 0 : -1);
+					}
+				});
+			} else {
+				sto.sort({
+					direction: 'ASC',
+					sorterFn: function(r1, r2) {
+						var ord1 = r1.get('index'),
+							ord2 = r2.get('index');
+						return (ord1 > ord2) ? 1 : (ord1 === ord2 ? 0 : -1);
+					}
+				});
+				sto.setGrouper({
+					property: 'group',
+					direction: 'ASC',
+					sorterFn: function(r1, r2) {
+						var CFP = Sonicle.webtop.core.model.CustomFieldProp,
+								ord1 = CFP.toGroupOrdinal(r1.get('group')),
+								ord2 = CFP.toGroupOrdinal(r2.get('group'));
+						return (ord1 > ord2) ? 1 : (ord1 === ord2 ? 0 : -1);
+					}
+				});
+			}
+		},
 
 		generateSourceConfig: function(type) {
-			var props = this.typeProps[type],
-					sourceConfig = {}, obj;
+			var me = this,
+				props = me.typeProps[type],
+				sourceConfig = {}, obj;
 
 			Ext.Object.each(props, function(propName, propData) {
 				obj = {};
-				['displayName', 'type', 'defaultValue'].forEach(function(name) {
-					if (propData[name] !== undefined) obj[name] = propData[name];
+				['displayName', 'type', 'defaultValue', 'editor', 'renderer', 'getRenderer', 'getEditor'].forEach(function(name) {
+					if ('getRenderer' === name) {
+						if (Ext.isFunction(propData[name])) obj['renderer'] = propData[name](type);
+					} else if ('getEditor' === name) {
+						if (Ext.isFunction(propData[name])) obj['editor'] = propData[name](type);
+					} else {
+						if (propData[name] !== undefined) obj[name] = propData[name];
+					}
 				});
 				sourceConfig[propName] = obj;
 			});
 			return sourceConfig;
+		},
+		
+		dataDependsOnEditor: function(me, type) {
+			var SoS = Sonicle.String;
+			if (SoS.isIn(type, ['comboboxds', 'tagds'])) {
+				return {
+					xtype: 'sopickerpanelfield',
+					renderer: me.dataDependsOnRenderer(true, type),
+					pickerEditorClass: 'WTA.ux.picker.CFDataSourceDataDependsOn',
+					pickerEditorConfig: {
+						fieldsStore: me.dependsOnFieldStore,
+						placeholderStore: me.queryPlaceholdersStore
+					}
+				};
+			} else if (type === 'contactpicker') {
+				return {
+					xtype: 'sopickerpanelfield',
+					renderer: me.dataDependsOnRenderer(true, type),
+					pickerEditorClass: 'WTA.ux.picker.CFContactPickerDataDependsOn',
+					pickerEditorConfig: {
+						fieldsStore: me.dependsOnFieldStore
+					}
+				};
+			} else {
+				return false;
+			}
+		},
+		
+		dataDependsOnRenderer: function(editor, type) {
+			if (editor === true) {
+				return function(v) {
+					return WT.res('customField.gp-props.dataDependsOn.ed.display');
+				};
+			} else {
+				var SoS = Sonicle.String;
+				if (SoS.isIn(type, ['comboboxds', 'tagds'])) {
+					return function(v) {
+						var data = Ext.JSON.decode(v, true);
+						return Ext.htmlEncode(data ? WTA.ux.picker.CFDataSourceDataDependsOn.format(data) : v);
+					};
+				} else if (type === 'contactpicker') {
+					return function(v) {
+						var data = Ext.JSON.decode(v, true);
+						return Ext.htmlEncode(data ? WTA.ux.picker.CFContactPickerDataDependsOn.format(data) : v);
+					};
+				} else {
+					return function(v) {
+						return Ext.htmlEncode(v);
+					};
+				}
+			}
+		},
+		
+		exprRenderer: function(editor) {
+			if (editor === true) {
+				return function(v) {
+					return Ext.isEmpty(v) ? '' : WT.res('customField.gp-props.expr.ed.display');
+				};
+			} else {
+				return function(v) {
+					return Ext.htmlEncode(Ext.isEmpty(v) ? '' : WT.res('customField.gp-props.expr.display'));
+				};
+			}
+		},
+		
+		booleanYesNoRenderer: function() {
+			return function(v) {
+				var bool = Sonicle.Object.booleanValue(v);
+				return Ext.htmlEncode(bool === true ? WT.res('word.yes') : WT.res('word.no'));
+			};
+		},
+		
+		booleanYesNoEditor: function() {
+			return {
+				xtype: 'combobox',
+				editable: false,
+				store: [[true, WT.res('word.yes')], [false, WT.res('word.no')]]
+			};
+		},
+		
+		emptyTextRenderer: function(key) {
+			var me = this;
+			return function(v) {
+				if (Ext.isEmpty(v)) {
+					return '<span class="wt-theme-text-lighter2" style="font-size:0.9em;">' + Ext.htmlEncode(me.res(key)) + '</span>';
+				} else {
+					return v;
+				}
+			};
 		}
 	}
 });

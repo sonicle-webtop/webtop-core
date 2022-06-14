@@ -450,6 +450,7 @@ Ext.define('Sonicle.webtop.core.app.WT', {
 	 * @param {Object} [opts.scope] The scope (`this` reference) in which the function will be executed.
 	 * @param {String} [opts.itemId] The ID assigned to MessageBox, this prevents displaying two messages with same reference.
 	 * @param {Boolean} opts.keepLineBreaks True to disable line-breaks to HTML conversion
+	 * @param {Boolean} [opts.expandTpl] `false` to disable message template expansion.
 	 * @param {Object} [opts.config] A custom {@link Ext.MessageBox#show} config.
 	 * @param {Object} [opts.instConfig] A custom {@link Ext.window.MessageBox} instance config.
 	 * 
@@ -457,7 +458,8 @@ Ext.define('Sonicle.webtop.core.app.WT', {
 	 */
 	info: function(msg, opts) {
 		opts = opts || {};
-		var exists = Ext.isString(opts.itemId) ? (Ext.ComponentQuery.query('messagebox#'+opts.itemId).length > 0) : false,
+		var txt = (!(opts.expandTpl === false) && WT.isResTpl(msg)) ? WT.resTpl(msg) : msg,
+				exists = Ext.isString(opts.itemId) ? (Ext.ComponentQuery.query('messagebox#'+opts.itemId).length > 0) : false,
 				// Component is destroyed only if X button is pressed, so define a sequenced function in order to properly clear the MessageBox!
 				autoDestroyFn = function() { this.destroy(); },
 				mbox;
@@ -468,7 +470,7 @@ Ext.define('Sonicle.webtop.core.app.WT', {
 			mbox = Ext.create('Ext.window.MessageBox', Ext.apply({itemId: opts.itemId, closeAction: 'destroy'}, opts.instConfig || {}));
 			return mbox.show(Ext.apply({
 				title: opts.title || WT.res('info'),
-				message: (opts.keepLineBreaks === true) ? msg : Sonicle.String.htmlLineBreaks(msg),
+				message: (opts.keepLineBreaks === true) ? txt : Sonicle.String.htmlLineBreaks(txt),
 				buttons: opts.buttons || Ext.MessageBox.OK,
 				icon: Ext.MessageBox.INFO,
 				fn: Ext.isFunction(opts.fn) ? Ext.Function.createSequence(opts.fn, autoDestroyFn, mbox) : Ext.Function.bind(autoDestroyFn, mbox),
@@ -493,6 +495,7 @@ Ext.define('Sonicle.webtop.core.app.WT', {
 	 * @param {Object} [opts.scope] The scope (`this` reference) in which the function will be executed.
 	 * @param {String} [opts.itemId] The ID assigned to MessageBox, this prevents displaying two messages with same reference.
 	 * @param {Boolean} opts.keepLineBreaks True to disable line-breaks to HTML conversion
+	 * @param {Boolean} [opts.expandTpl] `false` to disable message template expansion.
 	 * @param {Object} [opts.config] A custom {@link Ext.MessageBox#show} config.
 	 * @param {Object} [opts.instConfig] A custom {@link Ext.window.MessageBox} instance config.
 	 * 
@@ -500,7 +503,8 @@ Ext.define('Sonicle.webtop.core.app.WT', {
 	 */
 	warn: function(msg, opts) {
 		opts = opts || {};
-		var exists = Ext.isString(opts.itemId) ? (Ext.ComponentQuery.query('messagebox#'+opts.itemId).length > 0) : false,
+		var txt = (!(opts.expandTpl === false) && WT.isResTpl(msg)) ? WT.resTpl(msg) : msg,
+				exists = Ext.isString(opts.itemId) ? (Ext.ComponentQuery.query('messagebox#'+opts.itemId).length > 0) : false,
 				// Component is destroyed only if X button is pressed, so define a sequenced function in order to properly clear the MessageBox!
 				autoDestroyFn = function() { this.destroy(); },
 				mbox;
@@ -511,7 +515,7 @@ Ext.define('Sonicle.webtop.core.app.WT', {
 			mbox = Ext.create('Ext.window.MessageBox', Ext.apply({itemId: opts.itemId, closeAction: 'destroy'}, opts.instConfig || {}));
 			return mbox.show(Ext.apply({
 				title: opts.title || WT.res('warning'),
-				message: (opts.keepLineBreaks === true) ? msg : Sonicle.String.htmlLineBreaks(msg),
+				message: (opts.keepLineBreaks === true) ? txt : Sonicle.String.htmlLineBreaks(txt),
 				buttons: opts.buttons || Ext.MessageBox.OK,
 				icon: Ext.MessageBox.WARNING,
 				fn: Ext.isFunction(opts.fn) ? Ext.Function.createSequence(opts.fn, autoDestroyFn, mbox) : Ext.Function.bind(autoDestroyFn, mbox),
@@ -536,7 +540,7 @@ Ext.define('Sonicle.webtop.core.app.WT', {
 	 * @param {Object} [opts.scope] The scope (`this` reference) in which the function will be executed.
 	 * @param {String} [opts.itemId] The ID assigned to MessageBox, this prevents displaying two messages with same reference.
 	 * @param {Boolean} [opts.keepLineBreaks] True to disable line-breaks to HTML conversion.
-	 * @param {Boolean} [opts.expandTpl] `False` to disable message template expansion.
+	 * @param {Boolean} [opts.expandTpl] `false` to disable message template expansion.
 	 * @param {Object} [opts.config] A custom {@link Ext.MessageBox#show} config.
 	 * @param {Object} [opts.instConfig] A custom {@link Ext.window.MessageBox} instance config.
 	 * 
@@ -837,7 +841,7 @@ Ext.define('Sonicle.webtop.core.app.WT', {
 				} else {
 					var json = Ext.decode(resp.responseText);
 					if (sfn) Ext.callback(sfn, scope || me, [resp, opts]);
-					Ext.callback(fn, scope || me, [json['success'], json, json['metaData'], opts]);
+					Ext.callback(fn, scope || me, [json ? json['success'] : undefined, json, json ? json['metaData'] : undefined, opts]);
 				}
 			},
 			failure: function(resp, opts) {
@@ -860,6 +864,16 @@ Ext.define('Sonicle.webtop.core.app.WT', {
 		Ext.apply(obj, {headers: hdrs});
 		//headers: {"Content-Type": "application/x-www-form-urlencoded; charset=utf-8"},
 		Ext.Ajax.request(obj);
+	},
+	
+	handleOperationMessage: function(operation) {
+		var resp = operation.getResponse(), json;
+		if (resp && resp.status === 200) {
+			json = resp.responseJson;
+			if (json && !Ext.isEmpty(json.message)) {
+				WT.warn(json.message);
+			}
+		}
 	},
 	
 	handleRequestError: function(sid, act, req, op) {

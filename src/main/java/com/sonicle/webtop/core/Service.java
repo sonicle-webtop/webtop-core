@@ -37,6 +37,7 @@ import com.sonicle.commons.EnumUtils;
 import com.sonicle.commons.InternetAddressUtils;
 import com.sonicle.commons.LangUtils;
 import com.sonicle.commons.PathUtils;
+import com.sonicle.commons.beans.PageInfo;
 import com.sonicle.commons.db.DbUtils;
 import com.sonicle.commons.time.DateTimeUtils;
 import com.sonicle.commons.web.Crud;
@@ -47,6 +48,7 @@ import com.sonicle.commons.web.json.CompositeId;
 import com.sonicle.commons.web.json.PayloadAsList;
 import com.sonicle.commons.web.json.MapItem;
 import com.sonicle.commons.web.json.Payload;
+import com.sonicle.commons.web.json.bean.StringMap;
 import com.sonicle.commons.web.json.ipstack.IPLookupResponse;
 import com.sonicle.security.Principal;
 import com.sonicle.webtop.core.CoreSettings.OtpDeliveryMode;
@@ -58,6 +60,8 @@ import com.sonicle.webtop.core.app.CorePrivateEnvironment;
 import com.sonicle.webtop.core.app.OTPManager;
 import com.sonicle.webtop.core.app.WT;
 import com.sonicle.webtop.core.app.WebTopSession;
+import com.sonicle.webtop.core.app.io.dbutils.FilterInfo;
+import com.sonicle.webtop.core.app.io.dbutils.RowsAndCols;
 import com.sonicle.webtop.core.app.provider.RecipientsProviderBase;
 import com.sonicle.webtop.core.app.sdk.BaseEvent;
 import com.sonicle.webtop.core.app.sdk.EventListener;
@@ -85,6 +89,7 @@ import com.sonicle.webtop.core.bol.js.JsCustomFieldLkp;
 import com.sonicle.webtop.core.bol.js.JsCustomPanel;
 import com.sonicle.webtop.core.bol.js.JsCustomPanelGrid;
 import com.sonicle.webtop.core.bol.js.JsCustomerSupplierLkp;
+import com.sonicle.webtop.core.bol.js.JsDataSourceQueryLkp;
 import com.sonicle.webtop.core.bol.js.JsSimple;
 import com.sonicle.webtop.core.bol.js.JsFeedback;
 import com.sonicle.webtop.core.bol.js.JsGridIMChat;
@@ -117,6 +122,9 @@ import com.sonicle.webtop.core.model.CausalExt;
 import com.sonicle.webtop.core.model.CustomField;
 import com.sonicle.webtop.core.model.CustomFieldEx;
 import com.sonicle.webtop.core.model.CustomPanel;
+import com.sonicle.webtop.core.model.DataSourceQuery;
+import com.sonicle.webtop.core.model.DataSourceBase;
+import com.sonicle.webtop.core.model.DataSourcePooled;
 import com.sonicle.webtop.core.model.IMChat;
 import com.sonicle.webtop.core.model.IMMessage;
 import com.sonicle.webtop.core.model.ListTagsOpt;
@@ -181,6 +189,8 @@ import java.net.URI;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
 import org.apache.commons.vfs2.FileObject;
 import org.jivesoftware.smack.tcp.XMPPTCPConnectionConfiguration;
 import org.joda.time.DateTimeZone;
@@ -1062,17 +1072,121 @@ public class Service extends BaseService implements EventListener {
 				
 			} else if(crud.equals(Crud.CREATE)) {
 				Payload<MapItem, JsCustomPanel> pl = ServletUtils.getPayload(request, JsCustomPanel.class);
-				coreMgr.addCustomPanel(pl.data.toCustomPanel());
+				coreMgr.addCustomPanel(pl.data.serviceId, pl.data.createCustomPanel());
 				new JsonResult().printTo(out);
 				
 			} else if(crud.equals(Crud.UPDATE)) {
 				Payload<MapItem, JsCustomPanel> pl = ServletUtils.getPayload(request, JsCustomPanel.class);
-				coreMgr.updateCustomPanel(pl.data.toCustomPanel());
+				coreMgr.updateCustomPanel(pl.data.serviceId, pl.data.panelId, pl.data.createCustomPanel());
 				new JsonResult().printTo(out);	
 			}
 			
 		} catch(Throwable t) {
 			logger.error("Error in ManageCustomPanel", t);
+			new JsonResult(t).printTo(out);
+		}
+	}
+	
+	public void processLookupDataSourceQueries(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
+		try {
+			List<JsDataSourceQueryLkp> items = new ArrayList<>();
+			Map<String, DataSourcePooled> dataSources = coreMgr.listDataSources();
+			for (DataSourceQuery query : coreMgr.listDataSourceQueries().values()) {
+				items.add(new JsDataSourceQueryLkp(query, dataSources));
+			}
+			new JsonResult(items).printTo(out);
+			
+		} catch (Throwable t) {
+			logger.error("Error in LookupDataSourceQueries", t);
+			new JsonResult(t).printTo(out);
+		}
+	}
+	
+	public void processLookupDataSourceQueryFields(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
+		try {
+			String queryId = ServletUtils.getStringParameter(request, "queryId", true);
+			
+			Set<String> columns = coreMgr.guessDataSourceQueryColumns(queryId);
+			if (columns != null) {
+				List<String[]> items = new ArrayList<>(columns.size());
+				for (String name : columns) {
+					items.add(new String[]{name});
+				}
+				new JsonResult(items).printTo(out);
+				
+			} else {
+				throw new WTException();
+			}
+			
+		} catch (Throwable t) {
+			logger.error("Error in LookupDataSourceQueryFields", t);
+			new JsonResult(t).printTo(out);
+		}
+	}
+	
+	public void processLookupDataSourceQueryPlaceholders(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
+		try {
+			String queryId = ServletUtils.getStringParameter(request, "queryId", true);
+			
+			Set<String> placeholders = coreMgr.extractDataSourceQueryPlaceholders(queryId);
+			List<String[]> items = new ArrayList<>(placeholders.size());
+			for (String name : placeholders) {
+				items.add(new String[]{name});
+			}
+			new JsonResult(items).printTo(out);
+			
+		} catch (Throwable t) {
+			logger.error("Error in LookupDataSourceQueryPlaceholders", t);
+			new JsonResult(t).printTo(out);
+		}
+	}
+	
+	/*
+	public void processLookupDataSources(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
+		try {
+			List<JsDataSourceLkp> items = new ArrayList<>();
+			for (DataSourcePooled dataSource : coreMgr.listDataSources().values()) {
+				items.add(new JsDataSourceLkp(dataSource));
+			}
+			new JsonResult(items).printTo(out);
+			
+		} catch (Throwable t) {
+			logger.error("Error in LookupDataSources", t);
+			new JsonResult(t).printTo(out);
+		}
+	}
+	*/
+	
+	public void processCustomFieldDataSourceQuery(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
+		try {
+			String fieldServiceId = ServletUtils.getStringParameter(request, "fieldServiceId", true);
+			String fieldId = ServletUtils.getStringParameter(request, "fieldId", true);
+			boolean pagination = ServletUtils.getBooleanParameter(request, "pagination", false);
+			String id = ServletUtils.getStringParameter(request, "id", false);
+			String query = ServletUtils.getStringParameter(request, "query", false);
+			StringMap placeholders = ServletUtils.getObjectParameter(request, "placeholders", StringMap.class, false);
+			
+			PageInfo pagInfo = null;
+			if (pagination) {
+				int page = ServletUtils.getIntParameter(request, "page", true);
+				int limit = ServletUtils.getIntParameter(request, "limit", 50);
+				pagInfo = new PageInfo(page, limit, true);
+			}
+			FilterInfo filterInfo = null;
+			if (!StringUtils.isBlank(id)) {
+				filterInfo = FilterInfo.newById(id);
+			} else if (!StringUtils.isBlank(query)) {
+				filterInfo = FilterInfo.newByQuery(DbUtils.escapeSQLLikePattern(query));
+			}
+			DataSourceBase.ExecuteQueryResult<RowsAndCols> result = coreMgr.executeCustomFieldDataSourceQuery(fieldServiceId, fieldId, placeholders, pagInfo, filterInfo);
+			if (pagination && result.totalCount != null) {
+				new JsonResult(result.resultSet.rows).setTotal(result.totalCount).printTo(out);
+			} else {
+				new JsonResult(result.resultSet.rows).printTo(out);
+			}
+			
+		} catch (Throwable t) {
+			logger.error("Error in CustomFieldDataSourceQuery", t);
 			new JsonResult(t).printTo(out);
 		}
 	}
@@ -1088,7 +1202,7 @@ public class Service extends BaseService implements EventListener {
 			new JsonResult(items, items.size()).printTo(out);
 			
 		} catch (Throwable t) {
-			logger.error("Error in LookupCausals", t);
+			logger.error("Error in LookupCustomFields", t);
 			new JsonResult(t).printTo(out);
 		}
 	}
@@ -1124,22 +1238,28 @@ public class Service extends BaseService implements EventListener {
 		
 		try {
 			String crud = ServletUtils.getStringParameter(request, "crud", true);
-			if (crud.equals(Crud.READ)) {
+			if (Crud.READ.equals(crud)) {
 				String id = ServletUtils.getStringParameter(request, "id", true);
 				CompositeId cid = new CompositeId().parse(id);
 				CustomField item = coreMgr.getCustomField(cid.getToken(0), cid.getToken(1));
 				if (item == null) throw new WTException();
 				new JsonResult(new JsCustomField(item)).printTo(out);
 				
-			} else if(crud.equals(Crud.CREATE)) {
+			} else if (Crud.CREATE.equals(crud)) {
 				Payload<MapItem, JsCustomField> pl = ServletUtils.getPayload(request, JsCustomField.class);
-				coreMgr.addCustomField(pl.data.toCustomField());
+				coreMgr.addCustomField(pl.data.serviceId, pl.data.createCustomField());
 				new JsonResult().printTo(out);
 				
-			} else if(crud.equals(Crud.UPDATE)) {
+			} else if (Crud.UPDATE.equals(crud)) {
 				Payload<MapItem, JsCustomField> pl = ServletUtils.getPayload(request, JsCustomField.class);
-				coreMgr.updateCustomField(pl.data.toCustomField());
-				new JsonResult().printTo(out);	
+				coreMgr.updateCustomField(pl.data.serviceId, pl.data.fieldId, pl.data.createCustomField());
+				new JsonResult().printTo(out);
+				
+			} else if ("check".equals(crud)) {
+				String fieldServiceId = ServletUtils.getStringParameter(request, "fieldServiceId", true);
+				String name = ServletUtils.getStringParameter(request, "name", true);
+				boolean available = coreMgr.checkCustomFieldNameAvailability(fieldServiceId, name);
+				new JsonResult(available).printTo(out);
 			}
 		
 		} catch(WTIntegrityException ex) {

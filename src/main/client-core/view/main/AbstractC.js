@@ -337,9 +337,11 @@ Ext.define('Sonicle.webtop.core.view.main.AbstractC', {
 		return Ext.Object.getSize(this.viewsMap);
 	},
 	
-	findServiceViewTag: function(cname) {
-		var clazz = Ext.ClassManager.get(cname);
-		return clazz ? clazz.VIEW_TAG : undefined;
+	findServiceViewTag: function(cname, viewName) {
+		var clazz = Ext.ClassManager.get(cname),
+			vtag = clazz ? clazz.VIEW_TAG : null;
+		if (Ext.isEmpty(vtag)) vtag = viewName.replaceAll('.', '').toLowerCase();
+		return vtag;
 	},
 	
 	hasServiceView: function(desc, tag) {
@@ -354,7 +356,7 @@ Ext.define('Sonicle.webtop.core.view.main.AbstractC', {
 				svcId = desc.getId(),
 				svcInst = desc.getInstance(false),
 				cname = desc.preNs(viewName),
-				tag = !Ext.isEmpty(opts.tag) ? opts.tag : me.findServiceViewTag(cname),
+				tag = (!Ext.isEmpty(opts.tag) ? opts.tag : me.findServiceViewTag(cname, viewName)) + (!Ext.isEmpty(opts.tagSuffix) ? opts.tagSuffix : ''),
 				preventDup = (opts.preventDuplicates === true),
 				floating = (opts.floating === true),
 				swapReturn = (opts.swapReturn === true),

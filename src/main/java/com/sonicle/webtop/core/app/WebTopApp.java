@@ -44,6 +44,8 @@ import com.sonicle.commons.PathUtils;
 import com.sonicle.commons.web.ContextUtils;
 import com.sonicle.commons.web.manager.TomcatManager;
 import com.sonicle.security.AuthenticationDomain;
+import com.sonicle.security.CryptoUtils;
+import static com.sonicle.security.CryptoUtils.generateAESKey;
 import com.sonicle.security.PasswordUtils;
 import com.sonicle.security.auth.directory.ADConfigBuilder;
 import com.sonicle.security.auth.directory.ADDirectory;
@@ -110,6 +112,9 @@ import jakarta.mail.internet.MimeBodyPart;
 import jakarta.mail.internet.MimeMessage;
 import jakarta.mail.internet.MimeMultipart;
 import jakarta.mail.internet.MimeUtility;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.jar.Manifest;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
@@ -117,9 +122,11 @@ import javax.servlet.http.HttpServletRequest;
 import net.sf.uadetector.ReadableUserAgent;
 import net.sf.uadetector.UserAgentStringParser;
 import net.sf.uadetector.service.UADetectorServiceFactory;
+import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.httpclient.contrib.ssl.EasySSLProtocolSocketFactory;
 import org.apache.commons.httpclient.protocol.Protocol;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.vfs2.FileSystemException;
@@ -224,6 +231,7 @@ public final class WebTopApp {
 	private SessionManager sesMgr = null;
 	private OTPManager otpMgr = null;
 	private ReportManager rptMgr = null;
+	private DataSourcesManager dsMgr = null;
 	private DocEditorManager docEditorMgr = null;
 	private Scheduler scheduler = null;
 	private final HashMap<String, Session> cacheMailSessionByDomain = new HashMap<>();
@@ -358,6 +366,7 @@ public final class WebTopApp {
 		File homeDir = new File(homePath);
 		if (!homeDir.exists()) throw new WTRuntimeException("Configured home directory not found [{}]", homeDir.toString());
 		checkHomeStructure();
+		checkSecretKey();
 		
 		// Template Engine
 		logger.info("Initializing template engine");
@@ -390,6 +399,7 @@ public final class WebTopApp {
 		//comm = ComponentsManager.initialize(this); // Components Manager
 		this.licMgr = LicenseManager.initialize(this, this.scheduler);
 		this.wtMgr = WebTopManager.initialize(this);
+		this.dsMgr = new DataSourcesManager(this);
 		
 		this.systemLocale = CoreServiceSettings.getSystemLocale(setMgr); // System locale
 		this.otpMgr = OTPManager.initialize(this);
@@ -423,14 +433,14 @@ public final class WebTopApp {
 		// Session Manager
 		sesMgr.cleanup();
 		sesMgr = null;
-		docEditorMgr = docEditorMgr.cleanup();
+		docEditorMgr = docEditorMgr.cleanup(); // DocEditor Manager
 		// Report Manager
 		rptMgr.cleanup();
 		rptMgr = null;
 		// OTP Manager
 		otpMgr.cleanup();
 		otpMgr = null;
-		auditLogMgr = auditLogMgr.cleanup();
+		auditLogMgr = auditLogMgr.cleanup(); // AuditLog Manager
 		// Settings Manager
 		setMgr.cleanup();
 		setMgr = null;
@@ -438,6 +448,7 @@ public final class WebTopApp {
 		//autm.cleanup();
 		//autm = null;
 		// User Manager
+		dsMgr = dsMgr.cleanup(); // DataSources Manager
 		wtMgr.cleanup();
 		wtMgr = null;
 		licMgr.cleanup();
@@ -567,7 +578,64 @@ public final class WebTopApp {
 			
 		} catch(SecurityException ex) {
 			throw new WTRuntimeException("Security error", ex);
-		}	
+		}
+	}
+	
+	private void checkSecretKey() {
+		try {
+			String hexKey = null;
+			File keyFile = new File(getHomePath() + "secret.key");
+			if (!keyFile.exists()) {
+				logger.info("Secret key file not found, generating new one...");
+				hexKey = CryptoUtils.hex(CryptoUtils.generateAESKey(256));
+				
+				FileOutputStream fos = null;
+				try {
+					fos = new FileOutputStream(keyFile);
+					IOUtils.write(hexKey, fos, StandardCharsets.UTF_8);
+					logger.debug("Secret key generated to '{}'", keyFile.toString());
+					
+				} catch (IOException ex) {
+					throw new WTRuntimeException(ex, "Unable to write key file");
+				} finally {
+					IOUtils.closeQuietly(fos);
+				}
+				
+			} else {
+				byte[] bytes = null;
+				FileInputStream fis = null;
+				try {
+					fis = new FileInputStream(keyFile);
+					bytes = IOUtils.readFully(fis, 64);
+					
+				} catch (IOException ex) {
+					throw new WTRuntimeException(ex, "Unable to read key file");
+				} finally {
+					IOUtils.closeQuietly(fis);
+				}
+				hexKey = new String(bytes, StandardCharsets.UTF_8);
+			}
+			secretKeyBytes = Hex.decodeHex(hexKey.toCharArray());
+			
+		} catch (Throwable t) {
+			throw new WTRuntimeException(t, "Unable to check secret key");
+		}
+	}
+	
+	private byte[] secretKeyBytes = null;
+	
+	byte[] getSecretKey() {
+		byte[] bytes = new byte[secretKeyBytes.length];
+		System.arraycopy(secretKeyBytes, 0, bytes, 0, secretKeyBytes.length);
+		return bytes;
+	}
+	
+	public String encryptData(final String s) {
+		return CryptoUtils.encryptAES(s, secretKeyBytes);
+	}
+	
+	public String decryptData(final String s) {
+		return CryptoUtils.decryptAES(s, secretKeyBytes);
 	}
 	
 	private void checkDomainsHomesStructure() throws WTException {
@@ -735,6 +803,14 @@ public final class WebTopApp {
 	 */
 	public LicenseManager getLicenseManager() {
 		return licMgr;
+	}
+	
+	/**
+	 * Returns the DataSourcesManager.
+	 * @return DataSourcesManager instance.
+	 */
+	public DataSourcesManager getDataSourcesManager() {
+		return dsMgr;
 	}
 	
 	/**

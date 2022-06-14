@@ -697,6 +697,39 @@ Ext.define('Sonicle.webtop.core.app.Factory', {
 	},
 	
 	/**
+	 * Returns an info-button configuration for displaying view's record 
+	 * informations as a tooltip (for eg. in a statusbar).
+	 * @param {Object} opts An object containing configuration.
+	 * @param {Function} [opts.getTooltip] The callback function to provide a value for the tooltip.
+	 * @param {Object} [opts.scope] The scope (this) for the getTooltip callback.
+	 * @returns {Object} Configuration object
+	 */
+	recordInfoButton: function(opts) {
+		opts = opts || {};
+		return {
+			xtype: 'button',
+			iconCls: 'fas fa-fingerprint',
+			handler: function(s) {
+				s.tooltip_.show();
+			},
+			listeners: {
+				afterrender: function(s) {
+					s.tooltip_ = Ext.create({
+						xtype: 'tooltip',
+						target: s.getEl(),
+						hideDelay: 2000,
+						listeners: {
+							beforeshow: function(s) {
+								s.update(Ext.callback(opts.getTooltip, opts.scope || s) || '');
+							}
+						}
+					});
+				}
+			}
+		};
+	},
+	
+	/**
 	 * Configures a renderer for looking-up columns value from a resource.
 	 * Resource key will be the result of the following concatenation: '{key}.{value}'
 	 * @param {Object} cfg Custom configuration object

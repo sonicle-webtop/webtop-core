@@ -47,8 +47,10 @@ import com.sonicle.webtop.core.model.Activity;
 import com.sonicle.webtop.core.model.BaseMasterData;
 import com.sonicle.webtop.core.model.Causal;
 import com.sonicle.webtop.core.model.CustomField;
+import com.sonicle.webtop.core.model.CustomFieldBase;
 import com.sonicle.webtop.core.model.CustomFieldEx;
 import com.sonicle.webtop.core.model.CustomPanel;
+import com.sonicle.webtop.core.model.CustomPanelBase;
 import com.sonicle.webtop.core.model.MasterData;
 import com.sonicle.webtop.core.model.MasterDataLookup;
 import com.sonicle.webtop.core.model.Tag;
@@ -184,45 +186,48 @@ public class ManagerUtils {
 	}
 	
 	static <T extends CustomPanel> T fillCustomPanel(T tgt, OCustomPanel src) {
+		fillCustomPanel((CustomPanelBase)tgt, src);
 		if ((tgt != null) && (src != null)) {
 			tgt.setPanelId(src.getCustomPanelId());
 			tgt.setDomainId(src.getDomainId());
 			tgt.setServiceId(src.getServiceId());
-			tgt.setName(src.getName());
-			tgt.setDescription(src.getDescription());
-			tgt.setTitleI18n(LangUtils.deserialize(src.getTitleI18n(), new CustomPanel.TitleI18n(), CustomPanel.TitleI18n.class));
 		}
 		return tgt;
 	}
 	
-	static OCustomPanel createOCustomPanel(CustomPanel src) {
-		if (src == null) return null;
-		return fillOCustomPanel(new OCustomPanel(), src);
-	}
-	
-	static <T extends OCustomPanel> T fillOCustomPanel(T tgt, CustomPanel src) {
+	static <T extends CustomPanelBase> T fillCustomPanel(T tgt, OCustomPanel src) {
 		if ((tgt != null) && (src != null)) {
-			tgt.setCustomPanelId(src.getPanelId());
-			tgt.setDomainId(src.getDomainId());
-			tgt.setServiceId(src.getServiceId());
 			tgt.setName(src.getName());
 			tgt.setDescription(src.getDescription());
-			tgt.setTitleI18n(LangUtils.serialize(src.getTitleI18n(), CustomPanel.TitleI18n.class));
+			tgt.setTitleI18n(LangUtils.deserialize(src.getTitleI18n(), new CustomPanelBase.TitleI18n(), CustomPanelBase.TitleI18n.class));
+			tgt.setProps(LangUtils.deserialize(src.getProperties(), new CustomPanelBase.Props(), CustomPanelBase.Props.class));
 		}
 		return tgt;
 	}
 	
-	static CustomField createCustomField(OCustomField src) {
-		if (src == null) return null;
-		return fillCustomField(new CustomField(), src);
+	static OCustomPanel fillOCustomPanel(OCustomPanel tgt, CustomPanelBase src) {
+		if ((tgt != null) && (src != null)) {
+			tgt.setName(src.getName());
+			tgt.setDescription(src.getDescription());
+			tgt.setTitleI18n(LangUtils.serialize(src.getTitleI18n(), CustomPanelBase.TitleI18n.class));
+			tgt.setProperties(LangUtils.serialize(src.getProps(), CustomPanelBase.Props.class));
+		}
+		return tgt;
 	}
 	
 	static <T extends CustomField> T fillCustomField(T tgt, OCustomField src) {
+		fillCustomField((CustomFieldBase)tgt, src);
 		if ((tgt != null) && (src != null)) {
 			tgt.setFieldId(src.getCustomFieldId());
 			tgt.setDomainId(src.getDomainId());
 			tgt.setServiceId(src.getServiceId());
-			tgt.setRevisionStatus(EnumUtils.forSerializedName(src.getRevisionStatus(), CustomField.RevisionStatus.class));
+		}
+		return tgt;
+	}
+	
+	static <T extends CustomFieldBase> T fillCustomField(T tgt, OCustomField src) {
+		if ((tgt != null) && (src != null)) {
+			tgt.setRevisionStatus(EnumUtils.forSerializedName(src.getRevisionStatus(), CustomFieldBase.RevisionStatus.class));
 			tgt.setRevisionTimestamp(src.getRevisionTimestamp());
 			tgt.setCreationTimestamp(src.getCreationTimestamp());
 			tgt.setName(src.getName());
@@ -230,9 +235,10 @@ public class ManagerUtils {
 			tgt.setType(EnumUtils.forSerializedName(src.getType(), CustomField.Type.class));
 			tgt.setSearchable(src.getSearchable());
 			tgt.setPreviewable(src.getPreviewable());
-			tgt.setProps(LangUtils.deserialize(src.getProperties(), new CustomField.Props(), CustomField.Props.class));
-			tgt.setValues(LangUtils.deserialize(src.getValues(), new CustomField.Values(), CustomField.Values.class));
-			tgt.setLabelI18n(LangUtils.deserialize(src.getLabelI18n(), new CustomField.LabelI18n(), CustomField.LabelI18n.class));
+			tgt.setProps(LangUtils.deserialize(src.getProperties(), new CustomFieldBase.Props(), CustomFieldBase.Props.class));
+			tgt.setValues(LangUtils.deserialize(src.getValues(), new CustomFieldBase.Values(), CustomFieldBase.Values.class));
+			tgt.setLabelI18n(LangUtils.deserialize(src.getLabelI18n(), new CustomFieldBase.LabelI18n(), CustomFieldBase.LabelI18n.class));
+			tgt.setQueryId(src.getDataSourceQueryId());
 		}
 		return tgt;
 	}
@@ -245,25 +251,18 @@ public class ManagerUtils {
 		return tgt;
 	}
 	
-	static OCustomField createOCustomField(CustomField src) {
-		if (src == null) return null;
-		return fillOCustomField(new OCustomField(), src);
-	}
-	
-	static <T extends OCustomField> T fillOCustomField(T tgt, CustomField src) {
+	static OCustomField fillOCustomField(OCustomField tgt, CustomFieldBase src) {
 		if ((tgt != null) && (src != null)) {
-			tgt.setCustomFieldId(src.getFieldId());
-			tgt.setDomainId(src.getDomainId());
-			tgt.setServiceId(src.getServiceId());
 			tgt.setRevisionTimestamp(src.getRevisionTimestamp());
 			tgt.setName(src.getName());
 			tgt.setDescription(src.getDescription());
 			tgt.setType(EnumUtils.toSerializedName(src.getType()));
 			tgt.setSearchable(src.getSearchable());
 			tgt.setPreviewable(src.getPreviewable());
-			tgt.setProperties(LangUtils.serialize(src.getProps(), CustomField.Props.class));
-			tgt.setValues(LangUtils.serialize(src.getValues(), CustomField.Values.class));
-			tgt.setLabelI18n(LangUtils.serialize(src.getLabelI18n(), CustomField.LabelI18n.class));
+			tgt.setProperties(LangUtils.serialize(src.getProps(), CustomFieldBase.Props.class));
+			tgt.setValues(LangUtils.serialize(src.getValues(), CustomFieldBase.Values.class));
+			tgt.setLabelI18n(LangUtils.serialize(src.getLabelI18n(), CustomFieldBase.LabelI18n.class));
+			tgt.setDataSourceQueryId(src.getQueryId());
 		}
 		return tgt;
 	}

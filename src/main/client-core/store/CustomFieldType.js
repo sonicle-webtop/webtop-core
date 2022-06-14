@@ -35,22 +35,29 @@ Ext.define('Sonicle.webtop.core.store.CustomFieldType', {
 	extend: 'Ext.data.ArrayStore',
 	alias: 'store.wtcustomfieldtype',
 	
-	model: 'WTA.model.Simple',
+	//model: 'WTA.model.Simple',
+	fields: ['id', 'desc', 'icon'],
 	data: [
-		['text',''],
-		['textarea',''],
-		['number',''],
-		['date',''],
-		['time',''],
-		//['datetime',''],
-		['combobox',''],
-		['checkbox','']
+		// Remember to update support also in Sonicle.webtop.core.ux.field.Search!
+		['text','',''],
+		['textarea','',''],
+		['number','',''],
+		['date','',''],
+		['time','',''],
+		//['datetime','',''],
+		['checkbox','',''],
+		['combobox','',''],
+		['comboboxds','',''],
+		['tag','',''],
+		['tagds','',''],
+		['contactpicker','','']
 	],
 	
 	constructor: function(cfg) {
 		var me = this;
 		Ext.each(me.config.data, function(row) {
 			row[1] = WT.res('com.sonicle.webtop.core', 'store.customFieldType.'+row[0]);
+			row[2] = 'wt-icon-customField-'+row[0];
 		});
 		me.callParent([cfg]);
 	}

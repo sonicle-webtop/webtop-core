@@ -42,7 +42,6 @@ Ext.define('Sonicle.webtop.core.ux.panel.CustomFieldsBase', {
 		'WTA.mixin.Waitable'
 	],
 	
-	//layout: 'border',
 	layout: 'fit',
 	
 	/**
@@ -59,7 +58,25 @@ Ext.define('Sonicle.webtop.core.ux.panel.CustomFieldsBase', {
 	},
 	
 	/**
-	 * @property {String[]} defFields
+	 * @cfg {String} serviceId
+	 * Target service ID for which managing fields.
+	 */
+	serviceId: null,
+	
+	/**
+	 * @cfg {WTA.sdk.ModelView} mainView
+	 * Reference to main ModelView owning this custom-fields.
+	 * Optional: only needed for evaluating some expression (Jexl) formulas, 
+	 * tipically used only in editor components.
+	 */
+	
+	/**
+	 * @property {Object} cfCache
+	 * @readonly
+	 */
+	
+	/**
+	 * @property {Object} jexlCache
 	 * @readonly
 	 */
 	
@@ -67,16 +84,30 @@ Ext.define('Sonicle.webtop.core.ux.panel.CustomFieldsBase', {
 	
 	initComponent: function() {
 		var me = this;
+		me.jexlCache = {};
 		me.callParent(arguments);
 		if (me.fieldDefs) {
 			me.setFieldsDefs(me.fieldDefs);
 		}
 	},
 	
+	doDestroy: function() {
+		var me = this;
+		delete me.mainView;
+		delete me.cfCache;
+		delete me.jexlCache;
+		me.callParent();
+	},
+	
+	getStore: function() {
+		var vm = this.getViewModel();
+		return vm ? vm.getStores('cvalues') : null;
+	},
+	
 	setStore: function(store) {
 		var me = this,
-				vm = me.getViewModel(),
-				stores = {}, fieldsWithValue = [], values = {};
+			vm = me.getViewModel(),
+			stores = {}, fieldsWithValue = [], values = {};
 		if (vm) {
 			if (store) stores['cvalues'] = {source: store, model: 'Sonicle.webtop.core.ux.data.CustomFieldValueModel'};
 			vm.setStores(stores);
@@ -94,48 +125,42 @@ Ext.define('Sonicle.webtop.core.ux.panel.CustomFieldsBase', {
 		vm.set('values', values);
 	},
 	
-	getStore: function() {
-		var vm = this.getViewModel();
-		return vm ? vm.getStores('cvalues') : null;
-	},
-	
 	setFieldsDefs: function(rawDefs) {
 		var me = this,
-				defObj = Ext.JSON.decode(rawDefs, true),
-				createEmpty = true,
-				items = [], formulas = {}, defFields = [];
+			result = me.analyzeDefObject(Ext.JSON.decode(rawDefs, true)),
+			createEmpty = result.items.length === 0;
 		
-		if (defObj) {
-			Ext.iterate(defObj.panels, function(panel, indx) {
-				var pitems = [];
-				pitems.push({
-					xtype: 'soformseparator',
-					title: panel.title
-				});
-				Ext.iterate(panel.fields, function(fieldId) {
-					if (!defObj.fields[fieldId]) return;
-					var ret = me.createCustomFieldDef(indx, defObj.fields[fieldId]);
-					if (ret) {
-						Ext.merge(formulas, ret.formulas);
-						pitems.push(ret.fieldCfg);
-						defFields.push(fieldId);
-					}
-				});
-				if (pitems.length > 1) Ext.Array.push(items, pitems);
-			});
-			createEmpty = items.length === 0;
-		}
+		me.cacheDefObjectResult(result);
 		
-		me.defFields = defFields;
 		Ext.suspendLayouts();
         me.removeAll();
 		if (createEmpty) {
 			me.add(me.createEmptyItemCfg());
 		} else {
-			me.getViewModel().setFormulas(formulas);
-			me.add(me.createFormPanelCfg(items));
+			var vm = me.getViewModel(),
+				bindFieldIds = Ext.Object.getKeys(me.cfCache.dataDependsMap);
+			
+			// This relies on bindFieldIds to be generic: for now ids refers only 
+			// to data-dependency but maybe in future binding can be wider adopted.
+			Ext.iterate(bindFieldIds, function(fieldId) {
+				vm.bind('{' + me.buildValueBindName(fieldId) + '}', function(nv, ov, b) {
+					if (ov !== undefined) {
+						// Handle reloaders (dataDepends)
+						var reloader = me.cfCache.reloadersMap[b.stub.name];
+						if (reloader) {
+							reloader(b.stub.name, nv, me.cfCache.dataDependsMap[b.stub.name]);
+						}
+					}
+				}, me);
+			});
+			vm.setFormulas(result.formulas);
+			me.add(me.createFormPanelCfg(result.items));
 		}
 		Ext.resumeLayouts(true);
+		
+		if (result.prioritize) {
+			me.fireEvent('prioritize', me);
+		}
 		
 		/*
 		Ext.defer(function() { // Run async in order to avoid raise of "Cannot have multiple center regions..."
@@ -150,63 +175,296 @@ Ext.define('Sonicle.webtop.core.ux.panel.CustomFieldsBase', {
 		*/
 	},
 	
-	createEmptyItemCfg: function() {
-		return {
-			xtype: 'wtpanel',
-			layout: {
-				type: 'vbox',
-				pack: 'center',
-				align: 'middle'
-			},
-			items: [{
-				xtype: 'label',
-				text: this.emptyItemTitle,
-				cls: 'wt-theme-text-header1',
-				style: 'font-size:1.2em'
-			}, {
-				xtype: 'label',
-				text: this.emptyItemText,
-				cls: 'wt-theme-text-subtitle',
-				style: 'font-size:0.9em'
-			}]
-		};
-	},
-	
-	createFormPanelCfg: function(items) {
-		return {
-			xtype: 'wtform',
-			scrollable: true,
-			items: items
-		};
-	},
-	
-	createFieldValueFormula: function(field) {
-		var bind = this.buildValueBindName(field.id);
-		return {
-			bind: {bindTo: '{' + bind + '}'},
-			get: function(val) {
-				return val;
-			}
-		};
-	},
-	
-	createFieldHiddenFormula: function(field) {
-		var bind = this.buildShowBindName(field.id);
-		return {
-			bind: {bindTo: '{' + bind + '}'},
-			get: function(val) {
-				return val === true ? false : true;
-			}
-		};
+	getFieldsContainer: function() {
+		return this.getComponent(0);
 	},
 	
 	privates: {
+		analyzeDefObject: function(defObj) {
+			var me = this,
+				SoO = Sonicle.Object,
+				result = {
+					formulas: {},
+					fieldsMap: {},
+					dataDependsMap: {},
+					items: []
+				};
+
+			if (defObj) {
+				Ext.iterate(defObj.panels, function(panel, indx) {
+					var pitems = [];
+					pitems.push({
+						xtype: 'soformseparator',
+						title: panel.title
+					});
+					if (SoO.booleanValue(panel.props['priority'], false) === true) result.prioritize = true;
+					Ext.iterate(panel.fields, function(fieldId) {
+						var fieldDef = defObj.fields[fieldId], cmpId, cret, mapobj;
+						if (!fieldDef) return;
+
+						cmpId = me.buildFieldCmpId(indx, fieldDef.id);
+						cret = me.createCustomFieldDef(indx, fieldDef, cmpId);
+						if (cret) {
+							Ext.merge(result.formulas, cret.formulas);
+							pitems.push(cret.fieldCfg);
+
+							mapobj = result.fieldsMap[fieldId] || {id: fieldId, name: fieldDef.name, type: fieldDef.type, cmpIds: []};
+							mapobj.cmpIds.push(cmpId);
+							result.fieldsMap[fieldId] = mapobj;
+							if (cret.dependsOn) {
+								if (cret.dependsOn.data) {
+									SoO.multiValueMapPut(result.dataDependsMap, cret.dependsOn.data.parentField, fieldId);
+								}
+							}
+						}
+					});
+					if (pitems.length > 1) Ext.Array.push(result.items, pitems);
+				});
+			}
+			return result;
+		},
+
+		cacheDefObjectResult: function(result) {
+			var me = this,
+				dataDependsMap = {},
+				reloadersMap = {};
+
+			// Remap collected data-dependencies with real fieldIds
+			dataDependsMap = Sonicle.Object.remap(result.dataDependsMap, true, false, function(key) {
+				return me.getFieldIdByName(key, result.fieldsMap);
+			}, me);
+
+			// Prepare buffered methods for reloading depending fields
+			reloadersMap = {};
+			Ext.iterate(dataDependsMap, function(parentId) {
+				reloadersMap[parentId] = Ext.Function.createBuffered(me.reloadDependingFields, 100, me);
+			});
+
+			me.cfCache = {
+				fieldsMap: result.fieldsMap,
+				dataDependsMap: dataDependsMap,
+				reloadersMap: reloadersMap
+			};
+		},
+		
+		createEmptyItemCfg: function() {
+			return {
+				xtype: 'wtpanel',
+				layout: {
+					type: 'vbox',
+					pack: 'center',
+					align: 'middle'
+				},
+				items: [{
+					xtype: 'label',
+					text: this.emptyItemTitle,
+					cls: 'wt-theme-text-header1',
+					style: 'font-size:1.2em'
+				}, {
+					xtype: 'label',
+					text: this.emptyItemText,
+					cls: 'wt-theme-text-subtitle',
+					style: 'font-size:0.9em'
+				}]
+			};
+		},
+
+		createFormPanelCfg: function(items) {
+			return {
+				xtype: 'wtform',
+				referenceHolder: true,
+				scrollable: true,
+				items: items
+			};
+		},
+
+		createFieldValueFormula: function(field) {
+			var bind = this.buildValueBindName(field.id);
+			return {
+				bind: {bindTo: '{' + bind + '}'},
+				get: function(val) {
+					return val;
+				}
+			};
+		},
+
+		createFieldHiddenFormula: function(field) {
+			var bind = this.buildShowBindName(field.id);
+			return {
+				bind: {bindTo: '{' + bind + '}'},
+				get: function(val) {
+					return val === true ? false : true;
+				}
+			};
+		},
+		
+		getFieldIdByName: function(name, map) {
+			var ret;
+			Ext.iterate(map || this.cfCache.fieldsMap, function(key, obj) {
+				if (name === obj['name']) {
+					ret = key;
+					return false;
+				}
+			});
+			return ret;
+		},
+		
+		generateDependsOnBeforeLoadListener: function(ftype, dependsOn) {
+			var me = this,
+				SoS = Sonicle.String,
+				WTCFB = Sonicle.webtop.core.ux.panel.CustomFieldsBase;
+			
+			if (SoS.isIn(ftype, ['comboboxds', 'tagds'])) {
+				return function(s) {
+					var fieldId = me.getFieldIdByName(dependsOn.parentField);
+					if (fieldId) {
+						Ext.callback(WTCFB.generateDSFieldsStoreOnBeforeLoadDoFn(dependsOn.placeholder), s, [s, me.getViewModel().get(me.buildValueBindName(fieldId))]);
+					}
+				};
+				
+			} else if ('contactpicker' === ftype) {
+				return function(s) {
+					var fieldId = me.getFieldIdByName(dependsOn.parentField);
+					if (fieldId) {
+						Ext.callback(WTCFB.generateContactPickerStoreOnBeforeLoadDoFn(dependsOn.keyword), s, [s, me.getViewModel().get(me.buildValueBindName(fieldId))]);
+					}
+				};
+				
+			} else {
+				return null;
+			}
+		},
+		
+		reloadDependingFields: function(parentFieldId, parentValue, childFieldIds) {
+			var me = this,
+				fcnt = me.getFieldsContainer();
+			Ext.iterate(childFieldIds, function(fieldId) {
+				var entry = me.cfCache.fieldsMap[fieldId];
+				if (entry) {
+					Ext.iterate(entry.cmpIds, function(cmpId) {
+						var cmp = fcnt.lookupReference(cmpId);
+						if (cmp && cmp.getStore) {
+							if (Ext.isEmpty(parentValue)) {
+								cmp.getStore().clearData();
+							} else {
+								cmp.getStore().load();
+							}
+						}
+					});
+				}
+			});
+		},
+		
+		evaluateExpr: function(expr, multiline, opts) {
+			opts = opts || {};
+			var me = this,
+				context = opts.context || {},
+				jexl = me.getExprEvaluator({functions: opts.functions, transforms: opts.transforms});
+
+			Ext.iterate(me.cfCache.fieldsMap, function(key, entry) {
+				context['$'+entry.name] = key;
+			});
+			return WTA.ux.picker.CustomFieldExpr.evalExpr(expr, multiline, jexl, context, opts.silent);
+		},
+		
+		getExprEvaluator: function(opts) {
+			opts = opts || {};
+			var me = this,
+				flags = 0,
+				key, jexl;
+
+			if (opts.functions === true) flags |= 1;
+			if (opts.transforms === true) flags |= 2;
+			key = Sonicle.Object.stringValue(flags);
+			if (!(jexl = me.jexlCache[key])) {
+				jexl = me.jexlCache[key] = new Jexl.Jexl();
+				
+				// Functions...
+				if (opts.functions === true) {
+					jexl.addFunction('format', function(pattern, args) {
+						return Ext.String.format.apply(this, [pattern].concat(args));
+					});
+					jexl.addFunction('getMainValue', function(fieldName) {
+						return me.exprFnGetMainModelValue(fieldName);
+					});
+					jexl.addFunction('getValue', function(fieldId) {
+						return me.exprFnGetVMValue(fieldId);
+					});
+					jexl.addFunction('getFieldValue', function(fieldId) {
+						var cmp = me.exprFnGetFieldComponent(fieldId);
+						if (!cmp) throw '[getFieldValue] Field component "' + fieldId + '" not found';
+						return cmp.getValue();
+					});
+					jexl.addFunction('getFieldDisplayValue', function(fieldId) {
+						var cmp = me.exprFnGetFieldComponent(fieldId);
+						if (!cmp) throw '[getFieldDisplayValue] Field component "' + fieldId + '" not found';
+						return cmp.getRawValue();
+					});
+					jexl.addFunction('getFieldSelection', function(fieldId) {
+						var cmp = me.exprFnGetFieldComponent(fieldId), sel, data;
+						if (!cmp) throw '[getFieldSelection] Field component "' + fieldId + '" not found';
+						if (Ext.isFunction(cmp.getSelection) && (sel = cmp.getSelection())) {
+							data = sel.getData();
+						}
+						return data;
+					});
+				}
+
+				// Transforms...
+				if (opts.transforms === true) {
+					jexl.addTransform('alert', function(message, type, title) {
+						var opts = Ext.isString(title) ? {title: title} : undefined;
+						if ('info' === type) {
+							WT.info(message, opts);
+						} else {
+							WT.warn(message, opts);
+						}
+					});
+					jexl.addTransform('setFieldValue', function(value, fieldId) {
+						var cmp = me.exprFnGetFieldComponent(fieldId);
+						if (!cmp) throw '[setFieldValue] Field component "' + fieldId + '" not found';
+						cmp.setValue(value);
+						return value;
+					});
+					jexl.addTransform('setMainValue', function(value, fieldName) {
+						me.exprFnSetMainModelValue(fieldName, value);
+						return value;
+					});
+				}
+			}
+			return jexl;
+		},
+	
+		exprFnGetVMValue: function(fieldId) {
+			return this.getViewModel().get(this.buildValueBindName(fieldId));
+		},
+
+		exprFnGetFieldComponent: function(fieldId) {
+			var me = this,
+				field = me.cfCache.fieldsMap[fieldId];
+			return field ? me.getFieldsContainer().lookupReference(field.cmpIds[0]) : undefined;
+		},
+		
+		exprFnGetMainModelValue: function(fieldId) {
+			var mmo = this.mainView ? this.mainView.getModel() : null;
+			return mmo ? mmo.get(fieldId) : null;
+		},
+		
+		exprFnSetMainModelValue: function(fieldId, value) {
+			var mmo = this.mainView ? this.mainView.getModel() : null;
+			return mmo ? mmo.set(fieldId, value) : null;
+		},
+		
 		buildValueBindName: function(fieldId) {
 			return 'values.' + fieldId;
 		},
 		
 		buildShowBindName: function(fieldId) {
 			return 'shows.' + fieldId;
+		},
+		
+		buildFieldCmpId: function(panelId, fieldId) {
+			return 'cmp' + Ext.String.leftPad(panelId, 2, '0') + fieldId;
 		},
 		
 		buildFieldFormulaName: function(prefix, panelId, fieldId, ftype) {
@@ -223,6 +481,60 @@ Ext.define('Sonicle.webtop.core.ux.panel.CustomFieldsBase', {
 				});
 			}
 			return shows;
+		}
+		*/
+	},
+	
+	statics: {
+		parseAsPageSize: function(value) {
+			var pageSize = Number.parseInt(value, 10);
+			return (Ext.isNumber(pageSize) && pageSize > 0 && pageSize <= 1000) ? pageSize : null;
+		},
+		
+		generateDSFieldsStoreOnBeforeLoadDoFn: function(placeholderName) {
+			return function(store, placeholderValue) {
+				WTU.applyExtraParams(store, {
+					placeholders: Ext.JSON.encode(Sonicle.Object.setProp({}, placeholderName, placeholderValue))
+				});
+			};
+		},
+
+		generateContactPickerStoreOnBeforeLoadDoFn: function(queryObjKeyword) {
+			return function(store, queryObjValue) {
+				if (queryObjValue) {
+					WTU.applyExtraParams(store, {
+						queryObj: Ext.JSON.encode({conditions: [{
+						keyword: queryObjKeyword,
+						value: queryObjValue,
+						negated: false
+						}]})
+					});
+				}
+			};
+		}
+		
+		/*
+		generateContactPickerStoreOnBeforeLoadDoFn: function(queryObjKeyword) {
+			return function(store, queryObjValue, idValue) {
+				if (queryObjValue) {
+					var conds = [];
+					if (!Ext.isEmpty(idValue)) {
+						conds.push({
+							keyword: 'id',
+							value: idValue,
+							negated: false
+						});
+					}
+					conds.push({
+						keyword: queryObjKeyword,
+						value: queryObjValue,
+						negated: false
+					});
+					WTU.applyExtraParams(store, {
+						queryObj: Ext.JSON.encode({conditions: conds})
+					});
+				}
+			};
 		}
 		*/
 	}

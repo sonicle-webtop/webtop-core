@@ -31,5 +31,47 @@
  * display the words "Copyright (C) 2019 Sonicle S.r.l.".
  */
 Ext.define('Sonicle.webtop.core.model.CustomFieldProp', {
-	extend: 'Ext.PropGridProperty'
+	extend: 'Ext.PropGridProperty',
+	requires: [
+		'Sonicle.String'
+	],
+	
+	fields: [
+		WTF.roField('index', 'int', {defaultValue: 0}),
+		WTF.calcField('group', 'string', 'name', function(v, rec, name) {
+			var SoS = Sonicle.String;
+			if (SoS.isIn(name, ['searchable', 'previewable', 'queryable'])) {
+				return 'behaviour';
+			} else if (SoS.isIn(name, ['required', 'minLength', 'maxLength', 'minValue', 'maxValue', 'allowDecimals', 'validationRe'])) {
+				return 'value';
+			} else if (SoS.isIn(name, ['emptyText', 'maskRe', 'contactPickerNewButton', 'displayTpl'])) {
+				return 'appearance';
+			} else if (SoS.isIn(name, ['width', 'anchor', 'autoGrow'])) {
+				return 'layout';
+			} else if (SoS.isIn(name, ['queryId', 'valueField', 'displayField', 'pageSize', 'dataDependsOn', 'contactPickerCategoryIds'])) {
+				return 'data';
+			} else if (SoS.isIn(name, ['disabledExpr', 'onChangeExpr', 'contactPickerAddContactApiDataExpr'])) {
+				return 'advanced';
+			}
+			return 'other';
+		})
+	],
+	
+	setValue: function(value) {
+		this.set('value', value);
+	},
+	
+	statics: {
+		toGroupOrdinal: function(group) {
+			return {
+				'other': 99,
+				'behaviour': 1,
+				'layout': 2,
+				'appearance': 3,
+				'value': 4,
+				'data': 5,
+				'advanced': 6
+			}[group];
+		}
+	}
 });

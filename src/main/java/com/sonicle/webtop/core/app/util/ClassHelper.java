@@ -85,12 +85,20 @@ public class ClassHelper {
 		return null;
 	}
 	
+	/**
+	 * @deprecated Use ClassUtils.isClassInheritingFromParent instead
+	 */
+	@Deprecated
 	public static boolean isInheritingFromParent(Class clazz, Class parentClass) {
 		if (clazz == null) return false;
 		if (parentClass == null) return false;
 		return parentClass.isAssignableFrom(clazz);
 	}
 	
+	/**
+	 * @deprecated Use ClassUtils.isClassImplementingInterface instead
+	 */
+	@Deprecated
 	public static boolean isImplementingInterface(Class clazz, Class interfaceClass) {
 		if (clazz == null) return false;
 		if (interfaceClass == null) return false;

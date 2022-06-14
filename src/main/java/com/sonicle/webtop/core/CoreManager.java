@@ -34,10 +34,13 @@
 package com.sonicle.webtop.core;
 
 import com.aventrix.jnanoid.jnanoid.NanoIdUtils;
+import com.sonicle.commons.BitFlag;
+import com.sonicle.commons.BitFlagEnum;
 import com.sonicle.commons.EnumUtils;
 import com.sonicle.commons.InternetAddressUtils;
 import com.sonicle.commons.LangUtils;
 import com.sonicle.commons.URIUtils;
+import com.sonicle.commons.beans.PageInfo;
 import com.sonicle.commons.beans.VirtualAddress;
 import com.sonicle.commons.db.DbUtils;
 import com.sonicle.commons.time.DateTimeUtils;
@@ -45,10 +48,11 @@ import com.sonicle.commons.web.json.CompositeId;
 import com.sonicle.commons.web.json.JsonResult;
 import com.sonicle.commons.web.json.JsonUtils;
 import com.sonicle.commons.web.json.ipstack.IPLookupResponse;
-import com.sonicle.security.Principal;
 import com.sonicle.security.auth.directory.AbstractDirectory;
+import com.sonicle.webtop.core.app.AuditLogManager;
 import com.sonicle.webtop.core.app.RunContext;
 import com.sonicle.webtop.core.app.CoreManifest;
+import com.sonicle.webtop.core.app.DataSourcesManager;
 import com.sonicle.webtop.core.app.OTPManager;
 import com.sonicle.webtop.core.app.ServiceManager;
 import com.sonicle.webtop.core.app.SessionManager;
@@ -56,6 +60,9 @@ import com.sonicle.webtop.core.app.SettingsManager;
 import com.sonicle.webtop.core.app.WebTopManager;
 import com.sonicle.webtop.core.app.WT;
 import com.sonicle.webtop.core.app.WebTopApp;
+import com.sonicle.webtop.core.app.io.dbutils.FilterInfo;
+import com.sonicle.webtop.core.app.io.dbutils.FilterableArrayListHandler;
+import com.sonicle.webtop.core.app.io.dbutils.RowsAndCols;
 import com.sonicle.webtop.core.app.pbx.PbxProvider;
 import com.sonicle.webtop.core.app.provider.RecipientsProviderBase;
 import com.sonicle.webtop.core.app.sdk.AuditReferenceDataEntry;
@@ -122,8 +129,13 @@ import com.sonicle.webtop.core.model.AuditLog;
 import com.sonicle.webtop.core.model.Causal;
 import com.sonicle.webtop.core.model.CausalExt;
 import com.sonicle.webtop.core.model.CustomField;
+import com.sonicle.webtop.core.model.CustomFieldBase;
 import com.sonicle.webtop.core.model.CustomFieldEx;
 import com.sonicle.webtop.core.model.CustomPanel;
+import com.sonicle.webtop.core.model.CustomPanelBase;
+import com.sonicle.webtop.core.model.DataSourceQuery;
+import com.sonicle.webtop.core.model.DataSourceBase;
+import com.sonicle.webtop.core.model.DataSourcePooled;
 import com.sonicle.webtop.core.model.DomainEntity;
 import com.sonicle.webtop.core.model.IMChat;
 import com.sonicle.webtop.core.model.IMMessage;
@@ -163,6 +175,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import jakarta.mail.internet.InternetAddress;
+import net.sf.qualitycheck.Check;
 import java.util.HashMap;
 import net.sf.qualitycheck.Check;
 import org.apache.commons.lang3.StringUtils;
@@ -1377,7 +1390,14 @@ public class CoreManager extends BaseManager {
 		return audit;
 	}
 	
+	/**
+	 * Lists all CustomPanels of specified Service.
+	 * @param serviceId The owning Service ID.
+	 * @return A map of panels by their IDs.
+	 * @throws WTException 
+	 */
 	public Map<String, CustomPanel> listCustomPanels(final String serviceId) throws WTException {
+		Check.notEmpty(serviceId, "serviceId");
 		CustomPanelDAO cupDao = CustomPanelDAO.getInstance();
 		Connection con = null;
 		
@@ -1401,7 +1421,16 @@ public class CoreManager extends BaseManager {
 		}
 	}
 	
+	/**
+	 * Lists all CustomPanels of a Service used-by the specified set of Tags.
+	 * @param serviceId The owning Service ID.
+	 * @param tagIds A collection of Tag IDs.
+	 * @return A map of panels by their IDs.
+	 * @throws WTException 
+	 */
 	public Map<String, CustomPanel> listCustomPanelsUsedBy(final String serviceId, final Collection<String> tagIds) throws WTException {
+		Check.notEmpty(serviceId, "serviceId");
+		Check.notNull(tagIds, "tagIds");
 		CustomPanelDAO cupDao = CustomPanelDAO.getInstance();
 		Connection con = null;
 		
@@ -1425,7 +1454,16 @@ public class CoreManager extends BaseManager {
 		}
 	}
 	
+	/**
+	 * Gets the CustomPanel with the specified ID.
+	 * @param serviceId The owning Service ID.
+	 * @param panelId The CustomPanel ID.
+	 * @return CustomPanel object or null if not found.
+	 * @throws WTException 
+	 */
 	public CustomPanel getCustomPanel(final String serviceId, final String panelId) throws WTException {
+		Check.notEmpty(serviceId, "serviceId");
+		Check.notEmpty(panelId, "panelId");
 		Connection con = null;
 		
 		try {
@@ -1442,19 +1480,25 @@ public class CoreManager extends BaseManager {
 		}
 	}
 	
-	public CustomPanel addCustomPanel(final CustomPanel customPanel) throws WTException {
+	/**
+	 * Add new CustomPanel for the specified Service.
+	 * @param serviceId The owning Service ID.
+	 * @param customPanel Data to set.
+	 * @return The added CustomPanel.
+	 * @throws WTException 
+	 */
+	public CustomPanel addCustomPanel(final String serviceId, final CustomPanelBase customPanel) throws WTException {
+		Check.notEmpty(serviceId, "serviceId");
+		Check.notNull(customPanel, "customPanel");
 		Connection con = null;
 		
 		try {
-			// We just want to make sure alerting external code that domainId, if present, is consistent!
-			if (customPanel.getDomainId() != null) ensureTargetProfileDomain(customPanel.getDomainId());
-			customPanel.setDomainId(getTargetProfileId().getDomainId());
-			
-			ensureProfileDomain(customPanel.getDomainId());
+			String domainId = getTargetProfileId().getDomainId();
+			ensureProfileDomain(domainId);
 			RunContext.ensureIsPermitted(false, SERVICE_ID, "CUSTOM_FIELDS", "MANAGE");
 			
 			con = WT.getCoreConnection();
-			CustomPanel ret = doCustomPanelUpdate(true, con, customPanel);
+			CustomPanel ret = doCustomPanelUpdate(con, domainId, serviceId, null, customPanel);
 			
 			if (isAuditEnabled()) {
 				auditLogWrite(AuditContext.CUSTOMPANEL, AuditAction.CREATE, new CompositeId(ret.getServiceId(), ret.getPanelId()).toString(), null);
@@ -1469,20 +1513,27 @@ public class CoreManager extends BaseManager {
 		}
 	}
 	
-	public CustomPanel updateCustomPanel(final CustomPanel customPanel) throws WTException {
+	/**
+	 * Updates specified CustomPanel.
+	 * @param serviceId The owning Service ID.
+	 * @param panelId The CustomPanel ID.
+	 * @param customPanel New data to set.
+	 * @return The updated CustomPanel.
+	 * @throws WTException 
+	 */
+	public CustomPanel updateCustomPanel(final String serviceId, final String panelId, final CustomPanelBase customPanel) throws WTException {
+		Check.notEmpty(serviceId, "serviceId");
+		Check.notEmpty(panelId, "panelId");
 		Connection con = null;
 		
 		try {
-			// We just want to make sure alerting external code that domainId, if present, is consistent!
-			if (customPanel.getDomainId() != null) ensureTargetProfileDomain(customPanel.getDomainId());
-			customPanel.setDomainId(getTargetProfileId().getDomainId());
-			
-			ensureProfileDomain(customPanel.getDomainId());
+			String domainId = getTargetProfileId().getDomainId();
+			ensureProfileDomain(domainId);
 			RunContext.ensureIsPermitted(false, SERVICE_ID, "CUSTOM_FIELDS", "MANAGE");
 			
 			con = WT.getCoreConnection();
-			CustomPanel ret = doCustomPanelUpdate(false, con, customPanel);
-			if (ret == null) throw new WTNotFoundException("Custom-panel not found [{}, {}]", customPanel.getServiceId(), customPanel.getPanelId());
+			CustomPanel ret = doCustomPanelUpdate(con, domainId, serviceId, panelId, customPanel);
+			if (ret == null) throw new WTNotFoundException("Custom-panel not found [{}, {}]", serviceId, panelId);
 			
 			if (isAuditEnabled()) {
 				auditLogWrite(AuditContext.CUSTOMPANEL, AuditAction.UPDATE, new CompositeId(ret.getServiceId(), ret.getPanelId()).toString(), null);
@@ -1497,7 +1548,16 @@ public class CoreManager extends BaseManager {
 		}
 	}
 	
-	public boolean updateCustomPanelOrder(final String serviceId, final String panelId, final short order) throws WTException {
+	/**
+	 * Updates specified CustomPanel's ordering number with the provided one.
+	 * @param serviceId The owning Service ID.
+	 * @param panelId The CustomPanel ID.
+	 * @param newOrder New order position.
+	 * @throws WTException 
+	 */
+	public void updateCustomPanelOrder(final String serviceId, final String panelId, final short newOrder) throws WTException {
+		Check.notEmpty(serviceId, "serviceId");
+		Check.notEmpty(panelId, "panelId");
 		CustomPanelDAO cupDao = CustomPanelDAO.getInstance();
 		Connection con = null;
 		
@@ -1507,14 +1567,12 @@ public class CoreManager extends BaseManager {
 			RunContext.ensureIsPermitted(false, SERVICE_ID, "CUSTOM_FIELDS", "MANAGE");
 			
 			con = WT.getCoreConnection();
-			boolean ret = cupDao.updateOrder(con, targetDomainId, serviceId, panelId, order) == 1;
+			boolean ret = cupDao.updateOrder(con, targetDomainId, serviceId, panelId, newOrder) == 1;
 			if (!ret) throw new WTNotFoundException("Custom-panel not found [{}, {}]", serviceId, panelId);
 			
 			if (isAuditEnabled()) {
 				auditLogWrite(AuditContext.CUSTOMPANEL, AuditAction.UPDATE, new CompositeId(serviceId, panelId).toString(), null);
 			}
-			
-			return ret;
 			
 		} catch (Throwable t) {
 			throw ExceptionUtils.wrapThrowable(t);
@@ -1523,7 +1581,15 @@ public class CoreManager extends BaseManager {
 		}
 	}
 	
-	public boolean deleteCustomPanel(final String serviceId, final String panelId) throws WTException {
+	/**
+	 * Deletes the specified CustomPanel, removing any associations with CustomField(s).
+	 * @param serviceId The owning Service ID.
+	 * @param panelId The CustomPanel ID.
+	 * @throws WTException 
+	 */
+	public void deleteCustomPanel(final String serviceId, final String panelId) throws WTException {
+		Check.notEmpty(serviceId, "serviceId");
+		Check.notEmpty(panelId, "panelId");
 		CustomPanelDAO cupDao = CustomPanelDAO.getInstance();
 		Connection con = null;
 		
@@ -1540,8 +1606,6 @@ public class CoreManager extends BaseManager {
 				auditLogWrite(AuditContext.CUSTOMPANEL, AuditAction.DELETE, new CompositeId(serviceId, panelId).toString(), null);
 			}
 			
-			return ret;
-			
 		} catch (Throwable t) {
 			throw ExceptionUtils.wrapThrowable(t);
 		} finally {
@@ -1549,19 +1613,37 @@ public class CoreManager extends BaseManager {
 		}
 	}
 	
+	/**
+	 * Returns the list of CustomField types related to the specified Service.
+	 * @param serviceId The owning Service ID.
+	 * @return Map of fields by their IDs.
+	 * @throws WTException 
+	 */
 	public Map<String, CustomField.Type> listCustomFieldTypesById(final String serviceId) throws WTException {
-		return listCustomFieldTypesById(serviceId, null);
+		Check.notEmpty(serviceId, "serviceId");
+		return listCustomFieldTypesById(serviceId, BitFlag.none());
 	}
 	
-	public Map<String, CustomField.Type> listCustomFieldTypesById(final String serviceId, final Boolean searchable) throws WTException {
+	/**
+	 * Returns the list of CustomField types related to the specified Service.
+	 * @param serviceId The owning Service ID.
+	 * @param options Listing options.
+	 * @return Map of fields types by field IDs.
+	 * @throws WTException 
+	 */
+	public Map<String, CustomField.Type> listCustomFieldTypesById(final String serviceId, final BitFlag<CustomFieldListOptions> options) throws WTException {
+		Check.notEmpty(serviceId, "serviceId");
+		Check.notNull(options, "options");
 		CustomFieldDAO cufDao = CustomFieldDAO.getInstance();
 		Connection con = null;
 		
 		try {
+			if (options.has(CustomFieldListOptions.PREVIEWABLE)) throw new IllegalArgumentException("Option PREVIEWABLE is not supported here");
 			String targetDomainId = getTargetProfileId().getDomainId();
 			ensureProfileDomain(targetDomainId);
 			
 			con = WT.getConnection(SERVICE_ID);
+			Boolean searchable = options.has(CustomFieldListOptions.SEARCHABLE) ? true : null;
 			LinkedHashMap<String, CustomField.Type> items = new LinkedHashMap<>();
 			for (Map.Entry<String, String> entry : cufDao.viewOnlineTypeByDomainServiceSearchable(con, targetDomainId, serviceId, searchable).entrySet()) {
 				CustomField.Type type = EnumUtils.forSerializedName(entry.getValue(), CustomField.Type.class);
@@ -1576,11 +1658,27 @@ public class CoreManager extends BaseManager {
 		}
 	}
 	
+	/**
+	 * Returns the list of CustomFields related to the specified Service.
+	 * @param serviceId The owning Service ID.
+	 * @return Map of fields by field IDs.
+	 * @throws WTException 
+	 */
 	public Map<String, CustomFieldEx> listCustomFields(final String serviceId) throws WTException {
-		return listCustomFields(serviceId, null, null);
+		Check.notEmpty(serviceId, "serviceId");
+		return listCustomFields(serviceId, BitFlag.none());
 	}
 	
-	public Map<String, CustomFieldEx> listCustomFields(final String serviceId, final Boolean searchable, final Boolean previewable) throws WTException {
+	/**
+	 * Returns the list of CustomFields related to the specified Service.
+	 * @param serviceId The owning Service ID.
+	 * @param options Listing options.
+	 * @return Map of fields by field IDs.
+	 * @throws WTException 
+	 */
+	public Map<String, CustomFieldEx> listCustomFields(final String serviceId, final BitFlag<CustomFieldListOptions> options) throws WTException {
+		Check.notEmpty(serviceId, "serviceId");
+		Check.notNull(options, "options");
 		CustomFieldDAO cufDao = CustomFieldDAO.getInstance();
 		Connection con = null;
 		
@@ -1589,6 +1687,8 @@ public class CoreManager extends BaseManager {
 			ensureProfileDomain(targetDomainId);
 			
 			con = WT.getConnection(SERVICE_ID);
+			Boolean searchable = options.has(CustomFieldListOptions.SEARCHABLE) ? true : null;
+			Boolean previewable = options.has(CustomFieldListOptions.PREVIEWABLE) ? true : null;
 			LinkedHashMap<String, CustomFieldEx> items = new LinkedHashMap<>();
 			for (VCustomField vcfield : cufDao.viewOnlineByDomainServiceSearchablePreviewable(con, targetDomainId, serviceId, searchable, previewable, getCustomFieldsMaxNo()).values()) {
 				//items.put(vcfield.getCustomFieldId(), ManagerUtils.createCustomField(vcfield));
@@ -1603,7 +1703,16 @@ public class CoreManager extends BaseManager {
 		}
 	}
 	
-	public Set<String> listCustomFieldIds(final String serviceId, final Boolean searchable, final Boolean previewable) throws WTException {
+	/**
+	 * Returns the list of CustomField IDs related to the specified Service.
+	 * @param serviceId The owning Service ID.
+	 * @param options Listing options.
+	 * @return Set of CustomField IDs.
+	 * @throws WTException 
+	 */
+	public Set<String> listCustomFieldIds(final String serviceId, final BitFlag<CustomFieldListOptions> options) throws WTException {
+		Check.notEmpty(serviceId, "serviceId");
+		Check.notNull(options, "options");
 		CustomFieldDAO cufDao = CustomFieldDAO.getInstance();
 		Connection con = null;
 		
@@ -1612,6 +1721,8 @@ public class CoreManager extends BaseManager {
 			ensureProfileDomain(targetDomainId);
 			
 			con = WT.getConnection(SERVICE_ID);
+			Boolean searchable = options.has(CustomFieldListOptions.SEARCHABLE) ? true : null;
+			Boolean previewable = options.has(CustomFieldListOptions.PREVIEWABLE) ? true : null;
 			return cufDao.viewOnlineIdsByDomainServiceSearchablePreviewable(con, targetDomainId, serviceId, searchable, previewable, getCustomFieldsMaxNo());
 			
 		} catch (Throwable t) {
@@ -1621,7 +1732,16 @@ public class CoreManager extends BaseManager {
 		}
 	}
 	
+	/**
+	 * Gets the CustomField with the specified ID.
+	 * @param serviceId The owning Service ID.
+	 * @param fieldId The CustomField ID.
+	 * @return CustomField object or null if not found.
+	 * @throws WTException 
+	 */
 	public CustomField getCustomField(final String serviceId, final String fieldId) throws WTException {
+		Check.notEmpty(serviceId, "serviceId");
+		Check.notEmpty(fieldId, "fieldId");
 		CustomFieldDAO cufDao = CustomFieldDAO.getInstance();
 		Connection con = null;
 		
@@ -1631,7 +1751,7 @@ public class CoreManager extends BaseManager {
 			
 			con = WT.getConnection(SERVICE_ID);
 			OCustomField ofield = cufDao.selectByDomainService(con, targetDomainId, serviceId, fieldId);
-			return ManagerUtils.createCustomField(ofield);
+			return ofield == null ? null : ManagerUtils.fillCustomField(new CustomField(), ofield);
 			
 		} catch (Throwable t) {
 			throw ExceptionUtils.wrapThrowable(t);
@@ -1640,19 +1760,52 @@ public class CoreManager extends BaseManager {
 		}
 	}
 	
-	public CustomField addCustomField(final CustomField customField) throws WTException {
+	/**
+	 * Checks if provided CustomField name is already taken (unavailable) or not.
+	 * @param serviceId The owning Service ID.
+	 * @param name The name to check.
+	 * @return `true` if name is available for usage
+	 * @throws WTException 
+	 */
+	public boolean checkCustomFieldNameAvailability(final String serviceId, final String name) throws WTException {
+		Check.notEmpty(serviceId, "serviceId");
+		Check.notEmpty(name, "name");
+		CustomFieldDAO cufDao = CustomFieldDAO.getInstance();
 		Connection con = null;
 		
 		try {
-			// We just want to make sure alerting external code that domainId, if present, is consistent!
-			if (customField.getDomainId() != null) ensureTargetProfileDomain(customField.getDomainId());
-			customField.setDomainId(getTargetProfileId().getDomainId());
+			String domainId = getTargetProfileId().getDomainId();
+			ensureProfileDomain(domainId);
 			
-			ensureProfileDomain(customField.getDomainId());
+			con = WT.getCoreConnection();
+			return cufDao.nameIsAvailableByDomainService(con, domainId, serviceId, name);
+			
+		} catch (Throwable t) {
+			throw ExceptionUtils.wrapThrowable(t);
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
+	/**
+	 * Add new CustomField for the specified Service.
+	 * @param serviceId The owning Service ID.
+	 * @param customField Data to set.
+	 * @return The added CustomField.
+	 * @throws WTException 
+	 */
+	public CustomField addCustomField(final String serviceId, final CustomFieldBase customField) throws WTException {
+		Check.notEmpty(serviceId, "serviceId");
+		Check.notNull(customField, "customField");
+		Connection con = null;
+		
+		try {
+			String domainId = getTargetProfileId().getDomainId();
+			ensureProfileDomain(domainId);
 			RunContext.ensureIsPermitted(false, SERVICE_ID, "CUSTOM_FIELDS", "MANAGE");
 			
 			con = WT.getCoreConnection();
-			CustomField ret = doCustomFieldUpdate(true, con, customField);
+			CustomField ret = doCustomFieldUpdate(con, domainId, serviceId, null, customField);
 			
 			if (isAuditEnabled()) {
 				auditLogWrite(AuditContext.CUSTOMFIELD, AuditAction.CREATE, new CompositeId(ret.getServiceId(), ret.getFieldId()).toString(), null);
@@ -1667,20 +1820,28 @@ public class CoreManager extends BaseManager {
 		}
 	}
 	
-	public CustomField updateCustomField(final CustomField customField) throws WTException {
+	/**
+	 * Updates specified CustomField.
+	 * @param serviceId The owning Service ID.
+	 * @param fieldId The CustomField ID.
+	 * @param customField New data to set.
+	 * @return The updated CustomField.
+	 * @throws WTException 
+	 */
+	public CustomField updateCustomField(final String serviceId, final String fieldId, final CustomFieldBase customField) throws WTException {
+		Check.notEmpty(serviceId, "serviceId");
+		Check.notEmpty(fieldId, "fieldId");
+		Check.notNull(customField, "customField");
 		Connection con = null;
 		
 		try {
-			// We just want to make sure alerting external code that domainId, if present, is consistent!
-			if (customField.getDomainId() != null) ensureTargetProfileDomain(customField.getDomainId());
-			customField.setDomainId(getTargetProfileId().getDomainId());
-			
-			ensureProfileDomain(customField.getDomainId());
+			String domainId = getTargetProfileId().getDomainId();
+			ensureProfileDomain(domainId);
 			RunContext.ensureIsPermitted(false, SERVICE_ID, "CUSTOM_FIELDS", "MANAGE");
 			
 			con = WT.getCoreConnection();
-			CustomField ret = doCustomFieldUpdate(false, con, customField);
-			if (ret == null) throw new WTNotFoundException("Custom-field not found [{}, {}]", customField.getServiceId(), customField.getFieldId());
+			CustomField ret = doCustomFieldUpdate(con, domainId, serviceId, fieldId, customField);
+			if (ret == null) throw new WTNotFoundException("Custom-field not found [{}, {}]", serviceId, fieldId);
 			
 			if (isAuditEnabled()) {
 				auditLogWrite(AuditContext.CUSTOMFIELD, AuditAction.UPDATE, new CompositeId(ret.getServiceId(), ret.getFieldId()).toString(), null);
@@ -1695,7 +1856,15 @@ public class CoreManager extends BaseManager {
 		}
 	}
 	
-	public boolean deleteCustomField(final String serviceId, final String fieldId) throws WTException {
+	/**
+	 * Deletes the specified CustomField, removing associations with any CustomPanel(s).
+	 * @param serviceId The owning Service ID.
+	 * @param fieldId The CustomField ID.
+	 * @throws WTException 
+	 */
+	public void deleteCustomField(final String serviceId, final String fieldId) throws WTException {
+		Check.notEmpty(serviceId, "serviceId");
+		Check.notEmpty(fieldId, "fieldId");
 		CustomFieldDAO cufDao = CustomFieldDAO.getInstance();
 		CustomPanelFieldDAO cupfDao = CustomPanelFieldDAO.getInstance();
 		Connection con = null;
@@ -1714,13 +1883,155 @@ public class CoreManager extends BaseManager {
 				auditLogWrite(AuditContext.CUSTOMFIELD, AuditAction.DELETE, new CompositeId(serviceId, fieldId).toString(), null);
 			}
 			DbUtils.commitQuietly(con);
-			return ret;
 			
 		} catch (Throwable t) {
 			DbUtils.rollbackQuietly(con);
 			throw ExceptionUtils.wrapThrowable(t);
 		} finally {
 			DbUtils.closeQuietly(con);
+		}
+	}
+	
+	/**
+	 * Executes the DataSource Query linked to the specified CustomField.
+	 * No exception will be thrown for query related, any errors will be reported in the returned result object.
+	 * @param fieldServiceId The owning Service ID.
+	 * @param fieldId The CustomField ID.
+	 * @param placeholdersValues Map of placeholder/parameters values to substitute before execution; it can be `null`.
+	 * @param pagination Pagination info; it can be `null`.
+	 * @param filter Filtering info; it can be `null`.
+	 * @return Query result object.
+	 * @throws WTException 
+	 */
+	public DataSourceBase.ExecuteQueryResult<RowsAndCols> executeCustomFieldDataSourceQuery(final String fieldServiceId, final String fieldId, final Map<String, String> placeholdersValues, final PageInfo pagination, final FilterInfo filter) throws WTException {
+		Check.notEmpty(fieldServiceId, "fieldServiceId");
+		Check.notEmpty(fieldId, "fieldId");
+		
+		// Rights not checked here: they will be checked inside getCustomField call
+		CustomField field = getCustomField(fieldServiceId, fieldId);
+		if (field == null) throw new WTException("Custom-field not found [{}, {}]", fieldId, fieldServiceId);
+		if (!field.isDataBindableType()) throw new WTException("Custom-field not applicable within a data-source [{}, {}]", fieldId, fieldServiceId);
+		if (StringUtils.isBlank(field.getQueryId())) throw new WTException("Custom-field does not have a query set [{}, {}]", fieldId, fieldServiceId);
+		
+		String valueField = field.getProps().get("valueField");
+		if (StringUtils.isBlank(valueField)) throw new WTException("Custom-field does not have a valid valueField [{}, {}]", fieldId, fieldServiceId);
+		String displayField = field.getProps().get("displayField");
+		if (StringUtils.isBlank(displayField)) displayField = valueField;
+		
+		DataSourcesManager dsMgr = wta.getDataSourcesManager();
+		Set<String> cols = new LinkedHashSet<>(Arrays.asList(valueField, displayField));
+		DataSourcesManager.FilterClause filterClause = null;
+		if (filter != null) {
+			if (filter.isQuery) {
+				filterClause = new DataSourcesManager.FilterClause(Arrays.asList(valueField, displayField), filter);
+			} else {
+				filterClause = new DataSourcesManager.FilterClause(Arrays.asList(valueField), filter);
+			}
+		}
+		DataSourcesManager.QueryPlaceholders placeholders = new DataSourcesManager.QueryPlaceholders(field.getDomainId(), getTargetProfileId().getUserId(), placeholdersValues);
+		return dsMgr.executeQuery(field.getDomainId(), field.getQueryId(), placeholders, pagination, false, new FilterableArrayListHandler(cols), filterClause, !cfieldsLicensed ? 10 : null);
+	}
+	
+	/**
+	 * Executes the DataSource Query targeted by the specified ID.
+	 * @param dataSourceQueryId The query ID.
+	 * @param pagination Pagination info; it can be `null`.
+	 * @param debugReport `true` to provide a detailed debug method in the result messages.
+	 * @return Query result object.
+	 * @throws WTException 
+	 */
+	public DataSourceBase.ExecuteQueryResult<RowsAndCols> executeDataSourceQuery(final String dataSourceQueryId, final PageInfo pagination, final boolean debugReport) throws WTException {
+		Check.notEmpty(dataSourceQueryId, "dataSourceQueryId");
+		
+		try {
+			String targetDomainId = getTargetProfileId().getDomainId();
+			ensureProfileDomain(targetDomainId);
+			
+			DataSourcesManager dsMgr = wta.getDataSourcesManager();
+			DataSourcesManager.QueryPlaceholders placeholders = new DataSourcesManager.QueryPlaceholders(targetDomainId, getTargetProfileId().getUserId());
+			return dsMgr.executeQuery(targetDomainId, dataSourceQueryId, placeholders, pagination, debugReport, new FilterableArrayListHandler(), null, !cfieldsLicensed ? 10 : null);
+			
+		} catch (Throwable t) {
+			throw ExceptionUtils.wrapThrowable(t);
+		}
+	}
+	
+	/**
+	 * Returns a set of columns names guessed from DataSource Query execution result.
+	 * @param dataSourceQueryId The query ID.
+	 * @return Column names set.
+	 * @throws WTException 
+	 */
+	public Set<String> guessDataSourceQueryColumns(final String dataSourceQueryId) throws WTException {
+		Check.notEmpty(dataSourceQueryId, "dataSourceQueryId");
+		
+		try {
+			String targetDomainId = getTargetProfileId().getDomainId();
+			ensureProfileDomain(targetDomainId);
+			
+			DataSourcesManager dsMgr = wta.getDataSourcesManager();
+			DataSourcesManager.QueryPlaceholders placeholders = new DataSourcesManager.QueryPlaceholders(targetDomainId, getTargetProfileId().getUserId());
+			return dsMgr.guessQueryColumns(targetDomainId, dataSourceQueryId, placeholders);
+			
+		} catch (Throwable t) {
+			throw ExceptionUtils.wrapThrowable(t);
+		}
+	}
+	
+	/**
+	 * Returns a set of placeholder names found in DataSource Query SQL definition.
+	 * @param dataSourceQueryId The query ID.
+	 * @return Placeholder names set.
+	 * @throws WTException 
+	 */
+	public Set<String> extractDataSourceQueryPlaceholders(final String dataSourceQueryId) throws WTException {
+		Check.notEmpty(dataSourceQueryId, "dataSourceQueryId");
+		
+		try {
+			String targetDomainId = getTargetProfileId().getDomainId();
+			ensureProfileDomain(targetDomainId);
+			
+			DataSourcesManager dsMgr = wta.getDataSourcesManager();
+			return dsMgr.extractQueryPlaceholders(targetDomainId, dataSourceQueryId);
+			
+		} catch (Throwable t) {
+			throw ExceptionUtils.wrapThrowable(t);
+		}
+	}
+	
+	/**
+	 * Returns a list of available DataSources.
+	 * @return Map of data-sources by their IDs.
+	 * @throws WTException 
+	 */
+	public Map<String, DataSourcePooled> listDataSources() throws WTException {
+		try {
+			String targetDomainId = getTargetProfileId().getDomainId();
+			ensureProfileDomain(targetDomainId);
+			
+			DataSourcesManager dsMgr = wta.getDataSourcesManager();
+			return dsMgr.listDataSources(targetDomainId);
+			
+		} catch (Throwable t) {
+			throw ExceptionUtils.wrapThrowable(t);
+		}
+	}
+	
+	/**
+	 * Returns a list of available DataSource Queries.
+	 * @return Map of queries by their IDs.
+	 * @throws WTException 
+	 */
+	public Map<String, DataSourceQuery> listDataSourceQueries() throws WTException {
+		try {
+			String targetDomainId = getTargetProfileId().getDomainId();
+			ensureProfileDomain(targetDomainId);
+			
+			DataSourcesManager dsMgr = wta.getDataSourcesManager();
+			return dsMgr.listDataSourceQueries(targetDomainId);
+			
+		} catch (Throwable t) {
+			throw ExceptionUtils.wrapThrowable(t);
 		}
 	}
 	
@@ -1789,17 +2100,18 @@ public class CoreManager extends BaseManager {
 		return ManagerUtils.createCustomPanel(opanel, fieldIds, tagIds);
 	}
 	
-	private CustomPanel doCustomPanelUpdate(boolean insert, Connection con, CustomPanel panel) throws WTException {
+	private CustomPanel doCustomPanelUpdate(Connection con, String domainId, String serviceId, String panelId, CustomPanelBase panel) throws WTException {
 		TagDAO tagDao = TagDAO.getInstance();
 		CustomPanelDAO cupDao = CustomPanelDAO.getInstance();
 		CustomPanelFieldDAO cupfDao = CustomPanelFieldDAO.getInstance();
 		CustomPanelTagDAO cuptDao = CustomPanelTagDAO.getInstance();
 		
-		OCustomPanel opanel = ManagerUtils.createOCustomPanel(panel);
-		if (opanel.getDomainId() == null) opanel.setDomainId(getTargetProfileId().getDomainId());
+		OCustomPanel opanel = ManagerUtils.fillOCustomPanel(new OCustomPanel(), panel);
+		opanel.setDomainId(domainId);
+		opanel.setServiceId(serviceId);
 		
-		int ret = -1;
-		if (insert) {
+		int ret;
+		if (panelId == null) {
 			opanel.setCustomPanelId(cupDao.generateCustomPanelId());
 			ret = cupDao.insert(con, opanel);
 			if (panel.getFields() != null) {
@@ -1814,6 +2126,7 @@ public class CoreManager extends BaseManager {
 			}
 			
 		} else {
+			opanel.setCustomPanelId(panelId);
 			ret = cupDao.update(con, opanel);
 			cupfDao.deleteByPanel(con, opanel.getCustomPanelId());
 			if (panel.getFields() != null) {
@@ -1832,22 +2145,24 @@ public class CoreManager extends BaseManager {
 		return (ret == 1) ? ManagerUtils.createCustomPanel(opanel, panel.getFields(), panel.getTags()) : null;
 	}
 	
-	private CustomField doCustomFieldUpdate(boolean insert, Connection con, CustomField field) throws WTException {
+	private CustomField doCustomFieldUpdate(Connection con, String domainId, String serviceId, String fieldId, CustomFieldBase customField) throws WTException {
 		CustomFieldDAO cufDao = CustomFieldDAO.getInstance();
 		
-		OCustomField ofield = ManagerUtils.createOCustomField(field);
-		if (ofield.getDomainId() == null) ofield.setDomainId(getTargetProfileId().getDomainId());
+		OCustomField ofield = ManagerUtils.fillOCustomField(new OCustomField(), customField);
+		ofield.setDomainId(domainId);
+		ofield.setServiceId(serviceId);
 		ManagerUtils.validate(ofield);
 		
-		int ret = -1;
-		if (insert) {
+		int ret;
+		if (fieldId == null) {
 			ofield.setCustomFieldId(cufDao.generateCustomFieldId());
 			ret = cufDao.insert(con, ofield, BaseDAO.createRevisionTimestamp());
 		} else {
+			ofield.setCustomFieldId(fieldId);
 			ret = cufDao.update(con, ofield, BaseDAO.createRevisionTimestamp());
 		}
 		
-		return (ret == 1) ? ManagerUtils.createCustomField(ofield) : null;
+		return (ret == 1) ? ManagerUtils.fillCustomField(new CustomField(), ofield) : null;
 	}
 	
 	public List<AuditLog> listAuditLog(final String serviceId, final String context, final String action, final String referenceId) throws WTException {
@@ -3506,5 +3821,14 @@ public class CoreManager extends BaseManager {
 	
 	private enum AuditAction {
 		CREATE, UPDATE, DELETE, MOVE
+	}
+	
+	public static enum CustomFieldListOptions implements BitFlagEnum {
+		SEARCHABLE(1), PREVIEWABLE(2);
+		
+		private int value = 0;
+		private CustomFieldListOptions(int value) { this.value = value; }
+		@Override
+		public int value() { return this.value; }
 	}
 }

@@ -34,13 +34,9 @@
 package com.sonicle.webtop.core.admin.bol.js;
 
 import com.sonicle.commons.FlagUtils;
-import com.sonicle.commons.LangUtils;
-import com.sonicle.commons.l4j.AbstractProduct;
-import com.sonicle.commons.l4j.HardwareID;
 import com.sonicle.commons.l4j.ProductLicense;
 import com.sonicle.commons.l4j.ProductLicense.LicenseInfo;
 import com.sonicle.commons.time.DateTimeUtils;
-import com.sonicle.webtop.core.app.WT;
 import com.sonicle.webtop.core.app.util.ProductUtils;
 import com.sonicle.webtop.core.model.ServiceLicense;
 import com.sonicle.webtop.core.model.ServiceLicenseLease;

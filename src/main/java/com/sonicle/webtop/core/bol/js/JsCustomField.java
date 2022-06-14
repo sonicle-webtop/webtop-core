@@ -35,9 +35,11 @@ package com.sonicle.webtop.core.bol.js;
 import com.sonicle.commons.EnumUtils;
 import com.sonicle.commons.web.json.CompositeId;
 import com.sonicle.webtop.core.model.CustomField;
+import com.sonicle.webtop.core.model.CustomFieldBase;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.stream.Collectors;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  *
@@ -56,6 +58,7 @@ public class JsCustomField {
 	public ArrayList<Prop> props;
 	public ArrayList<Value> values;
 	public ArrayList<I18nValue> labelI18n;
+	public String queryId;
 	
 	public JsCustomField(CustomField field) {
 		id = new CompositeId(field.getServiceId(), field.getFieldId()).toString();
@@ -65,40 +68,48 @@ public class JsCustomField {
 		name = field.getName();
 		description = field.getDescription();
 		type = EnumUtils.toSerializedName(field.getType());
+		
 		searchable = field.getSearchable();
 		previewable = field.getPreviewable();
+		queryId = field.getQueryId();
+		
+		// Properties...
 		props = new ArrayList<>(field.getProps().size());
 		for (Map.Entry<String, String> entry : field.getProps().entrySet()) {
 			props.add(new Prop(entry.getKey(), entry.getValue()));
 		}
+		// Values...
 		values = new ArrayList<>(field.getValues().size());
 		for (Map.Entry<String, String> entry : field.getValues().entrySet()) {
 			values.add(new Value(entry.getKey(), entry.getValue(), values.size()));
 		}
+		// Labels...
 		labelI18n = new ArrayList<>(field.getLabelI18n().size());
 		for (Map.Entry<String, String> entry : field.getLabelI18n().entrySet()) {
 			labelI18n.add(new I18nValue(entry.getKey(), entry.getValue()));
 		}
 	}
 	
-	public CustomField toCustomField() {
-		CustomField field = new CustomField();
+	public CustomFieldBase createCustomField() {
+		CustomFieldBase field = new CustomFieldBase();
 		
-		field.setDomainId(domainId);
-		field.setServiceId(serviceId);
-		field.setFieldId(fieldId);
 		field.setName(name);
 		field.setDescription(description);
 		field.setType(EnumUtils.forSerializedName(type, CustomField.Type.class));
+		
 		field.setSearchable(searchable);
 		field.setPreviewable(previewable);
+		field.setQueryId(queryId);
+		
+		// Properties...
 		if ((props != null) && !props.isEmpty()) {
 			field.setProps(
 				props.stream()
-					.filter(item -> (item.name != null) && (item.value != null))
+					.filter(item -> (item.name != null && !isVirtualProp(item.name)) && (item.value != null))
 					.collect(Collectors.toMap(item -> item.name, item -> item.value, (ov, nv) -> nv, CustomField.Props::new))
 			);
 		}
+		// Values...
 		if ((values != null) && !values.isEmpty()) {
 			field.setValues(
 				values.stream()
@@ -109,6 +120,7 @@ public class JsCustomField {
 					.collect(Collectors.toMap(item -> item.key, item -> item.desc, (ov, nv) -> nv, CustomField.Values::new))
 			);	
 		}
+		// Labels...
 		if ((labelI18n != null) && !labelI18n.isEmpty()) {
 			field.setLabelI18n(
 				labelI18n.stream()
@@ -118,6 +130,10 @@ public class JsCustomField {
 		}
 		
 		return field;
+	}
+	
+	private static boolean isVirtualProp(String name) {
+		return StringUtils.equalsAny(name, "searchable", "previewable", "queryId");
 	}
 	
 	public static class Prop {

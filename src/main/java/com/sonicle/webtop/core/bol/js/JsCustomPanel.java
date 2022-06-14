@@ -32,8 +32,9 @@
  */
 package com.sonicle.webtop.core.bol.js;
 
-import com.sonicle.commons.web.json.CompositeId;
+import com.sonicle.commons.web.json.CId;
 import com.sonicle.webtop.core.model.CustomPanel;
+import com.sonicle.webtop.core.model.CustomPanelBase;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.Map;
@@ -54,36 +55,42 @@ public class JsCustomPanel {
 	public String tags;
 	public ArrayList<Field> assocFields;
 	public ArrayList<I18nValue> titleI18n;
+	public ArrayList<Prop> props;
 	
 	public JsCustomPanel(CustomPanel panel) {
-		id = new CompositeId(panel.getServiceId(), panel.getPanelId()).toString();
+		id = CId.build(panel.getServiceId(), panel.getPanelId()).toString();
 		panelId = panel.getPanelId();
 		domainId = panel.getDomainId();
 		serviceId = panel.getServiceId();
 		name = panel.getName();
 		description = panel.getDescription();
-		tags = new CompositeId(panel.getTags()).toString();
+		tags = CId.build(panel.getTags()).toString();
+		// Associated fields...
 		assocFields = new ArrayList<>(panel.getFields().size());
 		for (String fieldId : panel.getFields()) {
 			assocFields.add(new Field(fieldId, assocFields.size()));
 		}
+		// Titles...
 		titleI18n = new ArrayList<>(panel.getTitleI18n().size());
 		for (Map.Entry<String, String> entry : panel.getTitleI18n().entrySet()) {
 			titleI18n.add(new JsCustomPanel.I18nValue(entry.getKey(), entry.getValue()));
 		}
+		// Properties...
+		props = new ArrayList<>(panel.getProps().size());
+		for (Map.Entry<String, String> entry : panel.getProps().entrySet()) {
+			props.add(new Prop(entry.getKey(), entry.getValue()));
+		}
 	}
 	
-	public CustomPanel toCustomPanel() {
-		CustomPanel field = new CustomPanel();
+	public CustomPanelBase createCustomPanel() {
+		CustomPanelBase panel = new CustomPanelBase();
 		
-		field.setPanelId(panelId);
-		field.setDomainId(domainId);
-		field.setServiceId(serviceId);
-		field.setName(name);
-		field.setDescription(description);
-		field.setTags(new LinkedHashSet<>(new CompositeId().parse(tags).getTokens()));
+		panel.setName(name);
+		panel.setDescription(description);
+		panel.setTags(new LinkedHashSet<>(new CId(tags).getTokens()));
+		// Associated fields...
 		if ((assocFields != null) && !assocFields.isEmpty()) {
-			field.setFields(
+			panel.setFields(
 				assocFields.stream()
 					.filter(item -> (item.id != null))
 					.sorted((v1, v2) -> {
@@ -93,15 +100,24 @@ public class JsCustomPanel {
 					.collect(Collectors.toCollection(LinkedHashSet::new))
 			);	
 		}
+		// Labels...
 		if ((titleI18n != null) && !titleI18n.isEmpty()) {
-			field.setTitleI18n(
+			panel.setTitleI18n(
 				titleI18n.stream()
 					.filter(item -> (item.tag != null) && (item.txt != null))
-					.collect(Collectors.toMap(item -> item.tag, item -> item.txt, (ov, nv) -> nv, CustomPanel.TitleI18n::new))
+					.collect(Collectors.toMap(item -> item.tag, item -> item.txt, (ov, nv) -> nv, CustomPanelBase.TitleI18n::new))
+			);
+		}
+		// Properties...
+		if ((props != null) && !props.isEmpty()) {
+			panel.setProps(
+				props.stream()
+					.filter(item -> (item.name != null) && (item.value != null))
+					.collect(Collectors.toMap(item -> item.name, item -> item.value, (ov, nv) -> nv, CustomPanelBase.Props::new))
 			);
 		}
 		
-		return field;
+		return panel;
 	}
 	
 	public static class Field {
@@ -121,6 +137,16 @@ public class JsCustomPanel {
 		public I18nValue(String tag, String txt) {
 			this.tag = tag;
 			this.txt = txt;
+		}
+	}
+	
+	public static class Prop {
+		public String name;
+		public String value;
+		
+		public Prop(String name, String value) {
+			this.name = name;
+			this.value = value;
 		}
 	}
 }

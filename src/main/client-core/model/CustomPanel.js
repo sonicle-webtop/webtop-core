@@ -35,7 +35,8 @@ Ext.define('Sonicle.webtop.core.model.CustomPanel', {
 	requires: [
 		'Sonicle.data.writer.Json',
 		'Sonicle.webtop.core.model.CustomPanelField',
-		'Sonicle.webtop.core.model.I18nValue'
+		'Sonicle.webtop.core.model.I18nValue',
+		'Sonicle.webtop.core.model.CustomPanelProp'
 	],
 	proxy: WTF.apiProxy(WT.ID, 'ManageCustomPanel', 'data', {
 		writer: {
@@ -57,6 +58,7 @@ Ext.define('Sonicle.webtop.core.model.CustomPanel', {
 	],
 	hasMany: [
 		WTF.hasMany('assocFields', 'Sonicle.webtop.core.model.CustomPanelField'),
-		WTF.hasMany('titleI18n', 'Sonicle.webtop.core.model.I18nValue')
+		WTF.hasMany('titleI18n', 'Sonicle.webtop.core.model.I18nValue'),
+		WTF.hasMany('props', 'Sonicle.webtop.core.model.CustomPanelProp')
 	]
 });

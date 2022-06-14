@@ -31,6 +31,7 @@
  * display the words "Copyright (C) 2019 Sonicle S.r.l.".
  */
 Ext.define('Sonicle.webtop.core.ux.data.CustomFieldValueModel', {
+	alternateClassName: ['WTA.ux.data.CustomFieldValueModel'],
 	extend: 'WTA.ux.data.BaseModel',
 	
 	identifier: 'negativestring',
@@ -53,5 +54,28 @@ Ext.define('Sonicle.webtop.core.ux.data.CustomFieldValueModel', {
 	
 	setValue: function(value) {
 		this.set(this.get('vtype'), value);
+	},
+	
+	statics: {
+		/**
+		 * This implicitly reflects implementation in ObjCustomFieldValue.java 
+		 * where a fieldType is mapped to a vtype, referencing a primitive value.
+		 */
+		convertValue: function(ftype, value) {
+			var SoO = Sonicle.Object;
+			if ('number' === ftype) {
+				return SoO.numberValue(value);
+			} else if ('date' === ftype) {
+				return SoO.dateValue(value);
+			} else if ('time' === ftype) {
+				return SoO.timeValue(value);
+			} else if ('datetime' === ftype) {
+				return SoO.dateTimeValue(value);
+			} else if ('checkbox' === ftype) {
+				return SoO.booleanValue(value);
+			} else {
+				return SoO.stringValue(value);
+			}
+		}
 	}
 });

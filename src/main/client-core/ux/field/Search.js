@@ -34,6 +34,13 @@ Ext.define('Sonicle.webtop.core.ux.field.Search', {
 	alternateClassName: 'WTA.ux.field.Search',
 	extend: 'Sonicle.form.field.search.Field',
 	alias: ['widget.wtsearchfield'],
+	requires: [
+		'Sonicle.Object',
+		'Sonicle.String'
+	],
+	uses: [
+		'Sonicle.webtop.core.ux.panel.CustomFieldsBase'
+	],
 	
 	width: 400,
 	
@@ -90,8 +97,8 @@ Ext.define('Sonicle.webtop.core.ux.field.Search', {
 	 */
 	highlight: function(el, querySelector) {
 		var me = this,
-				SoSS = Sonicle.SearchString,
-				keywords = [], queryObject;
+			SoSS = Sonicle.SearchString,
+			keywords = [], queryObject;
 		
 		if (!Ext.isEmpty(me.getValue())) {
 			queryObject = SoSS.toQueryObject(SoSS.parseHumanQuery(me.getValue()));
@@ -161,26 +168,31 @@ Ext.define('Sonicle.webtop.core.ux.field.Search', {
 	},
 	
 	statics: {
-		customFieldDefs2Fields: function(rawDefs) {
+		customFieldDefs2Fields: function(serviceId, rawDefs) {
 			var defObj = Ext.JSON.decode(rawDefs, true),
-					fields = [], cfg;
+				fields = [], cfg;
 			
 			if (defObj) {
 				Ext.iterate(defObj, function(field, indx) {
-					cfg = WTA.ux.field.Search._customFieldCfg(field);
+					cfg = WTA.ux.field.Search._customFieldCfg(serviceId, field);
 					if (cfg) fields.push(cfg);
 				});
 			}
 			return fields;
 		},
 		
-		_customFieldCfg: function(field) {
-			var ftype = field.type,
-					cfg = {
-						name: 'cf_' + field.name,
-						mapping: 'cfield|' + field.id,
-						label: field.label
-					};
+		_customFieldCfg: function(serviceId, field) {
+			var WTCFB = Sonicle.webtop.core.ux.panel.CustomFieldsBase,
+				ftype = field.type,
+				fprops = field.props,
+				dependsOn = {
+					data: Ext.JSON.decode(fprops['dataDependsOn'], true)
+				},
+				cfg = {
+					name: 'cf_' + field.name,
+					mapping: 'cfield|' + field.id,
+					label: field.label
+				};
 			
 			if ('text' === ftype || 'textarea' === ftype) {
 				return Ext.apply(cfg, {type: 'string'});
@@ -208,14 +220,19 @@ Ext.define('Sonicle.webtop.core.ux.field.Search', {
 				});
 				
 			} else if ('datetime' === ftype) {
-				//TODO: Add support to this when customFields will be extendes.
+				//TODO: Add support to this when customFields will be extended!!
 				return null;
+				
+			} else if ('checkbox' === ftype) {
+				return Ext.apply(cfg, {type: 'boolean'});
 				
 			} else if ('combobox' === ftype) {
 				return Ext.apply(cfg, {
 					type: 'combo',
 					customConfig: {
 						store: field.values,
+						valueField: 'field1',
+						displayField: 'field2',
 						typeAhead: true,
 						queryMode: 'local',
 						forceSelection: true,
@@ -225,8 +242,113 @@ Ext.define('Sonicle.webtop.core.ux.field.Search', {
 					}
 				});
 				
-			} else if ('checkbox' === ftype) {
-				return Ext.apply(cfg, {type: 'boolean'});
+			} else if ('comboboxds' === ftype) {
+				var pageSize = Sonicle.webtop.core.ux.panel.CustomFieldsBase.parseAsPageSize(fprops['pageSize']),
+					sdo;
+				
+				if (Ext.isObject(dependsOn.data)) {
+					sdo = {
+						parentField: 'cf_' + dependsOn.data.parentField,
+						onBeforeLoadHandlerFn: WTCFB.generateDSFieldsStoreOnBeforeLoadDoFn(dependsOn.data.placeholder)
+					};
+				}
+				
+				return Ext.apply(cfg, {
+					type: 'combo',
+					storeDependsOn: sdo,
+					customConfig: {
+						autoLoadOnValue: true,
+						autoLoadOnQuery: true,
+						store: {
+							type: 'array',
+							proxy: WTF.proxy(WT.ID, 'CustomFieldDataSourceQuery', null, {
+								extraParams: {
+									fieldServiceId: serviceId,
+									fieldId: field.id,
+									pagination: pageSize !== null
+								}
+							}),
+							fields: ['field1', 'field2']
+						},
+						valueField: 'field1',
+						displayField: 'field2'
+					}
+				});
+				
+			} else if ('tag' === ftype) {
+				return Ext.apply(cfg, {
+					type: 'tag',
+					customConfig: {
+						store: field.values,
+						valueField: 'field1',
+						displayField: 'field2'
+					}
+				});
+				
+			} else if ('tagds' === ftype) {
+				var sdo;
+				
+				if (Ext.isObject(dependsOn.data)) {
+					sdo = {
+						parentField: 'cf_' + dependsOn.data.parentField,
+						onBeforeLoadHandlerFn: WTCFB.generateDSFieldsStoreOnBeforeLoadDoFn(dependsOn.data.placeholder)
+					};
+				}
+				
+				return Ext.apply(cfg, {
+					type: 'tag',
+					storeDependsOn: sdo,
+					customConfig: {
+						autoLoadOnValue: true,
+						store: {
+							type: 'array',
+							autoLoad: true,
+							proxy: WTF.proxy(WT.ID, 'CustomFieldDataSourceQuery', null, {
+								extraParams: {
+									fieldServiceId: serviceId,
+									fieldId: field.id
+								}
+							}),
+							fields: ['field1', 'field2']
+						},
+						valueField: 'field1',
+						displayField: 'field2'
+					}
+				});
+				
+			} else if ('contactpicker' === ftype && WT.hasService('com.sonicle.webtop.contacts')) {
+				var categoryIds = Sonicle.String.split(fprops['contactPickerCategoryIds'], ','),
+					sdo;
+				
+				if (Ext.isObject(dependsOn.data)) {
+					sdo = {
+						parentField: 'cf_' + dependsOn.data.parentField,
+						onBeforeLoadHandlerFn: WTCFB.generateContactPickerStoreOnBeforeLoadDoFn(dependsOn.data.keyword)
+					};
+				}
+				
+				return Ext.apply(cfg, {
+					type: 'combo',
+					storeDependsOn: sdo,
+					customConfig: {
+						typeAhead: true,
+						queryMode: 'remote',
+						forceSelection: true,
+						selectOnFocus: true,
+						triggerAction: 'all',
+						pageSize: 50,
+						autoLoadOnValue: true,
+						autoLoadOnQuery: true,
+						store: {
+							model: 'Sonicle.webtop.contacts.model.ContactLkp', // Model MUST be loaded by Contact's service!
+							proxy: WTF.proxy('com.sonicle.webtop.contacts', 'CustomFieldContactPicker', null, {
+								extraParams: Sonicle.Object.setProp({}, 'categoryIds', !Ext.isEmpty(categoryIds) ? Sonicle.Utils.toJSONArray(categoryIds) : undefined, true)
+							})
+						},
+						valueField: 'id',
+						displayField: 'displayName'
+					}
+				});
 				
 			} else {
 				return null;

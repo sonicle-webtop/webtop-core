@@ -913,6 +913,34 @@ public class CoreSettings {
 	 */
 	public static final String MEETING_JITSI_URL = "meeting.jitsi.url";
 	
+	/**
+	 * [domain+system]
+	 * [object[]]
+	 * Defines additional data-source types in addition to built-in ones:
+	 *  - proto: JDBC protocol
+	 *  - name: A name or description of the Driver
+	 *  - dialectMime: MimeType for SQL dialect, used for code editing (optional)
+	 *  - loadDriverClassName: The full Driver's className to load (optional)
+	 *  - databasePropName: The property name in which set target database instead of in the URL (optional)
+	 * 
+	 * [
+	 *   {
+	 *     "proto": "mysql",
+	 *     "name": "MySQL",
+	 *     "dialectMime": "text/x-mysql"
+	 *     "loadDriverClassName": "",
+	 *     "databasePropName": ""
+	 *   },
+	 *   {
+	 *     "proto": "reljdbc",
+	 *     "name": "Relativity",
+	 *     "loadDriverClassName": "relativity.jdbc.Driver",
+	 *     "databasePropName": ""
+	 *   }
+	 * ]
+	 */
+	public static final String DATASOURCE_MORE_TYPES = "datasource.more.types";
+	
 	public static class MeetingJitsiConfig {
 		public String name;
 		public String url;
@@ -960,6 +988,24 @@ public class CoreSettings {
 	
 	public static enum GeolocationProvider {
 		@SerializedName("ipstack") IPSTACK;
+	}
+	
+	public static class DataSourceTypeObj {
+		public String proto;
+		public String name;
+		public String dialectMime;
+		public String loadDriverClassName;
+		public String databasePropName;
+		
+		public static class List extends ArrayList<DataSourceTypeObj> {
+			public static DataSourceTypeObj.List fromJson(String value) {
+				return JsonResult.gson().fromJson(value, DataSourceTypeObj.List.class);
+			}
+
+			public static String toJson(DataSourceTypeObj.List value) {
+				return JsonResult.gson().toJson(value, DataSourceTypeObj.List.class);
+			}
+		}
 	}
 	
 	public static class LauncherLink {

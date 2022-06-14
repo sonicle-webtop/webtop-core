@@ -345,6 +345,8 @@ Ext.define('Sonicle.webtop.core.sdk.ModelView', {
 		me.unwait();
 		me.fireEvent('viewsave', me, success, model);
 		if (success) {
+			// Display any message set into response object as UI warning, request still succeeded!
+			WT.handleOperationMessage(op);
 			if (pass && pass.closeAfter) me.closeView(false);
 		}
 	},

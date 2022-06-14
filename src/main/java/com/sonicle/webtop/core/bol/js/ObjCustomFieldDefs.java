@@ -55,8 +55,8 @@ public class ObjCustomFieldDefs {
 	public ObjCustomFieldDefs(Collection<Panel> panels, Collection<Field> fields) {
 		this.panels = panels;
 		this.fields = fields.stream()
-					.filter(item -> item.id != null)
-					.collect(Collectors.toMap(item -> item.id, item -> item, (ov, nv) -> nv, HashMap<String, Field>::new));
+			.filter(item -> item.id != null)
+			.collect(Collectors.toMap(item -> item.id, item -> item, (ov, nv) -> nv, HashMap<String, Field>::new));
 	}
 	
 	public static String toJson(ObjCustomFieldDefs value) {
@@ -67,11 +67,17 @@ public class ObjCustomFieldDefs {
 		public String id;
 		public String title;
 		public Set<String> fields;
+		public HashMap<String, String> props;
+		public Boolean important;
 		
 		public Panel(CustomPanel fieldPanel, String languageTag) {
 			id = fieldPanel.getPanelId();
 			title = StringUtils.defaultIfBlank(fieldPanel.getTitleI18n().get(languageTag), fieldPanel.getName());
 			fields = fieldPanel.getFields();
+			props = new HashMap<>(fieldPanel.getProps().size());
+			for (Map.Entry<String, String> entry : fieldPanel.getProps().entrySet()) {
+				props.put(entry.getKey(), entry.getValue());
+			}
 		}
 	}
 	

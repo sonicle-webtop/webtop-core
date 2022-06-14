@@ -115,10 +115,14 @@ public class ObjCustomFieldValue {
 			return "ti";
 		} else if (CustomField.Type.DATE_TIME.equals(fieldType)) {
 			return "dt";
-		} else if (CustomField.Type.COMBOBOX.equals(fieldType)) {
+		} else if (CustomField.Type.COMBOBOX.equals(fieldType) || CustomField.Type.COMBOBOX_DATASOURCE.equals(fieldType)) {
+			return "st";
+		} else if (CustomField.Type.TAG.equals(fieldType) || CustomField.Type.TAG_DATASOURCE.equals(fieldType)) {
 			return "st";
 		} else if (CustomField.Type.CHECKBOX.equals(fieldType)) {
 			return "bo";
+		} else if (CustomField.Type.CONTACT_PICKER.equals(fieldType)) {
+			return "st";
 		} else {
 			return null;
 		}

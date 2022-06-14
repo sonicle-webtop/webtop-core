@@ -389,6 +389,10 @@ public class CoreServiceSettings extends BaseServiceSettings {
 		return urls.size() > 0 ? Pattern.compile("(?:" + StringUtils.join(urls, "|") + ")", Pattern.CASE_INSENSITIVE) : null;
 	}
 	
+	public List<DataSourceTypeObj> getDataSourceAdditionalTypes() {
+		return getObject(DATASOURCE_MORE_TYPES, new DataSourceTypeObj.List(), DataSourceTypeObj.List.class);
+	}
+	
 	public EditorPasteImportMode getEditorPasteImportMode() {
 		return getEnum(DEFAULT_PREFIX + EDITOR_PASTE_IMPORTMODE, EditorPasteImportMode.PROMPT, EditorPasteImportMode.class);
 	}

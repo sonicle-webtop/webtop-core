@@ -163,6 +163,8 @@ Ext.define('Sonicle.webtop.core.admin.Service', {
 							me.showDomainRolesUI(rec.parentNode, rec);
 						} else if (type === 'dlicenses') {
 							me.showDomainLicensesUI(rec.parentNode, rec);
+						} else if (type === 'ddatasources') {
+							me.showDomainDataSourcesUI(rec.parentNode, rec);	
 						} else if (type === 'dlauncherlinks') {
 							me.showDomainLauncherLinksUI(rec.parentNode, rec);
 						} else if (type === 'dpecbridge') {
@@ -431,6 +433,20 @@ Ext.define('Sonicle.webtop.core.admin.Service', {
 		
 		me.showTab(itemId, function() {
 			return Ext.create('Sonicle.webtop.core.admin.view.DomainLicenses', {
+				mys: me,
+				itemId: itemId,
+				domainId: node.get('_domainId'),
+				closable: true
+			});
+		});
+	},
+	
+	showDomainDataSourcesUI: function(domNode, node) {
+		var me = this,
+				itemId = WTU.forItemId(node.getId());
+		
+		me.showTab(itemId, function() {
+			return Ext.create('Sonicle.webtop.core.admin.view.DomainDataSources', {
 				mys: me,
 				itemId: itemId,
 				domainId: node.get('_domainId'),

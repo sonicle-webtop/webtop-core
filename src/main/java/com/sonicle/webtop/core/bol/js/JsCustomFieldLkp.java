@@ -33,7 +33,6 @@
 package com.sonicle.webtop.core.bol.js;
 
 import com.sonicle.commons.EnumUtils;
-import com.sonicle.commons.web.json.CompositeId;
 import com.sonicle.webtop.core.model.CustomField;
 
 /**
@@ -46,7 +45,6 @@ public class JsCustomFieldLkp {
 	public String type;
 	
 	public JsCustomFieldLkp(CustomField field) {
-		id = new CompositeId(field.getServiceId(), field.getFieldId()).toString();
 		id = field.getFieldId();
 		name = field.getName();
 		type = EnumUtils.toSerializedName(field.getType());

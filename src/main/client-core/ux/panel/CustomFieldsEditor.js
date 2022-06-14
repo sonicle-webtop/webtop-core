@@ -35,15 +35,32 @@ Ext.define('Sonicle.webtop.core.ux.panel.CustomFieldsEditor', {
 	extend: 'Sonicle.webtop.core.ux.panel.CustomFieldsBase',
 	alias: 'widget.wtcfieldseditorpanel',
 	requires: [
-		'Sonicle.plugin.FieldTooltip'
+		'Sonicle.String',
+		'Sonicle.plugin.FieldTooltip',
+		'Sonicle.form.field.Tag'
 	],
 	
 	constructor: function(cfg) {
 		var me = this;
-		
 		cfg.emptyItemTitle = WT.res('wtcfieldseditorpanel.empty.tit');
 		cfg.emptyItemText = WT.res('wtcfieldseditorpanel.empty.txt');
 		me.callParent([cfg]);
+	},
+	
+	initComponent: function() {
+		var me = this;
+		me.callParent(arguments);
+		if (me.mainView) {
+			me.mainView.on('beforemodelvalidate', me.onMainBeforeModelValidate, me);
+		}
+	},
+	
+	doDestroy: function() {
+		var me = this;
+		if (me.mainView) {
+			me.mainView.un('beforemodelvalidate', me.onMainBeforeModelValidate, me);
+		}
+		me.callParent();
 	},
 	
 	isValid: function() {
@@ -51,263 +68,204 @@ Ext.define('Sonicle.webtop.core.ux.panel.CustomFieldsEditor', {
 		return pnl.isXType('form') ? pnl.isValid() : true;
 	},
 	
-	createCustomFieldDef: function(panelId, field) {
+	createCustomFieldDef: function(panelId, field, cmpId) {
 		var me = this,
-				SU = Sonicle.Utils,
-				ftype = field.type,
-				fprops = field.props || {},
-				flabel = field.label,
-				//showTip = !Ext.isEmpty(field.desc),
-				valFoName = me.buildFieldFormulaName('val', panelId, field.id, ftype),
-				//parseWidth = function(s) { return Number.parseInt(s) + me.defaultLabelWidth; },
-				cfg;
+			SoS = Sonicle.String,
+			SoO = Sonicle.Object,
+			ftype = field.type,
+			fprops = field.props || {},
+			flabel = field.label,
+			//showTip = !Ext.isEmpty(field.desc),
+			//parseWidth = function(s) { return Number.parseInt(s) + me.defaultLabelWidth; },
+			dependsOn = {
+				data: Ext.JSON.decode(fprops['dataDependsOn'], true)
+			},
+			disabledExpr = fprops['disabledExpr'],
+			onChangeExpr = fprops['onChangeExpr'],
+			formulas = {},
+			bind = {},
+			listeners = {scope: me},
+			cfg,
+			foName;
 		
 		//if (showTip) label += ' <i class="fas fa-info-circle" aria-hidden="true"></i>';
 		
-		if (Sonicle.String.isIn(ftype, ['text', 'textarea', 'number', 'date', 'time', 'combobox'])) {
-			cfg = {
-				fieldLabel: flabel,
-				msgTarget: 'side',
-				allowBlank: !(fprops['required'] === 'true')
+		// Append main value binding formula
+		foName = me.buildFieldFormulaName('val', panelId, field.id, ftype);
+		SoO.setProp(formulas, foName, me.createFieldValueFormula(field));
+		bind['value'] = '{' + foName + '}';
+		
+		// If necessary, append disabled formula
+		if (Ext.isString(disabledExpr)) {
+			foName = me.buildFieldFormulaName('isDisabled', panelId, field.id, ftype);
+			SoO.setProp(formulas, foName, me.createFieldExprFormula(field, disabledExpr));
+			bind['disabled'] = '{' + foName + '}';
+		}
+		// If necessary, append select listener
+		if (Ext.isString(onChangeExpr) && SoS.isIn(ftype, ['date', 'time', 'combobox', 'comboboxds', 'tag', 'tagds', 'contactpicker'])) {
+			listeners['select'] = function(s, rec) {
+				me.evaluateExpr(onChangeExpr, true, {functions: true, transforms: true});
 			};
-			SU.applyProp(cfg, false, fprops, 'emptyText');
-			
-		} else {
-			cfg = {};
+			listeners['clear'] = function(s, rec) {
+				me.evaluateExpr(onChangeExpr, true, {functions: true, transforms: true});
+			};
 		}
 		
 		if ('text' === ftype) {
-			Ext.apply(cfg, {
+			cfg = {
 				xtype: 'textfield',
-				bind: '{' + valFoName + '}'
-			});
-			SU.applyProp(cfg, false, fprops, 'minLength');
-			SU.applyProp(cfg, false, fprops, 'maxLength');
-			SU.applyProp(cfg, false, fprops, 'width', Number.parseInt);
-			SU.applyProp(cfg, false, fprops, 'anchor');
+				reference: cmpId,
+				bind: bind,
+				allowBlank: !(fprops['required'] === 'true'),
+				msgTarget: 'side',
+				fieldLabel: flabel,
+				listeners: listeners
+			};
+			SoO.copyProp(cfg, false, fprops, 'emptyText');
+			SoO.copyProp(cfg, false, fprops, 'minLength');
+			SoO.copyProp(cfg, false, fprops, 'maxLength');
+			SoO.copyProp(cfg, false, fprops, 'width', Number.parseInt);
+			SoO.copyProp(cfg, false, fprops, 'anchor');
 			
 		} else if ('textarea' === ftype) {
-			Ext.apply(cfg, {
+			cfg = {
 				xtype: 'textareafield',
-				bind: '{' + valFoName + '}'
-			});
-			SU.applyProp(cfg, false, fprops, 'minLength');
-			SU.applyProp(cfg, false, fprops, 'maxLength');
-			SU.applyProp(cfg, false, fprops, 'width', Number.parseInt);
-			SU.applyProp(cfg, false, fprops, 'anchor');
-			SU.applyProp(cfg, false, fprops, 'autoGrow', 'grow');
+				reference: cmpId,
+				bind: bind,
+				allowBlank: !(fprops['required'] === 'true'),
+				msgTarget: 'side',
+				fieldLabel: flabel,
+				listeners: listeners
+			};
+			SoO.copyProp(cfg, false, fprops, 'emptyText');
+			SoO.copyProp(cfg, false, fprops, 'minLength');
+			SoO.copyProp(cfg, false, fprops, 'maxLength');
+			SoO.copyProp(cfg, false, fprops, 'width', Number.parseInt);
+			SoO.copyProp(cfg, false, fprops, 'anchor');
+			SoO.copyProp(cfg, false, fprops, 'autoGrow', 'grow');
 			
 		} else if ('number' === ftype) {
-			Ext.apply(cfg, {
+			cfg = {
 				xtype: 'numberfield',
-				bind: '{' + valFoName + '}'
-			});
-			SU.applyProp(cfg, false, fprops, 'minValue');
-			SU.applyProp(cfg, false, fprops, 'maxValue');
-			SU.applyProp(cfg, false, fprops, 'allowDecimals');
-			SU.applyProp(cfg, false, fprops, 'width', Number.parseInt);
-			SU.applyProp(cfg, false, fprops, 'anchor');
+				reference: cmpId,
+				bind: bind,
+				allowBlank: !(fprops['required'] === 'true'),
+				msgTarget: 'side',
+				fieldLabel: flabel,
+				listeners: listeners
+			};
+			SoO.copyProp(cfg, false, fprops, 'emptyText');
+			SoO.copyProp(cfg, false, fprops, 'minValue');
+			SoO.copyProp(cfg, false, fprops, 'maxValue');
+			SoO.copyProp(cfg, false, fprops, 'allowDecimals');
+			SoO.copyProp(cfg, false, fprops, 'width', Number.parseInt);
+			SoO.copyProp(cfg, false, fprops, 'anchor');
 			
 		} else if ('date' === ftype) {
-			Ext.apply(cfg, {
+			cfg = {
 				xtype: 'datefield',
-				bind: '{' + valFoName + '}',
+				reference: cmpId,
+				bind: bind,
 				startDay: WT.getStartDay(),
-				format: WT.getShortDateFmt()
-			});
+				format: WT.getShortDateFmt(),
+				allowBlank: !(fprops['required'] === 'true'),
+				msgTarget: 'side',
+				fieldLabel: flabel,
+				listeners: listeners
+			};
+			SoO.copyProp(cfg, false, fprops, 'emptyText');
 			
 		} else if ('time' === ftype) {
-			Ext.apply(cfg, {
-				xtype: 'timefield',
-				bind: '{' + valFoName + '}',
-				format: WT.getShortTimeFmt()
-			});
-			
-		} else if ('combobox' === ftype) {
-			Ext.apply(cfg, WTF[fprops['queryable'] === 'true' ? 'localCombo' : 'lookupCombo']('field1', 'field2', {
-				bind: '{' + valFoName + '}',
-				store: field.values
-			}));
-			if (cfg.allowBlank) {
-				Ext.apply(cfg, {
-					triggers: {
-						clear: WTF.clearTrigger()
-					}
-				});
-			}
-			SU.applyProp(cfg, false, fprops, 'width', Number.parseInt);
-			SU.applyProp(cfg, false, fprops, 'anchor');
-			
-		} else if ('checkbox' === ftype) {
-			Ext.apply(cfg, {
-				xtype: 'checkbox',
-				bind: '{' + valFoName + '}',
-				hideEmptyLabel: true,
-				boxLabel: flabel
-			});
-		}
-		
-		return {
-			formulas: SU.setProp({}, valFoName, me.createFieldValueFormula(field)),
-			fieldCfg: cfg
-		};
-	},
-	
-	createFieldValueFormula: function(field) {
-		var bind = this.buildValueBindName(field.id);
-		return Ext.apply(this.callParent(arguments), {
-			set: function(val) {
-				this.set(bind, val);
-				var sto = this.getStore('cvalues'), rec;
-				if (sto) {
-					rec = sto.getById(field.id);
-					if (rec) rec.setValue(val);
-				}
-			}
-		});
-	}
-	
-	/*
-	createCustomFieldDef: function(panelId, field) {
-		var me = this,
-				appPro = WTU.applyProp,
-				parseWidth = function(s) {
-					return Number.parseInt(s) + me.defaultLabelWidth;
-				},
-				ftype = field.type,
-				fprops = field.props || {},
-				showTip = !Ext.isEmpty(field.desc),
-				label = field.label,
-				foObj = {}, cfgObj = {}, otype, cfg, fo;
-		
-		//if (showTip) label += ' <i class="fas fa-info-circle" aria-hidden="true"></i>';
-		
-		if (Sonicle.String.isIn(ftype, ['text', 'textarea', 'number', 'date', 'time', 'combobox'])) {
 			cfg = {
-				fieldLabel: label,
-				msgTarget: 'side',
-				allowBlank: !(fprops['required'] === 'true')
-			};
-			appPro(cfg, false, fprops, 'emptyText');
-			
-		} else {
-			cfg = {};
-		}
-		
-		if (showTip) {
-			Ext.apply(cfg, {
-				tooltip: field.desc,
-				plugins: [{ptype: 'sofieldtooltip', tooltipTarget: 'label'}]
-			});
-		}
-		
-		if ('text' === ftype) {
-			otype = 'text';
-			fo = me.buildFieldFormulaName(panelId, field.id, otype);
-			Ext.apply(cfg, {
-				xtype: 'textfield',
-				bind: '{' + fo + '}'
-			});
-			appPro(cfg, false, fprops, 'minLength');
-			appPro(cfg, false, fprops, 'maxLength');
-			appPro(cfg, false, fprops, 'width', Number.parseInt);
-			appPro(cfg, false, fprops, 'anchor');
-			foObj[otype] = {};
-			foObj[otype][fo] = me.createFieldValueFormula(field);
-			cfgObj[otype] = cfg;
-			
-		} else if ('textarea' === ftype) {
-			otype = 'textarea';
-			fo = me.buildFieldFormulaName(panelId, field.id, otype);
-			Ext.apply(cfg, {
-				xtype: 'textareafield',
-				bind: '{' + fo + '}'
-			});
-			appPro(cfg, false, fprops, 'minLength');
-			appPro(cfg, false, fprops, 'maxLength');
-			appPro(cfg, false, fprops, 'width', Number.parseInt);
-			appPro(cfg, false, fprops, 'anchor');
-			appPro(cfg, false, fprops, 'autoGrow', 'grow');
-			foObj[otype] = {};
-			foObj[otype][fo] = me.createFieldValueFormula(field);
-			cfgObj[otype] = cfg;
-			
-		} else if ('number' === ftype) {
-			otype = 'number';
-			fo = me.buildFieldFormulaName(panelId, field.id, otype);
-			Ext.apply(cfg, {
-				xtype: 'numberfield',
-				bind: '{' + fo + '}'
-			});
-			appPro(cfg, false, fprops, 'minValue');
-			appPro(cfg, false, fprops, 'maxValue');
-			appPro(cfg, false, fprops, 'allowDecimals');
-			appPro(cfg, false, fprops, 'width', Number.parseInt);
-			appPro(cfg, false, fprops, 'anchor');
-			foObj[otype] = {};
-			foObj[otype][fo] = me.createFieldValueFormula(field);
-			cfgObj[otype] = cfg;
-			
-		} else if ('date' === ftype || 'datetime' === ftype) {
-			otype = 'date';
-			fo = me.buildFieldFormulaName(panelId, field.id, otype);
-			Ext.apply(cfg, {
-				xtype: 'datefield',
-				bind: '{' + fo + '}',
-				startDay: WT.getStartDay(),
-				format: WT.getShortDateFmt()
-			});
-			foObj[otype] = {};
-			foObj[otype][fo] = me.createFieldValueFormula(field);
-			cfgObj[otype] = cfg;
-			
-		} else if ('time' === ftype || 'datetime' === ftype) {
-			otype = 'time';
-			fo = me.buildFieldFormulaName(panelId, field.id, otype);
-			Ext.apply(cfg, {
 				xtype: 'timefield',
-				bind: '{' + fo + '}',
-				format: WT.getShortTimeFmt()
-			});
-			foObj[otype] = {};
-			foObj[otype][fo] = me.createFieldValueFormula(field);
-			cfgObj[otype] = cfg;
-			
-		} else if ('datetime' === ftype) {
-			Ext.apply(cfg, {
-				xtype: 'fieldcontainer',
-				fieldLabel: label,
-				combineErrors: true,
+				itemId: reference,
+				bind: bind,
+				format: WT.getShortTimeFmt(),
+				allowBlank: !(fprops['required'] === 'true'),
 				msgTarget: 'side',
-				layout: 'hbox',
-				defaults: {
-					//margin: '0 10 0 0'
-					hideLabel: true,
-					flex: 1
-				},
-				items: [
-					Ext.apply(cfgObj['date'], {
-						allowBlank: cfg.allowBlank
-						//margin: '0 5 0 0'
-						//width: 105
-					}),
-					Ext.apply(cfgObj['time'], {
-						allowBlank: cfg.allowBlank,
-						padding: '0 0 0 10'
-						//margin: '0 5 0 0'
-						//width: 80
-					})
-				]
-			});
-			cfgObj['datetime'] = cfg;
+				fieldLabel: flabel,
+				listeners: listeners
+			};
+			SoO.copyProp(cfg, false, fprops, 'emptyText');
 			
-		} else if ('combobox' === ftype) {
-			otype = 'combobox';
-			fo = me.buildFieldFormulaName(panelId, field.id, otype);
-			Ext.apply(cfg, WTF[fprops['queryable'] === 'true' ? 'localCombo' : 'lookupCombo']('field1', 'field2', {
-				bind: '{' + fo + '}',
-				store: field.values
-			}));
+		} else if ('checkbox' === ftype) {
+			cfg = {
+				xtype: 'checkbox',
+				reference: cmpId,
+				bind: bind,
+				hideEmptyLabel: true,
+				boxLabel: flabel,
+				listeners: listeners
+			};
+		
+		} else if (SoS.isIn(ftype, ['combobox', 'comboboxds'])) {
+			var pageSize = Sonicle.webtop.core.ux.panel.CustomFieldsBase.parseAsPageSize(fprops['pageSize']),
+				queryable = fprops['queryable'] === 'true';
+			
+			cfg = {
+				xtype: 'combo',
+				reference: cmpId,
+				bind: bind,
+				valueField: 'field1',
+				displayField: 'field2',
+				allowBlank: !(fprops['required'] === 'true'),
+				msgTarget: 'side',
+				fieldLabel: flabel,
+				listeners: listeners
+			};
+			
+			if (pageSize !== null) { // Remote pagination
+				Ext.apply(cfg, {
+					typeAhead: true,
+					queryMode: 'remote',
+					forceSelection: true,
+					selectOnFocus: true,
+					triggerAction: 'all',
+					pageSize: pageSize
+					//https://fiddle.sencha.com/#view/editor&fiddle/22im
+				});
+				
+			} else if (queryable) { // Combo with local filtering and forced selection
+				Ext.apply(cfg, {
+					typeAhead: true,
+					queryMode: 'local',
+					forceSelection: true,
+					selectOnFocus: true,
+					triggerAction: 'all'
+				});
+				
+			} else { // Combo with forced selection and NO filtering capabilities
+				Ext.apply(cfg, {
+					editable: false,
+					typeAhead: false,
+					forceSelection: true,
+					triggerAction: 'all'
+				});
+			}
+			
+			if ('comboboxds' === ftype) {
+				Ext.apply(cfg, {
+					autoLoadOnValue: true,
+					autoLoadOnQuery: true,
+					store: {
+						type: 'array',
+						//autoLoad: true,
+						proxy: WTF.proxy(WT.ID, 'CustomFieldDataSourceQuery', null, {
+							extraParams: {
+								fieldServiceId: me.serviceId,
+								fieldId: field.id,
+								pagination: pageSize !== null
+							}
+						}),
+						fields: ['field1', 'field2'],
+						listeners: Ext.isObject(dependsOn.data) ? {beforeload: me.generateDependsOnBeforeLoadListener(ftype, dependsOn.data)} : {}
+					}
+				});
+			} else {
+				Ext.apply(cfg, {
+					store: field.values
+				});
+			}
 			if (cfg.allowBlank) {
 				Ext.apply(cfg, {
 					triggers: {
@@ -315,30 +273,198 @@ Ext.define('Sonicle.webtop.core.ux.panel.CustomFieldsEditor', {
 					}
 				});
 			}
-			appPro(cfg, false, fprops, 'width', Number.parseInt);
-			appPro(cfg, false, fprops, 'anchor');
-			foObj[otype] = {};
-			foObj[otype][fo] = me.createFieldValueFormula(field);
-			cfgObj[otype] = cfg;
+			SoO.copyProp(cfg, false, fprops, 'emptyText');
+			SoO.copyProp(cfg, false, fprops, 'width', Number.parseInt);
+			SoO.copyProp(cfg, false, fprops, 'anchor');
 			
-		} else if ('checkbox' === ftype) {
-			otype = 'checkbox';
-			fo = me.buildFieldFormulaName(panelId, field.id, otype);
-			Ext.apply(cfg, {
-				xtype: 'checkbox',
-				bind: '{' + fo + '}',
-				hideEmptyLabel: true,
-				boxLabel: label
-			});
-			foObj[otype] = {};
-			foObj[otype][fo] = me.createFieldValueFormula(field);
-			cfgObj[otype] = cfg;
+		} else if (SoS.isIn(ftype, ['tag', 'tagds'])) {
+			cfg = {
+				xtype: 'sotagfield',
+				reference: cmpId,
+				bind: bind,
+				valueField: 'field1',
+				displayField: 'field2',
+				createNewOnEnter: false,
+				createNewOnBlur: false,
+				filterPickList: true,
+				forceSelection: true,
+				allowBlank: !(fprops['required'] === 'true'),
+				msgTarget: 'side',
+				fieldLabel: flabel,
+				listeners: listeners
+			};
+			if ('tagds' === ftype) {
+				Ext.apply(cfg, {
+					autoLoadOnValue: true,
+					store: {
+						type: 'array',
+						autoLoad: true,
+						proxy: WTF.proxy(WT.ID, 'CustomFieldDataSourceQuery', null, {
+							extraParams: {
+								fieldServiceId: me.serviceId,
+								fieldId: field.id
+							}
+						}),
+						fields: ['field1', 'field2'],
+						listeners: Ext.isObject(dependsOn.data) ? {beforeload: me.generateDependsOnBeforeLoadListener(ftype, dependsOn.data)} : {}
+					}
+				});
+			} else {
+				Ext.apply(cfg, {
+					store: field.values
+				});
+			}
+			SoO.copyProp(cfg, false, fprops, 'emptyText');
+			SoO.copyProp(cfg, false, fprops, 'width', Number.parseInt);
+			SoO.copyProp(cfg, false, fprops, 'anchor');
+			
+		} else if ('contactpicker' === ftype && WT.hasService('com.sonicle.webtop.contacts')) {
+			var categoryIds = SoS.split(fprops['contactPickerCategoryIds'], ','),
+				displayTpl = fprops['displayTpl'],
+				fieldCfg = {
+					xtype: 'combobox',
+					reference: cmpId,
+					bind: bind,
+					typeAhead: true,
+					queryMode: 'remote',
+					forceSelection: true,
+					selectOnFocus: true,
+					triggerAction: 'all',
+					pageSize: 50,
+					autoLoadOnValue: true,
+					autoLoadOnQuery: true,
+					valueField: 'id',
+					displayField: 'name',
+					store: {
+						//autoLoad: true,
+						model: 'Sonicle.webtop.contacts.model.ContactLkp', // Model MUST be loaded by Contact's service!
+						proxy: WTF.proxy('com.sonicle.webtop.contacts', 'CustomFieldContactPicker', null, {
+							extraParams: SoO.setProp({}, 'categoryIds', !Ext.isEmpty(categoryIds) ? Sonicle.Utils.toJSONArray(categoryIds) : undefined, true)
+						}),
+						listeners: Ext.isObject(dependsOn.data) ? {beforeload: me.generateDependsOnBeforeLoadListener(ftype, dependsOn.data)} : {}
+					},
+					listConfig: SoO.applyPairs({}, [Ext.isString(displayTpl) ? 'itemTpl' : null], [displayTpl]),
+					triggers: {
+						clear: WTF.clearTrigger()
+					},
+					listeners: listeners
+				};
+			SoO.copyProp(fieldCfg, false, fprops, 'emptyText');
+			
+			if (SoO.booleanValue(fprops['contactPickerNewButton'], true) === true) {
+				var apiDataExpr = fprops['contactPickerAddContactApiDataExpr'];
+				// Wraps field into a field container for button
+				cfg = {
+					xtype: 'fieldcontainer',
+					layout: {
+						type: 'hbox',
+						padding: '0 0 1 0' // fixes classic-theme bottom border issue
+					},
+					items: [
+						Ext.apply(fieldCfg, {
+							margin: '0 5 0 0',
+							flex: 1
+						}),
+						{
+							xtype: 'button',
+							ui: 'default-toolbar',
+							tooltip: WT.res('store.customFieldType.contactpicker.add.tip'),
+							iconCls: 'wt-icon-customField-contactpicker-add',
+							handler: function() {
+								var capi = WT.getServiceApi('com.sonicle.webtop.contacts');
+								if (capi) {
+									var data = {};
+									if (Ext.isString(apiDataExpr)) {
+										Ext.apply(data, SoO.objectValue(me.evaluateExpr(apiDataExpr, false, {silent: true, functions: true})[0], {}));
+									}
+									SoO.setProp(data, 'categoryId', !Ext.isEmpty(categoryIds) ? categoryIds[0] : undefined, true);
+									capi.addContact(data, {
+										dirty: true,
+										callback: function(success) {
+											if (success) {
+												var cmp = me.getFieldsContainer().lookupReference(cmpId);
+												if (cmp) cmp.getStore().reload();
+											}
+										}
+									});
+								}
+							}
+						}
+					],
+					fieldLabel: flabel
+				};
+				SoO.copyProp(cfg, false, fprops, 'width', Number.parseInt);
+				SoO.copyProp(cfg, false, fprops, 'anchor');
+				
+			} else {
+				cfg = Ext.apply(fieldCfg, {
+					fieldLabel: flabel
+				});
+				SoO.copyProp(cfg, false, fprops, 'width', Number.parseInt);
+				SoO.copyProp(cfg, false, fprops, 'anchor');
+			}	
 		}
 		
 		return {
-			formulas: foObj[ftype],
-			fieldCfg: cfgObj[ftype]
+			formulas: formulas,
+			fieldCfg: cfg,
+			dependsOn: dependsOn
 		};
 	},
-	*/
+	
+	privates: {
+		onMainBeforeModelValidate: function(s) {
+			var me = this;
+			if (me.cfCache) {
+				Ext.iterate(me.cfCache.onBeforeSaveExprs, function(expr) {
+					me.evaluateExpr(expr, true, {functions: true, transforms: true});
+				});
+			}
+		},
+		
+		analyzeDefObject: function(defObj) {
+			var result = this.callParent(arguments), obsExprs = [], expr;
+			if (defObj && result) {
+				// Collect exprs to run on beforeSave
+				Ext.iterate(defObj.panels, function(panel, indx) {
+					expr = panel.props['onBeforeSaveExpr'];
+					if (Ext.isString(expr)) obsExprs.push(expr);
+				});
+				result.onBeforeSaveExprs = obsExprs;
+			}
+			return result;
+		},
+
+		cacheDefObjectResult: function(result) {
+			var me = this;
+			me.callParent(arguments);
+			if (me.cfCache) {
+				me.cfCache.onBeforeSaveExprs = result.onBeforeSaveExprs;
+			}
+		},
+		
+		createFieldValueFormula: function(field) {
+			var bind = this.buildValueBindName(field.id);
+			return Ext.apply(this.callParent(arguments), {
+				set: function(val) {
+					this.set(bind, val);
+					var sto = this.getStore('cvalues'), rec;
+					if (sto) {
+						rec = sto.getById(field.id);
+						if (rec) rec.setValue(val);
+					}
+				}
+			});
+		},
+
+		createFieldExprFormula: function(field, expr) {
+			var me = this;
+			return {
+				bind: {bindTo: '{values}', deep: true},
+				get: function(val) {
+					return Sonicle.Object.booleanValue(me.evaluateExpr(expr, false, {silent: true, functions: true})[0]);
+				}
+			};
+		}
+	}
 });

@@ -33,11 +33,15 @@
  */
 package com.sonicle.webtop.core.admin;
 
+import com.sonicle.commons.BitFlag;
+import com.sonicle.commons.EnumUtils;
+import com.sonicle.commons.beans.PageInfo;
 import com.sonicle.commons.beans.SortInfo;
 import com.sonicle.commons.db.DbUtils;
 import com.sonicle.commons.qbuilders.conditions.Condition;
 import com.sonicle.commons.time.DateTimeRange;
 import com.sonicle.webtop.core.app.CoreManifest;
+import com.sonicle.webtop.core.app.DataSourcesManager;
 import com.sonicle.webtop.core.app.LicenseManager;
 import com.sonicle.webtop.core.app.LogbackPropertyDefiner;
 import com.sonicle.webtop.core.app.RunContext;
@@ -47,6 +51,8 @@ import com.sonicle.webtop.core.app.WebTopManager;
 import com.sonicle.webtop.core.app.WT;
 import com.sonicle.webtop.core.app.WebTopApp;
 import com.sonicle.webtop.core.app.WebTopProps;
+import com.sonicle.webtop.core.app.io.dbutils.FilterableArrayListHandler;
+import com.sonicle.webtop.core.app.io.dbutils.RowsAndCols;
 import com.sonicle.webtop.core.app.util.ExceptionUtils;
 import com.sonicle.webtop.core.app.util.LogbackHelper;
 import com.sonicle.webtop.core.bol.VDomainAccessLog;
@@ -71,6 +77,12 @@ import com.sonicle.webtop.core.dal.BaseDAO;
 import com.sonicle.webtop.core.dal.DomainAccessLogDAO;
 import com.sonicle.webtop.core.dal.DomainAccessLogPredicateVisitor;
 import com.sonicle.webtop.core.dal.UpgradeStatementDAO;
+import com.sonicle.webtop.core.model.DataSource;
+import com.sonicle.webtop.core.model.DataSourceBase;
+import com.sonicle.webtop.core.model.DataSourcePooled;
+import com.sonicle.webtop.core.model.DataSourceQuery;
+import com.sonicle.webtop.core.model.DataSourceQueryBase;
+import com.sonicle.webtop.core.model.DataSourceType;
 import com.sonicle.webtop.core.model.DomainAccessLog;
 import com.sonicle.webtop.core.model.DomainAccessLogDetail;
 import com.sonicle.webtop.core.model.DomainAccessLogQuery;
@@ -100,6 +112,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import net.sf.qualitycheck.Check;
+import org.apache.commons.dbutils.ResultSetHandler;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 
@@ -543,6 +556,145 @@ public class CoreAdminManager extends BaseManager {
 		RunContext.ensureIsWebTopAdmin();
 		
 		licMgr.revokeLicenseLease(domainId, productId, userIds);
+	}
+	
+	public Map<String, DataSourceType> listDataSourceTypes(final String domainId) throws WTException {
+		DataSourcesManager dsMgr = wta.getDataSourcesManager();
+		
+		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
+		RunContext.ensureIsWebTopAdmin();
+		
+		return dsMgr.listDataSourceTypes(domainId);
+	}
+	
+	public Map<String, DataSourcePooled> listDataSources(final String domainId) throws WTException {
+		DataSourcesManager dsMgr = wta.getDataSourcesManager();
+		
+		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
+		RunContext.ensureIsWebTopAdmin();
+		
+		return dsMgr.listDataSources(domainId);
+	}
+	
+	public DataSource getDataSource(final String domainId, final String dataSourceId) throws WTException {
+		DataSourcesManager dsMgr = wta.getDataSourcesManager();
+		
+		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
+		RunContext.ensureIsWebTopAdmin();
+		
+		return dsMgr.getDataSource(domainId, dataSourceId);
+	}
+	
+	public DataSource addDataSource(final String domainId, final DataSourceBase dataSource) throws WTException {
+		DataSourcesManager dsMgr = wta.getDataSourcesManager();
+		
+		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
+		RunContext.ensureIsWebTopAdmin();
+		
+		return dsMgr.addDataSource(domainId, dataSource);
+	}
+	
+	public void updateDataSource(final String domainId, final String dataSourceId, final DataSourceBase dataSource, final boolean setPassword) throws WTException {
+		DataSourcesManager dsMgr = wta.getDataSourcesManager();
+		
+		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
+		RunContext.ensureIsWebTopAdmin();
+		
+		dsMgr.updateDataSource(domainId, dataSourceId, dataSource, setPassword);
+	}
+	
+	public void deleteDataSource(final String domainId, final String dataSourceId) throws WTException {
+		DataSourcesManager dsMgr = wta.getDataSourcesManager();
+		
+		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
+		RunContext.ensureIsWebTopAdmin();
+		
+		dsMgr.deleteDataSource(domainId, dataSourceId);
+	}
+	
+	public void checkDataSourceConnection(final String domainId, final String dataSourceId) throws WTException {
+		DataSourcesManager dsMgr = wta.getDataSourcesManager();
+		
+		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
+		RunContext.ensureIsWebTopAdmin();
+		
+		dsMgr.checkDataSourceConnection(domainId, dataSourceId);
+	}
+	
+	public void checkDataSourceConnection(final String domainId, final String dataSourceType, final String serverName, final Integer serverPort, final String databaseName, final String username, final String password, final Map<String, String> props) throws WTException {
+		DataSourcesManager dsMgr = wta.getDataSourcesManager();
+		
+		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
+		RunContext.ensureIsWebTopAdmin();
+		
+		dsMgr.checkDataSourceConnection(domainId, dataSourceType, serverName, serverPort, databaseName, username, password, props);
+	}
+	
+	public DataSourceQuery getDataSourceQuery(final String domainId, final String queryId) throws WTException {
+		Check.notEmpty(domainId, "domainId");
+		Check.notEmpty(queryId, "queryId");
+		DataSourcesManager dsMgr = wta.getDataSourcesManager();
+		
+		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
+		RunContext.ensureIsWebTopAdmin();
+		
+		return dsMgr.getDataSourceQuery(domainId, queryId);
+	}
+	
+	public DataSourceQuery addDataSourceQuery(final String domainId, final String dataSourceId, final DataSourceQueryBase query) throws WTException {
+		Check.notEmpty(domainId, "domainId");
+		Check.notEmpty(dataSourceId, "dataSourceId");
+		DataSourcesManager dsMgr = wta.getDataSourcesManager();
+		
+		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
+		RunContext.ensureIsWebTopAdmin();
+		
+		return dsMgr.addDataSourceQuery(domainId, dataSourceId, query);
+	}
+	
+	public void updateDataSourceQuery(final String domainId, final String queryId, final DataSourceQueryBase query) throws WTException {
+		Check.notEmpty(domainId, "domainId");
+		Check.notEmpty(queryId, "queryId");
+		Check.notNull(query, "query");
+		DataSourcesManager dsMgr = wta.getDataSourcesManager();
+		
+		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
+		RunContext.ensureIsWebTopAdmin();
+		
+		dsMgr.updateDataSourceQuery(domainId, queryId, query);
+	}
+	
+	public void deleteDataSourceQuery(final String domainId, final String queryId) throws WTException {
+		Check.notEmpty(domainId, "domainId");
+		Check.notEmpty(queryId, "queryId");
+		DataSourcesManager dsMgr = wta.getDataSourcesManager();
+		
+		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
+		RunContext.ensureIsWebTopAdmin();
+		
+		dsMgr.deleteDataSourceQuery(domainId, queryId);
+	}
+	
+	public DataSourceBase.ExecuteQueryResult<RowsAndCols> executeDataSourceRawQuery(final String domainId, final String dataSourceId, final String rawSql, final Map<String, String> placeholdersValues, final PageInfo pagination, final boolean debugReport) throws WTException {
+		return executeDataSourceRawQuery(domainId, dataSourceId, rawSql, placeholdersValues, pagination, debugReport, new FilterableArrayListHandler());
+	}
+	
+	public <T> DataSourceBase.ExecuteQueryResult<T> executeDataSourceRawQuery(final String domainId, final String dataSourceId, final String rawSql, final Map<String, String> placeholdersValues, final PageInfo pagination, final boolean debugReport, final ResultSetHandler<T> resultSetHandler) throws WTException {
+		Check.notEmpty(dataSourceId, "dataSourceId");
+		Check.notNull(resultSetHandler, "resultSetHandler");
+		
+		try {
+			ensureProfileDomain(domainId);
+			
+			DataSourcesManager dsMgr = wta.getDataSourcesManager();
+			// Here in admin manager we do not have a real target user, so 
+			// currentUserId will be taken from incoming sqlPlaceholders.
+			DataSourcesManager.QueryPlaceholders placeholders = new DataSourcesManager.QueryPlaceholders(domainId, null, placeholdersValues);
+			return dsMgr.executeRawQuery(domainId, dataSourceId, rawSql, placeholders, pagination, debugReport, resultSetHandler, null);
+			
+		} catch (Throwable t) {
+			throw ExceptionUtils.wrapThrowable(t);
+		}
 	}
 	
 	public List<DirectoryUser> listDirectoryUsers(String domainId) throws WTException {

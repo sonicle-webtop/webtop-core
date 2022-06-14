@@ -218,7 +218,7 @@ Ext.define('Sonicle.webtop.core.view.CustomFields', {
 						disabled: '{!foAddEnabled}'
 					},
 					text: WT.res('act-add.lbl'),
-					iconCls: 'wt-icon-add',
+					iconCls: 'wt-icon-addCustomField',
 					handler: function() {
 						me.addCustomFieldUI();
 					}
@@ -241,16 +241,16 @@ Ext.define('Sonicle.webtop.core.view.CustomFields', {
 		});
 	},
 	
-	addCustomField: function(serviceId, data, opts) {
+	addCustomField: function(data, opts) {
 		opts = opts || {};
 		var me = this,
-				vw = WT.createView(me.mys.ID, 'view.CustomField', {
-					swapReturn: true,
-					viewCfg: {
-						serviceId: me.serviceId,
-						serviceName: me.serviceName
-					}
-				});
+			vw = WT.createView(me.mys.ID, 'view.CustomField', {
+				swapReturn: true,
+				viewCfg: {
+					serviceId: me.serviceId,
+					serviceName: me.serviceName
+				}
+			});
 		
 		vw.on('viewsave', function(s, success, model) {
 			Ext.callback(opts.callback, opts.scope || me, [success, model]);
@@ -258,22 +258,24 @@ Ext.define('Sonicle.webtop.core.view.CustomFields', {
 		vw.showView(function(s) {
 			vw.begin('new', {
 				data: Ext.apply(data || {}, {
-					serviceId: serviceId
+					serviceId: me.serviceId
 				})
 			});
 		});
 	},
 	
-	editCustomField: function(cid, opts) {
+	editCustomField: function(fieldId, opts) {
 		opts = opts || {};
 		var me = this,
-				vw = WT.createView(me.mys.ID, 'view.CustomField', {
-					swapReturn: true,
-					viewCfg: {
-						serviceId: me.serviceId,
-						serviceName: me.serviceName
-					}
-				});
+			vw = WT.createView(me.mys.ID, 'view.CustomField', {
+				swapReturn: true,
+				preventDuplicates: true,
+				tagSuffix: fieldId,
+				viewCfg: {
+					serviceId: me.serviceId,
+					serviceName: me.serviceName
+				}
+			});
 		
 		vw.on('viewsave', function(s, success, model) {
 			Ext.callback(opts.callback, opts.scope || me, [success, model]);
@@ -281,7 +283,7 @@ Ext.define('Sonicle.webtop.core.view.CustomFields', {
 		vw.showView(function(s) {
 			vw.begin('edit', {
 				data: {
-					id: cid
+					id: fieldId
 				}
 			});
 		});
@@ -290,7 +292,7 @@ Ext.define('Sonicle.webtop.core.view.CustomFields', {
 	privates: {
 		addCustomFieldUI: function() {
 			var me = this;
-			me.addCustomField(me.serviceId, null, {
+			me.addCustomField(null, {
 				callback: function() {
 					me.lref('gp').getStore().load();
 				}
@@ -320,7 +322,7 @@ Ext.define('Sonicle.webtop.core.view.CustomFields', {
 							fieldId: undefined,
 							name: Sonicle.Data.getDuplValue(me.lref('gp').getStore(), 'name', json.data.name)
 						});
-						me.addCustomField(me.serviceId, Sonicle.Utils.applyIfDefined({}, data), {
+						me.addCustomField(Sonicle.Utils.applyIfDefined({}, data), {
 							callback: function() {
 								me.lref('gp').getStore().load();
 							}
@@ -339,9 +341,11 @@ Ext.define('Sonicle.webtop.core.view.CustomFields', {
 				if (bid === 'yes') sto.remove(rec);
 			}, me);
 		}
-	},
+	}
 	
+	/*
 	statics: {
 		VIEW_TAG: 'cfields'
 	}
+	*/
 });

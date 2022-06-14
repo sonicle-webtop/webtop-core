@@ -10,6 +10,7 @@
 .wtadm-icon-play1Stmt { background-image: url('stmtPlay1_16.svg') !important; background-size: contain; }
 .wtadm-icon-playStmt { background-image: url('stmtPlay_16.svg') !important; background-size: contain; }
 .wtadm-icon-skipStmt { background-image: url('stmtSkip_16.svg') !important; background-size: contain; }
+.wtadm-icon-testConnection { background-image: url('testConnection_16.svg') !important; background-size: contain; }
 
 .wtadm-icon-maintenance-on { background-image: url('maintenance-on_16.svg') !important; background-size: contain; }
 .wtadm-icon-maintenance-off { background-image: url('maintenance-off_16.svg') !important; background-size: contain; }
@@ -38,6 +39,9 @@
 .wtadm-icon-licenseActivatorWiz { background-image: url('licenseActivator_16.svg') !important; background-size: contain; }
 .wtadm-icon-licenseAutoLease-on { background-image: url('licenseAutoLease-on_16.svg') !important; background-size: contain; }
 .wtadm-icon-licenseAutoLease-off { background-image: url('licenseAutoLease-off_16.svg') !important; background-size: contain; }
+.wtadm-icon-dataSources { background-image: url('dataSource_16.svg') !important; background-size: contain; }
+.wtadm-icon-dataSource { background-image: url('dataSource_16.svg') !important; background-size: contain; }
+.wtadm-icon-dataSourceQuery { background-image: url('dataSource-query_16.svg') !important; background-size: contain; }
 .wtadm-icon-virtualDomain { background-image: url('virtualDomain_16.svg') !important; background-size: contain; }
 .wtadm-icon-virtualEmail { background-image: url('virtualEmail_16.svg') !important; background-size: contain; }
 .wtadm-icon-pecBridge { background-image: url('pecBridge_16.svg') !important; background-size: contain; }

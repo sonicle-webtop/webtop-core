@@ -247,7 +247,7 @@ Ext.define('Sonicle.webtop.core.app.WTPrivate', {
 		var app = this.getApp(),
 				desc = app.getDescriptor(sid);
 		if (!desc) Ext.Error.raise('Service descriptor not found ['+sid+']');
-		return app.getViewportController().findServiceViewTag(desc.preNs(name));
+		return app.getViewportController().findServiceViewTag(desc.preNs(name), name);
 	},
 	
 	/**

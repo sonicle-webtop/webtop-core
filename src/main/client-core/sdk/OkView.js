@@ -48,11 +48,17 @@ Ext.define('Sonicle.webtop.core.sdk.OkView', {
 		var me = this,
 				vm = me.getVM();
 		vm.set('_return', 'ok');
-		me.fireEventArgs('viewok', Ext.Array.insert(me.viewokArgs(vm) || [], 0, [me]));
+		me.fireEventArgs('viewok', Ext.Array.push([me], me.createViewOkArgs(vm) || []));
 		me.closeView(false);
 	},
 	
-	viewokArgs: function(vm) {
-		return [];
+	privates: {
+		createViewOkArgs: function(vm) {
+			return [this.createViewOkData(vm)];
+		},
+		
+		createViewOkData: function(vm) {
+			return {};
+		}
 	}
 });

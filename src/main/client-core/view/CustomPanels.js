@@ -190,13 +190,13 @@ Ext.define('Sonicle.webtop.core.view.CustomPanels', {
 	addCustomPanel: function(serviceId, data, opts) {
 		opts = opts || {};
 		var me = this,
-				vw = WT.createView(me.mys.ID, 'view.CustomPanel', {
-					swapReturn: true,
-					viewCfg: {
-						serviceId: me.serviceId,
-						serviceName: me.serviceName
-					}
-				});
+			vw = WT.createView(me.mys.ID, 'view.CustomPanel', {
+				swapReturn: true,
+				viewCfg: {
+					serviceId: me.serviceId,
+					serviceName: me.serviceName
+				}
+			});
 		
 		vw.on('viewsave', function(s, success, model) {
 			Ext.callback(opts.callback, opts.scope || me, [success, model]);
@@ -212,16 +212,18 @@ Ext.define('Sonicle.webtop.core.view.CustomPanels', {
 		});
 	},
 	
-	editCustomPanel: function(cid, opts) {
+	editCustomPanel: function(panelId, opts) {
 		opts = opts || {};
 		var me = this,
-				vw = WT.createView(me.mys.ID, 'view.CustomPanel', {
-					swapReturn: true,
-					viewCfg: {
-						serviceId: me.serviceId,
-						serviceName: me.serviceName
-					}
-				});
+			vw = WT.createView(me.mys.ID, 'view.CustomPanel', {
+				swapReturn: true,
+				preventDuplicates: true,
+				tagSuffix: panelId,
+				viewCfg: {
+					serviceId: me.serviceId,
+					serviceName: me.serviceName
+				}
+			});
 		
 		vw.on('viewsave', function(s, success, model) {
 			Ext.callback(opts.callback, opts.scope || me, [success, model]);
@@ -229,7 +231,7 @@ Ext.define('Sonicle.webtop.core.view.CustomPanels', {
 		vw.showView(function(s) {
 			vw.begin('edit', {
 				data: {
-					id: cid
+					id: panelId
 				}
 			});
 		});
@@ -291,9 +293,11 @@ Ext.define('Sonicle.webtop.core.view.CustomPanels', {
 				if (bid === 'yes') sto.remove(rec);
 			}, me);
 		}
-	},
+	}
 	
+	/*
 	statics: {
 		VIEW_TAG: 'cpanels'
 	}
+	*/
 });

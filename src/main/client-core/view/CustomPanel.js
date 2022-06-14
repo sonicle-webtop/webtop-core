@@ -35,17 +35,25 @@ Ext.define('Sonicle.webtop.core.view.CustomPanel', {
 	extend: 'WTA.sdk.ModelView',
 	requires: [
 		'Sonicle.Data',
+		'Sonicle.Object',
 		'Sonicle.String',
+		'Sonicle.Utils',
 		'Sonicle.form.field.Tag',
 		'Sonicle.grid.column.Action',
 		'Sonicle.grid.column.Icon',
 		'Sonicle.grid.feature.RowLookup',
 		'Sonicle.grid.plugin.DDOrdering',
+		'Sonicle.form.field.pickerpanel.Picker',
 		'Sonicle.picker.List',
 		'Sonicle.plugin.FieldTooltip',
 		'WTA.ux.PickerWindow',
 		'Sonicle.webtop.core.model.CustomFieldLkp',
 		'Sonicle.webtop.core.model.CustomPanel'
+	],
+	uses: [
+		'WTA.ux.picker.CFDataSourceDataDependsOn',
+		'WTA.ux.picker.CFContactPickerDataDependsOn',
+		'WTA.ux.picker.CustomFieldExpr'
 	],
 	
 	/**
@@ -85,7 +93,7 @@ Ext.define('Sonicle.webtop.core.view.CustomPanel', {
 					return Sonicle.String.split(v, '|');
 				}, function(v) {
 					return Sonicle.String.join('|', v);
-			})
+			}),
 		});
 	},
 	
@@ -127,6 +135,7 @@ Ext.define('Sonicle.webtop.core.view.CustomPanel', {
 			})
 		});
 		
+		var propviewGroup = Ext.id(null, 'custfield-propview-');
 		me.add({
 			region: 'center',
 			xtype: 'container',
@@ -264,12 +273,64 @@ Ext.define('Sonicle.webtop.core.view.CustomPanel', {
 								me.addAct('add', {
 									text: WT.res('act-add.lbl'),
 									tooltip: null,
-									iconCls: 'wt-icon-add',
+									iconCls: 'wt-icon-addCustomField',
 									handler: function() {
 										me.showFieldPicker();
 									}
 								})
 							]
+						}, {
+							xtype: 'propertygrid',
+							itemId: 'props',
+							title: me.res('customPanel.props.tit'),
+							bind: {
+								store: '{record.props}'
+							},
+							viewConfig: {
+								deferEmptyText: false,
+								emptyText: me.res('customPanel.gp-props.emp')
+							},
+							features: [
+								{
+									ftype: 'grouping',
+									groupHeaderTpl: [
+										'{name:this.nameRes}',
+										{
+											nameRes: function(name) {
+												return me.res('customField.gp-props.group.'+name);
+											}
+										}
+									]
+								}
+							],
+							tbar: [
+								{
+									xtype: 'sotogglebutton',
+									toggleGroup: propviewGroup,
+									offIconCls: 'wt-icon-propView-hier-gray',
+									onIconCls: 'wt-icon-propView-hier',
+									allowDepress: false,
+									pressed: true,
+									toggleHandler: function(s, pressed) {
+										if (pressed) me.updatePropView('hier');
+									}
+								}, {
+									xtype: 'sotogglebutton',
+									toggleGroup: propviewGroup,
+									offIconCls: 'wt-icon-propView-sorted-gray',
+									onIconCls: 'wt-icon-propView-sorted',
+									allowDepress: false,
+									pressed: false,
+									toggleHandler: function(s, pressed) {
+										if (pressed) me.updatePropView('sorted');
+									}
+								}
+							],
+							nameColumnWidth: 180,
+							inferTypes: false,
+							sortableColumns: false,
+							border: false,
+							flex: 1
 						}
 					],
 					flex: 1
@@ -320,8 +381,35 @@ Ext.define('Sonicle.webtop.core.view.CustomPanel', {
 		
 		onViewLoad: function(s, success) {
 			var me = this,
-					mo = me.getModel();
+				mo = me.getModel();
 			
+			me.lref('fldname').focus(true);
+			if (success) {
+				Sonicle.Utils.configurePropertyGrid(me.lref('tabmain').getComponent('props'), {
+					'priority': {
+						displayName: me.res('customPanel.gp-props.priority'),
+						type: 'boolean',
+						renderer: me.booleanYesNoRenderer(),
+						editor: me.booleanYesNoEditor(),
+						defaultValue: false
+					},
+					'onBeforeSaveExpr': {
+						displayName: me.res('customPanel.gp-props.onBeforeSaveExpr'),
+						type: 'string',
+						renderer: me.exprRenderer(),
+						editor: {
+							xtype: 'sopickerpanelfield',
+							matchFieldWidth: false,
+							renderer: me.exprRenderer(true),
+							pickerEditorClass: 'WTA.ux.picker.CustomFieldExpr',
+							pickerEditorConfig: {
+								multiline: true
+							}
+						},
+						defaultValue: null
+					}
+				}, mo ? mo.props() : null);
+			}
 			if (me.mys.hasAuditUI()) {
 				if (me.isMode(me.MODE_NEW)) {
 					me.getAct('customPanelAuditLog').setDisabled(true);
@@ -329,8 +417,6 @@ Ext.define('Sonicle.webtop.core.view.CustomPanel', {
 					me.getAct('customPanelAuditLog').setDisabled(false);
 				}
 			}
-			
-			me.lref('fldname').focus(true);
 		},
 		
 		onFieldPickerPick: function(s, vals, recs) {
@@ -375,7 +461,7 @@ Ext.define('Sonicle.webtop.core.view.CustomPanel', {
 		
 		showFieldPicker: function() {
 			var me = this,
-					usedFields = Sonicle.Data.collectValues(me.getModel().assocFields());
+				usedFields = Sonicle.Data.collectValues(me.getModel().assocFields());
 			me.fieldPicker = me.createFieldPicker();
 			me.fieldPicker.getComponent(0).setSkipValues(usedFields);
 			me.fieldPicker.show();
@@ -408,6 +494,80 @@ Ext.define('Sonicle.webtop.core.view.CustomPanel', {
 					scope: me
 				}]
 			});
+		},
+		
+		updatePropView: function(view) {
+			var me = this,
+				sto = me.getModel().props();
+			if ('sorted' === view) {
+				sto.setGrouper(null);
+				sto.sort({
+					direction: 'ASC',
+					sorterFn: function(r1, r2) {
+						var res = function(rec) { return me.res('customField.gp-props.'+rec.get('name')); },
+							ord1 = res(r1),
+							ord2 = res(r2);
+						return (ord1 > ord2) ? 1 : (ord1 === ord2 ? 0 : -1);
+					}
+				});
+			} else {
+				sto.sort({
+					direction: 'ASC',
+					sorterFn: function(r1, r2) {
+						var ord1 = r1.get('index'),
+							ord2 = r2.get('index');
+						return (ord1 > ord2) ? 1 : (ord1 === ord2 ? 0 : -1);
+					}
+				});
+				sto.setGrouper({
+					property: 'group',
+					direction: 'ASC',
+					sorterFn: function(r1, r2) {
+						var CFP = Sonicle.webtop.core.model.CustomPanelProp,
+								ord1 = CFP.toGroupOrdinal(r1.get('group')),
+								ord2 = CFP.toGroupOrdinal(r2.get('group'));
+						return (ord1 > ord2) ? 1 : (ord1 === ord2 ? 0 : -1);
+					}
+				});
+			}
+		},
+		
+		exprRenderer: function(editor) {
+			if (editor === true) {
+				return function(v) {
+					return Ext.isEmpty(v) ? '' : WT.res('customField.gp-props.expr.ed.display');
+				};
+			} else {
+				return function(v) {
+					return Ext.htmlEncode(Ext.isEmpty(v) ? '' : WT.res('customField.gp-props.expr.display'));
+				};
+			}
+		},
+		
+		booleanYesNoRenderer: function() {
+			return function(v) {
+				var bool = Sonicle.Object.booleanValue(v);
+				return Ext.htmlEncode(bool === true ? WT.res('word.yes') : WT.res('word.no'));
+			};
+		},
+		
+		booleanYesNoEditor: function() {
+			return {
+				xtype: 'combobox',
+				editable: false,
+				store: [[true, WT.res('word.yes')], [false, WT.res('word.no')]]
+			};
+		},
+		
+		emptyTextRenderer: function(key) {
+			var me = this;
+			return function(v) {
+				if (Ext.isEmpty(v)) {
+					return '<span class="wt-theme-text-lighter2" style="font-size:0.9em;">' + Ext.htmlEncode(me.res(key)) + '</span>';
+				} else {
+					return v;
+				}
+			};
 		}
 	}
 });

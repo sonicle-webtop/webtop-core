@@ -61,6 +61,7 @@
 
 .wt-icon-customPanel { background-image: url('custompanel_16.svg') !important; background-size: contain; }
 .wt-icon-customField { background-image: url('customfield_16.svg') !important; background-size: contain; }
+.wt-icon-addCustomField { background-image: url('customfield-add_16.svg') !important; background-size: contain; }
 .wt-icon-customField-text { background-image: url('customfield-text_16.svg') !important; background-size: contain; }
 .wt-icon-customField-textarea { background-image: url('customfield-text_16.svg') !important; background-size: contain; }
 .wt-icon-customField-number { background-image: url('customfield-number_16.svg') !important; background-size: contain; }
@@ -68,8 +69,14 @@
 .wt-icon-customField-time { background-image: url('customfield-time_16.svg') !important; background-size: contain; }
 .wt-icon-customField-datetime { background-image: url('customfield-datetime_16.svg') !important; background-size: contain; }
 .wt-icon-customField-combobox { background-image: url('customfield-combobox_16.svg') !important; background-size: contain; }
+.wt-icon-customField-comboboxds { background-image: url('customfield-comboboxds_16.svg') !important; background-size: contain; }
 .wt-icon-customField-checkbox { background-image: url('customfield-checkbox_16.svg') !important; background-size: contain; }
 .wt-icon-customField-radios { background-image: url('customfield-radios_16.svg') !important; background-size: contain; }
+.wt-icon-customField-tag { background-image: url('customfield-tag_16.svg') !important; background-size: contain; }
+.wt-icon-customField-tagds { background-image: url('customfield-tagds_16.svg') !important; background-size: contain; }
+.wt-icon-customField-contactpicker { background-image: url('customfield-contactpicker_16.svg') !important; background-size: contain; }
+.wt-icon-customField-contactpicker-add { background-image: url('customfield-contactpicker-add_16.svg') !important; background-size: contain; }
+.wt-icon-sqlQueryEditor { background-image: url('sqlQueryEditor_16.svg') !important; background-size: contain; }
 .wt-icon-meeting { background-image: url('meeting_16.svg') !important; background-size: contain; }
 .wt-icon-newMeeting { background-image: url('meeting-new_16.svg') !important; background-size: contain; }
 
@@ -174,6 +181,14 @@
 .wt-icon-calDays-31 { background-image: url('cal-days-31_16.svg') !important; background-size: contain; }
 .wt-icon-calDays-60 { background-image: url('cal-days-60_16.svg') !important; background-size: contain; }
 .wt-icon-calDays-90 { background-image: url('cal-days-90_16.svg') !important; background-size: contain; }
+.wt-icon-propView-sorted { background-image: url('propview-sorted_16.svg') !important; background-size: contain; }
+.wt-icon-propView-sorted-gray { background-image: url('propview-sorted-gray_16.svg') !important; background-size: contain; }
+.wt-icon-propView-hier { background-image: url('propview-hier_16.svg') !important; background-size: contain; }
+.wt-icon-propView-hier-gray { background-image: url('propview-hier-gray_16.svg') !important; background-size: contain; }
+.wt-icon-status-up-green { background-image: url('status-up-green_16.svg') !important; background-size: contain; }
+.wt-icon-status-up-blue { background-image: url('status-up-blue_16.svg') !important; background-size: contain; }
+.wt-icon-status-down-red { background-image: url('status-down-red_16.svg') !important; background-size: contain; }
+.wt-icon-status-down-gray { background-image: url('status-down-gray_16.svg') !important; background-size: contain; }
 
 .wt-icon-browser-checkPermission { background-image: url('browser-checkperms_16.svg') !important; background-size: contain; }
 .wt-icon-emoji { background-image: url('emoji_16.svg') !important; background-size: contain; }

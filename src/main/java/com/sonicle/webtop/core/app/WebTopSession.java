@@ -1035,6 +1035,10 @@ public class WebTopSession {
 		js.appManifest.addJs(VENDOR_PATH + "/guess-language/" + "guessLanguage.js");
 		js.appManifest.addJs(VENDOR_PATH + "/showdown/1.9.1/" + "showdown.min.js");
 		js.appManifest.addCss(VENDOR_PATH + "/github-markdown/4.0.0/" + "github-markdown.min.css");
+		js.appManifest.addJs(VENDOR_PATH + "/codemirror/5.65.2/" + "codemirror.min.js");
+		js.appManifest.addJs(VENDOR_PATH + "/codemirror/5.65.2/mode/sql/" + "sql.min.js");
+		js.appManifest.addCss(VENDOR_PATH + "/codemirror/5.65.2/" + "codemirror.min.css");
+		js.appManifest.addJs(VENDOR_PATH + "/jexl/2.3.0/" + "jexl.min.js");
 		
 		// Uncomment these lines to load debug versions of the libraries ----->
 		//js.appManifest.addJs(VENDOR_PATH + "/jsxc/3.4.0/" + "jsxc.dep.js");

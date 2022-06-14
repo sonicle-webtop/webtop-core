@@ -39,6 +39,7 @@ import com.license4j.ActivationStatus;
 import com.license4j.ValidationStatus;
 import com.sonicle.commons.AlgoUtils.MD5HashBuilder;
 import com.sonicle.commons.LangUtils;
+import com.sonicle.commons.beans.PageInfo;
 import com.sonicle.commons.beans.SortInfo;
 import com.sonicle.commons.l4j.HardwareID;
 import com.sonicle.commons.l4j.ProductLicense;
@@ -64,9 +65,12 @@ import com.sonicle.webtop.core.CoreLocaleKey;
 import com.sonicle.webtop.core.CoreManager;
 import com.sonicle.webtop.core.CoreServiceSettings;
 import com.sonicle.webtop.core.CoreSettings.LauncherLink;
+import com.sonicle.webtop.core.admin.bol.js.JsDataSource;
+import com.sonicle.webtop.core.admin.bol.js.JsDataSourceQuery;
 import com.sonicle.webtop.core.admin.bol.js.JsDomainAccessLog;
 import com.sonicle.webtop.core.admin.bol.js.JsDomainAccessLogDetail;
 import com.sonicle.webtop.core.admin.bol.js.JsDomainLauncherLink;
+import com.sonicle.webtop.core.admin.bol.js.JsGridDomainDataSource;
 import com.sonicle.webtop.core.app.CoreManifest;
 import com.sonicle.webtop.core.app.CorePrivateEnvironment;
 import com.sonicle.webtop.core.app.WT;
@@ -114,6 +118,11 @@ import com.sonicle.webtop.core.bol.model.RoleEntity;
 import com.sonicle.webtop.core.bol.model.RoleWithSource;
 import com.sonicle.webtop.core.bol.model.UserEntity;
 import com.sonicle.webtop.core.bol.model.UserOptionsServiceData;
+import com.sonicle.webtop.core.model.DataSource;
+import com.sonicle.webtop.core.model.DataSourceBase;
+import com.sonicle.webtop.core.model.DataSourcePooled;
+import com.sonicle.webtop.core.model.DataSourceQuery;
+import com.sonicle.webtop.core.model.DataSourceType;
 import com.sonicle.webtop.core.model.DomainAccessLog;
 import com.sonicle.webtop.core.model.DomainAccessLogDetail;
 import com.sonicle.webtop.core.model.DomainAccessLogQuery;
@@ -135,12 +144,14 @@ import com.sonicle.webtop.core.versioning.IgnoreErrorsAnnotationLine;
 import com.sonicle.webtop.core.versioning.RequireAdminAnnotationLine;
 import java.io.InputStream;
 import java.io.PrintWriter;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.ListIterator;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import javax.servlet.http.HttpServletRequest;
@@ -287,6 +298,7 @@ public class Service extends BaseService {
 	private static final String NID_USERS = "users";
 	private static final String NID_ROLES = "roles";
 	private static final String NID_LAUNCHERLINKS = "launcherlinks";
+	private static final String NID_DATASOURCES = "datasources";
 	private static final String NID_LICENSES = "licenses";
 	private static final String NID_PECBRIDGE = "pecbridge";
 	private static final String NID_DBUPGRADER = "dbupgrader";
@@ -362,6 +374,7 @@ public class Service extends BaseService {
 							children.add(createDomainChildNode(nodeId, NID_USERS, "dusers", "wtadm-icon-users", domainId, dirCapPasswordWrite, dirCapUsersWrite));
 							children.add(createDomainChildNode(nodeId, NID_ROLES, "droles", "wtadm-icon-roles", domainId, dirCapPasswordWrite, dirCapUsersWrite));
 							children.add(createDomainChildNode(nodeId, NID_LICENSES, "dlicenses", "wtadm-icon-licenses", domainId, dirCapPasswordWrite, dirCapUsersWrite));
+							children.add(createDomainChildNode(nodeId, NID_DATASOURCES, "ddatasources", "wtadm-icon-dataSources", domainId, null, null));
 							children.add(createDomainChildNode(nodeId, NID_LAUNCHERLINKS, "dlauncherlinks", "wtadm-icon-launcherLinks", domainId, dirCapPasswordWrite, dirCapUsersWrite));
 							
 							CoreServiceSettings css = new CoreServiceSettings(CoreManifest.ID, domainId);
@@ -895,6 +908,198 @@ public class Service extends BaseService {
 			new JsonResult(t).printTo(out);
 		} finally {
 			if (upfile != null) removeUploadedFile(upfile.getUploadId());
+		}
+	}
+	
+	public void processLookupDataSourceTypes(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
+		
+		try {
+			String domainId = ServletUtils.getStringParameter(request, "domainId", true);
+			
+			Map<String, DataSourceType> types = coreadm.listDataSourceTypes(domainId);
+			List<JsSimple> items = new ArrayList<>();
+			for (DataSourceType type : types.values()) {
+				items.add(new JsSimple(type.getProto(), type.getName()));
+			}
+			new JsonResult(items, items.size()).printTo(out);
+			
+		} catch(Throwable t) {
+			logger.error("Error in LookupDataSourceTypes", t);
+			new JsonResult(t).printTo(out);
+		}
+	}
+	
+	public void processManageDomainDataSources(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
+		try {
+			String domainId = ServletUtils.getStringParameter(request, "domainId", true);
+			String crud = ServletUtils.getStringParameter(request, "crud", true);
+			if (Crud.READ.equals(crud)) {
+				List<JsGridDomainDataSource> items = new ArrayList<>();
+				for (DataSourcePooled dataSource : coreadm.listDataSources(domainId).values()) {
+					items.add(new JsGridDomainDataSource(dataSource));
+				}
+				new JsonResult(items).printTo(out);
+				
+			} else {
+				throw new WTException("Unsupported operation [{}]", crud);
+			}
+			
+		} catch (Throwable t) {
+			logger.error("Error in ManageDomainDataSources", t);
+			new JsonResult(t).printTo(out);
+		}
+	}
+	
+	public void processManageDomainDataSourceQuery(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
+		try {
+			String domainId = ServletUtils.getStringParameter(request, "domainId", true);
+			String crud = ServletUtils.getStringParameter(request, "crud", true);
+			if (Crud.READ.equals(crud)) {
+				String id = ServletUtils.getStringParameter(request, "id", false);
+				
+				DataSourceQuery item = coreadm.getDataSourceQuery(domainId, id);
+				new JsonResult(new JsDataSourceQuery(item)).printTo(out);
+				
+			} else if (Crud.CREATE.equals(crud)) {
+				Payload<MapItem, JsDataSourceQuery> pl = ServletUtils.getPayload(request, JsDataSourceQuery.class);
+				
+				coreadm.addDataSourceQuery(domainId, pl.data.dataSourceId, JsDataSourceQuery.createDataSourceQueryForAdd(pl.data));
+				new JsonResult().printTo(out);
+				
+			} else if (Crud.UPDATE.equals(crud)) {
+				Payload<MapItem, JsDataSourceQuery> pl = ServletUtils.getPayload(request, JsDataSourceQuery.class);
+				
+				coreadm.updateDataSourceQuery(domainId, pl.data.id, JsDataSourceQuery.createDataSourceQueryForUpdate(pl.data));
+				new JsonResult().printTo(out);
+				
+			} else if (Crud.DELETE.equals(crud)) {
+				String id = ServletUtils.getStringParameter(request, "id", false);
+				
+				coreadm.deleteDataSourceQuery(domainId, id);
+				new JsonResult().printTo(out);
+			
+			} else {
+				throw new WTException("Unsupported operation [{}]", crud);
+			}
+			
+		} catch (Throwable t) {
+			logger.error("Error in ManageDomainDataSourceQuery", t);
+			new JsonResult(t).printTo(out);
+		}
+	}
+	
+	public void processDataSourceQueryTester(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
+		
+		try {
+			String domainId = ServletUtils.getStringParameter(request, "domainId", true);
+			String dataSourceId = ServletUtils.getStringParameter(request, "dataSourceId", true);
+			boolean pagination = ServletUtils.getBooleanParameter(request, "pagination", false);
+			Payload<MapItem, MapItem> pl = ServletUtils.getPayload(request, MapItem.class);
+			
+			PageInfo pagInfo = null;
+			if (pagination) {
+				int page = ServletUtils.getIntParameter(request, "page", true);
+				int limit = ServletUtils.getIntParameter(request, "limit", 25);
+				pagInfo = new PageInfo(page, limit, false);
+			}
+			DataSourceBase.ExecuteQueryResult result = coreadm.executeDataSourceRawQuery(domainId, dataSourceId, (String)pl.data.get("source"), (Map)pl.data.get("placeholders"), pagInfo, true);
+			new JsonResult(result).printTo(out);
+			
+		} catch (Throwable t) {
+			logger.error("Error in DataSourceQueryTester", t);
+			new JsonResult(t).printTo(out);
+		}
+	}
+	
+	public void processManageDomainDataSource(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
+		
+		try {
+			String domainId = ServletUtils.getStringParameter(request, "domainId", true);
+			String crud = ServletUtils.getStringParameter(request, "crud", true);
+			if (Crud.READ.equals(crud)) {
+				String id = ServletUtils.getStringParameter(request, "id", false);
+				
+				DataSource item = coreadm.getDataSource(domainId, id);
+				new JsonResult(new JsDataSource(item)).printTo(out);
+				
+			} else if (Crud.CREATE.equals(crud)) {
+				Payload<MapItem, JsDataSource> pl = ServletUtils.getPayload(request, JsDataSource.class);
+				
+				try {
+					coreadm.addDataSource(domainId, JsDataSource.createDataSourceForAdd(pl.data));
+					new JsonResult().printTo(out);
+				} catch (DataSourceBase.WTPoolException ex1) {
+					new JsonResult(true, "{dataSource.warn.poolNotReady@com.sonicle.webtop.core.admin}").printTo(out);
+				}
+				
+			} else if (Crud.UPDATE.equals(crud)) {
+				Payload<MapItem, JsDataSource> pl = ServletUtils.getPayload(request, JsDataSource.class);
+				
+				JsDataSource.UpdateReturn ret = new JsDataSource.UpdateReturn();
+				DataSourceBase dataSource = JsDataSource.createDataSourceForUpdate(pl.data, ret);
+				try {
+					coreadm.updateDataSource(domainId, pl.data.id, dataSource, ret.passwordChanged);
+					new JsonResult().printTo(out);
+				} catch (DataSourceBase.WTPoolException ex1) {
+					new JsonResult(true, "{dataSource.warn.poolNotReady@com.sonicle.webtop.core.admin}").printTo(out);
+				}
+				
+			} else if (Crud.DELETE.equals(crud)) {
+				String id = ServletUtils.getStringParameter(request, "id", false);
+				
+				coreadm.deleteDataSource(domainId, id);
+				new JsonResult().printTo(out);
+			
+			} else if ("test".equals(crud)) {
+				String id = ServletUtils.getStringParameter(request, "id", false);
+				try {
+					coreadm.checkDataSourceConnection(domainId, id);
+					new JsonResult().printTo(out);
+
+				} catch (WTException ex1) {
+					if (ex1.getCause() instanceof SQLException) {
+						new JsonResult(ex1.getCause()).printTo(out);
+					} else {
+						throw ex1;
+					}
+				}
+				
+			} else if ("testp".equals(crud)) {
+				String id = ServletUtils.getStringParameter(request, "id", true);
+				String type = ServletUtils.getStringParameter(request, "type", true);
+				String serverName = ServletUtils.getStringParameter(request, "serverName", true);
+				Integer serverPort = ServletUtils.getIntParameter(request, "serverPort", false);
+				String databaseName = ServletUtils.getStringParameter(request, "databaseName", true);
+				String username = ServletUtils.getStringParameter(request, "username", false);
+				String password = ServletUtils.getStringParameter(request, "password", false);
+				String rpassword = ServletUtils.getStringParameter(request, "rpassword", false);
+				String driverProps = ServletUtils.getStringParameter(request, "driverProps", false);
+				
+				String realPassword = password;
+				if (StringUtils.equals(password, rpassword) && (id != null)) {
+					DataSource dataSource = coreadm.getDataSource(domainId, id);
+					if (dataSource == null) throw new WTException("Data source not found [{}]", id);
+					realPassword = dataSource.getPassword();
+				}
+				
+				try {
+					coreadm.checkDataSourceConnection(domainId, type, serverName, serverPort, databaseName, username, realPassword, LangUtils.parseStringAsKeyValueMap(driverProps));
+					new JsonResult().printTo(out);
+
+				} catch (WTException ex1) {
+					if (ex1.getCause() instanceof SQLException) {
+						new JsonResult(ex1.getCause()).printTo(out);
+					} else {
+						throw ex1;
+					}
+				}
+			} else {
+				throw new WTException("Unsupported operation [{}]", crud);
+			}
+			
+		} catch (Throwable t) {
+			logger.error("Error in ManageDomainDataSource", t);
+			new JsonResult(t).printTo(out);
 		}
 	}
 	
