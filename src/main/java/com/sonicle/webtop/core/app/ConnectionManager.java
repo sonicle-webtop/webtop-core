@@ -32,6 +32,7 @@
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
 package com.sonicle.webtop.core.app;
+import com.sonicle.commons.ClassUtils;
 import com.sonicle.commons.PathUtils;
 import com.sonicle.webtop.core.app.DataSourcesConfig.HikariConfigMap;
 import com.sonicle.webtop.core.sdk.WTRuntimeException;
@@ -161,7 +162,11 @@ public class ConnectionManager implements IConnectionProvider {
 	}
 	
 	public final void registerDataSource(final String namespace, final String dataSourceName, final HikariConfig config) {
+		Check.notEmpty(namespace, "namespace");
+		Check.notEmpty(dataSourceName, "dataSourceName");
+		Check.notNull(config, "config");
 		if (shuttingDown) throw new WTRuntimeException("Manager is coming down");
+		if (!ClassUtils.hasStrictlyType(config, HikariConfig.class)) throw new IllegalArgumentException("You cannot use a subclass of HikariConfig here");
 		String poolName = poolName(namespace, dataSourceName);
 		
 		long stamp = lock.writeLock();
@@ -175,6 +180,8 @@ public class ConnectionManager implements IConnectionProvider {
 	}
 	
 	public final void unregisterDataSource(final String namespace, final String dataSourceName) {
+		Check.notEmpty(namespace, "namespace");
+		Check.notEmpty(dataSourceName, "dataSourceName");
 		if (shuttingDown) throw new WTRuntimeException("Manager is coming down");
 		String poolName = poolName(namespace, dataSourceName);
 		
@@ -216,6 +223,7 @@ public class ConnectionManager implements IConnectionProvider {
 	 * @return DataSource object.
 	 */
 	public DataSource getDataSource(final String namespace) {
+		Check.notEmpty(namespace, "namespace");
 		return getDataSource(namespace, DEFAULT_DATASOURCE);
 	}
 	
@@ -226,6 +234,8 @@ public class ConnectionManager implements IConnectionProvider {
 	 * @return DataSource object.
 	 */
 	public DataSource getDataSource(final String namespace, final String dataSourceName) {
+		Check.notEmpty(namespace, "namespace");
+		Check.notEmpty(dataSourceName, "dataSourceName");
 		if (shuttingDown) throw new WTRuntimeException("Manager is coming down");
 		String poolName = poolName(namespace, dataSourceName);
 		
@@ -300,6 +310,8 @@ public class ConnectionManager implements IConnectionProvider {
 	 * @throws SQLException 
 	 */
 	public Connection getConnection(final String namespace, final String dataSourceName, final boolean autoCommit) throws SQLException {
+		Check.notEmpty(namespace, "namespace");
+		Check.notEmpty(dataSourceName, "dataSourceName");
 		if (shuttingDown) throw new WTRuntimeException("Manager is coming down");
 		String poolName = poolName(namespace, dataSourceName);
 		
@@ -352,6 +364,8 @@ public class ConnectionManager implements IConnectionProvider {
 	 * @throws SQLException 
 	 */
 	public Connection getFallbackConnection(final String namespace, final String dataSourceName, final boolean autoCommit) throws SQLException {
+		Check.notEmpty(namespace, "namespace");
+		Check.notEmpty(dataSourceName, "dataSourceName");
 		if (shuttingDown) throw new WTRuntimeException("Manager is coming down");
 		String poolName = poolName(namespace, dataSourceName);
 		
@@ -365,6 +379,8 @@ public class ConnectionManager implements IConnectionProvider {
 	}
 	
 	public boolean isRegistered(final String namespace, final String dataSourceName) {
+		Check.notEmpty(namespace, "namespace");
+		Check.notEmpty(dataSourceName, "dataSourceName");
 		if (shuttingDown) throw new WTRuntimeException("Manager is coming down");
 		String poolName = poolName(namespace, dataSourceName);
 		
