@@ -40,6 +40,10 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainUsers', {
 		'Sonicle.webtop.core.admin.view.Options'
 	],
 	
+	/**
+	 * @cfg {String} domainId
+	 * Target domain ID.
+	 */
 	domainId: null,
 	dirScheme: null,
 	dirCapPasswordWrite: false,

@@ -37,6 +37,10 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainRoles', {
 		'Sonicle.webtop.core.admin.model.GridDomainRole'
 	],
 	
+	/**
+	 * @cfg {String} domainId
+	 * Target domain ID.
+	 */
 	domainId: null,
 	
 	dockableConfig: {

@@ -46,6 +46,10 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainLicenses', {
 		'Sonicle.webtop.core.admin.view.LicenseActivatorWiz'
 	],
 	
+	/**
+	 * @cfg {String} domainId
+	 * Target domain ID.
+	 */
 	domainId: null,
 	
 	dockableConfig: {
@@ -55,6 +59,7 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainLicenses', {
 	
 	constructor: function(cfg) {
 		var me = this;
+		if (!cfg.domainId) Ext.raise('domainId is mandatory');
 		me.callParent([cfg]);
 		
 		if (!cfg.title) {

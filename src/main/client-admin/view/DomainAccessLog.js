@@ -37,6 +37,10 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainAccessLog', {
 		'WTA.ux.field.Search'
 	],
 	
+	/**
+	 * @cfg {String} domainId
+	 * Target domain ID.
+	 */
 	domainId: null,
 	
 	dockableConfig: {

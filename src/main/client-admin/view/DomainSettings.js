@@ -40,6 +40,10 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainSettings', {
 		'Sonicle.webtop.core.admin.model.DomainSetting'
 	],
 	
+	/**
+	 * @cfg {String} domainId
+	 * Target domain ID.
+	 */
 	domainId: null,
 	
 	dockableConfig: {

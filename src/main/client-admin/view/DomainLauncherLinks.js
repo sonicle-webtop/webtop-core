@@ -39,15 +39,21 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainLauncherLinks', {
 		'Sonicle.webtop.core.admin.model.GridDomainLauncherLink'
 	],
 	
-	domainId: null,
-	
 	dockableConfig: {
 		title: '{domainLauncherLinks.tit}',
 		iconCls: 'wtadm-icon-launcherLinks'
 	},
+	actionsResPrefix: 'domainDataSources',
+	
+	/**
+	 * @cfg {String} domainId
+	 * Target domain ID.
+	 */
+	domainId: null,
 	
 	constructor: function(cfg) {
 		var me = this;
+		if (!cfg.domainId) Ext.raise('domainId is mandatory');
 		me.callParent([cfg]);
 		
 		if (!cfg.title) {
@@ -80,10 +86,12 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainLauncherLinks', {
 			},
 			viewConfig: {
 				deferEmptyText: false,
-				plugins: [{
-					ptype: 'sogridviewddordering',
-					orderField: 'order'
-				}]
+				plugins: [
+					{
+						ptype: 'sogridviewddordering',
+						orderField: 'order'
+					}
+				]
 			},
 			selModel: 'cellmodel',
 			plugins: {

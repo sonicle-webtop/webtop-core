@@ -59,6 +59,7 @@ Ext.define('Sonicle.webtop.core.admin.view.DataSourceQuery', {
 	
 	constructor: function(cfg) {
 		var me = this;
+		if (!cfg.domainId) Ext.raise('domainId is mandatory');
 		me.callParent([cfg]);
 		
 		WTU.applyFormulas(me.getVM(), {

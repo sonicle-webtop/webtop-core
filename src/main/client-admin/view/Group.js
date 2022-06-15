@@ -50,6 +50,10 @@ Ext.define('Sonicle.webtop.core.admin.view.Group', {
 	fieldTitle: 'groupId',
 	modelName: 'Sonicle.webtop.core.admin.model.Group',
 	
+	/**
+	 * @cfg {String} domainId
+	 * Target domain ID.
+	 */
 	domainId: null,
 	
 	constructor: function(cfg) {

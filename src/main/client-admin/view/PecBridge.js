@@ -39,6 +39,10 @@ Ext.define('Sonicle.webtop.core.admin.view.PecBridge', {
 		'Sonicle.webtop.core.admin.model.GridPecBridgeRelay'
 	],
 	
+	/**
+	 * @cfg {String} domainId
+	 * Target domain ID.
+	 */
 	domainId: null,
 	
 	dockableConfig: {

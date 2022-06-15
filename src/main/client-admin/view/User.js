@@ -56,6 +56,10 @@ Ext.define('Sonicle.webtop.core.admin.view.User', {
 	fieldTitle: 'userId',
 	modelName: 'Sonicle.webtop.core.admin.model.User',
 	
+	/**
+	 * @cfg {String} domainId
+	 * Target domain ID.
+	 */
 	domainId: null,
 	askForPassword: true,
 	policies: null,
