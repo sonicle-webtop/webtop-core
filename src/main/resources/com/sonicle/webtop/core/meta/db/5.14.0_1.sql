@@ -3,7 +3,8 @@
 -- ----------------------------
 -- Historicize OLD audit_log (and related)
 -- ----------------------------
-ALTER TABLE IF EXISTS "core"."audit_log_bck" RENAME TO "audit_log_bck.old";
+@IgnoreErrors
+ALTER TABLE "core"."audit_log_bck" RENAME TO "audit_log_bck.old";
 DROP INDEX IF EXISTS "core"."audit_log_ak1";
 DROP INDEX IF EXISTS "core"."audit_log_ak2";
 ALTER TABLE "core"."audit_log" RENAME TO "audit_log.old";
