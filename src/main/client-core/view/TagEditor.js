@@ -98,7 +98,7 @@ Ext.define('Sonicle.webtop.core.view.TagEditor', {
 		Ext.merge(cfg || {}, {
             dockableConfig: {
 				// Keep WT.getVar: mys is NOT ready here in constructor
-				height: WT.hasAuditUI() ? 180 : 150
+				height: !!WT.getVar('auditUi') ? 180 : 150
 			}
 		});
 		me.callParent([cfg]);
