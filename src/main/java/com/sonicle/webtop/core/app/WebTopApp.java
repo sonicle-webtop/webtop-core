@@ -399,13 +399,13 @@ public final class WebTopApp {
 		//comm = ComponentsManager.initialize(this); // Components Manager
 		this.licMgr = LicenseManager.initialize(this, this.scheduler);
 		this.wtMgr = WebTopManager.initialize(this);
-		this.dsMgr = new DataSourcesManager(this);
 		
 		this.systemLocale = CoreServiceSettings.getSystemLocale(setMgr); // System locale
 		this.otpMgr = OTPManager.initialize(this);
 		this.rptMgr = ReportManager.initialize(this);
 		this.docEditorMgr = new DocEditorManager(this, 30*1000);
 		this.svcMgr = ServiceManager.initialize(this, this.scheduler); // Service Manager
+		this.dsMgr = new DataSourcesManager(this);
 		
 		this.mediaTypes = MediaTypes.init(conMgr);
 		this.fileTypes = FileTypes.init(conMgr);
