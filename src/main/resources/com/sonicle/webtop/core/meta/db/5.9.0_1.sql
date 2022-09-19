@@ -1,3 +1,4 @@
+@DataSource[default@com.sonicle.webtop.core]
 
 -- ----------------------------
 -- New table: data_sources
