@@ -105,6 +105,10 @@ public class DataSourcesManager extends AbstractAppManager<DataSourcesManager> {
 	private final HashMap<String, HikariDataSource> pools = new HashMap<>();
 	private final KeyedReentrantLocks<String> poolLocks = new KeyedReentrantLocks();
 	
+	private static final String DBPRODUCT_POSTGRES = "PostgreSQL";
+	private static final String DBPRODUCT_MARIADB = "MariaDB";
+	private static final String DBPRODUCT_MYSQL = "MySQL";
+	
 	static {
 		WELLKNOWN_TYPES.put("postgresql", new DataSourceType("postgresql", "PostgreSQL", "text/x-pgsql"));
 		WELLKNOWN_TYPES.put("mariadb", new DataSourceType("mariadb", "MariaDB", "text/x-mariadb"));
@@ -700,8 +704,9 @@ public class DataSourcesManager extends AbstractAppManager<DataSourcesManager> {
 		if (StringUtils.isBlank(rawSql)) throw new WTException("Query is empty");
 		
 		try {
+			String databaseProductName = con.getMetaData().getDatabaseProductName();
 			String sanitizedQuery = replaceQueryPlaceholders(LangUtils.flattenLineBreaks(StringUtils.trim(rawSql)), placeholders);
-			String sql = buildColumnGuessingQuery(sanitizedQuery);
+			String sql = buildColumnGuessingQuery(databaseProductName, sanitizedQuery);
 			
 			QueryRunner qr = new QueryRunner(new StatementConfiguration.Builder().maxRows(1).build());
 			RowsAndCols ret = qr.query(con, sql, new FilterableArrayListHandler());
@@ -730,22 +735,23 @@ public class DataSourcesManager extends AbstractAppManager<DataSourcesManager> {
 		long start = 0, end;
 		
 		try {
+			String databaseProductName = con.getMetaData().getDatabaseProductName();
 			String sanitizedQuery = replaceQueryPlaceholders(LangUtils.flattenLineBreaks(StringUtils.trim(rawSql)), placeholders);
 			QueryRunner qr = (maxRows != null) ? new QueryRunner(new StatementConfiguration.Builder().maxRows(maxRows).build()) : new QueryRunner();
 			
 			if (filterClause != null) {
-				sql = buildFilterDataQuery(sanitizedQuery, filterClause);
+				sql = buildFilterDataQuery(databaseProductName, sanitizedQuery, filterClause);
 				start = System.nanoTime();
 				if (LOGGER.isTraceEnabled()) LOGGER.trace("SQL Query (filter):\n{}", sql);
 				resultSet = qr.query(con, sql, resultSetHandler);
 				end = System.nanoTime();
 				
 			} else if (pagination != null) {
-				sql = buildPaginationCountQuery(sanitizedQuery);
+				sql = buildPaginationCountQuery(databaseProductName, sanitizedQuery);
 				start = System.nanoTime();
 				if (LOGGER.isTraceEnabled()) LOGGER.trace("SQL Query (total count):\n{}", sql);
 				totalCount = qr.query(con, sql, new LongScalarHandler());
-				sql = buildPaginationDataQuery(sanitizedQuery, pagination);
+				sql = buildPaginationDataQuery(databaseProductName, sanitizedQuery, pagination);
 				if (LOGGER.isTraceEnabled()) LOGGER.trace("SQL Query (data paginated):\n{}", sql);
 				resultSet = qr.query(con, sql, resultSetHandler);
 				end = System.nanoTime();
@@ -849,11 +855,11 @@ public class DataSourcesManager extends AbstractAppManager<DataSourcesManager> {
 		}
 	}
 	
-	private String buildColumnGuessingQuery(final String query) {
+	private String buildColumnGuessingQuery(final String databaseProductName, final String query) {
 		return query;
 	}
 	
-	private String buildPaginationCountQuery(final String query) {
+	private String buildPaginationCountQuery(final String databaseProductName, final String query) {
 		/*
 		String from = query;
 		//TODO: use regex here to match for eg. "ORDER    BY" or "ORDER \n\n BY", etc...
@@ -884,7 +890,7 @@ public class DataSourcesManager extends AbstractAppManager<DataSourcesManager> {
 		}
 	}
 	
-	private String buildFilterDataQuery(final String query, final FilterClause filterClause) {
+	private String buildFilterDataQuery(final String databaseProductName, final String query, final FilterClause filterClause) {
 		String where;
 		if (filterClause.filterInfo.isQuery) {
 			ArrayList<String> conditions = new ArrayList<>(filterClause.fields.size());
@@ -907,10 +913,16 @@ public class DataSourcesManager extends AbstractAppManager<DataSourcesManager> {
 		return "SELECT * FROM (" + from + ") AS __table__ WHERE " + where;
 	}
 	
-	private String buildPaginationDataQuery(final String query, final PageInfo pagination) {
-		return query
-			+ " OFFSET " + String.valueOf((pagination.getPageNumber()-1) * pagination.getPageSize()) + " ROWS"
-			+ " FETCH NEXT " + String.valueOf(pagination.getPageSize()) + " ROWS ONLY";
+	private String buildPaginationDataQuery(final String databaseProductName, final String query, final PageInfo pagination) {
+		if (DBPRODUCT_MYSQL.equals(databaseProductName) || DBPRODUCT_MARIADB.equals(databaseProductName)) {
+			return query
+				+ " LIMIT " + String.valueOf(pagination.getPageSize())
+				+ " OFFSET " + String.valueOf((pagination.getPageNumber()-1) * pagination.getPageSize());
+		} else {
+			return query
+				+ " OFFSET " + String.valueOf((pagination.getPageNumber()-1) * pagination.getPageSize()) + " ROWS"
+				+ " FETCH NEXT " + String.valueOf(pagination.getPageSize()) + " ROWS ONLY";
+		}
 	}
 	
 	private String toPoolName(final String domainId, final String dataSourceId) {

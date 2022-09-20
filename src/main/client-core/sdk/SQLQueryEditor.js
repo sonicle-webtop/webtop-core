@@ -142,7 +142,7 @@ Ext.define('Sonicle.webtop.core.sdk.SQLQueryEditor', {
 				'->',
 				{
 					xtype: 'checkbox',
-					bind: '{pagination}',
+					bind: '{data.pagination}',
 					plugins: [
 						{
 							ptype: 'sofieldtooltip',
@@ -303,7 +303,7 @@ Ext.define('Sonicle.webtop.core.sdk.SQLQueryEditor', {
 		doRunQuery: function(source, placeholders) {
 			var me = this,
 				vm = me.getVM(),
-				params = me.runParams || {};
+				params = Ext.clone(me.runParams) || {};
 			
 			if (placeholders) me.lastPlaceholdersValues = placeholders;
 			if (vm.get('data.pagination') === true) {

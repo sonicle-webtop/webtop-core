@@ -192,7 +192,7 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainDataSources', {
 						title: me.res('domainDataSources.gp.queries.tit'),
 						bind: {
 							store: '{record.queries}'
-							//title: 'Orders for {record.name}'
+							//title: 'Queries for {record.name}'
 						},
 						viewConfig: {
 							emptyText: me.res('domainDataSources.gp.queries.emp')
@@ -229,17 +229,19 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainDataSources', {
 									}
 								]
 							}
-						]
+						],
+						listeners: {
+							rowdblclick: function(s, rec) {
+								me.editQueryUI(rec);
+							}
+						}
 					}
 				}
 			],
 			tbar: [
-				//me.addAct('add', {
 				me.addAct('addDataSource', {
-					//text: WT.res('act-add.lbl'),
 					tooltip: null,
 					iconCls: null,
-					//iconCls: 'wt-icon-add',
 					handler: function() {
 						me.addDataSourceUI();
 					}
@@ -447,7 +449,7 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainDataSources', {
 		addQueryUI: function(rec) {
 			var me = this,
 				gp = me.lref('gp');
-				
+
 			me.addDataSourceQuery(me.domainId, rec.getId(), {
 				callback: function(success, model) {
 					if (success) gp.getStore().load();
