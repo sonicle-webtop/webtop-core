@@ -61,6 +61,11 @@ Ext.define('Sonicle.webtop.core.sdk.SQLQueryEditor', {
 	},
 	
 	/**
+	 * @cfg {String} targetName
+	 * The name to display next to view's title in order to help user to indentify execution target.
+	 */
+	
+	/**
 	 * @cfg {String} [text/x-sql|text/x-mysql|text/x-mariadb|text/x-cassandra|text/x-plsql|text/x-mssql|text/x-hive|text/x-pgsql|text/x-gql|text/x-gpsql|text/x-esper]
 	 * The dialect mime-type to use for syntax highlighting
 	 */
@@ -262,6 +267,15 @@ Ext.define('Sonicle.webtop.core.sdk.SQLQueryEditor', {
 	doDestroy: function() {
 		delete this.lastPlaceholdersValues;
 		this.callParent();
+	},
+	
+	buildViewTitle: function(dockTitle) {
+		var me = this,
+			s = me.callParent(arguments);
+		if (!Ext.isEmpty(me.targetName)) {
+			s += ' [' + me.targetName + ']';
+		}
+		return s;
 	},
 	
 	runQueryUI: function() {

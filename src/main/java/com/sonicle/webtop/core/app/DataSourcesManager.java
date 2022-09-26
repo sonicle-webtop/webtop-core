@@ -81,7 +81,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
+import java.util.concurrent.CancellationException;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -100,10 +106,12 @@ import org.slf4j.LoggerFactory;
  */
 public class DataSourcesManager extends AbstractAppManager<DataSourcesManager> {
 	private static final Logger LOGGER = (Logger)LoggerFactory.getLogger(DataSourcesManager.class);	
+	private static final Pattern PATTERN_QUERY_PLACEHOLDER = Pattern.compile("\\{\\{([A-Z][A-Z0-9_]*)\\}\\}");
 	private static final HashMap<String, DataSourceType> WELLKNOWN_TYPES = new HashMap<>();
 	private final LinkedHashSet<String> loadedDrivers = new LinkedHashSet<>();
 	private final HashMap<String, HikariDataSource> pools = new HashMap<>();
 	private final KeyedReentrantLocks<String> poolLocks = new KeyedReentrantLocks();
+	private final ExecutorService dataSourceConnectionCheckers = Executors.newCachedThreadPool();
 	
 	private static final String DBPRODUCT_POSTGRES = "PostgreSQL";
 	private static final String DBPRODUCT_MARIADB = "MariaDB";
@@ -136,6 +144,7 @@ public class DataSourcesManager extends AbstractAppManager<DataSourcesManager> {
 	
 	@Override
 	protected void internalAppManagerCleanup() {
+		dataSourceConnectionCheckers.shutdownNow();
 		LOGGER.debug("Clearing pools...");
 		clearPools();
 		LOGGER.debug("Unloading drivers...");
@@ -155,13 +164,13 @@ public class DataSourcesManager extends AbstractAppManager<DataSourcesManager> {
 				try {
 					final String poolName = toPoolName(dataSource.getDomainId(), dataSource.getDataSourceId());
 					doAddPool(poolName, createHikariConfig(dataSource));
-				} catch (Throwable t1) {
-					LOGGER.error("Unable to initialize pool for data-source '{}:{}'", dataSource.getDataSourceId(), dataSource.getType(), t1);
+				} catch (Exception ex1) {
+					LOGGER.error("Unable to initialize pool for data-source '{}:{}'", dataSource.getDataSourceId(), dataSource.getType(), ex1);
 				}
 			}
 
-		} catch (Throwable t) {
-			throw new WTRuntimeException(t, "Unable to initialize DataSource pools");
+		} catch (Exception ex) {
+			throw new WTRuntimeException(ex, "Unable to initialize DataSource pools");
 		} finally {
 			DbUtils.closeQuietly(con);
 		}
@@ -180,8 +189,6 @@ public class DataSourcesManager extends AbstractAppManager<DataSourcesManager> {
 		}
 		pools.clear();
 	}
-	
-	
 	
 	public Map<String, DataSourceType> listDataSourceTypes(final String domainId) throws WTException {
 		Check.notNull(domainId, "domainId");
@@ -231,8 +238,8 @@ public class DataSourcesManager extends AbstractAppManager<DataSourcesManager> {
 				}
 				return items;
 
-			} catch(Throwable t) {
-				throw ExceptionUtils.wrapThrowable(t);
+			} catch (Exception ex) {
+				throw ExceptionUtils.wrapThrowable(ex);
 			} finally {
 				DbUtils.closeQuietly(con);
 			}
@@ -252,8 +259,8 @@ public class DataSourcesManager extends AbstractAppManager<DataSourcesManager> {
 				con = getConnection(CoreManifest.ID);
 				return doDataSourceGet(con, domainId, dataSourceId);
 				
-			} catch(Throwable t) {
-				throw ExceptionUtils.wrapThrowable(t);
+			} catch (Exception ex) {
+				throw ExceptionUtils.wrapThrowable(ex);
 			} finally {
 				DbUtils.closeQuietly(con);
 			}
@@ -285,26 +292,15 @@ public class DataSourcesManager extends AbstractAppManager<DataSourcesManager> {
 				boolean ret = dsDao.insert(con, ods) == 1;
 				if (!ret) return null;
 				DataSource created = fillDataSource(new DataSource(dsType.getDialectMime()), ods);
-				decryptPassword(dataSource);
+				decryptPassword(created);
 				
 				// Setup a pool for newly created dataSource
-				final String poolName = toPoolName(domainId, created.getDataSourceId());
-				try {
-					poolLocks.lockInterruptibly(poolName);
-					try {
-						if (!doAddPool(poolName, createHikariConfig(created))) {
-							throw new WTException("Unable to create pool for data-source '{}'", created.getDataSourceId());
-						}
-					} catch (PoolInitializationException ex) {
-						throw new DataSourceBase.WTPoolException(ex);
-					}
-				} finally {
-					poolLocks.unlock(poolName);
-				}
+				lockedSetupPool(domainId, created, SetupPoolMode.ADD);
+				
 				return created;
 
-			} catch (Throwable t) {
-				throw ExceptionUtils.wrapThrowable(t);
+			} catch (Exception ex) {
+				throw ExceptionUtils.wrapThrowable(ex);
 			} finally {
 				DbUtils.closeQuietly(con);
 			}
@@ -334,23 +330,10 @@ public class DataSourcesManager extends AbstractAppManager<DataSourcesManager> {
 				DataSource updated = doDataSourceGet(con, domainId, dataSourceId);
 				
 				// Update the pool associated to the dataSource
-				final String poolName = toPoolName(domainId, dataSourceId);
-				try {
-					poolLocks.lockInterruptibly(poolName);
-					doRemovePool(poolName);
-					try {
-						if (!doAddPool(poolName, createHikariConfig(updated))) {
-							throw new WTException("Unable to create pool for data-source '{}'", dataSourceId);
-						}
-					} catch (PoolInitializationException ex) {
-						throw new DataSourceBase.WTPoolException(ex);
-					}
-				} finally {
-					poolLocks.unlock(poolName);
-				}
+				lockedSetupPool(domainId, updated, SetupPoolMode.UPDATE);
 
-			} catch (Throwable t) {
-				throw ExceptionUtils.wrapThrowable(t);
+			} catch (Exception ex) {
+				throw ExceptionUtils.wrapThrowable(ex);
 			} finally {
 				DbUtils.closeQuietly(con);
 			}
@@ -373,8 +356,8 @@ public class DataSourcesManager extends AbstractAppManager<DataSourcesManager> {
 				int ret = dsDao.deleteByIdDomain(con, dataSourceId, domainId);
 				if (ret == 0) throw new WTNotFoundException("DataSource not found [{}, {}]", domainId, dataSourceId);
 
-			} catch (Throwable t) {
-				throw ExceptionUtils.wrapThrowable(t);
+			} catch (Exception ex) {
+				throw ExceptionUtils.wrapThrowable(ex);
 			} finally {
 				DbUtils.closeQuietly(con);
 			}
@@ -407,8 +390,8 @@ public class DataSourcesManager extends AbstractAppManager<DataSourcesManager> {
 				con = getConnection(CoreManifest.ID);
 				ds = doDataSourceGet(con, domainId, dataSourceId);
 				
-			} catch(Throwable t) {
-				throw ExceptionUtils.wrapThrowable(t);
+			} catch (Exception ex) {
+				throw ExceptionUtils.wrapThrowable(ex);
 			} finally {
 				DbUtils.closeQuietly(con);
 			}
@@ -417,6 +400,9 @@ public class DataSourcesManager extends AbstractAppManager<DataSourcesManager> {
 			DataSourceType dsType = doDataSourceTypeGet(domainId, ds.getType());
 			if (dsType == null) throw new WTException("Unsupported dataSource type [{}]", ds.getType());
 			doCheckDataSourceConnection(createJdbcConfig(dsType, ds.getServerName(), ds.getServerPort(), ds.getDatabaseName(), ds.getUsername(), ds.getPassword(), ds.getDriverProps()));
+			
+			// Add (if necessary) the pool associated to the dataSource
+			lockedSetupPool(domainId, ds, SetupPoolMode.ADD_QUIETLY);
 			
 		} finally {
 			readyUnlock();
@@ -445,8 +431,8 @@ public class DataSourcesManager extends AbstractAppManager<DataSourcesManager> {
 				con = getConnection(CoreManifest.ID);
 				return doDataSourceQueryGet(con, domainId, queryId);
 				
-			} catch(Throwable t) {
-				throw ExceptionUtils.wrapThrowable(t);
+			} catch (Exception ex) {
+				throw ExceptionUtils.wrapThrowable(ex);
 			} finally {
 				DbUtils.closeQuietly(con);
 			}
@@ -477,8 +463,8 @@ public class DataSourcesManager extends AbstractAppManager<DataSourcesManager> {
 				boolean ret = dsqDao.insert(con, odsq) == 1;
 				return !ret ? null : fillDataSourceQuery(new DataSourceQuery(), odsq);
 				
-			} catch (Throwable t) {
-				throw ExceptionUtils.wrapThrowable(t);
+			} catch (Exception ex) {
+				throw ExceptionUtils.wrapThrowable(ex);
 			} finally {
 				DbUtils.closeQuietly(con);
 			}
@@ -503,8 +489,8 @@ public class DataSourcesManager extends AbstractAppManager<DataSourcesManager> {
 				boolean ret = dsqDao.update(con, odsq, BaseDAO.createRevisionTimestamp(), domainId) == 1;
 				if (ret == false) throw new WTNotFoundException("DataSource Query not found [{}, {}]", domainId, queryId);
 				
-			} catch (Throwable t) {
-				throw ExceptionUtils.wrapThrowable(t);
+			} catch (Exception ex) {
+				throw ExceptionUtils.wrapThrowable(ex);
 			} finally {
 				DbUtils.closeQuietly(con);
 			}
@@ -527,8 +513,8 @@ public class DataSourcesManager extends AbstractAppManager<DataSourcesManager> {
 				int ret = dsqDao.deleteByIdDomain(con, queryId, domainId);
 				if (ret == 0) throw new WTNotFoundException("DataSource Query not found [{}, {}]", domainId, queryId);
 				
-			} catch (Throwable t) {
-				throw ExceptionUtils.wrapThrowable(t);
+			} catch (Exception ex) {
+				throw ExceptionUtils.wrapThrowable(ex);
 			} finally {
 				DbUtils.closeQuietly(con);
 			}
@@ -545,8 +531,8 @@ public class DataSourcesManager extends AbstractAppManager<DataSourcesManager> {
 			con = getConnection(CoreManifest.ID);
 			return doDataSourceQueryGet(con, domainId, dataSourceId);
 
-		} catch (Throwable t) {
-			throw ExceptionUtils.wrapThrowable(t);
+		} catch (Exception ex) {
+			throw ExceptionUtils.wrapThrowable(ex);
 		} finally {
 			DbUtils.closeQuietly(con);
 		}
@@ -568,8 +554,8 @@ public class DataSourcesManager extends AbstractAppManager<DataSourcesManager> {
 				}
 				return items;
 
-			} catch(Throwable t) {
-				throw ExceptionUtils.wrapThrowable(t);
+			} catch (Exception ex) {
+				throw ExceptionUtils.wrapThrowable(ex);
 			} finally {
 				DbUtils.closeQuietly(con);
 			}
@@ -591,7 +577,7 @@ public class DataSourcesManager extends AbstractAppManager<DataSourcesManager> {
 				poolLocks.lockInterruptibly(poolName);
 				Connection pcon = null;
 				try {
-					pcon = doGetPoolConnection(poolName, true);
+					pcon = doGetPoolConnection(poolName);
 					if (pcon == null) throw new DataSourceBase.WTPoolException("Pool not available [{}]", poolName);
 					return doGuessQueryColumns(pcon, dsQuery.getRawSql(), placeholders);
 					
@@ -649,7 +635,7 @@ public class DataSourcesManager extends AbstractAppManager<DataSourcesManager> {
 				poolLocks.lockInterruptibly(poolName);
 				Connection pcon = null;
 				try {
-					pcon = doGetPoolConnection(poolName, true);
+					pcon = doGetPoolConnection(poolName);
 					if (pcon == null) throw new DataSourceBase.WTPoolException("Pool not available [{}]", poolName);
 					return doExecuteQuery(pcon, dsQuery.getRawSql(), placeholders, paginationInfo, debugReport, resultSetHandler, filterClause, maxRows);
 					
@@ -679,7 +665,7 @@ public class DataSourcesManager extends AbstractAppManager<DataSourcesManager> {
 				poolLocks.lockInterruptibly(poolName);
 				Connection pcon = null;
 				try {
-					pcon = doGetPoolConnection(poolName, true);
+					pcon = doGetPoolConnection(poolName);
 					if (pcon == null) throw new DataSourceBase.WTPoolException("Pool not available [{}]", poolName);
 					return doExecuteQuery(pcon, rawSql, placeholders, paginationInfo, debugReport, resultSetHandler, null, maxRows);
 					
@@ -804,36 +790,10 @@ public class DataSourcesManager extends AbstractAppManager<DataSourcesManager> {
 		return sb.toString();
 	}
 	
-	/*
-	public static void main(String args[]) {
-		String query = "SELECT \n" +
-"codice, \n" +
-"descrizione, \n" +
-"descrizione2, \n" +
-"indirizzo, \n" +
-"cap, \n" +
-"citta, \n" +
-"provincia, \n" +
-"bloccato \n" +
-"FROM clienti \n" +
-"WHERE (agente = '{{AGENTE_CODICE}}') \n" +
-"ORDER BY {{AGENTE_XXX}}, descrizione ASC";
-		
-		final Pattern PPP = Pattern.compile("\\{\\{([A-Z][A-Z0-9_]*)\\}\\}");
-		final Matcher matcher = PPP.matcher(query);
-		while (matcher.find()) {
-			System.out.println(matcher.start() + " - " + matcher.end());
-			System.out.println(query.substring(matcher.start(), matcher.end()));
-		}
-		System.out.println("");
-	}
-	*/
-	
-	private static final Pattern PATTERN_PLACEHOLDER = Pattern.compile("\\{\\{([A-Z][A-Z0-9_]*)\\}\\}");
 	private Set<String> extractQueryPlaceholders(final String query) {
 		LinkedHashSet<String> names = new LinkedHashSet<>();
 		if (!StringUtils.isBlank(query)) {
-			final Matcher matcher = PATTERN_PLACEHOLDER.matcher(query);
+			final Matcher matcher = PATTERN_QUERY_PLACEHOLDER.matcher(query);
 			while (matcher.find()) {
 				final String name = matcher.group(1);
 				names.add(name);
@@ -946,32 +906,43 @@ public class DataSourcesManager extends AbstractAppManager<DataSourcesManager> {
 			java.lang.reflect.Field field = hds.getClass().getDeclaredField("pool");
 			field.setAccessible(true);
 			return (HikariPool)field.get(hds);
-		} catch (Throwable t) {
+		} catch (Exception ex) {
 			return null;
 		}
 	}
 	
 	private void doCheckDataSourceConnection(final JdbcConfig jdbcConfig) throws WTException {
-		Connection con = null;
-		try {
-			if (LOGGER.isDebugEnabled()) {
-				LOGGER.debug("Getting connection for '{}'", jdbcConfig.url);
-				LOGGER.debug("Properties:");
-				for (Enumeration<String> enums = (Enumeration<String>)jdbcConfig.info.propertyNames(); enums.hasMoreElements();) {
-					String key = enums.nextElement();
-					if (!StringUtils.equalsIgnoreCase(key, "password")) {
-						LOGGER.debug("  {}={}", key, jdbcConfig.info.getProperty(key));
-					}
-				}
+		if (LOGGER.isDebugEnabled()) {
+			LOGGER.debug("Getting connection for '{}'", jdbcConfig.url);
+			LOGGER.debug("Properties:");
+			dumpJdbcProps(jdbcConfig.info);
+		}
+		
+		// Do connection test into a future due to lack of support for loginTimeout
+		// in various JDBC drivers. Connection check will be manually 
+		// cancelled after timeout expiration!
+		Future<Boolean> future = dataSourceConnectionCheckers.submit(() -> {
+			Connection con = null;
+			try {
+				con = DriverManager.getConnection(jdbcConfig.url, jdbcConfig.info);
+				// --> Connection established successfully!
+				return true;
+			} catch (Exception ex) {
+				// --> Connection failure!
+				throw ex;
+			} finally {
+				DbUtils.closeQuietly(con);
 			}
-			con = DriverManager.getConnection(jdbcConfig.url, jdbcConfig.info);
-			// --> Connection established successfully!
-			
-		} catch(Throwable t) {
-			// --> Connection failure!
-			throw ExceptionUtils.wrapThrowable(t);
-		} finally {
-			DbUtils.closeQuietly(con);
+		});
+		
+		try {
+			future.get(15, TimeUnit.SECONDS);
+		} catch (ExecutionException ex) {
+			throw ExceptionUtils.wrapThrowable(ex.getCause());
+		} catch (TimeoutException ex) {
+			throw new WTException("The connection to the host has failed. Error: \"Connection timeout\". Verify the connection properties. Make sure the DBMS servier is running on the host and accepting TCP/IP connections at the port. Make sure that TCP connections to the port are not blocked by a firewall.");
+		} catch (CancellationException | InterruptedException ex) {
+			throw new WTException("The connection to the host has failed. Error: \"Connection cancelled\"");
 		}
 	}
 	
@@ -985,8 +956,10 @@ public class DataSourcesManager extends AbstractAppManager<DataSourcesManager> {
 		if (!poolProps.containsKey("maximumPoolSize")) poolProps.setProperty("maximumPoolSize", "3");
 		
 		HikariConfig config = new HikariConfig(poolProps);
+		config.setConnectionTimeout(15000); // Lowers default connection timeout of 30s to not have problems with HTTP timeout
 		config.setJdbcUrl(jdbcConfig.url);
 		config.setDataSourceProperties(jdbcConfig.info);
+		config.setReadOnly(true);
 		return config;
 	}
 	
@@ -1119,15 +1092,31 @@ public class DataSourcesManager extends AbstractAppManager<DataSourcesManager> {
 		}
 	}
 	
-	/*
-	private KeyedLock lockPool(String poolName) throws WTException {
+	private static enum SetupPoolMode {
+		ADD, UPDATE, ADD_QUIETLY; 
+	}
+	
+	private void lockedSetupPool(final String domainId, final DataSource dataSource, final SetupPoolMode mode) throws DataSourceBase.WTPoolException, WTException {
+		final String poolName = toPoolName(domainId, dataSource.getDataSourceId());
 		try {
-			return poolLocks.acquire(poolName);
+			poolLocks.lockInterruptibly(poolName);
+			if (SetupPoolMode.UPDATE.equals(mode)) doRemovePool(poolName);
+			try {
+				if (!doAddPool(poolName, createHikariConfig(dataSource))) {
+					if (!SetupPoolMode.ADD_QUIETLY.equals(mode)) {
+						throw new WTException("Unable to create pool for data-source '{}'", dataSource.getDataSourceId());
+					}
+				}
+			} catch (PoolInitializationException ex1) {
+				throw new DataSourceBase.WTPoolException(ex1);
+			}
 		} catch (InterruptedException ex) {
-			throw new WTException(ex);
+			LOGGER.error("Unable to setup pool '{}'", poolName, ex);
+			throw ExceptionUtils.wrapThrowable(ex);
+		} finally {
+			poolLocks.unlock(poolName);
 		}
 	}
-	*/
 	
 	private boolean doAddPool(String poolName, HikariConfig config) throws PoolInitializationException {
 		if (pools.containsKey(poolName)) {
@@ -1137,13 +1126,7 @@ public class DataSourcesManager extends AbstractAppManager<DataSourcesManager> {
 			if (LOGGER.isDebugEnabled()) {
 				LOGGER.debug("Creating pool for '{}'", config.getJdbcUrl());
 				LOGGER.debug("DataSource properties:");
-				Properties dsprops = config.getDataSourceProperties();
-				for (Enumeration<String> enums = (Enumeration<String>)dsprops.propertyNames(); enums.hasMoreElements();) {
-					String key = enums.nextElement();
-					if (!StringUtils.equalsIgnoreCase(key, "password")) {
-						LOGGER.debug("  {}={}", key, dsprops.getProperty(key));
-					}
-				}
+				dumpJdbcProps(config.getDataSourceProperties());
 			}
 			pools.put(poolName, new HikariDataSource(config));
 			return true;
@@ -1160,13 +1143,13 @@ public class DataSourcesManager extends AbstractAppManager<DataSourcesManager> {
 		}
 	}
 	
-	private Connection doGetPoolConnection(String poolName, boolean autoCommit) throws SQLException {
+	private Connection doGetPoolConnection(String poolName) throws SQLException {
 		HikariDataSource pool = pools.get(poolName);
 		if (pool == null) {
 			return null;
 		} else {
 			Connection con = pool.getConnection();
-			con.setAutoCommit(autoCommit);
+			con.setAutoCommit(true);
 			return con;
 		}
 	}
@@ -1257,6 +1240,17 @@ public class DataSourcesManager extends AbstractAppManager<DataSourcesManager> {
 			tgt.setForcePagination(src.getForcePagination());
 		}
 		return tgt;
+	}
+	
+	private void dumpJdbcProps(final Properties jdbcProps) {
+		for (Enumeration<String> enums = (Enumeration<String>)jdbcProps.propertyNames(); enums.hasMoreElements();) {
+			String key = enums.nextElement();
+			if (!StringUtils.equalsIgnoreCase(key, "password")) {
+				LOGGER.debug("  {}={}", key, jdbcProps.getProperty(key));
+			} else {
+				LOGGER.debug("  {}={}", key, "*** (redacted)");
+			}
+		}
 	}
 	
 	private static class JdbcConfig {

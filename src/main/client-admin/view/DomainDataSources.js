@@ -338,11 +338,13 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainDataSources', {
 	},
 	
 	addDataSourceQuery: function(domainId, dataSourceId, opts) {
+		opts = opts || {};
 		var me = this,
 			vw = WT.createView(me.mys.ID, 'view.DataSourceQuery', {
 				swapReturn: true,
 				viewCfg: {
-					domainId: domainId
+					domainId: domainId,
+					dataSourceName: opts.dataSourceName
 				}
 			});
 
@@ -421,12 +423,7 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainDataSources', {
 				key = rec.areQueriesInUse() ? 'dataSource.confirm.delete.inuse' : 'dataSource.confirm.delete';
 			WT.confirm(me.res(key, rec.get('name')), function(bid) {
 				if (bid === 'yes') {
-					me.deleteDataSource(me.domainId, rec.getId(), {
-						callback: function(success, data, json) {
-							if (success) me.lref('gp').getStore().remove(rec);
-							WT.handleError(success, json);
-						}
-					});
+					me.lref('gp').getStore().remove(rec);
 				}
 			}, me);
 		},
@@ -439,6 +436,7 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainDataSources', {
 					me.unwait();
 					if (success) {
 						WT.info(me.res('dataSource.info.check'));
+						if (rec.get('poolStatus') !== 'up') me.lref('gp').getStore().load();
 					} else {
 						WT.error(me.res('dataSource.error.check', json.message));
 					}
@@ -451,6 +449,8 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainDataSources', {
 				gp = me.lref('gp');
 
 			me.addDataSourceQuery(me.domainId, rec.getId(), {
+				//TODO: find rowwidget parent and get data-source name
+				dataSourceName: null,
 				callback: function(success, model) {
 					if (success) gp.getStore().load();
 				}

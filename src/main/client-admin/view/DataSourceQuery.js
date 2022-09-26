@@ -57,6 +57,11 @@ Ext.define('Sonicle.webtop.core.admin.view.DataSourceQuery', {
 	 */
 	domainId: null,
 	
+	/**
+	 * cfg {String} dataSourceName
+	 * The name of the target data-source referenced in model's data. Optional.
+	 */
+	
 	constructor: function(cfg) {
 		var me = this;
 		if (!cfg.domainId) Ext.raise('domainId is mandatory');
@@ -152,6 +157,7 @@ Ext.define('Sonicle.webtop.core.admin.view.DataSourceQuery', {
 				swapReturn: true,
 				viewCfg: {
 					dockableConfig: {modal: true},
+					targetName: me.dataSourceName,
 					runService: me.mys.ID,
 					runAction: 'DataSourceQueryTester',
 					runParams: {

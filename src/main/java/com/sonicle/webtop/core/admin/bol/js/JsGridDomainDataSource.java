@@ -32,6 +32,7 @@
  */
 package com.sonicle.webtop.core.admin.bol.js;
 
+import com.sonicle.commons.web.json.JsonResult;
 import com.sonicle.webtop.core.model.DataSourcePooled;
 import java.util.ArrayList;
 
@@ -67,5 +68,15 @@ public class JsGridDomainDataSource {
 			this.poolStatus = "down";
 		}
 		this.queries = new ArrayList<>(dataSource.getQueries().values());
+	}
+	
+	public static class List extends ArrayList<JsGridDomainDataSource> {
+		public static JsGridDomainDataSource.List fromJson(String value) {
+			return JsonResult.gson().fromJson(value, JsGridDomainDataSource.List.class);
+		}
+
+		public static String toJson(JsGridDomainDataSource.List value) {
+			return JsonResult.gson().toJson(value, JsGridDomainDataSource.List.class);
+		}
 	}
 }

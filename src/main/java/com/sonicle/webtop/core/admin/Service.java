@@ -943,6 +943,13 @@ public class Service extends BaseService {
 				}
 				new JsonResult(items).printTo(out);
 				
+			} else if (Crud.DELETE.equals(crud)) {
+				PayloadAsList<JsGridDomainDataSource.List> pl = ServletUtils.getPayloadAsList(request, JsGridDomainDataSource.List.class);
+				for (JsGridDomainDataSource js : pl.data) {
+					admMgr.deleteDataSource(js.id);
+				}
+				new JsonResult().printTo(out);
+				
 			} else {
 				throw new WTException("Unsupported operation [{}]", crud);
 			}
