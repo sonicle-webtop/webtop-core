@@ -33,9 +33,11 @@
 package com.sonicle.webtop.core.app;
 
 import com.sonicle.webtop.core.sdk.WTException;
+import com.sonicle.webtop.core.sdk.WTRuntimeException;
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.concurrent.locks.StampedLock;
+import net.sf.qualitycheck.Check;
 import org.slf4j.Logger;
 
 /**
@@ -44,21 +46,22 @@ import org.slf4j.Logger;
  * @param <T>
  */
 public abstract class AbstractAppManager<T> {
-	private final ReentrantReadWriteLock readyLock = new ReentrantReadWriteLock();
+	private final StampedLock readyLock = new StampedLock();
 	private boolean ready = false;
 	private WebTopApp wta;
 	
 	AbstractAppManager(WebTopApp wta) {
+		this(wta, false);
+	}
+	
+	AbstractAppManager(WebTopApp wta, final boolean deferredInitialize) {
 		this.wta = wta;
+		if (!deferredInitialize) initialize();
 	}
 	
-	protected abstract Logger internalGetLogger();
-	protected abstract void internalAppManagerCleanup();
-	
-	protected void initialized() {
-		this.ready = true;
-		internalGetLogger().info("Initialized");
-	}
+	protected abstract Logger doGetLogger();
+	protected abstract void doAppManagerCleanup();
+	protected void doAppManagerInitialize() {}
 	
 	protected WebTopApp getWebTopApp() {
 		return wta;
@@ -72,33 +75,62 @@ public abstract class AbstractAppManager<T> {
 		return getWebTopApp().getConnectionManager().getConnection(namespace, autoCommit);
 	}
 	
-	protected void readyLock() throws WTException {
+	protected long readyLock() throws WTException {
 		try {
-			readyLock.readLock().lockInterruptibly();
+			long stamp = readyLock.readLockInterruptibly();
 			if (!ready) throw new WTException("Manager cannot handle your request");
+			return stamp;
 			
 		} catch (InterruptedException ex) {
 			throw new WTException(ex);
 		}
 	}
 	
-	protected void readyUnlock() {
-		readyLock.readLock().unlock();
+	protected void readyUnlock(final long stamp) {
+		readyLock.unlockRead(stamp);
+	}
+	
+	/**
+	 * Initializes internal structures marking this Manager as ready.
+	 * By default this method is called automatically by the constructor, 
+	 * unless you specify deferredInitialize as `false`.
+	 */
+	final void initialize() {
+		Check.notNull(doGetLogger(), "internalGetLogger()");
+		try {
+			long stamp = readyLock.writeLockInterruptibly();
+			try {
+				if (!ready) {
+					doAppManagerInitialize();
+					this.ready = true;
+					doGetLogger().info("Initialized");
+				}	
+			} finally {
+				readyLock.unlockWrite(stamp);
+			}
+		} catch (InterruptedException ex) {
+			throw new WTRuntimeException(ex);
+		}
 	}
 	
 	/**
 	 * Clears internal structures marking this Manager as NOT ready.
 	 * @return Always return `null` reference, for clearing reference easily.
 	 */
-	T cleanup() {
-		readyLock.writeLock().lock();
+	final T cleanup() {
+		Check.notNull(doGetLogger(), "internalGetLogger()");
 		try {
-			this.ready = false;
-			internalAppManagerCleanup();
-		} finally {
-			this.wta = null;
-			readyLock.writeLock().unlock();
-			internalGetLogger().info("Cleaned up");
+			long stamp = readyLock.writeLockInterruptibly();
+			try {
+				this.ready = false;
+				doAppManagerCleanup();
+			} finally {
+				this.wta = null;
+				readyLock.unlockWrite(stamp);
+				doGetLogger().info("Cleaned up");
+			}
+		} catch (InterruptedException ex) {
+			throw new WTRuntimeException(ex);
 		}
 		return (T)null;
 	}

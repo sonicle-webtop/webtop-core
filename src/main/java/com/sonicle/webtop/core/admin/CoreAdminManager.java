@@ -53,6 +53,7 @@ import com.sonicle.webtop.core.app.WebTopApp;
 import com.sonicle.webtop.core.app.WebTopProps;
 import com.sonicle.webtop.core.app.io.dbutils.FilterableArrayListHandler;
 import com.sonicle.webtop.core.app.io.dbutils.RowsAndCols;
+import com.sonicle.webtop.core.app.sdk.WTConnectionException;
 import com.sonicle.webtop.core.app.util.ExceptionUtils;
 import com.sonicle.webtop.core.app.util.LogbackHelper;
 import com.sonicle.webtop.core.bol.VDomainAccessLog;
@@ -606,7 +607,7 @@ public class CoreAdminManager extends BaseManager {
 		dsMgr.deleteDataSource(getTargetProfileId().getDomainId(), dataSourceId);
 	}
 	
-	public void checkDataSourceConnection(final String dataSourceId) throws WTException {
+	public void checkDataSourceConnection(final String dataSourceId) throws WTConnectionException, WTException {
 		DataSourcesManager dsMgr = wta.getDataSourcesManager();
 		String domainId = getTargetProfileId().getDomainId();
 
@@ -614,7 +615,7 @@ public class CoreAdminManager extends BaseManager {
 		dsMgr.checkDataSourceConnection(getTargetProfileId().getDomainId(), dataSourceId);
 	}
 	
-	public void checkDataSourceConnection(final String dataSourceType, final String serverName, final Integer serverPort, final String databaseName, final String username, final String password, final Map<String, String> props) throws WTException {
+	public void checkDataSourceConnection(final String dataSourceType, final String serverName, final Integer serverPort, final String databaseName, final String username, final String password, final Map<String, String> props) throws WTConnectionException, WTException {
 		DataSourcesManager dsMgr = wta.getDataSourcesManager();
 		String domainId = getTargetProfileId().getDomainId();
 

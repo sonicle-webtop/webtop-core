@@ -91,6 +91,7 @@ import com.sonicle.webtop.core.admin.bol.js.JsGridDomainLicense;
 import com.sonicle.webtop.core.admin.bol.js.JsGridLogger;
 import com.sonicle.webtop.core.app.RunContext;
 import com.sonicle.webtop.core.app.WebTopProps;
+import com.sonicle.webtop.core.app.sdk.WTConnectionException;
 import com.sonicle.webtop.core.app.sdk.WTLicenseActivationException;
 import com.sonicle.webtop.core.app.sdk.WTLicenseException;
 import com.sonicle.webtop.core.app.sdk.WTLicenseMismatchException;
@@ -1006,9 +1007,11 @@ public class Service extends BaseService {
 				try {
 					admMgr.checkDataSourceConnection(id);
 					new JsonResult().printTo(out);
-
+				
 				} catch (WTException ex1) {
-					if (ex1.getCause() instanceof SQLException) {
+					if (ex1 instanceof WTConnectionException) {
+						new JsonResult(ex1).printTo(out);
+					} else if (ex1.getCause() instanceof SQLException) {
 						new JsonResult(ex1.getCause()).printTo(out);
 					} else {
 						throw ex1;
@@ -1038,7 +1041,9 @@ public class Service extends BaseService {
 					new JsonResult().printTo(out);
 
 				} catch (WTException ex1) {
-					if (ex1.getCause() instanceof SQLException) {
+					if (ex1 instanceof WTConnectionException) {
+						new JsonResult(ex1).printTo(out);
+					} else if (ex1.getCause() instanceof SQLException) {
 						new JsonResult(ex1.getCause()).printTo(out);
 					} else {
 						throw ex1;

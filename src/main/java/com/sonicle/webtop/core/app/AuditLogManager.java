@@ -99,16 +99,15 @@ public class AuditLogManager extends AbstractAppManager<AuditLogManager> {
 	
 	AuditLogManager(WebTopApp wta) {
 		super(wta);
-		initialized();
 	}
 	
 	@Override
-	protected Logger internalGetLogger() {
+	protected Logger doGetLogger() {
 		return LOGGER;
 	}
 	
 	@Override
-	protected void internalAppManagerCleanup() {
+	protected void doAppManagerCleanup() {
 		ipLookupRespCache.cleanUp();
 	}
 	
@@ -139,7 +138,7 @@ public class AuditLogManager extends AbstractAppManager<AuditLogManager> {
 		boolean isImpersonated = RunContext.isImpersonated();
 		
 		try {
-			readyLock();
+			long stamp = readyLock();
 			try {
 				if (isImpersonated && !logImpersonatedEnabled(profileId)) return;
 				WT.runPrivileged(() -> {
@@ -150,7 +149,7 @@ public class AuditLogManager extends AbstractAppManager<AuditLogManager> {
 					}
 				});
 			} finally {
-				readyUnlock();
+				readyUnlock(stamp);
 			}
 		} catch (WTException ex1) {
 			LOGGER.trace("Not ready", ex1);
@@ -169,7 +168,7 @@ public class AuditLogManager extends AbstractAppManager<AuditLogManager> {
 		boolean isImpersonated = RunContext.isImpersonated();
 		
 		try {
-			readyLock();
+			long stamp = readyLock();
 			try {
 				if (isImpersonated && !logImpersonatedEnabled(profileId)) return;
 				WT.runPrivileged(() -> {
@@ -180,7 +179,7 @@ public class AuditLogManager extends AbstractAppManager<AuditLogManager> {
 					}
 				});
 			} finally {
-				readyUnlock();
+				readyUnlock(stamp);
 			}
 		} catch (WTException ex1) {
 			LOGGER.trace("Not ready", ex1);
@@ -211,7 +210,7 @@ public class AuditLogManager extends AbstractAppManager<AuditLogManager> {
 		boolean isImpersonated = RunContext.isImpersonated();
 		
 		try {
-			readyLock();
+			long stamp = readyLock();
 			try {
 				if (isImpersonated && !logImpersonatedEnabled(profileId)) {
 					return null;
@@ -219,7 +218,7 @@ public class AuditLogManager extends AbstractAppManager<AuditLogManager> {
 					return new Batch(this, profileId.getDomain(), buildAuditUserId(profileId, isImpersonated), softwareName, sessionId, serviceId, context, action, 50);
 				}
 			} finally {
-				readyUnlock();
+				readyUnlock(stamp);
 			}
 		} catch (WTException ex1) {
 			LOGGER.trace("Not ready", ex1);
@@ -240,7 +239,7 @@ public class AuditLogManager extends AbstractAppManager<AuditLogManager> {
 		boolean isImpersonated = RunContext.isImpersonated();
 		
 		try {
-			readyLock();
+			long stamp = readyLock();
 			try {
 				if (isImpersonated && !logImpersonatedEnabled(profileId)) return;
 				WT.runPrivileged(() -> {
@@ -251,7 +250,7 @@ public class AuditLogManager extends AbstractAppManager<AuditLogManager> {
 					}
 				});
 			} finally {
-				readyUnlock();
+				readyUnlock(stamp);
 			}
 		} catch (WTException ex1) {
 			LOGGER.trace("Not ready", ex1);
@@ -282,7 +281,7 @@ public class AuditLogManager extends AbstractAppManager<AuditLogManager> {
 		Check.notNull(userAgent, "userAgent");
 		Check.notNull(remoteIpAddress, "remoteIpAddress");
 		
-		readyLock();
+		long stamp = readyLock();
 		try {
 			CoreServiceSettings css = new CoreServiceSettings(getWebTopApp().getSettingsManager(), CoreManifest.ID, profileId.getDomainId());
 
@@ -336,7 +335,7 @@ public class AuditLogManager extends AbstractAppManager<AuditLogManager> {
 				LOGGER.error("Unable to send email", ex);
 			}
 		} finally {
-			readyUnlock();
+			readyUnlock(stamp);
 		}
 	}
 	
@@ -344,7 +343,7 @@ public class AuditLogManager extends AbstractAppManager<AuditLogManager> {
 		Check.notNull(profileId, "profileId");
 		Check.notNull(deviceId, "deviceId");
 		
-		readyLock();
+		long stamp = readyLock();
 		try {
 			AuditKnownDeviceDAO akdDao = AuditKnownDeviceDAO.getInstance();
 			Connection con = null;
@@ -359,7 +358,7 @@ public class AuditLogManager extends AbstractAppManager<AuditLogManager> {
 				DbUtils.closeQuietly(con);
 			}
 		} finally {
-			readyUnlock();
+			readyUnlock(stamp);
 		}
 	}
 	
@@ -367,7 +366,7 @@ public class AuditLogManager extends AbstractAppManager<AuditLogManager> {
 		Check.notNull(profileId, "profileId");
 		Check.notNull(deviceId, "deviceId");
 		
-		readyLock();
+		long stamp = readyLock();
 		try {
 			final String key = profileId.toString() + deviceId;
 			try {
@@ -396,7 +395,7 @@ public class AuditLogManager extends AbstractAppManager<AuditLogManager> {
 				lockKnownDevice.unlock(key);
 			}
 		} finally {
-			readyUnlock();
+			readyUnlock(stamp);
 		}
 	}
 	
@@ -404,17 +403,17 @@ public class AuditLogManager extends AbstractAppManager<AuditLogManager> {
 		Check.notNull(domainId, "domainId");
 		Check.notNull(ipAddress, "ipAddress");
 		
-		readyLock();
+		long stamp = readyLock();
 		try {
 			return internalGetIPGeolocationData(domainId, ipAddress);
 		} finally {
-			readyUnlock();
+			readyUnlock(stamp);
 		}
 	}
 	
 	private void batchWrite(final String domainId, final String userId, final String softwareName, final String sessionId, final String serviceId, final String context, final String action, final Collection<AuditReferenceDataEntry> entries) {
 		try {
-			readyLock();
+			long stamp = readyLock();
 			try {
 				WT.runPrivileged(() -> {
 					try {
@@ -424,7 +423,7 @@ public class AuditLogManager extends AbstractAppManager<AuditLogManager> {
 					}
 				});
 			} finally {
-				readyUnlock();
+				readyUnlock(stamp);
 			}
 		} catch (WTException ex1) {
 			LOGGER.trace("Not ready", ex1);

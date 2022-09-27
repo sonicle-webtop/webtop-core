@@ -92,19 +92,19 @@ public class DocEditorManager extends AbstractAppManager<DocEditorManager> {
 	private final Map<String, Long> expirationCandidates = new HashMap();
 	
 	DocEditorManager(WebTopApp wta, final long timeToLiveMillis) {
-		super(wta);
+		super(wta, true);
 		this.timeToLiveMillis = timeToLiveMillis;
-		initialized();
 		LOGGER.debug("timeToLive: {}", timeToLiveMillis);
+		initialize();
 	}
 
 	@Override
-	protected Logger internalGetLogger() {
+	protected Logger doGetLogger() {
 		return LOGGER;
 	}
 	
 	@Override
-	protected void internalAppManagerCleanup() {
+	protected void doAppManagerCleanup() {
 		handlers.clear();
 		sessionIdByEditingId.clear();
 		editingIdsBySessionId.clear();
@@ -112,7 +112,7 @@ public class DocEditorManager extends AbstractAppManager<DocEditorManager> {
 	}
 	
 	public DocumentConfig registerDocumentHandler(String sessionId, BaseDocEditorDocumentHandler docHandler, String filename, long lastModifiedTime) throws WTException, FileSystemException {
-		readyLock();
+		long stamp = readyLock();
 		try {
 			try {
 				internalCleanupExpired(System.currentTimeMillis());
@@ -146,20 +146,20 @@ public class DocEditorManager extends AbstractAppManager<DocEditorManager> {
 				return null;
 			}
 		} finally {
-			readyUnlock();
+			readyUnlock(stamp);
 		}
 	}
 	
 	public void unregisterDocumentHandler(String editingId) {
 		try {
-			readyLock();
+			long stamp = readyLock();
 			try {
 				LOGGER.debug("Unregistering DocumentHandler [{}]", editingId);
 				String sessionId = sessionIdByEditingId.remove(editingId);
 				editingIdsBySessionId.remove(sessionId);
 				handlers.remove(editingId);
 			} finally {
-				readyUnlock();
+				readyUnlock(stamp);
 			}
 		} catch (WTException ex1) {
 			LOGGER.trace("Not ready", ex1);
@@ -168,11 +168,11 @@ public class DocEditorManager extends AbstractAppManager<DocEditorManager> {
 	
 	public BaseDocEditorDocumentHandler getDocumentHandler(String editingId) {
 		try {
-			readyLock();
+			long stamp = readyLock();
 			try {
 				return handlers.get(editingId);
 			} finally {
-				readyUnlock();
+				readyUnlock(stamp);
 			}
 		} catch (WTException ex1) {
 			LOGGER.trace("Not ready", ex1);
@@ -187,13 +187,13 @@ public class DocEditorManager extends AbstractAppManager<DocEditorManager> {
 	
 	void cleanupOnSessionDestroy(String sessionId) {
 		try {
-			readyLock();
+			long stamp = readyLock();
 			try {
 				if (editingIdsBySessionId.containsKey(sessionId)) {
 					expirationCandidates.put(sessionId, System.currentTimeMillis());
 				}
 			} finally {
-				readyUnlock();
+				readyUnlock(stamp);
 			}
 		} catch (WTException ex1) {
 			LOGGER.trace("Not ready", ex1);

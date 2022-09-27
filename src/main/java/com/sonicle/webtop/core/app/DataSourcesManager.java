@@ -45,6 +45,7 @@ import com.sonicle.webtop.core.app.io.dbutils.FilterInfo;
 import com.sonicle.webtop.core.app.io.dbutils.FilterableArrayListHandler;
 import com.sonicle.webtop.core.app.io.dbutils.LongScalarHandler;
 import com.sonicle.webtop.core.app.io.dbutils.RowsAndCols;
+import com.sonicle.webtop.core.app.sdk.WTConnectionException;
 import com.sonicle.webtop.core.app.sdk.WTNotFoundException;
 import com.sonicle.webtop.core.app.util.ExceptionUtils;
 import com.sonicle.webtop.core.bol.ODataSource;
@@ -126,24 +127,26 @@ public class DataSourcesManager extends AbstractAppManager<DataSourcesManager> {
 	}
 	
 	DataSourcesManager(WebTopApp wta) {
-		super(wta);
+		super(wta, true);
 		
 		// Preload included drivers
 		// Due to internal usage of "org.postgresql.Driver" we can safely skip it!
 		loadDriverQuietly("org.mariadb.jdbc.Driver");
 		loadDriverQuietly("com.microsoft.sqlserver.jdbc.SQLServerDriver");
-		
+	}
+
+	@Override
+	protected void doAppManagerInitialize() {
 		initPools();
-		initialized();
 	}
 	
 	@Override
-	protected Logger internalGetLogger() {
+	protected Logger doGetLogger() {
 		return LOGGER;
 	}
 	
 	@Override
-	protected void internalAppManagerCleanup() {
+	protected void doAppManagerCleanup() {
 		dataSourceConnectionCheckers.shutdownNow();
 		LOGGER.debug("Clearing pools...");
 		clearPools();
@@ -192,12 +195,12 @@ public class DataSourcesManager extends AbstractAppManager<DataSourcesManager> {
 	
 	public Map<String, DataSourceType> listDataSourceTypes(final String domainId) throws WTException {
 		Check.notNull(domainId, "domainId");
-		readyLock();
+		long stamp = readyLock();
 		try {
 			return doDataSourceTypesGet(domainId);
 			
 		} finally {
-			readyUnlock();
+			readyUnlock(stamp);
 		}
 	}
 	
@@ -207,7 +210,7 @@ public class DataSourcesManager extends AbstractAppManager<DataSourcesManager> {
 		DataSourceQueryDAO dsqDao = DataSourceQueryDAO.getInstance();
 		Connection con = null;
 		
-		readyLock();
+		long stamp = readyLock();
 		try {
 			Map<String, DataSourceType> dsTypes = doDataSourceTypesGet(domainId);
 			
@@ -244,7 +247,7 @@ public class DataSourcesManager extends AbstractAppManager<DataSourcesManager> {
 				DbUtils.closeQuietly(con);
 			}
 		} finally {
-			readyUnlock();
+			readyUnlock(stamp);
 		}
 	}
 	
@@ -253,7 +256,7 @@ public class DataSourcesManager extends AbstractAppManager<DataSourcesManager> {
 		Check.notNull(dataSourceId, "dataSourceId");
 		Connection con = null;
 		
-		readyLock();
+		long stamp = readyLock();
 		try {
 			try {
 				con = getConnection(CoreManifest.ID);
@@ -265,7 +268,7 @@ public class DataSourcesManager extends AbstractAppManager<DataSourcesManager> {
 				DbUtils.closeQuietly(con);
 			}
 		} finally {
-			readyUnlock();
+			readyUnlock(stamp);
 		}
 	}
 	
@@ -275,7 +278,7 @@ public class DataSourcesManager extends AbstractAppManager<DataSourcesManager> {
 		DataSourceDAO dsDao = DataSourceDAO.getInstance();
 		Connection con = null;
 		
-		readyLock();
+		long stamp = readyLock();
 		try {
 			DataSourceType dsType = doDataSourceTypeGet(domainId, dataSource.getType());
 			if (dsType == null) throw new WTException("Unsupported dataSource type [{}]", dataSource.getType());
@@ -305,7 +308,7 @@ public class DataSourcesManager extends AbstractAppManager<DataSourcesManager> {
 				DbUtils.closeQuietly(con);
 			}
 		} finally {
-			readyUnlock();
+			readyUnlock(stamp);
 		}
 	}
 	
@@ -315,7 +318,7 @@ public class DataSourcesManager extends AbstractAppManager<DataSourcesManager> {
 		DataSourceDAO dsDao = DataSourceDAO.getInstance();
 		Connection con = null;
 		
-		readyLock();
+		long stamp = readyLock();
 		try {
 			try {
 				if (setPassword) encryptPassword(dataSource);
@@ -339,7 +342,7 @@ public class DataSourcesManager extends AbstractAppManager<DataSourcesManager> {
 			}
 			
 		} finally {
-			readyUnlock();
+			readyUnlock(stamp);
 		}
 	}
 	
@@ -349,7 +352,7 @@ public class DataSourcesManager extends AbstractAppManager<DataSourcesManager> {
 		DataSourceDAO dsDao = DataSourceDAO.getInstance();
 		Connection con = null;
 		
-		readyLock();
+		long stamp = readyLock();
 		try {
 			try {
 				con = getConnection(CoreManifest.ID);
@@ -374,15 +377,15 @@ public class DataSourcesManager extends AbstractAppManager<DataSourcesManager> {
 			}
 			
 		} finally {
-			readyUnlock();
+			readyUnlock(stamp);
 		}
 	}
 	
-	public void checkDataSourceConnection(final String domainId, final String dataSourceId) throws WTException {
+	public void checkDataSourceConnection(final String domainId, final String dataSourceId) throws WTConnectionException, WTException {
 		Check.notNull(domainId, "domainId");
 		Check.notNull(dataSourceId, "dataSourceId");
 		
-		readyLock();
+		long stamp = readyLock();
 		try {
 			DataSource ds = null;
 			Connection con = null;
@@ -405,18 +408,18 @@ public class DataSourcesManager extends AbstractAppManager<DataSourcesManager> {
 			lockedSetupPool(domainId, ds, SetupPoolMode.ADD_QUIETLY);
 			
 		} finally {
-			readyUnlock();
+			readyUnlock(stamp);
 		}
 	}
 	
-	public void checkDataSourceConnection(final String domainId, final String dataSourceType, final String serverName, final Integer serverPort, final String databaseName, final String username, final String password, final Map<String, String> props) throws WTException {
-		readyLock();
+	public void checkDataSourceConnection(final String domainId, final String dataSourceType, final String serverName, final Integer serverPort, final String databaseName, final String username, final String password, final Map<String, String> props) throws WTConnectionException, WTException {
+		long stamp = readyLock();
 		try {
 			DataSourceType dsType = doDataSourceTypeGet(domainId, dataSourceType);
 			if (dsType == null) throw new WTException("Unsupported dataSource type [{}]", dataSourceType);
 			doCheckDataSourceConnection(createJdbcConfig(dsType, serverName, serverPort, databaseName, username, password, props));
 		} finally {
-			readyUnlock();
+			readyUnlock(stamp);
 		}
 	}
 	
@@ -425,7 +428,7 @@ public class DataSourcesManager extends AbstractAppManager<DataSourcesManager> {
 		Check.notNull(queryId, "queryId");
 		Connection con = null;
 		
-		readyLock();
+		long stamp = readyLock();
 		try {
 			try {
 				con = getConnection(CoreManifest.ID);
@@ -437,7 +440,7 @@ public class DataSourcesManager extends AbstractAppManager<DataSourcesManager> {
 				DbUtils.closeQuietly(con);
 			}
 		} finally {
-			readyUnlock();
+			readyUnlock(stamp);
 		}
 	}
 	
@@ -449,7 +452,7 @@ public class DataSourcesManager extends AbstractAppManager<DataSourcesManager> {
 		DataSourceQueryDAO dsqDao = DataSourceQueryDAO.getInstance();
 		Connection con = null;
 		
-		readyLock();
+		long stamp = readyLock();
 		try {
 			try {
 				String newQueryId = IdentifierUtils.getUUIDTimeBased(true);
@@ -469,7 +472,7 @@ public class DataSourcesManager extends AbstractAppManager<DataSourcesManager> {
 				DbUtils.closeQuietly(con);
 			}
 		} finally {
-			readyUnlock();
+			readyUnlock(stamp);
 		}
 	}
 	
@@ -479,7 +482,7 @@ public class DataSourcesManager extends AbstractAppManager<DataSourcesManager> {
 		DataSourceQueryDAO dsqDao = DataSourceQueryDAO.getInstance();
 		Connection con = null;
 		
-		readyLock();
+		long stamp = readyLock();
 		try {
 			try {
 				ODataSourceQuery odsq = fillODataSourceQuery(new ODataSourceQuery(), query);
@@ -496,7 +499,7 @@ public class DataSourcesManager extends AbstractAppManager<DataSourcesManager> {
 			}
 			
 		} finally {
-			readyUnlock();
+			readyUnlock(stamp);
 		}
 	}
 	
@@ -506,7 +509,7 @@ public class DataSourcesManager extends AbstractAppManager<DataSourcesManager> {
 		DataSourceQueryDAO dsqDao = DataSourceQueryDAO.getInstance();
 		Connection con = null;
 		
-		readyLock();
+		long stamp = readyLock();
 		try {
 			try {
 				con = getConnection(CoreManifest.ID);
@@ -520,7 +523,7 @@ public class DataSourcesManager extends AbstractAppManager<DataSourcesManager> {
 			}
 			
 		} finally {
-			readyUnlock();
+			readyUnlock(stamp);
 		}
 	}
 	
@@ -541,7 +544,7 @@ public class DataSourcesManager extends AbstractAppManager<DataSourcesManager> {
 	public Map<String, DataSourceQuery> listDataSourceQueries(final String domainId) throws WTException {
 		Check.notNull(domainId, "domainId");
 		
-		readyLock();
+		long stamp = readyLock();
 		try {
 			DataSourceQueryDAO dsqDao = DataSourceQueryDAO.getInstance();
 			Connection con = null;
@@ -560,14 +563,13 @@ public class DataSourcesManager extends AbstractAppManager<DataSourcesManager> {
 				DbUtils.closeQuietly(con);
 			}
 		} finally {
-			readyUnlock();
+			readyUnlock(stamp);
 		}
 	}
 	
 	public Set<String> guessQueryColumns(final String domainId, final String queryId, final QueryPlaceholders placeholders) throws WTException {
-		readyLock();
+		long stamp = readyLock();
 		try {
-			
 			DataSourceQuery dsQuery = doDataSourceQueryLookup(domainId, queryId);
 			if (dsQuery == null) throw new WTNotFoundException("Query not found [{}, {}]", queryId, domainId);
 			
@@ -593,14 +595,13 @@ public class DataSourcesManager extends AbstractAppManager<DataSourcesManager> {
 			}
 			
 		} finally {
-			readyUnlock();
+			readyUnlock(stamp);
 		}
 	}
 	
 	public Set<String> extractQueryPlaceholders(final String domainId, final String queryId) throws WTException {
-		readyLock();
+		long stamp = readyLock();
 		try {
-			
 			DataSourceQuery dsQuery = doDataSourceQueryLookup(domainId, queryId);
 			if (dsQuery == null) throw new WTNotFoundException("Query not found [{}, {}]", queryId, domainId);
 			
@@ -608,7 +609,7 @@ public class DataSourcesManager extends AbstractAppManager<DataSourcesManager> {
 			return extractQueryPlaceholders(dsQuery.getRawSql());
 			
 		} finally {
-			readyUnlock();
+			readyUnlock(stamp);
 		}
 	}
 	
@@ -623,7 +624,7 @@ public class DataSourcesManager extends AbstractAppManager<DataSourcesManager> {
 	}
 	
 	public <T> DataSourceBase.ExecuteQueryResult<T> executeQuery(final String domainId, final String queryId, final QueryPlaceholders placeholders, final PageInfo paginationInfo, final boolean debugReport, final ResultSetHandler<T> resultSetHandler, final FilterClause filterClause, final Integer maxRows) throws WTException {
-		readyLock();
+		long stamp = readyLock();
 		try {
 			DataSourceQuery dsQuery = doDataSourceQueryLookup(domainId, queryId);
 			if (dsQuery == null) throw new WTNotFoundException("Query not found [{}, {}]", queryId, domainId);
@@ -652,12 +653,12 @@ public class DataSourcesManager extends AbstractAppManager<DataSourcesManager> {
 			}
 			
 		} finally {
-			readyUnlock();
+			readyUnlock(stamp);
 		}
 	}
 	
 	public <T> DataSourceBase.ExecuteQueryResult<T> executeRawQuery(final String domainId, final String dataSourceId, final String rawSql, final QueryPlaceholders placeholders, final PageInfo paginationInfo, final boolean debugReport, final ResultSetHandler<T> resultSetHandler, final Integer maxRows) throws WTException {
-		readyLock();
+		long stamp = readyLock();
 		try {
 			final String poolName = toPoolName(domainId, dataSourceId);
 			LOGGER.debug("Executing raw query against '{}'", poolName);
@@ -682,7 +683,7 @@ public class DataSourcesManager extends AbstractAppManager<DataSourcesManager> {
 			}
 			
 		} finally {
-			readyUnlock();
+			readyUnlock(stamp);
 		}
 	}
 	
@@ -911,7 +912,7 @@ public class DataSourcesManager extends AbstractAppManager<DataSourcesManager> {
 		}
 	}
 	
-	private void doCheckDataSourceConnection(final JdbcConfig jdbcConfig) throws WTException {
+	private void doCheckDataSourceConnection(final JdbcConfig jdbcConfig) throws WTConnectionException, WTException {
 		if (LOGGER.isDebugEnabled()) {
 			LOGGER.debug("Getting connection for '{}'", jdbcConfig.url);
 			LOGGER.debug("Properties:");
@@ -940,7 +941,7 @@ public class DataSourcesManager extends AbstractAppManager<DataSourcesManager> {
 		} catch (ExecutionException ex) {
 			throw ExceptionUtils.wrapThrowable(ex.getCause());
 		} catch (TimeoutException ex) {
-			throw new WTException("The connection to the host has failed. Error: \"Connection timeout\". Verify the connection properties. Make sure the DBMS servier is running on the host and accepting TCP/IP connections at the port. Make sure that TCP connections to the port are not blocked by a firewall.");
+			throw new WTConnectionException("The connection to the host has failed. Error: \"Connection timeout\". Verify the connection properties. Make sure the DBMS servier is running on the host and accepting TCP/IP connections at the port. Make sure that TCP connections to the port are not blocked by a firewall.");
 		} catch (CancellationException | InterruptedException ex) {
 			throw new WTException("The connection to the host has failed. Error: \"Connection cancelled\"");
 		}

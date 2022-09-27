@@ -523,6 +523,7 @@ public final class WebTopApp {
 			} else {
 				logger.info("This webapp [{}] is NOT the latest", webappName);
 			}
+			dsMgr.initialize();
 			
 			svcMgr.initializeJobServices();
 			if (isLatest()) {
