@@ -67,6 +67,7 @@ public class WebTopProps {
 	public static final String PROP_TOMCAT_MANAGER_URI = "webtop.tomcat.manager.uri";
 	public static final String PROP_WTDIR_SIMILARITY_LEVENTHRES = "webtop.directory.similarity.leventhres";
 	public static final String PROP_WTDIR_SIMILARITY_TOKENSIZE = "webtop.directory.similarity.tokensize";
+	public static final String PROP_SESSION_FORCESECURECOOKIE = "webtop.session.forcesecurecookie";
 	
 	public static void init() {
 		Properties systemProps = System.getProperties();
@@ -138,6 +139,7 @@ public class WebTopProps {
 		WebTopApp.logger.info("{} = {} [{}]", PROP_TOMCAT_MANAGER_URI, properties.getProperty(PROP_TOMCAT_MANAGER_URI), getTomcatManagerUri(properties));
 		WebTopApp.logger.info("{} = {} [{}]", PROP_WTDIR_SIMILARITY_LEVENTHRES, properties.getProperty(PROP_WTDIR_SIMILARITY_LEVENTHRES), getWTDirectorySimilarityLevenThres(properties));
 		WebTopApp.logger.info("{} = {} [{}]", PROP_WTDIR_SIMILARITY_TOKENSIZE, properties.getProperty(PROP_WTDIR_SIMILARITY_TOKENSIZE), getWTDirectorySimilarityTokenSize(properties));
+		WebTopApp.logger.info("{} = {} [{}]", PROP_SESSION_FORCESECURECOOKIE, properties.getProperty(PROP_SESSION_FORCESECURECOOKIE), getSessionForceSecureCookie(properties));
 	}
 	
 	public static void checkOldPropsUsage(Properties properties) {
@@ -266,6 +268,10 @@ public class WebTopProps {
 	
 	public static short getWTDirectorySimilarityTokenSize(Properties props) {
 		return (short)Math.max(0, PropUtils.getIntProperty(props, PROP_WTDIR_SIMILARITY_TOKENSIZE, 4));
+	}
+	
+	public static boolean getSessionForceSecureCookie(Properties props) {
+		return PropUtils.getBooleanProperty(props, PROP_SESSION_FORCESECURECOOKIE, false);
 	}
 	
 	private static void copyOldProp(Properties props, String oldKey, String newKey) {

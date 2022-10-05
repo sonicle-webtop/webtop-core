@@ -130,6 +130,15 @@ public class ContextLoader {
 			throw new IllegalStateException("There is already a WebTop application associated with the current ServletContext.");
 		}
 		
+		// If property is set, forcibly enables 'secure' attribute in SessionCookie 
+		// configuration. This is a fallback mode for dealing with secured cookies 
+		// that enables them app-wide. Tipically, this is done using a specific 
+		// Valve that configures the Request according to X-Forwarded-* headers 
+		// passed py proxy-pass.
+		if (WebTopProps.getSessionForceSecureCookie(properties)) {
+			servletContext.getSessionCookieConfig().setSecure(true);
+		}
+		
 		try {
 			WebTopApp wta = new WebTopApp(servletContext, properties);
 			wta.boot();
