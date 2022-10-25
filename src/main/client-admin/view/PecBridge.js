@@ -106,6 +106,11 @@ Ext.define('Sonicle.webtop.core.admin.view.PecBridge', {
 						}
 					}
 				},
+				viewConfig: {
+					getRowClass: function(rec) {
+						return rec.get('enabled') === false ? 'wtadm-gpfetchers-row-disabled' : '';
+					}
+				},
 				columns: [{
 					xtype: 'rownumberer'
 				}, {
@@ -180,6 +185,11 @@ Ext.define('Sonicle.webtop.core.admin.view.PecBridge', {
 							// Fix for updating selection
 							me.lref('gprelays').getSelectionModel().deselect(recs);
 						}
+					}
+				},
+				viewConfig: {
+					getRowClass: function(rec) {
+						return rec.get('enabled') === false ? 'wtadm-gprelays-row-disabled' : '';
 					}
 				},
 				columns: [{

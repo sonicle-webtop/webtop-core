@@ -54,7 +54,8 @@ Ext.define('Sonicle.webtop.core.admin.view.PecBridgeFetcher', {
 		me.callParent([cfg]);
 		
 		WTU.applyFormulas(me.getVM(), {
-			foKeepCopy: WTF.checkboxBind('record', 'keepCopy')
+			foKeepCopy: WTF.checkboxBind('record', 'keepCopy'),
+			foEnabled: WTF.checkboxBind('record', 'enabled')
 		});
 	},
 	
@@ -133,6 +134,12 @@ Ext.define('Sonicle.webtop.core.admin.view.PecBridgeFetcher', {
 					bind: '{foKeepCopy}',
 					hideEmptyLabel: false,
 					boxLabel: me.mys.res('pecBridgeFetcher.fld-keepCopy.lbl')
+				},
+				{
+					xtype: 'checkbox',
+					bind: '{foEnabled}',
+					hideEmptyLabel: false,
+					boxLabel: me.mys.res('pecBridgeFetcher.fld-enabled.lbl')
 				}
 			]
 		});

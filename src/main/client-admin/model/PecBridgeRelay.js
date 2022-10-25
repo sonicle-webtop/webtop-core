@@ -56,6 +56,7 @@ Ext.define('Sonicle.webtop.core.admin.model.PecBridgeRelay', {
 		WTF.field('port', 'int', false),
 		WTF.field('username', 'string', false),
 		WTF.field('password', 'string', false),
-		WTF.field('connSecurity', 'string', true, {defaultValue: 'SSL'})
+		WTF.field('connSecurity', 'string', true, {defaultValue: 'SSL'}),
+		WTF.field('enabled', 'boolean', false, {defaultValue: true})
 	]
 });

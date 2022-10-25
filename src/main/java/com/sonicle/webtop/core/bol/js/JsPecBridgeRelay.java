@@ -50,6 +50,7 @@ public class JsPecBridgeRelay {
 	public String username;
 	public String password;
 	public String connSecurity;
+	public Boolean enabled;
 	
 	public JsPecBridgeRelay() {}
 	
@@ -66,6 +67,7 @@ public class JsPecBridgeRelay {
 		if (o.getProtocol().equals("SMTPS")) {
 			connSecurity = "SSL";
 		}
+		enabled = o.getEnabled();
 	}
 	
 	public static OPecBridgeRelay buildRelay(JsPecBridgeRelay js) {
@@ -80,6 +82,7 @@ public class JsPecBridgeRelay {
 		if (js.connSecurity.equals("SSL")) {
 			o.setProtocol("SMTPS");
 		}
+		o.setEnabled(js.enabled);
 		return o;
 	}
 }

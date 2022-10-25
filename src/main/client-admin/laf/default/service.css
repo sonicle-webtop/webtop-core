@@ -54,3 +54,6 @@
 .wtadm-gpusers-row-disabled { color: #E60D35; }
 .wtadm-domainAccessLog-warning { background-color: #FFFFE0; }
 .wtadm-domainAccessLog-danger { background-color: #FFCCCB; }
+
+.wtadm-gpfetchers-row-disabled { color: #E60D35; }
+.wtadm-gprelays-row-disabled { color: #E60D35; }

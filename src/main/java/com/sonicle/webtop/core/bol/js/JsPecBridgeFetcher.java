@@ -50,6 +50,7 @@ public class JsPecBridgeFetcher {
 	public String password;
 	public String connSecurity;
 	public Boolean keepCopy;
+	public Boolean enabled;
 	
 	public JsPecBridgeFetcher() {}
 	
@@ -66,6 +67,7 @@ public class JsPecBridgeFetcher {
 			connSecurity = "SSL";
 		}
 		keepCopy = !o.getDeleteOnForward();
+		enabled = o.getEnabled();
 	}
 	
 	public static OPecBridgeFetcher buildFetcher(JsPecBridgeFetcher js) {
@@ -80,6 +82,7 @@ public class JsPecBridgeFetcher {
 			o.setProtocol("IMAPS");
 		}
 		o.setDeleteOnForward(!js.keepCopy);
+		o.setEnabled(js.enabled);
 		return o;
 	}
 }

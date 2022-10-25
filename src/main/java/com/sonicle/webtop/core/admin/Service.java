@@ -1426,8 +1426,8 @@ public class Service extends BaseService {
 			String crud = ServletUtils.getStringParameter(request, "crud", true);
 			if(crud.equals(Crud.READ)) {
 				Integer id = ServletUtils.getIntParameter(request, "id", null);
-				OPecBridgeRelay fetcher = coreadm.getPecBridgeRelay(id);
-				new JsonResult(new JsPecBridgeRelay(fetcher)).printTo(out);
+				OPecBridgeRelay relay = coreadm.getPecBridgeRelay(id);
+				new JsonResult(new JsPecBridgeRelay(relay)).printTo(out);
 				
 			} else if(crud.equals(Crud.CREATE)) {
 				Payload<MapItem, JsPecBridgeRelay> pl = ServletUtils.getPayload(request, JsPecBridgeRelay.class);

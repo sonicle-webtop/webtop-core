@@ -44,7 +44,7 @@ Ext.define('Sonicle.webtop.core.admin.view.PecBridgeRelay', {
 		title: '{pecBridgeRelay.tit}',
 		iconCls: 'wtadm-icon-pecBridge',
 		width: 400,
-		height: 300
+		height: 340
 	},
 	fieldTitle: 'userId',
 	modelName: 'Sonicle.webtop.core.admin.model.PecBridgeRelay',
@@ -52,6 +52,11 @@ Ext.define('Sonicle.webtop.core.admin.view.PecBridgeRelay', {
 	constructor: function(cfg) {
 		var me = this;
 		me.callParent([cfg]);
+
+		WTU.applyFormulas(me.getVM(), {
+			foEnabled: WTF.checkboxBind('record', 'enabled')
+		});
+	
 	},
 	
 	initComponent: function() {
@@ -128,7 +133,13 @@ Ext.define('Sonicle.webtop.core.admin.view.PecBridgeRelay', {
 					}),
 					fieldLabel: me.mys.res('pecBridgeRelay.fld-connSecurity.lbl'),
 					width: 230
-				})
+				}),
+				{
+					xtype: 'checkbox',
+					bind: '{foEnabled}',
+					hideEmptyLabel: false,
+					boxLabel: me.mys.res('pecBridgeRelay.fld-enabled.lbl')
+				}
 			]
 		});
 		me.on('viewload', me.onViewLoad);
