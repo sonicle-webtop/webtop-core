@@ -54,6 +54,6 @@ Ext.define('Sonicle.webtop.core.admin.model.PecBridgeFetcher', {
 		WTF.field('username', 'string', false),
 		WTF.field('password', 'string', false),
 		WTF.field('connSecurity', 'string', true, {defaultValue: 'SSL'}),
-		WTF.field('keepCopy', 'boolean', false)
+		WTF.field('keepCopy', 'boolean', false, {defaultValue: true})
 	]
 });

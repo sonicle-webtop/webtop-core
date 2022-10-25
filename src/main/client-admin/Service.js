@@ -956,7 +956,7 @@ Ext.define('Sonicle.webtop.core.admin.Service', {
 			vct.getView().begin('new', {
 				data: {
 					domainId: domainId,
-					keepCopy: false
+					keepCopy: true
 				}
 			});
 		});
