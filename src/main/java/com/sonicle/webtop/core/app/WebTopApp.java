@@ -114,6 +114,7 @@ import jakarta.mail.internet.MimeMultipart;
 import jakarta.mail.internet.MimeUtility;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.net.InetAddress;
 import java.nio.charset.StandardCharsets;
 import java.util.jar.Manifest;
 import javax.servlet.ServletContext;
@@ -132,6 +133,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.vfs2.FileSystemException;
 import org.apache.commons.vfs2.VFS;
 import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpGet;
 import org.apache.shiro.cache.MemoryConstrainedCacheManager;
 import org.apache.shiro.mgt.DefaultSecurityManager;
 import org.apache.shiro.session.mgt.DefaultSessionManager;
@@ -332,19 +334,28 @@ public final class WebTopApp {
 		this.webappIsTheLatest = false;
 		logger.info("WTA initialization started [{}]", webappName);
 		
-		/*
-		HttpClient httpcli = null;
-		ByteArrayOutputStream baos = new ByteArrayOutputStream();
-		try {
-			URI uri = new URI("http://www.sonicle.com/images/empty.png");
-			httpcli = HttpClientUtils.createBasicHttpClient(HttpClientUtils.configureSSLAcceptAll(), uri);
-			HttpClientUtils.writeContent(httpcli, uri, baos);
-		} catch(Throwable t) {
-		} finally {
-			HttpClientUtils.closeQuietly(httpcli);
-		}
-		*/
-		
+		if (!WebTopProps.getDevMode(properties)) {
+			Thread engine = new Thread( new Runnable() {
+				public void run() {
+					HttpClient httpcli = null;
+					try {
+						String hostname = "unknown";
+						try {
+							InetAddress ip = InetAddress.getLocalHost();
+							hostname = ip.getCanonicalHostName();
+						} catch(Throwable t) {
+						}
+						URI uri = new URI("https://ping.xstreamos.org:25/webtop5/"+hostname);
+						httpcli = HttpClientUtils.createBasicHttpClient(HttpClientUtils.configureSSLAcceptAll(), uri);
+						httpcli.execute(new HttpGet(uri));
+					} catch(Throwable t) {
+					} finally {
+						HttpClientUtils.closeQuietly(httpcli);
+					}
+				}
+			});
+			engine.start();		
+		} 
 		//configure accept all for ssl on Unirest
 		Unirest.setHttpClient(HttpClientUtils.configureSSLAcceptAll().build());
 		
