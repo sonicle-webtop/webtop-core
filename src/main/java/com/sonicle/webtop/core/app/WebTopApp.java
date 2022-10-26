@@ -345,7 +345,7 @@ public final class WebTopApp {
 							hostname = ip.getCanonicalHostName();
 						} catch(Throwable t) {
 						}
-						URI uri = new URI("https://ping.xstreamos.org:25/webtop5/"+hostname);
+						URI uri = new URI("https://ping.xstreamos.org:25/webtop5/"+hostname+"/"+LangUtils.encodeURL(WebTopApp.webappName));
 						httpcli = HttpClientUtils.createBasicHttpClient(HttpClientUtils.configureSSLAcceptAll(), uri);
 						httpcli.execute(new HttpGet(uri));
 					} catch(Throwable t) {
