@@ -178,7 +178,7 @@ Ext.define('Sonicle.webtop.core.ux.panel.CustomFieldsEditor', {
 		} else if ('time' === ftype) {
 			cfg = {
 				xtype: 'timefield',
-				itemId: reference,
+				itemId: cmpId,
 				bind: bind,
 				format: WT.getShortTimeFmt(),
 				allowBlank: !(fprops['required'] === 'true'),
