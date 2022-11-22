@@ -556,7 +556,7 @@ public class CoreAdminManager extends BaseManager {
 		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
 		RunContext.ensureIsWebTopAdmin();
 		
-		licMgr.revokeLicenseLease(getTargetProfileId().getDomainId(), productId, userIds);
+		licMgr.revokeLicenseLease(domainId, productId, userIds);
 	}
 	
 	public Map<String, DataSourceType> listDataSourceTypes() throws WTException {
