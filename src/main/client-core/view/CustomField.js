@@ -164,6 +164,9 @@ Ext.define('Sonicle.webtop.core.view.CustomField', {
 			'time': me.propsBuilder(
 				'searchable', 'previewable', 'required', 'disabledExpr', 'onChangeExpr'
 			),
+			'checkbox': me.propsBuilder(
+				'searchable', 'previewable'
+			),
 			'combobox': me.propsBuilder(
 				'searchable', 'previewable', 'required', 'queryable', 'emptyText', 'width', 'anchor', 'disabledExpr', 'onChangeExpr'
 			),
