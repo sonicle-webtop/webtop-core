@@ -10,7 +10,7 @@
 	<parent>
 		<groupId>com.sonicle.webtop</groupId>
 		<artifactId>webtop-superpom-core</artifactId>
-		<version>8</version>
+		<version>9</version>
 	</parent>
 	
 	<properties>
@@ -167,7 +167,11 @@
 			<artifactId>jackson-databind</artifactId>
 			<version>${jackson.version}</version>
 		</dependency>
-		
+		<dependency>
+			<groupId>org.reflections</groupId>
+			<artifactId>reflections</artifactId>
+			<version>0.10.2</version>
+		</dependency>
 		<dependency>
 			<groupId>io.swagger.core.v3</groupId>
 			<artifactId>swagger-jaxrs2</artifactId>
@@ -836,10 +840,53 @@
 							</execution>
 						</executions>
 					</plugin>
+					<!-- Supports OpenApi v2 spec, but StopLight editor is buggy with OpenApi v2 spec -->
+					<!--
 					<plugin>
 						<groupId>io.swagger</groupId>
 						<artifactId>swagger-codegen-maven-plugin</artifactId>
 						<version>${swagger-codegen-maven-plugin.version}</version>
+						<executions>
+							<execution>
+								<id>generate-oas-classes</id>
+								<phase>generate-sources</phase>
+							</execution>
+						</executions>
+					</plugin>
+					-->
+					
+					<!-- Supports OpenApi v2/v3 spec, but generated code is buggy and some imports are missing -->
+					<!--
+						Resource classes:
+							- import io.swagger.annotations.*;
+							+ import io.swagger.annotations.Api;
+							+ import io.swagger.v3.oas.annotations.*;
+							+ import io.swagger.v3.oas.annotations.media.*;
+							+ import io.swagger.v3.oas.annotations.responses.*;
+							+ import io.swagger.v3.oas.annotations.security.*;
+						
+						Model classes:
+							+ import com.fasterxml.jackson.annotation.JsonCreator;
+							+ import com.fasterxml.jackson.annotation.JsonValue;
+					-->
+					<!--
+					<plugin>
+						<groupId>io.swagger.codegen.v3</groupId>
+						<artifactId>swagger-codegen-maven-plugin</artifactId>
+						<version>${swagger-codegen-maven-plugin.version}</version>
+						<executions>
+							<execution>
+								<id>generate-oas-classes</id>
+								<phase>generate-sources</phase>
+							</execution>
+						</executions>
+					</plugin>
+					-->
+					<!-- Supports OpenApi v2/v3 spec -->
+					<plugin>
+						<groupId>org.openapitools</groupId>
+						<artifactId>openapi-generator-maven-plugin</artifactId>
+						<version>${openapi-generator-maven-plugin.version}</version>
 						<executions>
 							<execution>
 								<id>generate-oas-classes</id>
