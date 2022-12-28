@@ -229,6 +229,7 @@ Ext.define('Sonicle.webtop.core.ux.panel.CustomFieldsEditor', {
 				Ext.apply(cfg, {
 					typeAhead: true,
 					queryMode: 'local',
+					anyMatch: true,
 					forceSelection: true,
 					selectOnFocus: true,
 					triggerAction: 'all'
