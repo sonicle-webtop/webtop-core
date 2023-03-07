@@ -35,6 +35,7 @@ package com.sonicle.webtop.core.app;
 import com.sonicle.commons.PathUtils;
 import com.sonicle.commons.PropUtils;
 import com.sonicle.commons.web.ContextUtils;
+import com.sonicle.security.PasswordUtils;
 import com.sonicle.webtop.core.app.util.LogbackHelper;
 import com.sonicle.webtop.core.util.ICalendarUtils;
 import java.io.File;
@@ -47,6 +48,7 @@ import org.apache.commons.lang3.StringUtils;
  */
 public class WebTopProps {
 	public static final String WEBTOP_PROPERTIES_FILE = "webtop.properties";
+	public static final String PROP_HOME = "webtop.home";
 	public static final String PROP_ETC_DIR = "webtop.etc.dir";
 	public static final String PROP_LOG_DIR = "webtop.log.dir";
 	public static final String PROP_LOG_FILE_BASENAME = "webtop.log.file.basename";
@@ -64,10 +66,12 @@ public class WebTopProps {
 	public static final String PROP_ATMO_MAXSCHEDULERTHREADS = "webtop.atmosphere.maxschedulerthreads";
 	public static final String PROP_ATMO_MAXPROCESSINGTHREADS = "webtop.atmosphere.maxprocessingthreads";
 	public static final String PROP_ATMO_MAXWRITETHREADS = "webtop.atmosphere.maxwritethreads";
+	public static final String PROP_EVENTBUS_MAXTHREADS = "webtop.eventbus.maxthreads";
 	public static final String PROP_TOMCAT_MANAGER_URI = "webtop.tomcat.manager.uri";
 	public static final String PROP_WTDIR_SIMILARITY_LEVENTHRES = "webtop.directory.similarity.leventhres";
 	public static final String PROP_WTDIR_SIMILARITY_TOKENSIZE = "webtop.directory.similarity.tokensize";
 	public static final String PROP_SESSION_FORCESECURECOOKIE = "webtop.session.forcesecurecookie";
+	public static final String PROP_PROVISIONING_API_TOKEN = "webtop.provisioning.api.token";
 	
 	public static void init() {
 		Properties systemProps = System.getProperties();
@@ -119,27 +123,30 @@ public class WebTopProps {
 	}
 	
 	public static void print(Properties properties) {
-		WebTopApp.logger.info("{} = {} [{}]", PROP_ETC_DIR, properties.getProperty(PROP_ETC_DIR), getEtcDir(properties));
-		WebTopApp.logger.info("{} = {} [{}]", PROP_LOG_DIR, properties.getProperty(PROP_LOG_DIR), getLogDir(properties));
-		WebTopApp.logger.info("{} = {} [{}]", PROP_LOG_FILE_BASENAME, properties.getProperty(PROP_LOG_FILE_BASENAME), getLogFileBasename(properties));
-		WebTopApp.logger.info("{} = {} [{}]", PROP_LOG_MAIN_TARGET, properties.getProperty(PROP_LOG_MAIN_TARGET), getLogMainTarget(properties));
-		WebTopApp.logger.info("{} = {} [{}]", PROP_LOG_MAIN_FILE_POLICY, properties.getProperty(PROP_LOG_MAIN_FILE_POLICY), getLogMainFilePolicy(properties));
-		WebTopApp.logger.info("{} = {} [{}]", PROP_LOG_AUTH_TARGET, properties.getProperty(PROP_LOG_AUTH_TARGET), getLogAuthTarget(properties));
-		WebTopApp.logger.info("{} = {} [{}]", PROP_LOGBACK_SYSLOG_HOST, properties.getProperty(PROP_LOGBACK_SYSLOG_HOST), getLogbackSyslogHost(properties));
-		WebTopApp.logger.info("{} = {} [{}]", PROP_LOGBACK_SYSLOG_PORT, properties.getProperty(PROP_LOGBACK_SYSLOG_PORT), getLogbackSyslogPort(properties));
-		WebTopApp.logger.info("{} = {} [{}]", PROP_EXTJS_DEBUG, properties.getProperty(PROP_EXTJS_DEBUG), getExtJsDebug(properties));
-		WebTopApp.logger.info("{} = {} [{}]", PROP_JS_DEBUG, properties.getProperty(PROP_JS_DEBUG), getJsDebug(properties));
-		WebTopApp.logger.info("{} = {} [{}]", PROP_SOEXT_DEV_MODE, properties.getProperty(PROP_SOEXT_DEV_MODE), getSoExtJsExtensionsDevMode(properties));
-		WebTopApp.logger.info("{} = {} [{}]", PROP_DEV_MODE, properties.getProperty(PROP_DEV_MODE), getDevMode(properties));
-		WebTopApp.logger.info("{} = {} [{}]", PROP_SCHEDULER_DISABLED, properties.getProperty(PROP_SCHEDULER_DISABLED), getSchedulerDisabled(properties));
-		WebTopApp.logger.info("{} = {} [{}]", PROP_QUARTZ_MAXTHREADS, properties.getProperty(PROP_QUARTZ_MAXTHREADS), getQuartzMaxThreads(properties));
-		WebTopApp.logger.info("{} = {} [{}]", PROP_ATMO_MAXSCHEDULERTHREADS, properties.getProperty(PROP_ATMO_MAXSCHEDULERTHREADS), getAtmosphereMaxSchedulerThreads(properties));
-		WebTopApp.logger.info("{} = {} [{}]", PROP_ATMO_MAXPROCESSINGTHREADS, properties.getProperty(PROP_ATMO_MAXPROCESSINGTHREADS), getAtmosphereMaxProcessingThreads(properties));
-		WebTopApp.logger.info("{} = {} [{}]", PROP_ATMO_MAXWRITETHREADS, properties.getProperty(PROP_ATMO_MAXWRITETHREADS), getAtmosphereMaxWriteThreads(properties));
-		WebTopApp.logger.info("{} = {} [{}]", PROP_TOMCAT_MANAGER_URI, properties.getProperty(PROP_TOMCAT_MANAGER_URI), getTomcatManagerUri(properties));
-		WebTopApp.logger.info("{} = {} [{}]", PROP_WTDIR_SIMILARITY_LEVENTHRES, properties.getProperty(PROP_WTDIR_SIMILARITY_LEVENTHRES), getWTDirectorySimilarityLevenThres(properties));
-		WebTopApp.logger.info("{} = {} [{}]", PROP_WTDIR_SIMILARITY_TOKENSIZE, properties.getProperty(PROP_WTDIR_SIMILARITY_TOKENSIZE), getWTDirectorySimilarityTokenSize(properties));
-		WebTopApp.logger.info("{} = {} [{}]", PROP_SESSION_FORCESECURECOOKIE, properties.getProperty(PROP_SESSION_FORCESECURECOOKIE), getSessionForceSecureCookie(properties));
+		Properties emptyProperties = new Properties();
+		WebTopApp.logger.info("{} = {} [{}]", PROP_ETC_DIR, properties.getProperty(PROP_ETC_DIR), getEtcDir(emptyProperties));
+		WebTopApp.logger.info("{} = {} [{}]", PROP_LOG_DIR, properties.getProperty(PROP_LOG_DIR), getLogDir(emptyProperties));
+		WebTopApp.logger.info("{} = {} [{}]", PROP_LOG_FILE_BASENAME, properties.getProperty(PROP_LOG_FILE_BASENAME), getLogFileBasename(emptyProperties));
+		WebTopApp.logger.info("{} = {} [{}]", PROP_LOG_MAIN_TARGET, properties.getProperty(PROP_LOG_MAIN_TARGET), getLogMainTarget(emptyProperties));
+		WebTopApp.logger.info("{} = {} [{}]", PROP_LOG_MAIN_FILE_POLICY, properties.getProperty(PROP_LOG_MAIN_FILE_POLICY), getLogMainFilePolicy(emptyProperties));
+		WebTopApp.logger.info("{} = {} [{}]", PROP_LOG_AUTH_TARGET, properties.getProperty(PROP_LOG_AUTH_TARGET), getLogAuthTarget(emptyProperties));
+		WebTopApp.logger.info("{} = {} [{}]", PROP_LOGBACK_SYSLOG_HOST, properties.getProperty(PROP_LOGBACK_SYSLOG_HOST), getLogbackSyslogHost(emptyProperties));
+		WebTopApp.logger.info("{} = {} [{}]", PROP_LOGBACK_SYSLOG_PORT, properties.getProperty(PROP_LOGBACK_SYSLOG_PORT), getLogbackSyslogPort(emptyProperties));
+		WebTopApp.logger.info("{} = {} [{}]", PROP_EXTJS_DEBUG, properties.getProperty(PROP_EXTJS_DEBUG), getExtJsDebug(emptyProperties));
+		WebTopApp.logger.info("{} = {} [{}]", PROP_JS_DEBUG, properties.getProperty(PROP_JS_DEBUG), getJsDebug(emptyProperties));
+		WebTopApp.logger.info("{} = {} [{}]", PROP_SOEXT_DEV_MODE, properties.getProperty(PROP_SOEXT_DEV_MODE), getSoExtJsExtensionsDevMode(emptyProperties));
+		WebTopApp.logger.info("{} = {} [{}]", PROP_DEV_MODE, properties.getProperty(PROP_DEV_MODE), getDevMode(emptyProperties));
+		WebTopApp.logger.info("{} = {} [{}]", PROP_SCHEDULER_DISABLED, properties.getProperty(PROP_SCHEDULER_DISABLED), getSchedulerDisabled(emptyProperties));
+		WebTopApp.logger.info("{} = {} [{}]", PROP_QUARTZ_MAXTHREADS, properties.getProperty(PROP_QUARTZ_MAXTHREADS), getQuartzMaxThreads(emptyProperties));
+		WebTopApp.logger.info("{} = {} [{}]", PROP_ATMO_MAXSCHEDULERTHREADS, properties.getProperty(PROP_ATMO_MAXSCHEDULERTHREADS), getAtmosphereMaxSchedulerThreads(emptyProperties));
+		WebTopApp.logger.info("{} = {} [{}]", PROP_ATMO_MAXPROCESSINGTHREADS, properties.getProperty(PROP_ATMO_MAXPROCESSINGTHREADS), getAtmosphereMaxProcessingThreads(emptyProperties));
+		WebTopApp.logger.info("{} = {} [{}]", PROP_ATMO_MAXWRITETHREADS, properties.getProperty(PROP_ATMO_MAXWRITETHREADS), getAtmosphereMaxWriteThreads(emptyProperties));
+		WebTopApp.logger.info("{} = {} [{}]", PROP_TOMCAT_MANAGER_URI, properties.getProperty(PROP_TOMCAT_MANAGER_URI), getTomcatManagerUri(emptyProperties));
+		WebTopApp.logger.info("{} = {} [{}]", PROP_WTDIR_SIMILARITY_LEVENTHRES, properties.getProperty(PROP_WTDIR_SIMILARITY_LEVENTHRES), getWTDirectorySimilarityLevenThres(emptyProperties));
+		WebTopApp.logger.info("{} = {} [{}]", PROP_WTDIR_SIMILARITY_TOKENSIZE, properties.getProperty(PROP_WTDIR_SIMILARITY_TOKENSIZE), getWTDirectorySimilarityTokenSize(emptyProperties));
+		WebTopApp.logger.info("{} = {} [{}]", PROP_SESSION_FORCESECURECOOKIE, properties.getProperty(PROP_SESSION_FORCESECURECOOKIE), getSessionForceSecureCookie(emptyProperties));
+		WebTopApp.logger.info("{} = {} [{}]", PROP_HOME, properties.getProperty(PROP_HOME), getHome(emptyProperties));
+		WebTopApp.logger.info("{} = {} [{}]", PROP_PROVISIONING_API_TOKEN, PasswordUtils.printRedacted(properties.getProperty(PROP_PROVISIONING_API_TOKEN)), PasswordUtils.printRedacted(getProvisioningApiToken(emptyProperties)));
 	}
 	
 	public static void checkOldPropsUsage(Properties properties) {
@@ -258,6 +265,15 @@ public class WebTopProps {
 		return Math.max(5, PropUtils.getIntProperty(props, PROP_ATMO_MAXWRITETHREADS, 10));
 	}
 	
+	public static int getEventBusMinThreads(Properties props) {
+		// Auto set to 1/5 of maxThreads with a min of 1
+		return Math.max(1, (getEventBusMaxThreads(props) / 5));
+	}
+	
+	public static int getEventBusMaxThreads(Properties props) {
+		return Math.max(5, PropUtils.getIntProperty(props, PROP_EVENTBUS_MAXTHREADS, 10));
+	}
+	
 	public static String getTomcatManagerUri(Properties props) {
 		return PropUtils.getStringProperty(props, PROP_TOMCAT_MANAGER_URI, null);
 	}
@@ -272,6 +288,14 @@ public class WebTopProps {
 	
 	public static boolean getSessionForceSecureCookie(Properties props) {
 		return PropUtils.getBooleanProperty(props, PROP_SESSION_FORCESECURECOOKIE, false);
+	}
+	
+	public static String getHome(Properties props) {
+		return PropUtils.getStringProperty(props, PROP_HOME, null);
+	}
+	
+	public static String getProvisioningApiToken(Properties props) {
+		return PropUtils.getStringProperty(props, PROP_PROVISIONING_API_TOKEN, null);
 	}
 	
 	private static void copyOldProp(Properties props, String oldKey, String newKey) {

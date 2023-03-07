@@ -37,7 +37,7 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainLicenses', {
 		'Sonicle.String',
 		'Sonicle.grid.column.Action',
 		'Sonicle.grid.column.Icon',
-		'Sonicle.webtop.core.admin.model.DomainUserLkp',
+		'Sonicle.webtop.core.model.SubjectLkp',
 		'Sonicle.webtop.core.admin.model.GridDomainLicenses'
 	],
 	uses: [
@@ -56,6 +56,7 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainLicenses', {
 		title: '{domainLicenses.tit}',
 		iconCls: 'wtadm-icon-licenses'
 	},
+	actionsResPrefix: 'domainLicenses',
 	
 	constructor: function(cfg) {
 		var me = this;
@@ -75,9 +76,12 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainLicenses', {
 		
 		me.usersLkpStore = Ext.create('Ext.data.Store', {
 			autoLoad: true,
-			model: 'Sonicle.webtop.core.admin.model.DomainUserLkp',
-			proxy: WTF.proxy(me.mys.ID, 'LookupDomainUsers', 'users', {
-				extraParams: {domainId: me.domainId}
+			model: 'WTA.model.SubjectLkp',
+			proxy: WTF.proxy(me.mys.ID, 'LookupSubjects', null, {
+				extraParams: {
+					domainId: me.domainId,
+					users: true
+				}
 			})
 		});
 		
@@ -104,7 +108,7 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainLicenses', {
 				}, {
 					xtype: 'solookupcolumn',
 					dataIndex: 'serviceId',
-					header: me.mys.res('domainLicenses.gp.service.lbl'),
+					header: me.res('domainLicenses.gp.service.lbl'),
 					store: {
 						autoLoad: true,
 						model: 'Sonicle.webtop.core.model.ServiceLkp',
@@ -115,7 +119,7 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainLicenses', {
 					flex: 1
 				}, {
 					dataIndex: 'productName',
-					header: me.mys.res('domainLicenses.gp.product.lbl'),
+					header: me.res('domainLicenses.gp.product.lbl'),
 					flex: 1
 				}, {
 					xtype: 'soiconcolumn',
@@ -147,7 +151,7 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainLicenses', {
 						} else if (rec.isExpired()) {
 							s = 'expired';
 						}
-						return me.mys.res('domainLicenses.gp.status.'+s+'.tip');
+						return me.res('domainLicenses.gp.status.'+s+'.tip');
 					},
 					iconSize: WTU.imgSizeToPx('xs'),
 					width: 40
@@ -169,7 +173,7 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainLicenses', {
 						}
 					},
 					getTip: function(v, rec) {
-						return me.mys.res('domainLicenses.gp.status.'+rec.getStatus()+'.tip');
+						return me.res('domainLicenses.gp.status.'+rec.getStatus()+'.tip');
 					},
 					iconSize: WTU.imgSizeToPx('xs'),
 					width: 40
@@ -177,7 +181,7 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainLicenses', {
 					xtype: 'datecolumn',
 					dataIndex: 'expiry',
 					format: WT.getShortDateFmt(),
-					header: me.mys.res('domainLicenses.gp.expiry.lbl'),
+					header: me.res('domainLicenses.gp.expiry.lbl'),
 					//emptyCellText: '\u221e',
 					usingDefaultRenderer: true, // Necessary for renderer usage below
 					renderer : function(v, meta, rec) {
@@ -189,7 +193,7 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainLicenses', {
 					width: 100
 				}, {
 					dataIndex: 'leasesCount',
-					header: me.mys.res('domainLicenses.gp.lease.lbl'),
+					header: me.res('domainLicenses.gp.lease.lbl'),
 					renderer : function(v, meta, rec) {
 						var max = rec.get('maxLease');
 						if (max > -1) {
@@ -211,8 +215,8 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainLicenses', {
 					},
 					getTip: function(v, rec) {
 						if (rec.isLeaseUnbounded()) return '';
-						return {title: me.mys.res('domainLicenses.gp.autoLease.'+v+'.tip.tit'), text: me.mys.res('domainLicenses.gp.autoLease.'+v+'.tip.txt')};
-						//return Sonicle.String.htmlEncodeLineBreaks(me.mys.res('domainLicenses.gp.autoLease.'+v+'.tip'));
+						return {title: me.res('domainLicenses.gp.autoLease.'+v+'.tip.tit'), text: me.res('domainLicenses.gp.autoLease.'+v+'.tip.txt')};
+						//return Sonicle.String.htmlEncodeLineBreaks(me.res('domainLicenses.gp.autoLease.'+v+'.tip'));
 					},
 					handler: function(w, ridx, cidx, e, rec) {
 						if (rec.isLeaseUnbounded()) return;
@@ -229,14 +233,14 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainLicenses', {
 					width: 40
 				}, {
 					xtype: 'templatecolumn',
-					header: me.mys.res('domainLicenses.gp.details.lbl'),
+					header: me.res('domainLicenses.gp.details.lbl'),
 					tpl: new Ext.XTemplate(
 						'{[this.buildDetails(values)]}',
 						{
 							buildDetails: function(values) {
 								var s = '';
 								if (values['builtIn'] === true) {
-									s += '<span class="wt-theme-text-lighter2" style="font-size:0.8em;">' + me.mys.res('domainLicenses.gp.details.builtin') + '</span>' ;
+									s += '<span class="wt-theme-text-lighter2" style="font-size:0.8em;">' + me.res('domainLicenses.gp.details.builtin') + '</span>' ;
 								} else {
 									if (!Ext.isEmpty(values['hwId'])) {
 										if (s.length !== 0) s += ' | ';
@@ -244,11 +248,11 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainLicenses', {
 									}
 									if (values['maxLease'] > -1) {
 										if (s.length !== 0) s += ' | ';
-										s += Ext.String.format(me.mys.res('domainLicenses.gp.details.users'), values['maxLease']);
+										s += Ext.String.format(me.res('domainLicenses.gp.details.users'), values['maxLease']);
 									}
 									if (!Ext.isEmpty(values['regTo'])) {
 										if (s.length !== 0) s += ' | ';
-										s += Ext.String.format(me.mys.res('domainLicenses.gp.details.regto'), values['regTo']);
+										s += Ext.String.format(me.res('domainLicenses.gp.details.regto'), values['regTo']);
 									}
 								}
 								return s;
@@ -348,7 +352,7 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainLicenses', {
 								xtype: 'solookupcolumn',
 								dataIndex: 'userId',
 								store: me.usersLkpStore,
-								displayField: 'label',
+								displayField: 'labelNameWithDN',
 								flex: 1
 							}, {
 								xtype: 'soactioncolumn',
@@ -369,9 +373,8 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainLicenses', {
 			],
 			tbar: [
 				me.addAct('add', {
-					text: WT.res('act-add.lbl'),
 					tooltip: null,
-					iconCls: 'wt-icon-add',
+					iconCls: null,
 					handler: function() {
 						me.addLicenseUI();
 					}
@@ -632,8 +635,8 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainLicenses', {
 					xtype: 'solistpicker',
 					store: me.usersLkpStore,
 					valueField: 'id',
-					displayField: 'label',
-					searchField: 'label',
+					displayField: 'labelNameWithDN',
+					searchField: 'search',
 					emptyText: WT.res('grid.emp'),
 					searchText: WT.res('textfield.search.emp'),
 					selectedText: WT.res('grid.selected.lbl'),

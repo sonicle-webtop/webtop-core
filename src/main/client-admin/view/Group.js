@@ -1,6 +1,6 @@
 /*
  * WebTop Services is a Web Application framework developed by Sonicle S.r.l.
- * Copyright (C) 2014 Sonicle S.r.l.
+ * Copyright (C) 2022 Sonicle S.r.l.
  *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by
@@ -29,41 +29,75 @@
  * version 3, these Appropriate Legal Notices must retain the display of the
  * Sonicle logo and Sonicle copyright notice. If the display of the logo is not
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
- * display the words "Copyright (C) 2014 Sonicle S.r.l.".
+ * display the words "Copyright (C) 2022 Sonicle S.r.l.".
  */
 Ext.define('Sonicle.webtop.core.admin.view.Group', {
 	extend: 'WTA.sdk.ModelView',
 	requires: [
-		'Sonicle.form.Spacer',
-		'Sonicle.webtop.core.admin.ux.UserGrid',
-		'Sonicle.webtop.core.admin.ux.RoleGrid',
-		'Sonicle.webtop.core.admin.ux.RoleServiceGrid',
-		'Sonicle.webtop.core.admin.ux.RolePermissionGrid'
+		'Sonicle.data.validator.Username',
+		'Sonicle.plugin.FieldAvailabilityCheck',
+		'WTA.model.AclSubjectLkp',
+		'Sonicle.plugin.NoAutocomplete',
+		'Sonicle.webtop.core.admin.ux.AclSubjectGrid',
+		'Sonicle.webtop.core.admin.ux.SubjectServiceGrid',
+		'Sonicle.webtop.core.admin.ux.SubjectPermissionGrid'
 	],
 	
 	dockableConfig: {
 		title: '{group.tit}',
 		iconCls: 'wtadm-icon-group',
-		width: 650,
+		width: 550,
 		height: 400
 	},
 	fieldTitle: 'groupId',
 	modelName: 'Sonicle.webtop.core.admin.model.Group',
+	returnModelExtraParams: function() {
+		return {
+			domainId: this.domainId
+		};
+	},
+	focusField: {'new': 'fldgroupid', 'edit': 'flddescription'},
 	
 	/**
 	 * @cfg {String} domainId
-	 * Target domain ID.
+	 * The bound domain ID for this entity.
 	 */
 	domainId: null,
 	
 	constructor: function(cfg) {
 		var me = this;
+		if (!cfg.domainId) Ext.raise('domainId is mandatory');
 		me.callParent([cfg]);
+		
+		WTU.applyFormulas(me.getVM(), {
+			foIsNew: WTF.foIsEqual('_mode', null, me.MODE_NEW)
+		});
 	},
 	
 	initComponent: function() {
 		var me = this;
 		me.callParent(arguments);
+		
+		me.userSubjectStore = Ext.create('Ext.data.Store', {
+			autoLoad: true,
+			model: 'WTA.model.AclSubjectLkp',
+			proxy: WTF.proxy(me.mys.ID, 'LookupAclSubjects', null, {
+				extraParams: {
+					domainId: me.domainId,
+					users: true
+				}
+			})
+		});
+		me.roleSubjectStore = Ext.create('Ext.data.Store', {
+			autoLoad: true,
+			model: 'WTA.model.AclSubjectLkp',
+			proxy: WTF.proxy(me.mys.ID, 'LookupAclSubjects', null, {
+				extraParams: {
+					domainId: me.domainId,
+					roles: true
+				}
+			})
+		});
 		
 		me.add({
 			region: 'center',
@@ -72,117 +106,111 @@ Ext.define('Sonicle.webtop.core.admin.view.Group', {
 				type: 'vbox',
 				align: 'stretch'
 			},
-			items: [{
-				xtype: 'wtfieldspanel',
-				reference: 'pnlmain',
-				modelValidation: true,
-				defaults: {
-					labelWidth: 120
-				},
-				items: [{
-					xtype: 'textfield',
-					reference: 'fldgroupid',
-					bind: '{record.groupId}',
-					disabled: true,
-					fieldLabel: me.mys.res('group.fld-groupId.lbl'),
-					width: 300
-				}, {
-					xtype: 'textfield',
-					bind: '{record.displayName}',
-					fieldLabel: me.mys.res('group.fld-displayName.lbl'),
-					width: 400
-				}]
-			}, {
-				xtype: 'tabpanel',
-				flex: 1,
-				activeTab: 0,
-				items: [{
-					xtype: 'wtadmusergrid',
-					title: me.mys.res('group.assignedUsers.tit'),
-					iconCls: 'wtadm-icon-users',
-					bind: {
-						store: '{record.assignedUsers}'
+			items: [
+				{
+					xtype: 'wtfieldspanel',
+					reference: 'pnlmain',
+					modelValidation: true,
+					defaults: {
+						labelWidth: 120
 					},
-					domainId: me.domainId,
-					listeners: {
-						pick: function(s, vals) {
-							var mo = me.getModel();
-							mo.assignedUsers().add({
-								_fk: mo.getId(),
-								userId: vals[0]
-							});
+					items: [
+						{
+							xtype: 'textfield',
+							reference: 'fldgroupid',
+							bind: {
+								value: '{record.groupId}',
+								disabled: '{!foIsNew}'
+							},
+							disabled: true,
+							maskRe: Sonicle.data.validator.Username.maskRe,
+							fieldLabel: me.res('group.fld-groupId.lbl'),
+							plugins: [
+								'sonoautocomplete',
+								{
+									ptype: 'sofieldavailabilitycheck',
+									baseIconCls: 'wt-opacity-50',
+									availableTooltipText: WT.res('sofieldavailabilitycheck.availableTooltipText'),
+									unavailableTooltipText: WT.res('sofieldavailabilitycheck.unavailableTooltipText'),
+									checkAvailability: function(value, done) {
+										if (me.getModel().getModified('groupId') === undefined) return false;
+										WT.ajaxReq(me.mys.ID, 'ManageDomainGroup', {
+											params: {
+												crud: 'check',
+												domainId: me.domainId,
+												group: value
+											},
+											callback: function(success, json) {
+												done(success ? json.data : json.message);
+											}
+										});
+									}
+								}
+							],
+							anchor: '100%'
+						}, {
+							xtype: 'textareafield',
+							reference: 'flddescription',
+							bind: '{record.description}',
+							fieldLabel: me.res('group.fld-description.lbl'),
+							anchor: '100%'
 						}
-					}
+					]
 				}, {
-					xtype: 'wtadmrolegrid',
-					title: me.mys.res('group.assignedRoles.tit'),
-					iconCls: 'wtadm-icon-roles',
-					bind: {
-						store: '{record.assignedRoles}'
-					},
-					domainId: me.domainId,
-					listeners: {
-						pick: function(s, vals) {
-							var mo = me.getModel();
-							mo.assignedRoles().add({
-								_fk: mo.getId(),
-								roleUid: vals[0]
-							});
+					xtype: 'tabpanel',
+					flex: 1,
+					activeTab: 0,
+					items: [
+						{
+							xtype: 'wtadmaclsubjectgrid',
+							title: me.res('group.assignedUsers.tit'),
+							iconCls: 'wtadm-icon-users',
+							bind: '{record.assignedUsers}',
+							lookupStore: me.userSubjectStore,
+							recordCreatorFn: function(value) {
+								return {sid: value};
+							},
+							emptyText: me.res('wtadmaclsubjectgrid.users.emp'),
+							pickerTitle: me.res('wtadmaclsubjectgrid.picker.users.tit')
+						}, {
+							xtype: 'wtadmaclsubjectgrid',
+							title: me.res('group.assignedRoles.tit'),
+							iconCls: 'wtadm-icon-roles',
+							bind: '{record.assignedRoles}',
+							lookupStore: me.roleSubjectStore,
+							recordCreatorFn: function(value) {
+								return {sid: value};
+							},
+							emptyText: me.res('wtadmaclsubjectgrid.roles.emp'),
+							pickerTitle: me.res('wtadmaclsubjectgrid.picker.roles.tit')
+						}, {
+							xtype: 'wtadmsubjectservicegrid',
+							title: me.res('group.allowedServices.tit'),
+							iconCls: 'wtadm-icon-service-module',
+							bind: '{record.allowedServices}',
+							recordCreatorFn: function(value) {
+								return {serviceId: value};
+							}
+						}, {
+							xtype: 'wtadmsubjectpermissiongrid',
+							title: me.res('group.permissions.tit'),
+							iconCls: 'wtadm-icon-permission',
+							bind: '{record.permissions}',
+							recordCreatorFn: function(serviceId, context, action) {
+								return {string: Sonicle.String.join(':', serviceId, context, action)};
+							}
+							/*
+							recordCreatorFn: function(value) {
+								return {string: value};
+							}
+							*/
 						}
-					}
-				}, {
-					xtype: 'wtadmroleservicegrid',
-					title: me.mys.res('group.assignedServices.tit'),
-					iconCls: 'wtadm-icon-service-module',
-					bind: {
-						store: '{record.assignedServices}'
-					},
-					listeners: {
-						pick: function(s, vals) {
-							var mo = me.getModel();
-							mo.assignedServices().add({
-								_fk: mo.getId(),
-								serviceId: vals[0]
-							});
-						}
-					}
-				}, {
-					xtype: 'wtadmrolepermissiongrid',
-					title: me.mys.res('group.permissions.tit'),
-					iconCls: 'wtadm-icon-permission',
-					bind: {
-						store: '{record.permissions}'
-					},
-					listeners: {
-						pick: function(s, serviceId, groupName, action) {
-							var mo = me.getModel();
-							mo.permissions().add({
-								_fk: mo.getId(),
-								serviceId: serviceId,
-								groupName: groupName,
-								action: action,
-								instance: '*'
-							});
-						}
-					}
-				}]
-			}]
+					]
+				}
+			]
 		});
 		
-		me.on('viewload', me.onViewLoad);
 		me.on('viewinvalid', me.onViewInvalid);
-	},
-	
-	onViewLoad: function(s, success) {
-		if (!success) return;
-		var me = this,
-				fldgroupid = me.lref('fldgroupid');
-		if (me.isMode(me.MODE_NEW)) {
-			fldgroupid.setDisabled(false);
-			fldgroupid.focus(true);
-		} else {
-			fldgroupid.setDisabled(true);
-		}
 	},
 	
 	onViewInvalid: function(s, mo, errs) {

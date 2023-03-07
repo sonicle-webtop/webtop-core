@@ -38,7 +38,7 @@ import com.sonicle.webtop.core.sdk.UserProfile;
 import com.sonicle.webtop.core.sdk.UserProfileId;
 import com.sonicle.webtop.core.swagger.v1.api.DavApi;
 import com.sonicle.webtop.core.swagger.v1.model.ApiError;
-import com.sonicle.webtop.core.swagger.v1.model.PrincipalInfo;
+import com.sonicle.webtop.core.swagger.v1.model.ApiPrincipalInfo;
 import javax.ws.rs.core.Response;
 import org.jooq.tools.StringUtils;
 
@@ -49,16 +49,16 @@ import org.jooq.tools.StringUtils;
 public class Dav extends DavApi {
 	
 	@Override
-	public Response getPrincipalInfo(String profileUsername) {
-		UserProfileId pid = WT.guessUserProfileIdProfileUsername(profileUsername);
+	public Response getDavPrincipalInfo(String profileUsername) {
+		UserProfileId pid = WT.guessProfileIdByAuthAddress(profileUsername);
 		if (pid == null) return respErrorNotFound();
 		UserProfile.Data ud = WT.getUserData(pid);
 		if (ud == null) return respErrorNotFound();
-		return respOk(createPrincipal(pid, profileUsername, ud));
+		return respOk(createApiPrincipalInfo(pid, profileUsername, ud));
 	}
 	
-	private PrincipalInfo createPrincipal(UserProfileId profileId, String profileUsername, UserProfile.Data data) {
-		return new PrincipalInfo()
+	private ApiPrincipalInfo createApiPrincipalInfo(UserProfileId profileId, String profileUsername, UserProfile.Data data) {
+		return new ApiPrincipalInfo()
 				.profileId(profileId.toString())
 				.profileUsername(profileUsername)
 				.displayName(StringUtils.defaultIfBlank(data.getDisplayName(), profileId.getUserId()))

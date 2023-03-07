@@ -63,6 +63,12 @@ Ext.define('Sonicle.webtop.core.mixin.HasModel', {
 	},
 	
 	/**
+	 * @cfg {Function} returnModelExtraParams
+	 * Function that returns extra-params that will be set as Model's extra-params.
+	 */
+	returnModelExtraParams: undefined,
+	
+	/**
 	 * @event beforemodelload
 	 * @param {Object} this
 	 * @param {Object} pass Custom parameters to pass back.
@@ -257,10 +263,6 @@ Ext.define('Sonicle.webtop.core.mixin.HasModel', {
 		}
 	},
 	
-	onModelLoad: function(success, model, op, pass) {
-		this.fireEvent('modelload', this, success, model, op, pass);
-	},
-	
 	/**
 	 * Saves configured model.
 	 * @param {Object} opts An object containing configuration.
@@ -292,10 +294,6 @@ Ext.define('Sonicle.webtop.core.mixin.HasModel', {
 		return false;
 	},
 	
-	onModelSave: function(success, model, op, pass) {
-		this.fireEvent('modelsave', this, success, model, op, pass);
-	},
-	
 	eraseModel: function(opts) {
 		opts = opts || {};
 		var me = this,
@@ -314,6 +312,14 @@ Ext.define('Sonicle.webtop.core.mixin.HasModel', {
 			}
 		}
 		return false;
+	},
+	
+	onModelLoad: function(success, model, op, pass) {
+		this.fireEvent('modelload', this, success, model, op, pass);
+	},
+	
+	onModelSave: function(success, model, op, pass) {
+		this.fireEvent('modelsave', this, success, model, op, pass);
 	},
 	
 	onModelErase: function(success, model, op, pass) {
@@ -343,7 +349,7 @@ Ext.define('Sonicle.webtop.core.mixin.HasModel', {
 		
 		onInitComponent: function() {
 			var me = this,
-					vm = me.getViewModel();
+				vm = me.getViewModel();
 
 			if (!vm) Ext.Error.raise('ViewModel need to be defined. Please add it in your class body!');
 			if (!Ext.isString(me.getModelProperty())) Ext.Error.raise('Missing value [modelProperty]');
@@ -357,6 +363,15 @@ Ext.define('Sonicle.webtop.core.mixin.HasModel', {
 				var model = Ext.create(me.getModelName());
 				me.setModelIdFieldName(model.getIdProperty());
 				model.destroy();
+			}
+			
+			if (Ext.isFunction(me.returnModelExtraParams)) {
+				vm.onRecordCreateWithId = function(record, id) {
+					record.setExtraParams(me.returnModelExtraParams() || {});
+				};
+				me.on('beforemodelsave', function(s, record) {
+					record.setExtraParams(me.returnModelExtraParams() || {});
+				});
 			}
 		},
 		

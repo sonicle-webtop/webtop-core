@@ -1,6 +1,6 @@
 /*
  * WebTop Services is a Web Application framework developed by Sonicle S.r.l.
- * Copyright (C) 2014 Sonicle S.r.l.
+ * Copyright (C) 2022 Sonicle S.r.l.
  *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by
@@ -29,23 +29,47 @@
  * version 3, these Appropriate Legal Notices must retain the display of the
  * Sonicle logo and Sonicle copyright notice. If the display of the logo is not
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
- * display the words "Copyright (C) 2014 Sonicle S.r.l.".
+ * display the words "Copyright (C) 2022 Sonicle S.r.l.".
  */
 Ext.define('Sonicle.webtop.core.admin.view.Role', {
 	extend: 'WTA.sdk.ModelView',
 	requires: [
-		'Sonicle.webtop.core.admin.ux.RoleServiceGrid',
-		'Sonicle.webtop.core.admin.ux.RolePermissionGrid'
+		'Sonicle.data.validator.Username',
+		'Sonicle.plugin.FieldAvailabilityCheck',
+		'Sonicle.webtop.core.admin.ux.SubjectServiceGrid',
+		'Sonicle.webtop.core.admin.ux.SubjectPermissionGrid'
 	],
 	
 	dockableConfig: {
 		title: '{role.tit}',
 		iconCls: 'wtadm-icon-role',
-		width: 650,
-		height: 500
+		width: 550,
+		height: 400
 	},
 	fieldTitle: 'name',
 	modelName: 'Sonicle.webtop.core.admin.model.Role',
+	returnModelExtraParams: function() {
+		return {
+			domainId: this.domainId
+		};
+	},
+	focusField: {'new': 'fldroleid', 'edit': 'flddescription'},
+	
+	/**
+	 * @cfg {String} domainId
+	 * The bound domain ID for this entity.
+	 */
+	domainId: null,
+	
+	constructor: function(cfg) {
+		var me = this;
+		if (!cfg.domainId) Ext.raise('domainId is mandatory');
+		me.callParent([cfg]);
+		
+		WTU.applyFormulas(me.getVM(), {
+			foIsNew: WTF.foIsEqual('_mode', null, me.MODE_NEW)
+		});
+	},
 	
 	initComponent: function() {
 		var me = this;
@@ -58,76 +82,89 @@ Ext.define('Sonicle.webtop.core.admin.view.Role', {
 				type: 'vbox',
 				align: 'stretch'
 			},
-			items: [{
-				xtype: 'wtfieldspanel',
-				reference: 'pnlmain',
-				modelValidation: true,
-				defaults: {
-					labelWidth: 120
-				},
-				items: [{
-					xtype: 'textfield',
-					reference: 'fldname',
-					bind: '{record.name}',
-					fieldLabel: me.mys.res('role.fld-name.lbl'),
-					width: 300
-				}, {
-					xtype: 'textareafield',
-					bind: '{record.description}',
-					fieldLabel: me.mys.res('role.fld-description.lbl'),
-					anchor: '100%'
-				}]
-			}, {
-				xtype: 'tabpanel',
-				flex: 1,
-				activeTab: 0,
-				items: [{
-					xtype: 'wtadmroleservicegrid',
-					title: me.mys.res('role.assignedServices.tit'),
-					iconCls: 'wtadm-icon-service-module',
-					bind: {
-						store: '{record.assignedServices}'
+			items: [
+				{
+					xtype: 'wtfieldspanel',
+					reference: 'pnlmain',
+					modelValidation: true,
+					defaults: {
+						labelWidth: 120
 					},
-					listeners: {
-						pick: function(s, vals) {
-							var mo = me.getModel();
-							mo.assignedServices().add({
-								_fk: mo.getId(),
-								serviceId: vals[0]
-							});
+					items: [
+						{
+							xtype: 'textfield',
+							reference: 'fldroleid',
+							bind: {
+								value: '{record.roleId}',
+								disabled: '{!foIsNew}'
+							},
+							disabled: true,
+							maskRe: Sonicle.data.validator.Username.maskRe,
+							fieldLabel: me.res('role.fld-roleId.lbl'),
+							plugins: [
+								'sonoautocomplete',
+								{
+									ptype: 'sofieldavailabilitycheck',
+									baseIconCls: 'wt-opacity-50',
+									availableTooltipText: WT.res('sofieldavailabilitycheck.availableTooltipText'),
+									unavailableTooltipText: WT.res('sofieldavailabilitycheck.unavailableTooltipText'),
+									checkAvailability: function(value, done) {
+										if (me.getModel().getModified('roleId') === undefined) return false;
+										WT.ajaxReq(me.mys.ID, 'ManageDomainRole', {
+											params: {
+												crud: 'check',
+												domainId: me.domainId,
+												role: value
+											},
+											callback: function(success, json) {
+												done(success ? json.data : json.message);
+											}
+										});
+									}
+								}
+							],
+							anchor: '100%'
+						}, {
+							xtype: 'textareafield',
+							reference: 'flddescription',
+							bind: '{record.description}',
+							fieldLabel: me.res('role.fld-description.lbl'),
+							anchor: '100%'
 						}
-					}
+					]
 				}, {
-					xtype: 'wtadmrolepermissiongrid',
-					title: me.mys.res('role.permissions.tit'),
-					iconCls: 'wtadm-icon-permission',
-					bind: {
-						store: '{record.permissions}'
-					},
-					listeners: {
-						pick: function(s, serviceId, groupName, action) {
-							var mo = me.getModel();
-							mo.permissions().add({
-								_fk: mo.getId(),
-								serviceId: serviceId,
-								groupName: groupName,
-								action: action,
-								instance: '*'
-							});
+					xtype: 'tabpanel',
+					flex: 1,
+					activeTab: 0,
+					items: [
+						{
+							xtype: 'wtadmsubjectservicegrid',
+							title: me.res('role.allowedServices.tit'),
+							iconCls: 'wtadm-icon-service-module',
+							bind: '{record.allowedServices}',
+							recordCreatorFn: function(value) {
+								return {serviceId: value};
+							}
+						}, {
+							xtype: 'wtadmsubjectpermissiongrid',
+							title: me.res('role.permissions.tit'),
+							iconCls: 'wtadm-icon-permission',
+							bind: '{record.permissions}',
+							recordCreatorFn: function(serviceId, context, action) {
+								return {string: Sonicle.String.join(':', serviceId, context, action)};
+							}
+							/*
+							recordCreatorFn: function(value) {
+								return {string: value};
+							}
+							*/
 						}
-					}
-				}]
-			}]
+					]
+				}
+			]
 		});
 		
-		me.on('viewload', me.onViewLoad);
 		me.on('viewinvalid', me.onViewInvalid);
-	},
-	
-	onViewLoad: function(s, success) {
-		if(!success) return;
-		var me = this;
-		me.lref('fldname').focus(true);
 	},
 	
 	onViewInvalid: function(s, mo, errs) {

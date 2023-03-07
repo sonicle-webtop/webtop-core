@@ -38,10 +38,11 @@ import com.github.benmanes.caffeine.cache.Caffeine;
 import com.license4j.ActivationStatus;
 import com.license4j.ValidationStatus;
 import com.sonicle.commons.AlgoUtils.MD5HashBuilder;
+import com.sonicle.commons.EnumUtils;
 import com.sonicle.commons.LangUtils;
 import com.sonicle.commons.beans.PageInfo;
 import com.sonicle.commons.beans.SortInfo;
-import com.sonicle.commons.l4j.HardwareID;
+import com.sonicle.commons.flags.BitFlags;
 import com.sonicle.commons.l4j.ProductLicense;
 import com.sonicle.commons.time.DateTimeRange;
 import com.sonicle.commons.time.DateTimeUtils;
@@ -58,7 +59,6 @@ import com.sonicle.commons.web.json.extjs.ExtTreeNode;
 import com.sonicle.commons.web.json.extjs.GridMetadata;
 import com.sonicle.commons.web.json.extjs.ResultMeta;
 import com.sonicle.commons.web.json.extjs.SortMeta;
-import com.sonicle.security.auth.DirectoryManager;
 import com.sonicle.security.auth.directory.AbstractDirectory;
 import com.sonicle.security.auth.directory.DirectoryCapability;
 import com.sonicle.webtop.core.CoreLocaleKey;
@@ -69,6 +69,9 @@ import com.sonicle.webtop.core.admin.bol.js.JsDataSource;
 import com.sonicle.webtop.core.admin.bol.js.JsDataSourceQuery;
 import com.sonicle.webtop.core.admin.bol.js.JsDomainAccessLog;
 import com.sonicle.webtop.core.admin.bol.js.JsDomainAccessLogDetail;
+import com.sonicle.webtop.core.admin.bol.js.JsGridResource;
+import com.sonicle.webtop.core.admin.bol.js.JsGridRole;
+import com.sonicle.webtop.core.admin.bol.js.JsGridUser;
 import com.sonicle.webtop.core.admin.bol.js.JsDomainLauncherLink;
 import com.sonicle.webtop.core.admin.bol.js.JsGridDomainDataSource;
 import com.sonicle.webtop.core.app.CoreManifest;
@@ -78,7 +81,6 @@ import com.sonicle.webtop.core.app.WebTopApp;
 import com.sonicle.webtop.core.app.WebTopSession.UploadedFile;
 import com.sonicle.webtop.core.app.sdk.WTIntegrityException;
 import com.sonicle.webtop.core.bol.ODomain;
-import com.sonicle.webtop.core.bol.OGroup;
 import com.sonicle.webtop.core.config.bol.OPecBridgeFetcher;
 import com.sonicle.webtop.core.config.bol.OPecBridgeRelay;
 import com.sonicle.webtop.core.bol.ORunnableUpgradeStatement;
@@ -86,39 +88,44 @@ import com.sonicle.webtop.core.bol.OSettingDb;
 import com.sonicle.webtop.core.bol.OUpgradeStatement;
 import com.sonicle.webtop.core.bol.OUser;
 import com.sonicle.webtop.core.bol.js.JsDomain;
-import com.sonicle.webtop.core.bol.js.JsGridDomainGroup;
 import com.sonicle.webtop.core.admin.bol.js.JsGridDomainLicense;
+import com.sonicle.webtop.core.admin.bol.js.JsGridGroup;
 import com.sonicle.webtop.core.admin.bol.js.JsGridLogger;
+import com.sonicle.webtop.core.admin.bol.js.JsGroup;
+import com.sonicle.webtop.core.admin.bol.js.JsRole;
+import com.sonicle.webtop.core.admin.bol.js.JsUser;
 import com.sonicle.webtop.core.app.RunContext;
 import com.sonicle.webtop.core.app.WebTopProps;
+import com.sonicle.webtop.core.app.model.DirectoryUser;
+import com.sonicle.webtop.core.app.model.Domain;
+import com.sonicle.webtop.core.app.model.DomainGetOption;
+import com.sonicle.webtop.core.app.model.DomainUpdateOption;
+import com.sonicle.webtop.core.app.model.EnabledCond;
+import com.sonicle.webtop.core.app.model.GenericSubject;
+import com.sonicle.webtop.core.app.model.Group;
+import com.sonicle.webtop.core.app.model.GroupGetOption;
+import com.sonicle.webtop.core.app.model.GroupUpdateOption;
+import com.sonicle.webtop.core.app.model.LicenseBase;
+import com.sonicle.webtop.core.app.model.LicenseListOption;
+import com.sonicle.webtop.core.app.sdk.Result;
+import com.sonicle.webtop.core.app.sdk.ResultVoid;
 import com.sonicle.webtop.core.app.sdk.WTConnectionException;
 import com.sonicle.webtop.core.app.sdk.WTLicenseActivationException;
 import com.sonicle.webtop.core.app.sdk.WTLicenseException;
 import com.sonicle.webtop.core.app.sdk.WTLicenseMismatchException;
 import com.sonicle.webtop.core.app.sdk.WTLicenseValidationException;
-import com.sonicle.webtop.core.app.util.ProductUtils;
-import com.sonicle.webtop.core.bol.js.JsDomainPwdPolicies;
-import com.sonicle.webtop.core.bol.js.JsGridDomainRole;
-import com.sonicle.webtop.core.bol.js.JsGridDomainUser;
+import com.sonicle.webtop.core.app.sdk.WTUnsupportedOperationException;
 import com.sonicle.webtop.core.bol.js.JsGridPecBridgeFetcher;
 import com.sonicle.webtop.core.bol.js.JsGridPecBridgeRelay;
 import com.sonicle.webtop.core.bol.js.JsGridUpgradeRow;
-import com.sonicle.webtop.core.bol.js.JsGroup;
 import com.sonicle.webtop.core.bol.js.JsPecBridgeFetcher;
 import com.sonicle.webtop.core.bol.js.JsPecBridgeRelay;
-import com.sonicle.webtop.core.bol.js.JsRole;
+import com.sonicle.webtop.core.bol.js.JsResource;
 import com.sonicle.webtop.core.bol.js.JsRoleLkp;
+import com.sonicle.webtop.core.bol.js.JsAclSubjectLkp;
 import com.sonicle.webtop.core.bol.js.JsServiceProductLkp;
 import com.sonicle.webtop.core.bol.js.JsSettingEntry;
 import com.sonicle.webtop.core.bol.js.JsSimple;
-import com.sonicle.webtop.core.bol.js.JsUser;
-import com.sonicle.webtop.core.bol.model.DirectoryUser;
-import com.sonicle.webtop.core.model.DomainEntity;
-import com.sonicle.webtop.core.bol.model.GroupEntity;
-import com.sonicle.webtop.core.bol.model.Role;
-import com.sonicle.webtop.core.bol.model.RoleEntity;
-import com.sonicle.webtop.core.bol.model.RoleWithSource;
-import com.sonicle.webtop.core.bol.model.UserEntity;
 import com.sonicle.webtop.core.bol.model.UserOptionsServiceData;
 import com.sonicle.webtop.core.model.DataSource;
 import com.sonicle.webtop.core.model.DataSourceBase;
@@ -132,6 +139,18 @@ import com.sonicle.webtop.core.model.ListDomainAccessLogDetailResult;
 import com.sonicle.webtop.core.model.ListDomainAccessLogResult;
 import com.sonicle.webtop.core.model.LoggerEntry;
 import com.sonicle.webtop.core.model.ProductId;
+import com.sonicle.webtop.core.app.model.Resource;
+import com.sonicle.webtop.core.app.model.ResourceGetOption;
+import com.sonicle.webtop.core.app.model.ResourceUpdateOption;
+import com.sonicle.webtop.core.app.model.Role;
+import com.sonicle.webtop.core.app.model.RoleGetOption;
+import com.sonicle.webtop.core.app.model.RoleUpdateOption;
+import com.sonicle.webtop.core.app.model.User;
+import com.sonicle.webtop.core.app.model.UserGetOption;
+import com.sonicle.webtop.core.app.model.UserUpdateOption;
+import com.sonicle.webtop.core.bol.js.JsDomainPwdPolicies;
+import com.sonicle.webtop.core.bol.js.JsSubjectLkp;
+import com.sonicle.webtop.core.bol.model.RoleWithSource;
 import com.sonicle.webtop.core.model.ServiceLicense;
 import com.sonicle.webtop.core.model.SettingEntry;
 import com.sonicle.webtop.core.sdk.BaseService;
@@ -139,11 +158,11 @@ import com.sonicle.webtop.core.sdk.ServiceManifest;
 import com.sonicle.webtop.core.sdk.ServiceManifest.Product;
 import com.sonicle.webtop.core.sdk.UserProfile;
 import com.sonicle.webtop.core.sdk.UserProfileId;
-import com.sonicle.webtop.core.sdk.WTCyrusException;
 import com.sonicle.webtop.core.sdk.WTException;
 import com.sonicle.webtop.core.sdk.WTRuntimeException;
 import com.sonicle.webtop.core.versioning.IgnoreErrorsAnnotationLine;
 import com.sonicle.webtop.core.versioning.RequireAdminAnnotationLine;
+import jakarta.mail.internet.InternetAddress;
 import java.io.InputStream;
 import java.io.PrintWriter;
 import java.sql.SQLException;
@@ -224,81 +243,68 @@ public class Service extends BaseService {
 		}
 	}
 	
-	public void processLookupDomainGroups(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
-		List<JsSimple> items = new ArrayList<>();
+	public void processLookupSubjects(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
 		UserProfile up = getEnv().getProfile();
 		
 		try {
 			String domainId = ServletUtils.getStringParameter(request, "domainId", true);
 			boolean wildcard = ServletUtils.getBooleanParameter(request, "wildcard", false);
-			boolean uidAsId = ServletUtils.getBooleanParameter(request, "uidAsId", false);
+			boolean users = ServletUtils.getBooleanParameter(request, "users", false);
+			boolean resources = ServletUtils.getBooleanParameter(request, "resources", false);
+			boolean groups = ServletUtils.getBooleanParameter(request, "groups", false);
+			boolean roles = ServletUtils.getBooleanParameter(request, "roles", false);
+			boolean fullId = ServletUtils.getBooleanParameter(request, "fullId", false);
+			CoreAdminManager admMgr = WT.getCoreAdminManager(RunContext.buildDomainAdminProfileId(domainId));
 			
-			if(wildcard) items.add(JsSimple.wildcard(lookupResource(up.getLocale(), CoreLocaleKey.WORD_ALL_MALE)));
-			for(OGroup group : coreadm.listGroups(domainId)) {
-				items.add(new JsSimple(uidAsId ? group.getUserUid() : group.getGroupId(), group.getDisplayName()));
+			List<JsSubjectLkp> items = new ArrayList<>();
+			if (wildcard) items.add(JsSubjectLkp.wildcard(lookupResource(up.getLocale(), CoreLocaleKey.WORD_ALL_MALE)));
+			for (GenericSubject subject : admMgr.listSubjects(users, resources, groups, roles, true).values()) {
+				InternetAddress personalAddress = null;
+				if (GenericSubject.Type.USER.equals(subject.getType()) || GenericSubject.Type.RESOURCE.equals(subject.getType())) {
+					personalAddress = WT.getProfilePersonalAddress(new UserProfileId(subject.getDomainId(), subject.getName()));
+				}
+				items.add(new JsSubjectLkp(fullId ? subject.getProfileId().toString() : subject.getName(), subject.getName(), subject.getDisplayName(), (personalAddress != null) ? personalAddress.getAddress() : null, subject.getType()));
 			}
+			new JsonResult(items).printTo(out);
 			
-			new JsonResult("groups", items, items.size()).printTo(out);
-			
-		} catch (Exception ex) {
-			logger.error("Error in LookupDomainGroups", ex);
-			new JsonResult(false, "Unable to lookup groups").printTo(out);
+		} catch (Throwable t) {
+			logger.error("Error in LookupSubjects", t);
+			new JsonResult(t).printTo(out);
 		}
 	}
 	
-	public void processLookupDomainUsers(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
-		List<JsSimple> items = new ArrayList<>();
+	public void processLookupAclSubjects(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
 		UserProfile up = getEnv().getProfile();
 		
 		try {
 			String domainId = ServletUtils.getStringParameter(request, "domainId", true);
 			boolean wildcard = ServletUtils.getBooleanParameter(request, "wildcard", false);
-			boolean uidAsId = ServletUtils.getBooleanParameter(request, "uidAsId", false);
+			boolean users = ServletUtils.getBooleanParameter(request, "users", false);
+			boolean resources = ServletUtils.getBooleanParameter(request, "resources", false);
+			boolean groups = ServletUtils.getBooleanParameter(request, "groups", false);
+			boolean roles = ServletUtils.getBooleanParameter(request, "roles", false);
+			CoreAdminManager admMgr = WT.getCoreAdminManager(RunContext.buildDomainAdminProfileId(domainId));
 			
-			if(wildcard) items.add(JsSimple.wildcard(lookupResource(up.getLocale(), CoreLocaleKey.WORD_ALL_MALE)));
-			for(OUser user : coreadm.listUsers(domainId, false)) {
-				items.add(new JsSimple(uidAsId ? user.getUserUid() : user.getUserId(), user.getDisplayName()));
+			List<JsAclSubjectLkp> items = new ArrayList<>();
+			if (wildcard) items.add(JsAclSubjectLkp.wildcard(lookupResource(up.getLocale(), CoreLocaleKey.WORD_ALL_MALE)));
+			for (GenericSubject subject : admMgr.listSubjects(users, resources, groups, roles, false).values()) {
+				items.add(new JsAclSubjectLkp(subject.getSid(), subject.getDisplayName(), subject.getName(), EnumUtils.toSerializedName(subject.getType())));
 			}
-			
-			new JsonResult("users", items, items.size()).printTo(out);
+			new JsonResult(items).printTo(out);
 			
 		} catch (Exception ex) {
-			logger.error("Error in LookupDomainUsers", ex);
-			new JsonResult(false, "Unable to lookup users").printTo(out);
+			logger.error("Error in LookupAclSubjects", ex);
+			new JsonResult(ex).printTo(out);
 		}
 	}
-	
-	public void processLookupDomainRoles(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
-		List<JsRoleLkp> items = new ArrayList<>();
-		
-		try {
-			String domainId = ServletUtils.getStringParameter(request, "domainId", true);
-			for(Role role : coreadm.listRoles(domainId)) {
-				items.add(new JsRoleLkp(role, RoleWithSource.SOURCE_ROLE));
-			}
-			
-			new JsonResult("roles", items, items.size()).printTo(out);
-			
-		} catch (Exception ex) {
-			logger.error("Error in LookupDomainRoles", ex);
-			new JsonResult(false, "Unable to lookup roles").printTo(out);
-		}
-	}
-	
-	
-	
-	
-	
-	
-	
-	
 	
 	
 	private static final String NID_SETTINGS = "settings";
-	private static final String NID_DOMAIN = "domain";
+	private static final String NID_DOMAINS = "domains";
 	private static final String NID_GROUPS = "groups";
 	private static final String NID_USERS = "users";
 	private static final String NID_ROLES = "roles";
+	private static final String NID_RESOURCES = "resources";
 	private static final String NID_LAUNCHERLINKS = "launcherlinks";
 	private static final String NID_DATASOURCES = "datasources";
 	private static final String NID_LICENSES = "licenses";
@@ -309,13 +315,29 @@ public class Service extends BaseService {
 	private static final String NID_AUDIT = "audit";
 	private static final String NID_ACCESSLOG = "accesslog";
 	
+	private ExtTreeNode createDomainNode(String parentId, Domain domain, String dirScheme, boolean dirCapPasswordWrite, boolean dirCapUsersWrite) {
+		CId cid = CId.build(parentId, domain.getDomainId());
+		ExtTreeNode node = new ExtTreeNode(cid.toString(), domain.getDisplayName(), false);
+		node.setIconClass(domain.getEnabled() ? "wtadm-icon-domain" : "wtadm-icon-domain-disabled");
+		node.put("_type", "domain");
+		node.put("_domainId", domain.getDomainId());
+		node.put("_authDomainName", domain.getAuthDomainName());
+		node.put("_domainName", domain.getDomainName());
+		node.put("_dirScheme", dirScheme);
+		node.put("_dirCapPasswordWrite", dirCapPasswordWrite);
+		node.put("_dirCapUsersWrite", dirCapUsersWrite);
+		return node;
+	}
+	
 	private ExtTreeNode createDomainNode(String parentId, ODomain domain, String dirScheme, boolean dirCapPasswordWrite, boolean dirCapUsersWrite) {
 		CompositeId cid = new CompositeId(parentId, domain.getDomainId());
 		ExtTreeNode node = new ExtTreeNode(cid.toString(), domain.getDescription(), false);
 		node.setIconClass(domain.getEnabled() ? "wtadm-icon-domain" : "wtadm-icon-domain-disabled");
 		node.put("_type", "domain");
 		node.put("_domainId", domain.getDomainId());
-		//node.put("_internetDomain", domain.getInternetName());
+		//TODO: separate email domain from auth domain
+		node.put("_authDomain", domain.getInternetName());
+		node.put("_emailDomain", domain.getInternetName());
 		node.put("_dirScheme", dirScheme);
 		node.put("_dirCapPasswordWrite", dirCapPasswordWrite);
 		node.put("_dirCapUsersWrite", dirCapUsersWrite);
@@ -342,21 +364,22 @@ public class Service extends BaseService {
 				String nodeId = ServletUtils.getStringParameter(request, "node", true);
 				
 				if (nodeId.equals("root")) {
-					children.add(createTreeNode(NID_SETTINGS, "settings", null, true, "wtadm-icon-settings"));
-					children.add(createTreeNode(NID_DOMAIN, "domains", null, false, "wtadm-icon-domains"));
-					children.add(createTreeNode(NID_DBUPGRADER, "dbupgrader", null, true, "wtadm-icon-dbUpgrader"));
-					children.add(createTreeNode(NID_LOGS, "logging", null, false, "wtadm-icon-logging"));
+					final boolean sysAdmin = RunContext.isSysAdmin();
+					if (sysAdmin) children.add(createTreeNode(NID_SETTINGS, "settings", null, true, "wtadm-icon-settings"));
+					children.add(createTreeNode(NID_DOMAINS, "domains", null, false, "wtadm-icon-domains"));
+					if (sysAdmin) children.add(createTreeNode(NID_DBUPGRADER, "dbupgrader", null, true, "wtadm-icon-dbUpgrader"));
+					if (sysAdmin) children.add(createTreeNode(NID_LOGS, "logging", null, false, "wtadm-icon-logging"));
 					
 				} else {
 					CId cid = new CId(nodeId);
-					if (cid.getToken(0).equals(NID_DOMAIN)) {
+					if (cid.getToken(0).equals(NID_DOMAINS)) {
 						if (!cid.hasToken(1)) { // Domain nodes
-							for (ODomain domain : core.listDomains(false)) {
-								AbstractDirectory dir = core.getAuthDirectory(domain);
-								String dirScheme = dir.getScheme();
+							for (Domain domain : coreadm.listDomains(EnabledCond.ANY_STATE).values()) {
+								final String scheme = domain.getDirScheme();
+								AbstractDirectory dir = coreadm.getAuthDirectoryByScheme(scheme);
 								boolean dirCapPasswordWrite = dir.hasCapability(DirectoryCapability.PASSWORD_WRITE);
 								boolean dirCapUsersWrite = dir.hasCapability(DirectoryCapability.USERS_WRITE);
-								children.add(createDomainNode(nodeId, domain, dirScheme, dirCapPasswordWrite, dirCapUsersWrite));
+								children.add(createDomainNode(nodeId, domain, scheme, dirCapPasswordWrite, dirCapUsersWrite));
 							}
 							
 						} else if (cid.hasToken(2)) {
@@ -366,22 +389,19 @@ public class Service extends BaseService {
 							}
 						} else { // Single Domain node
 							String domainId = cid.getToken(1);
-							ODomain domain = core.getDomain(domainId);
-							AbstractDirectory dir = core.getAuthDirectory(domain);
-							boolean dirCapPasswordWrite = dir.hasCapability(DirectoryCapability.PASSWORD_WRITE);
-							boolean dirCapUsersWrite = dir.hasCapability(DirectoryCapability.USERS_WRITE);
 							
-							children.add(createDomainChildNode(nodeId, NID_SETTINGS, "dsettings", "wtadm-icon-settings", domainId, dirCapPasswordWrite, dirCapUsersWrite));
-							children.add(createDomainChildNode(nodeId, NID_GROUPS, "dgroups", "wtadm-icon-groups", domainId, dirCapPasswordWrite, dirCapUsersWrite));
-							children.add(createDomainChildNode(nodeId, NID_USERS, "dusers", "wtadm-icon-users", domainId, dirCapPasswordWrite, dirCapUsersWrite));
-							children.add(createDomainChildNode(nodeId, NID_ROLES, "droles", "wtadm-icon-roles", domainId, dirCapPasswordWrite, dirCapUsersWrite));
-							children.add(createDomainChildNode(nodeId, NID_LICENSES, "dlicenses", "wtadm-icon-licenses", domainId, dirCapPasswordWrite, dirCapUsersWrite));
-							children.add(createDomainChildNode(nodeId, NID_DATASOURCES, "ddatasources", "wtadm-icon-dataSources", domainId, null, null));
-							children.add(createDomainChildNode(nodeId, NID_LAUNCHERLINKS, "dlauncherlinks", "wtadm-icon-launcherLinks", domainId, dirCapPasswordWrite, dirCapUsersWrite));
+							children.add(createDomainChildNode(nodeId, NID_SETTINGS, "dsettings", "wtadm-icon-settings", null, null, null));
+							children.add(createDomainChildNode(nodeId, NID_GROUPS, "dgroups", "wtadm-icon-groups", null, null, null));
+							children.add(createDomainChildNode(nodeId, NID_USERS, "dusers", "wtadm-icon-users", null, null, null));
+							children.add(createDomainChildNode(nodeId, NID_RESOURCES, "dresources", "wt-icon-resources", null, null, null));
+							children.add(createDomainChildNode(nodeId, NID_ROLES, "droles", "wtadm-icon-roles", null, null, null));
+							children.add(createDomainChildNode(nodeId, NID_LICENSES, "dlicenses", "wtadm-icon-licenses", null, null, null));
+							children.add(createDomainChildNode(nodeId, NID_DATASOURCES, "ddatasources", "wtadm-icon-dataSources", null, null, null));
+							children.add(createDomainChildNode(nodeId, NID_LAUNCHERLINKS, "dlauncherlinks", "wtadm-icon-launcherLinks", null, null, null));
 							
 							CoreServiceSettings css = new CoreServiceSettings(CoreManifest.ID, domainId);
 							if (css.getHasPecBridgeManagement()) {
-								children.add(createDomainChildNode(nodeId, NID_PECBRIDGE, "dpecbridge", "wtadm-icon-pecBridge", domainId, dirCapPasswordWrite, dirCapUsersWrite));
+								children.add(createDomainChildNode(nodeId, NID_PECBRIDGE, "dpecbridge", "wtadm-icon-pecBridge", null, null, null));
 							}
 							children.add(createTreeNode(CId.build(nodeId, NID_AUDIT).toString(), "daudit", null, false, "wtadm-icon-audit"));
 						}
@@ -468,7 +488,7 @@ public class Service extends BaseService {
 				
 			} else if ("cleanup".equals(crud)) {
 				coreadm.cleanupSettingsCache();
-				coreadm.cleanupDomainSettingsCache("*");
+				coreadm.cleanupDomainSettingsCache();
 				new JsonResult().printTo(out);
 			}
 			
@@ -478,48 +498,87 @@ public class Service extends BaseService {
 		}
 	}
 	
-	public void processManageDomains(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
-		
+	public void processManageDomain(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
 		try {
 			String crud = ServletUtils.getStringParameter(request, "crud", true);
-			if (crud.equals(Crud.READ)) {
-				String id = ServletUtils.getStringParameter(request, "id", null);
-				DomainEntity domain = coreadm.getDomain(id);
-				new JsonResult(new JsDomain(domain)).printTo(out);
+			if (Crud.READ.equals(crud)) {
+				String id = ServletUtils.getStringParameter(request, "id", false);
 				
-			} else if (crud.equals(Crud.CREATE)) {
+				CoreAdminManager admMgr = WT.getCoreAdminManager(RunContext.buildDomainAdminProfileId(id));
+				Domain item = admMgr.getDomain(DomainGetOption.internalDefaultFlags());
+				new JsonResult(new JsDomain(item)).printTo(out);
+				
+			} else if (Crud.CREATE.equals(crud)) {
 				Payload<MapItem, JsDomain> pl = ServletUtils.getPayload(request, JsDomain.class);
-				AbstractDirectory dir = DirectoryManager.getManager().getDirectory(pl.data.dirScheme);
-				coreadm.addDomain(JsDomain.buildDomainEntity(pl.data, dir));
-				new JsonResult().printTo(out);
 				
-			} else if (crud.equals(Crud.UPDATE)) {
+				CoreAdminManager admMgr = WT.getCoreAdminManager(RunContext.getSysAdminProfileId());
+				Result<Domain> result = admMgr.addDomain(pl.data.domainId, JsDomain.createDomainForAdd(pl.data));
+				if (result.hasExceptions()) {
+					new JsonResult().withMessageArray("{warn.operation.okWithExceptions@com.sonicle.webtop.core}", result.collectExceptionsMessages()).printTo(out);
+				} else {
+					new JsonResult().printTo(out);
+				}
+				
+			} else if (Crud.UPDATE.equals(crud)) {
 				Payload<MapItem, JsDomain> pl = ServletUtils.getPayload(request, JsDomain.class);
-				AbstractDirectory dir = DirectoryManager.getManager().getDirectory(pl.data.dirScheme);
-				coreadm.updateDomain(JsDomain.buildDomainEntity(pl.data, dir));
-				new JsonResult().printTo(out);
 				
-			} else if (crud.equals(Crud.DELETE)) {
-				String domainId = ServletUtils.getStringParameter(request, "domainId", true);
-				coreadm.deleteDomain(domainId);
-				new JsonResult().printTo(out);
+				CoreAdminManager admMgr = WT.getCoreAdminManager(RunContext.buildDomainAdminProfileId(pl.data.domainId));
+				BitFlags<DomainUpdateOption> options = DomainUpdateOption.internalDefaultFlags();
+				JsDomain.CreateForUpdateResult forUpate = JsDomain.createDomainForUpdate(pl.data);
+				if (forUpate.passwordChanged) options.set(DomainUpdateOption.DIRECTORY_PASSWORD);
+				Result<Domain> result = admMgr.updateDomain(forUpate.item, options);
+				if (result.hasExceptions()) {
+					new JsonResult().withMessageArray("{warn.operation.okWithExceptions@com.sonicle.webtop.core}", result.collectExceptionsMessages()).printTo(out);
+				} else {
+					new JsonResult().printTo(out);
+				}
 				
-			} else if (crud.equals("init")) {
-				String domainId = ServletUtils.getStringParameter(request, "domainId", true);
-				coreadm.initDomainWithDefaults(domainId);
-				new JsonResult().printTo(out);
+			} else if (Crud.DELETE.equals(crud)) {
+				String id = ServletUtils.getStringParameter(request, "id", false);
+				boolean deep = ServletUtils.getBooleanParameter(request, "deep", true);
 				
-			} else if (crud.equals("policies")) {
-				String domainId = ServletUtils.getStringParameter(request, "domainId", true);
+				CoreAdminManager admMgr = WT.getCoreAdminManager(RunContext.buildDomainAdminProfileId(id));
+				ResultVoid result = admMgr.deleteDomain(deep);
+				if (result.hasExceptions()) {
+					new JsonResult().withMessageArray("{warn.operation.okWithExceptions@com.sonicle.webtop.core}", result.collectExceptionsMessages()).printTo(out);
+				} else {
+					new JsonResult().printTo(out);
+				}
+				
+			} else if ("check".equals(crud)) {
+				String domain = ServletUtils.getStringParameter(request, "domain", false);
+				
+				CoreAdminManager admMgr = WT.getCoreAdminManager(RunContext.getSysAdminProfileId());
+				boolean available = admMgr.checkDomainIdAvailability(domain);
+				new JsonResult(available).printTo(out);
+				
+			} else if ("init".equals(crud)) {
+				String id = ServletUtils.getStringParameter(request, "id", false);
+				
+				CoreAdminManager admMgr = WT.getCoreAdminManager(RunContext.buildDomainAdminProfileId(id));
+				ResultVoid result = admMgr.initDomain();
+				if (result.hasExceptions()) {
+					new JsonResult().withMessageArray("{domain.info.init.okWithExceptions@com.sonicle.webtop.core.admin}", result.collectExceptionsMessages()).printTo(out);
+				} else {
+					new JsonResult().printTo(out);
+				}
+				
+			} else if ("policies".equals(crud)) {
+				String id = ServletUtils.getStringParameter(request, "id", false);
+				
 				short levenThres = WebTopProps.getWTDirectorySimilarityLevenThres(WT.getProperties());
 				short tokenSize = WebTopProps.getWTDirectorySimilarityTokenSize(WT.getProperties());
-				JsDomainPwdPolicies item = new JsDomainPwdPolicies(levenThres, tokenSize, coreadm.getDomainPasswordPolicies(domainId));
+				CoreAdminManager admMgr = WT.getCoreAdminManager(RunContext.buildDomainAdminProfileId(id));
+				JsDomainPwdPolicies item = new JsDomainPwdPolicies(levenThres, tokenSize, admMgr.getDomainPasswordPolicies());
 				new JsonResult(item).printTo(out);
+				
+			} else {
+				throw new WTException("Unsupported operation [{}]", crud);
 			}
 			
-		} catch(Throwable t) {
-			logger.error("Error in ManageDomains", t);
-			new JsonResult(t).printTo(out);
+		} catch (Exception ex) {
+			logger.error("Error in ManageDomain", ex);
+			new JsonResult(ex).printTo(out);
 		}
 	}
 	
@@ -527,16 +586,17 @@ public class Service extends BaseService {
 		
 		try {
 			String domainId = ServletUtils.getStringParameter(request, "domainId", true);
+			CoreAdminManager admMgr = WT.getCoreAdminManager(RunContext.buildDomainAdminProfileId(domainId));
 			String crud = ServletUtils.getStringParameter(request, "crud", true);
 			if (crud.equals(Crud.READ)) {
-				List<SettingEntry> items = coreadm.listDomainSettings(domainId, false);
+				List<SettingEntry> items = admMgr.listDomainSettings(false);
 				new JsonResult(items, items.size()).printTo(out);
 				
 			} else if (crud.equals(Crud.CREATE)) {
 				PayloadAsList<JsSettingEntry.List> pl = ServletUtils.getPayloadAsList(request, JsSettingEntry.List.class);
 				SettingEntry setting = pl.data.get(0);
 				
-				if (!coreadm.updateDomainSetting(domainId, setting.getServiceId(), setting.getKey(), setting.getValue())) {
+				if (!admMgr.updateDomainSetting(setting.getServiceId(), setting.getKey(), setting.getValue())) {
 					throw new WTException("Cannot insert setting [{0}, {1}]", setting.getServiceId(), setting.getKey());
 				} else {
 					//FIXME: Evaluate to create new field in Domain data for public.url
@@ -554,17 +614,12 @@ public class Service extends BaseService {
 				final CId cid = new CId(setting.getId(), 2);
 				final String sid = cid.getToken(0);
 				final String key = cid.getToken(1);
-
-				if (!coreadm.updateDomainSetting(domainId, sid, setting.getKey(), setting.getValue())) {
+				
+				if (!admMgr.updateDomainSetting(sid, setting.getKey(), setting.getValue())) {
 					throw new WTException("Cannot update setting [{0}, {1}]", sid, key);
-				} else {
-					//FIXME: Evaluate to create new field in Domain data for public.url
-					if (CoreManifest.ID.equals(sid) && "public.url".equals(key)) {
-						coreadm.refreshDomainCache();
-					}
 				}
 				if (!StringUtils.equals(key, setting.getKey())) {
-					coreadm.deleteDomainSetting(domainId, sid, key);
+					admMgr.deleteDomainSetting(sid, key);
 				}
 				new JsonResult().printTo(out);
 				
@@ -576,22 +631,17 @@ public class Service extends BaseService {
 				final String sid = cid.getToken(0);
 				final String key = cid.getToken(1);
 
-				if (!coreadm.deleteDomainSetting(domainId, sid, key)) {
+				if (!admMgr.deleteDomainSetting(sid, key)) {
 					throw new WTException("Cannot delete setting [{0}, {1}]", sid, key);
-				} else {
-					//FIXME: Evaluate to create new field in Domain data for public.url
-					if (CoreManifest.ID.equals(sid) && "public.url".equals(key)) {
-						coreadm.refreshDomainCache();
-					}
 				}
 				new JsonResult().printTo(out);
 				
 			} else if ("cleanup".equals(crud)) {
 				boolean users = ServletUtils.getBooleanParameter(request, "users", false);
 				if (users) {
-					coreadm.cleanupUserSettingsCache(domainId);
+					admMgr.cleanupUserSettingsCache();
 				} else {
-					coreadm.cleanupDomainSettingsCache(domainId);
+					admMgr.cleanupDomainSettingsCache();
 				}
 				new JsonResult().printTo(out);
 			}
@@ -603,57 +653,367 @@ public class Service extends BaseService {
 	}
 	
 	public void processManageDomainGroups(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
-		
 		try {
+			String domainId = ServletUtils.getStringParameter(request, "domainId", true);
 			String crud = ServletUtils.getStringParameter(request, "crud", true);
-			if(crud.equals(Crud.READ)) {
-				String domainId = ServletUtils.getStringParameter(request, "domainId", true);
-				
-				List<JsGridDomainGroup> items = new ArrayList<>();
-				for(OGroup group : coreadm.listGroups(domainId)) {
-					items.add(new JsGridDomainGroup(group));
+			CoreAdminManager admMgr = WT.getCoreAdminManager(RunContext.buildDomainAdminProfileId(domainId));
+			if (Crud.READ.equals(crud)) {
+				List<JsGridGroup> items = new ArrayList<>();
+				for (Group group : admMgr.listGroups().values()) {
+					items.add(new JsGridGroup(group));
 				}
-				new JsonResult("groups", items, items.size()).printTo(out);
+				new JsonResult(items).printTo(out);
 				
-			} else if(crud.equals(Crud.DELETE)) {
-				ServletUtils.StringArray profileIds = ServletUtils.getObjectParameter(request, "profileIds", ServletUtils.StringArray.class, true);
-				
-				UserProfileId pid = new UserProfileId(profileIds.get(0));
-				coreadm.deleteGroup(pid);
-				
-				new JsonResult().printTo(out);
+			} else {
+				throw new WTUnsupportedOperationException("Unsupported operation [{}]", crud);
 			}
 			
-		} catch(Exception ex) {
+		} catch (Exception ex) {
 			logger.error("Error in ManageDomainGroups", ex);
 			new JsonResult(ex).printTo(out);
 		}
 	}
 	
-	public void processManageGroup(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
-		
+	public void processManageDomainGroup(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
 		try {
+			String domainId = ServletUtils.getStringParameter(request, "domainId", true);
 			String crud = ServletUtils.getStringParameter(request, "crud", true);
-			if(crud.equals(Crud.READ)) {
-				String id = ServletUtils.getStringParameter(request, "id", null);
+			CoreAdminManager admMgr = WT.getCoreAdminManager(RunContext.buildDomainAdminProfileId(domainId));
+			if (Crud.READ.equals(crud)) {
+				String id = ServletUtils.getStringParameter(request, "id", false);
 				
-				UserProfileId pid = new UserProfileId(id);
-				GroupEntity group = coreadm.getGroup(pid);
-				new JsonResult(new JsGroup(group)).printTo(out);
+				Group item = admMgr.getGroup(id, GroupGetOption.internalDefaultFlags());
+				new JsonResult(new JsGroup(item)).printTo(out);
 				
-			} else if(crud.equals(Crud.CREATE)) {
+			} else if (Crud.CREATE.equals(crud)) {
 				Payload<MapItem, JsGroup> pl = ServletUtils.getPayload(request, JsGroup.class);
-				coreadm.addGroup(JsGroup.buildGroupEntity(pl.data));
-				new JsonResult().printTo(out);
 				
-			} else if(crud.equals(Crud.UPDATE)) {
+				Result<Group> result = admMgr.addGroup(pl.data.groupId, JsGroup.createGroupForAdd(pl.data), GroupUpdateOption.internalDefaultFlags());
+				if (result.hasExceptions()) {
+					new JsonResult().withMessageArray("{warn.operation.okWithExceptions@com.sonicle.webtop.core}", result.collectExceptionsMessages()).printTo(out);
+				} else {
+					new JsonResult().printTo(out);
+				}
+				
+			} else if (Crud.UPDATE.equals(crud)) {
 				Payload<MapItem, JsGroup> pl = ServletUtils.getPayload(request, JsGroup.class);
-				coreadm.updateGroup(JsGroup.buildGroupEntity(pl.data));
-				new JsonResult().printTo(out);
+				
+				ResultVoid result = admMgr.updateGroup(pl.data.groupId, JsGroup.createGroupForUpdate(pl.data), GroupUpdateOption.internalDefaultFlags());
+				if (result.hasExceptions()) {
+					new JsonResult().withMessageArray("{warn.operation.okWithExceptions@com.sonicle.webtop.core}", result.collectExceptionsMessages()).printTo(out);
+				} else {
+					new JsonResult().printTo(out);
+				}
+				
+			} else if (Crud.DELETE.equals(crud)) {
+				String id = ServletUtils.getStringParameter(request, "id", false);
+				
+				ResultVoid result = admMgr.deleteGroup(id);
+				if (result.hasExceptions()) {
+					new JsonResult().withMessageArray("{warn.operation.okWithExceptions@com.sonicle.webtop.core}", result.collectExceptionsMessages()).printTo(out);
+				} else {
+					new JsonResult().printTo(out);
+				}
+				
+			} else if ("check".equals(crud)) {
+				String group = ServletUtils.getStringParameter(request, "group", false);
+				
+				boolean available = admMgr.checkGroupIdAvailability(group);
+				new JsonResult(available).printTo(out);
+				
+			} else {
+				throw new WTException("Unsupported operation [{}]", crud);
 			}
 			
+		} catch (Exception ex) {
+			logger.error("Error in ManageDomainGroup", ex);
+			new JsonResult(ex).printTo(out);
+		}
+	}
+	
+	public void processManageDomainUsers(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
+		try {
+			String domainId = ServletUtils.getStringParameter(request, "domainId", true);
+			String crud = ServletUtils.getStringParameter(request, "crud", true);
+			CoreAdminManager admMgr = WT.getCoreAdminManager(RunContext.buildDomainAdminProfileId(domainId));
+			if (Crud.READ.equals(crud)) {
+				List<JsGridUser> items = new ArrayList<>();
+				for (DirectoryUser directoryUser : admMgr.listDirectoryUsers()) {
+					items.add(new JsGridUser(directoryUser));
+				}
+				new JsonResult(items).printTo(out);
+				
+			} else if ("enable".equals(crud) || "disable".equals(crud)) {
+				ServletUtils.StringArray userIds = ServletUtils.getObjectParameter(request, "ids", ServletUtils.StringArray.class, true);
+				boolean enabled = "enable".equals(crud);
+				
+				for (String userId : userIds) {
+					admMgr.updateUserStatus(userId, enabled);
+				}
+				new JsonResult().printTo(out);
+				
+			} else if ("updateEmailDomain".equals(crud)) {
+				ServletUtils.StringArray userIds = ServletUtils.getObjectParameter(request, "ids", ServletUtils.StringArray.class, true);
+				String domainPart = ServletUtils.getStringParameter(request, "domainPart", true);
+				
+				admMgr.bulkUpdatePersonalEmailDomain(userIds.stream().collect(Collectors.toSet()), domainPart);
+				new JsonResult().printTo(out);
+				
+			} else {
+				throw new WTUnsupportedOperationException("Unsupported operation [{}]", crud);
+			}
+			
+		} catch (Exception ex) {
+			logger.error("Error in ManageDomainUsers", ex);
+			new JsonResult(ex).printTo(out);
+		}
+	}
+	
+	public void processChangeUserPassword(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
+		try {
+			String profileId = ServletUtils.getStringParameter(request, "profileId", true);
+			char[] newPassword = ServletUtils.getStringParameter(request, "newPassword", true).toCharArray();
+			
+			UserProfileId pid = new UserProfileId(profileId);
+			CoreAdminManager admMgr = WT.getCoreAdminManager(RunContext.buildDomainAdminProfileId(pid.getDomainId()));
+			admMgr.updateUserPassword(pid.getUserId(), newPassword);
+			new JsonResult().printTo(out);
+			
 		} catch(Exception ex) {
-			logger.error("Error in ManageGroup", ex);
+			logger.error("Error in ChangeUserPassword", ex);
+			new JsonResult(ex).printTo(out);
+		}
+	}
+	
+	public void processManageDomainUser(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
+		try {
+			String domainId = ServletUtils.getStringParameter(request, "domainId", true);
+			String crud = ServletUtils.getStringParameter(request, "crud", true);
+			CoreAdminManager admMgr = WT.getCoreAdminManager(RunContext.buildDomainAdminProfileId(domainId));
+			if (Crud.READ.equals(crud)) {
+				String id = ServletUtils.getStringParameter(request, "id", false);
+				
+				User item = admMgr.getUser(id, UserGetOption.internalDefaultFlags());
+				new JsonResult(new JsUser(item)).printTo(out);
+				
+			} else if (Crud.CREATE.equals(crud)) {
+				Payload<MapItem, JsUser> pl = ServletUtils.getPayload(request, JsUser.class);
+				
+				Result<User> result = null;
+				if (!StringUtils.isBlank(pl.data.password)) {
+					result = admMgr.addUser(pl.data.userId, JsUser.createUserForAdd(pl.data), true, pl.data.password.toCharArray(), UserUpdateOption.internalDefaultFlags());
+				} else {
+					result = admMgr.addUser(pl.data.userId, JsUser.createUserForAdd(pl.data), false, null, UserUpdateOption.internalDefaultFlags());
+				}
+				if (result.hasExceptions()) {
+					new JsonResult().withMessageArray("{warn.operation.okWithExceptions@com.sonicle.webtop.core}", result.collectExceptionsMessages()).printTo(out);
+				} else {
+					new JsonResult().printTo(out);
+				}
+				
+			} else if (Crud.UPDATE.equals(crud)) {
+				Payload<MapItem, JsUser> pl = ServletUtils.getPayload(request, JsUser.class);
+				
+				ResultVoid result = admMgr.updateUser(pl.data.userId, JsUser.createUserForUpdate(pl.data), UserUpdateOption.internalDefaultFlags());
+				if (result.hasExceptions()) {
+					new JsonResult().withMessageArray("{warn.operation.okWithExceptions@com.sonicle.webtop.core}", result.collectExceptionsMessages()).printTo(out);
+				} else {
+					new JsonResult().printTo(out);
+				}
+				
+			} else if (Crud.DELETE.equals(crud)) {
+				String id = ServletUtils.getStringParameter(request, "id", false);
+				boolean deep = ServletUtils.getBooleanParameter(request, "deep", false);
+				
+				ResultVoid result = admMgr.deleteUser(id, deep);
+				if (result.hasExceptions()) {
+					new JsonResult().withMessageArray("{warn.operation.okWithExceptions@com.sonicle.webtop.core}", result.collectExceptionsMessages()).printTo(out);
+				} else {
+					new JsonResult().printTo(out);
+				}
+				
+			} else if ("check".equals(crud)) {
+				String user = ServletUtils.getStringParameter(request, "user", false);
+				
+				boolean available = admMgr.checkUserIdAvailability(user);
+				new JsonResult(available).printTo(out);
+				
+			} else {
+				throw new WTException("Unsupported operation [{}]", crud);
+			}
+			
+		} catch (Exception ex) {
+			logger.error("Error in ManageDomainUser", ex);
+			new JsonResult(ex).printTo(out);
+		}
+	}
+	
+	public void processManageDomainResources(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
+		try {
+			String domainId = ServletUtils.getStringParameter(request, "domainId", true);
+			String crud = ServletUtils.getStringParameter(request, "crud", true);
+			CoreAdminManager admMgr = WT.getCoreAdminManager(RunContext.buildDomainAdminProfileId(domainId));
+			if (Crud.READ.equals(crud)) {
+				List<JsGridResource> items = new ArrayList<>();
+				for (Resource resource : admMgr.listResources(EnabledCond.ANY_STATE).values()) {
+					items.add(new JsGridResource(resource));
+				}
+				new JsonResult(items).printTo(out);
+				
+			} /*else if (Crud.DELETE.equals(crud)) {
+				PayloadAsList<JsDomainGridResource.List> pl = ServletUtils.getPayloadAsList(request, JsDomainGridResource.List.class);
+				
+				JsDomainGridResource js = pl.data.get(0);
+				ResultVoid result = admMgr.deleteResource(js.name);
+				if (result.hasExceptions()) {
+					new JsonResult().withMessageArray("{resource.warn.deleteWithExceptions@com.sonicle.webtop.core.admin}", result.collectExceptionsMessages()).printTo(out);
+				} else {
+					new JsonResult().printTo(out);
+				}
+				
+			}*/ else {
+				throw new WTUnsupportedOperationException("Unsupported operation [{}]", crud);
+			}
+			
+		} catch (Exception ex) {
+			logger.error("Error in ManageDomainResources", ex);
+			new JsonResult(ex).printTo(out);
+		}
+	}
+
+	public void processManageDomainResource(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
+		
+		try {
+			String domainId = ServletUtils.getStringParameter(request, "domainId", true);
+			String crud = ServletUtils.getStringParameter(request, "crud", true);
+			CoreAdminManager admMgr = WT.getCoreAdminManager(RunContext.buildDomainAdminProfileId(domainId));
+			if (Crud.READ.equals(crud)) {
+				String id = ServletUtils.getStringParameter(request, "id", false);
+				
+				Resource item = admMgr.getResource(id, ResourceGetOption.internalDefaultFlags());
+				new JsonResult(new JsResource(item)).printTo(out);
+				
+			} else if (Crud.CREATE.equals(crud)) {
+				Payload<MapItem, JsResource> pl = ServletUtils.getPayload(request, JsResource.class);
+				
+				Result<Resource> result = admMgr.addResource(pl.data.name, JsResource.createResourceForAdd(pl.data), ResourceUpdateOption.internalDefaultFlags());
+				if (result.hasExceptions()) {
+					new JsonResult().withMessageArray("{warn.operation.okWithExceptions@com.sonicle.webtop.core}", result.collectExceptionsMessages()).printTo(out);
+				} else {
+					new JsonResult().printTo(out);
+				}
+				
+			} else if (Crud.UPDATE.equals(crud)) {
+				Payload<MapItem, JsResource> pl = ServletUtils.getPayload(request, JsResource.class);
+				
+				ResultVoid result = admMgr.updateResource(pl.data.name, JsResource.createResourceForUpdate(pl.data), ResourceUpdateOption.internalDefaultFlags());
+				if (result.hasExceptions()) {
+					new JsonResult().withMessageArray("{warn.operation.okWithExceptions@com.sonicle.webtop.core}", result.collectExceptionsMessages()).printTo(out);
+				} else {
+					new JsonResult().printTo(out);
+				}
+				
+			} else if (Crud.DELETE.equals(crud)) {
+				String id = ServletUtils.getStringParameter(request, "id", false);
+				
+				ResultVoid result = admMgr.deleteResource(id);
+				if (result.hasExceptions()) {
+					new JsonResult().withMessageArray("{warn.operation.okWithExceptions@com.sonicle.webtop.core}", result.collectExceptionsMessages()).printTo(out);
+				} else {
+					new JsonResult().printTo(out);
+				}
+				
+			} else if ("check".equals(crud)) {
+				String resource = ServletUtils.getStringParameter(request, "resource", false);
+				
+				boolean available = admMgr.checkResourceIdAvailability(resource);
+				new JsonResult(available).printTo(out);
+				
+			} else {
+				throw new WTException("Unsupported operation [{}]", crud);
+			}
+			
+		} catch (Exception ex) {
+			logger.error("Error in ManageDomainResource", ex);
+			new JsonResult(ex).printTo(out);
+		}
+	}
+	
+	public void processManageDomainRoles(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
+		try {
+			String domainId = ServletUtils.getStringParameter(request, "domainId", true);
+			String crud = ServletUtils.getStringParameter(request, "crud", true);
+			CoreAdminManager admMgr = WT.getCoreAdminManager(RunContext.buildDomainAdminProfileId(domainId));
+			if (Crud.READ.equals(crud)) {
+				List<JsGridRole> items = new ArrayList<>();
+				for (Role role : admMgr.listRoles().values()) {
+					items.add(new JsGridRole(role));
+				}
+				new JsonResult(items).printTo(out);
+				
+			} else {
+				throw new WTUnsupportedOperationException("Unsupported operation [{}]", crud);
+			}
+			
+		} catch (Exception ex) {
+			logger.error("Error in ManageDomainRoles", ex);
+			new JsonResult(ex).printTo(out);
+		}
+	}
+	
+	public void processManageDomainRole(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
+		try {
+			String domainId = ServletUtils.getStringParameter(request, "domainId", true);
+			String crud = ServletUtils.getStringParameter(request, "crud", true);
+			CoreAdminManager admMgr = WT.getCoreAdminManager(RunContext.buildDomainAdminProfileId(domainId));
+			if (Crud.READ.equals(crud)) {
+				String id = ServletUtils.getStringParameter(request, "id", false);
+				
+				Role item = admMgr.getRole(id, RoleGetOption.internalDefaultFlags());
+				new JsonResult(new JsRole(item)).printTo(out);
+				
+			} else if (Crud.CREATE.equals(crud)) {
+				Payload<MapItem, JsRole> pl = ServletUtils.getPayload(request, JsRole.class);
+				
+				Result<Role> result = admMgr.addRole(pl.data.roleId, JsRole.createRoleForAdd(pl.data), RoleUpdateOption.internalDefaultFlags());
+				if (result.hasExceptions()) {
+					new JsonResult().withMessageArray("{warn.operation.okWithExceptions@com.sonicle.webtop.core}", result.collectExceptionsMessages()).printTo(out);
+				} else {
+					new JsonResult().printTo(out);
+				}
+				
+			} else if (Crud.UPDATE.equals(crud)) {
+				Payload<MapItem, JsRole> pl = ServletUtils.getPayload(request, JsRole.class);
+				
+				ResultVoid result = admMgr.updateRole(pl.data.roleId, JsRole.createRoleForUpdate(pl.data), RoleUpdateOption.internalDefaultFlags());
+				if (result.hasExceptions()) {
+					new JsonResult().withMessageArray("{warn.operation.okWithExceptions@com.sonicle.webtop.core}", result.collectExceptionsMessages()).printTo(out);
+				} else {
+					new JsonResult().printTo(out);
+				}
+				
+			} else if (Crud.DELETE.equals(crud)) {
+				String id = ServletUtils.getStringParameter(request, "id", false);
+				
+				ResultVoid result = admMgr.deleteRole(id);
+				if (result.hasExceptions()) {
+					new JsonResult().withMessageArray("{warn.operation.okWithExceptions@com.sonicle.webtop.core}", result.collectExceptionsMessages()).printTo(out);
+				} else {
+					new JsonResult().printTo(out);
+				}
+				
+			} else if ("check".equals(crud)) {
+				String role = ServletUtils.getStringParameter(request, "role", false);
+				
+				boolean available = admMgr.checkRoleIdAvailability(role);
+				new JsonResult(available).printTo(out);
+				
+			} else {
+				throw new WTException("Unsupported operation [{}]", crud);
+			}
+			
+		} catch (Exception ex) {
+			logger.error("Error in ManageDomainRole", ex);
 			new JsonResult(ex).printTo(out);
 		}
 	}
@@ -663,7 +1023,7 @@ public class Service extends BaseService {
 		UserProfile up = getEnv().getProfile();
 		
 		try {
-			for (String sid: core.listWTInstalledServices()) {
+			for (String sid: core.listInstalledServices()) {
 				ServiceManifest manifest = WT.getManifest(sid);
 				for (Product product : manifest.getProducts()) {
 					items.add(new JsServiceProductLkp(sid, WT.lookupResource(sid, up.getLocale(), BaseService.RESOURCE_SERVICE_NAME), product.code, product.name));
@@ -672,9 +1032,9 @@ public class Service extends BaseService {
 			Collections.sort(items, (JsServiceProductLkp js1, JsServiceProductLkp js2) -> js1.productCode.compareTo(js2.productCode));
 			new JsonResult(items).printTo(out);
 			
-		} catch(Throwable t) {
-			logger.error("Error in processLookupServicesProducts", t);
-			new JsonResult(false, "Error").printTo(out);
+		} catch (Exception ex) {
+			logger.error("Error in LookupServicesProducts", ex);
+			new JsonResult(ex).printTo(out);
 		}
 	}
 	
@@ -684,11 +1044,11 @@ public class Service extends BaseService {
 		try {
 			String domainId = ServletUtils.getStringParameter(request, "domainId", true);
 			String crud = ServletUtils.getStringParameter(request, "crud", true);
-			if (crud.equals(Crud.READ)) {
+			CoreAdminManager admMgr = WT.getCoreAdminManager(RunContext.buildDomainAdminProfileId(domainId));
+			if (Crud.READ.equals(crud)) {
 				List<JsGridDomainLicense> items = new ArrayList<>();
-				String machineHardwareId = LangUtils.joinStrings("!", HardwareID.getHardwareIDFromHostName(), HardwareID.getHardwareIDFromEthernetAddress(true));
-				for (ServiceLicense license : coreadm.listLicenses(domainId)) {
-					items.add(new JsGridDomainLicense(license, up.getTimeZone(), machineHardwareId));
+				for (ServiceLicense license : admMgr.listLicenses(LicenseListOption.internalDefaultFlags())) {
+					items.add(new JsGridDomainLicense(domainId, license, up.getTimeZone()));
 				}
 				new JsonResult(items, items.size()).printTo(out);
 				
@@ -696,41 +1056,43 @@ public class Service extends BaseService {
 				PayloadAsList<JsGridDomainLicense.List> pl = ServletUtils.getPayloadAsList(request, JsGridDomainLicense.List.class);
 				
 				JsGridDomainLicense pl0 = pl.data.get(0);
-				coreadm.updateLicenseAutoLease(domainId, new ProductId(pl0.id), pl0.autoLease);
+				admMgr.updateLicenseAutoLease(new ProductId(pl0.id).getProductCode(), pl0.autoLease);
 				new JsonResult().printTo(out);
 				
 			} else if ("cleanup".equals(crud)) {
-				coreadm.cleanupLicenseCache();
+				admMgr.cleanupLicenseCache();
 				new JsonResult().printTo(out);
 				
 			} else if ("check".equals(crud)) {
-				coreadm.checkOnlineAvailability();
+				admMgr.checkOnlineAvailability();
 				new JsonResult().printTo(out);
+				
+			} else {
+				throw new WTException("Unsupported operation [{}]", crud);
 			}
-			
-		} catch(Throwable t) {
-			logger.error("Error in ManageDomainLicenses", t);
-			new JsonResult(t).printTo(out);
+		
+		} catch (Exception ex) {
+			logger.error("Error in ManageDomainLicenses", ex);
+			new JsonResult(ex).printTo(out);
 		}
 	}
 	
 	public void processManageLicense(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
 		
 		try {
+			String domainId = ServletUtils.getStringParameter(request, "domainId", true);
+			String productId = ServletUtils.getStringParameter(request, "productId", true);
 			String crud = ServletUtils.getStringParameter(request, "crud", true);
-			if (crud.equals(Crud.CREATE)) {
-				String domainId = ServletUtils.getStringParameter(request, "domainId", true);
-				String productId = ServletUtils.getStringParameter(request, "productId", true);
+			ProductId prodId = new ProductId(productId);
+			CoreAdminManager admMgr = WT.getCoreAdminManager(RunContext.buildDomainAdminProfileId(domainId));
+			if (Crud.CREATE.equals(crud)) {
 				String string = ServletUtils.getStringParameter(request, "string", true);
 				Boolean activate = ServletUtils.getBooleanParameter(request, "activate", false);
-				ProductId prodId = new ProductId(productId);
 				
 				try {
-					ServiceLicense sl = new ServiceLicense();
-					sl.setDomainId(domainId);
-					sl.setProductId(prodId);
-					sl.setLicenseString(string);
-					coreadm.addLicense(sl, activate);
+					LicenseBase license = new LicenseBase();
+					license.setLicenseString(string);
+					admMgr.addLicense(prodId.getProductCode(), license, activate);
 					new JsonResult().printTo(out);
 					
 				} catch(WTIntegrityException ex) {
@@ -740,14 +1102,11 @@ public class Service extends BaseService {
 				}
 				
 			} else if ("change".equals(crud)) {
-				String domainId = ServletUtils.getStringParameter(request, "domainId", true);
-				String productId = ServletUtils.getStringParameter(request, "productId", true);
 				String newString = ServletUtils.getStringParameter(request, "nstring", true);
 				String activatedString = ServletUtils.getStringParameter(request, "astring", false);
-				ProductId prodId = new ProductId(productId);
 				
 				try {
-					coreadm.changeLicense(domainId, prodId, newString, activatedString);
+					admMgr.changeLicense(prodId.getProductCode(), newString, activatedString);
 					new JsonResult().printTo(out);
 					
 				} catch(WTLicenseMismatchException | WTLicenseValidationException | WTLicenseActivationException ex) {
@@ -755,22 +1114,14 @@ public class Service extends BaseService {
 				}
 				
 			} else if (crud.equals(Crud.DELETE)) {
-				String domainId = ServletUtils.getStringParameter(request, "domainId", true);
-				String productId = ServletUtils.getStringParameter(request, "productId", true);
-				ProductId prodId = new ProductId(productId);
-				
-				coreadm.deleteLicense(domainId, prodId);				
+				admMgr.deleteLicense(prodId.getProductCode(), false);				
 				new JsonResult().printTo(out);
 				
 			} else if ("actreqinfo".equals(crud)) {
-				String domainId = ServletUtils.getStringParameter(request, "domainId", true);
-				String productId = ServletUtils.getStringParameter(request, "productId", true);
 				String type = ServletUtils.getStringParameter(request, "type", true);
 				
-				ProductId prodId = new ProductId(productId);
-				ProductLicense prodLic = WT.findProductLicense(ProductUtils.getProduct(prodId, domainId));
+				ProductLicense prodLic = admMgr.getProductLicense(prodId.getProductCode());
 				if (prodLic == null) throw new WTException("Unknown product [{}]", productId);
-				
 				if ("activation".equals(type)) {
 					new JsonResult(prodLic.getManualActivationRequestInfo()).printTo(out);
 					
@@ -782,60 +1133,50 @@ public class Service extends BaseService {
 				}
 				
 			} else if ("activate".equals(crud)) {
-				String domainId = ServletUtils.getStringParameter(request, "domainId", true);
-				String productId = ServletUtils.getStringParameter(request, "productId", true);
 				String activatedString = ServletUtils.getStringParameter(request, "astring", false);
-				ProductId prodId = new ProductId(productId);
 				
 				try {
-					coreadm.activateLicense(domainId, prodId, activatedString);
+					admMgr.activateLicense(prodId.getProductCode(), activatedString);
 					new JsonResult().printTo(out);
 					
-				} catch(WTLicenseMismatchException | WTLicenseValidationException | WTLicenseActivationException ex) {
+				} catch (WTLicenseMismatchException | WTLicenseValidationException | WTLicenseActivationException ex) {
 					handleLicenseException(ex, true).printTo(out);
 				}
 				
 			}  else if ("deactivate".equals(crud)) {
-				String domainId = ServletUtils.getStringParameter(request, "domainId", true);
-				String productId = ServletUtils.getStringParameter(request, "productId", true);
 				String deactivatedString = ServletUtils.getStringParameter(request, "dstring", false);
-				ProductId prodId = new ProductId(productId);
 				
 				try {
-					coreadm.deactivateLicense(domainId, prodId, "dummyoffline".equals(deactivatedString));
+					admMgr.deactivateLicense(prodId.getProductCode(), "dummyoffline".equals(deactivatedString));
 					new JsonResult().printTo(out);
 					
-				} catch(WTLicenseMismatchException | WTLicenseValidationException | WTLicenseActivationException ex) {
+				} catch (WTLicenseMismatchException | WTLicenseValidationException | WTLicenseActivationException ex) {
 					handleLicenseException(ex, false).printTo(out);
 				}
 				
 			} else if ("assignlease".equals(crud)) {
-				String domainId = ServletUtils.getStringParameter(request, "domainId", true);
-				String productId = ServletUtils.getStringParameter(request, "productId", true);
 				ArrayList<String> userIds = ServletUtils.getStringParameters(request, "userIds");
 				
-				ProductId prodId = new ProductId(productId);
 				try {
-					coreadm.assignLicenseLease(domainId, prodId, userIds);
+					admMgr.assignLicenseLease(prodId.getProductCode(), LangUtils.asSet(userIds));
 				} catch(WTIntegrityException ex) {
 					throw new WTException(ex, "User has already been assigned [{}]", prodId.getProductCode());
 				}
 				new JsonResult().printTo(out);
 				
 			}  else if ("revokelease".equals(crud)) {
-				String domainId = ServletUtils.getStringParameter(request, "domainId", true);
-				String productId = ServletUtils.getStringParameter(request, "productId", true);
 				ArrayList<String> userIds = ServletUtils.getStringParameters(request, "userIds");
 				
-				ProductId prodId = new ProductId(productId);
-				coreadm.revokeLicenseLease(domainId, prodId, userIds);
-				
+				admMgr.revokeLicenseLease(prodId.getProductCode(), LangUtils.asSet(userIds));
 				new JsonResult().printTo(out);
+				
+			} else {
+				throw new WTException("Unsupported operation [{}]", crud);
 			}
 			
-		} catch(Throwable t) {
-			logger.error("Error in ManageLicense", t);
-			new JsonResult(t).printTo(out);
+		} catch (Exception ex) {
+			logger.error("Error in ManageLicense", ex);
+			new JsonResult(ex).printTo(out);
 		}
 	}
 	
@@ -871,9 +1212,10 @@ public class Service extends BaseService {
 			String domainId = ServletUtils.getStringParameter(request, "domainId", true);
 			String productId = ServletUtils.getStringParameter(request, "productId", true);
 			String type = ServletUtils.getStringParameter(request, "type", true);
-
+			
 			ProductId prodId = new ProductId(productId);
-			ProductLicense prodLic = WT.findProductLicense(ProductUtils.getProduct(prodId, domainId));
+			CoreAdminManager admMgr = WT.getCoreAdminManager(RunContext.buildDomainAdminProfileId(domainId));
+			ProductLicense prodLic = admMgr.getProductLicense(prodId.getProductCode());
 			if (prodLic == null) throw new WTException("Unknown product [{}]", productId);
 			
 			String s = null;
@@ -889,9 +1231,9 @@ public class Service extends BaseService {
 			ServletUtils.setFileStreamHeadersForceDownload(response, filename);
 			ServletUtils.writePlainResponse(response, s);
 			
-		} catch(Throwable t) {
-			logger.error("Error in ActivatorWizSaveToFile", t);
-			ServletUtils.writeErrorHandlingJs(response, t.getMessage());
+		} catch (Exception ex) {
+			logger.error("Error in ActivatorWizSaveToFile", ex);
+			ServletUtils.writeErrorHandlingJs(response, ex.getMessage());
 		}
 	}
 	
@@ -905,9 +1247,9 @@ public class Service extends BaseService {
 			if (upfile.getSize() > 1048576) throw new WTException("File is too large [{}]", upfile.getSize());
 			new JsonResult(FileUtils.readFile(upfile.getFile())).printTo(out);
 			
-		} catch(Throwable t) {
-			logger.error("Error in LicenseWizLoadFromFile", t);
-			new JsonResult(t).printTo(out);
+		} catch (Exception ex) {
+			logger.error("Error in LicenseWizLoadFromFile", ex);
+			new JsonResult(ex).printTo(out);
 		} finally {
 			if (upfile != null) removeUploadedFile(upfile.getUploadId());
 		}
@@ -925,9 +1267,9 @@ public class Service extends BaseService {
 			}
 			new JsonResult(items, items.size()).printTo(out);
 			
-		} catch(Throwable t) {
-			logger.error("Error in LookupDataSourceTypes", t);
-			new JsonResult(t).printTo(out);
+		} catch (Exception ex) {
+			logger.error("Error in LookupDataSourceTypes", ex);
+			new JsonResult(ex).printTo(out);
 		}
 	}
 	
@@ -955,9 +1297,9 @@ public class Service extends BaseService {
 				throw new WTException("Unsupported operation [{}]", crud);
 			}
 			
-		} catch (Throwable t) {
-			logger.error("Error in ManageDomainDataSources", t);
-			new JsonResult(t).printTo(out);
+		} catch (Exception ex) {
+			logger.error("Error in ManageDomainDataSources", ex);
+			new JsonResult(ex).printTo(out);
 		}
 	}
 	
@@ -1053,9 +1395,9 @@ public class Service extends BaseService {
 				throw new WTException("Unsupported operation [{}]", crud);
 			}
 			
-		} catch (Throwable t) {
-			logger.error("Error in ManageDomainDataSource", t);
-			new JsonResult(t).printTo(out);
+		} catch (Exception ex) {
+			logger.error("Error in ManageDomainDataSource", ex);
+			new JsonResult(ex).printTo(out);
 		}
 	}
 	
@@ -1093,9 +1435,9 @@ public class Service extends BaseService {
 				throw new WTException("Unsupported operation [{}]", crud);
 			}
 			
-		} catch (Throwable t) {
-			logger.error("Error in ManageDomainDataSourceQuery", t);
-			new JsonResult(t).printTo(out);
+		} catch (Exception ex) {
+			logger.error("Error in ManageDomainDataSourceQuery", ex);
+			new JsonResult(ex).printTo(out);
 		}
 	}
 	
@@ -1117,160 +1459,8 @@ public class Service extends BaseService {
 			DataSourceBase.ExecuteQueryResult result = admMgr.executeDataSourceRawQuery(dataSourceId, (String)pl.data.get("source"), (Map)pl.data.get("placeholders"), pagInfo, true);
 			new JsonResult(result).printTo(out);
 			
-		} catch (Throwable t) {
-			logger.error("Error in DataSourceQueryTester", t);
-			new JsonResult(t).printTo(out);
-		}
-	}
-	
-	public void processManageDomainUsers(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
-		
-		try {
-			String crud = ServletUtils.getStringParameter(request, "crud", true);
-			if(crud.equals(Crud.READ)) {
-				String domainId = ServletUtils.getStringParameter(request, "domainId", true);
-				
-				List<JsGridDomainUser> items = new ArrayList<>();
-				for(DirectoryUser dirUser : coreadm.listDirectoryUsers(domainId)) {
-					items.add(new JsGridDomainUser(dirUser));
-				}
-				new JsonResult("users", items, items.size()).printTo(out);
-				
-			} else if(crud.equals(Crud.DELETE)) {
-				boolean deep = ServletUtils.getBooleanParameter(request, "deep", false);
-				ServletUtils.StringArray profileIds = ServletUtils.getObjectParameter(request, "profileIds", ServletUtils.StringArray.class, true);
-				
-				UserProfileId pid = new UserProfileId(profileIds.get(0));
-				coreadm.deleteUser(deep, pid);
-				
-				new JsonResult().printTo(out);
-				
-			} else if(crud.equals("enable") || crud.equals("disable")) {
-				ServletUtils.StringArray profileIds = ServletUtils.getObjectParameter(request, "profileIds", ServletUtils.StringArray.class, true);
-				
-				UserProfileId pid = new UserProfileId(profileIds.get(0));
-				coreadm.updateUser(pid, crud.equals("enable"));
-				
-				new JsonResult().printTo(out);
-				
-			} else if(crud.equals("updateEmailDomain")) {
-				ServletUtils.StringArray profileIds = ServletUtils.getObjectParameter(request, "profileIds", ServletUtils.StringArray.class, true);
-				String domainPart = ServletUtils.getStringParameter(request, "domainPart", true);
-				
-				List<UserProfileId> pids = profileIds.stream().map(spid -> new UserProfileId(spid)).collect(Collectors.toList());
-				coreadm.updateUserEmailDomain(pids, domainPart);
-				
-				new JsonResult().printTo(out);
-			}
-			
-		} catch(Exception ex) {
-			logger.error("Error in ManageDomainUsers", ex);
-			new JsonResult(ex).printTo(out);
-		}
-	}
-	
-	public void processManageUser(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
-		
-		try {
-			String crud = ServletUtils.getStringParameter(request, "crud", true);
-			if(crud.equals(Crud.READ)) {
-				String id = ServletUtils.getStringParameter(request, "id", null);
-				
-				UserProfileId pid = new UserProfileId(id);
-				UserEntity user = coreadm.getUser(pid);
-				new JsonResult(new JsUser(user)).printTo(out);
-				
-			} else if(crud.equals(Crud.CREATE)) {
-				Payload<MapItem, JsUser> pl = ServletUtils.getPayload(request, JsUser.class);
-				JsonResult jsres=new JsonResult();
-				if (!StringUtils.isBlank(pl.data.password)) {
-					try {
-						coreadm.addUser(JsUser.buildUserEntity(pl.data), true, pl.data.password.toCharArray());
-					} catch(WTCyrusException cexc) {
-						jsres.setMetaError(new ResultMeta.Error().setText("Error creating mailbox : "+cexc.getMessage()));
-					}
-				} else {
-					coreadm.addUser(JsUser.buildUserEntity(pl.data), false, null);
-				}
-				jsres.printTo(out);
-				
-			} else if(crud.equals(Crud.UPDATE)) {
-				Payload<MapItem, JsUser> pl = ServletUtils.getPayload(request, JsUser.class);
-				coreadm.updateUser(JsUser.buildUserEntity(pl.data));
-				new JsonResult().printTo(out);
-			}
-			
-		} catch(Exception ex) {
-			logger.error("Error in ManageUsers", ex);
-			new JsonResult(ex).printTo(out);
-		}
-	}
-	
-	public void processChangeUserPassword(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
-		try {
-			String profileId = ServletUtils.getStringParameter(request, "profileId", true);
-			char[] newPassword = ServletUtils.getStringParameter(request, "newPassword", true).toCharArray();
-			
-			UserProfileId pid = new UserProfileId(profileId);
-			coreadm.updateUserPassword(pid, newPassword);
-			
-			new JsonResult().printTo(out);
-			
-		} catch(Exception ex) {
-			logger.error("Error in ChangeUserPassword", ex);
-			new JsonResult(ex).printTo(out);
-		}
-	}
-	
-	public void processManageDomainRoles(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
-		
-		try {
-			String crud = ServletUtils.getStringParameter(request, "crud", true);
-			if(crud.equals(Crud.READ)) {
-				String domainId = ServletUtils.getStringParameter(request, "domainId", true);
-				
-				List<JsGridDomainRole> items = new ArrayList<>();
-				for(Role role : coreadm.listRoles(domainId)) {
-					items.add(new JsGridDomainRole(role));
-				}
-				new JsonResult("roles", items, items.size()).printTo(out);
-				
-			} else if(crud.equals(Crud.DELETE)) {
-				PayloadAsList<JsGridDomainRole.List> pl = ServletUtils.getPayloadAsList(request, JsGridDomainRole.List.class);
-				JsGridDomainRole role = pl.data.get(0);
-				
-				coreadm.deleteRole(role.roleUid);
-				new JsonResult().printTo(out);
-			}
-			
-		} catch(Exception ex) {
-			logger.error("Error in ManageDomainRoles", ex);
-			new JsonResult(ex).printTo(out);
-		}
-	}
-	
-	public void processManageRoles(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
-		
-		try {
-			String crud = ServletUtils.getStringParameter(request, "crud", true);
-			if(crud.equals(Crud.READ)) {
-				String id = ServletUtils.getStringParameter(request, "id", null);
-				RoleEntity role = coreadm.getRole(id);
-				new JsonResult(new JsRole(role)).printTo(out);
-				
-			} else if(crud.equals(Crud.CREATE)) {
-				Payload<MapItem, JsRole> pl = ServletUtils.getPayload(request, JsRole.class);
-				coreadm.addRole(JsRole.buildRoleEntity(pl.data));
-				new JsonResult().printTo(out);
-				
-			} else if(crud.equals(Crud.UPDATE)) {
-				Payload<MapItem, JsRole> pl = ServletUtils.getPayload(request, JsRole.class);
-				coreadm.updateRole(JsRole.buildRoleEntity(pl.data));
-				new JsonResult().printTo(out);
-			}
-			
-		} catch(Exception ex) {
-			logger.error("Error in ManageRoles", ex);
+		} catch (Exception ex) {
+			logger.error("Error in DataSourceQueryTester", ex);
 			new JsonResult(ex).printTo(out);
 		}
 	}

@@ -34,6 +34,7 @@
 Ext.define('Sonicle.webtop.core.view.Activity', {
 	extend: 'WTA.sdk.ModelView',
 	requires: [
+		'Sonicle.webtop.core.model.SubjectLkp',
 		'Sonicle.webtop.core.model.Activity'
 	],
 	
@@ -77,14 +78,17 @@ Ext.define('Sonicle.webtop.core.view.Activity', {
 					hideEmptyLabel: false,
 					boxLabel: me.mys.res('activity.fld-readOnly.lbl')
 				},
-				WTF.localCombo('id', 'desc', {
+				WTF.localCombo('id', 'labelNameWithDN', {
 					reference: 'user',
 					bind: '{record.userId}',
 					store: {
 						autoLoad: true,
-						model: 'WTA.model.Simple',
-						proxy: WTF.proxy(me.mys.ID, 'LookupDomainUsers', 'users', {
-							extraParams: {wildcard: true}
+						model: 'WTA.model.SubjectLkp',
+						proxy: WTF.proxy(me.mys.ID, 'LookupSubjects', null, {
+							extraParams: {
+								wildcard: true,
+								users: true
+							}
 						})
 					},
 					fieldLabel: me.mys.res('activity.fld-user.lbl'),

@@ -36,16 +36,23 @@ import com.license4j.ValidationStatus;
 import com.rits.cloning.Cloner;
 import com.sonicle.commons.LangUtils;
 import com.sonicle.commons.db.DbUtils;
+import com.sonicle.commons.flags.BitFlags;
 import com.sonicle.commons.l4j.HardwareID;
 import com.sonicle.commons.l4j.ProductLicense;
 import com.sonicle.commons.l4j.ProductLicense.LicenseInfo;
 import com.sonicle.commons.time.DateTimeUtils;
 import com.sonicle.commons.web.json.bean.StringMap;
+import com.sonicle.webtop.core.app.model.GenericSubject;
+import com.sonicle.webtop.core.app.model.LicenseBase;
+import com.sonicle.webtop.core.app.model.LicenseComputedStatus;
+import com.sonicle.webtop.core.app.model.LicenseComputedStatus;
+import com.sonicle.webtop.core.app.model.LicenseExInfo;
+import com.sonicle.webtop.core.app.model.LicenseListOption;
 import com.sonicle.webtop.core.app.sdk.WTLicenseActivationException;
 import com.sonicle.webtop.core.app.sdk.WTLicenseMismatchException;
 import com.sonicle.webtop.core.app.sdk.WTLicenseValidationException;
+import com.sonicle.webtop.core.app.sdk.WTNotFoundException;
 import com.sonicle.webtop.core.app.util.ExceptionUtils;
-import com.sonicle.webtop.core.app.util.ProductUtils;
 import com.sonicle.webtop.core.bol.OLicense;
 import com.sonicle.webtop.core.bol.OLicenseLease;
 import com.sonicle.webtop.core.bol.VLicense;
@@ -65,11 +72,11 @@ import com.sonicle.webtop.core.sdk.WTRuntimeException;
 import java.sql.Connection;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import net.sf.qualitycheck.Check;
 import org.apache.commons.collections4.MultiValuedMap;
@@ -189,7 +196,18 @@ public class LicenseManager {
 		licenseLeaseCache.clear();
 	}
 	
+	public String computeActivationHardwareID() {
+		return LangUtils.joinStrings("!", HardwareID.getHardwareIDFromHostName(), HardwareID.getHardwareIDFromEthernetAddress(true));
+	}
+	
+	public ProductLicense getProductLicenseOrThrow(final BaseServiceProduct product) throws WTNotFoundException {
+		final ProductLicense license = getProductLicense(product);
+		if (license == null) throw new WTNotFoundException("License not found [{}]", product.getProductCode());
+		return license;
+	}
+	
 	public ProductLicense getProductLicense(final BaseServiceProduct product) {
+		// This will always return a value, see dummy object creation!
 		return getProductLicenseData(product).license;
 	}
 	
@@ -205,11 +223,11 @@ public class LicenseManager {
 				if (WebTopManager.SYSADMIN_DOMAINID.equals(product.getDomainId())) return new ProductData(null, null, false);
 				
 				con = wta.getConnectionManager().getConnection();
-				OLicense olic = licDao.select(con, product.getDomainId(), product.getProductId().getServiceId(), product.getProductId().getProductCode());
+				OLicense olic = licDao.select(con, product.getDomainId(), product.SERVICE_ID, product.getProductCode());
 				if (olic != null) {
 					ProductLicense plicNew = new ProductLicense(product);
 					plicNew.setLicenseString(olic.getString());
-					plicNew.setActivationCustomHardwareId(LangUtils.joinStrings("!", HardwareID.getHardwareIDFromHostName(), HardwareID.getHardwareIDFromEthernetAddress(true)));
+					plicNew.setActivationCustomHardwareId(computeActivationHardwareID());
 					plicNew.setActivatedLicenseString(olic.getActivatedString());
 
 					LicenseInfo li = plicNew.validate(true);
@@ -227,7 +245,6 @@ public class LicenseManager {
 					return new ProductData(plicNew, maxLease, olic.getAutoLease());
 
 				} else {
-					
 					if (!StringUtils.isBlank(product.getBuiltInLicenseString())) {
 						ProductLicense plicNew = new ProductLicense(product);
 						plicNew.setLicenseString(product.getBuiltInLicenseString());
@@ -372,156 +389,296 @@ public class LicenseManager {
 		}
 	}
 	
-	public List<ServiceLicense> listLicenses(String domainId, boolean includeBuiltIn) throws WTException {
+	public List<ServiceLicense> listLicenses(final String domainId, final BitFlags<LicenseListOption> options) throws WTException {
+		Check.notEmpty(domainId, "domainId");
+		Check.notNull(options, "options");
 		LicenseDAO licDao = LicenseDAO.getInstance();
 		LicenseLeaseDAO lleaDao = LicenseLeaseDAO.getInstance();
 		Connection con = null;
 		
 		try {
 			con = wta.getConnectionManager().getConnection();
-			
+			String ativationHwID = options.has(LicenseListOption.EXTENDED_INFO) ? computeActivationHardwareID() : null;
 			ArrayList<ServiceLicense> items = new ArrayList<>();
 			HashSet<String> realIds = new HashSet<>();
 			for (VLicense vlic : licDao.viewByDomain(con, domainId)) {
 				realIds.add(ProductId.build(vlic.getServiceId(), vlic.getProductCode()).toString());
 				List<OLicenseLease> oleases = lleaDao.selectByDomainServiceProduct(con, domainId, vlic.getServiceId(), vlic.getProductCode());
-				items.add(AppManagerUtils.createServiceLicense(vlic, oleases));
+				final ServiceLicense serviceLicense = AppManagerUtils.createServiceLicense(vlic, oleases);
+				
+				if (options.has(LicenseListOption.EXTENDED_INFO)) {
+					try {
+						BaseServiceProduct product = ProductRegistry.getInstance().getServiceProductOrThrow(serviceLicense.getProductCode(), domainId);
+						ProductLicense productLicense = getProductLicenseOrThrow(product);
+						serviceLicense.setExtendedInfo(doLicenseGetExtendedInfo(serviceLicense, product, productLicense, ativationHwID));
+					} catch (Exception ex2) {
+						LOGGER.error("Unable to build extended info for '{}'", ex2, serviceLicense.getProductCode());
+					}
+				}
+				items.add(serviceLicense);
 			}
 			
-			if (includeBuiltIn) {
+			if (options.has(LicenseListOption.INCLUDE_BUILTIN)) {
 				for (String sid: wta.getServiceManager().listRegisteredServices()) {
 					ServiceManifest manifest = WT.getManifest(sid);
 					for (ServiceManifest.Product smProduct : manifest.getProducts()) {
 						ProductId productId = ProductId.build(sid, smProduct.code);
 						if (realIds.contains(productId.toString())) continue;
-						BaseServiceProduct product = ProductUtils.getProduct(productId, domainId);
+						BaseServiceProduct product = ProductRegistry.getInstance().getServiceProduct(productId, domainId);
 						if (product != null && StringUtils.isBlank(product.getBuiltInLicenseString())) continue;
 
-						items.add(AppManagerUtils.createBuiltInServiceLicense(domainId, product));
+						items.add(AppManagerUtils.createBuiltInServiceLicense(product));
 					}
 				}
 			}
 			
 			return items;
 			
-		} catch(Throwable t) {
-			throw ExceptionUtils.wrapThrowable(t);
+		} catch (Exception ex) {
+			throw ExceptionUtils.wrapThrowable(ex);
 		} finally {
 			DbUtils.closeQuietly(con);
 		}
 	}
 	
-	public ServiceLicense getLicense(String domainId, ProductId productId) throws WTException {
+	public ServiceLicense getLicense(final String domainId, final String productCode) throws WTException {
+		Check.notEmpty(domainId, "domainId");
+		Check.notEmpty(productCode, "productCode");
 		Connection con = null;
 		
 		try {
-			con = wta.getConnectionManager().getConnection();
-			return doServiceLicenseGet(con, domainId, productId, true);
+			ProductRegistry.ProductEntry product = ProductRegistry.getInstance().getProductOrThrow(productCode);
 			
-		} catch(Throwable t) {
-			throw ExceptionUtils.wrapThrowable(t);
+			con = wta.getConnectionManager().getConnection();
+			return doServiceLicenseGet(con, domainId, product.getServiceId(), product.getProductCode(), true);
+			
+		} catch (Exception ex) {
+			throw ExceptionUtils.wrapThrowable(ex);
 		} finally {
 			DbUtils.closeQuietly(con);
 		}
 	}
 	
-	public void addLicense(final License license, final boolean autoActivate) throws WTException {
+	private LicenseExInfo doLicenseGetExtendedInfo(ServiceLicense serviceLicense, BaseServiceProduct serviceProduct, ProductLicense productLicense, final String hardwareID) {
+		BitFlags<LicenseComputedStatus> status = BitFlags.noneOf(LicenseComputedStatus.class);
+		
+		if (!StringUtils.isBlank(serviceProduct.getBuiltInLicenseString())) productLicense.setCustomHardwareId(serviceProduct.getBuiltInHardwareId());
+		productLicense.setLicenseString(serviceLicense.getLicenseString());
+		productLicense.setActivationCustomHardwareId(hardwareID);
+		productLicense.setActivatedLicenseString(serviceLicense.getActivatedLicenseString());
+		
+		LicenseInfo li = productLicense.validate(true);
+		LicenseInfo ali = productLicense.validate(false);
+		
+		///////////////////////////
+		//valid = (li.getLicenseID() == ali.getLicenseID()) && ali.isValid();
+		//activated = ali.isActivationCompleted();
+		//expired = li.isExpired();
+		//expireSoon = li.isExpiringSoon();
+		///////////////////////////
+		
+		if (li.isActivationRequired()) {
+			if (ali.isActivationCompleted()) {
+				status.set(LicenseComputedStatus.ACTIVATED);
+			} else {
+				status.set(LicenseComputedStatus.PENDING_ACTIVATION);
+			}
+			if (li.isValid() && ali.isValid() && ali.isActivationCompleted() && li.getLicenseID() == ali.getLicenseID()) {
+				if (li.isValid()) status.set(LicenseComputedStatus.VALID);
+			}
+		} else {
+			if (li.isValid()) status.set(LicenseComputedStatus.VALID);
+		}
+		if (li.isExpired()) {
+			status.set(LicenseComputedStatus.EXPIRED);
+		}
+		if (li.isExpiringSoon()) {
+			status.set(LicenseComputedStatus.EXPIRE_SOON);
+		}
+		
+		return new LicenseExInfo(li.getHardwareID(), LicenseExInfo.buildRegisteredTo(li), status);
+	}
+	
+	public final BitFlags<LicenseComputedStatus> getLicenseStatus(final String domainId, final String productCode, final String hardwareID) throws WTException {
+		Check.notEmpty(domainId, "domainId");
+		Check.notEmpty(productCode, "productCode");
+		Check.notEmpty(hardwareID, "hardwareID");
+		Connection con = null;
+		
+		BaseServiceProduct product = ProductRegistry.getInstance().getServiceProductOrThrow(productCode, domainId);
+		ProductLicense productLicense = getProductLicenseOrThrow(product);
+		
+		ServiceLicense serviceLicense = null;
+		try {
+			con = wta.getConnectionManager().getConnection();
+			serviceLicense = doServiceLicenseGet(con, domainId, product.getProductId(), false);
+			
+		} catch (Exception ex) {
+			throw ExceptionUtils.wrapThrowable(ex);
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+		if (serviceLicense == null) throw new WTNotFoundException("Unknown product [{}]", productCode);
+		
+		// Analyze status...
+		BitFlags<LicenseComputedStatus> status = BitFlags.noneOf(LicenseComputedStatus.class);
+		
+		if (!StringUtils.isBlank(product.getBuiltInLicenseString())) productLicense.setCustomHardwareId(product.getBuiltInHardwareId());
+		productLicense.setLicenseString(serviceLicense.getLicenseString());
+		productLicense.setActivationCustomHardwareId(hardwareID);
+		productLicense.setActivatedLicenseString(serviceLicense.getActivatedLicenseString());
+		
+		LicenseInfo li = productLicense.validate(true);
+		LicenseInfo ali = productLicense.validate(false);
+		
+		///////////////////////////
+		//valid = (li.getLicenseID() == ali.getLicenseID()) && ali.isValid();
+		//activated = ali.isActivationCompleted();
+		//expired = li.isExpired();
+		//expireSoon = li.isExpiringSoon();
+		///////////////////////////
+		
+		if (li.isActivationRequired()) {
+			if (ali.isActivationCompleted()) {
+				status.set(LicenseComputedStatus.ACTIVATED);
+			} else {
+				status.set(LicenseComputedStatus.PENDING_ACTIVATION);
+			}
+			if (li.isValid() && ali.isValid() && ali.isActivationCompleted() && li.getLicenseID() == ali.getLicenseID()) {
+				if (li.isValid()) status.set(LicenseComputedStatus.VALID);
+			}
+		} else {
+			if (li.isValid()) status.set(LicenseComputedStatus.VALID);
+		}
+		if (li.isExpired()) {
+			status.set(LicenseComputedStatus.EXPIRED);
+		}
+		if (li.isExpiringSoon()) {
+			status.set(LicenseComputedStatus.EXPIRE_SOON);
+		}
+		
+		return status;
+	}
+	
+	public void addLicense(final String domainId, final String productCode, final LicenseBase license, final boolean autoActivate) throws WTException {
+		Check.notEmpty(domainId, "domainId");
+		Check.notEmpty(productCode, "productCode");
+		Check.notNull(license, "license");
 		LicenseDAO licDao = LicenseDAO.getInstance();
 		Connection con = null;
 		
 		try {
-			BaseServiceProduct product = ProductUtils.getProduct(license.getProductId(), license.getDomainId());
-			if (product == null) throw new WTException("Unknown product [{}]", license.getProductId());
+			BaseServiceProduct product = ProductRegistry.getInstance().getServiceProductOrThrow(productCode, domainId);
 			
-			ProductLicense tplProductLicense = new ProductLicense(product);
-			tplProductLicense.setLicenseString(license.getLicenseString());
-			LicenseInfo li = tplProductLicense.validate(true);
+			ProductLicense productLicense = new ProductLicense(product);
+			productLicense.setLicenseString(license.getLicenseString());
+			LicenseInfo li = productLicense.validate(true);
 			if (li.isInvalid()) throw new WTLicenseValidationException(li);
 			
 			//ProductLicense tplProductLicense = findProductLicense(license.getDomainId(), license.getProductId());
 			//if (!tplProductLicense.getLicenseInfo().isValid()) throw new WTException("License provided for '{}' is not valid", license.getProductId().getProductCode());
 			
-			OLicense olic = AppManagerUtils.createOLicense(license);
+			OLicense olic = AppManagerUtils.fillOLicense(new OLicense(), license);
+			olic.setDomainId(domainId);
+			olic.setServiceId(product.SERVICE_ID);
+			olic.setProductCode(productCode);
 			fillOLicenseWithDefaults(olic, li);
 			
 			con = wta.getConnectionManager().getConnection();
 			if (licDao.insert(con, olic) == 1) {
 				// Cleanup cached dummy ProductLicense
-				forgetProductLicense(license.getDomainId(), license.getProductId());
+				forgetProductLicense(domainId, product.SERVICE_ID, productCode);
 			}
 			if (autoActivate) activateLicense(product, null);
 			
-		} catch(Throwable t) {
-			throw ExceptionUtils.wrapThrowable(t);
+		} catch (Exception ex) {
+			throw ExceptionUtils.wrapThrowable(ex);
 		} finally {
 			DbUtils.closeQuietly(con);
 		}
 	}
 	
-	public void changeLicense(final String domainId, final ProductId productId, final String newString, final String activatedString, final boolean force) throws WTException {
-		ProductLicense tplProductLicense = findProductLicense(domainId, productId);
+	public void changeLicense(final String domainId, final String productCode, final String newString, final String activatedString, final boolean force) throws WTException {
+		Check.notEmpty(domainId, "domainId");
+		Check.notEmpty(productCode, "productCode");
+		Check.notEmpty(newString, "newString");
+		Check.notEmpty(activatedString, "activatedString");
 		
-		boolean ret = internalChangeLicense(domainId, productId, tplProductLicense, newString, activatedString, force);
-		if (ret) forgetProductLicense(domainId, productId);
+		BaseServiceProduct product = ProductRegistry.getInstance().getServiceProductOrThrow(productCode, domainId);
+		changeLicense(product, newString, activatedString, force);
 	}
 	
 	public void changeLicense(final BaseServiceProduct product, final String newString, final String activatedString, final boolean force) throws WTException {
-		ProductLicense tplProductLicense = getProductLicense(product);
-		if (tplProductLicense == null) throw new WTException("Unknown product [{}]", product.getProductId());
+		Check.notNull(product, "product");
+		Check.notEmpty(newString, "newString");
+		Check.notEmpty(activatedString, "activatedString");
 		
-		boolean ret = internalChangeLicense(product.getDomainId(), product.getProductId(), tplProductLicense, newString, activatedString, force);
-		if (ret) forgetProductLicense(product.getDomainId(), product.getProductId());
+		ProductLicense productLicense = getProductLicenseOrThrow(product);
+		boolean ret = internalChangeLicense(product.getDomainId(), product.SERVICE_ID, product.getProductCode(), productLicense, newString, activatedString, force);
+		if (ret) forgetProductLicense(product.getDomainId(), product.SERVICE_ID, product.getProductCode());
+	}
+	
+	public void modifyLicense(final String domainId, final String productCode, final String modificationKey, final String modifiedLicenseString) throws WTException {
+		Check.notEmpty(domainId, "domainId");
+		Check.notEmpty(productCode, "productCode");
+		Check.notEmpty(modificationKey, "modificationKey");
+		Check.notEmpty(modifiedLicenseString, "modifiedLicenseString");
+		
+		BaseServiceProduct product = ProductRegistry.getInstance().getServiceProductOrThrow(productCode, domainId);
+		modifyLicense(product, modificationKey, modifiedLicenseString);
 	}
 	
 	public void modifyLicense(final BaseServiceProduct product, final String modificationKey, final String modifiedLicenseString) throws WTException {
-		//TODO: not supported yet! Verify implementation!
-		ProductLicense tplProductLicense = getProductLicense(product);
-		if (tplProductLicense == null) throw new WTException("Unknown product [{}]", product.getProductId());
+		Check.notNull(product, "product");
+		Check.notEmpty(modificationKey, "modificationKey");
+		Check.notEmpty(modifiedLicenseString, "modifiedLicenseString");
 		
-		boolean ret = internalModifyLicense(product.getDomainId(), product.getProductId(), tplProductLicense, modificationKey, modifiedLicenseString);
-		if (ret) forgetProductLicense(product.getDomainId(), product.getProductId());
+		//TODO: not supported yet! Verify implementation!
+		ProductLicense productLicense = getProductLicenseOrThrow(product);
+		boolean ret = internalModifyLicense(product.getDomainId(), product.SERVICE_ID, product.getProductCode(), productLicense, modificationKey, modifiedLicenseString);
+		if (ret) forgetProductLicense(product.getDomainId(), product.SERVICE_ID, product.getProductCode());
 	}
 	
-	public void modifyLicense(final String domainId, final ProductId productId, final String modificationKey, final String modifiedLicenseString) throws WTException {
-		//TODO: not supported yet! Verify implementation!
-		ProductLicense tplProductLicense = findProductLicense(domainId, productId);
-		
-		boolean ret = internalModifyLicense(domainId, productId, tplProductLicense, modificationKey, modifiedLicenseString);
-		if (ret) forgetProductLicense(domainId, productId);
-	}
-	
-	public void updateLicenseAutoLease(final String domainId, final ProductId productId, final boolean autoLease) throws WTException {
+	public void updateLicenseAutoLease(final String domainId, final String productCode, final boolean autoLease) throws WTException {
+		Check.notEmpty(domainId, "domainId");
+		Check.notEmpty(productCode, "productCode");
 		LicenseDAO licDao = LicenseDAO.getInstance();
 		Connection con = null;
 		
 		try {
-			con = wta.getConnectionManager().getConnection();
-			licDao.updateAutoLease(con, domainId, productId.getServiceId(), productId.getProductCode(), autoLease);
-			forgetProductLicense(domainId, productId);
+			ProductRegistry.ProductEntry product = ProductRegistry.getInstance().getProductOrThrow(productCode);
 			
-		} catch(Throwable t) {
-			throw ExceptionUtils.wrapThrowable(t);
+			con = wta.getConnectionManager().getConnection();
+			licDao.updateAutoLease(con, domainId, product.getServiceId(), product.getProductCode(), autoLease);
+			forgetProductLicense(domainId, product.getServiceId(), product.getProductCode());
+			
+		} catch (Exception ex) {
+			throw ExceptionUtils.wrapThrowable(ex);
 		} finally {
 			DbUtils.closeQuietly(con);
 		}
 	}
 	
-	public void deleteLicense(final String domainId, final ProductId productId, final boolean force) throws WTException {
+	public void deleteLicense(final String domainId, final String productCode, final boolean force) throws WTException {
+		Check.notEmpty(domainId, "domainId");
+		Check.notEmpty(productCode, "productCode");
 		LicenseDAO licDao = LicenseDAO.getInstance();
 		Connection con = null;
 		
 		try {
-			ProductLicense tplProductLicense = findProductLicense(domainId, productId);
-			LicenseInfo li = tplProductLicense.validate(true);
+			BaseServiceProduct product = ProductRegistry.getInstance().getServiceProductOrThrow(productCode, domainId);
+			ProductLicense productLicense = getProductLicenseOrThrow(product);
+			
+			LicenseInfo li = productLicense.validate(true);
 			if (li.isInvalid()) throw new WTLicenseValidationException(li);
 			if (!force) {
-				li = tplProductLicense.validate(false);
+				li = productLicense.validate(false);
 				if (li.isActivationCompleted()) throw new WTException("License is activated, deactivate it before proceed.");
 			}
 			
 			con = wta.getConnectionManager().getConnection();
-			licDao.delete(con, domainId, productId.getServiceId(), productId.getProductCode());
-			forgetProductLicense(domainId, productId);
+			licDao.delete(con, domainId, product.SERVICE_ID, productCode);
+			forgetProductLicense(domainId, product.SERVICE_ID, productCode);
 			
 		} catch(Throwable t) {
 			throw ExceptionUtils.wrapThrowable(t);
@@ -530,68 +687,79 @@ public class LicenseManager {
 		}
 	}
 	
-	public void activateLicense(final BaseServiceProduct product, final String activatedString) throws WTException {
-		ProductLicense tplProductLicense = getProductLicense(product);
-		if (tplProductLicense == null) throw new WTException("Unknown product [{}]", product.getProductId());
+	public void activateLicense(final String domainId, final String productCode, final String activatedString) throws WTException {
+		Check.notEmpty(domainId, "domainId");
+		Check.notEmpty(productCode, "productCode");
 		
-		boolean ret = internalActivateLicense(product.getDomainId(), product.getProductId(), tplProductLicense, activatedString);
-		if (ret) forgetProductLicense(product.getDomainId(), product.getProductId());
+		BaseServiceProduct product = ProductRegistry.getInstance().getServiceProductOrThrow(productCode, domainId);
+		activateLicense(product, activatedString);
 	}
 	
-	public void activateLicense(final String domainId, final ProductId productId, final String activatedString) throws WTException {
-		ProductLicense tplProductLicense = findProductLicense(domainId, productId);
+	public void activateLicense(final BaseServiceProduct product, final String activatedString) throws WTException {
+		Check.notNull(product, "product");
 		
-		boolean ret = internalActivateLicense(domainId, productId, tplProductLicense, activatedString);
-		if (ret) forgetProductLicense(domainId, productId);
+		ProductLicense productLicense = getProductLicenseOrThrow(product);
+		boolean ret = internalActivateLicense(product.getDomainId(), product.getProductId(), productLicense, activatedString);
+		if (ret) forgetProductLicense(product.getDomainId(), product.SERVICE_ID, product.getProductCode());
+	}
+	
+	public void deactivateLicense(final String domainId, final String productCode, final boolean offline) throws WTException {
+		Check.notEmpty(domainId, "domainId");
+		Check.notEmpty(productCode, "productCode");
+		
+		BaseServiceProduct product = ProductRegistry.getInstance().getServiceProductOrThrow(productCode, domainId);
+		deactivateLicense(product, offline);
 	}
 	
 	public void deactivateLicense(final BaseServiceProduct product, final boolean offline) throws WTException {
-		ProductLicense tplProductLicense = getProductLicense(product);
-		if (tplProductLicense == null) throw new WTException("Unknown product [{}]", product.getProductId());
+		Check.notNull(product, "product");
 		
-		boolean ret = internalDeactivateLicense(product.getDomainId(), product.getProductId(), tplProductLicense, offline);
-		if (ret) forgetProductLicense(product.getDomainId(), product.getProductId());
+		ProductLicense productLicense = getProductLicenseOrThrow(product);
+		boolean ret = internalDeactivateLicense(product.getDomainId(), product.getProductId(), productLicense, offline);
+		if (ret) forgetProductLicense(product.getDomainId(), product.SERVICE_ID, product.getProductCode());
 	}
 	
-	public void deactivateLicense(final String domainId, final ProductId productId, final boolean offline) throws WTException {
-		ProductLicense tplProductLicense = findProductLicense(domainId, productId);
+	public void assignLicenseLease(final String domainId, final String productCode, final Set<String> userIds) throws WTException {
+		Check.notEmpty(domainId, "domainId");
+		Check.notEmpty(productCode, "productCode");
+		Check.notEmpty(userIds, "userIds");
 		
-		boolean ret = internalDeactivateLicense(domainId, productId, tplProductLicense, offline);
-		if (ret) forgetProductLicense(domainId, productId);
+		BaseServiceProduct product = ProductRegistry.getInstance().getServiceProductOrThrow(productCode, domainId);
+		assignLicenseLease(product, userIds);
 	}
 	
-	public void assignLicenseLease(final BaseServiceProduct product, final Collection<String> userIds) throws WTException {
-		ProductData plData = getProductLicenseData(product);
-		if (plData == null) throw new WTException("Unknown product [{}]", product.getProductId());
+	public void assignLicenseLease(final BaseServiceProduct product, final Set<String> userIds) throws WTException {
+		Check.notNull(product, "product");
+		Check.notEmpty(userIds, "userIds");
 		
-		boolean ret = internalAssignLicenseLease(product.getDomainId(), product.getProductId(), plData, userIds, ServiceLicenseLease.LeaseOrigin.STATIC);
-		if (ret) forgetLicenseLease(product.getDomainId(), product.getProductId(), userIds);
+		ProductData productData = getProductLicenseData(product);
+		if (productData == null) throw new WTNotFoundException("Unknown product [{}]", product.getProductCode());
+		boolean ret = internalAssignLicenseLease(product.getDomainId(), product.getProductId(), productData, userIds, ServiceLicenseLease.LeaseOrigin.STATIC);
+		if (ret) forgetLicenseLease(product.getDomainId(), product.SERVICE_ID, product.getProductCode(), userIds);
 	}
 	
-	public void assignLicenseLease(final String domainId, final ProductId productId, final Collection<String> userIds) throws WTException {
-		ProductData plData = findProductLicenseData(domainId, productId);
+	public void revokeLicenseLease(final BaseServiceProduct product, final Set<String> userIds) throws WTException {
+		Check.notNull(product, "product");
+		Check.notEmpty(userIds, "userIds");
 		
-		boolean ret = internalAssignLicenseLease(domainId, productId, plData, userIds, ServiceLicenseLease.LeaseOrigin.STATIC);
-		if (ret) forgetLicenseLease(domainId, productId, userIds);
+		ProductData productData = getProductLicenseData(product);
+		if (productData == null) throw new WTNotFoundException("Unknown product [{}]", product.getProductCode());
+		internalRevokeLicenseLease(product.getDomainId(), product.getProductId(), productData, userIds);
+		forgetLicenseLease(product.getDomainId(), product.SERVICE_ID, product.getProductCode(), userIds);
 	}
 	
-	public void revokeLicenseLease(final BaseServiceProduct product, final Collection<String> userIds) throws WTException {
-		ProductData plData = getProductLicenseData(product);
-		if (plData == null) throw new WTException("Unknown product [{}]", product.getProductId());
-		
-		internalRevokeLicenseLease(product.getDomainId(), product.getProductId(), plData, userIds);
-		forgetLicenseLease(product.getDomainId(), product.getProductId(), userIds);
-	}
-	
-	public void revokeLicenseLease(final String domainId, final ProductId productId, final Collection<String> userIds) throws WTException {
-		ProductData plData = findProductLicenseData(domainId, productId);
+	public void revokeLicenseLease(final String domainId, final String productCode, final Set<String> userIds) throws WTException {
+		Check.notEmpty(domainId, "domainId");
+		Check.notEmpty(productCode, "productCode");
+		Check.notEmpty(userIds, "userIds");
 		
 		//LOGGER.debug("Revoking license '{}' for user '{}'...", productId, new UserProfileId(domainId, userId));
-		internalRevokeLicenseLease(domainId, productId, plData, userIds);
-		forgetLicenseLease(domainId, productId, userIds);
+		BaseServiceProduct product = ProductRegistry.getInstance().getServiceProductOrThrow(productCode, domainId);
+		revokeLicenseLease(product, userIds);
 	}
 	
 	public void revokeLicenseLease(final UserProfileId profileId) throws WTException {
+		Check.notNull(profileId, "profileId");
 		LicenseLeaseDAO lleaDao = LicenseLeaseDAO.getInstance();
 		Connection con = null;
 		
@@ -601,12 +769,11 @@ public class LicenseManager {
 			con = wta.getConnectionManager().getConnection();
 			leases = lleaDao.selectByDomainUser(con, profileId.getDomainId(), profileId.getUserId());
 			for (OLicenseLease lease : leases) {
-				ProductId productId = ProductId.build(lease.getServiceId(), lease.getProductCode());
-				ProductLicense tplProductLicense = findProductLicense(profileId.getDomainId(), productId);
-				
-				LOGGER.debug("[{}] Revoking license '{}'...", profileId, productId);
+				//ProductId productId = ProductId.build(lease.getServiceId(), lease.getProductCode());
+				//ProductLicense productLicense = findProductLicense(profileId.getDomainId(), productId);
+				LOGGER.debug("[{}] Revoking license '{}'...", profileId, lease.getProductCode());
 				//doRevokeLicenseLease(con, profileId.getDomainId(), productId, tplProductLicense, profileId.getUserId(), lease.getActivationString());
-				forgetLicenseLease(profileId.getDomainId(), productId, Arrays.asList(profileId.getUserId()));
+				forgetLicenseLease(profileId.getDomainId(), lease.getServiceId(), lease.getProductCode(), LangUtils.asSet(profileId.getUserId()));
 			}
 		
 		} catch(Throwable t) {
@@ -616,19 +783,33 @@ public class LicenseManager {
 		}
 	}
 	
+	/*
 	private ProductLicense findProductLicense(String domainId, ProductId productId) throws WTException {
-		BaseServiceProduct product = ProductUtils.getProduct(productId, domainId);
-		if (product == null) throw new WTException("Unknown product [{}]", productId);
+		BaseServiceProduct product = ProductRegistry.getInstance().getServiceProduct(productId, domainId);
+		if (product == null) throw new WTNotFoundException("Unknown product [{}]", productId);
 		ProductLicense tplProductLicense = getProductLicense(product);
-		if (tplProductLicense == null) throw new WTException("Unknown product [{}]", productId);
+		if (tplProductLicense == null) throw new WTNotFoundException("Unknown product [{}]", productId);
 		return tplProductLicense;
+	}
+	*/
+	
+	private ProductLicense findProductLicense(String domainId, ProductId productId) throws WTException {
+		return findProductLicense(domainId, productId.getProductCode());
+	}
+	
+	private ProductLicense findProductLicense(String domainId, String productCode) throws WTException {
+		BaseServiceProduct product = ProductRegistry.getInstance().getServiceProduct(productCode, domainId);
+		if (product == null) throw new WTNotFoundException("Unknown product [{}]", productCode);
+		ProductLicense productLicense = getProductLicense(product);
+		if (productLicense == null) throw new WTNotFoundException("Unknown product [{}]", productCode);
+		return productLicense;
 	}
 	
 	private ProductData findProductLicenseData(String domainId, ProductId productId) throws WTException {
-		BaseServiceProduct product = ProductUtils.getProduct(productId, domainId);
-		if (product == null) throw new WTException("Unknown product [{}]", productId);
+		BaseServiceProduct product = ProductRegistry.getInstance().getServiceProduct(productId, domainId);
+		if (product == null) throw new WTNotFoundException("Unknown product [{}]", productId);
 		ProductData plData = getProductLicenseData(product);
-		if (plData == null) throw new WTException("Unknown product [{}]", productId);
+		if (plData == null) throw new WTNotFoundException("Unknown product [{}]", productId);
 		return plData;
 	}
 	
@@ -639,99 +820,99 @@ public class LicenseManager {
 		return activated;
 	}
 	
-	private boolean internalChangeLicense(final String domainId, final ProductId productId, final ProductLicense plicOrig, final String newString, final String activatedString, final boolean force) throws WTException {
+	private boolean internalChangeLicense(final String domainId, final String serviceId, final String productCode, final ProductLicense plicOrig, final String newString, final String activatedString, final boolean force) throws WTException {
 		LicenseDAO licDao = LicenseDAO.getInstance();
 		LicenseLeaseDAO lleaDao = LicenseLeaseDAO.getInstance();
 		Connection con = null;
 		
 		try {
-			LOGGER.debug("[{}] Changing license...", productId);
+			LOGGER.debug("[{}] Changing license...", productCode);
 			LicenseInfo li = plicOrig.validate(true);
-			LOGGER.debug("[{}] {} (old) -> Validate Be. [{}, {}]", productId, li.getLicenseID(), li.getValidationStatus(), li.getActivationStatus());
+			LOGGER.debug("[{}] {} (old) -> Validate Be. [{}, {}]", productCode, li.getLicenseID(), li.getValidationStatus(), li.getActivationStatus());
 			if (li.isInvalid()) throw new WTLicenseValidationException(li);
 			if (!force) {
 				li = plicOrig.validate(false);
-				LOGGER.debug("[{}] {} (old) -> Validate Af. [{}, {}]", productId, li.getLicenseID(), li.getValidationStatus(), li.getActivationStatus());
+				LOGGER.debug("[{}] {} (old) -> Validate Af. [{}, {}]", productCode, li.getLicenseID(), li.getValidationStatus(), li.getActivationStatus());
 				if (li.isActivationCompleted()) throw new WTException("License is activated, deactivate it before proceed.");
 			}
 			
 			ProductLicense plic = Cloner.standard().deepClone(plicOrig);
 			plic.setLicenseString(newString);
 			li = plic.validate(true);
-			LOGGER.debug("[{}] {} (new) -> Validate Be. [{}, {}]", productId, li.getLicenseID(), li.getValidationStatus(), li.getActivationStatus());
+			LOGGER.debug("[{}] {} (new) -> Validate Be. [{}, {}]", productCode, li.getLicenseID(), li.getValidationStatus(), li.getActivationStatus());
 			if (!li.isValid()) throw new WTLicenseValidationException(li);
 			
 			LocalDate expDate = li.getExpirationDate();
 			Integer quantity = li.getQuantity();
 			
 			if (StringUtils.isBlank(activatedString)) {
-				LOGGER.debug("[{}] Activation string not provided. Performing automatic activation...", productId);
+				LOGGER.debug("[{}] Activation string not provided. Performing automatic activation...", productCode);
 				li = plic.autoActivate();
 			} else {
-				LOGGER.debug("[{}] Activated string provided. Performing manual activation...", productId);
+				LOGGER.debug("[{}] Activated string provided. Performing manual activation...", productCode);
 				li = checkCompat(li, plic.manualActivate(activatedString));
 			}
-			LOGGER.debug("[{}] {} (new) -> Validate Ac. [{}, {}]", productId, li.getLicenseID(), li.getValidationStatus(), li.getActivationStatus());
+			LOGGER.debug("[{}] {} (new) -> Validate Ac. [{}, {}]", productCode, li.getLicenseID(), li.getValidationStatus(), li.getActivationStatus());
 			if (!li.isValid()) throw new WTLicenseValidationException(li);
 			if (!li.isActivationCompleted()) throw new WTLicenseActivationException(li);
 			
 			con = wta.getConnectionManager().getConnection();
-			boolean ret = licDao.replaceLicense(con, domainId, productId.getServiceId(), productId.getProductCode(), plic.getLicenseString(), expDate, quantity, plic.getActivatedLicenseString(), DateTimeUtils.now(), li.getHardwareID()) == 1;
+			boolean ret = licDao.replaceLicense(con, domainId, serviceId, productCode, plic.getLicenseString(), expDate, quantity, plic.getActivatedLicenseString(), DateTimeUtils.now(), li.getHardwareID()) == 1;
 			if (quantity != null) {
-				OLicense olic = licDao.lock(con, domainId, productId.getServiceId(), productId.getProductCode());
-				if (olic == null) throw new WTException("Unable to lookup license '{}'", productId.getProductCode());
-				lleaDao.deleteExeedingByDomainServiceProduct(con, domainId, productId.getServiceId(), productId.getProductCode(), quantity);
+				OLicense olic = licDao.lock(con, domainId, serviceId, productCode);
+				if (olic == null) throw new WTException("Unable to lookup license '{}'", productCode);
+				lleaDao.deleteExeedingByDomainServiceProduct(con, domainId, serviceId, productCode, quantity);
 			}
 			
 			DbUtils.commitQuietly(con);
 			return ret;
 			
-		} catch(Throwable t) {
-			throw ExceptionUtils.wrapThrowable(t);
+		} catch (Exception ex) {
+			throw ExceptionUtils.wrapThrowable(ex);
 		} finally {
 			DbUtils.closeQuietly(con);
 		}
 	}
 	
-	private boolean internalModifyLicense(final String domainId, final ProductId productId, final ProductLicense tplProductLicense, final String modificationKey, final String activatedString) throws WTException {
+	private boolean internalModifyLicense(final String domainId, final String serviceId, final String productCode, final ProductLicense tplProductLicense, final String modificationKey, final String activatedString) throws WTException {
 		LicenseDAO licDao = LicenseDAO.getInstance();
 		LicenseLeaseDAO lleaDao = LicenseLeaseDAO.getInstance();
 		Connection con = null;
 		
 		try {
-			LOGGER.debug("[{}] Modifying license...", productId);
+			LOGGER.debug("[{}] Modifying license...", productCode);
 			LicenseInfo li = tplProductLicense.validate(false);
-			LOGGER.debug("[{}] {} (old) -> Validate Af. [{}, {}]", productId, li.getLicenseID(), li.getValidationStatus(), li.getActivationStatus());
+			LOGGER.debug("[{}] {} (old) -> Validate Af. [{}, {}]", productCode, li.getLicenseID(), li.getValidationStatus(), li.getActivationStatus());
 			if (!li.isValid()) throw new WTLicenseValidationException(li);
 			
 			Integer quantity = li.getQuantity();
 			
 			ProductLicense plic = Cloner.standard().deepClone(tplProductLicense);
 			if (StringUtils.isBlank(activatedString)) {
-				LOGGER.debug("[{}] Activation string not provided. Performing automatic modification...", productId);
+				LOGGER.debug("[{}] Activation string not provided. Performing automatic modification...", productCode);
 				li = plic.modifyLicense(modificationKey);
 			} else {
-				LOGGER.debug("[{}] Activated string provided. Performing manual modification...", productId);
+				LOGGER.debug("[{}] Activated string provided. Performing manual modification...", productCode);
 				li = checkCompat(li, plic.manualModify(activatedString));
 			}
-			LOGGER.debug("[{}] {} (new) -> Validate Mo. [{}, {}]", productId, li.getLicenseID(), li.getValidationStatus(), li.getActivationStatus());
+			LOGGER.debug("[{}] {} (new) -> Validate Mo. [{}, {}]", productCode, li.getLicenseID(), li.getValidationStatus(), li.getActivationStatus());
 			if (!li.isValid()) throw new WTLicenseValidationException(li);
 			if (!li.isActivationCompleted()) throw new WTLicenseActivationException(li);
 			
 			con = wta.getConnectionManager().getConnection(true);
-			boolean ret = licDao.updateActivation(con, domainId, productId.getServiceId(), productId.getProductCode(), plic.getActivatedLicenseString(), DateTimeUtils.now(), li.getHardwareID()) == 1;
+			boolean ret = licDao.updateActivation(con, domainId, serviceId, productCode, plic.getActivatedLicenseString(), DateTimeUtils.now(), li.getHardwareID()) == 1;
 			if (quantity != null) {
-				OLicense olic = licDao.lock(con, domainId, productId.getServiceId(), productId.getProductCode());
-				if (olic == null) throw new WTException("Unable to lookup license '{}'", productId.getProductCode());
-				lleaDao.deleteExeedingByDomainServiceProduct(con, domainId, productId.getServiceId(), productId.getProductCode(), quantity);
+				OLicense olic = licDao.lock(con, domainId, serviceId, productCode);
+				if (olic == null) throw new WTException("Unable to lookup license '{}'", productCode);
+				lleaDao.deleteExeedingByDomainServiceProduct(con, domainId, serviceId, productCode, quantity);
 			}
 			
 			DbUtils.commitQuietly(con);
 			return ret;
 			
-		} catch(Throwable t) {
+		} catch (Exception ex) {
 			DbUtils.rollbackQuietly(con);
-			throw ExceptionUtils.wrapThrowable(t);
+			throw ExceptionUtils.wrapThrowable(ex);
 		} finally {
 			DbUtils.closeQuietly(con);
 		}
@@ -773,9 +954,9 @@ public class LicenseManager {
 			DbUtils.commitQuietly(con);
 			return ret;
 			
-		} catch(Throwable t) {
+		} catch (Exception ex) {
 			DbUtils.rollbackQuietly(con);
-			throw ExceptionUtils.wrapThrowable(t);
+			throw ExceptionUtils.wrapThrowable(ex);
 		} finally {
 			DbUtils.closeQuietly(con);
 		}
@@ -821,8 +1002,8 @@ public class LicenseManager {
 			if (afterUpdateThrow != null) throw afterUpdateThrow;
 			return ret;
 			
-		} catch(Throwable t) {
-			throw ExceptionUtils.wrapThrowable(t);
+		} catch (Exception ex) {
+			throw ExceptionUtils.wrapThrowable(ex);
 		} finally {
 			DbUtils.closeQuietly(con);
 		}
@@ -855,15 +1036,15 @@ public class LicenseManager {
 			DbUtils.commitQuietly(con);
 			return ret;
 			
-		} catch(Throwable t) {
+		} catch (Exception ex) {
 			DbUtils.rollbackQuietly(con);
-			throw ExceptionUtils.wrapThrowable(t);
+			throw ExceptionUtils.wrapThrowable(ex);
 		} finally {
 			DbUtils.closeQuietly(con);
 		}
 	}
 	
-	private boolean internalAssignLicenseLease(final String domainId, final ProductId productId, final ProductData pData, final Collection<String> userIds, final LeaseOrigin origin) throws WTException {
+	private boolean internalAssignLicenseLease(final String domainId, final ProductId productId, final ProductData pData, final Set<String> userIds, final LeaseOrigin origin) throws WTException {
 		LicenseDAO licDao = LicenseDAO.getInstance();
 		LicenseLeaseDAO lleaDao = LicenseLeaseDAO.getInstance();
 		Connection con = null;
@@ -878,25 +1059,26 @@ public class LicenseManager {
 			if (olic == null) throw new WTException("Unable to lookup license '{}'", productId.getProductCode());
 			
 			boolean ret = false;
+			Set<String> okUserIds = wta.getWebTopManager().parseSubjectsAsStringLocals(userIds, true, domainId, GenericSubject.Type.USER);
 			int origCount = lleaDao.countByDomainServiceProduct(con, domainId, productId.getServiceId(), productId.getProductCode());
 			if ((origCount + userIds.size()) <= li.getQuantity()) {
-				ret = lleaDao.batchInsert(con, domainId, productId.getServiceId(), productId.getProductCode(), userIds, DateTimeUtils.now(), origin).length == userIds.size();
+				ret = lleaDao.batchInsert(con, domainId, productId.getServiceId(), productId.getProductCode(), okUserIds, DateTimeUtils.now(), origin).length == okUserIds.size();
 			} else {
-				throw new WTException("Unable to satisfy required quantity for '{}' [{}+{} > {}]", productId.getProductCode(), origCount, userIds.size(), li.getQuantity());
+				throw new WTException("Unable to satisfy required quantity for '{}' [{}+{} > {}]", productId.getProductCode(), origCount, okUserIds.size(), li.getQuantity());
 			}
 			
 			DbUtils.commitQuietly(con);
 			return ret;
 			
-		} catch(Throwable t) {
+		} catch (Exception ex) {
 			DbUtils.rollbackQuietly(con);
-			throw ExceptionUtils.wrapThrowable(t);
+			throw ExceptionUtils.wrapThrowable(ex);
 		} finally {
 			DbUtils.closeQuietly(con);
 		}
 	}
 	
-	private boolean internalRevokeLicenseLease(final String domainId, final ProductId productId, final ProductData pData, final Collection<String> userIds) throws WTException {
+	private boolean internalRevokeLicenseLease(final String domainId, final ProductId productId, final ProductData pData, final Set<String> userIds) throws WTException {
 		LicenseDAO licDao = LicenseDAO.getInstance();
 		LicenseLeaseDAO lleaDao = LicenseLeaseDAO.getInstance();
 		Connection con = null;
@@ -905,14 +1087,15 @@ public class LicenseManager {
 			con = wta.getConnectionManager().getConnection(false);
 			OLicense olic = licDao.lock(con, domainId, productId.getServiceId(), productId.getProductCode());
 			if (olic == null) throw new WTException("Unable to lookup license '{}'", productId.getProductCode());
-			boolean ret = lleaDao.delete(con, domainId, productId.getServiceId(), productId.getProductCode(), userIds) == userIds.size();
+			Set<String> okUserIds = wta.getWebTopManager().parseSubjectsAsStringLocals(userIds, true, domainId, GenericSubject.Type.USER);
+			boolean ret = lleaDao.delete(con, domainId, productId.getServiceId(), productId.getProductCode(), okUserIds) == okUserIds.size();
 			
 			DbUtils.commitQuietly(con);
 			return ret;
 			
-		} catch(Throwable t) {
+		} catch (Exception ex) {
 			DbUtils.rollbackQuietly(con);
-			throw ExceptionUtils.wrapThrowable(t);
+			throw ExceptionUtils.wrapThrowable(ex);
 		} finally {
 			DbUtils.closeQuietly(con);
 		}
@@ -956,15 +1139,15 @@ public class LicenseManager {
 									lastTrackedLeaseValue.put(leaseLTKey, currentLease);
 								}
 							}
-						} catch(Throwable t) {
+						} catch (Exception ex2) {
 							// Do nothing...
 						}
 					}
-				} catch(Throwable t) {
+				} catch (Exception ex1) {
 					// Do nothing...
 				}
 			}
-		} catch(Throwable t) {
+		} catch (Exception ex) {
 			// Do nothing...
 		} finally {
 			DbUtils.closeQuietly(con);
@@ -1020,15 +1203,19 @@ public class LicenseManager {
 	}
 	
 	private ServiceLicense doServiceLicenseGet(Connection con, String domainId, ProductId product, boolean processLeases) throws DAOException, WTException {
+		return doServiceLicenseGet(con, domainId, product.getServiceId(), product.getProductCode(), processLeases);
+	}
+	
+	private ServiceLicense doServiceLicenseGet(Connection con, String domainId, String serviceId, String productCode, boolean processLeases) throws DAOException, WTException {
 		LicenseDAO licDao = LicenseDAO.getInstance();
 		LicenseLeaseDAO lleaDao = LicenseLeaseDAO.getInstance();
 		
-		OLicense olic = licDao.select(con, domainId, product.getServiceId(), product.getProductCode());
+		OLicense olic = licDao.select(con, domainId, serviceId, productCode);
 		if (olic == null) return null;
 		
 		ServiceLicense lic = AppManagerUtils.createServiceLicense(olic);
 		if (processLeases) {
-			List<OLicenseLease> oleases = lleaDao.selectByDomainServiceProduct(con, domainId, product.getServiceId(), product.getProductCode());
+			List<OLicenseLease> oleases = lleaDao.selectByDomainServiceProduct(con, domainId, serviceId, productCode);
 			lic.setLeases(AppManagerUtils.createServiceLicenseLeaseMap(oleases));
 		}
 		return lic;
@@ -1051,15 +1238,15 @@ public class LicenseManager {
 		return domainId + "|" + service + "|" + productCode + "|" + user;
 	}
 	
-	private void forgetProductLicense(String domainId, ProductId product) {
-		String key = productLicenseCacheKey(domainId, product.getServiceId(), product.getProductCode());
+	private void forgetProductLicense(String domainId, String serviceId, String productCode) {
+		String key = productLicenseCacheKey(domainId, serviceId, productCode);
 		productLicenseCache.remove(key);
 		licenseLeaseCache.entrySet().removeIf(e -> StringUtils.startsWith(e.getKey(), key));
 	}
 	
-	private void forgetLicenseLease(String domainId, ProductId product, Collection<String> users) {
+	private void forgetLicenseLease(String domainId, String serviceId, String productCode, Set<String> users) {
 		for (String user : users) {
-			licenseLeaseCache.remove(licenseLeaseCacheKey(domainId, product.getServiceId(), product.getProductCode(), user));
+			licenseLeaseCache.remove(licenseLeaseCacheKey(domainId, serviceId, productCode, user));
 		}
 	}
 	

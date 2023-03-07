@@ -193,7 +193,7 @@ public class ResourceRequest extends HttpServlet {
 				//		"/1bbc048f/images/sub/login.png"
 				WebTopManager wtMgr = wta.getWebTopManager();
 
-				String domainId = wtMgr.publicNameToDomainId(subject);
+				String domainId = wtMgr.domainPublicIdToDomainId(subject);
 				if (StringUtils.isBlank(domainId)) {
 					// We must support old-style URL using {domainInternetName}
 					// instead of {domainPublicName}
@@ -267,7 +267,7 @@ public class ResourceRequest extends HttpServlet {
 			WebTopApp wta = WebTopApp.get(request);
 			String remainingPath = StringUtils.substringAfter(targetPath, "images/");
 			if (StringUtils.isBlank(remainingPath)) throw new NotFoundException();
-			String imagesPath = wta.getImagesPath(domainId);
+			String imagesPath = wta.getFileSystem().getImagesPath(domainId);
 			File file = new File(imagesPath + remainingPath);
 			if (!file.exists()) throw new NotFoundException();
 			fileUrl = file.toURI().toURL();
@@ -293,10 +293,10 @@ public class ResourceRequest extends HttpServlet {
 		try {
 			WebTopManager wtMgr = wta.getWebTopManager();
 			String host = ServletUtils.getHostByHeaders(request);
-			String domainId = (wtMgr != null) ? wtMgr.publicInternetNameToDomainId(host, false) : null;
+			String domainId = (wtMgr != null) ? wtMgr.publicFqdnToDomainId(host, false) : null;
 			
 			if (!StringUtils.isBlank(domainId)) {
-				String pathname = wta.getImagesPath(domainId) + "login.png";
+				String pathname = wta.getFileSystem().getImagesPath(domainId) + "login.png";
 				File file = new File(pathname);
 				if (file.exists()) {
 					fileUrl = file.toURI().toURL();
@@ -329,10 +329,10 @@ public class ResourceRequest extends HttpServlet {
 			WebTopManager wtMgr = wta.getWebTopManager();
 			if (wtMgr != null) {
 				String host = ServletUtils.getHostByHeaders(request);
-				String domainId = wtMgr.publicInternetNameToDomainId(host, false);
+				String domainId = wtMgr.publicFqdnToDomainId(host, false);
 				
 				if (!StringUtils.isBlank(domainId)) {
-					String pathname = wta.getHomePath(domainId) + "license.html";
+					String pathname = wta.getFileSystem().getHomePath(domainId) + "license.html";
 					File file = new File(pathname);
 					if (file.exists()) {
 						fileUrl = file.toURI().toURL();

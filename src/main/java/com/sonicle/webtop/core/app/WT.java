@@ -37,9 +37,12 @@ import com.sonicle.commons.InternetAddressUtils;
 import com.sonicle.commons.LangUtils;
 import com.sonicle.commons.PathUtils;
 import com.sonicle.commons.l4j.ProductLicense;
+import com.sonicle.mail.PropsBuilder;
+import com.sonicle.mail.email.EmailMessage;
 import com.sonicle.webtop.core.CoreManager;
 import com.sonicle.webtop.core.admin.CoreAdminManager;
 import com.sonicle.webtop.core.app.sdk.AuditReferenceDataEntry;
+import com.sonicle.webtop.core.app.sdk.WTEmailSendException;
 import com.sonicle.webtop.core.io.output.AbstractReport;
 import com.sonicle.webtop.core.sdk.BaseManager;
 import com.sonicle.webtop.core.util.AppLocale;
@@ -50,6 +53,7 @@ import com.sonicle.webtop.core.sdk.UserProfileId;
 import com.sonicle.webtop.core.sdk.WTException;
 import com.sonicle.webtop.core.app.servlet.PublicRequest;
 import com.sonicle.webtop.core.app.servlet.ResourceRequest;
+import com.sonicle.webtop.core.app.model.GenericSubject;
 import com.sonicle.webtop.core.sdk.BaseServiceProduct;
 import com.sonicle.webtop.core.util.LoggerUtils;
 import com.sonicle.webtop.core.util.RRuleStringify;
@@ -84,6 +88,8 @@ import jakarta.mail.internet.MimeBodyPart;
 import jakarta.mail.internet.MimeMultipart;
 import javax.sql.DataSource;
 import net.sf.jasperreports.engine.JRException;
+import net.sf.qualitycheck.Check;
+import org.apache.commons.lang3.StringUtils;
 import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -104,17 +110,92 @@ public class WT {
 		manifestCache.put(serviceId, manifest);
 	}
 	
-	public static String findServiceId(Class clazz) {
-		String cname = clazz.getName();
-		synchronized(cnameToServiceIdCache) {
-			if (cnameToServiceIdCache.containsKey(cname)) {
-				return cnameToServiceIdCache.get(cname);
+	/**
+	 * @deprecated Use getProfileData instead (will be removed in v.5.16.0)
+	 */
+	@Deprecated
+	public static UserProfile.Data getUserData(UserProfileId profileId) {
+		return getProfileData(profileId);
+	}
+	
+	/**
+	 * @deprecated Use getProfilePersonalInfo instead (will be removed in v.5.16.0)
+	 */
+	@Deprecated
+	public static UserProfile.PersonalInfo getUserPersonalInfo(UserProfileId profileId) {
+		return getProfilePersonalInfo(profileId);
+	}
+	
+	/**
+	 * @deprecated Use guessProfileDataByPersonalAddress instead (will be removed in v.5.16.0)
+	 */
+	@Deprecated
+	public static UserProfile.Data guessUserData(String emailAddress) {
+		return guessProfileDataByPersonalAddress(emailAddress);
+	}
+	
+	/**
+	 * @deprecated Use getProfilePersonalAddress instead (will be removed in v.5.16.0)
+	 */
+	@Deprecated
+	public static InternetAddress getUserPersonalEmail(UserProfileId profileId) {
+		return getProfilePersonalAddress(profileId);
+	}
+	
+	/**
+	 * @deprecated Use getProfileAddress instead (will be removed in v.5.16.0)
+	 */
+	@Deprecated
+	public static InternetAddress getUserProfileEmail(UserProfileId profileId) {
+		return getProfileAddress(profileId);
+	}
+	
+	/**
+	 * @deprecated Use guessProfileIdByPersonalAddress instead (will be removed in v.5.16.0)
+	 */
+	@Deprecated
+	public static UserProfileId guessUserProfileIdByEmailAddress(String personalAddress) {
+		return guessProfileIdByPersonalAddress(personalAddress);
+	}
+	
+	/**
+	 * @deprecated Use guessProfileIdByAuthAddress instead (will be removed in v.5.16.0)
+	 */
+	@Deprecated
+	public static UserProfileId guessUserProfileIdProfileUsername(String profileUsername) {
+		return guessProfileIdByAuthAddress(profileUsername);
+	}
+	
+	/**
+	 * @deprecated use getGroupUidOfPecAccounts instead (will be removed in v.5.16.0)
+	 */
+	@Deprecated
+	public static String getGroupUidForPecAccounts(String domainId) {
+		return getGroupSidOfPecAccounts(domainId);
+	}
+	
+	/**
+	 * @deprecated use findDomainIdByDomainPublicId instead
+	 */
+	@Deprecated
+	public static String findDomainIdByPublicName(String domainPublicId) {
+		return findDomainIdByDomainPublicId(domainPublicId);
+	}
+	
+	public static String findServiceId(final Class clazz) {
+		return findServiceId(clazz.getName());
+	}
+	
+	public static String findServiceId(final String className) {
+		synchronized (cnameToServiceIdCache) {
+			if (cnameToServiceIdCache.containsKey(className)) {
+				return cnameToServiceIdCache.get(className);
 			} else {
 				String matchingSid = null;
 				for (String sid : manifestCache.keySet()) {
-					if (cname.startsWith(sid)) matchingSid = sid;
+					if (className.startsWith(sid)) matchingSid = sid;
 				}
-				if (matchingSid != null) cnameToServiceIdCache.put(cname, matchingSid);
+				if (matchingSid != null) cnameToServiceIdCache.put(className, matchingSid);
 				return matchingSid;
 			}
 		}
@@ -207,7 +288,7 @@ public class WT {
 	}
 	
 	public static String getDomainPublicName(String domainId) {
-		return getWTA().getWebTopManager().domainIdToPublicName(domainId);
+		return getWTA().getWebTopManager().domainIdToDomainPublicId(domainId);
 	}
 	
 	public static String getServicePublicName(String serviceId) {
@@ -251,12 +332,12 @@ public class WT {
 	}
 	*/
 	
-	public static String findDomainIdByPublicName(String domainPublicName) {
-		return getWTA().getWebTopManager().publicNameToDomainId(domainPublicName);
+	public static String findDomainIdByDomainPublicId(String domainPublicId) {
+		return getWTA().getWebTopManager().domainPublicIdToDomainId(domainPublicId);
 	}
 	
-	public static String findDomainIdByDomainInternetName(String internetName) {
-		return getWTA().getWebTopManager().domainInternetNameToDomainId(internetName);
+	public static String findDomainIdByAuthDomainName(final String authDomainName) {
+		return getWTA().getWebTopManager().authDomainNameToDomainId(authDomainName);
 	}
 	
 	/**
@@ -264,8 +345,9 @@ public class WT {
 	 * @param domainId The domain ID
 	 * @return the UID or null if group was not found
 	 */
-	public static String getGroupUidForUsers(String domainId) {
-		return getWTA().getWebTopManager().getGroupUid(domainId, WebTopManager.GROUPID_USERS);
+	public static String getGroupSidOfUsers(String domainId) {
+		final UserProfileId pid = new UserProfileId(domainId, WebTopManager.GROUPID_USERS);
+		return getWTA().getWebTopManager().lookupSubjectSidQuietly(pid, GenericSubject.Type.GROUP);
 	}
 	
 	/**
@@ -273,8 +355,9 @@ public class WT {
 	 * @param domainId The domain ID
 	 * @return the UID or null if group was not found
 	 */
-	public static String getGroupUidForPecAccounts(String domainId) {
-		return getWTA().getWebTopManager().getGroupUid(domainId, WebTopManager.GROUPID_PEC_ACCOUNTS);
+	public static String getGroupSidOfPecAccounts(String domainId) {
+		final UserProfileId pid = new UserProfileId(domainId, WebTopManager.GROUPID_PEC_ACCOUNTS);
+		return getWTA().getWebTopManager().lookupSubjectSidQuietly(pid, GenericSubject.Type.GROUP);
 	}
 	
 	/**
@@ -409,26 +492,30 @@ public class WT {
 	}
 	
 	public static String getDomainImagesPath(String domainId) {
-		return getWTA().getImagesPath(domainId);
+		return getWTA().getFileSystem().getImagesPath(domainId);
 	}
 	
 	public static String getServiceHomePath(String domainId, String serviceId) {
 		//TODO: eliminare questo metodo dopo la modifica della lettura dei model nel servizio di posta
-		return getWTA().getServiceHomePath(domainId, serviceId);
+		return getWTA().getFileSystem().getServiceHomePath(domainId, serviceId);
 	}
 	
 	public static String getServiceHomePath(String serviceId, UserProfileId profileId) {
-		return getWTA().getServiceHomePath(profileId.getDomain(), serviceId);
+		return getWTA().getFileSystem().getServiceHomePath(profileId.getDomain(), serviceId);
 	}
 	
 	public static String getTempPath() {
 		UserProfileId runPid = RunContext.getRunProfileId();
-		return getWTA().getTempPath(runPid.getDomain());
+		return getWTA().getFileSystem().getTempPath(runPid.getDomain());
 	}
 	
 	public static File getTempFolder() throws WTException {
 		UserProfileId runPid = RunContext.getRunProfileId();
-		return getWTA().getTempFolder(runPid.getDomain());
+		try {
+			return getWTA().getFileSystem().getTempFolder(runPid.getDomain());
+		} catch (IOException ex) {
+			throw new WTException(ex);
+		}
 	}
 	
 	public static File createTempFile() throws WTException {
@@ -441,7 +528,11 @@ public class WT {
 	
 	public static File createTempFile(String prefix, String extension) throws WTException {
 		UserProfileId runPid = RunContext.getRunProfileId();
-		return getWTA().createTempFile(runPid.getDomain(), prefix, extension);
+		try {
+			return getWTA().getFileSystem().createTempFile(runPid.getDomain(), prefix, extension);
+		} catch (IOException ex) {
+			throw new WTException(ex);
+		}
 	}
 	
 	public static boolean deleteTempFile(File file) throws WTException {
@@ -450,15 +541,19 @@ public class WT {
 	
 	public static boolean deleteTempFile(String filename) throws WTException {
 		UserProfileId runPid = RunContext.getRunProfileId();
-		return getWTA().deleteTempFile(runPid.getDomain(), filename);
+		try {
+			return getWTA().getFileSystem().deleteTempFile(runPid.getDomain(), filename);
+		} catch (IOException ex) {
+			throw new WTException(ex);
+		}
 	}
 	
 	public static String buildTempFilename() {
-		return getWTA().buildTempFilename(null, null);
+		return getWTA().getFileSystem().buildTempFilename(null, null);
 	}
 	
 	public static String buildTempFilename(String prefix, String suffix) {
-		return getWTA().buildTempFilename(prefix, suffix);
+		return getWTA().getFileSystem().buildTempFilename(prefix, suffix);
 	}
 	
 	public static Template loadTemplate(String serviceId, String relativePath) throws IOException {
@@ -488,71 +583,115 @@ public class WT {
 		getWTA().getReportManager().generateToStream(runPid.getDomain(), report, outputType, outputStream);
 	}
 	
-	public static String getDomainInternetName(String domainId) {
+	/**
+	 * Gets the internet-name (authentication) configured for the passed domain.
+	 * @param domainId The target domain ID.
+	 * @return Authentication internet-name
+	 */
+	public static String getDomainInternetName(final String domainId) {
+		//if (StringUtils.isBlank(domainId)) return null;
 		try {
 			return getWTA().getWebTopManager().domainIdToDomainInternetName(domainId);
-		} catch(Throwable t) {
-			logger.warn("Unable to get internet-name for domain [{}]", domainId, t);
+		} catch (Exception ex) {
+			logger.warn("Unable to get internet-name for domain [{}]", domainId, ex);
 			return null;
 		}
 	}
 	
-	public static UserProfileId guessUserProfileIdProfileUsername(String profileUsername) {
-		if (profileUsername == null) return null;
+	/**
+	 * Tries to lookup the profile ID of the passed internet address.
+	 * NB: The local part is not checked against existent usernames, only domain is verified.
+	 * @param authAddress The authentication (email) address (eg. {user}@{domain})
+	 * @return Profile ID or null
+	 */
+	public static UserProfileId guessProfileIdByAuthAddress(final String authAddress) {
+		if (StringUtils.isBlank(authAddress)) return null;
 		try {
-			return getWTA().getWebTopManager().guessUserProfileIdByProfileUsername(profileUsername);
-		} catch(WTException ex) {
-			logger.warn("Unable to get profileId [{}]", profileUsername, ex);
+			return getWTA().getWebTopManager().guessProfileIdAuthenticationAddress(authAddress);
+		} catch (Exception ex) {
+			logger.trace("Unable to get ProfileId [{}]", authAddress, ex);
 			return null;
 		}
 	}
 	
-	public static UserProfileId guessUserProfileIdByEmailAddress(String personalAddress) {
-		if (personalAddress == null) return null;
+	/**
+	 * Tries to lookup the profile ID of the passed internet address.
+	 * @param personalAddress The personal (email) address (eg. {user}@{domain})
+	 * @return Profile ID or null
+	 */
+	public static UserProfileId guessProfileIdByPersonalAddress(final String personalAddress) {
+		if (StringUtils.isBlank(personalAddress)) return null;
 		try {
-			return getWTA().getWebTopManager().guessUserProfileIdByPersonalAddress(personalAddress);
-		} catch(WTException ex) {
-			logger.warn("Unable to get profileId [{}]", personalAddress, ex);
+			return getWTA().getWebTopManager().guessProfileIdByPersonalAddress(personalAddress);
+		} catch (Exception ex) {
+			logger.trace("Unable to get ProfileId [{}]", personalAddress, ex);
 			return null;
 		}
 	}
 	
-	public static InternetAddress getUserPersonalEmail(UserProfileId profileId) {
-		UserProfile.Data ud = getUserData(profileId);
-		return ud != null ? ud.getPersonalEmail() : null;
+	/**
+	 * Gets the PersonalInfo object associated to the passed profile ID.
+	 * @param profileId The target profile ID to lookup.
+	 * @return PersonalInfo object or null
+	 */
+	public static UserProfile.PersonalInfo getProfilePersonalInfo(final UserProfileId profileId) {
+		try {
+			return getWTA().getWebTopManager().lookupProfilePersonalInfo(profileId, true);
+		} catch (Exception ex) {
+			logger.trace("Unable to get PersonalInfo [{}]", profileId.toString(), ex);
+			return null;
+		}
 	}
 	
-	public static InternetAddress getUserProfileEmail(UserProfileId profileId) {
-		UserProfile.Data ud = getUserData(profileId);
-		return ud != null ? ud.getProfileEmail(): null;
-	}
-	
-	public static UserProfile.Data getUserData(UserProfileId profileId) {
+	/**
+	 * Gets the Data object associated to the passed profile ID.
+	 * @param profileId The target profile ID to lookup.
+	 * @return Data object or null
+	 */
+	public static UserProfile.Data getProfileData(final UserProfileId profileId) {
 		if (profileId == null) return null;
 		try {
-			return getWTA().getWebTopManager().userData(profileId);
-		} catch(Exception ex) {
-			logger.warn("Unable to get UserData [{}]", profileId.toString(), ex);
+			return getWTA().getWebTopManager().lookupProfileData(profileId, true);
+		} catch (Exception ex) {
+			logger.trace("Unable to get ProfileData [{}]", profileId.toString(), ex);
 			return null;
 		}
 	}
 	
-	public static UserProfile.Data guessUserData(String emailAddress) {
+	/**
+	 * Gets the Data object associated to the passed profile ID.
+	 * @param personalAddress The personal (email) address (eg. {user}@{domain})
+	 * @return Data object or null
+	 */
+	public static UserProfile.Data guessProfileDataByPersonalAddress(final String personalAddress) {
 		try {
-			return getWTA().getWebTopManager().userDataByEmail(emailAddress);
-		} catch(WTException ex) {
-			logger.warn("Unable to guess UserData [{}]", emailAddress, ex);
+			final WebTopManager wtMgr = getWTA().getWebTopManager();
+			UserProfileId pid = wtMgr.guessProfileIdByPersonalAddress(personalAddress);
+			return (pid != null) ? wtMgr.lookupProfileData(pid, false) : null;
+		} catch (Exception ex) {
+			logger.trace("Unable to get ProfileData [{}]", personalAddress, ex);
 			return null;
 		}
 	}
 	
-	public static UserProfile.PersonalInfo getUserPersonalInfo(UserProfileId profileId) {
-		try {
-			return getWTA().getWebTopManager().userPersonalInfo(profileId);
-		} catch(WTException ex) {
-			logger.warn("Unable to get PersonalInfo [{}]", profileId.toString(), ex);
-			return null;
-		}
+	/**
+	 * Gets the personal (email) address associated to the passed profile ID.
+	 * @param profileId The target profile ID to lookup.
+	 * @return Personal internet address or null
+	 */
+	public static InternetAddress getProfilePersonalAddress(final UserProfileId profileId) {
+		UserProfile.Data ud = getProfileData(profileId);
+		return (ud != null) ? ud.getPersonalEmail(): null;
+	}
+	
+	/**
+	 * Gets the profile/authentication (email) address associated to the passed profile ID.
+	 * @param profileId The target profile ID to lookup.
+	 * @return Profile internet address or null
+	 */
+	public static InternetAddress getProfileAddress(final UserProfileId profileId) {
+		UserProfile.Data ud = getProfileData(profileId);
+		return (ud != null) ? ud.getProfileEmail(): null;
 	}
 	
 	public static String lookupCoreResource(Locale locale, String key) {
@@ -569,6 +708,10 @@ public class WT {
 	
 	public static String lookupFormattedResource(String serviceId, Locale locale, String key, Object... arguments) {
 		return MessageFormat.format(LangUtils.escapeMessageFormat(getWTA().lookupResource(serviceId, locale, key)), arguments);
+	}
+	
+	public static PropsBuilder getMailSessionPropsBuilder(final boolean forTransport, final boolean forStore) {
+		return getWTA().getMailBasePropsBuilder(forTransport, forStore);
 	}
 	
 	public static Session getGlobalMailSession(UserProfileId pid) {
@@ -643,14 +786,21 @@ public class WT {
 		getWTA().notify(profileId, messages, enqueueIfOffline);
 	}
 	
+	public static void sendEmail(final UserProfileId sendingProfileId, final EmailMessage email, final String moveToFolderAfterSent) throws WTEmailSendException {
+		getWTA().sendEmail(sendingProfileId, email, moveToFolderAfterSent);
+	}
+	
+	@Deprecated
 	public static void sendEmail(Session session, boolean rich, String from, String to, String subject, String body) throws MessagingException {
 		sendEmail(session, rich, from, new String[]{to}, null, null, subject, body);
 	}
 	
+	@Deprecated
 	public static void sendEmail(Session session, boolean rich, InternetAddress from, InternetAddress to, String subject, String body) throws MessagingException {
 		sendEmail(session, rich, from, new InternetAddress[]{to}, null, null, subject, body, null);
 	}
 	
+	@Deprecated
 	public static void sendEmail(Session session, boolean rich, 
 			String from, String[] to, String[] cc, String[] bcc, 
 				String subject, String body) throws MessagingException {
@@ -658,6 +808,7 @@ public class WT {
 		getWTA().sendEmail(session, rich, from, to, cc, bcc, subject, body);
 	}
 	
+	@Deprecated
 	public static void sendEmail(Session session, boolean rich, 
 			InternetAddress from, InternetAddress[] to, InternetAddress[] cc, InternetAddress[] bcc, 
 				String subject, String body, MimeBodyPart[] parts) throws MessagingException {
@@ -665,15 +816,17 @@ public class WT {
 		getWTA().sendEmail(session, rich, from, to, cc, bcc, subject, body, parts);
 	}
 	
-	
+	@Deprecated
 	public static void sendEmail(Session session, boolean rich, InternetAddress from, Collection<InternetAddress> to, Collection<InternetAddress> cc, Collection<InternetAddress> bcc, String subject, String body, Collection<MimeBodyPart> parts) throws MessagingException {
 		getWTA().sendEmail(session, rich, from, to, cc, bcc, subject, body, parts);
 	}
 	
+	@Deprecated
 	public static void sendEmail(Session session, String from, Collection<String> to, Collection<String> cc, Collection<String> bcc, String subject, MimeMultipart part) throws MessagingException {
 		getWTA().sendEmail(session, from, to, cc, bcc, subject, part);
 	}
 	
+	@Deprecated
 	public static void sendEmail(Session session, InternetAddress from, Collection<InternetAddress> to, Collection<InternetAddress> cc, Collection<InternetAddress> bcc, String subject, MimeMultipart part) throws MessagingException {
 		getWTA().sendEmail(session, from, to, cc, bcc, subject, part);
 	}
@@ -749,9 +902,20 @@ public class WT {
 		LoggerUtils.clearCustomDC();
 	}
 	
-	public static ProductLicense findProductLicense(final BaseServiceProduct product) {
-		if (product == null) return null;
-		return getWTA().getLicenseManager().getProductLicense(product);
+	public static ProductLicense findProductLicense(final BaseServiceProduct serviceProduct) {
+		if (serviceProduct == null) return null;
+		return getWTA().getLicenseManager().getProductLicense(serviceProduct);
+	}
+	
+	public static ProductLicense findProductLicense(final String productCode, final String domainId) {
+		BaseServiceProduct serviceProduct = ProductRegistry.getInstance().getServiceProduct(productCode, domainId);
+		return findProductLicense(serviceProduct);
+	}
+	
+	public static BaseServiceProduct findServiceProduct(final String productCode, final String domainId) {
+		Check.notEmpty(productCode, "productCode");
+		Check.notEmpty(domainId, "domainId");
+		return ProductRegistry.getInstance().getServiceProduct(productCode, domainId);
 	}
 	
 	/**

@@ -46,10 +46,11 @@ Ext.define('Sonicle.webtop.core.admin.view.Domain', {
 		title: '{domain.tit}',
 		iconCls: 'wtadm-icon-domain',
 		width: 500,
-		height: 550
+		height: 600
 	},
 	fieldTitle: 'domainId',
 	modelName: 'Sonicle.webtop.core.admin.model.Domain',
+	focusField: {'new': 'flddomainid', 'edit': 'flddisplayname'},
 	
 	passwordPolicy: false,
 	
@@ -58,6 +59,7 @@ Ext.define('Sonicle.webtop.core.admin.view.Domain', {
 		me.callParent([cfg]);
 		
 		WTU.applyFormulas(me.getVM(), {
+			foIsNew: WTF.foIsEqual('_mode', null, me.MODE_NEW),
 			foEnabled: WTF.checkboxBind('record', 'enabled'),
 			foUserAutoCreation: WTF.checkboxBind('record', 'userAutoCreation'),
 			foDirCaseSensitive: WTF.checkboxBind('record', 'dirCaseSensitive'),
@@ -86,37 +88,72 @@ Ext.define('Sonicle.webtop.core.admin.view.Domain', {
 				reference: 'pnlmain',
 				modelValidation: true,
 				defaults: {
-					labelWidth: 120
+					labelWidth: 150
 				},
 				items: [
 					{
 						xtype: 'textfield',
 						reference: 'flddomainid',
-						bind: '{record.domainId}',
+						bind: {
+							value: '{record.domainId}',
+							disabled: '{!foIsNew}'
+						},
 						disabled: true,
-						fieldLabel: me.mys.res('domain.fld-domainId.lbl'),
-						width: 300
-					}, {
-						xtype: 'textfield',
-						bind: '{record.internetName}',
-						fieldLabel: me.mys.res('domain.fld-internetName.lbl'),
-						emptyText: 'example.com',
-						width: 400
-					}, {
-						xtype: 'textfield',
-						bind: '{record.description}',
-						fieldLabel: me.mys.res('domain.fld-description.lbl'),
-						width: 400
+						maskRe: Sonicle.data.validator.Username.maskRe,
+						fieldLabel: me.res('domain.fld-domainId.lbl'),
+						plugins: [
+							'sonoautocomplete',
+							{
+								ptype: 'sofieldavailabilitycheck',
+								baseIconCls: 'wt-opacity-50',
+								availableTooltipText: WT.res('sofieldavailabilitycheck.availableTooltipText'),
+								unavailableTooltipText: WT.res('sofieldavailabilitycheck.unavailableTooltipText'),
+								checkAvailability: function(value, done) {
+									if (me.getModel().getModified('domainId') === undefined) return false;
+									WT.ajaxReq(me.mys.ID, 'ManageDomain', {
+										params: {
+											crud: 'check',
+											domain: value
+										},
+										callback: function(success, json) {
+											done(success ? json.data : json.message);
+										}
+									});
+								}
+							}
+						],
+						anchor: '100%'
 					}, {
 						xtype: 'checkbox',
 						bind: '{foEnabled}',
 						hideEmptyLabel: false,
-						boxLabel: me.mys.res('domain.fld-enabled.lbl')
+						boxLabel: me.res('domain.fld-enabled.lbl')
+					}, {
+						xtype: 'textfield',
+						reference: 'flddisplayname',
+						bind: '{record.displayName}',
+						fieldLabel: me.res('domain.fld-displayName.lbl'),
+						anchor: '100%'
+					}, {
+						xtype: 'textfield',
+						bind: '{record.authDomainName}',
+						fieldLabel: me.res('domain.fld-authDomainName.lbl'),
+						emptyText: 'example.com',
+						anchor: '100%'
+					}, {
+						xtype: 'textfield',
+						bind: {
+							value: '{record.domainName}',
+							emptyText: '{record.authDomainName}'
+						},
+						fieldLabel: me.res('domain.fld-domainName.lbl'),
+						emptyText: 'example.com',
+						anchor: '100%'
 					}, {
 						xtype: 'checkbox',
 						bind: '{foUserAutoCreation}',
 						hideEmptyLabel: false,
-						boxLabel: me.mys.res('domain.fld-userAutoCreation.lbl')
+						boxLabel: me.res('domain.fld-userAutoCreation.lbl')
 					}, 
 					WTF.lookupCombo('id', 'desc', {
 						bind: '{record.dirScheme}',
@@ -124,8 +161,8 @@ Ext.define('Sonicle.webtop.core.admin.view.Domain', {
 						store: Ext.create('Sonicle.webtop.core.admin.store.DirScheme', {
 							autoLoad: true
 						}),
-						fieldLabel: me.mys.res('domain.fld-dirScheme.lbl'),
-						width: 400
+						fieldLabel: me.res('domain.fld-dirScheme.lbl'),
+						anchor: '100%'
 					})
 				]
 			}, {
@@ -148,7 +185,7 @@ Ext.define('Sonicle.webtop.core.admin.view.Domain', {
 					items: [
 						{
 							xtype: 'wtfieldspanel',
-							title: me.mys.res('domain.server.tit'),
+							title: me.res('domain.server.tit'),
 							modelValidation: true,
 							defaults: {
 								labelWidth: 120
@@ -158,11 +195,11 @@ Ext.define('Sonicle.webtop.core.admin.view.Domain', {
 									xtype: 'checkbox',
 									bind: '{foDirCaseSensitive}',
 									hideEmptyLabel: false,
-									boxLabel: me.mys.res('domain.fld-dirCaseSensitive.lbl')
+									boxLabel: me.res('domain.fld-dirCaseSensitive.lbl')
 								}
 							]
 						}, {
-							title: me.mys.res('domain.pwdPolicies.tit'),
+							title: me.res('domain.pwdPolicies.tit'),
 							xtype: 'wtfieldspanel',
 							defaults: {
 								labelWidth: 120
@@ -177,35 +214,35 @@ Ext.define('Sonicle.webtop.core.admin.view.Domain', {
 										clear: WTF.clearTrigger()
 									},
 									plugins: ['sofieldtooltip'],
-									fieldLabel: me.mys.res('domain.fld-pwdMinLength.lbl'),
-									tooltip: me.mys.res('domain.fld-pwdMinLength.tip'),
+									fieldLabel: me.res('domain.fld-pwdMinLength.lbl'),
+									tooltip: me.res('domain.fld-pwdMinLength.tip'),
 									width: 120+100
 								}, {
 									xtype: 'checkbox',
 									bind: '{foPwdComplexity}',
 									plugins: ['sofieldtooltip'],
 									hideEmptyLabel: false,
-									boxLabel: me.mys.res('domain.fld-pwdComplexity.lbl'),
-									tooltip: me.mys.res('domain.fld-pwdComplexity.tip')
+									boxLabel: me.res('domain.fld-pwdComplexity.lbl'),
+									tooltip: me.res('domain.fld-pwdComplexity.tip')
 								}, {
 									xtype: 'checkbox',
 									bind: '{foPwdAvoidConsecutiveChars}',
 									hideEmptyLabel: false,
-									boxLabel: me.mys.res('domain.fld-pwdAvoidConsecutiveChars.lbl')
+									boxLabel: me.res('domain.fld-pwdAvoidConsecutiveChars.lbl')
 								}, {
 									xtype: 'checkbox',
 									bind: '{foPwdAvoidOldSimilarity}',
 									plugins: ['sofieldtooltip'],
 									hideEmptyLabel: false,
-									boxLabel: me.mys.res('domain.fld-pwdAvoidOldSimilarity.lbl'),
-									tooltip: me.mys.res('domain.fld-pwdAvoidOldSimilarity.tip')
+									boxLabel: me.res('domain.fld-pwdAvoidOldSimilarity.lbl'),
+									tooltip: me.res('domain.fld-pwdAvoidOldSimilarity.tip')
 								}, {
 									xtype: 'checkbox',
 									bind: '{foPwdAvoidUsernameSimilarity}',
 									plugins: ['sofieldtooltip'],
 									hideEmptyLabel: false,
-									boxLabel: me.mys.res('domain.fld-pwdAvoidUsernameSimilarity.lbl'),
-									tooltip: me.mys.res('domain.fld-pwdAvoidUsernameSimilarity.tip')
+									boxLabel: me.res('domain.fld-pwdAvoidUsernameSimilarity.lbl'),
+									tooltip: me.res('domain.fld-pwdAvoidUsernameSimilarity.tip')
 								}, {
 									xtype: 'numberfield',
 									bind: '{record.pwdExpiration}',
@@ -216,16 +253,16 @@ Ext.define('Sonicle.webtop.core.admin.view.Domain', {
 									},
 									plugins: ['sofieldtooltip'],
 									emptyText: WT.res('word.none.female'),
-									fieldLabel: me.mys.res('domain.fld-pwdExpiration.lbl'),
-									tooltip: me.mys.res('domain.fld-pwdExpiration.tip'),
+									fieldLabel: me.res('domain.fld-pwdExpiration.lbl'),
+									tooltip: me.res('domain.fld-pwdExpiration.tip'),
 									width: 120+100
 								}, {
 									xtype: 'checkbox',
 									bind: '{foPwdVerifyAtLogin}',
 									plugins: ['sofieldtooltip'],
 									hideEmptyLabel: false,
-									boxLabel: me.mys.res('domain.fld-pwdVerifyAtLogin.lbl'),
-									tooltip: me.mys.res('domain.fld-pwdVerifyAtLogin.tip')
+									boxLabel: me.res('domain.fld-pwdVerifyAtLogin.lbl'),
+									tooltip: me.res('domain.fld-pwdVerifyAtLogin.tip')
 								}
 							]
 						}
@@ -237,7 +274,7 @@ Ext.define('Sonicle.webtop.core.admin.view.Domain', {
 					deferredRender: false,
 					items: [
 						{
-							title: me.mys.res('domain.server.tit'),
+							title: me.res('domain.server.tit'),
 							xtype: 'wtfieldspanel',
 							defaults: {
 								labelWidth: 120
@@ -261,10 +298,10 @@ Ext.define('Sonicle.webtop.core.admin.view.Domain', {
 											minValue: 1,
 											maxValue: 65000,
 											width: 60,
-											emptyText: me.mys.res('domain.fld-dirPort.emp')
+											emptyText: me.res('domain.fld-dirPort.emp')
 										}
 									],
-									fieldLabel: me.mys.res('domain.fld-dirHost.lbl')
+									fieldLabel: me.res('domain.fld-dirHost.lbl')
 								},
 								WTF.lookupCombo('id', 'desc', {
 									bind: '{record.dirConnSecurity}',
@@ -272,30 +309,30 @@ Ext.define('Sonicle.webtop.core.admin.view.Domain', {
 									store: Ext.create('Sonicle.webtop.core.admin.store.DirConnSecurity', {
 										autoLoad: true
 									}),
-									fieldLabel: me.mys.res('domain.fld-dirConnSecurity.lbl'),
+									fieldLabel: me.res('domain.fld-dirConnSecurity.lbl'),
 									width: 230
 								}),
 								{
 									xtype: 'textfield',
 									bind: '{record.dirAdmin}',
 									plugins: 'sonoautocomplete',
-									fieldLabel: me.mys.res('domain.fld-dirAdmin.lbl'),
+									fieldLabel: me.res('domain.fld-dirAdmin.lbl'),
 									width: 300
 								}, {
 									xtype: 'sopasswordfield',
 									bind: '{record.dirPassword}',
 									plugins: 'sonoautocomplete',
-									fieldLabel: me.mys.res('domain.fld-dirPassword.lbl'),
+									fieldLabel: me.res('domain.fld-dirPassword.lbl'),
 									width: 300
 								}, {
 									xtype: 'checkbox',
 									bind: '{foDirCaseSensitive}',
 									hideEmptyLabel: false,
-									boxLabel: me.mys.res('domain.fld-dirCaseSensitive.lbl')
+									boxLabel: me.res('domain.fld-dirCaseSensitive.lbl')
 								}
 							]
 						}, {
-							title: me.mys.res('domain.pwdPolicies.tit'),
+							title: me.res('domain.pwdPolicies.tit'),
 							xtype: 'wtfieldspanel',
 							defaults: {
 								labelWidth: 120
@@ -310,35 +347,35 @@ Ext.define('Sonicle.webtop.core.admin.view.Domain', {
 										clear: WTF.clearTrigger()
 									},
 									plugins: ['sofieldtooltip'],
-									fieldLabel: me.mys.res('domain.fld-pwdMinLength.lbl'),
-									tooltip: me.mys.res('domain.fld-pwdMinLength.tip'),
+									fieldLabel: me.res('domain.fld-pwdMinLength.lbl'),
+									tooltip: me.res('domain.fld-pwdMinLength.tip'),
 									width: 120+100
 								}, {
 									xtype: 'checkbox',
 									bind: '{foPwdComplexity}',
 									plugins: ['sofieldtooltip'],
 									hideEmptyLabel: false,
-									boxLabel: me.mys.res('domain.fld-pwdComplexity.lbl'),
-									tooltip: me.mys.res('domain.fld-pwdComplexity.tip')
+									boxLabel: me.res('domain.fld-pwdComplexity.lbl'),
+									tooltip: me.res('domain.fld-pwdComplexity.tip')
 								}, {
 									xtype: 'checkbox',
 									bind: '{foPwdAvoidConsecutiveChars}',
 									hideEmptyLabel: false,
-									boxLabel: me.mys.res('domain.fld-pwdAvoidConsecutiveChars.lbl')
+									boxLabel: me.res('domain.fld-pwdAvoidConsecutiveChars.lbl')
 								}, {
 									xtype: 'checkbox',
 									bind: '{foPwdAvoidOldSimilarity}',
 									plugins: ['sofieldtooltip'],
 									hideEmptyLabel: false,
-									boxLabel: me.mys.res('domain.fld-pwdAvoidOldSimilarity.lbl'),
-									tooltip: me.mys.res('domain.fld-pwdAvoidOldSimilarity.tip')
+									boxLabel: me.res('domain.fld-pwdAvoidOldSimilarity.lbl'),
+									tooltip: me.res('domain.fld-pwdAvoidOldSimilarity.tip')
 								}, {
 									xtype: 'checkbox',
 									bind: '{foPwdAvoidUsernameSimilarity}',
 									plugins: ['sofieldtooltip'],
 									hideEmptyLabel: false,
-									boxLabel: me.mys.res('domain.fld-pwdAvoidUsernameSimilarity.lbl'),
-									tooltip: me.mys.res('domain.fld-pwdAvoidUsernameSimilarity.tip')
+									boxLabel: me.res('domain.fld-pwdAvoidUsernameSimilarity.lbl'),
+									tooltip: me.res('domain.fld-pwdAvoidUsernameSimilarity.tip')
 								}, {
 									xtype: 'numberfield',
 									bind: '{record.pwdExpiration}',
@@ -349,16 +386,16 @@ Ext.define('Sonicle.webtop.core.admin.view.Domain', {
 									},
 									plugins: ['sofieldtooltip'],
 									emptyText: WT.res('word.none.female'),
-									fieldLabel: me.mys.res('domain.fld-pwdExpiration.lbl'),
-									tooltip: me.mys.res('domain.fld-pwdExpiration.tip'),
+									fieldLabel: me.res('domain.fld-pwdExpiration.lbl'),
+									tooltip: me.res('domain.fld-pwdExpiration.tip'),
 									width: 120+100
 								}, {
 									xtype: 'checkbox',
 									bind: '{foPwdVerifyAtLogin}',
 									plugins: ['sofieldtooltip'],
 									hideEmptyLabel: false,
-									boxLabel: me.mys.res('domain.fld-pwdVerifyAtLogin.lbl'),
-									tooltip: me.mys.res('domain.fld-pwdVerifyAtLogin.tip')
+									boxLabel: me.res('domain.fld-pwdVerifyAtLogin.lbl'),
+									tooltip: me.res('domain.fld-pwdVerifyAtLogin.tip')
 								}
 							]
 						}
@@ -370,7 +407,7 @@ Ext.define('Sonicle.webtop.core.admin.view.Domain', {
 					deferredRender: false,
 					items: [
 						{
-							title: me.mys.res('domain.server.tit'),
+							title: me.res('domain.server.tit'),
 							xtype: 'wtfieldspanel',
 							defaults: {
 								labelWidth: 120
@@ -394,10 +431,10 @@ Ext.define('Sonicle.webtop.core.admin.view.Domain', {
 											minValue: 1,
 											maxValue: 65000,
 											width: 60,
-											emptyText: me.mys.res('domain.fld-dirPort.emp')
+											emptyText: me.res('domain.fld-dirPort.emp')
 										}
 									],
-									fieldLabel: me.mys.res('domain.fld-dirHost.lbl')
+									fieldLabel: me.res('domain.fld-dirHost.lbl')
 								},
 								WTF.lookupCombo('id', 'desc', {
 									bind: '{record.dirConnSecurity}',
@@ -405,30 +442,30 @@ Ext.define('Sonicle.webtop.core.admin.view.Domain', {
 									store: Ext.create('Sonicle.webtop.core.admin.store.DirConnSecurity', {
 										autoLoad: true
 									}),
-									fieldLabel: me.mys.res('domain.fld-dirConnSecurity.lbl'),
+									fieldLabel: me.res('domain.fld-dirConnSecurity.lbl'),
 									width: 230
 								}),
 								{
 									xtype: 'textfield',
 									bind: '{record.dirAdmin}',
 									plugins: 'sonoautocomplete',
-									fieldLabel: me.mys.res('domain.ldap.fld-dirAdmin.lbl'),
+									fieldLabel: me.res('domain.ldap.fld-dirAdmin.lbl'),
 									anchor: '100%'
 								}, {
 									xtype: 'sopasswordfield',
 									bind: '{record.dirPassword}',
 									plugins: 'sonoautocomplete',
-									fieldLabel: me.mys.res('domain.fld-dirPassword.lbl'),
+									fieldLabel: me.res('domain.fld-dirPassword.lbl'),
 									width: 300
 								}, {
 									xtype: 'checkbox',
 									bind: '{foDirCaseSensitive}',
 									hideEmptyLabel: false,
-									boxLabel: me.mys.res('domain.fld-dirCaseSensitive.lbl')
+									boxLabel: me.res('domain.fld-dirCaseSensitive.lbl')
 								}
 							]
 						}, {
-							title: me.mys.res('domain.ldap.login.tit'),
+							title: me.res('domain.ldap.login.tit'),
 							xtype: 'wtfieldspanel',
 							defaults: {
 								labelWidth: 120
@@ -437,17 +474,17 @@ Ext.define('Sonicle.webtop.core.admin.view.Domain', {
 								{
 									xtype: 'textfield',
 									bind: '{record.ldapLoginDn}',
-									fieldLabel: me.mys.res('domain.ldap.fld-ldapLoginDn.lbl'),
+									fieldLabel: me.res('domain.ldap.fld-ldapLoginDn.lbl'),
 									anchor: '100%'
 								}, {
 									xtype: 'textfield',
 									bind: '{record.ldapLoginFilter}',
-									fieldLabel: me.mys.res('domain.ldap.fld-ldapLoginFilter.lbl'),
+									fieldLabel: me.res('domain.ldap.fld-ldapLoginFilter.lbl'),
 									anchor: '100%'
 								}
 							]
 						}, {
-							title: me.mys.res('domain.ldap.users.tit'),
+							title: me.res('domain.ldap.users.tit'),
 							xtype: 'wtfieldspanel',
 							defaults: {
 								labelWidth: 120
@@ -456,41 +493,41 @@ Ext.define('Sonicle.webtop.core.admin.view.Domain', {
 								{
 									xtype: 'textfield',
 									bind: '{record.ldapUserDn}',
-									fieldLabel: me.mys.res('domain.ldap.fld-ldapUserDn.lbl'),
+									fieldLabel: me.res('domain.ldap.fld-ldapUserDn.lbl'),
 									anchor: '100%'
 								}, {
 									xtype: 'textfield',
 									bind: '{record.ldapUserFilter}',
-									fieldLabel: me.mys.res('domain.ldap.fld-ldapUserFilter.lbl'),
+									fieldLabel: me.res('domain.ldap.fld-ldapUserFilter.lbl'),
 									anchor: '100%'
 								}, {
 									xtype: 'textfield',
 									bind: '{record.ldapUserIdField}',
-									fieldLabel: me.mys.res('domain.ldap.fld-ldapUserIdField.lbl'),
-									emptyText: me.mys.res('domain.ldap.fld-ldapUserIdField.emp'),
+									fieldLabel: me.res('domain.ldap.fld-ldapUserIdField.lbl'),
+									emptyText: me.res('domain.ldap.fld-ldapUserIdField.emp'),
 									width: 330
 								}, {
 									xtype: 'textfield',
 									bind: '{record.ldapUserFirstnameField}',
-									fieldLabel: me.mys.res('domain.ldap.fld-ldapUserFirstnameField.lbl'),
-									emptyText: me.mys.res('domain.ldap.fld-ldapUserFirstnameField.emp'),
+									fieldLabel: me.res('domain.ldap.fld-ldapUserFirstnameField.lbl'),
+									emptyText: me.res('domain.ldap.fld-ldapUserFirstnameField.emp'),
 									width: 330
 								}, {
 									xtype: 'textfield',
 									bind: '{record.ldapUserLastnameField}',
-									fieldLabel: me.mys.res('domain.ldap.fld-ldapUserLastnameField.lbl'),
-									emptyText: me.mys.res('domain.ldap.fld-ldapUserLastnameField.emp'),
+									fieldLabel: me.res('domain.ldap.fld-ldapUserLastnameField.lbl'),
+									emptyText: me.res('domain.ldap.fld-ldapUserLastnameField.emp'),
 									width: 330
 								}, {
 									xtype: 'textfield',
 									bind: '{record.ldapUserDisplayNameField}',
-									fieldLabel: me.mys.res('domain.ldap.fld-ldapUserDisplayNameField.lbl'),
-									emptyText: me.mys.res('domain.ldap.fld-ldapUserDisplayNameField.emp'),
+									fieldLabel: me.res('domain.ldap.fld-ldapUserDisplayNameField.lbl'),
+									emptyText: me.res('domain.ldap.fld-ldapUserDisplayNameField.emp'),
 									width: 330
 								}
 							]
 						}, {
-							title: me.mys.res('domain.pwdPolicies.tit'),
+							title: me.res('domain.pwdPolicies.tit'),
 							xtype: 'wtfieldspanel',
 							defaults: {
 								labelWidth: 120
@@ -505,35 +542,35 @@ Ext.define('Sonicle.webtop.core.admin.view.Domain', {
 										clear: WTF.clearTrigger()
 									},
 									plugins: ['sofieldtooltip'],
-									fieldLabel: me.mys.res('domain.fld-pwdMinLength.lbl'),
-									tooltip: me.mys.res('domain.fld-pwdMinLength.tip'),
+									fieldLabel: me.res('domain.fld-pwdMinLength.lbl'),
+									tooltip: me.res('domain.fld-pwdMinLength.tip'),
 									width: 120+100
 								}, {
 									xtype: 'checkbox',
 									bind: '{foPwdComplexity}',
 									plugins: ['sofieldtooltip'],
 									hideEmptyLabel: false,
-									boxLabel: me.mys.res('domain.fld-pwdComplexity.lbl'),
-									tooltip: me.mys.res('domain.fld-pwdComplexity.tip')
+									boxLabel: me.res('domain.fld-pwdComplexity.lbl'),
+									tooltip: me.res('domain.fld-pwdComplexity.tip')
 								}, {
 									xtype: 'checkbox',
 									bind: '{foPwdAvoidConsecutiveChars}',
 									hideEmptyLabel: false,
-									boxLabel: me.mys.res('domain.fld-pwdAvoidConsecutiveChars.lbl')
+									boxLabel: me.res('domain.fld-pwdAvoidConsecutiveChars.lbl')
 								}, {
 									xtype: 'checkbox',
 									bind: '{foPwdAvoidOldSimilarity}',
 									plugins: ['sofieldtooltip'],
 									hideEmptyLabel: false,
-									boxLabel: me.mys.res('domain.fld-pwdAvoidOldSimilarity.lbl'),
-									tooltip: me.mys.res('domain.fld-pwdAvoidOldSimilarity.tip')
+									boxLabel: me.res('domain.fld-pwdAvoidOldSimilarity.lbl'),
+									tooltip: me.res('domain.fld-pwdAvoidOldSimilarity.tip')
 								}, {
 									xtype: 'checkbox',
 									bind: '{foPwdAvoidUsernameSimilarity}',
 									plugins: ['sofieldtooltip'],
 									hideEmptyLabel: false,
-									boxLabel: me.mys.res('domain.fld-pwdAvoidUsernameSimilarity.lbl'),
-									tooltip: me.mys.res('domain.fld-pwdAvoidUsernameSimilarity.tip')
+									boxLabel: me.res('domain.fld-pwdAvoidUsernameSimilarity.lbl'),
+									tooltip: me.res('domain.fld-pwdAvoidUsernameSimilarity.tip')
 								}, {
 									xtype: 'numberfield',
 									bind: '{record.pwdExpiration}',
@@ -544,16 +581,16 @@ Ext.define('Sonicle.webtop.core.admin.view.Domain', {
 									},
 									plugins: ['sofieldtooltip'],
 									emptyText: WT.res('word.none.female'),
-									fieldLabel: me.mys.res('domain.fld-pwdExpiration.lbl'),
-									tooltip: me.mys.res('domain.fld-pwdExpiration.tip'),
+									fieldLabel: me.res('domain.fld-pwdExpiration.lbl'),
+									tooltip: me.res('domain.fld-pwdExpiration.tip'),
 									width: 120+100
 								}, {
 									xtype: 'checkbox',
 									bind: '{foPwdVerifyAtLogin}',
 									plugins: ['sofieldtooltip'],
 									hideEmptyLabel: false,
-									boxLabel: me.mys.res('domain.fld-pwdVerifyAtLogin.lbl'),
-									tooltip: me.mys.res('domain.fld-pwdVerifyAtLogin.tip')
+									boxLabel: me.res('domain.fld-pwdVerifyAtLogin.lbl'),
+									tooltip: me.res('domain.fld-pwdVerifyAtLogin.tip')
 								}
 							]
 						}
@@ -564,7 +601,7 @@ Ext.define('Sonicle.webtop.core.admin.view.Domain', {
 					modelValidation: true,
 					deferredRender: false,
 					items: [{
-						title: me.mys.res('domain.server.tit'),
+						title: me.res('domain.server.tit'),
 						xtype: 'wtfieldspanel',
 						defaults: {
 							labelWidth: 120
@@ -586,9 +623,9 @@ Ext.define('Sonicle.webtop.core.admin.view.Domain', {
 									minValue: 1,
 									maxValue: 65000,
 									width: 60,
-									emptyText: me.mys.res('domain.fld-dirPort.emp')
+									emptyText: me.res('domain.fld-dirPort.emp')
 								}],
-								fieldLabel: me.mys.res('domain.fld-dirHost.lbl')
+								fieldLabel: me.res('domain.fld-dirHost.lbl')
 							},
 							WTF.lookupCombo('id', 'desc', {
 								bind: '{record.dirConnSecurity}',
@@ -596,30 +633,30 @@ Ext.define('Sonicle.webtop.core.admin.view.Domain', {
 								store: Ext.create('Sonicle.webtop.core.admin.store.DirConnSecurity', {
 									autoLoad: true
 								}),
-								fieldLabel: me.mys.res('domain.fld-dirConnSecurity.lbl'),
+								fieldLabel: me.res('domain.fld-dirConnSecurity.lbl'),
 								width: 230
 							}),
 							{
 								xtype: 'textfield',
 								bind: '{record.dirAdmin}',
 								plugins: 'sonoautocomplete',
-								fieldLabel: me.mys.res('domain.ldap.fld-dirAdmin.lbl'),
+								fieldLabel: me.res('domain.ldap.fld-dirAdmin.lbl'),
 								anchor: '100%'
 							}, {
 								xtype: 'sopasswordfield',
 								bind: '{record.dirPassword}',
 								plugins: 'sonoautocomplete',
-								fieldLabel: me.mys.res('domain.fld-dirPassword.lbl'),
+								fieldLabel: me.res('domain.fld-dirPassword.lbl'),
 								width: 300
 							}, {
 								xtype: 'checkbox',
 								bind: '{foDirCaseSensitive}',
 								hideEmptyLabel: false,
-								boxLabel: me.mys.res('domain.fld-dirCaseSensitive.lbl')
+								boxLabel: me.res('domain.fld-dirCaseSensitive.lbl')
 							}
 						]
 					}, {
-						title: me.mys.res('domain.ldap.login.tit'),
+						title: me.res('domain.ldap.login.tit'),
 						xtype: 'wtfieldspanel',
 						defaults: {
 							labelWidth: 120
@@ -627,16 +664,16 @@ Ext.define('Sonicle.webtop.core.admin.view.Domain', {
 						items: [{
 							xtype: 'textfield',
 							bind: '{record.ldapLoginDn}',
-							fieldLabel: me.mys.res('domain.ldap.fld-ldapLoginDn.lbl'),
+							fieldLabel: me.res('domain.ldap.fld-ldapLoginDn.lbl'),
 							anchor: '100%'
 						}, {
 							xtype: 'textfield',
 							bind: '{record.ldapLoginFilter}',
-							fieldLabel: me.mys.res('domain.ldap.fld-ldapLoginFilter.lbl'),
+							fieldLabel: me.res('domain.ldap.fld-ldapLoginFilter.lbl'),
 							anchor: '100%'
 						}]
 					}, {
-						title: me.mys.res('domain.ldap.users.tit'),
+						title: me.res('domain.ldap.users.tit'),
 						xtype: 'wtfieldspanel',
 						defaults: {
 							labelWidth: 120
@@ -644,32 +681,32 @@ Ext.define('Sonicle.webtop.core.admin.view.Domain', {
 						items: [{
 							xtype: 'textfield',
 							bind: '{record.ldapUserDn}',
-							fieldLabel: me.mys.res('domain.ldap.fld-ldapUserDn.lbl'),
+							fieldLabel: me.res('domain.ldap.fld-ldapUserDn.lbl'),
 							anchor: '100%'
 						}, {
 							xtype: 'textfield',
 							bind: '{record.ldapUserFilter}',
-							fieldLabel: me.mys.res('domain.ldap.fld-ldapUserFilter.lbl'),
+							fieldLabel: me.res('domain.ldap.fld-ldapUserFilter.lbl'),
 							anchor: '100%'
 						}, {
 							xtype: 'textfield',
 							bind: '{record.ldapUserIdField}',
-							fieldLabel: me.mys.res('domain.ldap.fld-ldapUserIdField.lbl'),
+							fieldLabel: me.res('domain.ldap.fld-ldapUserIdField.lbl'),
 							width: 330
 						}, {
 							xtype: 'textfield',
 							bind: '{record.ldapUserFirstnameField}',
-							fieldLabel: me.mys.res('domain.ldap.fld-ldapUserFirstnameField.lbl'),
+							fieldLabel: me.res('domain.ldap.fld-ldapUserFirstnameField.lbl'),
 							width: 330
 						}, {
 							xtype: 'textfield',
 							bind: '{record.ldapUserLastnameField}',
-							fieldLabel: me.mys.res('domain.ldap.fld-ldapUserLastnameField.lbl'),
+							fieldLabel: me.res('domain.ldap.fld-ldapUserLastnameField.lbl'),
 							width: 330
 						}, {
 							xtype: 'textfield',
 							bind: '{record.ldapUserDisplayNameField}',
-							fieldLabel: me.mys.res('domain.ldap.fld-ldapUserDisplayNameField.lbl'),
+							fieldLabel: me.res('domain.ldap.fld-ldapUserDisplayNameField.lbl'),
 							width: 330
 						}]
 					}]
@@ -682,7 +719,7 @@ Ext.define('Sonicle.webtop.core.admin.view.Domain', {
 						labelWidth: 120
 					},
 					items: [{
-						title: me.mys.res('domain.server.tit'),
+						title: me.res('domain.server.tit'),
 						xtype: 'wtfieldspanel',
 						defaults: {
 							labelWidth: 120
@@ -704,9 +741,9 @@ Ext.define('Sonicle.webtop.core.admin.view.Domain', {
 									minValue: 1,
 									maxValue: 65000,
 									width: 60,
-									emptyText: me.mys.res('domain.fld-dirPort.emp')
+									emptyText: me.res('domain.fld-dirPort.emp')
 								}],
-								fieldLabel: me.mys.res('domain.fld-dirHost.lbl')
+								fieldLabel: me.res('domain.fld-dirHost.lbl')
 							},
 							WTF.lookupCombo('id', 'desc', {
 								bind: '{record.dirConnSecurity}',
@@ -714,30 +751,30 @@ Ext.define('Sonicle.webtop.core.admin.view.Domain', {
 								store: Ext.create('Sonicle.webtop.core.admin.store.DirConnSecurity', {
 									autoLoad: true
 								}),
-								fieldLabel: me.mys.res('domain.fld-dirConnSecurity.lbl'),
+								fieldLabel: me.res('domain.fld-dirConnSecurity.lbl'),
 								width: 230
 							}),
 							{
 								xtype: 'textfield',
 								bind: '{record.dirAdmin}',
 								plugins: 'sonoautocomplete',
-								fieldLabel: me.mys.res('domain.ldap.fld-dirAdmin.lbl'),
+								fieldLabel: me.res('domain.ldap.fld-dirAdmin.lbl'),
 								anchor: '100%'
 							}, {
 								xtype: 'sopasswordfield',
 								bind: '{record.dirPassword}',
 								plugins: 'sonoautocomplete',
-								fieldLabel: me.mys.res('domain.fld-dirPassword.lbl'),
+								fieldLabel: me.res('domain.fld-dirPassword.lbl'),
 								width: 300
 							}, {
 								xtype: 'checkbox',
 								bind: '{foDirCaseSensitive}',
 								hideEmptyLabel: false,
-								boxLabel: me.mys.res('domain.fld-dirCaseSensitive.lbl')
+								boxLabel: me.res('domain.fld-dirCaseSensitive.lbl')
 							}
 						]
 					}, {
-						title: me.mys.res('domain.ldap.login.tit'),
+						title: me.res('domain.ldap.login.tit'),
 						xtype: 'wtfieldspanel',
 						defaults: {
 							labelWidth: 120
@@ -745,17 +782,17 @@ Ext.define('Sonicle.webtop.core.admin.view.Domain', {
 						items: [{
 							xtype: 'textfield',
 							bind: '{record.ldapLoginDn}',
-							fieldLabel: me.mys.res('domain.ldap.fld-ldapLoginDn.lbl'),
+							fieldLabel: me.res('domain.ldap.fld-ldapLoginDn.lbl'),
 							anchor: '100%'
 						}, {
 							xtype: 'textfield',
 							bind: '{record.ldapLoginFilter}',
-							fieldLabel: me.mys.res('domain.ldap.fld-ldapLoginFilter.lbl'),
+							fieldLabel: me.res('domain.ldap.fld-ldapLoginFilter.lbl'),
 							emptyText: '&(objectCategory=person)(objectClass=user)(!(userAccountControl:1.2.840.113556.1.4.803:=2))',
 							anchor: '100%'
 						}]
 					}, {
-						title: me.mys.res('domain.ldap.users.tit'),
+						title: me.res('domain.ldap.users.tit'),
 						xtype: 'wtfieldspanel',
 						defaults: {
 							labelWidth: 120
@@ -763,30 +800,30 @@ Ext.define('Sonicle.webtop.core.admin.view.Domain', {
 						items: [{
 							xtype: 'textfield',
 							bind: '{record.ldapUserDn}',
-							fieldLabel: me.mys.res('domain.ldap.fld-ldapUserDn.lbl'),
+							fieldLabel: me.res('domain.ldap.fld-ldapUserDn.lbl'),
 							anchor: '100%'
 						}, {
 							xtype: 'textfield',
 							bind: '{record.ldapUserFilter}',
-							fieldLabel: me.mys.res('domain.ldap.fld-ldapUserFilter.lbl'),
+							fieldLabel: me.res('domain.ldap.fld-ldapUserFilter.lbl'),
 							emptyText: '&(objectClass=person)(objectClass=user)',
 							anchor: '100%'
 						}, {
 							xtype: 'textfield',
 							bind: '{record.ldapUserFirstnameField}',
-							fieldLabel: me.mys.res('domain.ldap.fld-ldapUserFirstnameField.lbl'),
+							fieldLabel: me.res('domain.ldap.fld-ldapUserFirstnameField.lbl'),
 							emptyText: 'givenName',
 							width: 330
 						}, {
 							xtype: 'textfield',
 							bind: '{record.ldapUserLastnameField}',
-							fieldLabel: me.mys.res('domain.ldap.fld-ldapUserLastnameField.lbl'),
+							fieldLabel: me.res('domain.ldap.fld-ldapUserLastnameField.lbl'),
 							emptyText: 'sn',
 							width: 330
 						}, {
 							xtype: 'textfield',
 							bind: '{record.ldapUserDisplayNameField}',
-							fieldLabel: me.mys.res('domain.ldap.fld-ldapUserDisplayNameField.lbl'),
+							fieldLabel: me.res('domain.ldap.fld-ldapUserDisplayNameField.lbl'),
 							emptyText: 'cn',
 							width: 330
 						}]
@@ -815,9 +852,9 @@ Ext.define('Sonicle.webtop.core.admin.view.Domain', {
 							minValue: 1,
 							maxValue: 65000,
 							width: 60,
-							emptyText: me.mys.res('domain.fld-dirPort.emp')
+							emptyText: me.res('domain.fld-dirPort.emp')
 						}],
-						fieldLabel: me.mys.res('domain.fld-dirHost.lbl')
+						fieldLabel: me.res('domain.fld-dirHost.lbl')
 					},
 					WTF.lookupCombo('id', 'desc', {
 						bind: '{record.dirConnSecurity}',
@@ -825,14 +862,14 @@ Ext.define('Sonicle.webtop.core.admin.view.Domain', {
 						store: Ext.create('Sonicle.webtop.core.admin.store.DirConnSecurity', {
 							autoLoad: true
 						}),
-						fieldLabel: me.mys.res('domain.fld-dirConnSecurity.lbl'),
+						fieldLabel: me.res('domain.fld-dirConnSecurity.lbl'),
 						width: 200
 					}),
 					{
 						xtype: 'checkbox',
 						bind: '{foDirCaseSensitive}',
 						hideEmptyLabel: false,
-						boxLabel: me.mys.res('domain.fld-dirCaseSensitive.lbl')
+						boxLabel: me.res('domain.fld-dirCaseSensitive.lbl')
 					}]
 				}, {
 					xtype: 'wtform',
@@ -858,14 +895,14 @@ Ext.define('Sonicle.webtop.core.admin.view.Domain', {
 							minValue: 1,
 							maxValue: 65000,
 							width: 60,
-							emptyText: me.mys.res('domain.fld-dirPort.emp')
+							emptyText: me.res('domain.fld-dirPort.emp')
 						}],
-						fieldLabel: me.mys.res('domain.fld-dirHost.lbl')
+						fieldLabel: me.res('domain.fld-dirHost.lbl')
 					}, {
 						xtype: 'checkbox',
 						bind: '{foDirCaseSensitive}',
 						hideEmptyLabel: false,
-						boxLabel: me.mys.res('domain.fld-dirCaseSensitive.lbl')
+						boxLabel: me.res('domain.fld-dirCaseSensitive.lbl')
 					}]
 				}, {
 					xtype: 'wtform',
@@ -891,31 +928,19 @@ Ext.define('Sonicle.webtop.core.admin.view.Domain', {
 							minValue: 1,
 							maxValue: 65000,
 							width: 60,
-							emptyText: me.mys.res('domain.fld-dirPort.emp')
+							emptyText: me.res('domain.fld-dirPort.emp')
 						}],
-						fieldLabel: me.mys.res('domain.fld-dirHost.lbl')
+						fieldLabel: me.res('domain.fld-dirHost.lbl')
 					}, {
 						xtype: 'checkbox',
 						bind: '{foDirCaseSensitive}',
 						hideEmptyLabel: false,
-						boxLabel: me.mys.res('domain.fld-dirCaseSensitive.lbl')
+						boxLabel: me.res('domain.fld-dirCaseSensitive.lbl')
 					}]
 				}]
 			}]
 		});
-		me.on('viewload', me.onViewLoad);
 		me.on('viewinvalid', me.onViewInvalid);
-	},
-	
-	onViewLoad: function(s, success) {
-		if(!success) return;
-		var me = this;
-		if(me.isMode(me.MODE_NEW)) {
-			me.lref('flddomainid').setDisabled(false);
-			me.lref('flddomainid').focus(true);
-		} else {
-			me.lref('flddomainid').setDisabled(true);
-		}
 	},
 	
 	onViewInvalid: function(s, mo, errs) {

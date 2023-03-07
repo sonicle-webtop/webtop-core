@@ -1,15 +1,24 @@
 {
-  "swagger": "2.0",
+  "openapi": "3.0.1",
   "info": {
-    "version": "v1",
     "title": "WebTop Core",
+    "description": "https://github.com/OpenAPITools/openapi-generator/issues/10010\nhttps://github.com/stoplightio/prism/discussions/523\nhttps://github.com/OpenAPITools/openapi-generator/issues/3172",
     "contact": {
       "email": "dev-team@sonicle.com"
-    }
+    },
+    "version": "v1"
   },
+  "servers": [
+    {
+      "url": "/"
+    }
+  ],
   "security": [
     {
       "Basic authentication": []
+    },
+    {
+      "auth-bearer": []
     }
   ],
   "paths": {
@@ -19,36 +28,52 @@
           "dav-principals"
         ],
         "summary": "Returns principal info",
-        "operationId": "getPrincipalInfo",
-        "produces": [
-          "application/json"
+        "operationId": "getDavPrincipalInfo",
+        "parameters": [
+          {
+            "name": "profileUsername",
+            "in": "path",
+            "description": "Full profile username",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "example": "john.doe@sonicle.com"
+          }
         ],
-        "parameters": [],
         "responses": {
           "200": {
             "description": "Success",
-            "schema": {
-              "$ref": "#/definitions/PrincipalInfo"
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PrincipalInfo"
+                }
+              }
             }
           },
           "400": {
-            "description": "Invalid parameter"
+            "description": "Invalid parameter",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
           },
           "404": {
-            "description": "Principal not found"
+            "description": "Principal not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
           }
         }
-      },
-      "parameters": [
-        {
-          "name": "profileUsername",
-          "in": "path",
-          "required": true,
-          "type": "string",
-          "description": "Full profile username",
-          "x-example": "john.doe@sonicle.com"
-        }
-      ]
+      }
     },
     "/principals/{profileUsername}": {
       "get": {
@@ -57,17 +82,80 @@
         ],
         "summary": "Returns principal info",
         "operationId": "getPrincipalInfo",
-        "produces": [
-          "application/json"
-        ],
         "parameters": [
+          {
+            "name": "profileUsername",
+            "in": "path",
+            "description": "Full profile username (user@domain.tld)",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "example": "john.doe@sonicle.com"
+          },
           {
             "name": "permRefs",
             "in": "query",
-            "required": false,
-            "type": "array",
             "description": "Permissions to evaluate",
-            "items": {
+            "style": "form",
+            "explode": false,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PrincipalInfo"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid parameter",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid credentials",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Principal not found"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/users": {
+      "get": {
+        "summary": "List all enabled users",
+        "operationId": "getUsers",
+        "parameters": [
+          {
+            "name": "targetProfileId",
+            "in": "query",
+            "schema": {
               "type": "string"
             }
           }
@@ -75,152 +163,3581 @@
         "responses": {
           "200": {
             "description": "Success",
-            "schema": {
-              "$ref": "#/definitions/PrincipalInfo"
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/LegacyUser"
+                  }
+                }
+              }
             }
           },
-          "400": {
-            "description": "Invalid parameter"
-          },
-          "401": {
-            "description": "Invalid credentials"
-          },
-          "404": {
-            "description": "Principal not found"
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
           }
-        }
-      },
-      "parameters": [
-        {
-          "name": "profileUsername",
-          "in": "path",
-          "required": true,
-          "type": "string",
-          "description": "Full profile username (user@domain.tld)",
-          "x-example": "john.doe@sonicle.com"
-        }
-      ]
+        },
+        "x-codegen-request-body-name": "body",
+        "deprecated": true
+      }
     },
-    "/users": {
-      "get": {
-        "summary": "List all enabled users",
-        "operationId": "getUsers",
-        "produces": [
-          "application/json"
+    "/admin/password": {
+      "put": {
+        "tags": [
+          "admin-password"
         ],
+        "description": "Updates system administrator password.",
+        "operationId": "setAdminPassword",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "string",
+                "description": "The new password to set"
+              }
+            }
+          },
+          "required": false
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "x-codegen-request-body-name": "body",
+        "summary": "Sets System Administrator password"
+      }
+    },
+    "/admin/settings": {
+      "get": {
+        "tags": [
+          "admin-settings"
+        ],
+        "summary": "List settings (System/Domain)",
+        "description": "Return a list of all setting entries, System or Domain depending on the paramter.",
+        "operationId": "listSettings",
         "parameters": [
           {
-            "name": "targetProfileId",
+            "schema": {
+              "type": "string"
+            },
             "in": "query",
-            "required": false,
-            "type": "string"
+            "name": "domain_id",
+            "description": "The domain ID"
           }
         ],
         "responses": {
           "200": {
-            "description": "Success",
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SettingEntry"
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Domain Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "x-codegen-request-body-name": "body"
+      }
+    },
+    "/admin/settings/{service_id}/{key}": {
+      "get": {
+        "tags": [
+          "admin-settings"
+        ],
+        "summary": "Get setting entry (System/Domain)",
+        "description": "Gets specified setting value, System or Domain depending on the paramter.",
+        "operationId": "getSetting",
+        "parameters": [
+          {
+            "name": "service_id",
+            "in": "path",
+            "description": "Service ID",
+            "required": true,
             "schema": {
-              "type": "array",
-              "items": {
-                "$ref": "#/definitions/User"
+              "type": "string"
+            }
+          },
+          {
+            "name": "key",
+            "in": "path",
+            "description": "Setting key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "query",
+            "description": "The domain ID",
+            "name": "domain_id"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SettingEntry"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Domain Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "x-codegen-request-body-name": "body"
+      },
+      "put": {
+        "tags": [
+          "admin-settings"
+        ],
+        "summary": "Update setting entry (System/Domain)",
+        "description": "Updates setting value, System or Domain depending on the paramter.",
+        "operationId": "updateSetting",
+        "parameters": [
+          {
+            "name": "service_id",
+            "in": "path",
+            "description": "Service ID",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "key",
+            "in": "path",
+            "description": "Setting key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "query",
+            "name": "domain_id",
+            "description": "The domain ID"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "string",
+                "description": "Setting value"
+              }
+            }
+          },
+          "required": false
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Domain Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "x-codegen-request-body-name": "body"
+      },
+      "delete": {
+        "tags": [
+          "admin-settings"
+        ],
+        "summary": "Delete setting entry (System/Domain)",
+        "description": "Deletes setting value, System or Domain depending on the paramter.",
+        "operationId": "deleteSetting",
+        "parameters": [
+          {
+            "name": "service_id",
+            "in": "path",
+            "description": "Service ID",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "key",
+            "in": "path",
+            "description": "Setting key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "query",
+            "name": "domain_id",
+            "description": "The domain ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Entry or Domain Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "x-codegen-request-body-name": "body"
+      },
+      "parameters": [
+        {
+          "schema": {
+            "type": "string"
+          },
+          "name": "service_id",
+          "in": "path",
+          "required": true
+        },
+        {
+          "schema": {
+            "type": "string"
+          },
+          "name": "key",
+          "in": "path",
+          "required": true
+        }
+      ]
+    },
+    "/admin/domains": {
+      "get": {
+        "summary": "List domains",
+        "operationId": "adminListDomains",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/DomainEntry"
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "description": "Lists Domains.",
+        "tags": [
+          "admin-domains"
+        ],
+        "x-codegen-request-body-name": "body"
+      },
+      "post": {
+        "summary": "Add domain",
+        "operationId": "adminAddDomain",
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ResultExceptions"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "value": {
+                          "$ref": "#/components/schemas/Domain"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [],
+        "description": "Adds new Domain.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Domain"
+              },
+              "examples": {}
+            }
+          }
+        },
+        "tags": [
+          "admin-domains"
+        ],
+        "x-codegen-request-body-name": "body"
+      },
+      "parameters": []
+    },
+    "/admin/domains/{domain_id}": {
+      "get": {
+        "summary": "Get domain",
+        "operationId": "adminGetDomain",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Domain"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "description": "Get a single Domain.",
+        "tags": [
+          "admin-domains"
+        ],
+        "x-codegen-request-body-name": "body"
+      },
+      "put": {
+        "summary": "Update domain",
+        "operationId": "adminUpdateDomain",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/domainUpdateOptions"
+          }
+        ],
+        "description": "Updates a Domain.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DomainBase"
+              }
+            }
+          }
+        },
+        "tags": [
+          "admin-domains"
+        ],
+        "x-codegen-request-body-name": "body"
+      },
+      "delete": {
+        "summary": "Delete domain",
+        "operationId": "adminDeleteDomain",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultExceptions"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "boolean"
+            },
+            "in": "query",
+            "name": "deep",
+            "description": "Specifies whether to remove also all User entries from Directory (if supported)"
+          }
+        ],
+        "description": "Deletes a Domain.",
+        "tags": [
+          "admin-domains"
+        ],
+        "x-codegen-request-body-name": "body"
+      },
+      "parameters": [
+        {
+          "schema": {
+            "type": "string"
+          },
+          "name": "domain_id",
+          "in": "path",
+          "required": true
+        }
+      ]
+    },
+    "/admin/groups": {
+      "get": {
+        "summary": "List domain groups",
+        "operationId": "adminListGroups",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/domainId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Group"
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "description": "Lists Domain's groups.",
+        "tags": [
+          "admin-groups"
+        ],
+        "x-codegen-request-body-name": "body"
+      },
+      "post": {
+        "summary": "Adds a domain group",
+        "operationId": "adminAddGroup",
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ResultExceptions"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "value": {
+                          "$ref": "#/components/schemas/Group"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/domainId"
+          },
+          {
+            "$ref": "#/components/parameters/groupUpdateOptions"
+          }
+        ],
+        "description": "Adds new Domain group.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GroupAdd"
+              }
+            }
+          }
+        },
+        "tags": [
+          "admin-groups"
+        ],
+        "x-codegen-request-body-name": "body"
+      },
+      "parameters": []
+    },
+    "/admin/groups/{group_id}": {
+      "get": {
+        "summary": "Gets a domain group",
+        "operationId": "adminGetGroup",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/domainId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Group"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "description": "Get a single Domain's group.",
+        "tags": [
+          "admin-groups"
+        ],
+        "x-codegen-request-body-name": "body"
+      },
+      "put": {
+        "summary": "Updates a domain group",
+        "operationId": "adminUpdateGroup",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/domainId"
+          },
+          {
+            "$ref": "#/components/parameters/groupUpdateOptions"
+          }
+        ],
+        "description": "Updates a Domain's group.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GroupBase"
+              }
+            }
+          }
+        },
+        "tags": [
+          "admin-groups"
+        ],
+        "x-codegen-request-body-name": "body"
+      },
+      "delete": {
+        "summary": "Deletes a domain group",
+        "operationId": "adminDeleteGroup",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultExceptions"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/domainId"
+          }
+        ],
+        "description": "Deletes a Domain's group.",
+        "tags": [
+          "admin-groups"
+        ],
+        "x-codegen-request-body-name": "body"
+      },
+      "parameters": [
+        {
+          "schema": {
+            "type": "string"
+          },
+          "name": "group_id",
+          "in": "path",
+          "required": true
+        }
+      ]
+    },
+    "/admin/users": {
+      "get": {
+        "tags": [
+          "admin-users"
+        ],
+        "summary": "List domain users",
+        "operationId": "adminListUsers",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/domainId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/User"
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "description": "Lists Domain's users.",
+        "x-codegen-request-body-name": "body"
+      },
+      "post": {
+        "summary": "Add domain user",
+        "operationId": "adminAddUser",
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ResultExceptions"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "value": {
+                          "$ref": "#/components/schemas/User"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "admin-users"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/domainId"
+          },
+          {
+            "$ref": "#/components/parameters/userUpdateOptions"
+          }
+        ],
+        "description": "Adds new Domain user.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserAdd"
+              }
+            }
+          }
+        },
+        "x-codegen-request-body-name": "body"
+      }
+    },
+    "/admin/users/{user_id}": {
+      "get": {
+        "tags": [
+          "admin-users"
+        ],
+        "summary": "Gets a domain user",
+        "operationId": "adminGetUser",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/domainId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/User"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "description": "Get a single Domain's user.",
+        "x-codegen-request-body-name": "body"
+      },
+      "put": {
+        "summary": "Updates a domain user",
+        "operationId": "adminUpdateUser",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "admin-users"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/domainId"
+          },
+          {
+            "$ref": "#/components/parameters/userUpdateOptions"
+          }
+        ],
+        "description": "Updates a Domain's user.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserBase"
+              }
+            }
+          }
+        },
+        "x-codegen-request-body-name": "body"
+      },
+      "delete": {
+        "summary": "Deletes a domain user",
+        "operationId": "adminDeleteUser",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultExceptions"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "admin-users"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/domainId"
+          },
+          {
+            "schema": {
+              "type": "boolean"
+            },
+            "in": "query",
+            "name": "deep",
+            "description": "Specifies whether to remove also entry from Directory (if supported)"
+          }
+        ],
+        "description": "Deletes a Domain's user.",
+        "x-codegen-request-body-name": "body"
+      },
+      "parameters": [
+        {
+          "schema": {
+            "type": "string"
+          },
+          "name": "user_id",
+          "in": "path",
+          "required": true
+        }
+      ]
+    },
+    "/admin/users/{user_id}/password": {
+      "put": {
+        "summary": "Set user password",
+        "operationId": "adminSetUserPassword",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "admin-users"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/domainId"
+          }
+        ],
+        "description": "Updates user password.",
+        "x-codegen-request-body-name": "body",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "string"
+              }
+            }
+          },
+          "description": ""
+        }
+      },
+      "parameters": [
+        {
+          "schema": {
+            "type": "string"
+          },
+          "name": "user_id",
+          "in": "path",
+          "required": true
+        }
+      ]
+    },
+    "/admin/resources": {
+      "get": {
+        "tags": [
+          "admin-resources"
+        ],
+        "summary": "List resources for a domain",
+        "description": "Lists Domain's resources.",
+        "operationId": "adminListResources",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/domainId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Resource"
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "x-codegen-request-body-name": "body"
+      },
+      "post": {
+        "tags": [
+          "admin-resources"
+        ],
+        "summary": "Adds a resource for a domain",
+        "description": "Adds new Domain resource.",
+        "operationId": "adminAddResource",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/domainId"
+          },
+          {
+            "$ref": "#/components/parameters/resourceUpdateOptions"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResourceAdd"
+              }
+            }
+          },
+          "required": false
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ResultExceptions"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "value": {
+                          "$ref": "#/components/schemas/Resource"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "x-codegen-request-body-name": "body"
+      }
+    },
+    "/admin/resources/{resource_id}": {
+      "get": {
+        "tags": [
+          "admin-resources"
+        ],
+        "summary": "Gets a resource for a domain",
+        "description": "Get a single Domain's resource.",
+        "operationId": "adminGetResource",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/domainId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Resource"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "x-codegen-request-body-name": "body"
+      },
+      "put": {
+        "tags": [
+          "admin-resources"
+        ],
+        "summary": "Updates a resource for a domain",
+        "description": "Updates a Domain's resource.",
+        "operationId": "adminUpdateResource",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/domainId"
+          },
+          {
+            "$ref": "#/components/parameters/resourceUpdateOptions"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResourceBase"
+              }
+            }
+          }
+        },
+        "x-codegen-request-body-name": "body"
+      },
+      "delete": {
+        "tags": [
+          "admin-resources"
+        ],
+        "summary": "Deletes a resource for a domain",
+        "description": "Deletes a Domain's resource.",
+        "operationId": "adminDeleteResource",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/domainId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultExceptions"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "x-codegen-request-body-name": "body"
+      },
+      "parameters": [
+        {
+          "schema": {
+            "type": "string"
+          },
+          "name": "resource_id",
+          "in": "path",
+          "required": true
+        }
+      ]
+    },
+    "/admin/roles": {
+      "get": {
+        "summary": "List roles for a domain",
+        "operationId": "adminListRoles",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/domainId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Role"
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "description": "Lists Domain's roles.",
+        "tags": [
+          "admin-roles"
+        ],
+        "x-codegen-request-body-name": "body"
+      },
+      "post": {
+        "summary": "Adds a role for a domain",
+        "operationId": "adminAddRole",
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ResultExceptions"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "value": {
+                          "$ref": "#/components/schemas/Role"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/domainId"
+          },
+          {
+            "$ref": "#/components/parameters/roleUpdateOptions"
+          }
+        ],
+        "description": "Adds new Domain role.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RoleAdd"
+              }
+            }
+          }
+        },
+        "tags": [
+          "admin-roles"
+        ],
+        "x-codegen-request-body-name": "body"
+      },
+      "parameters": []
+    },
+    "/admin/roles/{role_id}": {
+      "get": {
+        "summary": "Gets a role for a domain",
+        "description": "Get a single Domain's role.",
+        "operationId": "adminGetRole",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/domainId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Role"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "admin-roles"
+        ],
+        "x-codegen-request-body-name": "body"
+      },
+      "put": {
+        "summary": "Updates a role for a domain",
+        "description": "Updates a Domain's role.",
+        "operationId": "adminUpdateRole",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/domainId"
+          },
+          {
+            "$ref": "#/components/parameters/roleUpdateOptions"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RoleBase"
+              }
+            }
+          },
+          "description": ""
+        },
+        "tags": [
+          "admin-roles"
+        ],
+        "x-codegen-request-body-name": "body"
+      },
+      "delete": {
+        "summary": "Deletes a role for a domain",
+        "description": "Deletes a Domain's role.",
+        "operationId": "adminDeleteRole",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/domainId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultExceptions"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "admin-roles"
+        ],
+        "x-codegen-request-body-name": "body"
+      },
+      "parameters": [
+        {
+          "schema": {
+            "type": "string"
+          },
+          "name": "role_id",
+          "in": "path",
+          "required": true
+        }
+      ]
+    },
+    "/admin/licenses": {
+      "get": {
+        "summary": "List product licenses for a domain",
+        "tags": [
+          "admin-licenses"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/License"
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "operationId": "adminListLicenses",
+        "description": "Lists Domain's product licenses.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/domainId"
+          },
+          {
+            "schema": {
+              "type": "boolean",
+              "default": true
+            },
+            "in": "query",
+            "name": "include_builtin",
+            "description": "Set to false to discard built-in licenses in results"
+          }
+        ],
+        "x-codegen-request-body-name": "body"
+      }
+    },
+    "/admin/licenses/{product_code}": {
+      "parameters": [
+        {
+          "name": "product_code",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          },
+          "description": "The product code"
+        }
+      ],
+      "post": {
+        "summary": "Adds a product's license for a domain",
+        "operationId": "adminAddLicense",
+        "responses": {
+          "201": {
+            "description": "Created"
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "admin-licenses"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/domainId"
+          },
+          {
+            "schema": {
+              "type": "boolean",
+              "default": true
+            },
+            "in": "query",
+            "name": "auto_activate",
+            "description": "Specifies whether to try auto-activation"
+          }
+        ],
+        "x-codegen-request-body-name": "body",
+        "description": "",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LicenseAdd"
               }
             }
           }
         }
-      }
-    }
-  },
-  "securityDefinitions": {
-    "Basic authentication": {
-      "type": "basic"
-    }
-  },
-  "definitions": {
-    "ApiError": {
-      "type": "object",
-      "required": [
-        "code"
-      ],
-      "properties": {
-        "code": {
-          "type": "integer",
-          "minimum": 400,
-          "maximum": 599
-        },
-        "description": {
-          "type": "string",
-          "example": "Bad query parameter [$size]: Invalid integer value [abc]"
-        }
       },
-      "description": "This general detailed error structure is used throughout this API.",
-      "example": "{\n  \"code\": 400,\n  \"description\": \"Bad query parameter [$size]: Invalid integer value [abc]\"\n}"
+      "delete": {
+        "summary": "Removes a product's license for a domain",
+        "operationId": "adminDeleteLicense",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "admin-licenses"
+        ],
+        "description": "",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/domainId"
+          },
+          {
+            "schema": {
+              "type": "boolean",
+              "default": false
+            },
+            "in": "query",
+            "name": "force"
+          }
+        ]
+      }
     },
-    "PrincipalInfo": {
-      "type": "object",
-      "required": [
-        "displayName",
-        "languageTag",
-        "profileId",
-        "profileUsername",
-        "timezoneId"
+    "/admin/licenses/{product_code}/activation": {
+      "parameters": [
+        {
+          "name": "product_code",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          },
+          "description": "The product code"
+        }
       ],
-      "properties": {
-        "profileId": {
-          "type": "string",
-          "description": "Internal profile ID (user@wtdomain)"
+      "delete": {
+        "summary": "Deactivates a product's license for a domain",
+        "operationId": "adminDeactivateLicense",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
         },
-        "profileUsername": {
-          "type": "string",
-          "description": "Full profile username (user@domain.tld)"
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/domainId"
+          },
+          {
+            "schema": {
+              "type": "boolean",
+              "default": false
+            },
+            "in": "query",
+            "name": "offline"
+          }
+        ],
+        "tags": [
+          "admin-licenses"
+        ],
+        "description": "Deactivates a license performing an online deactivation prior to removing activation info. If offline parameter was specified, activation info are just removed without any online deactivation tentatives.",
+        "x-codegen-request-body-name": "body"
+      },
+      "post": {
+        "summary": "Activates a product's license for a domain",
+        "operationId": "adminActivateLicense",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
         },
-        "displayName": {
-          "type": "string",
-          "description": "Associated display name"
+        "tags": [
+          "admin-licenses"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/domainId"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "string",
+                "description": "Activated string, result of manual (offline) activation."
+              }
+            }
+          },
+          "description": ""
         },
-        "emailAddress": {
-          "type": "string",
-          "description": "Associated email address"
+        "description": "When no activated string is attached to body request, an online activation will be performed, otherwise the string will be used as result of manual (offline) activation process.",
+        "x-codegen-request-body-name": "body"
+      }
+    },
+    "/admin/licenses/{product_code}/reqinfo": {
+      "parameters": [
+        {
+          "name": "product_code",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          },
+          "description": "The product code"
+        }
+      ],
+      "get": {
+        "summary": "Get license offline request info for a domain",
+        "operationId": "adminGetLicenseOfflineReqInfo",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LicenseOfflineReqInfo"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
         },
-        "timezoneId": {
-          "type": "string",
-          "description": "Timezone ID",
-          "example": "Europe/Rome"
+        "tags": [
+          "admin-licenses"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/domainId"
+          },
+          {
+            "schema": {
+              "type": "boolean",
+              "default": false
+            },
+            "in": "query",
+            "description": "Set to return deactivation info instead of activation",
+            "name": "deactivation"
+          }
+        ],
+        "description": "Returns info for performing offline activation requests, or for deactivation if specific parameter is turned on.",
+        "x-codegen-request-body-name": "body"
+      }
+    },
+    "/admin/licenses/{product_code}/leases": {
+      "parameters": [
+        {
+          "name": "product_code",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          },
+          "description": "The product code"
+        }
+      ],
+      "delete": {
+        "summary": "Deactivates a product's license for a domain",
+        "operationId": "adminRevokeLicenseLease",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
         },
-        "languageTag": {
-          "type": "string",
-          "description": "Language identifier (language_country)",
-          "example": "en_EN"
-        },
-        "evalPermRefs": {
-          "type": "array",
-          "items": {
-            "type": "boolean"
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/domainId"
+          }
+        ],
+        "tags": [
+          "admin-licenses"
+        ],
+        "description": "Revokes the lease of a license from each specified users.",
+        "x-codegen-request-body-name": "body",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
           }
         }
-      }
-    },
-    "User": {
-      "type": "object",
-      "required": [
-        "displayName",
-        "enabled",
-        "id",
-        "uid"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
+      },
+      "post": {
+        "summary": "Activates a product's license for a domain",
+        "operationId": "adminAssignLicenseLease",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
         },
-        "uid": {
-          "type": "string"
+        "tags": [
+          "admin-licenses"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/domainId"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "description": "Activated string, result of manual (offline) activation.",
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "description": ""
         },
-        "enabled": {
-          "type": "boolean"
-        },
-        "displayName": {
-          "type": "string"
-        }
+        "description": "Assigns a lease of a license to each specified users.",
+        "x-codegen-request-body-name": "body"
       }
     }
+  },
+  "components": {
+    "schemas": {
+      "Error": {
+        "required": [
+          "code"
+        ],
+        "type": "object",
+        "properties": {
+          "code": {
+            "maximum": 599,
+            "minimum": 400,
+            "type": "integer"
+          },
+          "description": {
+            "type": "string",
+            "example": "Bad query parameter [$size]: Invalid integer value [abc]"
+          }
+        },
+        "description": "This general detailed error structure is used throughout this API.",
+        "example": "{\n  \"code\": 400,\n  \"description\": \"Bad query parameter [$size]: Invalid integer value [abc]\"\n}"
+      },
+      "PrincipalInfo": {
+        "required": [
+          "displayName",
+          "languageTag",
+          "profileId",
+          "profileUsername",
+          "timezoneId"
+        ],
+        "type": "object",
+        "properties": {
+          "profileId": {
+            "type": "string",
+            "description": "Internal profile ID (user@wtdomain)"
+          },
+          "profileUsername": {
+            "type": "string",
+            "description": "Full profile username (user@domain.tld)"
+          },
+          "displayName": {
+            "type": "string",
+            "description": "Associated display name"
+          },
+          "emailAddress": {
+            "type": "string",
+            "description": "Associated email address"
+          },
+          "timezoneId": {
+            "type": "string",
+            "description": "Timezone ID",
+            "example": "Europe/Rome"
+          },
+          "languageTag": {
+            "type": "string",
+            "description": "Language identifier (language_country)",
+            "example": "en_EN"
+          },
+          "evalPermRefs": {
+            "type": "array",
+            "items": {
+              "type": "boolean"
+            }
+          }
+        },
+        "title": ""
+      },
+      "LegacyUser": {
+        "required": [
+          "displayName",
+          "enabled",
+          "id",
+          "uid"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "uid": {
+            "type": "string"
+          },
+          "enabled": {
+            "type": "boolean"
+          },
+          "displayName": {
+            "type": "string"
+          }
+        }
+      },
+      "Domain": {
+        "title": "Domain",
+        "x-stoplight": {
+          "id": "cydxqsj9h6df3"
+        },
+        "allOf": [
+          {
+            "type": "object",
+            "properties": {
+              "domainId": {
+                "type": "string",
+                "description": "Domain ID"
+              }
+            },
+            "required": [
+              "domainId"
+            ]
+          },
+          {
+            "$ref": "#/components/schemas/DomainBase"
+          }
+        ],
+        "description": "The domain data."
+      },
+      "DomainEntry": {
+        "title": "DomainEntry",
+        "x-stoplight": {
+          "id": "cydxqsj9h6df3"
+        },
+        "type": "object",
+        "description": "The domain data for listing purposes.",
+        "properties": {
+          "domainId": {
+            "type": "string",
+            "description": "Domain ID"
+          },
+          "enabled": {
+            "type": "boolean",
+            "description": "Represent the availability status"
+          },
+          "displayName": {
+            "type": "string",
+            "description": "Descriptive name for display purposes"
+          },
+          "authDomainName": {
+            "type": "string",
+            "description": "Authentication DomainName"
+          },
+          "domainName": {
+            "type": "string",
+            "description": "Primary DomainName (defaults to auth authDomainName)",
+            "deprecated": true
+          },
+          "publicURL": {
+            "type": "string",
+            "description": "Public URL to access the service, it get data from 'public.url' settings for now."
+          },
+          "userAutoCreation": {
+            "type": "boolean",
+            "description": "Specifies if user auto-creation at logon is active"
+          },
+          "dirUri": {
+            "type": "string",
+            "description": "The URL of underlyning authentication directory"
+          }
+        },
+        "required": [
+          "domainId",
+          "enabled",
+          "displayName",
+          "authDomainName",
+          "publicURL",
+          "userAutoCreation",
+          "dirUri"
+        ]
+      },
+      "DomainBase": {
+        "title": "DomainBase",
+        "x-stoplight": {
+          "id": "tpcmnbqz3qq70"
+        },
+        "type": "object",
+        "x-examples": {},
+        "description": "The domain base data.",
+        "properties": {
+          "enabled": {
+            "type": "boolean",
+            "description": "Represent the availability status"
+          },
+          "displayName": {
+            "type": "string",
+            "description": "Descriptive name for display purposes"
+          },
+          "authDomainName": {
+            "type": "string",
+            "description": "Authentication DomainName"
+          },
+          "domainName": {
+            "type": "string",
+            "description": "[Not used for now] Primary DomainName (defaults to auth DomainName)."
+          },
+          "publicURL": {
+            "type": "string",
+            "description": "Public URL to access the service, it uses 'public.url' settings for now."
+          },
+          "userAutoCreation": {
+            "type": "boolean",
+            "description": "Specifies if user auto-creation at logon is active."
+          },
+          "dirUri": {
+            "type": "string",
+            "description": "The URL of underlyning authentication directory."
+          },
+          "dirAdmin": {
+            "type": "string",
+            "description": "Username to access Directory as Admin."
+          },
+          "dirPassword": {
+            "type": "string",
+            "description": "Password of the Admin username."
+          },
+          "dirConnSecurity": {
+            "type": "string",
+            "enum": [
+              "OFF",
+              "SSL",
+              "STARTTLS"
+            ],
+            "description": "Specifies the security level of the connection."
+          },
+          "dirCaseSensitive": {
+            "type": "boolean",
+            "description": "Specifies whether Directory is case-sensitive during usernames evaluation."
+          },
+          "dirRawParameters": {
+            "oneOf": [
+              {},
+              {
+                "$ref": "#/components/schemas/LdapDirectoryParams"
+              }
+            ],
+            "description": "Raw Directory parameters to be used with some schemes: ldap, ldapneth, ad"
+          },
+          "passwordPolicies": {
+            "$ref": "#/components/schemas/DirectoryPasswordPolicies"
+          }
+        },
+        "required": [
+          "enabled",
+          "displayName",
+          "authDomainName",
+          "publicURL",
+          "userAutoCreation",
+          "dirUri"
+        ]
+      },
+      "SettingEntry": {
+        "title": "SettingEntry",
+        "type": "object",
+        "properties": {
+          "serviceId": {
+            "type": "string"
+          },
+          "key": {
+            "type": "string"
+          },
+          "value": {
+            "type": "string"
+          }
+        },
+        "x-stoplight": {
+          "id": "ng1rkzw6lvpah"
+        },
+        "description": "The setting entry."
+      },
+      "Group": {
+        "title": "Group",
+        "x-stoplight": {
+          "id": "c9om84roxllvh"
+        },
+        "allOf": [
+          {
+            "type": "object",
+            "properties": {
+              "groupId": {
+                "type": "string",
+                "description": "Group ID, actually its name."
+              },
+              "groupSid": {
+                "type": "string",
+                "description": "Group SID (internal Subject IDentifier), auto-generated GUID."
+              },
+              "builtIn": {
+                "type": "boolean",
+                "description": "Specifies if it is an auto-generated Group."
+              }
+            },
+            "required": [
+              "groupId",
+              "groupSid",
+              "builtIn"
+            ]
+          },
+          {
+            "$ref": "#/components/schemas/GroupBase"
+          }
+        ],
+        "description": "The group data for listing purposes."
+      },
+      "GroupAdd": {
+        "title": "GroupAdd",
+        "x-stoplight": {
+          "id": "c9om84roxllvh"
+        },
+        "allOf": [
+          {
+            "type": "object",
+            "properties": {
+              "groupId": {
+                "type": "string",
+                "description": "Group ID, actually its name."
+              }
+            },
+            "required": [
+              "groupId"
+            ]
+          },
+          {
+            "$ref": "#/components/schemas/GroupBase"
+          }
+        ],
+        "description": "The group data for insertion."
+      },
+      "GroupBase": {
+        "title": "GroupBase",
+        "type": "object",
+        "x-stoplight": {
+          "id": "gcehk13rbpg3i"
+        },
+        "properties": {
+          "description": {
+            "type": "string",
+            "description": "Descriptive info about this Group."
+          },
+          "assignedUsers": {
+            "type": "array",
+            "description": "One or more references to Users belonging to this Group. They will be interpreted as IDs or SIDs according to a parameter.",
+            "items": {
+              "type": "string"
+            }
+          },
+          "assignedRoles": {
+            "type": "array",
+            "description": "One or more references to Roles assigned to the User. They will be interpreted as IDs or SIDs according to a parameter.",
+            "items": {
+              "type": "string"
+            }
+          },
+          "permissions": {
+            "type": "array",
+            "description": "One or more permissions describing a right granted to the User. They are in the form of permission string.",
+            "items": {
+              "$ref": "#/components/schemas/PermissionString"
+            }
+          },
+          "allowedServiceIds": {
+            "type": "array",
+            "description": "One or more references to service IDs to which the User has access.",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "description"
+        ],
+        "description": "The group base data."
+      },
+      "User": {
+        "allOf": [
+          {
+            "type": "object",
+            "properties": {
+              "userId": {
+                "type": "string",
+                "description": "User ID, actually its name."
+              },
+              "userSid": {
+                "type": "string",
+                "description": "User SID (internal Subject IDentifier), auto-generated GUID."
+              }
+            },
+            "required": [
+              "userId",
+              "userSid"
+            ]
+          },
+          {
+            "$ref": "#/components/schemas/UserBase"
+          }
+        ],
+        "description": "The user data for listing purposes.",
+        "title": "User"
+      },
+      "UserAdd": {
+        "title": "UserAdd",
+        "x-stoplight": {
+          "id": "y8tazejcnukgx"
+        },
+        "allOf": [
+          {
+            "type": "object",
+            "properties": {
+              "userId": {
+                "type": "string",
+                "description": "User ID, actually its name."
+              },
+              "password": {
+                "type": "string",
+                "description": "Secret string for logging the user in."
+              }
+            },
+            "required": [
+              "userId",
+              "password"
+            ]
+          },
+          {
+            "$ref": "#/components/schemas/UserBase"
+          }
+        ],
+        "description": "The user data for insertion."
+      },
+      "UserBase": {
+        "title": "UserBase",
+        "required": [
+          "displayName",
+          "enabled"
+        ],
+        "type": "object",
+        "properties": {
+          "enabled": {
+            "type": "boolean",
+            "description": "Represent the availability status"
+          },
+          "displayName": {
+            "type": "string",
+            "description": "Descriptive name for display purposes"
+          },
+          "firstName": {
+            "type": "string",
+            "description": "User's first name"
+          },
+          "lastName": {
+            "type": "string",
+            "description": "User's last name"
+          },
+          "assignedGroups": {
+            "type": "array",
+            "description": "One or more references to Groups to which the User belongs. They will be interpreted as IDs or SIDs according to a parameter.",
+            "items": {
+              "type": "string"
+            }
+          },
+          "assignedRoles": {
+            "type": "array",
+            "description": "One or more references to Roles assigned to the User. They will be interpreted as IDs or SIDs according to a parameter.",
+            "items": {
+              "type": "string"
+            }
+          },
+          "permissions": {
+            "type": "array",
+            "description": "One or more permissions describing a right granted to the User. They are in the form of permission string.",
+            "items": {
+              "$ref": "#/components/schemas/PermissionString"
+            }
+          },
+          "allowedServiceIds": {
+            "type": "array",
+            "description": "One or more references to service IDs to which the User has access.",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "x-stoplight": {
+          "id": "gcehk13rbpg3i"
+        },
+        "description": "The user base data."
+      },
+      "Resource": {
+        "title": "Resource",
+        "description": "The resource data for listing purposes.",
+        "x-stoplight": {
+          "id": "zfr4nafhgmwoi"
+        },
+        "allOf": [
+          {
+            "type": "object",
+            "properties": {
+              "resourceId": {
+                "type": "string",
+                "description": "Resource ID, actually its name."
+              },
+              "resourceSid": {
+                "type": "string",
+                "description": "Resource SID (internal Subject IDentifier), auto-generated GUID."
+              }
+            },
+            "required": [
+              "resourceId",
+              "resourceSid"
+            ]
+          },
+          {
+            "$ref": "#/components/schemas/ResourceBase"
+          }
+        ]
+      },
+      "ResourceAdd": {
+        "title": "ResourceAdd",
+        "description": "The resource data for insertion.",
+        "x-stoplight": {
+          "id": "zfr4nafhgmwoi"
+        },
+        "allOf": [
+          {
+            "type": "object",
+            "properties": {
+              "resourceId": {
+                "type": "string",
+                "description": "Resource ID, actually its name."
+              }
+            },
+            "required": [
+              "resourceId"
+            ]
+          },
+          {
+            "$ref": "#/components/schemas/ResourceBase"
+          }
+        ]
+      },
+      "ResourceBase": {
+        "title": "ResourceBase",
+        "required": [
+          "enabled",
+          "type"
+        ],
+        "type": "object",
+        "properties": {
+          "enabled": {
+            "type": "boolean",
+            "description": "Represent the availability status"
+          },
+          "type": {
+            "type": "string",
+            "description": "Type of the Resource.",
+            "enum": [
+              "room",
+              "equipment"
+            ]
+          },
+          "displayName": {
+            "type": "string",
+            "description": "Descriptive name to display purposes"
+          },
+          "email": {
+            "type": "string",
+            "description": "The email address associated"
+          },
+          "managerSubject": {
+            "type": "string",
+            "description": "Reference to a User/Group that acts as Manager. It can be an ID or a SID according to '' parameter."
+          },
+          "allowedSubjects": {
+            "type": "array",
+            "description": "One or more references to User/Groups that can use the Resource. They can be IDs or SIDs according to '' parameter.",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "x-stoplight": {
+          "id": "zfr4nafhgmwoi"
+        },
+        "description": "The resource base data."
+      },
+      "Role": {
+        "title": "Role",
+        "x-stoplight": {
+          "id": "mybwyux80r8fl"
+        },
+        "allOf": [
+          {
+            "type": "object",
+            "properties": {
+              "roleId": {
+                "type": "string",
+                "description": "Role ID, actually its name."
+              },
+              "roleSid": {
+                "type": "string",
+                "description": "Role SID (internal Subject IDentifier), auto-generated GUID."
+              }
+            },
+            "required": [
+              "roleId",
+              "roleSid"
+            ]
+          },
+          {
+            "$ref": "#/components/schemas/RoleBase"
+          }
+        ],
+        "description": "The role data for listing purposes."
+      },
+      "RoleAdd": {
+        "title": "RoleAdd",
+        "x-stoplight": {
+          "id": "mybwyux80r8fl"
+        },
+        "allOf": [
+          {
+            "type": "object",
+            "properties": {
+              "roleId": {
+                "type": "string",
+                "description": "Role ID, actually its name."
+              }
+            },
+            "required": [
+              "roleId"
+            ]
+          },
+          {
+            "$ref": "#/components/schemas/RoleBase"
+          }
+        ],
+        "description": "The role data for insertion."
+      },
+      "RoleBase": {
+        "title": "RoleBase",
+        "type": "object",
+        "x-stoplight": {
+          "id": "gcehk13rbpg3i"
+        },
+        "properties": {
+          "description": {
+            "type": "string",
+            "description": "Descriptive info about this Role."
+          },
+          "permissions": {
+            "type": "array",
+            "description": "One or more permissions describing a right granted to the User. They are in the form of permission string.",
+            "items": {
+              "$ref": "#/components/schemas/PermissionString"
+            }
+          },
+          "allowedServiceIds": {
+            "type": "array",
+            "description": "One or more references to service IDs to which the User has access.",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "description"
+        ],
+        "description": "The role base data."
+      },
+      "PermissionString": {
+        "title": "PermissionString",
+        "type": "string",
+        "description": "The permission definition in string form.",
+        "x-stoplight": {
+          "id": "fjr42s1vf2eu1"
+        }
+      },
+      "LdapDirectoryParams": {
+        "title": "LdapDirectoryParams",
+        "x-stoplight": {
+          "id": "w4n3pmeztr2oh"
+        },
+        "type": "object",
+        "properties": {
+          "loginDn": {
+            "type": "string"
+          },
+          "loginFilter": {
+            "type": "string"
+          },
+          "userDn": {
+            "type": "string"
+          },
+          "userFilter": {
+            "type": "string"
+          },
+          "userIdField": {
+            "type": "string"
+          },
+          "userFirstnameField": {
+            "type": "string"
+          },
+          "userLastnameField": {
+            "type": "string"
+          },
+          "userDisplayNameField": {
+            "type": "string"
+          }
+        },
+        "description": "The parameters for some LDAP based domain authentication directories (ldap, ldapneth, ad)."
+      },
+      "DirectoryPasswordPolicies": {
+        "title": "DirectoryPasswordPolicies",
+        "x-stoplight": {
+          "id": "qsdypeba7k7o4"
+        },
+        "type": "object",
+        "properties": {
+          "minLength": {
+            "type": "integer"
+          },
+          "complexity": {
+            "type": "boolean"
+          },
+          "avoidConsecutiveChars": {
+            "type": "boolean"
+          },
+          "avoidOldSimilarity": {
+            "type": "boolean"
+          },
+          "avoidUsernameSimilarity": {
+            "type": "boolean"
+          },
+          "expiration": {
+            "type": "integer"
+          },
+          "verifyAtLogin": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "complexity",
+          "avoidConsecutiveChars",
+          "avoidOldSimilarity",
+          "avoidUsernameSimilarity",
+          "verifyAtLogin"
+        ],
+        "description": "The password policies for some domain authentication directories ()."
+      },
+      "ResultExceptions": {
+        "title": "ResultExceptions",
+        "x-stoplight": {
+          "id": "xii8p3q1zg85o"
+        },
+        "type": "object",
+        "description": "Wraps collected non-blocking exceptions in a response object.",
+        "properties": {
+          "exceptions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/HomedException"
+            }
+          }
+        }
+      },
+      "HomedException": {
+        "title": "ServiceException",
+        "x-stoplight": {
+          "id": "4tcsbh790vxoc"
+        },
+        "type": "object",
+        "description": "Represents a non-blocking exception captured for a service: it provides the originating service ID, the source className and the message of the exception.",
+        "properties": {
+          "serviceId": {
+            "type": "string"
+          },
+          "className": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "serviceId",
+          "className"
+        ]
+      },
+      "ProductIdString": {
+        "title": "ProductIdString",
+        "x-stoplight": {
+          "id": "bs3n7ajbxyyqz"
+        },
+        "type": "string",
+        "description": "The product identifier in the form: \"{service_id}|{procuct_name}\""
+      },
+      "LicenseOfflineReqInfo": {
+        "title": "LicenseOfflineReqInfo",
+        "x-stoplight": {
+          "id": "rktm3uwmb6nb1"
+        },
+        "type": "object",
+        "properties": {
+          "url": {
+            "type": "string"
+          },
+          "requestString": {
+            "type": "string"
+          },
+          "hardwareId": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "url",
+          "requestString",
+          "hardwareId"
+        ]
+      },
+      "License": {
+        "title": "License",
+        "x-stoplight": {
+          "id": "3yyix9xvkg2ck"
+        },
+        "allOf": [
+          {
+            "type": "object",
+            "properties": {
+              "productCode": {
+                "type": "string",
+                "description": "The unique product code."
+              },
+              "owningServiceId": {
+                "type": "string",
+                "description": "The service ID."
+              },
+              "builtIn": {
+                "type": "boolean",
+                "description": "Specifies if the license is included in distribution or not."
+              },
+              "revisionTimestamp": {
+                "type": "string",
+                "description": "Modification instant (ISO date/time YYYYMMDD'T'HHMMSS'Z')."
+              },
+              "activationTimestamp": {
+                "type": "string",
+                "description": "Activation instant (ISO date/time YYYYMMDD'T'HHMMSS'Z')."
+              },
+              "activationHwId": {
+                "type": "string",
+                "description": "The hardware ID used during activation process."
+              },
+              "expirationDate": {
+                "type": "string",
+                "description": "The optional expiration date (ISO date YYYYMMDD)."
+              },
+              "status": {
+                "type": "integer",
+                "format": "int64",
+                "description": "The current computed status of the license. It can assume one of the following values, or a sum of multiple values: 1 - VALID, 2 - ACTIVATED, 4 - PENDING_ACTIVATION, 8 - EXPIRED, 16 - EXPIRE_SOON"
+              },
+              "maxLease": {
+                "type": "integer",
+                "description": "The number of CALs of the license, if expected."
+              },
+              "leases": {
+                "type": "array",
+                "description": "Collection of active leases.",
+                "items": {
+                  "$ref": "#/components/schemas/LicenseLease"
+                }
+              }
+            },
+            "required": [
+              "productCode",
+              "owningServiceId",
+              "builtIn",
+              "revisionTimestamp",
+              "status",
+              "maxLease",
+              "leases"
+            ]
+          },
+          {
+            "$ref": "#/components/schemas/LicenseBase"
+          }
+        ],
+        "description": "The license data."
+      },
+      "LicenseAdd": {
+        "title": "LicenseAdd",
+        "x-stoplight": {
+          "id": "erhkmadny6d3j"
+        },
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/LicenseBase"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "assignedLeases": {
+                "type": "array",
+                "description": "A set of user IDs to assign a lease of this license.",
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        ],
+        "description": "The license data for insertion."
+      },
+      "LicenseBase": {
+        "title": "LicenseBase",
+        "x-stoplight": {
+          "id": "bkw2rag8iisgt"
+        },
+        "type": "object",
+        "properties": {
+          "licenseString": {
+            "type": "string",
+            "description": "The license text string."
+          },
+          "activatedLicenseString": {
+            "type": "string",
+            "description": "The licence activation string."
+          },
+          "autoLease": {
+            "type": "boolean",
+            "description": "Specifies if auto-lease feature is active for this license."
+          }
+        },
+        "required": [
+          "licenseString"
+        ],
+        "description": "The license base data."
+      },
+      "LicenseLease": {
+        "title": "LicenseLease",
+        "x-stoplight": {
+          "id": "4rccxqit7qjev"
+        },
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string",
+            "description": "The user ID holding the lease."
+          },
+          "timestamp": {
+            "type": "string",
+            "description": "The instant at which it was activated (ISO date/time YYYYMMDD'T'HHMMSS'Z')."
+          },
+          "origin": {
+            "type": "string",
+            "enum": [
+              "static",
+              "auto"
+            ],
+            "description": "The type of attribution when activated."
+          }
+        },
+        "required": [
+          "userId",
+          "timestamp",
+          "origin"
+        ],
+        "description": "The lease active on a user."
+      }
+    },
+    "securitySchemes": {
+      "auth-basic": {
+        "type": "http",
+        "scheme": "basic"
+      },
+      "auth-bearer": {
+        "type": "http",
+        "scheme": "bearer"
+      }
+    },
+    "parameters": {
+      "domainId": {
+        "name": "domain_id",
+        "in": "query",
+        "required": true,
+        "schema": {
+          "type": "string"
+        },
+        "description": "The domain ID"
+      },
+      "subjectsAsSIDs": {
+        "name": "subjects_as_sids",
+        "in": "query",
+        "required": false,
+        "schema": {
+          "type": "boolean",
+          "default": false
+        },
+        "description": "Specify that involved subjects are SIDs"
+      },
+      "roleUpdateOptions": {
+        "name": "update_options",
+        "in": "query",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "format": "int64",
+          "minimum": 0,
+          "default": 24
+        },
+        "description": "One of the following values, or a sum of multiple values: 1 - SubjectsAsSID, 2 - UpdateSubjectAssociations, 8 - UpdatePermissions, 16 - UpdateServicePermissions."
+      },
+      "groupUpdateOptions": {
+        "name": "update_options",
+        "in": "query",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "format": "int64",
+          "minimum": 0,
+          "default": 30
+        },
+        "description": "One of the following values, or a sum of multiple values: 1 - SubjectsAsSID, 2 - UpdateUserAssociations, 4 - UpdateRoleAssociations, 8 - UpdatePermissions, 16 - UpdateServicePermissions."
+      },
+      "userUpdateOptions": {
+        "name": "update_options",
+        "in": "query",
+        "schema": {
+          "type": "integer",
+          "minimum": 0,
+          "format": "int64",
+          "default": 30
+        },
+        "description": "One of the following values, or a sum of multiple values: 1 - SubjectsAsSID, 2 - UpdateGroupAssociations, 4 - UpdateRoleAssociations, 8 - UpdatePermissions, 16 - UpdateServicePermissions."
+      },
+      "resourceUpdateOptions": {
+        "name": "update_options",
+        "in": "query",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "format": "int64",
+          "minimum": 0,
+          "default": 2
+        },
+        "description": "One of the following values, or a sum of multiple values: 1 - SubjectsAsSID, 2 - UpdatePermissions."
+      },
+      "domainUpdateOptions": {
+        "name": "update_options",
+        "in": "query",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "format": "int64",
+          "minimum": 0,
+          "default": 0
+        },
+        "description": "One of the following values, or a sum of multiple values: 1 - UpdateDirectoryPassword, 2 - UpdateDirectoryData."
+      },
+      "serviceId": {
+        "name": "service_id",
+        "in": "path",
+        "required": true,
+        "schema": {
+          "type": "string"
+        },
+        "description": "The service ID"
+      },
+      "productCode": {
+        "name": "product_code",
+        "in": "path",
+        "required": true,
+        "schema": {
+          "type": "string"
+        },
+        "description": "The product code"
+      }
+    },
+    "responses": {}
   }
 }

@@ -37,6 +37,7 @@ import com.sonicle.webtop.core.app.sdk.BaseDocEditorDocumentHandler;
 import com.sonicle.commons.time.DateTimeUtils;
 import com.sonicle.commons.web.json.JsonResult;
 import com.sonicle.commons.web.json.MapItem;
+import com.sonicle.mail.StoreUtils;
 import com.sonicle.webtop.core.sdk.UserProfile;
 import com.sonicle.security.Principal;
 import com.sonicle.webtop.core.CoreLocaleKey;
@@ -80,6 +81,7 @@ import java.util.Properties;
 import java.util.Set;
 import jakarta.mail.Authenticator;
 import jakarta.mail.PasswordAuthentication;
+import java.io.IOException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 import net.sf.uadetector.ReadableDeviceCategory;
@@ -144,7 +146,7 @@ public class WebTopSession {
 		if(domainId != null) {
 			synchronized(uploads) {
 				for(UploadedFile upf : uploads.values()) {
-					if(!upf.isVirtual()) wta.deleteTempFile(domainId, upf.getUploadId());
+					if(!upf.isVirtual()) wta.getFileSystem().deleteTempFile(domainId, upf.getUploadId());
 				}
 				uploads.clear();
 			}
@@ -423,7 +425,7 @@ public class WebTopSession {
 		// Defines useful instances (NB: keep code assignment order!!!)
 		profile = new UserProfile(core, principal);
 		
-		boolean passwordChangeNeeded = wta.getWebTopManager().isUserPasswordChangeNeeded(profileId, principal.getPassword());
+		boolean passwordChangeNeeded = wta.getWebTopManager().isUserPasswordChangeNeeded(profileId.getDomainId(), profile.getUserId(), principal.getPassword());
 		if (passwordChangeNeeded && !principal.isImpersonated()) setProperty(CoreManifest.ID, UIPrivate.WTSPROP_PASSWORD_CHANGEUPONLOGIN, true);
 		
 		boolean otpEnabled = wta.getOTPManager().isEnabled(profile.getId());
@@ -650,8 +652,7 @@ public class WebTopSession {
 					props.put("mail.smtp.ssl.checkserveridentity", "false");
 				}
 				props.setProperty("mail.imaps.ssl.trust", "*");
-				props.setProperty("mail.imap.folder.class", "com.sonicle.mail.imap.SonicleIMAPFolder");
-				props.setProperty("mail.imaps.folder.class", "com.sonicle.mail.imap.SonicleIMAPFolder");
+				StoreUtils.useExtendedFolderClasses(props);
 				props.setProperty("mail.imap.enableimapevents", "true"); // Support idle events
 				Authenticator authenticator=null;
 				if (auth) {
@@ -843,9 +844,9 @@ public class WebTopSession {
 	
 	private void fillRolesMap(HashSet<String> roles) {
 		Subject subject = RunContext.getSubject();
-		pushIfSubjectHasRole(roles, subject, WebTopManager.ROLEUID_SYSADMIN);
-		pushIfSubjectHasRole(roles, subject, WebTopManager.ROLEUID_WTADMIN);
-		pushIfSubjectHasRole(roles, subject, WebTopManager.ROLEUID_IMPERSONATED_USER);
+		pushIfSubjectHasRole(roles, subject, WebTopManager.SYSADMIN_ROLESID);
+		pushIfSubjectHasRole(roles, subject, WebTopManager.WTADMIN_ROLESID);
+		pushIfSubjectHasRole(roles, subject, WebTopManager.IMPERSONATED_USER_ROLESID);
 	}
 	
 	private void fillServiceReferences(ServiceManager svcm, JsWTS js, ServiceDescriptor descriptor, Locale locale, String theme, String lookAndFeel) {
@@ -1281,8 +1282,8 @@ public class WebTopSession {
 				if(deleteTempFile && !upf.isVirtual()) {
 					String domainId = getProfileDomainId();
 					try {
-						wta.deleteTempFile(domainId, uploadId);
-					} catch(WTException ex) { /* Do nothing... */ }
+						wta.getFileSystem().deleteTempFile(domainId, uploadId);
+					} catch(IOException ex) { /* Do nothing... */ }
 				}
 				uploads.remove(uploadId);
 			}
@@ -1304,8 +1305,8 @@ public class WebTopSession {
 					if(!entry.getValue().isVirtual()) {
 						String domainId = getProfileDomainId();
 						try {
-							wta.deleteTempFile(domainId, entry.getValue().getUploadId());
-						} catch(WTException ex) { /* Do nothing... */ }
+							wta.getFileSystem().deleteTempFile(domainId, entry.getValue().getUploadId());
+						} catch(IOException ex) { /* Do nothing... */ }
 					}
 					it.remove();
 				}

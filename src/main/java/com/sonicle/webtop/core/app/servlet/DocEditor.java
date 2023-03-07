@@ -93,7 +93,7 @@ public class DocEditor extends AbstractServlet {
 		WebTopApp wta = WebTopApp.get(request);
 		DocEditorManager docEdMgr = wta.getDocEditorManager();
 		
-		String domainId = WT.findDomainIdByPublicName(path.getDomainPublicName());
+		String domainId = WT.findDomainIdByDomainPublicId(path.getDomainPublicName());
 		if (domainId == null) throw new WTServletException("Invalid domain public name [{0}]", path.getDomainPublicName());
 		if (!wta.getDocumentServerEnabled(domainId)) throw new WTServletException("DocumentServer not enabled for domain [{}]", domainId);
 		

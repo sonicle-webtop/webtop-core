@@ -33,22 +33,32 @@
  */
 package com.sonicle.webtop.core;
 
+import com.sonicle.webtop.core.app.RunContext;
 import com.sonicle.webtop.core.app.WT;
+import com.sonicle.webtop.core.app.events.ResourceAvailabilityChangeEvent;
+import com.sonicle.webtop.core.app.events.ResourceUpdateEvent;
+import com.sonicle.webtop.core.app.events.UserUpdateEvent;
+import com.sonicle.webtop.core.app.model.ResourcePermissions;
 import com.sonicle.webtop.core.app.sdk.interfaces.IControllerServiceHooks;
-import com.sonicle.webtop.core.app.sdk.interfaces.IControllerUserEvents;
 import com.sonicle.webtop.core.model.Tag;
+import com.sonicle.webtop.core.msg.ResourceAvailChangeSM;
 import com.sonicle.webtop.core.sdk.BaseController;
 import com.sonicle.webtop.core.sdk.ServiceVersion;
 import com.sonicle.webtop.core.sdk.UserProfileId;
 import com.sonicle.webtop.core.sdk.WTException;
+import com.sonicle.webtop.core.sdk.WTRuntimeException;
+import java.util.Arrays;
+import java.util.LinkedHashSet;
+import java.util.Set;
+import net.engio.mbassy.listener.Handler;
 import org.slf4j.Logger;
 
 /**
  *
  * @author malbinola
  */
-public class CoreController extends BaseController implements IControllerServiceHooks, IControllerUserEvents {
-	public static final Logger logger = WT.getLogger(CoreController.class);
+public class CoreController extends BaseController implements IControllerServiceHooks {
+	private static final Logger LOGGER = WT.getLogger(CoreController.class);
 	
 	public CoreController() {
 		super();
@@ -59,13 +69,49 @@ public class CoreController extends BaseController implements IControllerService
 		addBuiltinThunderbirdTags(profileId);
 	}
 	
-	@Override
-	public void onUserAdded(UserProfileId profileId) throws WTException {}
-
-	@Override
-	public void onUserRemoved(UserProfileId profileId) throws WTException {
-		CoreManager manager = WT.getCoreManager(true, profileId);
-		manager.eraseData(true);
+	private CoreUserSettings createCoreUserSettings(final UserProfileId profileId) {
+		return new CoreUserSettings(profileId);
+	}
+	
+	@Handler(priority = +100)
+	public void onUserUpdateEvent_First(UserUpdateEvent event) {
+		if (UserUpdateEvent.Type.CREATE.equals(event.getType())) {
+			try {
+				CoreUserSettings cus = createCoreUserSettings(event.getUserProfileId());
+				// Make sure language and timezone are truly set into settings!
+				cus.setLanguageTag(cus.getLanguageTag());
+				cus.setTimezone(cus.getTimezone());
+				
+			} catch (Exception ex) {
+				throw new WTRuntimeException("Error initializing data: {}", ex.getMessage());
+			}
+		}
+	}
+	
+	@Handler(priority = -100)
+	public void onUserUpdateEvent_Last(UserUpdateEvent event) {
+		if (UserUpdateEvent.Type.DELETE.equals(event.getType())) {
+			try {
+				CoreManager manager = WT.getCoreManager(true, event.getUserProfileId());
+				manager.eraseData(true);
+				
+			} catch (Exception ex) {
+				throw new WTRuntimeException("Error clearing data: {}", ex.getMessage());
+			}
+		}
+	}
+	
+	@Handler(priority = -100)
+	public void onResourceUpdateEvent(ResourceUpdateEvent event) {
+		if (ResourceUpdateEvent.Type.DELETE.equals(event.getType())) {
+			try {
+				CoreManager manager = WT.getCoreManager(true, event.getResourceProfileId());
+				manager.eraseData(true);
+				
+			} catch (Exception ex) {
+				throw new WTRuntimeException("Error clearing data: {}", ex.getMessage());
+			}
+		}
 	}
 	
 	private static final String[][] BULTIN_THUNDERBIRD_TAGS = {
@@ -90,7 +136,7 @@ public class CoreController extends BaseController implements IControllerService
 				tag.setVisibility(Tag.Visibility.PRIVATE);
 				WT.getCoreManager().addTag(tag);
 			} catch(Exception exc) {
-				logger.error("error creating builtin Thunderbird tags",exc);
+				LOGGER.error("error creating builtin Thunderbird tags",exc);
 			}
 		}
 	}

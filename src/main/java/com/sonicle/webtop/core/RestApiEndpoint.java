@@ -36,7 +36,8 @@ package com.sonicle.webtop.core;
 import com.sonicle.commons.web.json.MapItem;
 import com.sonicle.webtop.core.app.RunContext;
 import com.sonicle.webtop.core.app.WT;
-import com.sonicle.webtop.core.bol.ODomain;
+import com.sonicle.webtop.core.app.model.Domain;
+import com.sonicle.webtop.core.app.model.EnabledCond;
 import com.sonicle.webtop.core.bol.js.JsSimple;
 import com.sonicle.webtop.core.model.UILayout;
 import com.sonicle.webtop.core.model.UILookAndFeel;
@@ -44,6 +45,7 @@ import com.sonicle.webtop.core.model.UITheme;
 import com.sonicle.webtop.core.sdk.BaseRestApiEndpoint;
 import com.sonicle.webtop.core.sdk.WTException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -107,7 +109,7 @@ public class RestApiEndpoint extends BaseRestApiEndpoint {
 	@Produces({MediaType.APPLICATION_JSON})
 	public Response listDomains() throws WTException {
 		CoreManager core = getManager();
-		List<ODomain> items = core.listDomains(true);
+		Collection<Domain> items = core.listDomains(EnabledCond.ENABLED_ONLY).values();
 		return ok(items);
 	}
 	

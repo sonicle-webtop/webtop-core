@@ -69,7 +69,7 @@ import org.slf4j.LoggerFactory;
 public class WebTopDirectory extends AbstractDirectory {
 	private final static Logger logger = (Logger)LoggerFactory.getLogger(WebTopDirectory.class);
 	public static final String SCHEME = "webtop";
-	public static final Pattern PATTERN_USERNAME = Pattern.compile("^" + RegexUtils.MATCH_USERNAME + "$");
+	public static final Pattern PATTERN_USERNAME = Pattern.compile("^" + RegexUtils.MATCH_USERNAME_CHARS + "$");
 	//public static final Pattern PATTERN_PASSWORD_LENGTH = Pattern.compile("^[\\s\\S]{8,128}$");
 	public static final Pattern PATTERN_PASSWORD_UALPHA = Pattern.compile(".*[A-Z].*");
 	public static final Pattern PATTERN_PASSWORD_LALPHA = Pattern.compile(".*[a-z].*");

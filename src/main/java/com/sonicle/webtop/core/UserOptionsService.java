@@ -36,6 +36,7 @@ package com.sonicle.webtop.core;
 import com.sonicle.commons.EnumUtils;
 import com.sonicle.commons.LangUtils;
 import com.sonicle.commons.db.DbUtils;
+import com.sonicle.commons.flags.BitFlags;
 import com.sonicle.commons.web.Crud;
 import com.sonicle.commons.web.json.JsonResult;
 import com.sonicle.commons.web.ServletUtils;
@@ -49,6 +50,8 @@ import com.sonicle.webtop.core.app.CoreManifest;
 import com.sonicle.webtop.core.app.OTPManager;
 import com.sonicle.webtop.core.app.WT;
 import com.sonicle.webtop.core.app.WebTopProps;
+import com.sonicle.webtop.core.app.model.User;
+import com.sonicle.webtop.core.app.model.UserGetOption;
 import com.sonicle.webtop.core.bol.ODomain;
 import com.sonicle.webtop.core.bol.OUser;
 import com.sonicle.webtop.core.bol.js.JsDomainPwdPolicies;
@@ -92,9 +95,9 @@ public class UserOptionsService extends BaseUserOptionsService {
 			//CoreServiceSettings ss = new CoreServiceSettings(CoreManifest.ID, getTargetDomainId());
 			CoreUserSettings us = new CoreUserSettings(getTargetProfileId());
 			
-			OUser user = coreMgr.getUser();
+			User user = coreMgr.getUser(BitFlags.noneOf(UserGetOption.class));
 			if (user == null) throw new WTException("Unable to find a user [{0}, {1}]", getTargetDomainId(), getTargetUserId());
-			UserProfile.PersonalInfo upi = coreMgr.getUserPersonalInfo();
+			UserProfile.PersonalInfo upi = coreMgr.getProfilePersonalInfo();
 			
 			if (crud.equals(Crud.READ)) {
 				JsUserOptions jso = new JsUserOptions(getTargetProfileId().toString());

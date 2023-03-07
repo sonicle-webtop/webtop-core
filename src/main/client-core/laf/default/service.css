@@ -80,6 +80,16 @@
 .wt-icon-meeting { background-image: url('meeting_16.svg') !important; background-size: contain; }
 .wt-icon-newMeeting { background-image: url('meeting-new_16.svg') !important; background-size: contain; }
 
+.wt-icon-aclSubject-user { background-image: url('user_16.svg') !important; background-size: contain; }
+.wt-icon-aclSubject-resource { background-image: url('resource_16.svg') !important; background-size: contain; }
+.wt-icon-aclSubject-group { background-image: url('group_16.svg') !important; background-size: contain; }
+.wt-icon-aclSubject-role { background-image: url('role_16.svg') !important; background-size: contain; }
+
+.wt-icon-resources { background-image: url('resource_16.svg') !important; background-size: contain; }
+.wt-icon-resource { background-image: url('resource_16.svg') !important; background-size: contain; }
+.wt-icon-resource-room { background-image: url('resource-room_16.svg') !important; background-size: contain; }
+.wt-icon-resource-equipment { background-image: url('resource-room_16.svg') !important; background-size: contain; }
+
 .wt-menu-userdetails-main {
 	padding: 5px 0 0 5px;
 	font-weight: bold;

@@ -93,6 +93,12 @@ Ext.define('Sonicle.webtop.core.sdk.UIView', {
 	},
 	
 	/**
+	 * @cfg {String} focusField
+	 * The {@link Ext.Component#reference reference name} of the default 
+	 * field to be focused when view is loaded.
+	 */
+	
+	/**
 	 * @private
 	 * @property {Boolean} ctInited
 	 */
@@ -153,6 +159,7 @@ Ext.define('Sonicle.webtop.core.sdk.UIView', {
 		me.on('removed', function(s, ct) {
 			if (me.ctInited) me.cleanupCt(ct);
 		}, me, {single: true});
+		me.initFocusFieldHook();
 	},
 	
 	/**
@@ -453,6 +460,24 @@ Ext.define('Sonicle.webtop.core.sdk.UIView', {
 			var me = this,
 					sid = Ext.isString(me.mys) ? me.mys : me.mys.ID;
 			return key ? WT.resTpl(sid, key) : null;
+		},
+		
+		initFocusFieldHook: function() {
+			var me = this,
+				ff = me.focusField;
+			if (ff !== undefined) {
+				me.on('viewload', function() {
+					me.applyFocusOnFocusField(ff);
+				}, me, {single: true, delay: 200});
+			}
+		},
+		
+		applyFocusOnFocusField: function(focusField) {
+			var me = this, cmp;
+			if (Ext.isString(focusField)) {
+				cmp = me.lref(focusField);
+				if (cmp) cmp.focus(true);
+			}
 		},
 		
 		onBeforeMaximizeRestore: function() {

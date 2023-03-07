@@ -151,7 +151,7 @@ public class OTPManager {
 	
 	public EmailConfig configureEmail(UserProfileId pid, String emailAddress) throws WTException {
 		SonicleAuth sa = (SonicleAuth)OTPProviderFactory.getInstance("SonicleAuth");
-		UserProfile.Data ud = wta.getWebTopManager().userData(pid);
+		UserProfile.Data ud = wta.getWebTopManager().lookupProfileData(pid, true);
 		
 		InternetAddress to = InternetAddressUtils.toInternetAddress(emailAddress);
 		if (to == null) throw new WTException("Invalid destination address [{}]", emailAddress);
@@ -215,7 +215,7 @@ public class OTPManager {
 			else throw new WTException("Email not present for admin user");
 		} else {
 			//normal user composes email from user id and internet domain
-			ODomain domain = wta.getWebTopManager().getDomain(pid.getDomainId());
+			ODomain domain = wta.getWebTopManager().OLD_getDomain(pid.getDomainId());
 			if (domain == null) throw new WTException("Domain not found [{}]", pid.getDomainId());
 			internetName=domain.getInternetName();
 		}
@@ -233,7 +233,7 @@ public class OTPManager {
 		OtpDeliveryMode deliveryMode = getDeliveryMode(pid);
 		if (OtpDeliveryMode.EMAIL.equals(deliveryMode)) {
 			SonicleAuth te = (SonicleAuth)OTPProviderFactory.getInstance("SonicleAuth");
-			UserProfile.Data ud = wta.getWebTopManager().userData(pid);
+			UserProfile.Data ud = wta.getWebTopManager().lookupProfileData(pid, true);
 			
 			String emailAddress = getEmailAddress(pid);
 			InternetAddress to = InternetAddressUtils.toInternetAddress(emailAddress);

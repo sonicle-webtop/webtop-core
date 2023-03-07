@@ -67,10 +67,11 @@ Ext.define('Sonicle.webtop.core.admin.view.PecBridge', {
 		
 		me.lookupStore = Ext.create('Ext.data.Store', {
 			autoLoad: true,
-			model: 'WTA.model.Simple',
-			proxy: WTF.apiProxy(WT.ID, 'LookupDomainUsers', 'users', {
+			model: 'WTA.model.SubjectLkp',
+			proxy: WTF.proxy(me.mys.ID, 'LookupSubjects', null, {
 				extraParams: {
 					domainId: me.domainId,
+					users: true,
 					fullId: true
 				}
 			})
@@ -108,7 +109,7 @@ Ext.define('Sonicle.webtop.core.admin.view.PecBridge', {
 				},
 				viewConfig: {
 					getRowClass: function(rec) {
-						return rec.get('enabled') === false ? 'wtadm-gpfetchers-row-disabled' : '';
+						return rec.get('enabled') === false ? 'wt-text-striked wt-theme-text-error' : '';
 					}
 				},
 				columns: [{
@@ -117,7 +118,7 @@ Ext.define('Sonicle.webtop.core.admin.view.PecBridge', {
 					xtype: 'solookupcolumn',
 					dataIndex: 'forwardProfile',
 					store: me.lookupStore,
-					displayField: 'desc',
+					displayField: 'labelNameWithDN',
 					header: me.mys.res('pecBridge.gpfetchers.forwardProfile.lbl'),
 					flex: 1
 				}, {
@@ -189,7 +190,7 @@ Ext.define('Sonicle.webtop.core.admin.view.PecBridge', {
 				},
 				viewConfig: {
 					getRowClass: function(rec) {
-						return rec.get('enabled') === false ? 'wtadm-gprelays-row-disabled' : '';
+						return rec.get('enabled') === false ? 'wt-text-striked wt-theme-text-error' : '';
 					}
 				},
 				columns: [{
@@ -198,7 +199,7 @@ Ext.define('Sonicle.webtop.core.admin.view.PecBridge', {
 					xtype: 'solookupcolumn',
 					dataIndex: 'pecProfile',
 					store: me.lookupStore,
-					displayField: 'desc',
+					displayField: 'labelNameWithDN',
 					header: me.mys.res('pecBridge.gprelays.pecProfile.lbl'),
 					flex: 1
 				}, {

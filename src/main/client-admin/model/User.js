@@ -1,6 +1,5 @@
-/*
- * WebTop Services is a Web Application framework developed by Sonicle S.r.l.
- * Copyright (C) 2014 Sonicle S.r.l.
+/* 
+ * Copyright (C) 2022 Sonicle S.r.l.
  *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by
@@ -11,7 +10,7 @@
  *
  * This program is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
+ * FOR A PARTICULAR PURPOSE. See the GNU Affero General Public License for more
  * details.
  *
  * You should have received a copy of the GNU Affero General Public License
@@ -19,7 +18,7 @@
  * the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
  * MA 02110-1301 USA.
  *
- * You can contact Sonicle S.r.l. at email address sonicle@sonicle.com
+ * You can contact Sonicle S.r.l. at email address sonicle[at]sonicle[dot]com
  *
  * The interactive user interfaces in modified source and object code versions
  * of this program must display Appropriate Legal Notices, as required under
@@ -29,21 +28,20 @@
  * version 3, these Appropriate Legal Notices must retain the display of the
  * Sonicle logo and Sonicle copyright notice. If the display of the logo is not
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
- * display the words "Copyright (C) 2014 Sonicle S.r.l.".
+ * display the words "Copyright (C) 2022 Sonicle S.r.l.".
  */
 Ext.define('Sonicle.webtop.core.admin.model.User', {
 	extend: 'WTA.ux.data.BaseModel',
 	requires: [
+		'Sonicle.String',
 		'Sonicle.data.writer.Json',
-		'Sonicle.data.validator.MatchField',
 		'Sonicle.data.validator.Username',
-		'Sonicle.data.validator.Password',
-		'Sonicle.webtop.core.admin.model.AssignedGroup',
-		'Sonicle.webtop.core.admin.model.AssignedRole',
-		'Sonicle.webtop.core.admin.model.AssignedService',
-		'Sonicle.webtop.core.admin.model.RolePermission'
+		'Sonicle.webtop.core.admin.model.AclSubject',
+		'Sonicle.webtop.core.admin.model.PermissionString',
+		'Sonicle.webtop.core.admin.model.AllowedService'
 	],
-	proxy: WTF.apiProxy('com.sonicle.webtop.core.admin', 'ManageUser', 'data', {
+	
+	proxy: WTF.apiProxy('com.sonicle.webtop.core.admin', 'ManageDomainUser', 'data', {
 		writer: {
 			type: 'sojson',
 			writeAssociations: true
@@ -57,35 +55,33 @@ Ext.define('Sonicle.webtop.core.admin.model.User', {
 	passwordFieldLabel: '',
 	
 	identifier: 'negativestring',
-	idProperty: 'profileId',
+	idProperty: 'id',
 	fields: [
-		WTF.field('profileId', 'string', false),
-		WTF.field('domainId', 'string', false),
-		WTF.field('userId', 'string', false, {
-			validators: ['sousername']
+		WTF.field('id', 'string', false),
+		WTF.field('userId', 'string', true, {
+			validators: ['presence', 'sousername']
 		}),
-		WTF.field('enabled', 'boolean', true),
+		WTF.field('enabled', 'boolean', false, {defaultValue: true}),
+		WTF.field('displayName', 'string', true),
 		WTF.field('password', 'string', true, {
 			validators: ['wtadm-userpassword']
 		}),
 		WTF.field('password2', 'string', true, {
 			validators: ['wtadm-userpassword2']
 		}),
-		WTF.field('displayName', 'string', true),
 		WTF.field('firstName', 'string', true),
 		WTF.field('lastName', 'string', true)
 	],
 	hasMany: [
-		WTF.hasMany('assignedGroups', 'Sonicle.webtop.core.admin.model.AssignedGroup'),
-		WTF.hasMany('assignedRoles', 'Sonicle.webtop.core.admin.model.AssignedRole'),
-		WTF.hasMany('assignedServices', 'Sonicle.webtop.core.admin.model.AssignedService'),
-		WTF.hasMany('permissions', 'Sonicle.webtop.core.admin.model.RolePermission')
+		WTF.hasMany('assignedGroups', 'Sonicle.webtop.core.admin.model.AclSubject'),
+		WTF.hasMany('assignedRoles', 'Sonicle.webtop.core.admin.model.AclSubject'),
+		WTF.hasMany('permissions', 'Sonicle.webtop.core.admin.model.PermissionString'),
+		WTF.hasMany('allowedServices', 'Sonicle.webtop.core.admin.model.AllowedService')
 	],
 	
 	buildDisplayName: function() {
-		var soString = Sonicle.String, s;
-		s = soString.deflt(this.get('firstName'), '') + ' ' + soString.deflt(this.get('lastName'), '');
-		return Ext.String.trim(s);
+		var SoS = Sonicle.String;
+		return Ext.String.trim(SoS.deflt(this.get('firstName'), '') + ' ' + SoS.deflt(this.get('lastName'), ''));
 	}
 });
 Ext.define('Sonicle.webtop.core.admin.model.VUserPassword', {

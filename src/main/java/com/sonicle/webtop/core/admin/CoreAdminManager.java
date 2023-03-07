@@ -33,17 +33,19 @@
  */
 package com.sonicle.webtop.core.admin;
 
-import com.sonicle.commons.BitFlag;
-import com.sonicle.commons.EnumUtils;
 import com.sonicle.commons.beans.PageInfo;
 import com.sonicle.commons.beans.SortInfo;
 import com.sonicle.commons.db.DbUtils;
+import com.sonicle.commons.flags.BitFlags;
+import com.sonicle.commons.l4j.ProductLicense;
 import com.sonicle.commons.qbuilders.conditions.Condition;
 import com.sonicle.commons.time.DateTimeRange;
+import com.sonicle.security.auth.directory.AbstractDirectory;
 import com.sonicle.webtop.core.app.CoreManifest;
 import com.sonicle.webtop.core.app.DataSourcesManager;
 import com.sonicle.webtop.core.app.LicenseManager;
 import com.sonicle.webtop.core.app.LogbackPropertyDefiner;
+import com.sonicle.webtop.core.app.ProductRegistry;
 import com.sonicle.webtop.core.app.RunContext;
 import com.sonicle.webtop.core.app.ServiceManager;
 import com.sonicle.webtop.core.app.SettingsManager;
@@ -53,24 +55,26 @@ import com.sonicle.webtop.core.app.WebTopApp;
 import com.sonicle.webtop.core.app.WebTopProps;
 import com.sonicle.webtop.core.app.io.dbutils.FilterableArrayListHandler;
 import com.sonicle.webtop.core.app.io.dbutils.RowsAndCols;
+import com.sonicle.webtop.core.app.model.AclSubjectGetOption;
+import com.sonicle.webtop.core.app.model.DirectoryUser;
+import com.sonicle.webtop.core.app.model.Domain;
+import com.sonicle.webtop.core.app.model.DomainBase;
+import com.sonicle.webtop.core.app.model.DomainGetOption;
+import com.sonicle.webtop.core.app.model.DomainUpdateOption;
+import com.sonicle.webtop.core.app.model.EnabledCond;
+import com.sonicle.webtop.core.app.sdk.Result;
+import com.sonicle.webtop.core.app.sdk.ResultVoid;
 import com.sonicle.webtop.core.app.sdk.WTConnectionException;
 import com.sonicle.webtop.core.app.util.ExceptionUtils;
 import com.sonicle.webtop.core.app.util.LogbackHelper;
 import com.sonicle.webtop.core.bol.VDomainAccessLog;
-import com.sonicle.webtop.core.bol.ODomain;
 import com.sonicle.webtop.core.bol.ODomainAccessLogDetail;
-import com.sonicle.webtop.core.bol.OGroup;
 import com.sonicle.webtop.core.config.bol.OPecBridgeFetcher;
 import com.sonicle.webtop.core.config.bol.OPecBridgeRelay;
 import com.sonicle.webtop.core.bol.OSettingDb;
 import com.sonicle.webtop.core.bol.OUpgradeStatement;
 import com.sonicle.webtop.core.bol.OUser;
-import com.sonicle.webtop.core.bol.model.DirectoryUser;
 import com.sonicle.webtop.core.model.DomainEntity;
-import com.sonicle.webtop.core.bol.model.GroupEntity;
-import com.sonicle.webtop.core.bol.model.Role;
-import com.sonicle.webtop.core.bol.model.RoleEntity;
-import com.sonicle.webtop.core.bol.model.UserEntity;
 import com.sonicle.webtop.core.dal.DAOException;
 import com.sonicle.webtop.core.config.dal.PecBridgeFetcherDAO;
 import com.sonicle.webtop.core.config.dal.PecBridgeRelayDAO;
@@ -93,9 +97,32 @@ import com.sonicle.webtop.core.model.ListDomainAccessLogResult;
 import com.sonicle.webtop.core.model.LoggerEntry;
 import com.sonicle.webtop.core.model.ProductId;
 import com.sonicle.webtop.core.model.PublicImage;
+import com.sonicle.webtop.core.app.model.Resource;
+import com.sonicle.webtop.core.app.model.ResourceBase;
+import com.sonicle.webtop.core.app.model.GenericSubject;
+import com.sonicle.webtop.core.app.model.Group;
+import com.sonicle.webtop.core.app.model.GroupBase;
+import com.sonicle.webtop.core.app.model.GroupGetOption;
+import com.sonicle.webtop.core.app.model.GroupUpdateOption;
+import com.sonicle.webtop.core.app.model.LicenseBase;
+import com.sonicle.webtop.core.app.model.LicenseComputedStatus;
+import com.sonicle.webtop.core.app.model.LicenseListOption;
+import com.sonicle.webtop.core.app.model.ResourceGetOption;
+import com.sonicle.webtop.core.app.model.ResourceUpdateOption;
+import com.sonicle.webtop.core.app.model.Role;
+import com.sonicle.webtop.core.app.model.RoleBase;
+import com.sonicle.webtop.core.app.model.RoleGetOption;
+import com.sonicle.webtop.core.app.model.RoleUpdateOption;
+import com.sonicle.webtop.core.app.model.SubjectGetOption;
+import com.sonicle.webtop.core.app.model.User;
+import com.sonicle.webtop.core.app.model.UserBase;
+import com.sonicle.webtop.core.app.model.UserGetOption;
+import com.sonicle.webtop.core.app.model.UserUpdateOption;
+import com.sonicle.webtop.core.app.sdk.WTNotFoundException;
 import com.sonicle.webtop.core.model.ServiceLicense;
 import com.sonicle.webtop.core.model.SettingEntry;
 import com.sonicle.webtop.core.sdk.BaseManager;
+import com.sonicle.webtop.core.sdk.BaseServiceProduct;
 import com.sonicle.webtop.core.sdk.UserProfile;
 import com.sonicle.webtop.core.sdk.UserProfileId;
 import com.sonicle.webtop.core.sdk.WTException;
@@ -111,6 +138,7 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 import net.sf.qualitycheck.Check;
 import org.apache.commons.dbutils.ResultSetHandler;
@@ -130,6 +158,11 @@ public class CoreAdminManager extends BaseManager {
 		this.wta = wta;
 	}
 	
+	public void updateSysAdminPassword(final char[] newPassword) throws WTException {
+		RunContext.ensureIsSysAdmin();
+		wta.getWebTopManager().updateSysAdminPassword(newPassword);
+	}
+	
 	public boolean isOnlineSession(String sessionId) {
 		return wta.getSessionManager().isOnline(sessionId);
 	}
@@ -147,168 +180,259 @@ public class CoreAdminManager extends BaseManager {
 	public List<SettingEntry> listSystemSettings(boolean includeHidden) {
 		RunContext.ensureIsSysAdmin();
 		
-		SettingsManager setm = wta.getSettingsManager();
-		return setm.listSettings(includeHidden);
+		SettingsManager setMgr = wta.getSettingsManager();
+		return setMgr.listSettings(includeHidden);
 	}
 	
 	/**
-	 * Updates (or inserts) a system setting for a specific service.
+	 * Gets a System setting for specific service.
+	 * @param serviceId The service ID.
+	 * @param key The name of the setting.
+	 * @return The value
+	 */
+	public String getSystemSetting(final String serviceId, final String key) {
+		Check.notEmpty(serviceId, "serviceId");
+		Check.notEmpty(key, "key");
+		RunContext.ensureIsSysAdmin();
+		
+		SettingsManager setMgr = wta.getSettingsManager();
+		return setMgr.getServiceSetting(serviceId, key);
+	}
+	
+	/**
+	 * Updates (or inserts) a System setting for a specific service.
 	 * @param serviceId The service ID.
 	 * @param key The name of the setting.
 	 * @param value The value to set.
 	 * @return True if setting was succesfully written, otherwise false.
 	 */
-	public boolean updateSystemSetting(String serviceId, String key, Object value) {
+	public boolean updateSystemSetting(final String serviceId, final String key, final Object value) {
+		Check.notEmpty(serviceId, "serviceId");
+		Check.notEmpty(key, "key");
 		RunContext.ensureIsSysAdmin();
 		
-		SettingsManager setm = wta.getSettingsManager();
-		return setm.setServiceSetting(serviceId, key, value);
+		SettingsManager setMgr = wta.getSettingsManager();
+		return setMgr.setServiceSetting(serviceId, key, value);
 	}
 	
 	/**
-	 * Clears a system setting.
+	 * Clears a System setting for a specific service.
 	 * @param serviceId The service ID.
 	 * @param key The name of the setting.
 	 * @return True if setting was succesfully deleted, otherwise false.
 	 */
 	public boolean deleteSystemSetting(String serviceId, String key) {
+		Check.notEmpty(serviceId, "serviceId");
+		Check.notEmpty(key, "key");
 		RunContext.ensureIsSysAdmin();
 		
-		SettingsManager setm = wta.getSettingsManager();
-		return setm.deleteServiceSetting(serviceId, key);
+		SettingsManager setMgr = wta.getSettingsManager();
+		return setMgr.deleteServiceSetting(serviceId, key);
 	}
 	
-	public DomainEntity getDomain(String domainId) throws WTException {
-		WebTopManager wtmgr = wta.getWebTopManager();
+	public void cleanupSettingsCache() throws WTException {
+		SettingsManager setMgr = wta.getSettingsManager();
 		
-		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
 		RunContext.ensureIsWebTopAdmin();
+		setMgr.clearSettingsCache();
+		setMgr.dumpCacheStats();
+	}
+	
+	public AbstractDirectory getAuthDirectoryByScheme(final String scheme) throws WTException {
+		Check.notEmpty(scheme, "scheme");
+		WebTopManager wtMgr = wta.getWebTopManager();
 		
-		try {
-			return wtmgr.getDomainEntity(domainId);
-		} catch(Exception ex) {
-			throw new WTException(ex, "Cannot get domain [{0}]", domainId);
+		return wtMgr.getAuthDirectoryByScheme(scheme);
+	}
+	
+	public Map<String, Domain> listDomains(final EnabledCond enabled) throws WTException {
+		Check.notNull(enabled, "scheme");
+		WebTopManager wtMgr = wta.getWebTopManager();
+		
+		Map<String, Domain> domains = wtMgr.listDomains(enabled);
+		if (RunContext.isSysAdmin()) {
+			return domains;
+		} else {
+			Map<String, Domain> map = new LinkedHashMap<>();
+			for (Domain domain : domains.values()) {
+				if (RunContext.isWebTopDomainAdmin(domain.getDomainId())) {
+					map.put(domain.getDomainId(), domain);
+					break;
+				}
+			}
+			return map;
 		}
 	}
 	
-	public DomainEntity.PasswordPolicies getDomainPasswordPolicies(String domainId) throws WTException {
+	public boolean checkDomainIdAvailability(final String domainIdToCheck) throws WTException {
+		Check.notEmpty(domainIdToCheck, "domainIdToCheck");
+		WebTopManager wtMgr = wta.getWebTopManager();
+
+		RunContext.ensureIsSysAdmin();
+		return wtMgr.checkDomainIdAvailability(domainIdToCheck);
+	}
+	
+	public Domain getDomain(final BitFlags<DomainGetOption> options) throws WTException {
+		Check.notNull(options, "options");
+		WebTopManager wtMgr = wta.getWebTopManager();
+		String domainId = getTargetProfileId().getDomainId();
+
+		RunContext.ensureIsWebTopDomainAdmin(domainId);
+		return wtMgr.getDomain(domainId, options);
+	}
+	
+	public DomainBase.PasswordPolicies getDomainPasswordPolicies() throws WTException {
+		WebTopManager wtMgr = wta.getWebTopManager();
+		String domainId = getTargetProfileId().getDomainId();
+		
+		RunContext.ensureIsWebTopDomainAdmin(domainId);
+		return wtMgr.getDomainPasswordPolicies(domainId);
+	}
+	
+	public Result<Domain> addDomain(final String domainId, final DomainBase domain) throws WTException {
+		Check.notEmpty(domainId, "domainId");
+		Check.notNull(domain, "domain");
+		WebTopManager wtMgr = wta.getWebTopManager();
+
+		RunContext.ensureIsSysAdmin();
+		return wtMgr.addDomain(domainId, domain);
+	}
+	
+	public boolean existsDomain() throws WTException {
+		WebTopManager wtMgr = wta.getWebTopManager();
+		String domainId = getTargetProfileId().getDomainId();
+		
+		RunContext.ensureIsWebTopDomainAdmin(domainId);
+		return wtMgr.existsDomainId(domainId);
+	}
+	
+	public Result<Domain> updateDomain(final DomainBase domain, final BitFlags<DomainUpdateOption> options) throws WTException {
+		Check.notNull(domain, "domain");
+		Check.notNull(options, "options");
+		WebTopManager wtMgr = wta.getWebTopManager();
+		String domainId = getTargetProfileId().getDomainId();
+
+		RunContext.ensureIsWebTopDomainAdmin(domainId);
+		return wtMgr.updateDomain(domainId, domain, options);
+	}
+	
+	public ResultVoid deleteDomain(final boolean deep) throws WTException {
+		WebTopManager wtMgr = wta.getWebTopManager();
+		String domainId = getTargetProfileId().getDomainId();
+
+		RunContext.ensureIsSysAdmin();
+		return wtMgr.deleteDomain(domainId, deep);
+	}
+	
+	public ResultVoid initDomain() throws WTException {
+		WebTopManager wtMgr = wta.getWebTopManager();
+		String domainId = getTargetProfileId().getDomainId();
+
+		RunContext.ensureIsSysAdmin();
+		return wtMgr.initDomain(domainId);
+	}
+	
+	@Deprecated
+	public void refreshDomainCache() throws WTException {
 		WebTopManager wtMgr = wta.getWebTopManager();
 		
 		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
 		RunContext.ensureIsWebTopAdmin();
-		
-		try {
-			return wtMgr.getDomainPasswordPolicies(domainId);
-		} catch(Throwable t) {
-			throw new WTException(t, "Cannot get domain password policies [{}]", domainId);
-		}
-	}
-	
-	public void addDomain(DomainEntity domain) throws WTException {
-		WebTopManager wtmgr = wta.getWebTopManager();
-		
-		RunContext.ensureIsWebTopAdmin();
-		
-		try {
-			wtmgr.addDomain(domain);
-			IVfsManager vfs = (IVfsManager)WT.getServiceManager("com.sonicle.webtop.vfs");
-			if (vfs != null) {
-				vfs.addBuiltInStoreDomainImages(domain.getDomainId());
-			}
-			
-		} catch(Exception ex) {
-			throw new WTException(ex, "Cannot add domain");
-		}
-	}
-	
-	public void initDomainWithDefaults(String domainId) throws WTException {
-		WebTopManager wtmgr = wta.getWebTopManager();
-		
-		RunContext.ensureIsWebTopAdmin();
-		
-		try {
-			wtmgr.initDomainWithDefaults(domainId);
-			wtmgr.initDomainHomeFolder(domainId);
-		} catch(Exception ex) {
-			throw new WTException(ex, "Cannot init domain");
-		}
-	}
-	
-	public void updateDomain(DomainEntity domain) throws WTException {
-		WebTopManager wtmgr = wta.getWebTopManager();
-		
-		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
-		RunContext.ensureIsWebTopAdmin();
-		
-		try {
-			wtmgr.updateDomain(domain);
-		} catch(Exception ex) {
-			throw new WTException(ex, "Cannot update domain [{0}]", domain.getDomainId());
-		}
-	}
-	
-	public void deleteDomain(String domainId) throws WTException {
-		WebTopManager wtmgr = wta.getWebTopManager();
-		
-		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
-		RunContext.ensureIsWebTopAdmin();
-		
-		try {
-			wtmgr.deleteDomain(domainId);
-			IVfsManager vfs = (IVfsManager)WT.getServiceManager("com.sonicle.webtop.vfs");
-			if (vfs != null) {
-				vfs.deleteBuiltInStoreDomainImages(domainId);
-			}
-			
-		} catch(Exception ex) {
-			throw new WTException(ex, "Cannot delete domain [{0}]", domainId);
-		}
+		wtMgr.initDomainCache();
 	}
 	
 	/**
-	 * Lists all settings for a specific platform Domain.
-	 * @param domainId The domain ID.
+	 * Lists all Domain (platform) settings.
 	 * @param includeHidden Set to `true` also return hidden settings.
 	 * @return List of settings
 	 */
-	public List<SettingEntry> listDomainSettings(final String domainId, final boolean includeHidden) {
-		Check.notEmpty(domainId, "domainId");
-		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
-		RunContext.ensureIsWebTopAdmin();
-		
-		SettingsManager setm = wta.getSettingsManager();
-		return setm.listSettings(domainId, includeHidden);
+	public List<SettingEntry> listDomainSettings(final boolean includeHidden) {
+		SettingsManager setMgr = wta.getSettingsManager();
+		String domainId = getTargetProfileId().getDomainId();
+
+		RunContext.ensureIsWebTopDomainAdmin(domainId);
+		return setMgr.listSettings(domainId, includeHidden);
 	}
 	
 	/**
-	 * Updates (or inserts) a domain setting for a specific service.
-	 * @param domainId The domain ID.
+	 * Gets a Domain (platform) setting for specific service.
+	 * @param serviceId The service ID.
+	 * @param key The name of the setting.
+	 * @return The value
+	 */
+	public String getDomainSetting(final String serviceId, final String key) {
+		Check.notEmpty(serviceId, "serviceId");
+		Check.notEmpty(key, "key");
+		SettingsManager setMgr = wta.getSettingsManager();
+		String domainId = getTargetProfileId().getDomainId();
+		
+		RunContext.ensureIsWebTopDomainAdmin(domainId);
+		return setMgr.getServiceSetting(domainId, serviceId, key);
+	}
+	
+	/**
+	 * Updates (or inserts) a Domain (platform) setting for a specific service.
 	 * @param serviceId The service ID.
 	 * @param key The name of the setting.
 	 * @param value The value to set.
 	 * @return True if setting was succesfully written, otherwise false.
 	 */
-	public boolean updateDomainSetting(String domainId, String serviceId, String key, Object value) {
-		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
-		RunContext.ensureIsWebTopAdmin();
+	public boolean updateDomainSetting(final String serviceId, final String key, Object value) {
+		Check.notEmpty(serviceId, "serviceId");
+		Check.notEmpty(key, "key");
+		SettingsManager setMgr = wta.getSettingsManager();
+		String domainId = getTargetProfileId().getDomainId();
 		
-		SettingsManager setm = wta.getSettingsManager();
-		return setm.setServiceSetting(domainId, serviceId, key, value);
+		RunContext.ensureIsWebTopDomainAdmin(domainId);
+		boolean ret = setMgr.setServiceSetting(domainId, serviceId, key, value);
+		if (ret && CoreManifest.ID.equals(serviceId) && "public.url".equals(key)) {
+			WebTopManager wtMgr = wta.getWebTopManager();
+			wtMgr.initDomainCache();
+		}
+		return ret;
 	}
 	
 	/**
-	 * Clears a domain setting.
-	 * @param domainId The domain ID.
+	 * Clears a Domain (platform) setting for a specific service.
 	 * @param serviceId The service ID.
 	 * @param key The name of the setting.
 	 * @return True if setting was succesfully deleted, otherwise false.
 	 */
-	public boolean deleteDomainSetting(String domainId, String serviceId, String key) {
-		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
-		RunContext.ensureIsWebTopAdmin();
+	public boolean deleteDomainSetting(final String serviceId, final String key) {
+		Check.notEmpty(serviceId, "serviceId");
+		Check.notEmpty(key, "key");
+		SettingsManager setMgr = wta.getSettingsManager();
+		String domainId = getTargetProfileId().getDomainId();
 		
-		SettingsManager setm = wta.getSettingsManager();
-		return setm.deleteServiceSetting(domainId, serviceId, key);
+		RunContext.ensureIsWebTopDomainAdmin(domainId);
+		boolean ret = setMgr.deleteServiceSetting(domainId, serviceId, key);
+		if (ret && CoreManifest.ID.equals(serviceId) && "public.url".equals(key)) {
+			WebTopManager wtMgr = wta.getWebTopManager();
+			wtMgr.initDomainCache();
+		}
+		return ret;
+	}
+	
+	public void cleanupDomainSettingsCache() throws WTException {
+		SettingsManager setMgr = wta.getSettingsManager();
+		String domainId = getTargetProfileId().getDomainId();
+		
+		RunContext.ensureIsWebTopDomainAdmin(domainId);
+		setMgr.clearDomainSettingsCache(domainId);
+		setMgr.dumpCacheStats();
+	}
+	
+	public void cleanupUserSettingsCache() throws WTException {
+		cleanupUserSettingsCache(null);
+	}
+	
+	public void cleanupUserSettingsCache(final String userId) throws WTException {
+		SettingsManager setMgr = wta.getSettingsManager();
+		String domainId = getTargetProfileId().getDomainId();
+		
+		RunContext.ensureIsWebTopDomainAdmin(domainId);
+		setMgr.clearUserSettingsCache(domainId, userId);
+		setMgr.dumpCacheStats();
 	}
 	
 	public List<PublicImage> listDomainPublicImages(String domainId) throws WTException {
@@ -324,239 +448,438 @@ public class CoreAdminManager extends BaseManager {
 		}
 	}
 	
-	public List<OGroup> listGroups(String domainId) throws WTException {
-		WebTopManager wtmgr = wta.getWebTopManager();
-		
-		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
-		RunContext.ensureIsWebTopAdmin();
-		
-		try {
-			return wtmgr.listGroups(domainId);
-		} catch(Exception ex) {
-			throw new WTException(ex, "Unable to list groups [{0}]", domainId);
-		}
-	}
-	
-	public GroupEntity getGroup(UserProfileId pid) throws WTException {
-		WebTopManager wtmgr = wta.getWebTopManager();
-		
-		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
-		RunContext.ensureIsWebTopAdmin();
-		
-		try {
-			return wtmgr.getGroupEntity(pid);
-		} catch(Exception ex) {
-			throw new WTException(ex, "Unable to get group [{0}]", pid.toString());
-		}
-	}
-	
-	public void addGroup(GroupEntity group) throws WTException {
-		WebTopManager wtmgr = wta.getWebTopManager();
-		
-		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
-		RunContext.ensureIsWebTopAdmin();
-		
-		try {
-			wtmgr.addGroup(group);
-		} catch(Exception ex) {
-			throw new WTException(ex, "Unable to add group [{0}]", group.getProfileId().toString());
-		}
-	}
-	
-	public void updateGroup(GroupEntity group) throws WTException {
-		WebTopManager wtmgr = wta.getWebTopManager();
-		
-		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
-		RunContext.ensureIsWebTopAdmin();
-		
-		try {
-			wtmgr.updateGroup(group);
-		} catch(Exception ex) {
-			throw new WTException(ex, "Unable to update group [{0}]", group.getProfileId().toString());
-		}
-	}
-	
-	public void deleteGroup(UserProfileId pid) throws WTException {
-		WebTopManager wtmgr = wta.getWebTopManager();
-		
-		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
-		RunContext.ensureIsWebTopAdmin();
-		
-		try {
-			wtmgr.deleteGroup(pid);
-			
-		} catch(Exception ex) {
-			throw new WTException(ex, "Unable to delete group [{0}]", pid.toString());
-		}
-	}
-	
-	public void cleanupSettingsCache() throws WTException {
-		SettingsManager setMgr = wta.getSettingsManager();
-		
-		RunContext.ensureIsWebTopAdmin();
-		setMgr.clearSettingsCache();
-		setMgr.dumpCacheStats();
-	}
-	
-	public void cleanupDomainSettingsCache() throws WTException {
-		cleanupDomainSettingsCache(null);
-	}
-	
-	public void cleanupDomainSettingsCache(final String domainId) throws WTException {
-		SettingsManager setMgr = wta.getSettingsManager();
-		
-		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
-		RunContext.ensureIsWebTopAdmin();
-		setMgr.clearDomainSettingsCache(domainId);
-		setMgr.dumpCacheStats();
-	}
-	
-	public void cleanupUserSettingsCache(final String domainId) throws WTException {
-		cleanupUserSettingsCache(domainId, null);
-	}
-	
-	public void cleanupUserSettingsCache(final String domainId, final String userId) throws WTException {
-		SettingsManager setMgr = wta.getSettingsManager();
-		
-		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
-		RunContext.ensureIsWebTopAdmin();
-		setMgr.clearUserSettingsCache(domainId, userId);
-		setMgr.dumpCacheStats();
-	}
-	
-	public void refreshDomainCache() throws WTException {
+	public Map<String, Group> listGroups() throws WTException {
 		WebTopManager wtMgr = wta.getWebTopManager();
+		String domainId = getTargetProfileId().getDomainId();
+
+		RunContext.ensureIsWebTopDomainAdmin(domainId);
+		return wtMgr.listGroups(domainId);
+	}
+	
+	public boolean checkGroupIdAvailability(final String groupIdToCheck) throws WTException {
+		Check.notEmpty(groupIdToCheck, "groupIdToCheck");
+		WebTopManager wtMgr = wta.getWebTopManager();
+		String domainId = getTargetProfileId().getDomainId();
+
+		RunContext.ensureIsWebTopDomainAdmin(domainId);
+		return wtMgr.checkGroupIdAvailability(domainId, groupIdToCheck);
+	}
+	
+	public Group getGroup(final String groupId, final BitFlags<GroupGetOption> options) throws WTException {
+		Check.notEmpty(groupId, "groupId");
+		Check.notNull(options, "options");
+		WebTopManager wtMgr = wta.getWebTopManager();
+		String domainId = getTargetProfileId().getDomainId();
+
+		RunContext.ensureIsWebTopDomainAdmin(domainId);
+		return wtMgr.getGroup(domainId, groupId, options);
+	}
+	
+	public Result<Group> addGroup(final String groupId, final GroupBase group, final BitFlags<GroupUpdateOption> options) throws WTException {
+		Check.notEmpty(groupId, "groupId");
+		Check.notNull(group, "group");
+		Check.notNull(options, "options");
+		WebTopManager wtMgr = wta.getWebTopManager();
+		String domainId = getTargetProfileId().getDomainId();
+
+		RunContext.ensureIsWebTopDomainAdmin(domainId);
+		return wtMgr.addGroup(domainId, groupId, group, options);
+	}
+	
+	public ResultVoid updateGroup(final String groupId, final GroupBase group, final BitFlags<GroupUpdateOption> options) throws WTException {
+		Check.notEmpty(groupId, "groupId");
+		Check.notNull(group, "group");
+		Check.notNull(options, "options");
+		WebTopManager wtMgr = wta.getWebTopManager();
+		String domainId = getTargetProfileId().getDomainId();
+
+		RunContext.ensureIsWebTopDomainAdmin(domainId);
+		return wtMgr.updateGroup(domainId, groupId, group, options);
+	}
+	
+	public ResultVoid deleteGroup(final String groupId) throws WTException {
+		Check.notEmpty(groupId, "groupId");
+		WebTopManager wtMgr = wta.getWebTopManager();
+		String domainId = getTargetProfileId().getDomainId();
+
+		RunContext.ensureIsWebTopDomainAdmin(domainId);
+		return wtMgr.deleteGroup(domainId, groupId);
+	}
+	
+	public List<DirectoryUser> listDirectoryUsers() throws WTException {
+		WebTopManager wtMgr = wta.getWebTopManager();
+		String domainId = getTargetProfileId().getDomainId();
+
+		RunContext.ensureIsWebTopDomainAdmin(domainId);
+		List<DirectoryUser> items = wtMgr.listDirectoryUsers(domainId);
+		Collections.sort(items, (DirectoryUser du1, DirectoryUser du2) -> du1.getDirectoryUser().userId.compareTo(du2.getDirectoryUser().userId));
+		return items;
+	}
+	
+	public Map<String, User> listUsers(final EnabledCond enabled) throws WTException {
+		Check.notNull(enabled, "enabled");
+		WebTopManager wtMgr = wta.getWebTopManager();
+		String domainId = getTargetProfileId().getDomainId();
+
+		RunContext.ensureIsWebTopDomainAdmin(domainId);
+		return wtMgr.listUsers(domainId, enabled);
+	}
+	
+	public boolean checkUserIdAvailability(final String userIdToCheck) throws WTException {
+		Check.notEmpty(userIdToCheck, "userIdToCheck");
+		WebTopManager wtMgr = wta.getWebTopManager();
+		String domainId = getTargetProfileId().getDomainId();
+
+		RunContext.ensureIsWebTopDomainAdmin(domainId);
+		return wtMgr.checkUserIdAvailability(domainId, userIdToCheck);
+	}
+	
+	public User getUser(final String userId, final BitFlags<UserGetOption> options) throws WTException {
+		Check.notEmpty(userId, "userId");
+		WebTopManager wtMgr = wta.getWebTopManager();
+		String domainId = getTargetProfileId().getDomainId();
+
+		RunContext.ensureIsWebTopDomainAdmin(domainId);
+		return wtMgr.getUser(domainId, userId, options);
+	}
+	
+	public Result<User> addUser(final String userId, final UserBase user, final boolean setPassword, final char[] password, final BitFlags<UserUpdateOption> options) throws WTException {
+		Check.notEmpty(userId, "userId");
+		Check.notNull(user, "user");
+		WebTopManager wtMgr = wta.getWebTopManager();
+		String domainId = getTargetProfileId().getDomainId();
+
+		RunContext.ensureIsWebTopDomainAdmin(domainId);
+		return wtMgr.addUser(domainId, userId, user, true, setPassword, password, options);
+	}
+	
+	public ResultVoid updateUser(final String userId, final UserBase user, final BitFlags<UserUpdateOption> options) throws WTException {
+		Check.notEmpty(userId, "userId");
+		Check.notNull(user, "user");
+		WebTopManager wtMgr = wta.getWebTopManager();
+		String domainId = getTargetProfileId().getDomainId();
+
+		RunContext.ensureIsWebTopDomainAdmin(domainId);
+		return wtMgr.updateUser(domainId, userId, user, options);
+	}
+	
+	public void updateUserPassword(final String userId, final char[] newPassword) throws WTException {
+		Check.notEmpty(userId, "userId");
+		Check.notNull(newPassword, "newPassword");
+		WebTopManager wtMgr = wta.getWebTopManager();
+		String domainId = getTargetProfileId().getDomainId();
 		
-		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
-		RunContext.ensureIsWebTopAdmin();
-		wtMgr.initDomainCache();
+		RunContext.ensureIsWebTopDomainAdmin(domainId);
+		wtMgr.updateUserPassword(domainId, userId, null, newPassword);
+	}
+	
+	public void updateUserStatus(final String userId, final boolean enabled) throws WTException {
+		Check.notEmpty(userId, "userId");
+		WebTopManager wtMgr = wta.getWebTopManager();
+		String domainId = getTargetProfileId().getDomainId();
+		
+		RunContext.ensureIsWebTopDomainAdmin(domainId);
+		wtMgr.updateUserStatus(domainId, userId, enabled);
+	}
+	
+	public void bulkUpdatePersonalEmailDomain(final Set<String> userIds, final String newDomainPart) throws WTException {
+		Check.notEmpty(userIds, "userIds");
+		Check.notEmpty(newDomainPart, "newDomainPart");
+		WebTopManager wtMgr = wta.getWebTopManager();
+		String domainId = getTargetProfileId().getDomainId();
+		
+		RunContext.ensureIsWebTopDomainAdmin(domainId);
+		wtMgr.bulkUpdatePersonalEmailDomain(domainId, userIds, newDomainPart);
+	}
+	
+	public ResultVoid deleteUser(final String userId, final boolean deep) throws WTException {
+		Check.notEmpty(userId, "userId");
+		WebTopManager wtMgr = wta.getWebTopManager();
+		String domainId = getTargetProfileId().getDomainId();
+
+		RunContext.ensureIsWebTopDomainAdmin(domainId);
+		return wtMgr.deleteUser(domainId, userId, deep);
+	}
+	
+	public Map<String, Resource> listResources(final EnabledCond enabled) throws WTException {
+		WebTopManager wtMgr = wta.getWebTopManager();
+		String domainId = getTargetProfileId().getDomainId();
+
+		RunContext.ensureIsWebTopDomainAdmin(domainId);
+		return wtMgr.listResources(domainId, enabled);
+	}
+	
+	public boolean checkResourceIdAvailability(final String resourceIdToCheck) throws WTException {
+		Check.notEmpty(resourceIdToCheck, "resourceIdToCheck");
+		WebTopManager wtMgr = wta.getWebTopManager();
+		String domainId = getTargetProfileId().getDomainId();
+
+		RunContext.ensureIsWebTopDomainAdmin(domainId);
+		return wtMgr.checkResourceIdAvailability(domainId, resourceIdToCheck);
+	}
+	
+	public Resource getResource(final String resourceId, final BitFlags<ResourceGetOption> options) throws WTException {
+		Check.notEmpty(resourceId, "resourceId");
+		WebTopManager wtMgr = wta.getWebTopManager();
+		String domainId = getTargetProfileId().getDomainId();
+
+		RunContext.ensureIsWebTopDomainAdmin(domainId);
+		return wtMgr.getResource(domainId, resourceId, options);
+	}
+	
+	public Result<Resource> addResource(final String resourceId, final ResourceBase resource, final BitFlags<ResourceUpdateOption> options) throws WTException {
+		Check.notEmpty(resourceId, "resourceId");
+		Check.notNull(resource, "resource");
+		WebTopManager wtMgr = wta.getWebTopManager();
+		String domainId = getTargetProfileId().getDomainId();
+
+		RunContext.ensureIsWebTopDomainAdmin(domainId);
+		return wtMgr.addResource(domainId, resourceId, resource, options);
+	}
+	
+	public ResultVoid updateResource(final String resourceId, final ResourceBase resource, final BitFlags<ResourceUpdateOption> options) throws WTException {
+		Check.notEmpty(resourceId, "resourceId");
+		Check.notNull(resource, "resource");
+		WebTopManager wtMgr = wta.getWebTopManager();
+		String domainId = getTargetProfileId().getDomainId();
+
+		RunContext.ensureIsWebTopDomainAdmin(domainId);
+		return wtMgr.updateResource(domainId, resourceId, resource, options);
+	}
+	
+	public ResultVoid deleteResource(final String resourceId) throws WTException {
+		Check.notEmpty(resourceId, "resourceId");
+		WebTopManager wtMgr = wta.getWebTopManager();
+		String domainId = getTargetProfileId().getDomainId();
+
+		RunContext.ensureIsWebTopDomainAdmin(domainId);
+		return wtMgr.deleteResource(domainId, resourceId);
+	}
+	
+	public Map<String, Role> listRoles() throws WTException {
+		WebTopManager wtMgr = wta.getWebTopManager();
+		String domainId = getTargetProfileId().getDomainId();
+
+		RunContext.ensureIsWebTopDomainAdmin(domainId);
+		return wtMgr.listRoles(domainId);
+	}
+	
+	public boolean checkRoleIdAvailability(final String roleIdToCheck) throws WTException {
+		Check.notEmpty(roleIdToCheck, "roleIdToCheck");
+		WebTopManager wtMgr = wta.getWebTopManager();
+		String domainId = getTargetProfileId().getDomainId();
+
+		RunContext.ensureIsWebTopDomainAdmin(domainId);
+		return wtMgr.checkRoleIdAvailability(domainId, roleIdToCheck);
+	}
+	
+	public Role getRole(final String roleId, final BitFlags<RoleGetOption> options) throws WTException {
+		Check.notEmpty(roleId, "roleId");
+		Check.notNull(options, "options");
+		WebTopManager wtMgr = wta.getWebTopManager();
+		String domainId = getTargetProfileId().getDomainId();
+
+		RunContext.ensureIsWebTopDomainAdmin(domainId);
+		return wtMgr.getRole(domainId, roleId, options);
+	}
+	
+	public Result<Role> addRole(final String roleId, final RoleBase role, final BitFlags<RoleUpdateOption> options) throws WTException {
+		Check.notEmpty(roleId, "roleId");
+		Check.notNull(role, "role");
+		Check.notNull(options, "options");
+		WebTopManager wtMgr = wta.getWebTopManager();
+		String domainId = getTargetProfileId().getDomainId();
+
+		RunContext.ensureIsWebTopDomainAdmin(domainId);
+		return wtMgr.addRole(domainId, roleId, role, options);
+	}
+	
+	public ResultVoid updateRole(final String roleId, final RoleBase role, final BitFlags<RoleUpdateOption> options) throws WTException {
+		Check.notEmpty(roleId, "roleId");
+		Check.notNull(role, "role");
+		Check.notNull(options, "options");
+		WebTopManager wtMgr = wta.getWebTopManager();
+		String domainId = getTargetProfileId().getDomainId();
+
+		RunContext.ensureIsWebTopDomainAdmin(domainId);
+		return wtMgr.updateRole(domainId, roleId, role, options);
+	}
+	
+	public ResultVoid deleteRole(final String roleId) throws WTException {
+		Check.notEmpty(roleId, "roleId");
+		WebTopManager wtMgr = wta.getWebTopManager();
+		String domainId = getTargetProfileId().getDomainId();
+
+		RunContext.ensureIsWebTopDomainAdmin(domainId);
+		return wtMgr.deleteRole(domainId, roleId);
+	}
+	
+	public Map<String, GenericSubject> listSubjects(final boolean users, final boolean resources, final boolean groups, final boolean roles, final boolean useProfileIdAsKey) throws WTException {
+		WebTopManager wtMgr = wta.getWebTopManager();
+		String domainId = getTargetProfileId().getDomainId();
+		
+		ensureProfileDomain();
+		BitFlags<SubjectGetOption> options = new BitFlags<>(SubjectGetOption.class);
+		if (users) options.set(SubjectGetOption.USERS);
+		if (resources) options.set(SubjectGetOption.RESOURCES);
+		if (groups) options.set(SubjectGetOption.GROUPS);
+		if (roles) options.set(SubjectGetOption.ROLES);
+		if (useProfileIdAsKey) options.set(SubjectGetOption.PID_AS_KEY);
+		return wtMgr.listSubjects(domainId, options);
 	}
 	
 	public void cleanupLicenseCache() throws WTException {
 		LicenseManager licMgr = wta.getLicenseManager();
-		
-		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
-		RunContext.ensureIsWebTopAdmin();
+		String domainId = getTargetProfileId().getDomainId();
+
+		RunContext.ensureIsWebTopDomainAdmin(domainId);
 		licMgr.cleanupLicenseCache();
 	}
 	
 	public void checkOnlineAvailability() throws WTException {
 		LicenseManager licMgr = wta.getLicenseManager();
-		
-		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
-		RunContext.ensureIsWebTopAdmin();
-		
+		String domainId = getTargetProfileId().getDomainId();
+
+		RunContext.ensureIsWebTopDomainAdmin(domainId);
 		licMgr.checkOnlineAvailability();
 	}
 	
-	public List<ServiceLicense> listLicenses(String domainId) throws WTException {
+	public List<ServiceLicense> listLicenses(final BitFlags<LicenseListOption> options) throws WTException {
+		Check.notNull(options, "options");
 		LicenseManager licMgr = wta.getLicenseManager();
-		
-		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
-		RunContext.ensureIsWebTopAdmin();
-		
-		return licMgr.listLicenses(domainId, true);
+		String domainId = getTargetProfileId().getDomainId();
+
+		RunContext.ensureIsWebTopDomainAdmin(domainId);
+		return licMgr.listLicenses(domainId, options);
 	}
 	
-	public ServiceLicense getLicense(String domainId, ProductId productId) throws WTException {
+	public ServiceLicense getLicense(final String productCode) throws WTException {
+		Check.notNull(productCode, "productCode");
 		LicenseManager licMgr = wta.getLicenseManager();
-		
-		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
-		RunContext.ensureIsWebTopAdmin();
-		
-		return licMgr.getLicense(domainId, productId);
+		String domainId = getTargetProfileId().getDomainId();
+
+		RunContext.ensureIsWebTopDomainAdmin(domainId);
+		return licMgr.getLicense(domainId, productCode);
 	}
 	
-	public void addLicense(License license, boolean autoActivate) throws WTException {
+	public String computeLicenseActivationHardwareID() {
 		LicenseManager licMgr = wta.getLicenseManager();
-		
-		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
-		RunContext.ensureIsWebTopAdmin();
-		
-		licMgr.addLicense(license, autoActivate);
+		return licMgr.computeActivationHardwareID();
 	}
 	
-	public void changeLicense(String domainId, ProductId productId, String newString, String activatedString) throws WTException {
+	public BitFlags<LicenseComputedStatus> getLicenseStatus(final String productCode, final String hardwareID) throws WTException {
+		Check.notEmpty(productCode, "productCode");
 		LicenseManager licMgr = wta.getLicenseManager();
+		String domainId = getTargetProfileId().getDomainId();
 		
-		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
-		RunContext.ensureIsWebTopAdmin();
-		
-		licMgr.changeLicense(domainId, productId, newString, activatedString, false);
+		RunContext.ensureIsWebTopDomainAdmin(domainId);
+		return licMgr.getLicenseStatus(domainId, productCode, hardwareID);
 	}
 	
-	public void modifyLicense(String domainId, ProductId productId, String modificationKey, String modifiedString) throws WTException {
+	public ProductLicense getProductLicense(final String productCode) throws WTException {
+		Check.notEmpty(productCode, "productCode");
 		LicenseManager licMgr = wta.getLicenseManager();
+		String domainId = getTargetProfileId().getDomainId();
 		
-		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
-		RunContext.ensureIsWebTopAdmin();
-		
-		licMgr.modifyLicense(domainId, productId, modificationKey, modifiedString);
+		RunContext.ensureIsWebTopDomainAdmin(domainId);
+		BaseServiceProduct serviceProduct = ProductRegistry.getInstance().getServiceProduct(productCode, domainId);
+		if (serviceProduct == null) throw new WTNotFoundException("Product not found [{}]", productCode);
+		return licMgr.getProductLicense(serviceProduct);
 	}
 	
-	public void updateLicenseAutoLease(String domainId, ProductId productId, boolean autoLease) throws WTException {
+	public void addLicense(final String productCode, final LicenseBase license, final boolean autoActivate) throws WTException {
+		Check.notEmpty(productCode, "productCode");
+		Check.notNull(license, "license");
 		LicenseManager licMgr = wta.getLicenseManager();
-		
-		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
-		RunContext.ensureIsWebTopAdmin();
-		
-		licMgr.updateLicenseAutoLease(domainId, productId, autoLease);
+		String domainId = getTargetProfileId().getDomainId();
+
+		RunContext.ensureIsWebTopDomainAdmin(domainId);
+		licMgr.addLicense(domainId, productCode, license, autoActivate);
 	}
 	
-	public void deleteLicense(String domainId, ProductId productId) throws WTException {
+	public void changeLicense(final String productCode, final String newString, final String activatedString) throws WTException {
+		Check.notEmpty(productCode, "productCode");
 		LicenseManager licMgr = wta.getLicenseManager();
-		
-		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
-		RunContext.ensureIsWebTopAdmin();
-		
-		licMgr.deleteLicense(domainId, productId, false);
+		String domainId = getTargetProfileId().getDomainId();
+
+		RunContext.ensureIsWebTopDomainAdmin(domainId);
+		licMgr.changeLicense(domainId, productCode, newString, activatedString, false);
 	}
 	
-	public void activateLicense(String domainId, ProductId productId, String activatedString) throws WTException {
+	public void modifyLicense(final String productCode, final String modificationKey, final String modifiedString) throws WTException {
+		Check.notEmpty(productCode, "productCode");
 		LicenseManager licMgr = wta.getLicenseManager();
-		
-		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
-		RunContext.ensureIsWebTopAdmin();
-		
-		licMgr.activateLicense(domainId, productId, activatedString);
+		String domainId = getTargetProfileId().getDomainId();
+
+		RunContext.ensureIsWebTopDomainAdmin(domainId);
+		licMgr.modifyLicense(domainId, productCode, modificationKey, modifiedString);
 	}
 	
-	public void deactivateLicense(String domainId, ProductId productId, boolean offline) throws WTException {
+	public void updateLicenseAutoLease(final String productCode, final boolean autoLease) throws WTException {
+		Check.notEmpty(productCode, "productCode");
 		LicenseManager licMgr = wta.getLicenseManager();
-		
-		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
-		RunContext.ensureIsWebTopAdmin();
-		
-		licMgr.deactivateLicense(domainId, productId, offline);
+		String domainId = getTargetProfileId().getDomainId();
+
+		RunContext.ensureIsWebTopDomainAdmin(domainId);
+		licMgr.updateLicenseAutoLease(domainId, productCode, autoLease);
 	}
 	
-	public void assignLicenseLease(String domainId, ProductId productId, Collection<String> userIds) throws WTException {
+	public void deleteLicense(final String productCode, final boolean force) throws WTException {
+		Check.notEmpty(productCode, "productCode");
 		LicenseManager licMgr = wta.getLicenseManager();
-		
-		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
-		RunContext.ensureIsWebTopAdmin();
-		
-		licMgr.assignLicenseLease(domainId, productId, userIds);
+		String domainId = getTargetProfileId().getDomainId();
+
+		RunContext.ensureIsWebTopDomainAdmin(domainId);
+		licMgr.deleteLicense(domainId, productCode, force);
+	}
+	
+	public void activateLicense(final String productCode, String activatedString) throws WTException {
+		Check.notEmpty(productCode, "productCode");
+		LicenseManager licMgr = wta.getLicenseManager();
+		String domainId = getTargetProfileId().getDomainId();
+
+		RunContext.ensureIsWebTopDomainAdmin(domainId);
+		licMgr.activateLicense(domainId, productCode, activatedString);
+	}
+	
+	public void deactivateLicense(final String productCode, boolean offline) throws WTException {
+		Check.notEmpty(productCode, "productCode");
+		LicenseManager licMgr = wta.getLicenseManager();
+		String domainId = getTargetProfileId().getDomainId();
+
+		RunContext.ensureIsWebTopDomainAdmin(domainId);
+		licMgr.deactivateLicense(domainId, productCode, offline);
+	}
+	
+	public void assignLicenseLease(final String productCode, final Set<String> userIds) throws WTException {
+		Check.notEmpty(productCode, "productCode");
+		Check.notEmpty(userIds, "userIds");
+		LicenseManager licMgr = wta.getLicenseManager();
+		String domainId = getTargetProfileId().getDomainId();
+
+		RunContext.ensureIsWebTopDomainAdmin(domainId);
+		licMgr.assignLicenseLease(domainId, productCode, userIds);
 	}
 	
 	/*
-	public void autoAssignLicenseLease(String domainId, ProductId productId, String userId) throws WTException {
+	public void autoAssignLicenseLease(final ProductId productId, final String userId) throws WTException {
+		Check.notNull(productId, "productId");
 		LicenseManager licMgr = wta.getLicenseManager();
-		
-		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
-		RunContext.ensureIsWebTopAdmin();
-		
+		String domainId = getTargetProfileId().getDomainId();
+
+		RunContext.ensureIsWebTopDomainAdmin(domainId);
 		licMgr.assignLicenseLease(domainId, productId, userId, null);
 	}
 	*/
 	
-	public void revokeLicenseLease(String domainId, ProductId productId, Collection<String> userIds) throws WTException {
+	public void revokeLicenseLease(final String productCode, final Set<String> userIds) throws WTException {
+		Check.notEmpty(productCode, "productCode");
+		Check.notEmpty(userIds, "userIds");
 		LicenseManager licMgr = wta.getLicenseManager();
-		
-		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
-		RunContext.ensureIsWebTopAdmin();
-		
-		licMgr.revokeLicenseLease(domainId, productId, userIds);
+		String domainId = getTargetProfileId().getDomainId();
+
+		RunContext.ensureIsWebTopDomainAdmin(domainId);
+		licMgr.revokeLicenseLease(domainId, productCode, userIds);
 	}
 	
 	public Map<String, DataSourceType> listDataSourceTypes() throws WTException {
@@ -685,257 +1008,10 @@ public class CoreAdminManager extends BaseManager {
 		}
 	}
 	
-	public List<DirectoryUser> listDirectoryUsers(String domainId) throws WTException {
-		WebTopManager wtmgr = wta.getWebTopManager();
-		
-		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
-		RunContext.ensureIsWebTopAdmin();
-		
-		try {
-			ODomain domain = wtmgr.getDomain(domainId);
-			List<DirectoryUser> items = wtmgr.listDirectoryUsers(domain);
-			Collections.sort(items, (DirectoryUser o1, DirectoryUser o2) -> o1.getDirUser().userId.compareTo(o2.getDirUser().userId));
-			return items;
-			
-		} catch(Exception ex) {
-			throw new WTException(ex, "Unable to list directory users [{0}]", domainId);
-		}
-	}
 	
-	public List<OUser> listUsers(String domainId, boolean enabledOnly) throws WTException {
-		WebTopManager wtmgr = wta.getWebTopManager();
-		
-		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
-		RunContext.ensureIsWebTopAdmin();
-		
-		try {
-			return wtmgr.listUsers(domainId, enabledOnly);
-		} catch(Exception ex) {
-			throw new WTException(ex, "Unable to list users [{0}]", domainId);
-		}
-	}
 	
-	public UserEntity getUser(UserProfileId pid) throws WTException {
-		WebTopManager wtmgr = wta.getWebTopManager();
-		
-		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
-		RunContext.ensureIsWebTopAdmin();
-		
-		try {
-			return wtmgr.getUserEntity(pid);
-		} catch(Exception ex) {
-			throw new WTException(ex, "Unable to get user [{0}]", pid.toString());
-		}
-	}
 	
-	/*
-	public OUser getUser(UserProfileId pid) throws WTException {
-		UserManager wtmgr = wta.getUserManager();
-		
-		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
-		RunContext.ensureIsWebTopAdmin();
-		
-		try {
-			return wtmgr.getUser(pid);
-		} catch(Exception ex) {
-			throw new WTException(ex, "Unable to get user [{0}]", pid.toString());
-		}
-	}
-	*/
 	
-	public void addUser(UserEntity user, boolean updatePassord, char[] password) throws WTException {
-		WebTopManager wtmgr = wta.getWebTopManager();
-		
-		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
-		RunContext.ensureIsWebTopAdmin();
-		
-		try {
-			wtmgr.addUser(true, user, updatePassord, password);
-		} catch(WTException ex) {
-			throw new WTException(ex, "Unable to add user [{0}]", user.getProfileId().toString());
-		}
-	}
-	
-	public void updateUser(UserEntity user) throws WTException {
-		WebTopManager wtmgr = wta.getWebTopManager();
-		
-		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
-		RunContext.ensureIsWebTopAdmin();
-		
-		try {
-			wtmgr.updateUser(user);
-			wtmgr.cleanUserProfileCache(user.getProfileId());
-			
-		} catch(Exception ex) {
-			throw new WTException(ex, "Unable to update user [{0}]", user.getProfileId().toString());
-		}
-	}
-	
-	public boolean updateUser(UserProfileId pid, boolean enabled) throws WTException {
-		WebTopManager wtmgr = wta.getWebTopManager();
-		
-		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
-		RunContext.ensureIsWebTopAdmin();
-		
-		try {
-			return wtmgr.updateUser(pid, enabled);
-			
-		} catch(Exception ex) {
-			throw new WTException(ex, "Unable to update user [{0}]", pid.toString());
-		}
-	}
-	
-	public void updateUserPassword(UserProfileId pid, char[] newPassword) throws WTException {
-		WebTopManager wtmgr = wta.getWebTopManager();
-		
-		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
-		RunContext.ensureIsWebTopAdmin();
-		
-		try {
-			wtmgr.updateUserPassword(pid, null, newPassword);
-		} catch(Exception ex) {
-			throw new WTException(ex, "Unable to change user password [{0}]", pid.toString());
-		}
-	}
-	
-	public void updateUserEmailDomain(List<UserProfileId> pids, String newEmailDomain) throws WTException {
-		WebTopManager wtmgr = wta.getWebTopManager();
-		
-		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
-		RunContext.ensureIsWebTopAdmin();
-		
-		try {
-			wtmgr.updateUserEmailDomain(pids, newEmailDomain);
-		} catch(Exception ex) {
-			throw new WTException(ex, "Unable to change email domain [{}]", newEmailDomain);
-		}
-	}
-	
-	public void deleteUser(boolean deep, UserProfileId pid) throws WTException {
-		WebTopManager wtmgr = wta.getWebTopManager();
-		
-		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
-		RunContext.ensureIsWebTopAdmin();
-		
-		try {
-			wtmgr.deleteUser(pid, deep);
-			
-		} catch(Exception ex) {
-			throw new WTException(ex, "Unable to delete user [{0}]", pid.toString());
-		}
-	}
-	
-	/**
-	 * Lists domain real roles (those defined as indipendent role).
-	 * @param domainId The domain ID.
-	 * @return The role list.
-	 * @throws WTException If something goes wrong.
-	 */
-	public List<Role> listRoles(String domainId) throws WTException {
-		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
-		ensureUserDomain(domainId);
-		
-		WebTopManager wtmgr = wta.getWebTopManager();
-		try {
-			return wtmgr.listRoles(domainId);
-		} catch(Exception ex) {
-			throw new WTException(ex, "Unable to list roles [{0}]", domainId);
-		}
-	}
-	
-	/**
-	 * Lists domain users roles (those coming from a user).
-	 * @param domainId The domain ID.
-	 * @return The role list.
-	 * @throws WTException If something goes wrong.
-	 */
-	public List<Role> listUsersRoles(String domainId) throws WTException {
-		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
-		ensureUserDomain(domainId);
-		
-		WebTopManager wtmgr = wta.getWebTopManager();
-		try {
-			return wtmgr.listUsersRoles(domainId);
-		} catch(Exception ex) {
-			throw new WTException(ex, "Unable to list users roles [{0}]", domainId);
-		}
-	}
-	
-	/**
-	 * Lists domain groups roles (those coming from a group).
-	 * @param domainId The domain ID.
-	 * @return The role list.
-	 * @throws WTException If something goes wrong.
-	 */
-	public List<Role> listGroupsRoles(String domainId) throws WTException {
-		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
-		ensureUserDomain(domainId);
-		
-		WebTopManager wtmgr = wta.getWebTopManager();
-		try {
-			return wtmgr.listGroupsRoles(domainId);
-		} catch(Exception ex) {
-			throw new WTException(ex, "Unable to list groups roles [{0}]", domainId);
-		}
-	}
-	
-	public RoleEntity getRole(String uid) throws WTException {
-		WebTopManager wtmgr = wta.getWebTopManager();
-		
-		String domainId = wtmgr.getRoleDomain(uid);
-		if(domainId == null) throw new WTException("Role not found [{0}]", uid);
-		
-		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
-		RunContext.ensureIsWebTopAdmin();
-		
-		try {
-			return wtmgr.getRole(uid);
-		} catch(Exception ex) {
-			throw new WTException(ex, "Cannot get role [{0}]", uid);
-		}
-	}
-	
-	public void addRole(RoleEntity role) throws WTException {
-		WebTopManager wtmgr = wta.getWebTopManager();
-		
-		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
-		RunContext.ensureIsWebTopAdmin();
-		
-		try {
-			wtmgr.addRole(role);
-		} catch(Exception ex) {
-			throw new WTException(ex, "Cannot add role");
-		}
-	}
-	
-	public void updateRole(RoleEntity role) throws WTException {
-		WebTopManager wtmgr = wta.getWebTopManager();
-		
-		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
-		RunContext.ensureIsWebTopAdmin();
-		
-		try {
-			wtmgr.updateRole(role);
-		} catch(Exception ex) {
-			throw new WTException(ex, "Cannot update role [{0}]", role.getRoleUid());
-		}
-	}
-	
-	public void deleteRole(String uid) throws WTException {
-		WebTopManager wtmgr = wta.getWebTopManager();
-		
-		String domainId = wtmgr.getRoleDomain(uid);
-		if(domainId == null) throw new WTException("Role not found [{0}]", uid);
-		
-		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
-		RunContext.ensureIsWebTopAdmin();
-		
-		try {
-			wtmgr.deleteRole(uid);
-		} catch(Exception ex) {
-			throw new WTException(ex, "Cannot delete role [{0}]", uid);
-		}
-	}
 	
 	/**
 	 * Lists configured PecBridge fetchers for the specified domain.

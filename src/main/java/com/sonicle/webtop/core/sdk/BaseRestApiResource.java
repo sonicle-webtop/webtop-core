@@ -33,10 +33,13 @@
  */
 package com.sonicle.webtop.core.sdk;
 
+import com.sonicle.commons.LangUtils;
 import com.sonicle.webtop.core.app.AbstractPlatformService;
 import com.sonicle.webtop.core.app.RunContext;
 import com.sonicle.webtop.core.app.WT;
+import com.sonicle.webtop.core.app.sdk.WTNotFoundException;
 import javax.ws.rs.core.Response;
+import org.apache.commons.lang3.ClassUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.shiro.subject.Subject;
 import org.slf4j.helpers.MessageFormatter;
@@ -125,8 +128,29 @@ public abstract class BaseRestApiResource extends AbstractPlatformService {
 		return respError(Response.Status.METHOD_NOT_ALLOWED, message, arguments);
 	}
 	
+	public Response respErrorForbidden(String message, Object... arguments) {
+		return respError(Response.Status.FORBIDDEN, message, arguments);
+	}
+	
 	public Response respError(Throwable t) {
-		return respError(null, t.getMessage());
+		if (t instanceof AuthException) {
+			return respErrorForbidden(t.getMessage());
+		} else if (t instanceof WTNotFoundException) {
+			return respErrorNotFound(t.getMessage());
+		} else {
+			if (t != null) {
+				if ("net.sf.qualitycheck.exception".equals(ClassUtils.getPackageName(LangUtils.getDeepestCause(t).getClass()))) {
+					return respErrorBadRequest(t.getMessage());
+				} else {
+					// Exceptions can have null message (eg. NPE) so in this cases
+					// fill message with the full-name of the exception Class
+					final String message = t.getMessage();
+					return respError(null, (message != null) ? message : t.getClass().getCanonicalName());
+				}
+			} else {
+				return respError(null);
+			}
+		}
 	}
 	
 	public Response respError(Response.Status status, String message, Object... arguments) {

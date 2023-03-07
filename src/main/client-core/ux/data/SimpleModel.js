@@ -34,16 +34,19 @@
 Ext.define('Sonicle.webtop.core.ux.data.SimpleModel', {
 	alternateClassName: 'WTA.ux.data.SimpleModel',
 	extend: 'WTA.ux.data.BaseModel',
+	requires: [
+		'Sonicle.String'
+	],
 	
 	fields: ['id', 'desc'],
 	
 	statics: {
 		buildLabel: function(id, desc, seps) {
-			if(!Ext.isArray(seps)) seps = ['(', ')'];
-			if(id === '*') {
+			if (!Ext.isArray(seps)) seps = ['(', ')'];
+			if (id === '*') {
 				return desc;
 			} else {
-				return id + ' ' + seps[0] + desc + seps[1];
+				return id + ' ' + seps[0] + Sonicle.String.deflt(desc, '') + seps[1];
 			}
 		}
 	}

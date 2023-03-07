@@ -41,7 +41,7 @@ import com.sonicle.webtop.core.bol.OUser;
  *
  * @author malbinola
  */
-public class RoleWithSource extends Role {
+public class RoleWithSource extends RoleOLD {
 	public static final String SOURCE_ROLE = "role";
 	public static final String SOURCE_USER = "user";
 	public static final String SOURCE_GROUP = "group";

@@ -32,6 +32,7 @@
  */
 package com.sonicle.webtop.core.app;
 
+import com.sonicle.commons.LangUtils;
 import com.sonicle.commons.PathUtils;
 import com.sonicle.commons.web.ServletUtils;
 import com.sonicle.webtop.core.app.servlet.RestApi;
@@ -39,20 +40,23 @@ import com.sonicle.webtop.core.app.util.ClassHelper;
 import com.sonicle.webtop.core.sdk.AuthException;
 import com.sonicle.webtop.core.sdk.WTException;
 import com.sonicle.webtop.core.sdk.WTRuntimeException;
+import io.swagger.parser.OpenAPIParser;
 import io.swagger.v3.core.filter.AbstractSpecFilter;
 import io.swagger.v3.jaxrs2.integration.resources.AcceptHeaderOpenApiResource;
 import io.swagger.v3.jaxrs2.integration.resources.OpenApiResource;
 import io.swagger.v3.oas.integration.SwaggerConfiguration;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.servers.Server;
+import io.swagger.v3.parser.core.models.SwaggerParseResult;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 import javax.servlet.ServletConfig;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.Application;
@@ -64,6 +68,7 @@ import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 import javax.ws.rs.ext.ExceptionMapper;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.shiro.web.jaxrs.ShiroFeature;
 import org.glassfish.jersey.internal.util.collection.StringKeyIgnoreCaseMultivaluedMap;
@@ -127,31 +132,55 @@ public class ServiceApiJaxRsResourceApplication extends ResourceConfig {
 		
 		if (desc.hasOpenApiDefinitions()) {
 			for (ServiceDescriptor.OpenApiDefinition apiDefinition : desc.getOpenApiDefinitions()) {
-				// Register API spec listing resources
-				OpenAPI oa = new OpenAPI();			
-				oa.info(desc.buildOpenApiInfo(apiDefinition));	
-				SwaggerConfiguration oaConfig = new SwaggerConfiguration()
-					.openAPI(oa)
-					// Sets our filter Class in order to customize OpenAPI spec adding server informations
-					.filterClass(DynamicServerSpecFilter.class.getName())
-					.prettyPrint(false)
-					.resourcePackages(Stream.of(apiDefinition.implPackage).collect(Collectors.toSet()));
-				
-				ServiceOpenApiResource oar = new ServiceOpenApiResource(); // "*/openapi.json", "*/openapi.yaml"
-				oar.setOpenApiConfiguration(oaConfig);
-				register(oar);
-				ServiceAcceptHeaderOpenApiResource ahoar = new ServiceAcceptHeaderOpenApiResource(); // "*/openapi" with Accept header
-				oar.setOpenApiConfiguration(oaConfig);
-				register(ahoar);
-				
-				// Register API resources
+				registerServiceApiSpecResources(servletConfig, desc, apiDefinition);
+				// Register API implementation classes
 				for (Class clazz : apiDefinition.resourceClasses) {
 					javax.ws.rs.Path pathAnnotation = (javax.ws.rs.Path)ClassHelper.getClassAnnotation(clazz.getSuperclass(), javax.ws.rs.Path.class);
 					String resourcePath = "/" + PathUtils.concatPathParts(apiDefinition.context, pathAnnotation.value());
-					LOGGER.debug("[{}] Registering JaxRs resource [{}] -> [{}]", servletConfig.getServletName(), clazz.toString(), resourcePath);
+					LOGGER.debug("[{}] Registering JAX-RS resource at '{}' [{}]", servletConfig.getServletName(), resourcePath, clazz.toString());
 					registerResources(Resource.builder(clazz).path(resourcePath).build());
 				}
 			}
+		}
+	}
+	
+	private void registerServiceApiSpecResources(ServletConfig servletConfig, ServiceDescriptor descriptor, ServiceDescriptor.OpenApiDefinition apiDefinition) {
+		try {
+			LOGGER.debug("[{}] Parsing OpenAPI spec '{}'", servletConfig.getServletName(), apiDefinition.oasFile);
+			String rawOpenApi = readOpenAPISpec(apiDefinition.oasFile);
+			SwaggerParseResult result = new OpenAPIParser().readContents(rawOpenApi, null, null);
+			OpenAPI openAPI = result.getOpenAPI();
+			if (openAPI != null) {
+				openAPI.info(descriptor.buildOpenApiInfo(apiDefinition));
+				SwaggerConfiguration swaggerConfig = new SwaggerConfiguration()
+					.scannerClass("io.swagger.v3.jaxrs2.integration.JaxrsApplicationAndResourcePackagesAnnotationScanner")
+					.openAPI(openAPI)
+					// Sets our filter Class in order to customize OpenAPI spec adding server informations
+					.filterClass(DynamicServerSpecFilter.class.getName())
+					.prettyPrint(false);
+				
+				LOGGER.debug("[{}] Registering JAX-RS spec resource at '/openapi.[json|yaml]'", servletConfig.getServletName());
+				ServiceOpenApiResource oar = new ServiceOpenApiResource(); // "*/openapi.json", "*/openapi.yaml"
+				oar.setOpenApiConfiguration(swaggerConfig);
+				register(oar);
+				ServiceAcceptHeaderOpenApiResource ahoar = new ServiceAcceptHeaderOpenApiResource(); // "*/openapi" with Accept header
+				oar.setOpenApiConfiguration(swaggerConfig);
+				register(ahoar);
+			}
+		} catch (Exception ex) {
+			LOGGER.error("[{}] Unable to configure JAX-RS spec resource", ex, servletConfig.getServletName());
+		}
+	}
+	
+	public String readOpenAPISpec(String name) throws IOException {
+		InputStream is = null;
+		
+		try {
+			is = LangUtils.findClassLoader(getClass()).getResourceAsStream(name);
+			if (is == null) throw new IOException("InputStream is null");
+			return IOUtils.toString(is, StandardCharsets.UTF_8);
+		} finally {
+			IOUtils.closeQuietly(is);
 		}
 	}
 	
@@ -163,7 +192,7 @@ public class ServiceApiJaxRsResourceApplication extends ResourceConfig {
 			if (xRealReqUrlHeader != null && !xRealReqUrlHeader.isEmpty()) {
 				if (!StringUtils.isBlank(openAPI.getInfo().getVersion())) {
 					String serverUrl = xRealReqUrlHeader.get(0) + "/" + openAPI.getInfo().getVersion();
-					openAPI.addServersItem(new Server().url(serverUrl));
+					openAPI.servers(Arrays.asList(new Server().url(serverUrl)));
 				}
 				return Optional.of(openAPI);
 			} else {

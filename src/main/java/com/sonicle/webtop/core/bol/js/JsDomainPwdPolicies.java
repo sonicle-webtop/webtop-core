@@ -33,6 +33,7 @@
 package com.sonicle.webtop.core.bol.js;
 
 import com.sonicle.commons.web.json.JsonResult;
+import com.sonicle.webtop.core.app.model.DomainBase;
 import com.sonicle.webtop.core.model.DomainEntity;
 
 /**
@@ -47,8 +48,8 @@ public class JsDomainPwdPolicies {
 	public Boolean consecutiveDuplChars;
 	public Boolean oldSimilarity;
 	public Boolean usernameSimilarity;
-
-	public JsDomainPwdPolicies(short levenThres, short tokenSize, DomainEntity.PasswordPolicies policies) {
+	
+	public JsDomainPwdPolicies(short levenThres, short tokenSize, DomainBase.PasswordPolicies policies) {
 		this.levenThres = levenThres;
 		this.tokenSize = tokenSize;
 		this.minLength = policies.getMinLength();

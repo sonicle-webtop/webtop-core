@@ -33,7 +33,8 @@
  */
 package com.sonicle.webtop.core.bol.js;
 
-import com.sonicle.webtop.core.bol.model.Role;
+import com.sonicle.webtop.core.app.model.GenericSubject;
+import com.sonicle.webtop.core.app.model.Role;
 import com.sonicle.webtop.core.bol.model.RoleWithSource;
 import java.text.MessageFormat;
 
@@ -51,8 +52,22 @@ public class JsRoleLkp extends JsSimple {
 		this.source = source;
 	}
 	
+	@Deprecated
+	public JsRoleLkp(GenericSubject subject) {
+		super(subject.getSid(), JsSimple.description(subject.getName(), subject.getDisplayName()));
+		if (GenericSubject.Type.USER.equals(subject.getType())) {
+			this.source = RoleWithSource.SOURCE_USER;
+		} else if (GenericSubject.Type.GROUP.equals(subject.getType())) {
+			this.source = RoleWithSource.SOURCE_GROUP;
+		} else if (GenericSubject.Type.ROLE.equals(subject.getType())) {
+			this.source = RoleWithSource.SOURCE_ROLE;
+		} else {
+			throw new IllegalArgumentException();
+		}
+	}
+	
 	public JsRoleLkp(Role role, String source) {
-		super(role.getRoleUid(), JsSimple.description(role.getName(), role.getDescription()));
+		super(role.getRoleSid(), role.getRoleId());
 		this.source = source;
 	}
 	

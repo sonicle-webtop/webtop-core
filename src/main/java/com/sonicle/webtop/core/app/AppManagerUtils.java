@@ -34,10 +34,36 @@ package com.sonicle.webtop.core.app;
 
 import com.sonicle.commons.EnumUtils;
 import com.sonicle.commons.LangUtils;
+import com.sonicle.commons.URIUtils;
+import com.sonicle.security.auth.directory.ADDirectory;
+import com.sonicle.security.auth.directory.ImapDirectory;
+import com.sonicle.security.auth.directory.LdapDirectory;
+import com.sonicle.security.auth.directory.LdapNethDirectory;
+import com.sonicle.security.auth.directory.SftpDirectory;
+import com.sonicle.security.auth.directory.SmbDirectory;
+import com.sonicle.webtop.core.app.auth.LdapWebTopDirectory;
+import com.sonicle.webtop.core.app.auth.WebTopDirectory;
+import com.sonicle.webtop.core.app.model.Domain;
+import com.sonicle.webtop.core.app.model.DomainBase;
+import com.sonicle.webtop.core.app.model.Group;
+import com.sonicle.webtop.core.app.model.GroupBase;
+import com.sonicle.webtop.core.app.model.LicenseBase;
+import com.sonicle.webtop.core.app.model.Resource;
+import com.sonicle.webtop.core.app.model.ResourceBase;
+import com.sonicle.webtop.core.app.model.Role;
+import com.sonicle.webtop.core.app.model.RoleBase;
+import com.sonicle.webtop.core.app.model.User;
+import com.sonicle.webtop.core.app.model.UserBase;
 import com.sonicle.webtop.core.bol.ODomain;
+import com.sonicle.webtop.core.bol.OGroup;
 import com.sonicle.webtop.core.bol.OLicense;
 import com.sonicle.webtop.core.bol.OLicenseLease;
 import com.sonicle.webtop.core.bol.OMessageQueue;
+import com.sonicle.webtop.core.bol.ORole;
+import com.sonicle.webtop.core.bol.OUser;
+import com.sonicle.webtop.core.bol.OUserInfo;
+import com.sonicle.webtop.core.bol.VResource;
+import com.sonicle.webtop.core.bol.VUser;
 import com.sonicle.webtop.core.model.DomainEntity;
 import com.sonicle.webtop.core.model.License;
 import com.sonicle.webtop.core.model.ParamsLdapDirectory;
@@ -59,6 +85,247 @@ import java.util.Map;
  * @author malbinola
  */
 public class AppManagerUtils {
+	
+	static <T extends Domain> T fillDomain(T tgt, ODomain src) {
+		fillDomain((DomainBase)tgt, src);
+		if ((tgt != null) && (src != null)) {
+			tgt.setDomainId(src.getDomainId());
+		}
+		return tgt;
+	}
+	
+	static <T extends DomainBase> T fillDomain(T tgt, ODomain src) {
+		if ((tgt != null) && (src != null)) {
+			tgt.setEnabled(src.getEnabled());
+			tgt.setDisplayName(src.getDisplayName());
+			tgt.setAuthDomainName(src.getAuthDomainName());
+			tgt.setDomainName(src.getDomainName());
+			tgt.setUserAutoCreation(src.getUserAutoCreation());
+			tgt.setDirUri(URIUtils.createURIQuietly(src.getDirUri()));
+			tgt.setDirAdmin(src.getDirAdmin());
+			tgt.setDirPassword(src.getDirPassword());
+			tgt.setDirConnSecurity(EnumUtils.getEnum(src.getDirConnectionSecurity(), com.sonicle.security.ConnectionSecurity.class));
+			tgt.setDirCaseSensitive(src.getDirCaseSensitive());
+			tgt.setDirRawParameters(src.getDirParameters());
+			tgt.setPasswordPolicies(createDomainPasswordPolicies2(src));
+		}
+		return tgt;
+	}
+	
+	static ODomain fillODomain(ODomain tgt, DomainBase src) {
+		if ((tgt != null) && (src != null)) {
+			tgt.setEnabled(src.getEnabled());
+			tgt.setDisplayName(src.getDisplayName());
+			tgt.setAuthDomainName(src.getAuthDomainName());
+			tgt.setDomainName(src.getDomainName());
+			tgt.setUserAutoCreation(src.getUserAutoCreation());
+			tgt.setDirUri(src.getDirUri().toString());
+			
+			final String scheme = src.getDirScheme();
+			if (WebTopDirectory.SCHEME.equals(scheme)) {
+				tgt.setDirConnectionSecurity(null);
+				tgt.setDirAdmin(null);
+				tgt.setDirPassword(null);
+
+			} else if (LdapWebTopDirectory.SCHEME.equals(scheme)) {
+				tgt.setDirConnectionSecurity(EnumUtils.getName(src.getDirConnSecurity()));
+				tgt.setDirAdmin(src.getDirAdmin());
+				tgt.setDirPassword(src.getDirPassword());
+
+			} else if (LdapDirectory.SCHEME.equals(scheme)) {
+				tgt.setDirConnectionSecurity(EnumUtils.getName(src.getDirConnSecurity()));
+				tgt.setDirAdmin(src.getDirAdmin());
+				tgt.setDirPassword(src.getDirPassword());
+				tgt.setDirPasswordPolicy(false);
+				
+			} else if (ImapDirectory.SCHEME.equals(scheme)) {
+				tgt.setDirConnectionSecurity(EnumUtils.getName(src.getDirConnSecurity()));
+				tgt.setDirAdmin(null);
+				tgt.setDirPassword(null);
+
+			} else if (SmbDirectory.SCHEME.equals(scheme) || SftpDirectory.SCHEME.equals(scheme)) {
+				tgt.setDirConnectionSecurity(null);
+				tgt.setDirAdmin(null);
+				tgt.setDirPassword(null);
+
+			} else if (ADDirectory.SCHEME.equals(scheme)) {
+				tgt.setDirConnectionSecurity(EnumUtils.getName(src.getDirConnSecurity()));
+				tgt.setDirAdmin(src.getDirAdmin());
+				tgt.setDirPassword(src.getDirPassword());
+
+			} else if (LdapNethDirectory.SCHEME.equals(scheme)) {
+				tgt.setDirConnectionSecurity(EnumUtils.getName(src.getDirConnSecurity()));
+				tgt.setDirAdmin(src.getDirAdmin());
+				tgt.setDirPassword(src.getDirPassword());
+			}
+			tgt.setDirCaseSensitive(src.getDirCaseSensitive());
+			tgt.setDirParameters(src.getDirRawParameters());
+			fillODomain(tgt, src.getPasswordPolicies());
+		}
+		return tgt;
+	}
+	
+	static ODomain fillODomain(ODomain tgt, DomainBase.PasswordPolicies src) {
+		if ((tgt != null) && (src != null)) {
+			tgt.setDirPwdPolicyComplexity(src.getComplexity());
+			tgt.setDirPwdPolicyMinLength(src.getMinLength());
+			tgt.setDirPwdPolicyAvoidConsecutiveChars(src.getAvoidConsecutiveChars());
+			tgt.setDirPwdPolicyAvoidOldSimilarity(src.getAvoidOldSimilarity());
+			tgt.setDirPwdPolicyAvoidUsernameSimilarity(src.getAvoidUsernameSimilarity());
+			tgt.setDirPwdPolicyExpiration(src.getExpiration());
+			tgt.setDirPwdPolicyVerifyAtLogin(src.getVerifyAtLogin());
+		}
+		return tgt;
+	}
+	
+	static DomainBase.PasswordPolicies createDomainPasswordPolicies2(ODomain src) {
+		if (src != null) {
+			return new DomainBase.PasswordPolicies(
+				src.getDirPwdPolicyMinLength(),
+				src.getDirPwdPolicyComplexity(),
+				src.getDirPwdPolicyAvoidConsecutiveChars(),
+				src.getDirPwdPolicyAvoidOldSimilarity(),
+				src.getDirPwdPolicyAvoidUsernameSimilarity(),
+				src.getDirPwdPolicyExpiration(),
+				src.getDirPwdPolicyVerifyAtLogin()
+			);
+		}
+		return null;
+	}
+	
+	static <T extends User> T fillUser(T tgt, VUser src) {
+		fillUser((UserBase)tgt, src);
+		if ((tgt != null) && (src != null)) {
+			tgt.setUserId(src.getUserId());
+			tgt.setUserSid(src.getUserSid());
+		}
+		return tgt;
+	}
+	
+	static <T extends UserBase> T fillUser(T tgt, VUser src) {
+		if ((tgt != null) && (src != null)) {
+			tgt.setEnabled(src.getEnabled());
+			tgt.setDisplayName(src.getDisplayName());
+			tgt.setFirstName(src.getFirstName());
+			tgt.setLastName(src.getLastName());
+		}
+		return tgt;
+	}
+	
+	static <T extends Group> T fillGroup(T tgt, OGroup src) {
+		fillGroup((GroupBase)tgt, src);
+		if ((tgt != null) && (src != null)) {
+			tgt.setGroupId(src.getGroupId());
+			tgt.setGroupSid(src.getGroupSid());
+		}
+		return tgt;
+	}
+	
+	static <T extends GroupBase> T fillGroup(T tgt, OGroup src) {
+		if ((tgt != null) && (src != null)) {
+			tgt.setDescription(src.getDescription());
+		}
+		return tgt;
+	}
+	
+	static <T extends Role> T fillRole(T tgt, ORole src) {
+		fillRole((RoleBase)tgt, src);
+		if ((tgt != null) && (src != null)) {
+			tgt.setRoleId(src.getRoleId());
+			tgt.setRoleSid(src.getRoleSid());
+		}
+		return tgt;
+	}
+	
+	static <T extends RoleBase> T fillRole(T tgt, ORole src) {
+		if ((tgt != null) && (src != null)) {
+			tgt.setDescription(src.getDescription());
+		}
+		return tgt;
+	}
+	
+	static <T extends Resource> T fillResource(T tgt, VResource src) {
+		fillResource((ResourceBase)tgt, src);
+		if ((tgt != null) && (src != null)) {
+			tgt.setResourceId(src.getResourceId());
+			tgt.setResourceSid(src.getResourceSid());
+		}
+		return tgt;
+	}
+	
+	static <T extends ResourceBase> T fillResource(T tgt, VResource src) {
+		if ((tgt != null) && (src != null)) {
+			tgt.setEnabled(src.getEnabled());
+			tgt.setType(EnumUtils.forSerializedName(src.getCustom1(), ResourceBase.Type.ROOM, ResourceBase.Type.class));
+			tgt.setDisplayName(src.getDisplayName());
+			tgt.setEmail(src.getEmail());
+			//tgt.setCapacity(LangUtils.value(src.getCustom2(), (Integer)(-1)));
+			//tgt.setLocation(src.getAddress());
+			//tgt.setTelephone(src.getTelephone());
+		}
+		return tgt;
+	}
+	
+	static OUser fillOUser(OUser tgt, ResourceBase src) {
+		if ((tgt != null) && (src != null)) {
+			tgt.setEnabled(src.getEnabled());
+			tgt.setDisplayName(src.getDisplayName());
+		}
+		return tgt;
+	}
+	
+	static OUserInfo fillOUserInfo(OUserInfo tgt, ResourceBase src) {
+		if ((tgt != null) && (src != null)) {
+			tgt.setEmail(src.getEmail());
+			//tgt.setTelephone(src.getTelephone());
+			//tgt.setAddress(src.getLocation());
+			tgt.setCustom1(EnumUtils.toSerializedName(src.getType()));
+			//tgt.setCustom2(src.getCapacity() != null ? String.valueOf(src.getCapacity()) : null);
+		}
+		return tgt;
+	}
+	
+	static OGroup fillOGroup(OGroup tgt, GroupBase src) {
+		if ((tgt != null) && (src != null)) {
+			tgt.setDescription(src.getDescription());
+		}
+		return tgt;
+	}
+	
+	static OUser fillOUser(OUser tgt, UserBase src) {
+		if ((tgt != null) && (src != null)) {
+			tgt.setEnabled(src.getEnabled());
+			tgt.setDisplayName(src.getDisplayName());
+		}
+		return tgt;
+	}
+	
+	static OUserInfo fillOUserInfo(OUserInfo tgt, UserBase src) {
+		if ((tgt != null) && (src != null)) {
+			tgt.setFirstName(src.getFirstName());
+			tgt.setLastName(src.getLastName());
+		}
+		return tgt;
+	}
+	
+	static ORole fillORole(ORole tgt, RoleBase src) {
+		if ((tgt != null) && (src != null)) {
+			tgt.setDescription(src.getDescription());
+		}
+		return tgt;
+	}
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
 	
 	static <T extends OMessageQueue> T fillOMessageQueue(T tgt, UserProfileId profileId, String messageType, String messageData) {
 		if ((tgt != null)) {
@@ -133,11 +400,11 @@ public class AppManagerUtils {
 		return tgt;
 	}
 	
-	static ServiceLicense createBuiltInServiceLicense(String domainId, BaseServiceProduct product) {
+	static ServiceLicense createBuiltInServiceLicense(BaseServiceProduct product) {
 		ServiceLicense tgt = new ServiceLicense();
 		tgt.setBuiltIn(true);
-		tgt.setDomainId(domainId);
-		tgt.setProductId(product.getProductId());
+		tgt.setProductCode(product.getProductCode());
+		tgt.setOwningServiceId(product.SERVICE_ID);
 		tgt.setLicenseString(product.getBuiltInLicenseString());
 		tgt.setRevisionTimestamp(null);
 		tgt.setActivatedLicenseString(null);
@@ -152,8 +419,8 @@ public class AppManagerUtils {
 	static <T extends ServiceLicense> T fillServiceLicense(T tgt, OLicense src) {
 		if ((tgt != null) && (src != null)) {
 			tgt.setBuiltIn(false);
-			tgt.setDomainId(src.getDomainId());
-			tgt.setProductId(ProductId.build(src.getServiceId(), src.getProductCode()));
+			tgt.setProductCode(src.getProductCode());
+			tgt.setOwningServiceId(src.getServiceId());
 			tgt.setLicenseString(src.getString());
 			tgt.setRevisionTimestamp(src.getRevisionTimestamp());
 			tgt.setActivatedLicenseString(src.getActivatedString());
@@ -187,11 +454,19 @@ public class AppManagerUtils {
 		return fillOLicense(new OLicense(), src);
 	}
 	
+	static OLicense fillOLicense(OLicense tgt, LicenseBase src) {
+		if ((tgt != null) && (src != null)) {
+			tgt.setString(src.getLicenseString());
+			tgt.setActivatedString(src.getActivatedLicenseString());
+			tgt.setAutoLease(src.getAutoLease());
+		}
+		return tgt;
+	}
+	
 	static <T extends OLicense, S extends License> T fillOLicense(T tgt, S src) {
 		if ((tgt != null) && (src != null)) {
-			tgt.setDomainId(src.getDomainId());
-			tgt.setServiceId(src.getProductId().getServiceId());
-			tgt.setProductCode(src.getProductId().getProductCode());
+			tgt.setServiceId(src.getOwningServiceId());
+			tgt.setProductCode(src.getProductCode());
 			tgt.setString(src.getLicenseString());
 			tgt.setActivatedString(src.getActivatedLicenseString());
 			tgt.setAutoLease(src.getAutoLease());

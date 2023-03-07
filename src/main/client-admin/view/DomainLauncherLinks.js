@@ -153,7 +153,7 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainLauncherLinks', {
 				me.addAct('add', {
 					text: WT.res('act-add.lbl'),
 					tooltip: null,
-					iconCls: 'wt-icon-add',
+					iconCls: null,
 					handler: function() {
 						me.addLauncherLinkUI();
 					}

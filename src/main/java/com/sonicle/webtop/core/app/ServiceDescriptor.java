@@ -35,6 +35,7 @@ package com.sonicle.webtop.core.app;
 
 import com.sonicle.webtop.core.app.util.ClassHelper;
 import com.sonicle.commons.LangUtils;
+import com.sonicle.webtop.core.sdk.BaseBackgroundService;
 import com.sonicle.webtop.core.sdk.BaseRestApiEndpoint;
 import com.sonicle.webtop.core.sdk.BaseController;
 import com.sonicle.webtop.core.sdk.BasePublicService;
@@ -79,6 +80,7 @@ public class ServiceDescriptor {
 	private Class privateServiceClass = null;
 	private Class publicServiceClass = null;
 	private Class jobServiceClass = null;
+	private Class backgroundServiceClass = null;
 	private Class userOptionsServiceClass = null;
 	private final List<ApiEndpointClass> restApiEndpointClasses = new ArrayList<>();
 	private final List<OpenApiDefinition> openApiDefinitions = new ArrayList<>();
@@ -93,6 +95,7 @@ public class ServiceDescriptor {
 		privateServiceClass = ClassHelper.loadClass(true, manifest.getPrivateServiceClassName(), BaseService.class, "Service");
 		publicServiceClass = ClassHelper.loadClass(true, manifest.getPublicServiceClassName(), BasePublicService.class, "PublicService");
 		jobServiceClass = ClassHelper.loadClass(true, manifest.getJobServiceClassName(), BaseJobService.class, "JobService");
+		backgroundServiceClass = ClassHelper.loadClass(true, manifest.getBackgroundServiceClassName(), BaseBackgroundService.class, "BackgroundService");
 		userOptionsServiceClass = ClassHelper.loadClass(true, manifest.getUserOptionsServiceClassName(), BaseUserOptionsService.class, "UserOptionsService");
 		
 		for (ServiceManifest.RestApiEndpoint rae : manifest.getApiEndpoints()) {
@@ -163,6 +166,14 @@ public class ServiceDescriptor {
 
 	public Class getJobServiceClass() {
 		return jobServiceClass;
+	}
+	
+	public boolean hasBackgroundService() {
+		return backgroundServiceClass != null;
+	}
+	
+	public Class getBackgroundServiceClass() {
+		return backgroundServiceClass;
 	}
 	
 	public boolean hasRestApiEndpoints() {

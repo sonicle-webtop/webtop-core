@@ -184,6 +184,10 @@ Ext.define('Sonicle.webtop.core.app.WT', {
 		return ns + '.' + cn;
 	},
 	
+	buildProfileId: function(domainId, userId) {
+		return Sonicle.String.join('@', userId, domainId);
+	},
+	
 	/**
 	 * Builds a state ID useful for saving data into local storage.
 	 * @param {String} [xid] The service XID.
@@ -343,7 +347,12 @@ Ext.define('Sonicle.webtop.core.app.WT', {
 	 * @returns {Boolean} `True` if string follows the template pattern, `false` otherwise.
 	 */
 	isResTpl: function(str) {
-		return Ext.isString(str) && Ext.String.startsWith(str, '{') && Ext.String.endsWith(str, '}');
+		if (!Ext.isString(str)) return false;
+		if (Ext.String.startsWith(str, '[') && Ext.String.endsWith(str, ']')) { // Checks if passed string can be decoded as JSON array
+			return Ext.isArray(Ext.JSON.decode(str, true));
+		} else {
+			return Ext.String.startsWith(str, '{') && Ext.String.endsWith(str, '}');
+		}
 	},
 	
 	/**
@@ -385,9 +394,17 @@ Ext.define('Sonicle.webtop.core.app.WT', {
 			id = WT.ID;
 		}
 		if (this.isResTpl(tpl)) {
-			var s = tpl.substr(1, tpl.length-2),
-					tokens = s.split('@');
-			return WT.res((tokens.length === 2) ? tokens[1] : id, tokens[0]);
+			var arr = [tpl];
+			if (Ext.String.startsWith(tpl, '[') && Ext.String.endsWith(tpl, ']')) {
+				arr = Ext.JSON.decode(tpl, true);
+			}
+			var inner = arr[0].substr(1, arr[0].length-2),
+				tokens = inner.split('@');
+			if (arr.length > 1) {
+				return WT.res.apply(this, [(tokens.length === 2) ? tokens[1] : id, tokens[0]].concat(arr.slice(1)));
+			} else {
+				return WT.res((tokens.length === 2) ? tokens[1] : id, tokens[0]);
+			}
 		} else {
 			return tpl; // No template defined...
 		}
@@ -866,16 +883,6 @@ Ext.define('Sonicle.webtop.core.app.WT', {
 		Ext.Ajax.request(obj);
 	},
 	
-	handleOperationMessage: function(operation) {
-		var resp = operation.getResponse(), json;
-		if (resp && resp.status === 200) {
-			json = resp.responseJson;
-			if (json && !Ext.isEmpty(json.message)) {
-				WT.warn(json.message);
-			}
-		}
-	},
-	
 	handleRequestError: function(sid, act, req, op) {
 		if (!req.aborted) {
 			if (req.status === 200) {
@@ -905,8 +912,10 @@ Ext.define('Sonicle.webtop.core.app.WT', {
 	},
 	
 	/**
-	 * Handles an error by displaying the passed message in case of unsuccessful operation.
-	 * @param {Boolean} success Specified whether the operation was successful or not.
+	 * If operation has failed (success is `false`), this handles any message 
+	 * found in passed JSON data as ERROR message. If no message is provided, 
+	 * a console warning will be printed.
+	 * @param {Boolean} success Specifies whether the operation was successful or not.
 	 * @param {Object|String} json A JSON object in which look for `message` property or a direct message String.
 	 */
 	handleError: function(success, json) {
@@ -918,6 +927,55 @@ Ext.define('Sonicle.webtop.core.app.WT', {
 				if (console && console.warn) console.warn('Method handleError called with NO message');
 			}
 		}
+	},
+	
+	/**
+	 * If operation succeeded (success is `true`), this handles any message 
+	 * @param {Boolean} success Specifies whether the operation was successful or not.
+	 * @param {Object} operationOrJson A real Operation object or a JSON.
+	 * @param {info|warn|error} msgType The type of message to show.
+	 * @param {Object} msgOpts Show message options (see {@link #info}, {@link #warn}, {@link #error}).
+	 */
+	handleMessage: function(success, operationOrJson, msgType, msgOpts) {
+		if (msgType === undefined) msgType = 'warn';
+		if (!!success && operationOrJson) {
+			var msg = WT.extractResponseMessage(operationOrJson);
+			if (msg && Sonicle.String.isIn(msgType, ['info', 'warn', 'error'])) {
+				WT[msgType](msg, msgOpts);
+			}
+		}
+	},
+	
+	/**
+	 * Checks if passed response object has a message to be possibly show.
+	 * @param {Object} operationOrJson A real Operation object or a JSON.
+	 * @returns {Boolean} Returns `true` if a message was found, `false` otherwise.
+	 */
+	containsResponseMessage: function(operationOrJson) {
+		return !Ext.isEmpty(WT.extractResponseMessage(operationOrJson));
+	},
+	
+	/**
+	 * Extracts, if present, a message from passed response object.
+	 * @param {Object} operationOrJson A real Operation object or a JSON.
+	 * @returns {String} The message or `undefined` if none is found.
+	 */
+	extractResponseMessage: function(operationOrJson) {
+		if (operationOrJson) {
+			if (operationOrJson.isOperation) {
+				var resp = operationOrJson.getResponse();
+				if (resp && resp.status === 200) {
+					if (resp.responseJson && !Ext.isEmpty(resp.responseJson.message)) {
+						return resp.responseJson.message;
+					}
+				}
+			} else {
+				var json = operationOrJson;
+				if (Ext.isString(json) && !Ext.isEmpty(json)) return json;
+				if (Ext.isObject(json) && !Ext.isEmpty(json.message)) return json.message;
+			}
+		}
+		return undefined;
 	},
 	
 	/**

@@ -210,7 +210,7 @@ public class ContextLoader {
 			
 			// Adds RestAPIs documentation Servlet (using Swagger UI)
 			Dynamic restApiDocsServlet = servletContext.addServlet("RestApiDocsServlet", com.sonicle.webtop.core.app.servlet.RestApiDocs.class);
-			restApiDocsServlet.setInitParameter("resourcePath", "/client/com.sonicle.webtop.core/resources/swagger-ui/3.52.5/");
+			restApiDocsServlet.setInitParameter("resourcePath", "/client/com.sonicle.webtop.core/resources/swagger-ui/4.15.5/");
 			restApiDocsServlet.setInitParameter("uriPath", "/");
 			restApiDocsServlet.setLoadOnStartup(2);
 			restApiDocsServlet.setAsyncSupported(true);

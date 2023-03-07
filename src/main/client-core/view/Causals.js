@@ -36,6 +36,7 @@ Ext.define('Sonicle.webtop.core.view.Causals', {
 	requires: [
 		'Sonicle.grid.column.Icon',
 		'Sonicle.grid.column.Lookup',
+		'Sonicle.webtop.core.model.SubjectLkp',
 		'Sonicle.webtop.core.model.CausalGrid'
 	],
 	uses: [
@@ -90,12 +91,15 @@ Ext.define('Sonicle.webtop.core.view.Causals', {
 				header: me.mys.res('causals.gp.user.lbl'),
 				store: {
 					autoLoad: true,
-					model: 'WTA.model.Simple',
-					proxy: WTF.proxy(me.mys.ID, 'LookupDomainUsers', 'users', {
-						extraParams: {wildcard: true}
+					model: 'WTA.model.SubjectLkp',
+					proxy: WTF.proxy(me.mys.ID, 'LookupSubjects', null, {
+						extraParams: {
+							users: true,
+							wildcard: true
+						}
 					})
 				},
-				displayField: 'desc',
+				displayField: 'labelNameWithDN',
 				flex: 2
 			}, {
 				dataIndex: 'masterDataDescription',

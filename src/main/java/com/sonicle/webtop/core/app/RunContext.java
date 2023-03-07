@@ -34,6 +34,7 @@
 package com.sonicle.webtop.core.app;
 
 import com.sonicle.security.Principal;
+import com.sonicle.webtop.core.app.shiro.ShiroUtils;
 import com.sonicle.webtop.core.app.shiro.WTRealm;
 import com.sonicle.webtop.core.model.ServicePermission;
 import com.sonicle.webtop.core.sdk.AuthException;
@@ -91,6 +92,22 @@ public class RunContext {
 		WebSubject.Builder builder = new WebSubject.Builder(securityManager, request, response);
 		builder.principals(buildPrincipalCollection(profileId.getDomainId(), profileId.getUserId()));
 		return builder.buildWebSubject();
+	}
+	
+	public static void clearCachedAuthorizationInfo(final UserProfileId profileId) {
+		Check.notNull(profileId, "profileId");
+		PrincipalCollection principals = buildPrincipalCollection(profileId.getDomainId(), profileId.getUserId());
+		clearCachedAuthorizationInfo((WTRealm)ShiroUtils.getRealmByName(WTRealm.NAME), principals);
+	}
+	
+	public static void clearCachedAuthorizationInfo(final Subject subject) {
+		Check.notNull(subject, "subject");
+		clearCachedAuthorizationInfo((WTRealm)ShiroUtils.getRealmByName(WTRealm.NAME), subject.getPrincipals());
+	}
+	
+	static void clearCachedAuthorizationInfo(final WTRealm realm, final PrincipalCollection principals) {
+		// https://stackoverflow.com/questions/22706632/how-to-clear-cache-for-a-subject-in-shiro
+		realm.clearCachedAuthorizationInfo(principals);
 	}
 	
 	/**
@@ -464,7 +481,7 @@ public class RunContext {
 	}
 	
 	private static boolean isWebTopAdmin(PrincipalCollection principals) {
-		return hasRole(principals, WebTopManager.ROLEUID_WTADMIN);
+		return hasRole(principals, WebTopManager.WTADMIN_ROLESID);
 		/*
 		if (principals.isEmpty()) return false;
 		SecurityManager manager = SecurityUtils.getSecurityManager();
@@ -477,7 +494,7 @@ public class RunContext {
 	}
 	
 	private static boolean isSysAdmin(PrincipalCollection principals) {
-		return hasRole(principals, WebTopManager.ROLEUID_SYSADMIN);
+		return hasRole(principals, WebTopManager.SYSADMIN_ROLESID);
 		/*
 		if (principals.isEmpty()) return false;
 		SecurityManager manager = SecurityUtils.getSecurityManager();

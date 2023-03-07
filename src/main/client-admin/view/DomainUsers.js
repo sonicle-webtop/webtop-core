@@ -1,6 +1,6 @@
 /*
  * WebTop Services is a Web Application framework developed by Sonicle S.r.l.
- * Copyright (C) 2014 Sonicle S.r.l.
+ * Copyright (C) 2022 Sonicle S.r.l.
  *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by
@@ -29,14 +29,18 @@
  * version 3, these Appropriate Legal Notices must retain the display of the
  * Sonicle logo and Sonicle copyright notice. If the display of the logo is not
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
- * display the words "Copyright (C) 2014 Sonicle S.r.l.".
+ * display the words "Copyright (C) 2022 Sonicle S.r.l.".
  */
 Ext.define('Sonicle.webtop.core.admin.view.DomainUsers', {
 	extend: 'WTA.sdk.DockableView',
 	requires: [
-		'Sonicle.webtop.core.admin.model.GridDomainUser'
+		'Sonicle.Data',
+		'Sonicle.Utils',
+		'Sonicle.webtop.core.admin.model.GridUser'
 	],
 	uses: [
+		'Sonicle.webtop.core.admin.ux.UserDeleteScopeConfirmBox',
+		'Sonicle.webtop.core.admin.view.User',
 		'Sonicle.webtop.core.admin.view.Options'
 	],
 	
@@ -45,6 +49,7 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainUsers', {
 	 * Target domain ID.
 	 */
 	domainId: null,
+	
 	dirScheme: null,
 	dirCapPasswordWrite: false,
 	dirCapUsersWrite: false,
@@ -58,12 +63,14 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainUsers', {
 		title: '{domainUsers.tit}',
 		iconCls: 'wtadm-icon-users'
 	},
+	actionsResPrefix: 'domainUsers',
 	
 	constructor: function(cfg) {
 		var me = this;
+		if (!cfg.domainId) Ext.raise('domainId is mandatory');
 		me.callParent([cfg]);
 		
-		if(!cfg.title) {
+		if (!cfg.title) {
 			me.setBind({
 				title: Ext.String.format('[{0}] ', cfg.domainId || '') + '{_viewTitle}'
 			});
@@ -82,10 +89,11 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainUsers', {
 			reference: 'gp',
 			store: {
 				autoLoad: true,
-				model: 'Sonicle.webtop.core.admin.model.GridDomainUser',
-				proxy: WTF.apiProxy(me.mys.ID, 'ManageDomainUsers', 'users', {
+				model: 'Sonicle.webtop.core.admin.model.GridUser',
+				proxy: WTF.proxy(me.mys.ID, 'ManageDomainUsers', null, {
 					extraParams: {
-						domainId: me.domainId
+						domainId: me.domainId,
+						crud: 'read'
 					},
 					writer: {
 						allowSingle: false // Always wraps records into an array
@@ -100,7 +108,9 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainUsers', {
 			},
 			viewConfig: {
 				getRowClass: function(rec) {
-					return rec.get('enabled') === false ? 'wtadm-gpusers-row-disabled' : '';
+					if (rec.get('exist') === false) return 'wt-theme-text-lighter2';
+					if (rec.get('enabled') === false) return 'wt-text-striked wt-theme-text-error';
+					return '';
 				}
 			},
 			selModel: {
@@ -119,6 +129,12 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainUsers', {
 					header: me.mys.res('domainUsers.gp.displayName.lbl'),
 					flex: 2
 				}, {
+					dataIndex: 'userSid',
+					header: me.res('domainUsers.gp.userSid.lbl'),
+					tdCls: 'x-selectable',
+					hidden: true,
+					flex: 1
+				}, {
 					xtype: 'soiconcolumn',
 					dataIndex: 'exist',
 					header: WTF.headerWithGlyphIcon('fas fa-user'),
@@ -134,16 +150,77 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainUsers', {
 					dataIndex: 'dirDisplayName',
 					header: me.mys.res('domainUsers.gp.dirDisplayName.lbl'),
 					flex: 2
+				}, {
+					xtype: 'soactioncolumn',
+					items: [
+						{
+							iconCls: 'fas fa-key',
+							tooltip: WT.res('act-changePassword.lbl'),
+							hidden: !me.dirCapPasswordWrite,
+							isActionDisabled: function(s, ridx, cidx, itm, rec) {
+								return !me.dirCapPasswordWrite || !rec.get('exist');
+							},
+							handler: function(g, ridx) {
+								var rec = g.getStore().getAt(ridx);
+								me.changePasswordUI(rec);
+							}
+						}, {
+							iconCls: 'fas fa-user-plus',
+							tooltip: WT.res('act-add.lbl'),
+							isActionHidden: function(s, ridx, cidx, itm, rec) {
+								return rec.get('exist');
+							},
+							isActionDisabled: function(s, ridx, cidx, itm, rec) {
+								return rec.get('exist');
+							},
+							handler: function(g, ridx) {
+								var rec = g.getStore().getAt(ridx);
+								me.addUserUI(rec);
+							}
+						}, {
+							iconCls: 'far fa-edit',
+							tooltip: WT.res('act-edit.lbl'),
+							isActionHidden: function(s, ridx, cidx, itm, rec) {
+								return !rec.get('exist');
+							},
+							isActionDisabled: function(s, ridx, cidx, itm, rec) {
+								return !rec.get('exist');
+							},
+							handler: function(g, ridx) {
+								var rec = g.getStore().getAt(ridx);
+								me.editUserUI(rec);
+							}
+						}, {
+							iconCls: 'fas fa-cog',
+							tooltip: WT.res('opts.tit'),
+							isActionDisabled: function(s, ridx, cidx, itm, rec) {
+								return !rec.get('exist');
+							},
+							handler: function(g, ridx) {
+								var rec = g.getStore().getAt(ridx);
+								me.editOptionsUI(rec);
+							}
+						}, {
+							iconCls: 'far fa-trash-alt',
+							tooltip: WT.res('act-remove.lbl'),
+							isActionDisabled: function(s, ridx, cidx, itm, rec) {
+								return !rec.get('exist');
+							},
+							handler: function(g, ridx) {
+								var rec = g.getStore().getAt(ridx);
+								me.deleteUserUI(rec);
+							}
+						}
+					]
 				}
 			],
 			tbar: [
 				me.addAct('add', {
 					text: WT.res('act-add.lbl'),
 					tooltip: null,
-					iconCls: 'wt-icon-add',
+					iconCls: null,
 					menu: [
 						me.addAct('addEmpty', {
-							text: me.mys.res('domainUsers.act-addEmpty.lbl'),
 							tooltip: null,
 							disabled: !me.dirCapUsersWrite,
 							handler: function() {
@@ -153,32 +230,6 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainUsers', {
 						me.getAct('addImport')
 					]
 				}),
-				me.addAct('remove', {
-					text: WT.res('act-remove.lbl'),
-					tooltip: null,
-					iconCls: 'wt-icon-remove',
-					disabled: true,
-					menu: [
-						me.addAct('removeClean', {
-							text: me.mys.res('domainUsers.act-removeClean.lbl'),
-							tooltip: null,
-							handler: function() {
-								var sel = me.getSelectedUsers();
-								if (sel.length > 0) me.deleteUserUI(false, sel[0]);
-							}
-						}),
-						me.addAct('removeDeep', {
-							text: me.mys.res('domainUsers.act-removeDeep.lbl'),
-							tooltip: null,
-							disabled: !me.dirCapUsersWrite,
-							handler: function() {
-								var sel = me.getSelectedUsers();
-								if (sel.length > 0) me.deleteUserUI(true, sel[0]);
-							}
-						})
-					]
-				}),
-				me.getAct('changePassword'),
 				'-',
 				me.addAct('enable', {
 					text: WT.res('act-enable.lbl'),
@@ -219,20 +270,7 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainUsers', {
 					}
 				},
 				rowcontextmenu: function(s, rec, itm, i, e) {
-					WT.showContextMenu(e, me.getRef('cxmUserRow'));
-					/*
-					var selection = s.getSelection();
-					me.getAct('sendContact').setDisabled(false)
-					Ext.each(selection,function(sel){
-						if(sel.get('isList')){
-							me.getAct('sendContact').setDisabled(true)
-						}
-					});
-					WT.showContextMenu(e, me.getRef('cxmGrid'), {
-						contact: rec,
-						contacts: s.getSelection()
-					});
-					*/
+					Sonicle.Utils.showContextMenu(e, me.getRef('cxmUserRow'));
 				}
 			}
 		});
@@ -241,7 +279,6 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainUsers', {
 			bindTo: '{gp.selection}'
 		}, function() {
 			me.updateDisabled('addImport');
-			me.updateDisabled('remove');
 			me.updateDisabled('edit');
 			me.updateDisabled('changePassword');
 			me.updateDisabled('editOptions');
@@ -251,266 +288,221 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainUsers', {
 		});
 	},
 	
-	initActions: function() {
-		var me = this;
-		me.addAct('addImport', {
-			text: me.mys.res('domainUsers.act-addImport.lbl'),
-			tooltip: null,
-			disabled: true,
-			handler: function() {
-				var sel = me.getSelectedUsers();
-				if (sel.length > 0) me.addUserUI(sel[0]);
-			}
-		});
-		me.addAct('edit', {
-			text: WT.res('act-edit.lbl'),
-			tooltip: null,
-			handler: function() {
-				var sel = me.getSelectedUsers();
-				if (sel.length > 0) me.editUserUI(sel[0]);
-			}
-		});
-		me.addAct('changePassword', {
-			text: WT.res('act-changePassword.lbl'),
-			tooltip: null,
-			iconCls: 'wt-icon-changePassword',
-			disabled: true,
-			handler: function() {
-				var sel = me.getSelectedUsers();
-				if (sel.length > 0) me.changePasswordUI(sel[0]);
-			}
-		});
-		me.addAct('editOptions', {
-			text: WT.res('opts.tit'),
-			tooltip: null,
-			iconCls: 'wt-icon-options',
-			disabled: true,
-			handler: function() {
-				var sel = me.getSelectedUsers();
-				if (sel.length > 0) me.editOptionsUI(sel[0]);
-			}
-		});
-		me.addAct('updateEmailDomain', {
-			text: me.mys.res('domainUsers.act-updateEmailDomain.lbl'),
-			tooltip: null,
-			handler: function() {
-				var sel = me.getSelectedUsers();
-				me.updateEmailDomainUI(sel);
-			}
-		});
-	},
-	
-	initCxm: function() {
-		var me = this;
-		me.addRef('cxmUserRow', Ext.create({
-			xtype: 'menu',
-			items: [
-				me.getAct('addImport'),
-				me.getAct('edit'),
-				'-',
-				me.getAct('changePassword'),
-				'-',
-				me.getAct('editOptions'),
-				me.getAct('updateEmailDomain')
-			]
-		}));
-	},
-	
-	addUserUI: function(rec) {
+	addUser: function(domainId, userId, displayName, firstName, lastName, opts) {
+		opts = opts || {};
+		if (!opts.pwdPolicies) Ext.raise('Missing pwdPolicies');
+		if (!Ext.isBoolean(opts.askForPassword)) Ext.raise('Missing askForPassword');
 		var me = this,
-				copy = rec && (rec.get('exist') !== true),
-				usi = copy ? rec.get('userId') : null,
-				fn = copy ? rec.get('dirFirstName') : null,
-				ln = copy ? rec.get('dirLastName') : null,
-				dn = copy ? rec.get('dirDisplayName') : null;
-		
-		me.mys.getDomainPwdPolicies(me.domainId, {
-			callback: function(success, data) {
-				if (success) {
-					me.mys.addUser(!copy, data, me.domainId, usi, fn, ln, dn, {
-						callback: function(success2) {
-							if (success2) {
-								me.lref('gp').getStore().load();
-							}
-						}
-					});
-				} else {
-					WT.error('Password policies not loaded');
-				}
-			}
-		});
-	},
-	
-	editUserUI: function(rec) {
-		var me = this,
-				pid = rec.get('profileId');
-		me.mys.editUser(pid, {
-			callback: function(success) {
-				if(success) {
-					me.lref('gp').getStore().load();
-				}
-			}
-		});
-	},
-	
-	deleteUserUI: function(deep, rec) {
-		var me = this,
-				key = deep ? 'domainUsers.confirm.delete.deep' : 'domainUsers.confirm.delete';
-		
-		WT.confirm(me.mys.res(key), function(bid) {
-			if(bid === 'yes') {
-				me.mys.deleteUsers(deep, [rec.get('profileId')], {
-					callback: function(success) {
-						if(success) {
-							if(deep) {
-								me.lref('gp').getStore().remove(rec);
-							} else {
-								rec.set('displayName', null);
-								rec.set('exist', false);
-							}
-						}
-					}
-				});
-			}
-		}, me);	
-	},
-	
-	changePasswordUI: function(rec) {
-		var me = this;
-		me.mys.getDomainPwdPolicies(me.domainId, {
-			callback: function(success, data) {
-				if (success) {
-					me.showChangePassword(data, rec.get('profileId'));
-				} else {
-					WT.error('Password policies not loaded');
-				}
-			}
-		});
-	},
-	
-	updateUserStatusUI: function(rec, enabled) {
-		var me = this, doFn;
-		
-		doFn = function() {
-			me.mys.updateUsersStatus([rec.get('profileId')], enabled, {
-				callback: function(success) {
-					if (success) {
-						rec.set('enabled', enabled);
-						me.updateDisabled('enable');
-						me.updateDisabled('disable');
-					}
+			vw = WT.createView(me.mys.ID, 'view.User', {
+				swapReturn: true,
+				viewCfg: {
+					domainId: domainId,
+					policies: opts.pwdPolicies,
+					askForPassword: opts.askForPassword
 				}
 			});
-		};
-		if(enabled) {
-			doFn();
-		} else {
-			WT.confirm(me.mys.res('domainUsers.confirm.disable'), function(bid) {
-				if (bid === 'yes') doFn();
-			}, me);
-		}
-	},
-	
-	editOptionsUI: function(rec) {
-		var me = this,
-				vw = WT.createView(me.mys.ID, 'view.Options', {
-					swapReturn: true,
-					viewCfg: {
-						profileId: rec.get('profileId'),
-						profileDisplayName: rec.get('displayName')
-					}
-				});
-		vw.showView();
-	},
-	
-	updateEmailDomainUI: function(sel) {
-		var me = this;
-		WT.prompt(me.mys.res('domainUsers.prompt.updateEmailDomain'), {
-			title: me.mys.res('domainUsers.act-updateEmailDomain.lbl'),
-			fn: function(bid, value, cfg) {
-				if (bid === 'ok') {
-					if (Ext.isEmpty(value)) {
-						Ext.MessageBox.show(Ext.apply({}, {msg: cfg.msg}, cfg));
-					} else {
-						me.wait(WT.res('wait.changes'));
-						me.mys.updateUsersEmailDomain(me.selectionIds(sel), value, {
-							callback: function(success) {
-								me.unwait();
-								if (!success) WT.error(WT.res('error.unexpected'));
-							}
-						});
-					}
+
+		vw.on('viewsave', function(s, success, model, op) {
+			Ext.callback(opts.callback, opts.scope || me, [success, model, op]);
+		});
+		vw.showView(function() {
+			vw.begin('new', {
+				data: {
+					userId: userId,
+					enabled: true,
+					displayName: displayName,
+					firstName: firstName,
+					lastName: lastName
 				}
+			});
+		});
+	},
+	
+	editUser: function(domainId, userId, opts) {
+		opts = opts || {};
+		var me = this,
+			vw = WT.createView(me.mys.ID, 'view.User', {
+				swapReturn: true,
+				viewCfg: {
+					domainId: domainId
+				}
+			});
+
+		vw.on('viewsave', function(s, success, model, op) {
+			Ext.callback(opts.callback, opts.scope || me, [success, model, op]);
+		});
+		vw.showView(function() {
+			vw.begin('edit', {
+				data: {
+					id: userId
+				}
+			});
+		});
+	},
+	
+	updateUsersStatus: function(domainId, userIds, enable, opts) {
+		opts = opts || {};
+		var me = this;
+		WT.ajaxReq(me.mys.ID, 'ManageDomainUsers', {
+			params: {
+				crud: enable ? 'enable' : 'disable',
+				domainId: domainId,
+				ids: Sonicle.Utils.toJSONArray(Ext.Array.from(userIds))
+			},
+			callback: function(success, json) {
+				Ext.callback(opts.callback, opts.scope || me, [success, json.data, json]);
 			}
 		});
 	},
 	
-	getSelectedUsers: function() {
-		return this.lref('gp').getSelection();
+	updateUsersEmailDomain: function(domainId, userIds, domainPart, opts) {
+		opts = opts || {};
+		var me = this;
+		WT.ajaxReq(me.mys.ID, 'ManageDomainUsers', {
+			params: {
+				crud: 'updateEmailDomain',
+				domainId: domainId,
+				ids: Sonicle.Utils.toJSONArray(Ext.Array.from(userIds)),
+				domainPart: domainPart
+			},
+			callback: function(success, json) {
+				Ext.callback(opts.callback, opts.scope || me, [success, json.data, json]);
+			}
+		});
 	},
 	
-	updateDisabled: function(action) {
-		var me = this,
-				dis = me.isDisabled(action);
-		me.setActDisabled(action, dis);
-	},
-	
-	/**
-	 * @private
-	 */
-	isDisabled: function(action) {
-		var me = this, sel;
-		switch(action) {
-			case 'addImport':
-				sel = me.getSelectedUsers();
-				if (sel.length === 1) {
-					return sel[0].get('exist');
-				}
-				return true;
-			case 'remove':
-			case 'edit':
-			case 'editOptions':
-				sel = me.getSelectedUsers();
-				if (sel.length === 1) {
-					return !sel[0].get('exist');
-				}
-				return true;
-			case 'updateEmailDomain':
-				sel = me.getSelectedUsers();
-				if (sel.length > 0) {
-					return me.countByExist(sel) !== sel.length;
-				}
-				return true;
-			case 'changePassword':
-				if (!me.dirCapPasswordWrite) return true;
-				sel = me.getSelectedUsers();
-				if (sel.length === 1) {
-					return (me.dirScheme === 'webtop') && !sel[0].get('exist');
-					//return !sel[0].get('exist');
-				}
-				return true;
-			case 'enable':
-				sel = me.getSelectedUsers();
-				if (sel.length === 1) {
-					return !sel[0].get('exist') || sel[0].get('enabled') === true;
-				}
-				return true;
-			case 'disable':
-				sel = me.getSelectedUsers();
-				if (sel.length === 1) {
-					return !sel[0].get('exist') || !(sel[0].get('enabled') === true);
-				}
-				return true;
-		}
-	},
+	deleteUser: function(domainId, userId, opts) {
+		opts = opts || {};
+		var me = this;
+		WT.ajaxReq(me.mys.ID, 'ManageDomainUser', {
+			params: {
+				crud: 'delete',
+				domainId: domainId,
+				id: userId,
+				deep: opts.deep
+			},
+			callback: function(success, json) {
+				Ext.callback(opts.callback, opts.scope || me, [success, json.data, json]);
+			}
+		});
+	},	
 	
 	privates: {
-		selectionIds: function(sel) {
-			var ids = [];
-			Ext.iterate(sel, function(rec) {
-				ids.push(rec.getId());
+		initActions: function() {
+			var me = this;
+			me.addAct('addImport', {
+				tooltip: null,
+				disabled: true,
+				handler: function() {
+					var sel = me.getSelectedUsers();
+					if (sel.length > 0) me.addUserUI(sel[0]);
+				}
 			});
-			return ids;
+			me.addAct('edit', {
+				text: WT.res('act-edit.lbl'),
+				tooltip: null,
+				handler: function() {
+					var sel = me.getSelectedUsers();
+					if (sel.length > 0) me.editUserUI(sel[0]);
+				}
+			});
+			me.addAct('changePassword', {
+				text: WT.res('act-changePassword.lbl'),
+				tooltip: null,
+				iconCls: 'wt-icon-changePassword',
+				disabled: true,
+				handler: function() {
+					var sel = me.getSelectedUsers();
+					if (sel.length > 0) me.changePasswordUI(sel[0]);
+				}
+			});
+			me.addAct('editOptions', {
+				text: WT.res('opts.tit'),
+				tooltip: null,
+				iconCls: 'wt-icon-options',
+				disabled: true,
+				handler: function() {
+					var sel = me.getSelectedUsers();
+					if (sel.length > 0) me.editOptionsUI(sel[0]);
+				}
+			});
+			me.addAct('updateEmailDomain', {
+				tooltip: null,
+				handler: function() {
+					var sel = me.getSelectedUsers();
+					me.updateEmailDomainUI(sel);
+				}
+			});
+		},
+
+		initCxm: function() {
+			var me = this;
+			me.addRef('cxmUserRow', Ext.create({
+				xtype: 'menu',
+				items: [
+					me.getAct('addImport'),
+					me.getAct('edit'),
+					'-',
+					me.getAct('changePassword'),
+					'-',
+					me.getAct('editOptions'),
+					me.getAct('updateEmailDomain')
+				]
+			}));
+		},
+		
+		getSelectedUsers: function() {
+			return this.lref('gp').getSelection();
+		},
+	
+		updateDisabled: function(action) {
+			var me = this,
+				dis = me.isDisabled(action);
+			me.setActDisabled(action, dis);
+		},
+		
+		isDisabled: function(action) {
+			var me = this, sel;
+			switch(action) {
+				case 'addImport':
+					sel = me.getSelectedUsers();
+					if (sel.length === 1) {
+						return sel[0].get('exist');
+					}
+					return true;
+				case 'edit':
+				case 'editOptions':
+					sel = me.getSelectedUsers();
+					if (sel.length === 1) {
+						return !sel[0].get('exist');
+					}
+					return true;
+				case 'updateEmailDomain':
+					sel = me.getSelectedUsers();
+					if (sel.length > 0) {
+						return me.countByExist(sel) !== sel.length;
+					}
+					return true;
+				case 'changePassword':
+					if (!me.dirCapPasswordWrite) return true;
+					sel = me.getSelectedUsers();
+					if (sel.length === 1) {
+						return (me.dirScheme === 'webtop') && !sel[0].get('exist');
+					}
+					return true;
+				case 'enable':
+					sel = me.getSelectedUsers();
+					if (sel.length === 1) {
+						return !sel[0].get('exist') || sel[0].get('enabled') === true;
+					}
+					return true;
+				case 'disable':
+					sel = me.getSelectedUsers();
+					if (sel.length === 1) {
+						return !sel[0].get('exist') || !(sel[0].get('enabled') === true);
+					}
+					return true;
+			}
 		},
 		
 		countByExist: function(recs) {
@@ -521,16 +513,187 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainUsers', {
 			return i;
 		},
 		
+		addUserUI: function(rec) {
+			var me = this,
+				copy = rec && (rec.get('exist') !== true),
+				userId = copy ? rec.get('userId') : null,
+				ddn = copy ? rec.get('dirDisplayName') : null,
+				dfn = copy ? rec.get('dirFirstName') : null,
+				dln = copy ? rec.get('dirLastName') : null;
+
+			me.mys.lookupDomainPwdPolicies(me.domainId, {
+				callback: function(success, data) {
+					if (success) {
+						me.addUser(me.domainId, userId, ddn, dfn, dln, {
+							pwdPolicies: data,
+							askForPassword: !copy,
+							callback: function(success2) {
+								if (success2) {
+									me.lref('gp').getStore().load();
+								}
+							}
+						});
+					} else {
+						WT.error('Password policies not loaded');
+					}
+				}
+			});
+		},
+		
+		editUserUI: function(rec) {
+			var me = this,
+				gp = me.lref('gp');
+			
+			me.editUser(me.domainId, rec.getId(), {
+				callback: function(success, model) {
+					if (success) gp.getStore().load();
+				}
+			});
+		},
+		
+		updateUserStatusUI: function(recs, enabled) {
+			var me = this,
+				arecs = Ext.Array.from(recs),
+				ids = Sonicle.Data.collectValues(arecs),
+				doFn = function() {
+					me.wait();
+					me.updateUsersStatus(me.domainId, ids, enabled, {
+						callback: function(success, data, json) {
+							me.unwait();
+							if (success) {
+								Ext.iterate(arecs, function(rec) {
+									rec.set('enabled', enabled);
+								});
+								me.updateDisabled('enable');
+								me.updateDisabled('disable');
+							} else {
+								me.lref('gp').getStore().load();
+							}
+							WT.handleError(success, json);
+						}
+					});
+				};
+			
+			if (enabled) {
+				doFn();
+			} else {
+				WT.confirm(me.res('domainUsers.confirm.disable'), function(bid) {
+					if (bid === 'yes') doFn();
+				}, me);
+			}
+		},
+		
+		changePasswordUI: function(rec) {
+			var me = this;
+			me.mys.lookupDomainPwdPolicies(me.domainId, {
+				callback: function(success, data) {
+					if (success) {
+						me.showChangePassword(data, WT.buildProfileId(me.domainId, rec.getId()));
+					} else {
+						WT.error('Password policies not loaded');
+					}
+				}
+			});
+		},
+		
+		editOptionsUI: function(rec) {
+			var me = this,
+				vw = WT.createView(me.mys.ID, 'view.Options', {
+					swapReturn: true,
+					viewCfg: {
+						profileId: WT.buildProfileId(me.domainId, rec.getId()),
+						profileDisplayName: rec.get('displayName')
+					}
+				});
+			vw.showView();
+		},
+		
+		deleteUserUI: function(rec) {
+			var me = this,
+				doFn = function(deep) {
+					var key = deep ? 'domainUsers.confirm.delete.deep' : 'domainUsers.confirm.delete';
+					WT.confirm(me.res(key), function(bid) {
+						if (bid === 'yes') {
+							me.wait();
+							me.deleteUser(me.domainId, rec.getId(), {
+								deep: deep,
+								callback: function(success, data, json) {
+									me.unwait();
+									if (success) {
+										if (deep) {
+											me.lref('gp').getStore().remove(rec);
+										} else {
+											me.lref('gp').getStore().load();
+										}
+									}
+									WT.handleError(success, json);
+									WT.handleMessage(success, json);
+								}
+							});
+						}
+					}, me);
+				};
+			
+			if (!me.dirCapUsersWrite) {
+				doFn(false);
+			} else {
+				me.confirmDeleteScope(function(bid, value) {
+					if (bid === 'ok') doFn(value === 'deep');
+				}, me);
+			}
+		},
+		
+		updateEmailDomainUI: function(recs) {
+			var me = this,
+				arecs = Ext.Array.from(recs),
+				ids = Sonicle.Data.collectValues(arecs);
+
+			WT.prompt(me.res('domainUsers.prompt.updateEmailDomain'), {
+				title: me.res('domainUsers.act-updateEmailDomain.lbl'),
+				fn: function(bid, value, cfg) {
+					if (bid === 'ok') {
+						if (Ext.isEmpty(value)) {
+							Ext.MessageBox.show(Ext.apply({}, {msg: cfg.msg}, cfg));
+						} else {
+							me.wait();
+							me.updateUsersEmailDomain(me.domainId, ids, value, {
+								callback: function(success, data, json) {
+									me.unwait();
+									WT.handleError(success, json);
+								}
+							});
+						}
+					}
+				}
+			});
+		},
+		
 		showChangePassword: function(policies, profileId) {
 			var me = this,
-				vct = WT.createView(me.mys.ID, 'view.ChangePassword', {
+				vw = WT.createView(me.mys.ID, 'view.ChangePassword', {
+					swapReturn: true,
 					viewCfg: {
 						showOldPassword: false,
 						policies: policies,
 						profileId: profileId
 					}
 				});
-			vct.show();
+			vw.showView();
+		},
+		
+		confirmDeleteScope: function(cb, scope) {
+			var me = this;
+			WT.confirm(me.res('domainUsers.confirm.delete.scope'), cb, scope, {
+				buttons: Ext.Msg.OKCANCEL,
+				instClass: 'Sonicle.webtop.core.admin.ux.UserDeleteScopeConfirmBox',
+				instConfig: {
+					thisText: me.res('domainUsers.confirm.delete.scope.this.txt'),
+					deepText: me.res('domainUsers.confirm.delete.scope.deep.txt')
+				},
+				config: {
+					value: 'this'
+				}
+			});
 		}
 	}
 });

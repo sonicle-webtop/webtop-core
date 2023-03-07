@@ -98,9 +98,28 @@
             <version>3</version>
         </dependency>
 		<dependency>
+			<!-- Force version from jakarta (same in swagger-core) -->
+			<!--
+				This needs a review for JDK > 1.8 due a breaking removal!
+				https://stackoverflow.com/questions/46493613/what-is-the-replacement-for-javax-activation-package-in-java-9
+				https://docs.axelor.com/adk/6.0/migration.html
+				https://github.com/jakartaee/jaf-api/issues/33
+			-->
+            <groupId>jakarta.activation</groupId>
+            <artifactId>jakarta.activation-api</artifactId>
+            <version>1.2.2</version>
+        </dependency>
+		<dependency>
 			<groupId>org.jooq</groupId>
 			<artifactId>jooq</artifactId>
 			<version>${jooq.version}</version>
+			<exclusions>
+				<exclusion>
+					<!-- Block old javax.activation-api-1.2.0.jar coming transitively from jaxb-api -->
+					<groupId>javax.activation</groupId>
+					<artifactId>javax.activation-api</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 		<dependency>
 			<groupId>org.jooq</groupId>
@@ -176,20 +195,26 @@
 			<groupId>io.swagger.core.v3</groupId>
 			<artifactId>swagger-jaxrs2</artifactId>
 			<version>${swagger.version}</version>
+			<exclusions>
+				<exclusion>
+					<!-- Make sure to use latest activation-api version above -->
+					<groupId>jakarta.activation</groupId>
+					<artifactId>jakarta.activation-api</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
-		<!--
 		<dependency>
-			<groupId>io.swagger</groupId>
-			<artifactId>swagger-jersey2-jaxrs</artifactId>
-			<version>1.5.18</version>
+			<groupId>io.swagger.parser.v3</groupId>
+			<artifactId>swagger-parser</artifactId>
+			<version>2.1.9</version>
+			<exclusions>
+				<exclusion>
+					<!-- Block old mailapi.1.6.2.jar coming from transitive dependency -->
+					<groupId>com.sun.mail</groupId>
+					<artifactId>mailapi</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
-		-->
-		<dependency>
-			<groupId>io.swagger</groupId>
-			<artifactId>swagger-annotations</artifactId>
-			<version>${swagger-annotations.version}</version>
-		</dependency>
-		
 		<dependency>
 			<groupId>org.apache.commons</groupId>
 			<artifactId>commons-lang3</artifactId>
@@ -292,6 +317,11 @@
 			<groupId>net.glxn.qrgen</groupId>
 			<artifactId>javase</artifactId>
 			<version>2.0</version>
+		</dependency>
+		<dependency>
+			<groupId>net.engio</groupId>
+			<artifactId>mbassador</artifactId>
+			<version>${mbassador.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.quartz-scheduler</groupId>

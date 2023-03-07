@@ -81,6 +81,11 @@ public class CoreLocaleKey {
 	public static final String TPL_EMAIL_OTPCODEVERIFICATION_BODY_MESSAGE = "tpl.email.otpCodeVerification.body.message";
 	public static final String TPL_EMAIL_DEVICESYNCCHECK_BODY_HEADER = "tpl.email.devicesSyncCheck.body.header";
 	public static final String TPL_EMAIL_DEVICESYNCCHECK_BODY_MESSAGE = "tpl.email.devicesSyncCheck.body.message";
+	public static final String TPL_EMAIL_ICALREPLY_EVENT_SUBJECT_ACCEPTED="tpl.email.icalReply.event.subject.accepted";
+	public static final String TPL_EMAIL_ICALREPLY_EVENT_SUBJECT_DECLINED="tpl.email.icalReply.event.subject.declined";
+	public static final String TPL_EMAIL_ICALREPLY_EVENT_SUBJECT_TENTATIVE="tpl.email.icalReply.event.subject.tentative";
+	public static final String ICAL_REPLY_PARTSTAT_DECLINED="ical.reply.partstat.declined";
+	public static final String ICAL_REPLY_PARTSTAT_TENTATIVE="ical.reply.partstat.tentative";
 	
 	public static final String SMS_ERROR_BAD_TEXT = "sms.error.bad.text";
 	public static final String SMS_ERROR_BAD_FROM = "sms.error.bad.from";

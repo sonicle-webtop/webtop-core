@@ -44,6 +44,11 @@ Ext.define('Sonicle.webtop.core.mixin.FolderNodeInterface', {
 	builtInField: '',
 	activeField: '',
 	
+	/*
+	isFolderRoot -> isOrigin
+	getProfileId -> getOwnerId
+	*/
+	
 	isFolderRoot: function() {
 		return this.get(this.typeField) === 'root';
 	},

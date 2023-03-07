@@ -301,7 +301,7 @@ public class WTFormAuthFilter extends FormAuthenticationFilter {
 	private String getUserSecret(UserProfileId profileId) {
 		try {
 			return WebTopApp.getInstance().getWebTopManager()
-					.getUserSecret(profileId);
+				.getUserSecret(profileId.getDomainId(), profileId.getUserId());
 
 		} catch (Throwable t) {
 			LOGGER.error("[DeviceId] Unable to get secret for '{}'", profileId, t);

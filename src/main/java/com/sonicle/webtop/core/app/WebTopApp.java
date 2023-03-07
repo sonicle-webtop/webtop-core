@@ -43,10 +43,17 @@ import com.sonicle.commons.MailUtils;
 import com.sonicle.commons.PathUtils;
 import com.sonicle.commons.web.ContextUtils;
 import com.sonicle.commons.web.manager.TomcatManager;
+import com.sonicle.mail.PropsBuilder;
+import com.sonicle.mail.StoreHostParams;
+import com.sonicle.mail.StoreUtils;
+import com.sonicle.mail.TransportHostParams;
+import com.sonicle.mail.TransportUtils;
+import com.sonicle.mail.email.EmailMessage;
+import com.sonicle.mail.producer.MimeMessageProducer;
 import com.sonicle.security.AuthenticationDomain;
 import com.sonicle.security.CryptoUtils;
-import static com.sonicle.security.CryptoUtils.generateAESKey;
 import com.sonicle.security.PasswordUtils;
+import com.sonicle.security.Principal;
 import com.sonicle.security.auth.directory.ADConfigBuilder;
 import com.sonicle.security.auth.directory.ADDirectory;
 import com.sonicle.security.auth.directory.DirectoryOptions;
@@ -66,6 +73,10 @@ import com.sonicle.webtop.core.app.auth.LdapWebTopConfigBuilder;
 import com.sonicle.webtop.core.app.auth.LdapWebTopDirectory;
 import com.sonicle.webtop.core.app.auth.WebTopConfigBuilder;
 import com.sonicle.webtop.core.app.auth.WebTopDirectory;
+import com.sonicle.webtop.core.app.model.DomainBase;
+import com.sonicle.webtop.core.app.model.EnabledCond;
+import com.sonicle.webtop.core.app.model.GenericSubject;
+import com.sonicle.webtop.core.app.sdk.WTEmailSendException;
 import com.sonicle.webtop.core.bol.ODomain;
 import com.sonicle.webtop.core.model.ParamsLdapDirectory;
 import com.sonicle.webtop.core.io.FileResource;
@@ -75,13 +86,12 @@ import com.sonicle.webtop.core.sdk.UserProfileId;
 import com.sonicle.webtop.core.sdk.WTException;
 import com.sonicle.webtop.core.sdk.WTRuntimeException;
 import com.sonicle.webtop.core.app.shiro.WTRealm;
-import com.sonicle.webtop.core.model.DomainEntity.PasswordPolicies;
-import com.sonicle.webtop.core.util.ICalendarUtils;
+import com.sonicle.webtop.core.sdk.AuthException;
 import com.sonicle.webtop.core.util.LoggerUtils;
 import freemarker.template.Configuration;
 import freemarker.template.DefaultObjectWrapper;
 import freemarker.template.Template;
-import java.io.ByteArrayOutputStream;
+import jakarta.mail.Folder;
 import java.io.File;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -106,6 +116,7 @@ import java.util.jar.JarFile;
 import jakarta.mail.Message;
 import jakarta.mail.MessagingException;
 import jakarta.mail.Session;
+import jakarta.mail.Store;
 import jakarta.mail.Transport;
 import jakarta.mail.internet.InternetAddress;
 import jakarta.mail.internet.MimeBodyPart;
@@ -116,6 +127,7 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.net.InetAddress;
 import java.nio.charset.StandardCharsets;
+import java.security.GeneralSecurityException;
 import java.util.jar.Manifest;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
@@ -134,6 +146,7 @@ import org.apache.commons.vfs2.FileSystemException;
 import org.apache.commons.vfs2.VFS;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
+import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.cache.MemoryConstrainedCacheManager;
 import org.apache.shiro.mgt.DefaultSecurityManager;
 import org.apache.shiro.session.mgt.DefaultSessionManager;
@@ -187,6 +200,16 @@ public final class WebTopApp {
 		return instance;
 	}
 	
+	public static Properties getInstanceProperties() {
+		WebTopApp wta = getInstance();
+		return wta != null ? wta.getProperties() : null;
+	}
+	
+	public static boolean isWebappTheLatest() {
+		WebTopApp wta = getInstance();
+		return wta != null ? wta.isLatest() : false;
+	}
+	
 	public static String getWebappName() {
 		return webappName;
 	}
@@ -219,10 +242,12 @@ public final class WebTopApp {
 	private TomcatManager tomcat = null;
 	private boolean webappIsTheLatest;
 	private Timer webappVersionCheckTimer = null;
-	
+	private FileSystem fileSystem;
 	private MediaTypes mediaTypes = null;
 	private FileTypes fileTypes = null;
 	private Configuration freemarkerCfg = null;
+	
+	private EventBus eventBus;
 	private I18nManager i18nMgr = null;
 	private ConnectionManager conMgr = null;
 	private LicenseManager licMgr = null;
@@ -243,6 +268,7 @@ public final class WebTopApp {
 		WebTopApp.webappName = ContextUtils.getWebappFullName(servletContext, false);
 		this.servletContext = servletContext;
 		this.properties = properties;
+		StoreUtils.useExtendedFolderClasses(properties);
 		
 		this.osInfo = OSInfo.build();
 		this.systemCharset = Charset.forName("UTF-8");
@@ -316,6 +342,10 @@ public final class WebTopApp {
 		return adminSubject;
 	}
 	
+	public EventBus getEventBus() {
+		return eventBus;
+	}
+	
 	private DefaultSecurityManager buildSecurityManager() {
 		DefaultSecurityManager newSecurityManager = new DefaultSecurityManager(new WTRealm());
 		newSecurityManager.setCacheManager(new MemoryConstrainedCacheManager());
@@ -365,17 +395,15 @@ public final class WebTopApp {
 			throw new WTRuntimeException(ex, "Error initializing VFS");
 		}
 		
+		this.eventBus = new EventBus();
 		this.conMgr = ConnectionManager.initialize(this); // Connection Manager
 		this.setMgr = SettingsManager.initialize(this); // Settings Manager
+		this.fileSystem = new FileSystem(findHomePath()); //TODO: Move this up until home reading from settings will be deprecated
 		this.auditLogMgr = new AuditLogManager(this);
 		this.sesMgr = SessionManager.initialize(this); // Session Manager
 		
 		// Checks home directory
 		logger.info("Checking home structure...");
-		String homePath = getHomePath();
-		if (StringUtils.isBlank(homePath)) throw new WTRuntimeException("Missing home directory configuration [{}]", CoreSettings.HOME_PATH);
-		File homeDir = new File(homePath);
-		if (!homeDir.exists()) throw new WTRuntimeException("Configured home directory not found [{}]", homeDir.toString());
 		checkHomeStructure();
 		checkSecretKey();
 		
@@ -467,6 +495,7 @@ public final class WebTopApp {
 		// Connection Manager
 		conMgr.cleanup();
 		conMgr = null;
+		eventBus.shutdown();
 		// I18nManager Manager
 		i18nMgr.cleanup();
 		i18nMgr = null;
@@ -486,11 +515,9 @@ public final class WebTopApp {
 	private void onAppReady() throws InterruptedException {
 		logger.debug("onAppReady...");
 		try {
-			wtMgr.checkDomains();
-			logger.info("Checking domains homes structure...");
 			try {
-				checkDomainsHomesStructure();
-			} catch(WTException ex) {
+				wtMgr.checkDomains();
+			} catch (Exception ex) {
 				logger.error("Error", ex);
 			}
 			
@@ -498,7 +525,7 @@ public final class WebTopApp {
 			try {
 				initCacheDomainByFQDN();
 			} catch(WTException ex) {
-				logger.warn("Unable to create domains FQDN cache", ex);
+					logger.warn("Unable to create domains FQDN cache", ex);
 			}
 			*/
 			
@@ -511,6 +538,7 @@ public final class WebTopApp {
 			if (StringUtils.isBlank(tomcatUri)) {
 				logger.warn("No configuration found for TomcatManager [{}]", CoreSettings.TOMCAT_MANAGER_URI);
 				this.webappIsTheLatest = true;
+				
 			} else {
 				try {
 					this.tomcat = new TomcatManager(tomcatUri);
@@ -537,6 +565,7 @@ public final class WebTopApp {
 			dsMgr.initialize();
 			
 			svcMgr.initializeJobServices();
+			svcMgr.initializeBackgroundServices();
 			if (isLatest()) {
 				// Sleep a little bit for avoid concurrency with other webapp checks
 				logger.debug("Waiting 60sec before continue...");
@@ -545,6 +574,8 @@ public final class WebTopApp {
 					try {
 						logger.info("Scheduling JobServices tasks...");
 						svcMgr.scheduleAllJobServicesTasks();
+						logger.info("Scheduling BackgroundServices tasks...");
+						svcMgr.scheduleAllBackgroundServicesTasks();
 						if (!scheduler.isStarted()) logger.warn("Tasks succesfully scheduled but scheduler is not running");
 					} catch (SchedulerException ex) {
 						logger.error("Error", ex);
@@ -576,13 +607,13 @@ public final class WebTopApp {
 	
 	private void checkHomeStructure() {
 		try {
-			File dbScriptsDir = new File(getDbScriptsPath());
+			File dbScriptsDir = new File(getFileSystem().getDbScriptsPath());
 			if (!dbScriptsDir.exists()) {
 				dbScriptsDir.mkdir();
 				logger.trace("{} created", dbScriptsDir.toString());
 			}
 			
-			File domainsDir = new File(getDomainsPath());
+			File domainsDir = new File(getFileSystem().getDomainsPath());
 			if (!domainsDir.exists()) {
 				domainsDir.mkdir();
 				logger.trace("{} created", domainsDir.toString());
@@ -596,7 +627,7 @@ public final class WebTopApp {
 	private void checkSecretKey() {
 		try {
 			String hexKey = null;
-			File keyFile = new File(getHomePath() + "secret.key");
+			File keyFile = new File(getFileSystem().getHomePath() + "secret.key");
 			if (!keyFile.exists()) {
 				logger.info("Secret key file not found, generating new one...");
 				hexKey = CryptoUtils.hex(CryptoUtils.generateAESKey(256));
@@ -648,19 +679,6 @@ public final class WebTopApp {
 	
 	public String decryptData(final String s) {
 		return CryptoUtils.decryptAES(s, secretKeyBytes);
-	}
-	
-	private void checkDomainsHomesStructure() throws WTException {
-		wtMgr.initDomainHomeFolder(WebTopManager.SYSADMIN_DOMAINID);
-		
-		List<ODomain> domains = wtMgr.listDomains(false);
-		for (ODomain domain : domains) {
-			try {
-				wtMgr.initDomainHomeFolder(domain.getDomainId());
-			} catch(SecurityException ex) {
-				logger.warn("Unable to check domain home [{}]", domain.getDomainId(), ex);
-			}
-		}
 	}
 	
 	private void scheduleWebappVersionCheckTask() {
@@ -771,6 +789,10 @@ public final class WebTopApp {
 	public String getPlatformName() {
 		//TODO: completare rebranding aggiungendo impostazione per override del nome
 		return "WebTop";
+	}
+	
+	public FileSystem getFileSystem() {
+		return fileSystem;
 	}
 	
 	public MediaTypes getMediaTypes() {
@@ -918,120 +940,19 @@ public final class WebTopApp {
 		return freemarkerCfg.getTemplate(path, encoding);
 	}
 	
-	/**
-	 * Return the configured HOME path for the platform.
-	 * Path will be followed by the Unix style trailing separator.
-	 * @return The HOME path
-	 */
-	public String getHomePath() {
-		CoreServiceSettings css = getCoreServiceSettings();
-		return css.getHomePath();
-	}
-	
-	private String getDbScriptsPath() {
-		CoreServiceSettings css = getCoreServiceSettings();
-		return css.getHomePath() + DBSCRIPTS_FOLDER + "/";
-	}
-	
-	/**
-	 * Return the db-scripts HOME path for the passed Service.
-	 * @param serviceId The service ID.
-	 * @return The path
-	 */
-	public String getDbScriptsHomePath(String serviceId) {
-		CoreServiceSettings css = getCoreServiceSettings();
-		return css.getHomePath() + DBSCRIPTS_FOLDER + "/" + serviceId + "/";
-	}
-	
-	/**
-	 * Returns the POST db-scripts path for the passed Service.
-	 * @param serviceId The service ID.
-	 * @return The path
-	 */
-	public String getDbScriptsPostPath(String serviceId) {
-		return getDbScriptsHomePath(serviceId) + DBSCRIPTS_POST_FOLDER + "/";
-	}
-	
-	private String getDomainsPath() {
-		CoreServiceSettings css = getCoreServiceSettings();
-		return css.getHomePath() + DOMAINS_FOLDER + "/";
-	}
-	
-	/**
-	 * Return the HOME path for the passed Domain.
-	 * Path will be followed by the Unix style trailing separator.
-	 * @param domainId The domain ID.
-	 * @return The path
-	 */
-	public String getHomePath(String domainId) {
-		CoreServiceSettings css = getCoreServiceSettings();
-		if (StringUtils.equals(domainId, WebTopManager.SYSADMIN_DOMAINID)) {
-			return css.getHomePath() + DOMAINS_FOLDER + "/" + SYSADMIN_DOMAIN_FOLDER + "/";
-		} else {
-			return css.getHomePath() + DOMAINS_FOLDER + "/" + domainId + "/";
+	private String findHomePath() {
+		String home = PathUtils.ensureTrailingSeparator(WebTopProps.getHome(properties));
+		if (home == null) {
+			CoreServiceSettings css = getCoreServiceSettings();
+			home = css.getHomePath();
+			if (!StringUtils.isBlank(home)) {
+				logger.warn("!!!!!!!!!!!!!!!  WARNING  !!!!!!!!!!!!!!!");
+				logger.warn("Core setting 'home.path' is deprecated and will be removed in soon future.");
+				logger.warn("Please, use 'webtop.home' property instead.");
+				logger.warn("!!!!!!!!!!!!!!!  WARNING  !!!!!!!!!!!!!!!");
+			}
 		}
-	}
-	
-	/**
-	 * Return the TEMP path (relative to the HOME) for the passed Domain.
-	 * Path will be followed by the Unix style trailing separator.
-	 * @param domainId The domain ID.
-	 * @return The path
-	 */
-	public String getTempPath(String domainId) {
-		return getHomePath(domainId) + TEMP_DOMAIN_FOLDER + "/";
-	}
-	
-	public String getImagesPath(String domainId) {
-		return getHomePath(domainId) + IMAGES_DOMAIN_FOLDER + "/";
-	}
-	
-	/**
-	 * Return service's HOME path for the passed Domain.
-	 * Path will be followed by the Unix style trailing separator.
-	 * @param domainId The domain ID.
-	 * @param serviceId The service ID.
-	 * @return The path
-	 */
-	public String getServiceHomePath(String domainId, String serviceId) {
-		return getHomePath(domainId) + serviceId + "/";
-	}
-	
-	public String getPublicPath(String domainId) {
-		return getHomePath(domainId) + "public/";
-	}
-	
-	public File getTempFolder(String domainId) throws WTException {
-		File tempDir = new File(getTempPath(domainId));
-		if(!tempDir.isDirectory() || !tempDir.canWrite()) {
-			throw new WTException("Temp folder is not a directory or is write protected");
-		}
-		return tempDir;
-	}
-	
-	public File createTempFile(String domainId) throws WTException {
-		return createTempFile(domainId, null, null);
-	}
-	
-	public File createTempFile(String domainId, String prefix, String extension) throws WTException {
-		return new File(getTempFolder(domainId), buildTempFilename(prefix, extension));
-	}
-	
-	public boolean deleteTempFile(String domainId, String filename) throws WTException {
-		File tempFile = new File(getTempFolder(domainId), filename);
-		return tempFile.delete();
-	}
-	
-	public String buildTempFilename() {
-		return buildTempFilename(null, null);
-	}
-	
-	public String buildTempFilename(String prefix, String extension) {
-		String name = StringUtils.defaultString(prefix) + IdentifierUtils.getUUIDTimeBased(true);
-		if (!StringUtils.isBlank(extension)) {
-			name += ("." + extension);
-		}
-		return name;
+		return home;
 	}
 	
 	public FileResource getFileResource(URL url) throws URISyntaxException, MalformedURLException {
@@ -1172,6 +1093,22 @@ public final class WebTopApp {
 		return MessageFormat.format(value, arguments);
 	}
 	
+	public PropsBuilder getMailBasePropsBuilder(final boolean forTransport, final boolean forStore) {
+		PropsBuilder builder = new PropsBuilder(properties)
+			//.withDebug()
+			//.withSocketDebug()
+			//.withParseDebug()
+			;
+		
+		if (forTransport) {
+			// Nothing to preconfigure for now!
+		}
+		if (forStore) {
+			builder.withSonicleIMAPFolder();
+		}
+		return builder;
+	}
+	
 	public Session getGlobalMailSession(String domainId) {
 		Session session;
 		synchronized(cacheMailSessionByDomain) {
@@ -1181,17 +1118,10 @@ public final class WebTopApp {
 			String key=smtphost+":"+smtpport;
 			session=cacheMailSessionByDomain.get(key);
 			if (session==null) {
-				Properties props = new Properties(properties);
-				//props.setProperty("mail.imap.parse.debug", "true");
+				Properties props = getMailBasePropsBuilder(false, true).withEnableIMAPEvents().build();
 				props.setProperty("mail.smtp.host", smtphost);
 				props.setProperty("mail.smtp.port", ""+smtpport);
-				//props.setProperty("mail.socket.debug", "true");
 				props.setProperty("mail.imaps.ssl.trust", "*");
-				props.setProperty("mail.imap.folder.class", "com.sonicle.mail.imap.SonicleIMAPFolder");
-				props.setProperty("mail.imaps.folder.class", "com.sonicle.mail.imap.SonicleIMAPFolder");
-				//support idle events
-				props.setProperty("mail.imap.enableimapevents", "true");
-				
 				session=Session.getInstance(props, null);
 				cacheMailSessionByDomain.put(key,session);
 				
@@ -1199,6 +1129,92 @@ public final class WebTopApp {
 			}
 		}
 		return session;
+	}
+	
+	public void sendEmail(final UserProfileId sendingProfileId, final EmailMessage email, final String moveToFolderAfterSent) throws WTEmailSendException {
+		
+		// Checks if the running profile (see runContext) and sending profile are the same.
+		UserProfileId runPid = RunContext.getRunProfileId();
+		if (!RunContext.isWebTopAdmin(runPid)) {
+			if (!runPid.equals(sendingProfileId)) {
+				if (wtMgr.lookupSubjectSidQuietly(sendingProfileId, GenericSubject.Type.RESOURCE) == null) {
+					throw new AuthException("Running profile [{0}] does not match with sending profile [{1}]", runPid, sendingProfileId);
+				}
+			}
+			//if (!runPid.equals(sendingProfileId)) throw new AuthException("Running profile [{0}] does not match with sending profile [{1}]", runPid, sendingProfileId);
+		}
+		//TODO: maybe add a permission that allows sending emails
+		
+		// Creates new transport session
+		final TransportHostParams transportParams;
+		final jakarta.mail.Session transportSession;
+		try {
+			// For now, it's supposed that SMTP auth is not mandatory, sending 
+			// from localhost is always permitted. If we can extract credential 
+			// from current principal simply use them, otherwise no credential 
+			// will be used during connection.
+			//TODO: transport: where take credentials to connect? Principal may be a system user
+			CoreServiceSettings css = new CoreServiceSettings(CoreManifest.ID, sendingProfileId.getDomainId());
+			transportParams = css.getTransportHostParams((Principal)SecurityUtils.getSubject().getPrincipal());
+			Properties defaultProps = getMailBasePropsBuilder(true, false).build();
+			// Avoid slowness of call to message.saveChanges() due to DNS lookups
+			// https://stackoverflow.com/questions/44435457/mimemessage-savechanges-is-really-slow
+			// https://javaee.github.io/javamail/docs/api/
+			// https://javaee.github.io/javamail/FAQ#commonmistakes
+			defaultProps.setProperty("mail.from", email.getFromRecipient().getAddress());
+			transportSession = TransportUtils.createSession(transportParams, defaultProps);
+			
+		} catch (GeneralSecurityException ex) {
+			throw new WTEmailSendException(false, false, "Unable to create Transport session", ex);
+		}
+		
+		// Prepares new MimeMessage
+		final MimeMessage mimeMessage;
+		try {
+			mimeMessage = MimeMessageProducer.produceMimeMessage(email, transportSession);
+			mimeMessage.saveChanges();
+			
+		} catch (UnsupportedEncodingException | MessagingException ex) {
+			throw new WTEmailSendException(false, false, "Unable to create mimeMessage", ex);
+		}
+		
+		// Send message using trasport
+		Transport transport = null;
+		try {
+			transport = TransportUtils.open(transportSession, transportParams.getProtocol());
+			TransportUtils.send(transport, mimeMessage);
+			
+		} catch (MessagingException ex) {
+			throw new WTEmailSendException(false, false, "Unable to send message", ex);
+		} finally {
+			TransportUtils.closeQuietly(transport);
+		}
+		
+		// If necessary, copy sent message into specified folder
+		if (!StringUtils.isBlank(moveToFolderAfterSent)) {
+			Store store = null;
+			Folder moveToFolder = null;
+			
+			try {
+				// We cannot access our MailService here, so replicate its logic!
+				DummyMailUserSettings mus = new DummyMailUserSettings(sendingProfileId);
+				String user = WT.buildDomainInternetAddress(sendingProfileId.getDomainId(), sendingProfileId.getUserId(), null).getAddress();
+				
+				final StoreHostParams storeParams = mus.getMailboxHostDefinition(true, user, null);
+				final jakarta.mail.Session storeSession = StoreUtils.createSession(storeParams, 1, getMailBasePropsBuilder(false, true).build());
+				
+				store = StoreUtils.open(storeSession, storeParams.getProtocol());
+				moveToFolder = StoreUtils.openFolder(store, moveToFolderAfterSent, true);
+				StoreUtils.setMessageSeen(mimeMessage, true);
+				StoreUtils.moveMessage(mimeMessage, null, moveToFolder, false);
+				
+			} catch (GeneralSecurityException | MessagingException ex) {
+				throw new WTEmailSendException(true, false, ex, "Unable to save message into '{}'", moveToFolderAfterSent);
+			} finally {
+				StoreUtils.closeQuietly(moveToFolder, false);
+				StoreUtils.closeQuietly(store);
+			}
+		}
 	}
 	
 	public void sendEmail(jakarta.mail.Session session, boolean rich, 
@@ -1397,7 +1413,7 @@ public final class WebTopApp {
 				ldapwt.setPort(opts, authUri.getPort());
 				ldapwt.setConnectionSecurity(opts, ad.getDirConnSecurity());
 				ldapwt.setSpecificAdminDn(opts, ad.getDirAdmin(), ad.getInternetName());
-				ldapwt.setAdminPassword(opts, getDirPassword(ad));
+				ldapwt.setAdminPassword(opts, ad.getDirPassword());
 				ldapwt.setSpecificLoginDn(opts, ad.getInternetName());
 				ldapwt.setSpecificUserDn(opts, ad.getInternetName());
 				break;
@@ -1409,7 +1425,7 @@ public final class WebTopApp {
 				ldap.setPort(opts, authUri.getPort());
 				ldap.setConnectionSecurity(opts, ad.getDirConnSecurity());
 				ldap.setAdminDn(opts, ad.getDirAdmin());
-				ldap.setAdminPassword(opts, getDirPassword(ad));
+				ldap.setAdminPassword(opts, ad.getDirPassword());
 				ldap.setIsCaseSensitive(opts, webappIsTheLatest);
 				if (!StringUtils.isBlank(params.loginDn)) ldap.setLoginDn(opts, params.loginDn);
 				if (!StringUtils.isBlank(params.loginFilter)) ldap.setLoginFilter(opts, params.loginFilter);
@@ -1428,7 +1444,7 @@ public final class WebTopApp {
 				ldapnts.setPort(opts, authUri.getPort());
 				ldapnts.setConnectionSecurity(opts, ad.getDirConnSecurity());
 				ldapnts.setAdminDn(opts, ad.getDirAdmin());
-				ldapnts.setAdminPassword(opts, getDirPassword(ad));
+				ldapnts.setAdminPassword(opts, ad.getDirPassword());
 				if (!StringUtils.isBlank(params.loginDn)) ldapnts.setLoginDn(opts, params.loginDn);
 				if (!StringUtils.isBlank(params.loginFilter)) ldapnts.setLoginFilter(opts, params.loginFilter);
 				if (!StringUtils.isBlank(params.userDn)) ldapnts.setUserDn(opts, params.userDn);
@@ -1446,7 +1462,7 @@ public final class WebTopApp {
 				adir.setPort(opts, authUri.getPort());
 				adir.setConnectionSecurity(opts, ad.getDirConnSecurity());
 				adir.setAdminDn(opts, ad.getDirAdmin());
-				adir.setAdminPassword(opts, getDirPassword(ad));
+				adir.setAdminPassword(opts, ad.getDirPassword());
 				if (!StringUtils.isBlank(params.loginDn)) adir.setLoginDn(opts, params.loginDn);
 				if (!StringUtils.isBlank(params.loginFilter)) adir.setLoginFilter(opts, params.loginFilter);
 				if (!StringUtils.isBlank(params.userDn)) adir.setUserDn(opts, params.userDn);
@@ -1478,7 +1494,7 @@ public final class WebTopApp {
 		return opts;
 	}
 	
-	public DirectoryOptions setDirectoryOptionsPasswordPolicies(AuthenticationDomain ad, DirectoryOptions opts, PasswordPolicies policies) {
+	public DirectoryOptions setDirectoryOptionsPasswordPolicies(AuthenticationDomain ad, DirectoryOptions opts, DomainBase.PasswordPolicies policies) {
 		URI authUri = ad.getDirUri();
 		switch(authUri.getScheme()) {
 			case WebTopDirectory.SCHEME:
@@ -1503,11 +1519,131 @@ public final class WebTopApp {
 		return opts;
 	}
 	
-	private char[] getDirPassword(AuthenticationDomain ad) {
-		if(ad.getDirPassword() == null) return null;
-		String s = PasswordUtils.decryptDES(new String(ad.getDirPassword()), new String(new char[]{'p','a','s','s','w','o','r','d'}));
-		return (s != null) ? s.toCharArray() : null;
+	public static class FileSystem {
+		public static final String DOMAINS_FOLDER = "domains";
+		public static final String DBSCRIPTS_FOLDER = "dbscripts";
+		public static final String DBSCRIPTS_POST_FOLDER = "post";
+		public static final String TEMP_DOMAIN_FOLDER = "temp";
+		public static final String IMAGES_DOMAIN_FOLDER = "images";
+		public static final String SYSADMIN_DOMAIN_FOLDER = "_";
+		private final String homePath;
+		
+		private FileSystem(String homePath) throws WTRuntimeException {
+			this.homePath = PathUtils.ensureTrailingSeparator(homePath);
+			
+			// Check directory
+			File homeDir = new File(homePath);
+			if (!homeDir.exists()) throw new WTRuntimeException("Provided home directory '{}' not found", homeDir.toString());
+			if (!homeDir.canRead() || !homeDir.canWrite()) throw new WTRuntimeException("Provided home directory '{}' does NOT have required RW rights", homeDir.toString());
+		}
+		
+		/**
+		 * Return the configured HOME path for the platform.
+		 * Path will be followed by the Unix style trailing separator.
+		 * @return 
+		 */
+		public String getHomePath() {
+			return homePath;
+		}
+		
+		public String getDbScriptsPath() {
+			return getHomePath() + DBSCRIPTS_FOLDER + "/";
+		}
+		
+		/**
+		 * Return the db-scripts HOME path for the passed Service.
+		 * Path will be followed by the Unix style trailing separator.
+		 * @param serviceId The service ID.
+		 * @return 
+		 */
+		public String getDbScriptsHomePath(final String serviceId) {
+			return getHomePath() + DBSCRIPTS_FOLDER + "/" + serviceId + "/";
+		}
+		
+		/**
+		 * Returns the POST db-scripts path for the passed Service.
+		 * Path will be followed by the Unix style trailing separator.
+		 * @param serviceId The service ID.
+		 * @return 
+		 */
+		public String getDbScriptsPostPath(final String serviceId) {
+			return getDbScriptsHomePath(serviceId) + DBSCRIPTS_POST_FOLDER + "/";
+		}
+		
+		private String getDomainsPath() {
+			return getHomePath() + DOMAINS_FOLDER + "/";
+		}
+		
+		/**
+		 * Return the HOME path for the passed Domain.
+		 * Path will be followed by the Unix style trailing separator.
+		 * @param domainId The domain ID.
+		 * @return 
+		 */
+		public String getHomePath(final String domainId) {
+			if (StringUtils.equals(domainId, WebTopManager.SYSADMIN_DOMAINID)) {
+				return getHomePath() + DOMAINS_FOLDER + "/" + SYSADMIN_DOMAIN_FOLDER + "/";
+			} else {
+				return getHomePath() + DOMAINS_FOLDER + "/" + domainId + "/";
+			}
+		}
+		
+		/**
+		 * Return the TEMP path (relative to the HOME) for the passed Domain.
+		 * Path will be followed by the Unix style trailing separator.
+		 * @param domainId The domain ID.
+		 * @return 
+		 */
+		public String getTempPath(final String domainId) {
+			return getHomePath(domainId) + TEMP_DOMAIN_FOLDER + "/";
+		}
+
+		public String getImagesPath(final String domainId) {
+			return getHomePath(domainId) + IMAGES_DOMAIN_FOLDER + "/";
+		}
+		
+		/**
+		 * Return service's HOME path for the passed Domain.
+		 * Path will be followed by the Unix style trailing separator.
+		 * @param domainId The domain ID.
+		 * @param serviceId The service ID.
+		 * @return The path
+		 */
+		public String getServiceHomePath(String domainId, String serviceId) {
+			return getHomePath(domainId) + serviceId + "/";
+		}
+		
+		public File getTempFolder(String domainId) throws IOException {
+			File tempDir = new File(getTempPath(domainId));
+			if(!tempDir.isDirectory() || !tempDir.canWrite()) {
+				throw new IOException("Temp folder is not a directory or is write protected");
+			}
+			return tempDir;
+		}
+
+		public File createTempFile(String domainId) throws IOException {
+			return createTempFile(domainId, null, null);
+		}
+
+		public File createTempFile(String domainId, String prefix, String extension) throws IOException {
+			return new File(getTempFolder(domainId), buildTempFilename(prefix, extension));
+		}
+
+		public boolean deleteTempFile(String domainId, String filename) throws IOException {
+			File tempFile = new File(getTempFolder(domainId), filename);
+			return tempFile.delete();
+		}
+
+		public String buildTempFilename() {
+			return buildTempFilename(null, null);
+		}
+
+		public String buildTempFilename(String prefix, String extension) {
+			String name = StringUtils.defaultString(prefix) + IdentifierUtils.getUUIDTimeBased(true);
+			if (!StringUtils.isBlank(extension)) {
+				name += ("." + extension);
+			}
+			return name;
+		}
 	}
-	
-	
 }

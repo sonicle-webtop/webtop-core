@@ -35,13 +35,17 @@ package com.sonicle.webtop.core.rest.v1;
 import com.sonicle.webtop.core.CoreManager;
 import com.sonicle.webtop.core.app.RunContext;
 import com.sonicle.webtop.core.app.WT;
+import com.sonicle.webtop.core.app.model.EnabledCond;
+import com.sonicle.webtop.core.app.model.GenericSubject;
 import com.sonicle.webtop.core.bol.OUser;
+import com.sonicle.webtop.core.sdk.UserProfile;
 import com.sonicle.webtop.core.sdk.UserProfileId;
 import com.sonicle.webtop.core.swagger.v1.api.UsersApi;
 import com.sonicle.webtop.core.swagger.v1.model.ApiError;
-import com.sonicle.webtop.core.swagger.v1.model.User;
+import com.sonicle.webtop.core.swagger.v1.model.ApiLegacyUser;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import javax.ws.rs.core.Response;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -65,11 +69,9 @@ public class Users extends UsersApi {
 			if (targetPid == null) return respErrorBadRequest("Missing parameter [targetProfileId]");
 			
 			CoreManager coreMgr = WT.getCoreManager(targetPid);
-			List<User> items = new ArrayList<>();
-			for (OUser ouser : coreMgr.listUsers(true)) {
-				if (OUser.TYPE_USER.equals(ouser.getType())) {
-					items.add(createUser(ouser));
-				}
+			List<ApiLegacyUser> items = new ArrayList<>();
+			for (GenericSubject subject : coreMgr.listSubjects(true, false, false, false, false).values()) {
+				items.add(createApiLegacyUser(subject));
 			}
 			return respOk(items);
 			
@@ -79,12 +81,12 @@ public class Users extends UsersApi {
 		}
 	}
 	
-	private User createUser(OUser user) {
-		return new User()
-				.id(user.getUserId())
-				.uid(user.getUserUid())
-				.enabled(user.getEnabled())
-				.displayName(user.getDisplayName());
+	private ApiLegacyUser createApiLegacyUser(GenericSubject subject) {
+		return new ApiLegacyUser()
+				.id(subject.getName())
+				.uid(subject.getSid())
+				.enabled(true)
+				.displayName(subject.getDisplayName());
 	}
 
 	@Override

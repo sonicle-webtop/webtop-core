@@ -36,12 +36,14 @@ package com.sonicle.webtop.core.bol.js;
 import com.sonicle.commons.EnumUtils;
 import com.sonicle.commons.URIUtils;
 import com.sonicle.security.ConnectionSecurity;
-import com.sonicle.security.auth.directory.ADDirectory;
+import com.sonicle.security.PasswordUtils;
+import com.sonicle.security.auth.DirectoryManager;
 import com.sonicle.security.auth.directory.AbstractDirectory;
-import com.sonicle.security.auth.directory.LdapDirectory;
-import com.sonicle.security.auth.directory.LdapNethDirectory;
-import com.sonicle.webtop.core.model.DomainEntity;
-import com.sonicle.webtop.core.model.ParamsLdapDirectory;
+import com.sonicle.webtop.core.app.model.Domain;
+import com.sonicle.webtop.core.app.model.DomainBase;
+import com.sonicle.webtop.core.app.model.LdapDirectoryParams;
+import com.sonicle.webtop.core.sdk.WTRuntimeException;
+import java.net.URI;
 import java.net.URISyntaxException;
 import org.apache.commons.lang.StringUtils;
 
@@ -50,16 +52,20 @@ import org.apache.commons.lang.StringUtils;
  * @author malbinola
  */
 public class JsDomain {
+	public String id;
 	public String domainId;
-	public String internetName;
 	public Boolean enabled;
-	public String description;
+	public String displayName;
+	public String authDomainName;
+	public String domainName;
 	public Boolean userAutoCreation;
 	public String dirScheme;
 	public String dirHost;
 	public Integer dirPort;
 	public String dirAdmin;
 	public String dirPassword;
+	public String dirPassword_r;
+	public String dirPassword_h;
 	public String dirConnSecurity;
 	public Boolean dirCaseSensitive;
 	public Boolean dirPasswordPolicy;
@@ -81,63 +87,78 @@ public class JsDomain {
 	
 	public JsDomain() {}
 	
-	public JsDomain(DomainEntity o) throws URISyntaxException {
-		domainId = o.getDomainId();
-		internetName = o.getInternetName();
-		enabled = o.getEnabled();
-		description = o.getDescription();
-		userAutoCreation = o.getUserAutoCreation();
-		dirScheme = o.getDirUri().getScheme();
-		dirHost = o.getDirUri().getHost();
-		dirPort = URIUtils.getPort(o.getDirUri());
-		dirAdmin = o.getDirAdmin();
-		dirPassword = o.getDirPassword();
-		dirConnSecurity = StringUtils.defaultIfBlank(EnumUtils.getName(o.getDirConnSecurity()), "null");
-		dirCaseSensitive = o.getDirCaseSensitive();
-		if (o.getDirParameters() instanceof ParamsLdapDirectory) {
-			ParamsLdapDirectory params = (ParamsLdapDirectory)o.getDirParameters();
-			ldapLoginDn = params.loginDn;
-			ldapLoginFilter = params.loginFilter;
-			ldapUserDn = params.userDn;
-			ldapUserFilter = params.userFilter;
-			ldapUserIdField = params.userIdField;
-			ldapUserFirstnameField = params.userFirstnameField;
-			ldapUserLastnameField = params.userLastnameField;
-			ldapUserDisplayNameField = params.userDisplayNameField;
+	public JsDomain(Domain item) {
+		this.id = item.getDomainId();
+		this.domainId = item.getDomainId();
+		this.enabled = item.getEnabled();
+		this.displayName = item.getDisplayName();
+		this.authDomainName = item.getAuthDomainName();
+		this.domainName = item.getDomainName();
+		this.userAutoCreation = item.getUserAutoCreation();
+		this.dirScheme = item.getDirUri().getScheme();
+		this.dirHost = item.getDirUri().getHost();
+		this.dirPort = URIUtils.getPort(item.getDirUri());
+		this.dirAdmin = item.getDirAdmin();
+		final String[] redacted = PasswordUtils.redact(item.getDirPassword());
+		this.dirPassword = redacted[0];
+		this.dirPassword_r = redacted[0];
+		this.dirPassword_h = redacted[1];
+		this.dirConnSecurity = StringUtils.defaultIfBlank(EnumUtils.getName(item.getDirConnSecurity()), "null");
+		this.dirCaseSensitive = item.getDirCaseSensitive();
+		if (LdapDirectoryParams.class.equals(item.getDirRawParametersClass())) {
+			final LdapDirectoryParams params = item.readDirRawParameters(LdapDirectoryParams.class);
+			this.ldapLoginDn = params.loginDn;
+			this.ldapLoginFilter = params.loginFilter;
+			this.ldapUserDn = params.userDn;
+			this.ldapUserFilter = params.userFilter;
+			this.ldapUserIdField = params.userIdField;
+			this.ldapUserFirstnameField = params.userFirstnameField;
+			this.ldapUserLastnameField = params.userLastnameField;
+			this.ldapUserDisplayNameField = params.userDisplayNameField;
 		} else {
-			ldapLoginDn = null;
-			ldapLoginFilter = null;
-			ldapUserDn = null;
-			ldapUserFilter = null;
-			ldapUserIdField = null;
-			ldapUserFirstnameField = null;
-			ldapUserLastnameField = null;
-			ldapUserDisplayNameField = null;
+			this.ldapLoginDn = null;
+			this.ldapLoginFilter = null;
+			this.ldapUserDn = null;
+			this.ldapUserFilter = null;
+			this.ldapUserIdField = null;
+			this.ldapUserFirstnameField = null;
+			this.ldapUserLastnameField = null;
+			this.ldapUserDisplayNameField = null;
 		}
-		pwdMinLength = o.getPasswordPolicies().getMinLength();
-		pwdComplexity = o.getPasswordPolicies().getComplexity();
-		pwdAvoidConsecutiveChars = o.getPasswordPolicies().getAvoidConsecutiveChars();
-		pwdAvoidOldSimilarity = o.getPasswordPolicies().getAvoidOldSimilarity();
-		pwdAvoidUsernameSimilarity = o.getPasswordPolicies().getAvoidUsernameSimilarity();
-		pwdExpiration = o.getPasswordPolicies().getExpiration();
-		pwdVerifyAtLogin = o.getPasswordPolicies().getVerifyAtLogin();
+		final DomainBase.PasswordPolicies policies = item.getPasswordPolicies();
+		if (policies != null) {
+			this.pwdMinLength = policies.getMinLength();
+			this.pwdComplexity = policies.getComplexity();
+			this.pwdAvoidConsecutiveChars = policies.getAvoidConsecutiveChars();
+			this.pwdAvoidOldSimilarity = policies.getAvoidOldSimilarity();
+			this.pwdAvoidUsernameSimilarity = policies.getAvoidUsernameSimilarity();
+			this.pwdExpiration = policies.getExpiration();
+			this.pwdVerifyAtLogin = policies.getVerifyAtLogin();
+		} else {
+			this.pwdMinLength = null;
+			this.pwdComplexity = null;
+			this.pwdAvoidConsecutiveChars = null;
+			this.pwdAvoidOldSimilarity = null;
+			this.pwdAvoidUsernameSimilarity = null;
+			this.pwdExpiration = null;
+			this.pwdVerifyAtLogin = null;
+		}
 	}
 	
-	public static DomainEntity buildDomainEntity(JsDomain js, AbstractDirectory dir) throws URISyntaxException {
-		DomainEntity de = new DomainEntity();
-		de.setDomainId(js.domainId);
-		de.setInternetName(js.internetName);
-		de.setEnabled(js.enabled);
-		de.setDescription(js.description);
-		de.setUserAutoCreation(js.userAutoCreation);
-		de.setDirUri(dir.buildUri(js.dirHost, js.dirPort, null));
-		de.setDirAdmin(js.dirAdmin);
-		de.setDirPassword(js.dirPassword);
-		de.setDirConnSecurity(EnumUtils.getEnum(ConnectionSecurity.class, js.dirConnSecurity));
-		de.setDirCaseSensitive(js.dirCaseSensitive);
-		String scheme = de.getDirUri().getScheme();
-		if (scheme.equals(LdapDirectory.SCHEME) || scheme.equals(LdapNethDirectory.SCHEME) || scheme.equals(ADDirectory.SCHEME)) {
-			ParamsLdapDirectory params =  new ParamsLdapDirectory();
+	public static DomainBase createDomainForAdd(JsDomain js) {
+		DomainBase item = new DomainBase();
+		item.setEnabled(js.enabled);
+		item.setDisplayName(js.displayName);
+		item.setAuthDomainName(js.authDomainName);
+		item.setDomainName(js.domainName);
+		item.setUserAutoCreation(js.userAutoCreation);
+		item.setDirUri(buildDirectoryURI(js.dirScheme, js.dirHost, js.dirPort));
+		item.setDirAdmin(js.dirAdmin);
+		item.setDirPassword(js.dirPassword);
+		item.setDirConnSecurity(EnumUtils.forName(js.dirConnSecurity, ConnectionSecurity.class));
+		item.setDirCaseSensitive(js.dirCaseSensitive);
+		if (LdapDirectoryParams.class.equals(item.getDirRawParametersClass())) {
+			LdapDirectoryParams params = new LdapDirectoryParams();
 			params.loginDn = js.ldapLoginDn;
 			params.loginFilter = js.ldapLoginFilter;
 			params.userDn = js.ldapUserDn;
@@ -146,11 +167,11 @@ public class JsDomain {
 			params.userFirstnameField = js.ldapUserFirstnameField;
 			params.userLastnameField = js.ldapUserLastnameField;
 			params.userDisplayNameField = js.ldapUserDisplayNameField;
-			de.setDirParameters(params);
+			item.writeDirRawParameters(params, LdapDirectoryParams.class);
 		} else {
-			de.setDirParameters(null);
+			item.setDirRawParameters(null);
 		}
-		de.setPasswordPolicies(new DomainEntity.PasswordPolicies(
+		item.setPasswordPolicies(new DomainBase.PasswordPolicies(
 			js.pwdMinLength,
 			js.pwdComplexity,
 			js.pwdAvoidConsecutiveChars,
@@ -159,7 +180,76 @@ public class JsDomain {
 			js.pwdExpiration,
 			js.pwdVerifyAtLogin
 		));
+		return item;
+	}
+	
+	public static CreateForUpdateResult createDomainForUpdate(JsDomain js) {
+		boolean passwordChanged = false;
+		DomainBase item = new DomainBase();
+		item.setEnabled(js.enabled);
+		item.setDisplayName(js.displayName);
+		item.setAuthDomainName(js.authDomainName);
+		item.setDomainName(js.domainName);
+		item.setUserAutoCreation(js.userAutoCreation);
+		item.setDirUri(buildDirectoryURI(js.dirScheme, js.dirHost, js.dirPort));
+		item.setDirAdmin(js.dirAdmin);
+		if (StringUtils.isBlank(js.dirPassword_r) || (!StringUtils.equals(js.dirPassword, js.dirPassword_r) && !StringUtils.equals(PasswordUtils.redact(js.dirPassword)[1], js.dirPassword_h))) {
+			passwordChanged = true;
+			item.setDirPassword(js.dirPassword);
+		} else {
+			item.setDirPassword(null);
+		}
+		item.setDirPassword(js.dirPassword);
+		item.setDirConnSecurity(EnumUtils.forName(js.dirConnSecurity, ConnectionSecurity.class));
+		item.setDirCaseSensitive(js.dirCaseSensitive);
+		if (LdapDirectoryParams.class.equals(item.getDirRawParametersClass())) {
+			LdapDirectoryParams params = new LdapDirectoryParams();
+			params.loginDn = js.ldapLoginDn;
+			params.loginFilter = js.ldapLoginFilter;
+			params.userDn = js.ldapUserDn;
+			params.userFilter = js.ldapUserFilter;
+			params.userIdField = js.ldapUserIdField;
+			params.userFirstnameField = js.ldapUserFirstnameField;
+			params.userLastnameField = js.ldapUserLastnameField;
+			params.userDisplayNameField = js.ldapUserDisplayNameField;
+			item.writeDirRawParameters(params, LdapDirectoryParams.class);
+		} else {
+			item.setDirRawParameters(null);
+		}
+		item.setPasswordPolicies(new DomainBase.PasswordPolicies(
+			js.pwdMinLength,
+			js.pwdComplexity,
+			js.pwdAvoidConsecutiveChars,
+			js.pwdAvoidOldSimilarity,
+			js.pwdAvoidUsernameSimilarity,
+			js.pwdExpiration,
+			js.pwdVerifyAtLogin
+		));
+		return new CreateForUpdateResult(item, passwordChanged);
+	}
+	
+	public static class CreateForUpdateResult {
+		public final DomainBase item;
+		public final boolean passwordChanged;
 		
-		return de;
+		public CreateForUpdateResult(DomainBase item, boolean passwordChanged) {
+			this.item = item;
+			this.passwordChanged = passwordChanged;
+		}
+	}
+	
+	private static AbstractDirectory getAuthDirectoryByScheme(String scheme) {
+		final AbstractDirectory directory = DirectoryManager.getManager().getDirectory(scheme);
+		if (directory == null) throw new WTRuntimeException("Directory not supported [{}]", scheme);
+		return directory;
+	}
+	
+	private static URI buildDirectoryURI(String scheme, String host, Integer port) {
+		final AbstractDirectory directory = getAuthDirectoryByScheme(scheme);
+		try {
+			return directory.buildUri(host, port, null);
+		} catch (URISyntaxException ex) {
+			throw new WTRuntimeException(ex, "Unable to build URI for '{}' [{}, {}]", scheme, host, port);
+		}
 	}
 }

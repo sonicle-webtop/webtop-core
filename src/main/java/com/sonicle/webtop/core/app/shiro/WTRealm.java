@@ -32,6 +32,7 @@
  */
 package com.sonicle.webtop.core.app.shiro;
 
+import com.sonicle.commons.flags.BitFlags;
 import com.sonicle.security.Principal;
 import com.sonicle.security.AuthenticationDomain;
 import com.sonicle.security.auth.DirectoryException;
@@ -42,13 +43,16 @@ import com.sonicle.security.auth.directory.DirectoryOptions;
 import com.sonicle.webtop.core.app.CoreManifest;
 import com.sonicle.webtop.core.app.WebTopManager;
 import com.sonicle.webtop.core.app.WebTopApp;
-import com.sonicle.webtop.core.app.sdk.WTMultiCauseWarnException;
+import com.sonicle.webtop.core.app.WebTopProps;
+import com.sonicle.webtop.core.app.model.User;
+import com.sonicle.webtop.core.app.model.UserBase;
+import com.sonicle.webtop.core.app.model.UserGetOption;
+import com.sonicle.webtop.core.app.model.UserUpdateOption;
+import com.sonicle.webtop.core.app.sdk.Result;
 import com.sonicle.webtop.core.bol.ODomain;
 import com.sonicle.webtop.core.bol.ORolePermission;
-import com.sonicle.webtop.core.bol.OUser;
 import com.sonicle.webtop.core.model.ServicePermission;
 import com.sonicle.webtop.core.bol.model.RoleWithSource;
-import com.sonicle.webtop.core.bol.model.UserEntity;
 import com.sonicle.webtop.core.sdk.UserProfileId;
 import com.sonicle.webtop.core.sdk.WTException;
 import java.net.URISyntaxException;
@@ -59,6 +63,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.shiro.authc.AuthenticationException;
 import org.apache.shiro.authc.AuthenticationInfo;
 import org.apache.shiro.authc.AuthenticationToken;
+import org.apache.shiro.authc.BearerToken;
 import org.apache.shiro.authc.UsernamePasswordToken;
 import org.apache.shiro.authz.AuthorizationException;
 import org.apache.shiro.authz.AuthorizationInfo;
@@ -75,6 +80,26 @@ public class WTRealm extends AuthorizingRealm {
 	public static final String NAME = "wtrealm";
 	private final static Logger logger = (Logger)LoggerFactory.getLogger(WTRealm.class);
 	private final Object lock1 = new Object();
+	
+	@Override
+	public void clearCachedAuthorizationInfo(PrincipalCollection principals) {
+		// Exposes clearCachedAuthorizationInfo in order to clear cached data from management code.
+		super.clearCachedAuthorizationInfo(principals);
+	}
+	
+	@Override
+	public void clearCachedAuthenticationInfo(PrincipalCollection principals) {
+		// Exposes clearCachedAuthenticationInfo in order to clear cached data from management code.
+		super.clearCachedAuthenticationInfo(principals);
+	}
+
+	@Override
+	public boolean supports(AuthenticationToken token) {
+		// Override default implementation to support both UsernamePasswordToken and BearerToken classes.
+		return token != null &&
+			(getAuthenticationTokenClass().isAssignableFrom(UsernamePasswordToken.class)
+				|| getAuthenticationTokenClass().isAssignableFrom(BearerToken.class));
+	}
 	
 	@Override
 	protected AuthenticationInfo doGetAuthenticationInfo(AuthenticationToken token) throws AuthenticationException {
@@ -101,10 +126,36 @@ public class WTRealm extends AuthorizingRealm {
 			upt.setUsername(principal.getUserId());
 			
 			return new WTAuthenticationInfo(principal, upt.getPassword(), this.getName());
+		
+		} else if (token instanceof BearerToken) {
+			BearerToken bt = (BearerToken)token;
 			
-		} else {
-			return null;
+			Principal principal = authenticateWithToken(bt.getToken());
+			if (principal != null) return new WTAuthenticationInfo(principal, bt.getToken().toCharArray(), this.getName());
 		}
+		return null;
+	}
+	
+	private Principal authenticateWithToken(String token) throws AuthenticationException {
+		WebTopApp wta = WebTopApp.getInstance();
+		WebTopManager wtMgr = wta.getWebTopManager();
+		final String provisioningApiToken = WebTopProps.getProvisioningApiToken(WebTopApp.getInstanceProperties());
+		
+		if (provisioningApiToken != null && provisioningApiToken.equals(token)) {
+			// Support access leveraging on a pre-shared token, suitable for 
+			// provisioning application configuration through APIs.
+			
+			try {
+				AuthenticationDomain priAd = wtMgr.createSysAdminAuthenticationDomain();
+				Principal principal = new Principal(priAd, false, priAd.getDomainId(), WebTopManager.SYSADMIN_USERID, null);
+				principal.setDisplayName(WebTopManager.SYSADMIN_USERID);
+				return principal;
+				
+			} catch (URISyntaxException ex) {
+				throw new AuthenticationException(ex);
+			}
+		}
+		return null;
 	}
 	
 	@Override
@@ -160,7 +211,7 @@ public class WTRealm extends AuthorizingRealm {
 					if (domains.size() != 1) throw new WTException("Multiple domains match specified internet domain [{}]", internetDomain);
 					domain = domains.get(0);
 				} else {
-					domain = wtMgr.getDomain(domainId);
+					domain = wtMgr.OLD_getDomain(domainId);
 					if ((domain == null) || !domain.getEnabled()) throw new WTException("Domain not found [{}]", domainId);
 				}
 				
@@ -187,36 +238,39 @@ public class WTRealm extends AuthorizingRealm {
 			Principal authPrincipal = new Principal(authAd, impersonate, authAd.getDomainId(), authUsername, password);
 			logger.debug("Authenticating principal [{}, {}]", authPrincipal.getDomainId(), authPrincipal.getUserId());
 			
-			AuthUser userEntry = null;
+			AuthUser authUser = null;
 			try {
-				userEntry = directory.authenticate(opts, authPrincipal);
-			} catch(DirectoryException ex1) {
+				authUser = directory.authenticate(opts, authPrincipal);
+			} catch (DirectoryException ex1) {
 				logger.trace("Unable to authenticate principal: {}", authPrincipal.toString(), ex1);
 				throw new AuthenticationException(ex1);
 			}
 			
-			// Authentication phase passed succesfully, now build the right principal!
+			// If we are here, directory has successfully authenticated the user, provided credentials are correct!
+			
+			// Now build the right principal according to impersonate status...
 			Principal principal = null;
-			if (impersonate) {
+			if (impersonate) { // User is impersonated
 				String impUsername = sanitizeImpersonateUsername(username);
 				principal = new Principal(priAd, impersonate, priAd.getDomainId(), impUsername, password);
 				
-				UserProfileId pid = new UserProfileId(principal.getDomainId(), principal.getUserId());
-				OUser ouser = wta.getWebTopManager().getUser(pid);
-				// We cannot continue if the user is not present, impersonation needs it!
-				if (ouser == null) throw new WTException("User not found [{}]", pid.toString());
-				principal.setDisplayName(ouser.getDisplayName());
+				// !!! Impersonation needs that the User is already present, otherwise we cannot continue!
+				// Yes, you cannot leverage on User auto-creation feature during impersonation.
 				
-			} else {
-				// Authentication result points to the right userId...
-				principal = new Principal(priAd, impersonate, priAd.getDomainId(), userEntry.userId, password);
-				principal.setDisplayName(StringUtils.defaultIfBlank(userEntry.displayName, userEntry.userId));
+				UserProfileId pid = new UserProfileId(principal.getDomainId(), principal.getUserId());
+				User user = wtMgr.getUser(pid.getDomainId(), pid.getUserId(), BitFlags.noneOf(UserGetOption.class));
+				if (user == null) throw new WTException("User not found [{}]", pid.toString());
+				principal.setDisplayName(user.getDisplayName());
+				
+			} else { // User NOT impersonated (authentication result points to the right userId)
+				principal = new Principal(priAd, impersonate, priAd.getDomainId(), authUser.userId, password);
+				principal.setDisplayName(StringUtils.defaultIfBlank(authUser.displayName, authUser.userId));
 			}
 			
-			if (autoCreate) principal.pushDirectoryEntry(userEntry);
+			if (autoCreate) principal.pushDirectoryEntry(authUser);
 			return principal;
 		
-		} catch(URISyntaxException | WTException ex) {
+		} catch (URISyntaxException | WTException ex) {
 			logger.error("Authentication error", ex);
 			throw new AuthenticationException(ex);
 		}	
@@ -227,16 +281,15 @@ public class WTRealm extends AuthorizingRealm {
 		WebTopManager wtMgr = wta.getWebTopManager();
 		AuthUser userEntry = principal.popDirectoryEntry();
 		
+		//TODO: improve with a keyed lock
 		synchronized (lock1) {
 			WebTopManager.CheckUserResult chk = wtMgr.checkUser(principal.getDomainId(), principal.getUserId());
 			if (!chk.exist) {
 				if (userEntry != null) {
 					logger.debug("Creating user [{}]", principal.getSubjectId());
-					try {
-						wtMgr.addUser(false, createUserEntity(principal.getDomainId(), userEntry), false, null);
-					} catch(WTMultiCauseWarnException ex1) {
-						// This kind of exception collects errors from inner service handlers
-						logger.warn("User configuration may not have been fully completed. Please check log details above. [{}]", principal.getSubjectId(), ex1);
+					Result<User> result = wtMgr.addUser(principal.getDomainId(), userEntry.userId, createUserBase(userEntry), false, false, null, UserUpdateOption.internalDefaultFlags());
+					if (result.hasExceptions()) {
+						logger.warn("User configuration may not have been fully completed. Please check log details above. [{}]", principal.getSubjectId());
 					}
 					
 				} else {
@@ -258,12 +311,12 @@ public class WTRealm extends AuthorizingRealm {
 		HashSet<String> perms = new HashSet<>();
 		
 		if (Principal.xisAdmin(pid.toString())) {
-			roles.add(WebTopManager.ROLEUID_SYSADMIN);
-			roles.add(WebTopManager.ROLEUID_WTADMIN);
+			roles.add(WebTopManager.SYSADMIN_ROLESID);
+			roles.add(WebTopManager.WTADMIN_ROLESID);
 			//perms.add(ServicePermission.permissionString(ServicePermission.namespacedName(CoreManifest.ID, "SYSADMIN"), ServicePermission.ACTION_ACCESS, "*"));
 			//perms.add(ServicePermission.permissionString(ServicePermission.namespacedName(CoreManifest.ID, "WTADMIN"), ServicePermission.ACTION_ACCESS, "*"));
 		} else if (principal.isImpersonated()) {
-			roles.add(WebTopManager.ROLEUID_IMPERSONATED_USER);
+			roles.add(WebTopManager.IMPERSONATED_USER_ROLESID);
 			//perms.add(ServicePermission.permissionString(ServicePermission.namespacedName(CoreManifest.ID, "WTADMIN"), ServicePermission.ACTION_ACCESS, "*"));
 		}
 		
@@ -306,14 +359,12 @@ public class WTRealm extends AuthorizingRealm {
 		return StringUtils.startsWith(StringUtils.lowerCase(username), "admin$");
 	}
 	
-	private UserEntity createUserEntity(String domainId, AuthUser userEntry) {
-		UserEntity ue = new UserEntity();
-		ue.setDomainId(domainId);
-		ue.setUserId(userEntry.userId);
-		ue.setEnabled(true);
-		ue.setFirstName(userEntry.firstName);
-		ue.setLastName(userEntry.lastName);
-		ue.setDisplayName(userEntry.displayName);
-		return ue;
+	private UserBase createUserBase(AuthUser authUser) {
+		UserBase user = new UserBase();
+		user.setEnabled(true);
+		user.setFirstName(authUser.firstName);
+		user.setLastName(authUser.lastName);
+		user.setDisplayName(authUser.displayName);
+		return user;
 	}
 }

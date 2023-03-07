@@ -167,7 +167,7 @@ Ext.define('Sonicle.webtop.core.app.WTPrivate', {
 	 * @returns {Boolean}
 	 */
 	isSysAdmin: function() {
-		return this.hasRole('SYSADMIN');
+		return this.hasRole('__SYSADMIN__');
 	},
 	
 	/**
@@ -175,7 +175,7 @@ Ext.define('Sonicle.webtop.core.app.WTPrivate', {
 	 * @returns {Boolean}
 	 */
 	isAdmin: function() {
-		return this.hasRole('WTADMIN');
+		return this.hasRole('__WTADMIN__');
 	},
 	
 	/**
@@ -190,7 +190,7 @@ Ext.define('Sonicle.webtop.core.app.WTPrivate', {
 	 * @returns {Boolean}
 	 */
 	isProfileImpersonated: function() {
-		return this.hasRole('IMPERSONATED_USER');
+		return this.hasRole('__IMPERSONATED_USER__');
 	},
 	
 	isProfileActingAsAdmin: function() {
@@ -416,6 +416,7 @@ Ext.define('Sonicle.webtop.core.app.WTPrivate', {
 			iconCls: Ext.isEmpty(notification.iconCls) ? svc.cssIconCls('service', 'm') : notification.iconCls,
 			title: notification.title,
 			body: notification.body,
+			bodyIconCls: notification.bodyIconCls,
 			data: Ext.isDefined(notification.data) ? Ext.JSON.encode(notification.data) : null,
 			autoClear: autCle,
 			callbackService: callbk

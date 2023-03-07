@@ -39,6 +39,7 @@ import com.sonicle.commons.LangUtils;
 import com.sonicle.commons.beans.PageInfo;
 import com.sonicle.commons.concurrent.KeyedReentrantLocks;
 import com.sonicle.commons.db.DbUtils;
+import com.sonicle.security.PasswordUtils;
 import com.sonicle.webtop.core.CoreServiceSettings;
 import com.sonicle.webtop.core.CoreSettings.DataSourceTypeObj;
 import com.sonicle.webtop.core.app.io.dbutils.FilterInfo;
@@ -1249,7 +1250,7 @@ public class DataSourcesManager extends AbstractAppManager<DataSourcesManager> {
 			if (!StringUtils.equalsIgnoreCase(key, "password")) {
 				LOGGER.debug("  {}={}", key, jdbcProps.getProperty(key));
 			} else {
-				LOGGER.debug("  {}={}", key, "*** (redacted)");
+				LOGGER.debug("  {}={}", key, PasswordUtils.printRedacted(jdbcProps.getProperty(key)));
 			}
 		}
 	}

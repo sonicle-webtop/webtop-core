@@ -35,8 +35,8 @@ package com.sonicle.webtop.core.sdk;
 
 import com.sonicle.commons.LangUtils;
 import com.sonicle.commons.l4j.AbstractProduct;
+import com.sonicle.webtop.core.app.ProductRegistry;
 import com.sonicle.webtop.core.app.WT;
-import com.sonicle.webtop.core.app.util.ProductUtils;
 import com.sonicle.webtop.core.model.ServicePermission;
 import com.sonicle.webtop.core.model.ServiceSharePermission;
 import java.util.ArrayList;
@@ -80,6 +80,7 @@ public class ServiceManifest {
 	protected String userOptionsServiceClassName;
 	protected String publicServiceClassName;
 	protected String jobServiceClassName;
+	protected String backgroundServiceClassName;
 	protected String privateServiceJsClassName;
 	protected String privateServiceVarsModelJsClassName;
 	protected String publicServiceJsClassName;
@@ -106,20 +107,20 @@ public class ServiceManifest {
 	public ServiceManifest(HierarchicalConfiguration<ImmutableNode> svcEl) throws Exception {
 		
 		String pkg = svcEl.getString("package");
-		if (StringUtils.isEmpty(pkg)) throw new Exception("Invalid value for property [package]");
+		if (StringUtils.isEmpty(pkg)) throw new WTException("Invalid value for property [package]");
 		javaPackage = StringUtils.lowerCase(pkg);
 		id = javaPackage;
 		
 		String jspkg = svcEl.getString("jsPackage");
-		if (StringUtils.isEmpty(jspkg)) throw new Exception("Invalid value for property [jsPackage]");
+		if (StringUtils.isEmpty(jspkg)) throw new WTException("Invalid value for property [jsPackage]");
 		jsPackage = jspkg; // Lowercase allowed!
 		
 		String sname = svcEl.getString("shortName");
-		if (StringUtils.isEmpty(sname)) throw new Exception("Invalid value for property [shortName]");
+		if (StringUtils.isEmpty(sname)) throw new WTException("Invalid value for property [shortName]");
 		xid = sname;
 		
 		ServiceVersion ver = new ServiceVersion(svcEl.getString("version"));
-		if (ver.isUndefined()) throw new Exception("Invalid value for property [version]");
+		if (ver.isUndefined()) throw new WTException("Invalid value for property [version]");
 		version = ver;
 		
 		buildDate = StringUtils.defaultIfBlank(svcEl.getString("buildDate"), null);
@@ -133,11 +134,11 @@ public class ServiceManifest {
 		
 		hconf = svcEl.configurationsAt("controller");
 		if (!hconf.isEmpty()) {
-			//if (hconf.size() != 1) throw new Exception(invalidCardinalityEx("controller", "1"));
-			if (hconf.size() > 1) throw new Exception(invalidCardinalityEx("controller", "*1"));
+			//if (hconf.size() != 1) throw new WTException(invalidCardinalityEx("controller", "1"));
+			if (hconf.size() > 1) throw new WTException(invalidCardinalityEx("controller", "*1"));
 			
 			final String cn = hconf.get(0).getString("[@className]");
-			if (StringUtils.isBlank(cn)) throw new Exception(invalidAttributeValueEx("controller", "className"));
+			if (StringUtils.isBlank(cn)) throw new WTException(invalidAttributeValueEx("controller", "className"));
 			controllerClassName = buildJavaClassName(javaPackage, cn);
 			
 		} else { // Old-style configuration
@@ -149,10 +150,10 @@ public class ServiceManifest {
 		hconf = svcEl.configurationsAt("manager");
 		if (!hconf.isEmpty()) {
 			if (!hconf.isEmpty()) {
-				if (hconf.size() > 1) throw new Exception(invalidCardinalityEx("manager", "*1"));
+				if (hconf.size() > 1) throw new WTException(invalidCardinalityEx("manager", "*1"));
 
 				final String cn = hconf.get(0).getString("[@className]");
-				if (StringUtils.isBlank(cn)) throw new Exception(invalidAttributeValueEx("manager", "className"));
+				if (StringUtils.isBlank(cn)) throw new WTException(invalidAttributeValueEx("manager", "className"));
 				managerClassName = buildJavaClassName(javaPackage, cn);
 			}
 			
@@ -168,12 +169,12 @@ public class ServiceManifest {
 		hconf = svcEl.configurationsAt("privateService");
 		if (!hconf.isEmpty()) {
 			if (!hconf.isEmpty()) {
-				if (hconf.size() > 1) throw new Exception(invalidCardinalityEx("manager", "*1"));
+				if (hconf.size() > 1) throw new WTException(invalidCardinalityEx("manager", "*1"));
 
 				final String cn = hconf.get(0).getString("[@className]");
-				if (StringUtils.isBlank(cn)) throw new Exception(invalidAttributeValueEx("privateService", "className"));
+				if (StringUtils.isBlank(cn)) throw new WTException(invalidAttributeValueEx("privateService", "className"));
 				final String jcn = hconf.get(0).getString("[@jsClassName]");
-				if (StringUtils.isBlank(jcn)) throw new Exception(invalidAttributeValueEx("privateService", "jsClassName"));
+				if (StringUtils.isBlank(jcn)) throw new WTException(invalidAttributeValueEx("privateService", "jsClassName"));
 				
 				privateServiceClassName = LangUtils.buildClassName(javaPackage, cn);
 				privateServiceJsClassName = jcn;
@@ -206,16 +207,25 @@ public class ServiceManifest {
 		
 		hconf = svcEl.configurationsAt("jobService");
 		if (!hconf.isEmpty()) {
-			if (hconf.size() > 1) throw new Exception(invalidCardinalityEx("jobService", "*1"));
+			if (hconf.size() > 1) throw new WTException(invalidCardinalityEx("jobService", "*1"));
 			
 			final String cn = hconf.get(0).getString("[@className]");
-			if (StringUtils.isBlank(cn)) throw new Exception(invalidAttributeValueEx("jobService", "className"));
+			if (StringUtils.isBlank(cn)) throw new WTException(invalidAttributeValueEx("jobService", "className"));
 			jobServiceClassName = LangUtils.buildClassName(javaPackage, cn);
 			
 		} else { // Old-style configuration
 			if (svcEl.containsKey("jobServiceClassName")) {
 				jobServiceClassName = LangUtils.buildClassName(javaPackage, StringUtils.defaultIfEmpty(svcEl.getString("jobServiceClassName"), "JobService"));
 			}
+		}
+		
+		hconf = svcEl.configurationsAt("backgroundService");
+		if (!hconf.isEmpty()) {
+			if (hconf.size() > 1) throw new WTException(invalidCardinalityEx("backgroundService", "*1"));
+			
+			final String cn = hconf.get(0).getString("[@className]");
+			if (StringUtils.isBlank(cn)) throw new WTException(invalidAttributeValueEx("backgroundService", "className"));
+			backgroundServiceClassName = LangUtils.buildClassName(javaPackage, cn);
 		}
 		
 		if(!svcEl.configurationsAt("userOptions").isEmpty()) {
@@ -230,10 +240,10 @@ public class ServiceManifest {
 		if (!hconf.isEmpty()) {
 			for (HierarchicalConfiguration el : hconf) {
 				final String name = el.getString("[@name]");
-				if (StringUtils.isBlank(name)) throw new Exception(invalidAttributeValueEx("restApiEndpoint", "name"));
+				if (StringUtils.isBlank(name)) throw new WTException(invalidAttributeValueEx("restApiEndpoint", "name"));
 				final String path = el.getString("[@path]", "");
 				
-				if (restApiEndpoints.containsKey(path)) throw new Exception(invalidAttributeValueEx("restApiEndpoint", "path"));
+				if (restApiEndpoints.containsKey(path)) throw new WTException(invalidAttributeValueEx("restApiEndpoint", "path"));
 				restApiEndpoints.put(path, new RestApiEndpoint(buildJavaClassName(javaPackage, name), path));
 			}
 		}
@@ -242,11 +252,11 @@ public class ServiceManifest {
 			List<HierarchicalConfiguration<ImmutableNode>> restApiEls = svcEl.configurationsAt("restApis.restApi");
 			for (HierarchicalConfiguration<ImmutableNode> el : restApiEls) {
 				final String oasFile = el.getString("[@oasFile]");
-				if (StringUtils.isBlank(oasFile)) throw new Exception(invalidAttributeValueEx("restApis.restApi", "oasFile"));
+				if (StringUtils.isBlank(oasFile)) throw new WTException(invalidAttributeValueEx("restApis.restApi", "oasFile"));
 				final String context = oasFileToContext(oasFile);
 				final String implPackage = el.getString("[@package]", "." + JAVAPKG_REST + "." + context);
 				
-				if (restApis.containsKey(oasFile)) throw new Exception(invalidAttributeValueEx("restApis.restApi", "oasFile"));
+				if (restApis.containsKey(oasFile)) throw new WTException(invalidAttributeValueEx("restApis.restApi", "oasFile"));
 				//String oasFilePath = LangUtils.packageToPath(buildJavaPackage(javaPackage, "." + JAVAPKG_REST)) + "/" + oasFile;
 				String oasFilePath = LangUtils.packageToPath(javaPackage) + "/" + oasFile;
 				restApis.put(oasFile, new RestApi(oasFilePath, context, buildJavaPackage(javaPackage, implPackage)));
@@ -258,14 +268,14 @@ public class ServiceManifest {
 			for (HierarchicalConfiguration<ImmutableNode> elPerm : elPerms) {
 				if (elPerm.containsKey("[@group]")) {
 					String groupName = elPerm.getString("[@group]");
-					if (StringUtils.isEmpty(groupName)) throw new Exception("Permission must have a valid uppercase group name");
+					if (StringUtils.isEmpty(groupName)) throw new WTException("Permission must have a valid uppercase group name");
 					
 					if (elPerm.containsKey("[@actions]")) {
 						String[] actions = StringUtils.split(elPerm.getString("[@actions]"), ",");
-						if (actions.length == 0) throw new Exception("Resource must declare at least 1 action");
+						if (actions.length == 0) throw new WTException("Resource must declare at least 1 action");
 						permissions.add(new ServicePermission(groupName, actions));
 					} else {
-						throw new Exception("Permission must declare actions supported on group");
+						throw new WTException("Permission must declare actions supported on group");
 					}
 				}
 			}
@@ -274,7 +284,7 @@ public class ServiceManifest {
 			for (HierarchicalConfiguration<ImmutableNode> elShPerm : elShPerms) {
 				if (elShPerm.containsKey("[@group]")) {
 					String groupName = elShPerm.getString("[@group]");
-					if (StringUtils.isEmpty(groupName)) throw new Exception("Permission must have a valid uppercase group name");
+					if (StringUtils.isEmpty(groupName)) throw new WTException("Permission must have a valid uppercase group name");
 					permissions.add(new ServiceSharePermission(groupName));
 				}
 			}
@@ -285,7 +295,7 @@ public class ServiceManifest {
 			for (HierarchicalConfiguration<ImmutableNode> el : elPortlets) {
 				if (el.containsKey("[@jsClassName]")) {
 					final String jsClassName = el.getString("[@jsClassName]");
-					if (StringUtils.isBlank(jsClassName)) throw new Exception("Invalid value for attribute [portlet->jsClassName]");
+					if (StringUtils.isBlank(jsClassName)) throw new WTException("Invalid value for attribute [portlet->jsClassName]");
 					portlets.add(new Portlet(LangUtils.buildClassName(jsPackage, jsClassName)));
 				}
 			}
@@ -296,20 +306,12 @@ public class ServiceManifest {
 			for (HierarchicalConfiguration<ImmutableNode> el : elProducts) {
 				if (el.containsKey("[@className]")) {
 					final String className = el.getString("[@className]");
-					if (StringUtils.isBlank(className)) throw new Exception("Invalid value for attribute [product->className]");
+					if (StringUtils.isBlank(className)) throw new WTException("Invalid value for attribute [product->className]");
 					
 					final String productClassName = buildJavaClassName(javaPackage, className);
-					AbstractProduct product = ProductUtils.getProduct(productClassName);
+					ProductRegistry.ProductEntry product = ProductRegistry.getInstance().register(productClassName);
 					if (product == null) throw new WTException("Invalid value for attribute [product->className]. Product '{}' unloadable.", productClassName);
-					products.put(product.getProductCode(), new Product(productClassName, product));
-					
-					/*
-					AbstractProduct product = ProductUtils.getProduct(productClassName);
-					if (product != null) {
-						logger.info("Product found [{}, {}, {}]", product.getProductId(), product.getProductName(), productClassName);
-						products.put(product.getProductId(), new Product(productClassName, product));
-					}
-					*/
+					products.put(product.getProductCode(), new Product(product.getClassName(), product.getProductCode(), product.getName()));
 				}
 			}
 		}
@@ -470,6 +472,15 @@ public class ServiceManifest {
 	 */
 	public String getJobServiceClassName() {
 		return jobServiceClassName;
+	}
+	
+	/**
+	 * Gets the class name of server-side backgound service implementation.
+	 * (eg. com.sonicle.webtop.core.CoreBackgroundService)
+	 * @return The class name.
+	 */
+	public String getBackgroundServiceClassName() {
+		return backgroundServiceClassName;
 	}
 	
 	/**

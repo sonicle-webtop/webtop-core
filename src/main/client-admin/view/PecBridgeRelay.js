@@ -36,6 +36,7 @@ Ext.define('Sonicle.webtop.core.admin.view.PecBridgeRelay', {
 	requires: [
 		'Sonicle.form.field.Password',
 		'Sonicle.plugin.NoAutocomplete',
+		'Sonicle.webtop.core.model.SubjectLkp',
 		'Sonicle.webtop.core.admin.store.PecBridgeConnSecurity',
 		'Sonicle.webtop.core.admin.model.PecBridgeRelay'
 	],
@@ -72,12 +73,16 @@ Ext.define('Sonicle.webtop.core.admin.view.PecBridgeRelay', {
 				labelWidth: 120
 			},
 			items: [
-				WTF.localCombo('id', 'desc', {
+				WTF.localCombo('id', 'labelNameWithDN', {
 					reference: 'flduser',
 					bind: '{record.userId}',
 					store: {
-						model: 'WTA.model.Simple',
-						proxy: WTF.proxy(WT.ID, 'LookupDomainUsers', 'users'),
+						model: 'WTA.model.SubjectLkp',
+						proxy: WTF.proxy(me.mys.ID, 'LookupSubjects', null, {
+							extraParams: {
+								users: true
+							}
+						}),
 						listeners: {
 							beforeload: function(s,op) {
 								WTU.applyExtraParams(op.getProxy(), {domainId: me.getModel().get('domainId')});

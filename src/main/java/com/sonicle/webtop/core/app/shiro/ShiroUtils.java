@@ -32,9 +32,11 @@
  */
 package com.sonicle.webtop.core.app.shiro;
 
+import net.sf.qualitycheck.Check;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.mgt.RealmSecurityManager;
 import org.apache.shiro.realm.Realm;
+import org.apache.shiro.subject.Subject;
 
 /**
  *
@@ -42,7 +44,8 @@ import org.apache.shiro.realm.Realm;
  */
 public class ShiroUtils {
 	
-	public static Realm getRealmByName(String name) {
+	public static Realm getRealmByName(final String name) {
+		Check.notNull(name, "name");
 		RealmSecurityManager realmMgr = getRealmSecurityManager();
 		for (Realm realm : realmMgr.getRealms()) {
 			if (realm.getName().equals(name)) return realm;

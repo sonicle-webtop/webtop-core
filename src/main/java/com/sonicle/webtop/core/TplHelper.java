@@ -46,6 +46,7 @@ import java.io.IOException;
 import java.text.MessageFormat;
 import java.util.Arrays;
 import java.util.Locale;
+import net.fortuna.ical4j.model.parameter.PartStat;
 import net.sf.uadetector.ReadableUserAgent;
 import org.apache.commons.lang3.StringUtils;
 import org.joda.time.DateTime;
@@ -114,5 +115,17 @@ public class TplHelper {
 		String source = NotificationHelper.buildSource(locale, CoreManifest.ID);
 		String bodyMessage = WT.lookupResource(CoreManifest.ID, locale, CoreLocaleKey.TPL_EMAIL_DEVICESYNCCHECK_BODY_MESSAGE);
 		return NotificationHelper.buildDefaultBodyTplForNoReplay(locale, source, null, bodyMessage);
+	}
+	
+	public static String buildEventInvitationReplyEmailSubject(Locale locale, PartStat response, String eventTitle) {
+		String title = StringUtils.abbreviate(eventTitle, 30);
+		if (PartStat.ACCEPTED.equals(response)) {
+			return WT.lookupFormattedResource(CoreManifest.ID, locale, CoreLocaleKey.TPL_EMAIL_ICALREPLY_EVENT_SUBJECT_ACCEPTED, title);
+		} else if (PartStat.DECLINED.equals(response)) {
+			return WT.lookupFormattedResource(CoreManifest.ID, locale, CoreLocaleKey.TPL_EMAIL_ICALREPLY_EVENT_SUBJECT_DECLINED, title);
+		} else if (PartStat.TENTATIVE.equals(response)) {
+			return WT.lookupFormattedResource(CoreManifest.ID, locale, CoreLocaleKey.TPL_EMAIL_ICALREPLY_EVENT_SUBJECT_TENTATIVE, title);
+		}
+		return null;
 	}
 }

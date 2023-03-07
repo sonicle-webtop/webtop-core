@@ -93,7 +93,7 @@ Ext.define('Sonicle.webtop.core.view.CustomPanel', {
 					return Sonicle.String.split(v, '|');
 				}, function(v) {
 					return Sonicle.String.join('|', v);
-			}),
+			})
 		});
 	},
 	

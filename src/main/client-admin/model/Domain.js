@@ -37,20 +37,25 @@ Ext.define('Sonicle.webtop.core.admin.model.Domain', {
 		'Sonicle.data.writer.Json',
 		'Sonicle.data.validator.Username'
 	],
-	proxy: WTF.apiProxy('com.sonicle.webtop.core.admin', 'ManageDomains', 'data', {
+	proxy: WTF.apiProxy('com.sonicle.webtop.core.admin', 'ManageDomain', 'data', {
 		writer: {
 			type: 'sojson',
 			writeAssociations: true
 		}
 	}),
 	
+	identifier: 'negativestring',
+	idProperty: 'id',
+	
 	fields: [
+		WTF.field('id', 'string', false),
 		WTF.field('domainId', 'string', false, {
 			validators: ['sousername']
 		}),
-		WTF.field('internetName', 'string', false),
 		WTF.field('enabled', 'boolean', false, {defaultValue: true}),
-		WTF.field('description', 'string', false),
+		WTF.field('displayName', 'string', false),
+		WTF.field('authDomainName', 'string', false),
+		WTF.field('domainName', 'string', true),
 		WTF.field('userAutoCreation', 'boolean', false, {defaultValue: false}),
 		WTF.field('dirScheme', 'string', false),
 		WTF.field('dirHost', 'string', true, {
@@ -75,6 +80,8 @@ Ext.define('Sonicle.webtop.core.admin.model.Domain', {
 				ifValues: ['ldapwebtop', 'ldap', 'ldapneth', 'ad']
 			}]
 		}),
+		WTF.field('dirPassword_r', 'string', true),
+		WTF.field('dirPassword_h', 'string', true),
 		WTF.field('dirConnSecurity', 'string', true, {defaultValue: 'null'}),
 		WTF.field('dirCaseSensitive', 'boolean', false, {defaultValue: false}),
 		WTF.field('ldapLoginDn', 'string', true, {

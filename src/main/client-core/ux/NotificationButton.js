@@ -72,9 +72,12 @@ Ext.define('Sonicle.webtop.core.ux.NotificationButton', {
 			features: [{
 				ftype: 'rowbody',
 				getAdditionalData: function(data, idx, rec, orig) {
-					var body = rec.get('body'), empty = Ext.isEmpty(body);
+					var body = rec.get('body'),
+						bodyIconCls = rec.get('bodyIconCls'),
+						bodyIco = Ext.isEmpty(bodyIconCls) ? '' : '<i class="' + Sonicle.String.htmlAttributeEncode(bodyIconCls) + '"></i>&nbsp;',
+						empty = Ext.isEmpty(body);
 					return {
-						rowBody: empty ? '' : Ext.String.htmlEncode(body),
+						rowBody: empty ? '' : bodyIco + Ext.String.htmlEncode(body),
 						rowBodyCls: 'wt-notifbtn-grid-rowbody' + (empty ? '-empty' : '')
 					};
 				}

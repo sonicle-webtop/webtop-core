@@ -31,6 +31,9 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
+/**
+ * @deprecated Use {@link WTA.sdk.model.FolderSharing} instead with new server-side sharing
+ */
 Ext.define('Sonicle.webtop.core.sdk.model.Sharing', {
 	alternateClassName: 'WTA.sdk.model.Sharing',
 	extend: 'WTA.ux.data.BaseModel',

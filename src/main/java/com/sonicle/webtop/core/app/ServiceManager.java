@@ -101,10 +101,12 @@ import org.quartz.TriggerBuilder;
 import org.quartz.impl.matchers.GroupMatcher;
 import org.slf4j.Logger;
 import com.sonicle.webtop.core.app.sdk.interfaces.IControllerServiceHooks;
+import com.sonicle.webtop.core.sdk.BaseBackgroundService;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.Collection;
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.stream.Collectors;
 import org.apache.commons.configuration2.HierarchicalConfiguration;
@@ -153,6 +155,7 @@ public class ServiceManager {
 	private final HashMap<String, String> serviceIdToPublicName = new HashMap<>();
 	private final HashMap<String, String> publicNameToServiceId = new HashMap<>();
 	private final LinkedHashMap<String, BaseJobService> jobServices = new LinkedHashMap<>();
+	private final LinkedHashMap<String, BaseBackgroundService> backgroundServices = new LinkedHashMap<>();
 	
 	/**
 	 * Private constructor.
@@ -178,8 +181,11 @@ public class ServiceManager {
 			//TODO: effettuare lo shutdown dei task
 			jobInst = jobServices.remove(serviceId);
 			if(jobInst != null) cleanupJobService(jobInst);
+			final BaseBackgroundService bgInst = backgroundServices.get(serviceId);
+			if (bgInst != null) cleanupBackgroundService(bgInst);
 		}
 		
+		backgroundServices.clear();
 		jobServices.clear();
 		descriptors.clear();
 		xidToServiceId.clear();
@@ -302,6 +308,7 @@ public class ServiceManager {
 		
 		// Instantiate job services
 		int okJobs = 0, failJobs = 0;
+		int okBgs = 0, failBgs = 0;
 		for(String serviceId : listPrivateServices()) {
 			if(getDescriptor(serviceId).hasJobService()) {
 				if(!isInMaintenance(serviceId)) {
@@ -313,8 +320,14 @@ public class ServiceManager {
 					}
 				}
 			}
+			if (getDescriptor(serviceId).hasBackgroundService()) {
+				if (!isInMaintenance(serviceId)) {
+					if (createBackgroundService(serviceId)) okBgs++; else failBgs++;
+				}
+			}
 		}
 		logger.debug("Instantiated {} of {} job services", okJobs, (okJobs+failJobs));
+		logger.debug("Instantiated {} of {} background services", okBgs, (okBgs+failBgs));
 	}
 	
 	/**
@@ -326,6 +339,18 @@ public class ServiceManager {
 		synchronized(jobServices) {
 			for(Entry<String, BaseJobService> entry : jobServices.entrySet()) {
 				initializeJobService(entry.getValue());
+			}
+		}
+	}
+	
+	/**
+	 * Initialize each BackgroundService instance.
+	 * Postpone this methos call, WebTopApp instance must be set!
+	 */
+	public void initializeBackgroundServices() {
+		synchronized(backgroundServices) {
+			for(Entry<String, BaseBackgroundService> entry : backgroundServices.entrySet()) {
+				initializeBackgroundService(entry.getValue());
 			}
 		}
 	}
@@ -434,9 +459,9 @@ public class ServiceManager {
 	 * Lists IDs of registered services.
 	 * @return List of services' IDs.
 	 */
-	public List<String> listRegisteredServices() {
+	public Set<String> listRegisteredServices() {
 		synchronized(lock1) {
-			return Arrays.asList(descriptors.keySet().toArray(new String[descriptors.size()]));
+			return new LinkedHashSet(descriptors.keySet());
 		}
 	}
 	
@@ -644,6 +669,7 @@ public class ServiceManager {
 		return new ProfileVersionEvaluationResult(manifestVer, userVer, upgraded);
 	}
 	
+	@Deprecated
 	public List<Throwable> invokeOnUserAdded(UserProfileId profileId) {
 		ArrayList<Throwable> errors = new ArrayList<>(0);
 		for (String serviceId : listRegisteredServices()) {
@@ -653,6 +679,7 @@ public class ServiceManager {
 		return errors;
 	}
 	
+	@Deprecated
 	public Throwable invokeOnUserAdded(String serviceId, UserProfileId profileId) {
 		ServiceDescriptor descr = getDescriptor(serviceId);
 		if (descr.doesControllerImplements(IControllerUserEvents.class)) {
@@ -674,6 +701,7 @@ public class ServiceManager {
 		return null;
 	}
 	
+	@Deprecated
 	public List<Throwable> invokeOnUserRemoved(UserProfileId profileId) {
 		ArrayList<Throwable> errors = new ArrayList<>(0);
 		for (String serviceId : listRegisteredServices()) {
@@ -683,6 +711,7 @@ public class ServiceManager {
 		return errors;
 	}
 	
+	@Deprecated
 	public Throwable invokeOnUserRemoved(String serviceId, UserProfileId profileId) {
 		ServiceDescriptor descr = getDescriptor(serviceId);
 		if (descr.doesControllerImplements(IControllerUserEvents.class)) {
@@ -797,7 +826,23 @@ public class ServiceManager {
 	
 	
 	
+	public void scheduleAllBackgroundServicesTasks() {
+		if (!wta.isLatest()) return; // Make sure we are in latest webapp
+		synchronized (backgroundServices) {
+			for (BaseBackgroundService instance : backgroundServices.values()) {
+				boolean ret = instance.scheduleTasks();
+			}
+		}
+	}
 	
+	public void unscheduleAllBackgroundServicesTasks() {
+		if (!wta.isLatest()) return; // Make sure we are in latest webapp
+		synchronized (backgroundServices) {
+			for (BaseBackgroundService instance : backgroundServices.values()) {
+				boolean ret = instance.unscheduleTasks();
+			}
+		}
+	}
 	
 	public void scheduleAllJobServicesTasks() {
 		if(!wta.isLatest()) return; // Make sure we are in latest webapp
@@ -833,6 +878,7 @@ public class ServiceManager {
 			BaseController inst = instantiateController(descriptor);
 			if (inst != null) {
 				controllers.put(serviceId, inst);
+				wta.getEventBus().subscribe(inst);
 				return true;
 			} else {
 				return false;
@@ -1086,6 +1132,72 @@ public class ServiceManager {
 		if (logger.isTraceEnabled() && (end != 0)) logger.trace("[{}] JobService: cleanup() took {} ms", instance.SERVICE_ID, TimeUnit.MILLISECONDS.convert(end-start, TimeUnit.NANOSECONDS), instance.SERVICE_ID);
 	}
 	
+	private boolean createBackgroundService(String serviceId) {
+		synchronized(backgroundServices) {
+			if (backgroundServices.containsKey(serviceId)) throw new WTRuntimeException("Cannot add BackgroundService twice");
+			BaseBackgroundService inst = instantiateBackgroundService(serviceId);
+			if(inst != null) {
+				backgroundServices.put(serviceId, inst);
+				return true;
+			} else {
+				return false;
+			}
+		}
+	}
+	
+	private BaseBackgroundService instantiateBackgroundService(String serviceId) {
+		ServiceDescriptor descr = getDescriptor(serviceId);
+		if (!descr.hasBackgroundService()) throw new WTRuntimeException("Service '{}' has no BackgroundService class", serviceId);
+		
+		BaseBackgroundService instance = null;
+		try {
+			if (logger.isTraceEnabled()) logger.trace("[{}] BackgroundService: instantiating class '{}'", serviceId, descr.getManifest().getBackgroundServiceClassName());
+			instance = (BaseBackgroundService)descr.getBackgroundServiceClass().newInstance();
+		} catch(Throwable t) {
+			logger.error("[{}] BackgroundService: instantiation of '{}' throws errors", serviceId, descr.getManifest().getBackgroundServiceClassName(), t);
+			return null;
+		}
+		instance.configure(scheduler, wta.getAdminSubject());
+		return instance;
+	}
+	
+	private void initializeBackgroundService(BaseBackgroundService instance) {
+		long start = 0, end = 0;
+		logger.trace("[{}] BackgroundService: calling initialize()", instance.SERVICE_ID);
+		try {
+			LoggerUtils.setContextDC(instance.SERVICE_ID);
+			start = System.nanoTime();
+			instance.initialize();
+			end = System.nanoTime();
+		} catch(Throwable t) {
+			logger.error("[{}] BackgroundService: initialize() throws errors [{}]", instance.SERVICE_ID, instance.getClass().getCanonicalName(), t);
+		} finally {
+			LoggerUtils.clearContextServiceDC();
+		}
+		if (logger.isTraceEnabled() && (end != 0)) logger.trace("[{}] BackgroundService: initialize() took {} ms", instance.SERVICE_ID, TimeUnit.MILLISECONDS.convert(end-start, TimeUnit.NANOSECONDS), instance.SERVICE_ID);
+	}
+	
+	private void cleanupBackgroundService(BaseBackgroundService instance) {
+		long start = 0, end = 0;
+		logger.trace("[{}] BackgroundService: calling cleanup()", instance.SERVICE_ID);
+		try {
+			LoggerUtils.setContextDC(instance.getManifest().getId());
+			start = System.nanoTime();
+			instance.cleanup();
+			end = System.nanoTime();
+		} catch(Throwable t) {
+			logger.error("[{}] BackgroundService: cleanup() throws errors [{}]", instance.SERVICE_ID, instance.getClass().getCanonicalName(), t);
+		} finally {
+			LoggerUtils.clearContextServiceDC();
+		}
+		if (logger.isTraceEnabled() && (end != 0)) logger.trace("[{}] BackgroundService: cleanup() took {} ms", instance.SERVICE_ID, TimeUnit.MILLISECONDS.convert(end-start, TimeUnit.NANOSECONDS), instance.SERVICE_ID);
+	}
+	
+	
+	
+	
+	
+	
 	
 	
 	
@@ -1192,7 +1304,7 @@ public class ServiceManager {
 			if (xidToServiceId.containsKey(xid)) throw new WTRuntimeException("Service XID (short ID) is already bound to a service [{0} -> {1}]", xid, xidToServiceId.get(xid));
 			
 			desc = new ServiceDescriptor(manifest);
-			logger.info("[private:{}, public:{}, job:{}, userOptions:{}]", desc.hasPrivateService(), desc.hasPublicService(), desc.hasJobService(), desc.hasUserOptionsService());
+			logger.info("[private:{}, public:{}, job:{}, background:{}, userOptions:{}]", desc.hasPrivateService(), desc.hasPublicService(), desc.hasJobService(), desc.hasBackgroundService(), desc.hasUserOptionsService());
 			
 			// Register dataSources
 			try {
@@ -1497,7 +1609,7 @@ public class ServiceManager {
 		};
 		
 		try {
-			String postPath = wta.getDbScriptsPostPath(serviceId);
+			String postPath = wta.getFileSystem().getDbScriptsPostPath(serviceId);
 			logger.debug("Looking for post db-scripts in [{}]", postPath);
 			File postDir = new File(postPath);
 			if (postDir.exists()) {

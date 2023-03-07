@@ -115,6 +115,13 @@ Ext.define('Sonicle.webtop.core.sdk.ModelView', {
 	opts: null,
 	
 	/**
+	 * @cfg {String/Object} focusField
+	 * The {@link Ext.Component#reference reference name} of the default 
+	 * field to be focused when view is loaded. Or an object that specifies 
+	 * that name for each view opening MODE (uses as object's keys).
+	 */
+	
+	/**
 	 * @event viewload
 	 * @param {WTA.sdk.ModelView} this
 	 * @param {Boolean} success Whether the operation was successful or not.
@@ -336,17 +343,15 @@ Ext.define('Sonicle.webtop.core.sdk.ModelView', {
 		if ((me.getFieldTitle() === true) || Ext.isString(me.getFieldTitle())) {
 			me.getVM().set('_fieldTitle', me.formatFieldTitle(me.getModel()));
 		}
-		me.fireEvent('viewload', me, success, model);
+		me.fireEvent('viewload', me, success, model, op);
 	},
 	
 	onModelSave: function(success, model, op, pass) {
 		var me = this;
 		me.mixins.hasmodel.onModelSave.call(me, success, model, op, pass);
 		me.unwait();
-		me.fireEvent('viewsave', me, success, model);
+		me.fireEvent('viewsave', me, success, model, op);
 		if (success) {
-			// Display any message set into response object as UI warning, request still succeeded!
-			WT.handleOperationMessage(op);
 			if (pass && pass.closeAfter) me.closeView(false);
 		}
 	},
@@ -418,5 +423,24 @@ Ext.define('Sonicle.webtop.core.sdk.ModelView', {
 				break;
 		}
 		return Ext.String.format(this.modeTitleFormat, s || '');
+	},
+	
+	privates: {
+		applyFocusOnFocusField: function(focusField) {
+			var me = this;
+			if (Ext.isString(focusField)) {
+				me.callParent(arguments);
+			} else if (Ext.isObject(focusField)) {
+				var doFocusIf = function(ff, mode) {
+						if (Ext.isString(ff[mode])) {
+							var cmp = me.lref(ff[mode]);
+							if (cmp) cmp.focus(true);
+						}
+					};
+				if (me.isMode(me.MODE_VIEW)) doFocusIf(focusField, me.MODE_VIEW);
+				if (me.isMode(me.MODE_NEW)) doFocusIf(focusField, me.MODE_NEW);
+				if (me.isMode(me.MODE_EDIT)) doFocusIf(focusField, me.MODE_EDIT);
+			}
+		}
 	}
 });

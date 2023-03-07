@@ -33,7 +33,11 @@
  */
 package com.sonicle.webtop.core.app;
 
+import com.github.benmanes.caffeine.cache.CacheLoader;
+import com.github.benmanes.caffeine.cache.Caffeine;
+import com.github.benmanes.caffeine.cache.LoadingCache;
 import com.sonicle.commons.AlgoUtils;
+import com.sonicle.commons.ClassUtils;
 import com.sonicle.commons.EnumUtils;
 import com.sonicle.commons.InternetAddressUtils;
 import com.sonicle.commons.LangUtils;
@@ -42,9 +46,9 @@ import com.sonicle.commons.URIUtils;
 import com.sonicle.commons.cache.AbstractBulkCache;
 import com.sonicle.commons.concurrent.KeyedReentrantLocks;
 import com.sonicle.commons.db.DbUtils;
-import com.sonicle.commons.l4j.ProductLicense;
+import com.sonicle.commons.flags.BitFlags;
+import com.sonicle.commons.flags.BitFlagsEnum;
 import com.sonicle.commons.time.DateTimeUtils;
-import com.sonicle.commons.web.json.CompositeId;
 import com.sonicle.security.AuthenticationDomain;
 import com.sonicle.security.ConnectionSecurity;
 import com.sonicle.security.DomainAccount;
@@ -67,32 +71,42 @@ import com.sonicle.webtop.core.CoreServiceSettings;
 import com.sonicle.webtop.core.CoreUserSettings;
 import com.sonicle.webtop.core.app.auth.LdapWebTopDirectory;
 import com.sonicle.webtop.core.app.auth.WebTopDirectory;
+import com.sonicle.webtop.core.app.events.DomainUpdateEvent;
+import com.sonicle.webtop.core.app.events.GroupUpdateEvent;
+import com.sonicle.webtop.core.app.events.ResourceAvailabilityChangeEvent;
+import com.sonicle.webtop.core.app.events.ResourceUpdateEvent;
+import com.sonicle.webtop.core.app.events.UserAvailabilityChangeEvent;
+import com.sonicle.webtop.core.app.events.UserUpdateEvent;
+import com.sonicle.webtop.core.app.model.AclSubjectGetOption;
+import com.sonicle.webtop.core.app.model.DirectoryUser;
+import com.sonicle.webtop.core.app.model.Domain;
+import com.sonicle.webtop.core.app.model.DomainBase;
+import com.sonicle.webtop.core.app.model.DomainGetOption;
+import com.sonicle.webtop.core.app.model.DomainUpdateOption;
+import com.sonicle.webtop.core.app.model.EnabledCond;
+import com.sonicle.webtop.core.app.sdk.EventBase;
+import com.sonicle.webtop.core.app.sdk.Result;
+import com.sonicle.webtop.core.app.sdk.ResultVoid;
 import com.sonicle.webtop.core.app.sdk.WTMultiCauseWarnException;
+import com.sonicle.webtop.core.app.sdk.WTNotFoundException;
 import com.sonicle.webtop.core.app.sdk.WTPwdPolicyException;
 import com.sonicle.webtop.core.app.util.ExceptionUtils;
-import com.sonicle.webtop.core.bol.AssignedGroup;
-import com.sonicle.webtop.core.bol.AssignedRole;
-import com.sonicle.webtop.core.bol.AssignedUser;
-import com.sonicle.webtop.core.bol.GroupUid;
 import com.sonicle.webtop.core.bol.ODomain;
 import com.sonicle.webtop.core.bol.OGroup;
+import com.sonicle.webtop.core.bol.OResource;
 import com.sonicle.webtop.core.bol.ORole;
 import com.sonicle.webtop.core.bol.ORoleAssociation;
 import com.sonicle.webtop.core.bol.ORolePermission;
+import com.sonicle.webtop.core.bol.OShare;
 import com.sonicle.webtop.core.bol.OUser;
 import com.sonicle.webtop.core.bol.OUserAssociation;
 import com.sonicle.webtop.core.bol.OUserInfo;
-import com.sonicle.webtop.core.bol.UserId;
-import com.sonicle.webtop.core.bol.UserUid;
-import com.sonicle.webtop.core.bol.model.DirectoryUser;
+import com.sonicle.webtop.core.bol.ProfileIdentifier;
+import com.sonicle.webtop.core.bol.VResource;
+import com.sonicle.webtop.core.bol.VUserData;
 import com.sonicle.webtop.core.model.DomainEntity;
-import com.sonicle.webtop.core.bol.model.GroupEntity;
 import com.sonicle.webtop.core.model.ParamsLdapDirectory;
-import com.sonicle.webtop.core.bol.model.Role;
-import com.sonicle.webtop.core.bol.model.RoleEntity;
 import com.sonicle.webtop.core.bol.model.RoleWithSource;
-import com.sonicle.webtop.core.model.ServicePermission;
-import com.sonicle.webtop.core.bol.model.UserEntity;
 import com.sonicle.webtop.core.dal.ActivityDAO;
 import com.sonicle.webtop.core.dal.AutosaveDAO;
 import com.sonicle.webtop.core.dal.CausalDAO;
@@ -108,24 +122,57 @@ import com.sonicle.webtop.core.dal.ServiceStoreEntryDAO;
 import com.sonicle.webtop.core.dal.ShareDAO;
 import com.sonicle.webtop.core.dal.ShareDataDAO;
 import com.sonicle.webtop.core.dal.SnoozedReminderDAO;
-import com.sonicle.webtop.core.dal.AuditLogDAO;
+import com.sonicle.webtop.core.dal.ResourceDAO;
 import com.sonicle.webtop.core.dal.UserAssociationDAO;
 import com.sonicle.webtop.core.dal.UserDAO;
 import com.sonicle.webtop.core.dal.UserInfoDAO;
 import com.sonicle.webtop.core.dal.UserSettingDAO;
+import com.sonicle.webtop.core.app.model.FolderShare;
 import com.sonicle.webtop.core.model.PublicImage;
+import com.sonicle.webtop.core.app.model.Resource;
+import com.sonicle.webtop.core.app.model.ResourceBase;
+import com.sonicle.webtop.core.app.model.GenericSubject;
+import com.sonicle.webtop.core.model.SubjectPid;
+import com.sonicle.webtop.core.model.SubjectSid;
+import com.sonicle.webtop.core.app.model.FolderShareOriginFolders;
+import com.sonicle.webtop.core.app.model.FolderShareOrigin;
+import com.sonicle.webtop.core.app.model.FolderSharing;
+import com.sonicle.webtop.core.app.model.Group;
+import com.sonicle.webtop.core.app.model.GroupBase;
+import com.sonicle.webtop.core.app.model.GroupGetOption;
+import com.sonicle.webtop.core.app.model.GroupUpdateOption;
+import com.sonicle.webtop.core.app.model.HomedThrowable;
+import com.sonicle.webtop.core.app.model.PermissionString;
+import com.sonicle.webtop.core.app.model.ResourceGetOption;
+import com.sonicle.webtop.core.app.model.ResourcePermissions;
+import com.sonicle.webtop.core.app.model.ResourceUpdateOption;
+import com.sonicle.webtop.core.app.model.Role;
+import com.sonicle.webtop.core.app.model.RoleBase;
+import com.sonicle.webtop.core.app.model.RoleGetOption;
+import com.sonicle.webtop.core.app.model.RoleUpdateOption;
+import com.sonicle.webtop.core.app.model.ServicePermissionString;
+import com.sonicle.webtop.core.app.model.SubjectGetOption;
+import com.sonicle.webtop.core.app.model.User;
+import com.sonicle.webtop.core.app.model.UserBase;
+import com.sonicle.webtop.core.app.model.UserGetOption;
+import com.sonicle.webtop.core.app.model.UserUpdateOption;
+import com.sonicle.webtop.core.app.shiro.ShiroUtils;
+import com.sonicle.webtop.core.app.shiro.WTRealm;
+import com.sonicle.webtop.core.bol.VUser;
+import com.sonicle.webtop.core.dal.CustomFieldDAO;
+import com.sonicle.webtop.core.dal.CustomPanelDAO;
+import com.sonicle.webtop.core.dal.DataSourceDAO;
+import com.sonicle.webtop.core.dal.IMChatDAO;
+import com.sonicle.webtop.core.dal.IMMessageDAO;
+import com.sonicle.webtop.core.dal.LicenseDAO;
+import com.sonicle.webtop.core.dal.MasterDataDAO;
+import com.sonicle.webtop.core.dal.TagDAO;
+import com.sonicle.webtop.core.model.ServicePermission;
 import com.sonicle.webtop.core.sdk.AuthException;
-import com.sonicle.webtop.core.sdk.BaseServiceProduct;
-import com.sonicle.webtop.core.sdk.BaseServiceSettings;
 import com.sonicle.webtop.core.sdk.UserProfile;
 import com.sonicle.webtop.core.sdk.UserProfileId;
-import com.sonicle.webtop.core.sdk.WTCyrusException;
 import com.sonicle.webtop.core.sdk.WTException;
 import com.sonicle.webtop.core.sdk.WTRuntimeException;
-import com.sonicle.webtop.core.util.IdentifierUtils;
-import com.sun.mail.imap.ACL;
-import com.sun.mail.imap.IMAPFolder;
-import com.sun.mail.imap.Rights;
 import java.io.File;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -138,14 +185,16 @@ import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
-import jakarta.mail.Folder;
-import jakarta.mail.Session;
-import jakarta.mail.Store;
 import jakarta.mail.internet.InternetAddress;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.Map.Entry;
+import java.util.Optional;
+import java.util.stream.Stream;
+import net.sf.qualitycheck.Check;
 import org.apache.commons.lang3.StringUtils;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -156,7 +205,7 @@ import org.slf4j.Logger;
  * @author malbinola
  */
 public final class WebTopManager {
-	private static final Logger logger = WT.getLogger(WebTopManager.class);
+	private static final Logger LOGGER = WT.getLogger(WebTopManager.class);
 	private static boolean initialized = false;
 	
 	/**
@@ -169,38 +218,197 @@ public final class WebTopManager {
 		if(initialized) throw new RuntimeException("Initialization already done");
 		WebTopManager instance = new WebTopManager(wta);
 		initialized = true;
-		logger.info("Initialized");
+		LOGGER.info("Initialized");
 		return instance;
 	}
 	
 	private WebTopApp wta = null;
 	public static final String INTERNETNAME_LOCAL = "local";
-	public static final String ROLEUID_SYSADMIN = "SYSADMIN";
-	public static final String ROLEUID_WTADMIN = "WTADMIN";
-	public static final String ROLEUID_IMPERSONATED_USER = "IMPERSONATED_USER";
-	//public static final String SYSADMIN_PSTRING = ServicePermission.permissionString(ServicePermission.namespacedName(CoreManifest.ID, "SYSADMIN"), "ACCESS", "*");
-	//public static final String WTADMIN_PSTRING = ServicePermission.permissionString(ServicePermission.namespacedName(CoreManifest.ID, "WTADMIN"), "ACCESS", "*");
+	public static final String SYSADMIN_ROLESID = "__SYSADMIN__"; // NB: Reflect any update to client-side too (see WTPrivate.js) !!!
+	public static final String WTADMIN_ROLESID = "__WTADMIN__"; // NB: Reflect any update to client-side too (see WTPrivate.js) !!!
+	public static final String IMPERSONATED_USER_ROLESID = "__IMPERSONATED_USER__"; // NB: Reflect any update to client-side too (see WTPrivate.js) !!!
 	public static final String SYSADMIN_DOMAINID = "*";
 	public static final String SYSADMIN_USERID = "admin";
+	//public static final String SYSADMIN_PSTRING = ServicePermission.permissionString(ServicePermission.namespacedName(CoreManifest.ID, "SYSADMIN"), "ACCESS", "*");
+	//public static final String WTADMIN_PSTRING = ServicePermission.permissionString(ServicePermission.namespacedName(CoreManifest.ID, "WTADMIN"), "ACCESS", "*");
 	public static final String DOMAINADMIN_USERID = "admin";
-	public static final String GROUPID_ADMINS = "admins";
+	//public static final String GROUPID_ADMINS = "admins";
 	public static final String GROUPID_USERS = "users";
-	public static final String GROUPID_PEC_ACCOUNTS = "pec-accounts";
+	public static final String GROUPID_PEC_ACCOUNTS = "pec-accounts"; //@Deprecated
+	public static final String DOMAINADMIN_ROLEID = "domain-admin"; // Role for managing permissions for Domain admin user
+	public static final String PECACCOUNT_ROLEID = "pec-account"; // Role for track users for PEC accounts
+	public static final Set<String> BUILT_IN_ROLES = Stream.of(DOMAINADMIN_ROLEID, PECACCOUNT_ROLEID).collect(Collectors.toSet());
+	public static final Set<String> BUILT_IN_GROUPS = Stream.of(GROUPID_USERS, GROUPID_PEC_ACCOUNTS).collect(Collectors.toSet());
 	
 	private final CacheDomainInfo domainCache = new CacheDomainInfo();
 	private final KeyedReentrantLocks<String> lockSecretGet = new KeyedReentrantLocks<>();
-	private final Map<String, ProductLicense> productLicenseCache = new ConcurrentHashMap<>();
+	private final SubjectSidCache subjectSidCache = new SubjectSidCache();
+	private final LoadingCache<UserProfileId, UserProfile.PersonalInfo> profileToPersonalInfoCache = Caffeine.newBuilder().build(new ProfilePersonalInfoCacheLoader());
+	private final LoadingCache<UserProfileId, UserProfile.Data> profileToDataCache = Caffeine.newBuilder().build(new ProfileDataCacheLoader());
+	private final Object foldersLock = new Object();
 	
-	private final Object lock1 = new Object();
-	private final HashMap<UserProfileId, String> cacheUserToUserUid = new HashMap<>();
-	private final HashMap<String, UserProfileId> cacheUserUidToUser = new HashMap<>();
-	private final Object lock2 = new Object();
-	private final HashMap<UserProfileId, String> cacheGroupToGroupUid = new HashMap<>();
-	private final HashMap<String, UserProfileId> cacheGroupUidToGroup = new HashMap<>();
+	/**
+	 * Used transitively by aliseoweb, vfs
+	 * @deprecated use listDomains instead
+	 */
+	@Deprecated
+	public List<ODomain> OLD_listDomains(boolean enabledOnly) throws WTException {
+		DomainDAO dao = DomainDAO.getInstance();
+		Connection con = null;
+		
+		try {
+			con = wta.getConnectionManager().getConnection();
+			if(enabledOnly) {
+				return dao.selectEnabled(con);
+			} else {
+				return dao.selectAll(con);
+			}
+			
+		} catch(SQLException | DAOException ex) {
+			throw new WTException(ex, "DB error");
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
 	
-	private final HashMap<UserProfileId, UserProfile.PersonalInfo> cacheUserToPersonalInfo = new HashMap<>();
-	private final HashMap<UserProfileId, UserProfile.Data> cacheUserToData = new HashMap<>();
-	private final Object lock3 = new Object();
+	/**
+	 * Used transitively by aliseoweb
+	 * @deprecated use getDomain instead
+	 */
+	@Deprecated
+	public ODomain OLD_getDomain(String domainId) throws WTException {
+		DomainDAO domDao = DomainDAO.getInstance();
+		Connection con = null;
+		
+		try {
+			con = wta.getConnectionManager().getConnection();
+			return domDao.selectById(con, domainId);
+			
+		} catch(SQLException ex) {
+			throw new WTException(ex, "DB error");
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
+	/**
+	 * @deprecated used transitively in aliseoweb, drm
+	 */
+	@Deprecated
+	public List<OUser> listUsers(String domainId, boolean enabledOnly) throws WTException {
+		UserDAO dao = UserDAO.getInstance();
+		Connection con = null;
+		
+		try {
+			con = wta.getConnectionManager().getConnection();
+			if(enabledOnly) {
+				return dao.selectEnabledByDomain(con, domainId);
+			} else {
+				return dao.selectByDomain_OLD(con, domainId);
+			}
+			
+		} catch(SQLException | DAOException ex) {
+			throw new WTException(ex, "DB error");
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
+	@Deprecated
+	public List<UserProfileId> listUserProfileIdsByEmail(String emailAddress) throws WTException {
+		UserInfoDAO uidao = UserInfoDAO.getInstance();
+		Connection con = null;
+		
+		try {
+			con = wta.getConnectionManager().getConnection();
+			
+			List<ProfileIdentifier> uids = uidao.viewByEmail(con, emailAddress);
+			ArrayList<UserProfileId> items = new ArrayList<>();
+			for(ProfileIdentifier uid : uids) {
+				items.add(new UserProfileId(uid.getDomainId(), uid.getUserId()));
+			}
+			return items;
+			
+		} catch(SQLException | DAOException ex) {
+			DbUtils.rollbackQuietly(con);
+			throw new WTException(ex, "DB error");
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
+	@Deprecated
+	public OUser getUser(UserProfileId pid) throws WTException {
+		UserDAO dao = UserDAO.getInstance();
+		Connection con = null;
+		
+		try {
+			con = wta.getConnectionManager().getConnection();
+			return dao.selectByDomainUser(con, pid.getDomainId(), pid.getUserId());
+			
+		} catch(SQLException | DAOException ex) {
+			throw new WTException(ex, "DB error");
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
+	@Deprecated
+	public CheckUserResult checkUser(UserProfileId pid) throws WTException {
+		return checkUser(pid.getDomainId(), pid.getUserId());
+	}
+	
+	@Deprecated
+	public CheckUserResult checkUser(String domainId, String userId) throws WTException {
+		UserDAO dao = UserDAO.getInstance();
+		Connection con = null;
+		
+		try {
+			con = wta.getConnectionManager().getConnection();
+			OUser o = dao.selectByDomainUser(con, domainId, userId);
+			return new CheckUserResult(o != null, o != null ? o.getEnabled() : false);
+			
+		} catch(SQLException | DAOException ex) {
+			throw new WTException(ex, "DB error");
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
+	@Deprecated
+	public boolean updateUserDisplayName(UserProfileId pid, String displayName) throws WTException {
+		UserDAO dao = UserDAO.getInstance();
+		Connection con = null;
+		
+		try {
+			con = wta.getConnectionManager().getConnection();
+			return dao.updateDisplayNameByProfile(con, pid.getDomainId(), pid.getUserId(), displayName) == 1;
+			
+		} catch(SQLException | DAOException ex) {
+			throw new WTException(ex, "DB error");
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
+	@Deprecated
+	public boolean updateUserPersonalInfo(UserProfileId pid, UserProfile.PersonalInfo userPersonalInfo) throws WTException {
+		UserInfoDAO dao = UserInfoDAO.getInstance();
+		Connection con = null;
+		
+		try {
+			con = wta.getConnectionManager().getConnection();
+			OUserInfo oui = createUserInfo(userPersonalInfo);
+			oui.setDomainId(pid.getDomainId());
+			oui.setUserId(pid.getUserId());
+			return dao.update(con, oui) == 1;
+			
+		} catch(SQLException | DAOException ex) {
+			throw new WTException(ex, "DB error");
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
 	
 	/**
 	 * Creates UserProfileId for SysAdmin.
@@ -219,10 +427,6 @@ public final class WebTopManager {
 		return SYSADMIN_DOMAINID.equals(profileId.getDomainId()) && SYSADMIN_USERID.equals(profileId.getUserId());
 	}
 	
-	public static String generateSecretKey() {
-		return StringUtils.defaultIfBlank(IdentifierUtils.generateSecretKey(), "0123456789101112");
-	}
-	
 	/**
 	 * Private constructor.
 	 * Instances of this class must be created using static initialize method.
@@ -231,28 +435,18 @@ public final class WebTopManager {
 	private WebTopManager(WebTopApp wta) {
 		this.wta = wta;
 		domainCache.init();
-		initGroupUidCache();
-		initUserUidCache();
+		subjectSidCache.init();
 	}
 	
 	/**
 	 * Performs cleanup process.
 	 */
 	void cleanup() {
-		cleanupUserUidCache();
-		cleanupGroupUidCache();
-		cleanupUserCache();
+		subjectSidCache.cleanup();
+		cleanupProfileCache();
 		domainCache.clear();
 		wta = null;
-		logger.info("Cleaned up");
-	}
-	
-	public void initDomainCache() {
-		domainCache.init();
-	}
-	
-	public void cleanUserProfileCache(UserProfileId pid) {
-		removeFromUserCache(pid);
+		LOGGER.info("Cleaned up");
 	}
 	
 	public AbstractDirectory getAuthDirectory(String authUri) throws WTException {
@@ -285,13 +479,25 @@ public final class WebTopManager {
 				return createSysAdminAuthenticationDomain();
 
 			} else {
-				ODomain odom = getDomain(profileId.getDomainId());
-				if (odom == null) throw new WTException("Domain not found [{0}]", profileId.getDomainId());
-				return createAuthenticationDomain(odom);
+				Domain domain = getDomain(profileId.getDomainId(), DomainGetOption.internalDefaultFlags());
+				if (domain == null) throw new WTNotFoundException("Domain not found [{}]", profileId.getDomainId());
+				return createAuthenticationDomain(domain);
 			}
 		} catch(URISyntaxException ex) {
 			throw new WTException(ex, "Invalid URI");
 		}
+	}
+	
+	public AuthenticationDomain createAuthenticationDomain(Domain domain) {
+		return new AuthenticationDomain(domain.getDomainId(), 
+			domain.getAuthDomainName(), 
+			domain.getDirUri(), 
+			domain.getDirCaseSensitive(),
+			domain.getDirAdmin(), 
+			(domain.getDirPassword() != null) ? domain.getDirPassword().toCharArray() : null, 
+			domain.getDirConnSecurity(),
+			domain.getDirRawParameters()
+		);
 	}
 	
 	public AuthenticationDomain createAuthenticationDomain(ODomain domain) throws URISyntaxException {
@@ -300,7 +506,8 @@ public final class WebTopManager {
 				domain.getDirUri(), 
 				domain.getDirCaseSensitive(),
 				domain.getDirAdmin(), 
-				(domain.getDirPassword() != null) ? domain.getDirPassword().toCharArray() : null, 
+				// When creating from ODomain, password needs to be decrypted!
+				(domain.getDirPassword() != null) ? decDirPassword(domain.getDirPassword()).toCharArray() : null, 
 				EnumUtils.getEnum(ConnectionSecurity.class, domain.getDirConnectionSecurity()),
 				domain.getDirParameters()
 		);
@@ -315,42 +522,74 @@ public final class WebTopManager {
 		return dirManager.getDirectory(WebTopDirectory.SCHEME).buildUri("localhost", null, null).toString();
 	}
 	
-	public String domainIdToPublicName(String domainId) {
+	/**
+	 * Converts given Profile ID (userId@internalDomainId) to authentication 
+	 * Profile ID in the form: userId@domainInternetName.
+	 * @param profileId Profile ID (internal)
+	 * @return
+	 * @throws WTException 
+	 */
+	public UserProfileId toAuthProfileId(final UserProfileId profileId) throws WTException {
+		Check.notNull(profileId, "profileId");
+		String authInternetName = domainIdToDomainInternetName(profileId.getDomainId());
+		if (authInternetName == null) throw new WTException("Cannot find internet-name for '{}'", profileId.getDomainId());
+		return new UserProfileId(authInternetName, profileId.getUserId());
+	}
+	
+	/**
+	 * @deprecated Left here to satisfy compatibility with images lookup in ResourceRequest servlet!
+	 */
+	@Deprecated
+	public String legacyInternetNameToDomain(String internetName) {
+		String onlyOneDomainId = domainCache.authDomainNameToDomainIdIfOnlyOne(internetName);
+		if (onlyOneDomainId != null) return onlyOneDomainId;
+		
+		for(int i=2; i<255; i++) {
+			final int iOfNDot = StringUtils.lastOrdinalIndexOf(internetName, ".", i);
+			final String key = StringUtils.substring(internetName, iOfNDot+1);
+			String domainId = domainCache.authDomainNameToDomainId(key);
+			if (domainId != null) return domainId;
+			if (iOfNDot == -1) break; 
+		}
+		return null;
+	}
+	
+	public boolean existsDomainId(final String domainId) {
+		return domainCache.exists(domainId);
+	}
+	
+	public String domainIdToDomainPublicId(final String domainId) {
 		return AlgoUtils.adler32Hex(domainId);
 	}
 	
-	public String publicNameToDomainId(String domainPublicName) {
-		return domainCache.publicNameToDomainId(domainPublicName);
+	public String domainPublicIdToDomainId(String domainPublicId) {
+		return domainCache.publicIdToDomainId(domainPublicId);
 	}
 	
-	public UserProfileId authProfile(UserProfileId profile) throws WTException {
-		return new UserProfileId(domainIdToDomainInternetName(profile.getDomainId()), profile.getUserId());
-	}
-	
-	public String domainIdToDomainInternetName(String domainId) {
+	public String domainIdToDomainInternetName(final String domainId) {
 		if (StringUtils.equals(domainId, SYSADMIN_DOMAINID)) {
 			return INTERNETNAME_LOCAL;
 		} else {
-			return domainCache.domainIdToDomainInternetName(domainId);
+			return domainCache.domainIdToAuthDomainName(domainId);
 		}
 	}
 	
-	public String domainInternetNameToDomainId(String domainInternetName) {
-		return domainCache.domainInternetNameToDomainId(domainInternetName);
+	public String authDomainNameToDomainId(final String authDomainName) {
+		return domainCache.authDomainNameToDomainId(authDomainName);
 	}
 	
-	public String publicInternetNameToDomainId(String publicInternetName, boolean strict) {
+	public String publicFqdnToDomainId(String publicFqdn, boolean strict) {
 		if (strict) {
-			return domainCache.publicInternetNameToDomainId(publicInternetName);
+			return domainCache.publicFqdnToDomainId(publicFqdn);
 		} else {
 			for (int i=0; i<255; i++) {
-				String name = publicInternetName;
+				String name = publicFqdn;
 				if (i > 0) {
-					final int iOfNDot = StringUtils.ordinalIndexOf(publicInternetName, ".", i);
+					final int iOfNDot = StringUtils.ordinalIndexOf(publicFqdn, ".", i);
 					if (iOfNDot == -1) break;
-					name = StringUtils.substring(publicInternetName, iOfNDot+1);
+					name = StringUtils.substring(publicFqdn, iOfNDot+1);
 				}
-				final String domainId = domainCache.publicInternetNameToDomainId(name);
+				final String domainId = domainCache.publicFqdnToDomainId(name);
 				if (domainId != null) return domainId;
 				/*
 				final int iOfNDot = StringUtils.ordinalIndexOf(publicInternetName, ".", i);
@@ -363,78 +602,1387 @@ public final class WebTopManager {
 		}
 	}
 	
-	/**
-	 * @deprecated
-	 * Left here to satisfy compatibility with images lookup in ResourceRequest servlet!
-	 * @param internetName
-	 * @return
-	 */
-	@Deprecated
-	public String legacyInternetNameToDomain(String internetName) {
-		if (domainCache.getSize() == 1) {
-			// If we have only one domain in cache, simply returns it...
-			Map.Entry<String, String> entry = domainCache.domainInternetNameToDomainId.entrySet().iterator().next();
-			return entry.getValue();
-			
-		} else {
-			for(int i=2; i<255; i++) {
-				final int iOfNDot = StringUtils.lastOrdinalIndexOf(internetName, ".", i);
-				final String key = StringUtils.substring(internetName, iOfNDot+1);
-				String domainId = domainCache.domainInternetNameToDomainId(key);
-				if (domainId != null) return domainId;
-				if (iOfNDot == -1) break; 
-			}
-			return null;
+	public String lookupSubjectSidQuietly(final UserProfileId subjectProfileId, final GenericSubject.Type... validTypes) {
+		Check.notNull(subjectProfileId, "subjectProfileId");
+		return subjectSidCache.getSid(subjectProfileId, validTypes);
+	}
+	
+	public String lookupSubjectSid(final UserProfileId subjectProfileId, final GenericSubject.Type... validTypes) throws WTNotFoundException {
+		Check.notNull(subjectProfileId, "subjectProfileId");
+		final String uid = subjectSidCache.getSid(subjectProfileId, validTypes);
+		if (uid == null) throw new WTNotFoundException("SID not found for '{}'", subjectProfileId);
+		return uid;
+	}
+	
+	public UserProfileId lookupSubjectProfileQuietly(final String subjectSid, final GenericSubject.Type... validTypes) {
+		Check.notNull(subjectSid, "subjectSid");
+		Check.notEmpty(validTypes, "validTypes");
+		return subjectSidCache.getPid(subjectSid, validTypes);
+	}
+	
+	public UserProfileId lookupSubjectProfile(final String subjectSid, final GenericSubject.Type... validTypes) throws WTException {
+		Check.notNull(subjectSid, "subjectSid");
+		Check.notEmpty(validTypes, "validTypes");
+		final UserProfileId pid = subjectSidCache.getPid(subjectSid, validTypes);
+		if (pid == null) throw new WTException("ProfileId not found for Sid '{}'", subjectSid);
+		return pid;
+	}
+	
+	public UserProfile.PersonalInfo lookupProfilePersonalInfo(final UserProfileId profileId, final boolean throwIfNull) throws WTException {
+		Check.notNull(profileId, "profileId");
+		UserProfile.PersonalInfo pinfo = null;
+		if (SYSADMIN_DOMAINID.equals(profileId.getDomainId()) || domainCache.exists(profileId.getDomainId())) {
+			pinfo = profileToPersonalInfoCache.get(profileId);
 		}
+		if (throwIfNull && pinfo == null) throw new WTException("Profile's PersonalInfo not found for '{}'", profileId);
+		return pinfo;
+	}
+	
+	public UserProfile.Data lookupProfileData(final UserProfileId profileId, final boolean throwIfNull) throws WTException {
+		Check.notNull(profileId, "profileId");
+		UserProfile.Data data = null;
+		if (SYSADMIN_DOMAINID.equals(profileId.getDomainId()) || domainCache.exists(profileId.getDomainId())) {
+			data = profileToDataCache.get(profileId);
+		}
+		if (throwIfNull && data == null) throw new WTException("Profile's Data not found for '{}'", profileId);
+		return data;
+	}
+	
+	public void clearProfileCache(final UserProfileId profileId) {
+		Check.notNull(profileId, "profileId");
+		profileToDataCache.invalidate(profileId);
+		profileToPersonalInfoCache.invalidate(profileId);
+	}
+	
+	/**
+	 * Sets System Administrator password
+	 * @param newPassword
+	 * @throws WTException 
+	 */
+	public void updateSysAdminPassword(final char[] newPassword) throws WTException {
+		Check.notNull(newPassword, "newPassword");
+		DirectoryManager dirManager = DirectoryManager.getManager();
+		
+		try {
+			AuthenticationDomain authAd = createSysAdminAuthenticationDomain();
+			DirectoryOptions opts = wta.createDirectoryOptions(authAd);
+			AbstractDirectory directory = dirManager.getDirectory(authAd.getDirUri().getScheme());
+			if (directory == null) throw new WTException("Directory not supported [{}]", authAd.getDirUri().getScheme());
+			if (!directory.hasCapability(DirectoryCapability.PASSWORD_WRITE)) throw new WTException("Password update not supported [{}]", authAd.getDirUri().getScheme());
+			
+			directory.updateUserPassword(opts, SYSADMIN_DOMAINID, SYSADMIN_USERID, newPassword);
+			
+		} catch (URISyntaxException | DirectoryException ex) {
+			throw new WTException(ex);
+		}
+	}
+	
+	public void initDomainCache() {
+		domainCache.init();
 	}
 	
 	public void checkDomains() {
-		DomainDAO dao = DomainDAO.getInstance();
-		Connection con = null;
 		boolean needsCacheReload = false;
 		
+		LOGGER.debug("Checking domains...");
 		try {
-			logger.debug("Checking domains...");
-			con = wta.getConnectionManager().getConnection();
-			for (ODomain odomain : dao.selectAll(con)) {
-				try {
-					if (doPrepareDomain(con, odomain)) needsCacheReload = true;
-				} catch(WTException ex1) {
-					logger.error("Unable to verify domain [{}]", odomain.getDomainId(), ex1);
-				}
+			LOGGER.debug("[{}] Checking home folders...", WebTopManager.SYSADMIN_DOMAINID);
+			doDomainInitHomeFolder(WebTopManager.SYSADMIN_DOMAINID);
+			
+			Set<String> domainIds = listDomainIds(EnabledCond.ANY_STATE);
+			for (String domainId : domainIds) {
+				LOGGER.debug("[{}] Checking home folders...", domainId);
+				doDomainInitHomeFolder(domainId);
+				DomainInitResult result = doDomainInitCheck(domainId);
+				if (result.subjectCacheUpdated) needsCacheReload = true;
 			}
 			
-		} catch(SQLException ex) {
+		} catch (Exception ex) {
 			throw new WTRuntimeException(ex, "Unable to verify domains");
-		} finally {
-			DbUtils.closeQuietly(con);
 		}
 		
 		if (needsCacheReload) {
-			initGroupUidCache();
-			initUserUidCache();
+			subjectSidCache.cleanup();
+			subjectSidCache.init();
 		}
 	}
 	
-	public List<ODomain> listDomains(boolean enabledOnly) throws WTException {
-		DomainDAO dao = DomainDAO.getInstance();
+	/**
+	 * List configured domain IDs according to specified options.
+	 * @param enabled
+	 * @return
+	 * @throws WTException 
+	 */
+	public Set<String> listDomainIds(final EnabledCond enabled) throws WTException {
+		DomainDAO domDao = DomainDAO.getInstance();
 		Connection con = null;
 		
 		try {
 			con = wta.getConnectionManager().getConnection();
-			if(enabledOnly) {
-				return dao.selectEnabled(con);
-			} else {
-				return dao.selectAll(con);
-			}
+			return domDao.selectIdsByEnabled(con, enabled);
 			
-		} catch(SQLException | DAOException ex) {
-			throw new WTException(ex, "DB error");
+		} catch (Exception ex) {
+			throw ExceptionUtils.wrapThrowable(ex);
 		} finally {
 			DbUtils.closeQuietly(con);
 		}
 	}
 	
+	public Map<String, Domain> listDomains(final EnabledCond enabled) throws WTException {
+		Check.notNull(enabled, "enabled");
+		DomainDAO domDao = DomainDAO.getInstance();
+		Connection con = null;
+		
+		// This only fill basic domain info: NO directory data will be present!
+		
+		try {
+			con = wta.getConnectionManager().getConnection();
+			List<ODomain> odomains = domDao.selectBasicByEnabled(con, enabled);
+			Map<String, Domain> items = new LinkedHashMap<>(odomains.size());
+			for (ODomain odomain : odomains) {
+				items.put(odomain.getDomainId(), AppManagerUtils.fillDomain(new Domain(), odomain));
+			}
+			return items;
+			
+		} catch (Exception ex) {
+			throw ExceptionUtils.wrapThrowable(ex);
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
+	public boolean checkDomainIdAvailability(final String domainIdToCheck) throws WTException {
+		Check.notEmpty(domainIdToCheck, "domainIdToCheck");
+		DomainDAO domDao = DomainDAO.getInstance();
+		Connection con = null;
+		
+		try {
+			con = wta.getConnectionManager().getConnection();
+			return domDao.idIsAvailable(con, domainIdToCheck);
+			
+		} catch (Exception ex) {
+			throw ExceptionUtils.wrapThrowable(ex);
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
+	public Domain getDomain(final String domainId, final BitFlags<DomainGetOption> options) throws WTException {
+		Check.notEmpty(domainId, "domainId");
+		Check.notNull(options, "options");
+		Connection con = null;
+		
+		try {
+			con = wta.getConnectionManager().getConnection();
+			return doDomainGet(con, domainId, DomainProcessOpt.fromDomainGetOptions(options));
+			
+		} catch (Exception ex) {
+			throw ExceptionUtils.wrapThrowable(ex);
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
+	public DomainBase.PasswordPolicies getDomainPasswordPolicies(final String domainId) throws WTException {
+		Check.notEmpty(domainId, "domainId");
+		DomainDAO domDao = DomainDAO.getInstance();
+		Connection con = null;
+		
+		try {
+			if (Principal.xisAdminDomain(domainId)) {
+				return new DomainBase.PasswordPolicies(null, null, null, null, null, null, null);
+				
+			} else {
+				con = wta.getConnectionManager().getConnection();
+				ODomain odomain = domDao.selectPasswordPoliciesById(con, domainId);
+				return AppManagerUtils.createDomainPasswordPolicies2(odomain);
+			}	
+			
+		} catch (Exception ex) {
+			throw ExceptionUtils.wrapThrowable(ex);
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
+	public Result<Domain> addDomain(final String domainId, final DomainBase domain) throws WTException {
+		Check.notEmpty(domainId, "domainId");
+		Check.notNull(domain, "domain");
+		Connection con = null;
+		
+		Domain newDomain = null;
+		try {
+			con = wta.getConnectionManager().getConnection(false);
+			doDomainInsert(con, domainId, domain);
+			doDomainInitHomeFolder(domainId);
+			DbUtils.commitQuietly(con);
+			
+			newDomain = doDomainGet(con, domainId, BitFlags.allOf(DomainProcessOpt.class));
+			
+		} catch (Exception ex) {
+			DbUtils.rollbackQuietly(con);
+			throw ExceptionUtils.wrapThrowable(ex);
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+		
+		domainCache.init();
+		
+		EventBus.PostResult postResult = fireEvent(new DomainUpdateEvent(DomainUpdateEvent.Type.CREATE, domainId), true, true);
+		return new Result(newDomain, postResult.getHandlerErrorsCauses());
+		/*
+		// To create an error for testing purposes...
+		ArrayList<HomedThrowable> errors = new ArrayList<>(postResult.getHandlerErrorsCauses());
+		errors.add(new HomedThrowable(CoreManifest.ID, new WTException("Error testttttttttttttttttttttt")));
+		return new Result(newDomain, errors);
+		*/
+	}
+	
+	public ResultVoid initDomain(final String domainId) throws WTException {
+		Check.notEmpty(domainId, "domainId");
+		DomainDAO domDao = DomainDAO.getInstance();
+		Connection con = null;
+		
+		ODomain odomain = null;
+		try {
+			con = wta.getConnectionManager().getConnection();
+			odomain = domDao.selectBasicById(con, domainId);
+			
+		} catch (Exception ex) {
+			throw ExceptionUtils.wrapThrowable(ex);
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+		
+		if (odomain == null) throw new WTNotFoundException("Domain not found [{}]", domainId);
+		DomainInitResult initResult = doDomainInitCheck(domainId);
+		
+		return new ResultVoid(initResult.errors);
+	}
+	
+	public Result<Domain> updateDomain(final String domainId, final DomainBase domain, final BitFlags<DomainUpdateOption> options) throws WTException {
+		Check.notEmpty(domainId, "domainId");
+		Check.notNull(domain, "domain");
+		DomainDAO domDao = DomainDAO.getInstance();
+		Connection con = null;
+		
+		ODomain before = null;
+		Boolean newEnabled = null;
+		Domain updatedDomain = null;
+		try {
+			con = wta.getConnectionManager().getConnection(false);
+			before = domDao.selectBasicById(con, domainId);
+			DomainUpdateResult res = doDomainUpdate(con, domainId, domain, options.has(DomainUpdateOption.DIRECTORY_PASSWORD), DomainProcessOpt.fromDomainUpdateOptions(options));
+			DbUtils.commitQuietly(con);
+			
+			if (!before.getEnabled().equals(res.odomain.getEnabled())) newEnabled = res.odomain.getEnabled();
+			updatedDomain = doDomainGet(con, domainId, BitFlags.allOf(DomainProcessOpt.class));
+			
+		} catch (Exception ex) {
+			DbUtils.rollbackQuietly(con);
+			throw ExceptionUtils.wrapThrowable(ex);
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+		
+		domainCache.init();
+		
+		EventBus.PostResult postResult = fireEvent(new DomainUpdateEvent(ResourceUpdateEvent.Type.UPDATE, domainId), true, true);
+		if (newEnabled != null && before != null) {
+			//fireEvent(new DomainAvailabilityChangeEvent(newEnabled, resourcePid, EnumUtils.forSerializedName(before.getCustom1(), ResourceBase.Type.class)));
+		}
+		return new Result(updatedDomain, postResult.getHandlerErrorsCauses());
+	}
+	
+	public ResultVoid deleteDomain(final String domainId, final boolean updateDirectory) throws WTException {
+		Check.notEmpty(domainId, "domainId");
+		UserDAO useDao = UserDAO.getInstance();
+		ResourceDAO resDao = ResourceDAO.getInstance();
+		Connection con = null;
+		
+		Domain oldDomain = null;
+		Set<String> oldUserIds = null;
+		Set<String> oldResourcesIds = null;
+		try {
+			con = wta.getConnectionManager().getConnection(false);
+			oldDomain = doDomainGet(con, domainId, BitFlags.with(DomainProcessOpt.PROCESS_DIRECTORY));
+			if (oldDomain == null) throw new WTNotFoundException("Domain not found [{}]", domainId);
+			oldUserIds = useDao.selectIdsByDomainEnabled(con, domainId, EnabledCond.ANY_STATE);
+			oldResourcesIds = resDao.selectIdsByDomainEnabled(con, domainId, EnabledCond.ANY_STATE);
+			doDomainDelete(con, domainId);
+			DbUtils.commitQuietly(con);
+			
+		} catch (Exception ex) {
+			DbUtils.rollbackQuietly(con);
+			throw ExceptionUtils.wrapThrowable(ex);
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+		
+		domainCache.init();
+		subjectSidCache.cleanupByDomain(domainId);
+		cleanupProfileCache();
+		
+		ArrayList<HomedThrowable> errors = new ArrayList<>();
+		if (oldUserIds != null) {
+			if (updateDirectory) {
+				try {
+					AuthenticationDomain ad = createAuthenticationDomain(oldDomain);
+					AbstractDirectory directory = getAuthDirectory(ad.getDirUri());
+					DirectoryOptions opts = wta.createDirectoryOptions(ad);
+					if (directory.hasCapability(DirectoryCapability.USERS_WRITE)) {
+						Set<String> notFounds = new LinkedHashSet<>();
+						for (String userId : oldUserIds) {
+							try {
+								directory.deleteUser(opts, domainId, userId);
+							} catch (DirectoryException ex1) {
+								if (isDirectoryNameNotFoundException(ex1)) {
+									// Do not throw if error refers to an entry not-found... simply keep track of the user!
+									notFounds.add(userId);
+								} else {
+									throw ex1;
+								}
+							}
+						}
+						if (!notFounds.isEmpty()) {
+							if (notFounds.size() == oldUserIds.size()) {
+								errors.add(new HomedThrowable(CoreManifest.ID, new WTException("No user cleared from Directory")));
+							} else {
+								errors.add(new HomedThrowable(CoreManifest.ID, new WTException("Some users were not cleared from Directory: {}", notFounds.size())));
+								LOGGER.warn("[{}] Some users were not removed from Directory: {}", domainId, StringUtils.join(notFounds, ", "));
+							}
+						}
+					}
+				} catch (Exception ex) {
+					LOGGER.error("[{}] Error on bulk-cleaning users from Directory", ex, domainId);
+					errors.add(new HomedThrowable(CoreManifest.ID, new WTException(ex, "Error during bulk-cleaning users from Directory")));
+				}
+			}
+			/*
+			for (String userId : oldUserIds) {
+				//TODO: fire event?
+			}
+			*/
+		}
+			
+		if (oldResourcesIds != null) {
+			/*
+			for (String resourceId : oldResourceIds) {
+				//TODO: fire event?
+			}
+			*/
+		}
+		
+		EventBus.PostResult postResult = fireEvent(new DomainUpdateEvent(ResourceUpdateEvent.Type.DELETE, domainId), true, true);		
+		if (postResult.hasHandlerErrors()) errors.addAll(postResult.getHandlerErrorsCauses());
+		
+		// Cleanup file-system
+		doDomainDeleteHomeFolder(domainId);
+		
+		return new ResultVoid(errors);
+	}
+	
+	public List<DirectoryUser> listDirectoryUsers(final String domainId) throws WTException {
+		UserDAO useDao = UserDAO.getInstance();
+		Connection con = null;
+		
+		try {
+			con = wta.getConnectionManager().getConnection();
+			
+			Domain domain = doDomainGet(con, domainId, BitFlags.allOf(DomainProcessOpt.class));
+			if (domain == null) throw new WTNotFoundException("Domain not found [{}]", domainId);
+			
+			AuthenticationDomain ad = createAuthenticationDomain(domain);
+			AbstractDirectory directory = getAuthDirectory(ad.getDirUri());
+			DirectoryOptions opts = wta.createDirectoryOptions(ad);
+			
+			Map<String, VUser> vusers = useDao.selectByDomainEnabled(con, domain.getDomainId(), EnabledCond.ANY_STATE);
+			ArrayList<DirectoryUser> items = new ArrayList<>();
+			if (directory.hasCapability(DirectoryCapability.USERS_READ)) {
+				for (AuthUser authUser : directory.listUsers(opts, domain.getDomainId())) {
+					items.add(new DirectoryUser(authUser, vusers.get(authUser.userId)));
+				}
+			} else {
+				throw new WTException("Directory not readable");
+			}
+			return items;
+			
+		} catch(DirectoryException ex) {
+			throw ExceptionUtils.wrapThrowable(ex);
+		} catch (Exception ex) {
+			throw ExceptionUtils.wrapThrowable(ex);
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
+	public Set<String> listUserIds(final String domainId, final EnabledCond enabled) throws WTException {
+		Check.notEmpty(domainId, "domainId");
+		Check.notNull(enabled, "enabled");
+		UserDAO useDao = UserDAO.getInstance();
+		Connection con = null;
+		
+		try {
+			con = wta.getConnectionManager().getConnection();
+			return useDao.selectIdsByDomainEnabled(con, domainId, enabled);
+			
+		} catch (Exception ex) {
+			throw ExceptionUtils.wrapThrowable(ex);
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
+	public Map<String, User> listUsers(final String domainId, final EnabledCond enabled) throws WTException {
+		Check.notEmpty(domainId, "domainId");
+		Check.notNull(enabled, "enabled");
+		UserDAO useDao = UserDAO.getInstance();
+		Connection con = null;
+		
+		// This only fill basic user info: NO assignations and permissions related info will be returned!
+		
+		try {
+			con = wta.getConnectionManager().getConnection();
+			Collection<VUser> vusers = useDao.selectByDomainEnabled(con, domainId, enabled).values();
+			Map<String, User> items = new LinkedHashMap<>(vusers.size());
+			for (VUser vuser : vusers) {
+				items.put(vuser.getUserId(), AppManagerUtils.fillUser(new User(), vuser));
+			}
+			return items;
+			
+		} catch (Exception ex) {
+			throw ExceptionUtils.wrapThrowable(ex);
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
+	public boolean checkUserIdAvailability(final String domainId, final String userIdToCheck) throws WTException {
+		Check.notEmpty(domainId, "domainId");
+		Check.notEmpty(userIdToCheck, "userIdToCheck");
+		UserDAO useDao = UserDAO.getInstance();
+		Connection con = null;
+		
+		try {
+			con = wta.getConnectionManager().getConnection();
+			return useDao.idIsAvailableByDomain(con, domainId, userIdToCheck);
+			
+		} catch (Exception ex) {
+			throw ExceptionUtils.wrapThrowable(ex);
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
+	public User getUser(final String domainId, final String userId, final BitFlags<UserGetOption> options) throws WTException {
+		Check.notEmpty(domainId, "domainId");
+		Check.notEmpty(userId, "userId");
+		Check.notNull(options, "options");
+		Connection con = null;
+		
+		try {
+			con = wta.getConnectionManager().getConnection();
+			return doUserGet(con, domainId, userId, UserProcessOpt.fromUserGetOptions(options));
+			
+		} catch (Exception ex) {
+			throw ExceptionUtils.wrapThrowable(ex);
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
+	public String getUserSecret(final String domainId, final String userId) throws WTException {
+		Check.notEmpty(domainId, "domainId");
+		Check.notEmpty(userId, "userId");
+		UserDAO useDao = UserDAO.getInstance();
+		UserProfileId userPid = new UserProfileId(domainId, userId);
+		
+		try {
+			lockSecretGet.lock(userPid.toString());
+			Connection con = null;
+			
+			try {
+				con = wta.getConnectionManager().getConnection();
+				OUser ouser = useDao.selectSecretByProfile(con, domainId, userId);
+				if (ouser == null) throw new WTNotFoundException("User not found [{}]", userPid);
+
+				String secret = ouser.getSecret();
+				if (StringUtils.isBlank(secret)) {
+					secret = OUser.generateSecretKey();				
+					if (useDao.updateSecretByProfile(con, domainId, userId, secret) != 1) {
+						throw new WTException("Unable to set generated secret [{}]", userPid);
+					}
+				}
+				return secret;
+				
+			} catch (Exception ex) {
+				throw ExceptionUtils.wrapThrowable(ex);
+			} finally {
+				DbUtils.closeQuietly(con);
+			}
+
+		} finally {
+			lockSecretGet.unlock(userPid.toString());
+		}
+	}
+	
+	public Result<User> addUser(final String domainId, final String userId, final UserBase user, final boolean updateDirectory, final boolean setPassword, final char[] password, final BitFlags<UserUpdateOption> options) throws WTException {
+		Check.notEmpty(domainId, "domainId");
+		Check.notEmpty(userId, "userId");
+		Check.notNull(user, "user");
+		Check.notNull(options, "options");
+		
+		// Injects default Group (keep attention to subject ID mode)
+		final String defaultGroup;
+		if (options.has(UserUpdateOption.SUBJECTS_AS_SID)) {
+			defaultGroup = lookupSubjectSid(new UserProfileId(domainId, GROUPID_USERS), GenericSubject.Type.GROUP);
+		} else {
+			defaultGroup = new UserProfileId(domainId, GROUPID_USERS).toString();
+		}
+		return addUser(domainId, userId, user, updateDirectory, setPassword, password, options, defaultGroup);
+	}
+	
+	private Result<User> addUser(final String domainId, final String userId, final UserBase user, final boolean updateDirectory, final boolean setPassword, final char[] password, final BitFlags<UserUpdateOption> options, final String defaultGroup) throws WTException {
+		Check.notEmpty(domainId, "domainId");
+		Check.notEmpty(userId, "userId");
+		Check.notNull(user, "user");
+		Check.notNull(options, "options");
+		UserProfileId userPid = new UserProfileId(domainId, userId);
+		Connection con = null;
+		
+		User newUser = null;
+		try {
+			con = wta.getConnectionManager().getConnection(false);
+			
+			Domain domain = doDomainGet(con, userPid.getDomainId(), BitFlags.allOf(DomainProcessOpt.class));
+			if (domain == null) throw new WTException("Domain not found [{}]", userPid.getDomainId());
+			AuthenticationDomain ad = createAuthenticationDomain(domain);
+			
+			String userSid = null; // Internally auto-generated
+			UserInsertResult result = null;
+			if (updateDirectory) {
+				AbstractDirectory directory = getAuthDirectory(ad.getDirUri());
+				DirectoryOptions opts = wta.createDirectoryOptions(ad);
+				
+				if (directory.hasCapability(DirectoryCapability.USERS_WRITE)) {
+					if (!directory.validateUsername(opts, userPid.getUserId())) {
+						throw new WTException("Username does not satisfy directory requirements [{}]", ad.getDirUri().getScheme());
+					}
+				}
+				char[] appliedPassword = null;
+				if (setPassword && directory.hasCapability(DirectoryCapability.PASSWORD_WRITE)) {
+					wta.setDirectoryOptionsPasswordPolicies(ad, opts, domain.getPasswordPolicies());
+					if (password == null) {
+						appliedPassword = directory.generatePassword(opts);
+					} else {
+						appliedPassword = password;
+						int ret = directory.validatePasswordPolicy(opts, userPid.getUserId(), appliedPassword);
+						if (ret != 0) {
+							throw new WTPwdPolicyException(ret, "Password does not satisfy directory policy [{}, {}]", ad.getDirUri().getScheme(), ret);
+						}
+					}
+				}
+				
+				result = doUserInsert(con, userPid.getDomainId(), userPid.getUserId(), userSid, user, UserProcessOpt.fromUserUpdateOptions(options), defaultGroup);
+				
+				// Insert user in directory (if necessary)
+				if (directory.hasCapability(DirectoryCapability.USERS_WRITE)) {
+					LOGGER.debug("Adding user into directory...");
+					try {
+						final AuthUser authUser = new AuthUser(userPid.getUserId(), result.ouser.getDisplayName(), result.ouserinfo.getFirstName(), result.ouserinfo.getLastName(), null);
+						directory.addUser(opts, userPid.getDomainId(), authUser);
+					} catch (EntryException ex1) {
+						LOGGER.warn("Insertion skipped: user already exists [{}]", userPid.getUserId());
+					}
+				}
+				if (setPassword && directory.hasCapability(DirectoryCapability.PASSWORD_WRITE)) {
+					LOGGER.debug("Setting user password");
+					directory.updateUserPassword(opts, userPid.getDomainId(), userPid.getUserId(), appliedPassword);
+					new CoreUserSettings(wta.getSettingsManager(), userPid).setPasswordLastChange(DateTimeUtils.now());
+				}
+				
+			} else {
+				result = doUserInsert(con, userPid.getDomainId(), userPid.getUserId(), userSid, user, UserProcessOpt.fromUserUpdateOptions(options), defaultGroup);
+			}
+			
+			DbUtils.commitQuietly(con);
+			
+			subjectSidCache.add(result.ouser.getProfileId(), result.ouser.getUserSid(), GenericSubject.Type.USER);
+			newUser = doUserGet(con, userPid.getDomainId(), userPid.getUserId(), UserProcessOpt.fromUserUpdateOptions(options));
+			
+		} catch (Exception ex) {
+			DbUtils.rollbackQuietly(con);
+			throw ExceptionUtils.wrapThrowable(ex);
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+		
+		// Fire events
+		EventBus.PostResult postResult = fireEvent(new UserUpdateEvent(UserUpdateEvent.Type.CREATE, userPid), true, true);
+		//TODO: fire UserAvailabilityChangeEvent based on enabled change
+		// @Deprecated
+		// -> START Backward compatibility section: performs legacy actions
+		List<Throwable> errors = wta.getServiceManager().invokeOnUserAdded(userPid);
+		if (!errors.isEmpty()) throw new WTMultiCauseWarnException(errors, "Errors in user related listeners");
+		// <- END Backward compatibility section
+		
+		return new Result(newUser, postResult.getHandlerErrorsCauses());
+	}
+	
+	public ResultVoid updateUser(final String domainId, final String userId, final UserBase user, final BitFlags<UserUpdateOption> options) throws WTException {
+		Check.notEmpty(domainId, "domainId");
+		Check.notEmpty(userId, "userId");
+		Check.notNull(user, "user");
+		UserProfileId userPid = new UserProfileId(domainId, userId);
+		Connection con = null;
+		
+		try {
+			con = wta.getConnectionManager().getConnection(false);
+			
+			doUserUpdate(con, userPid.getDomainId(), userPid.getUserId(), user, UserProcessOpt.fromUserUpdateOptions(options));
+			DbUtils.commitQuietly(con);
+			
+		} catch (Exception ex) {
+ 			DbUtils.rollbackQuietly(con);
+			throw ExceptionUtils.wrapThrowable(ex);
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+		
+		// Fire events
+		EventBus.PostResult postResult = fireEvent(new UserUpdateEvent(UserUpdateEvent.Type.UPDATE, userPid), true, true);
+		
+		return new ResultVoid(postResult.getHandlerErrorsCauses());
+	}
+	
+	public void updateUserStatus(final String domainId, final String userId, final boolean enabled) throws WTException {
+		Check.notEmpty(domainId, "domainId");
+		Check.notEmpty(userId, "userId");
+		UserProfileId userPid = new UserProfileId(domainId, userId);
+		UserDAO useDao = UserDAO.getInstance();
+		Connection con = null;
+		
+		try {
+			con = wta.getConnectionManager().getConnection();
+			boolean ret = useDao.updateEnabledByProfile(con, domainId, userId, enabled) == 1;
+			if (!ret) throw new WTNotFoundException("User not found [{}]", userPid);
+			
+		} catch (Exception ex) {
+			throw ExceptionUtils.wrapThrowable(ex);
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+		
+		// Fire events
+		EventBus.PostResult postResult = fireEvent(new UserAvailabilityChangeEvent(enabled, userPid), false, true);
+	}
+	
+	public void updateUserPassword(final String domainId, final String userId, final char[] oldPassword, final char[] newPassword) throws WTException {
+		Check.notEmpty(domainId, "domainId");
+		Check.notEmpty(userId, "userId");
+		Check.notNull(newPassword, "newPassword");
+		UserProfileId userPid = new UserProfileId(domainId, userId);
+		AuthenticationDomain ad = createAuthenticationDomain(userPid);
+		
+		try {
+			AbstractDirectory directory = getAuthDirectory(ad.getDirUri());
+			if (!directory.hasCapability(DirectoryCapability.PASSWORD_WRITE)) {
+				throw new WTException("Directory has no write capability");
+			}
+			
+			DirectoryOptions opts = wta.createDirectoryOptions(ad);
+			DomainBase.PasswordPolicies pwdPolicies = getDomainPasswordPolicies(userPid.getDomainId());
+			wta.setDirectoryOptionsPasswordPolicies(ad, opts, pwdPolicies);
+			int ret = directory.validatePasswordPolicy(opts, userPid.getUserId(), newPassword);
+			if (ret == 0 && oldPassword != null && pwdPolicies.getAvoidOldSimilarity()) {
+				int similarityThres = 5;
+				if (StringUtils.getLevenshteinDistance(new String(oldPassword), new String(newPassword)) < similarityThres) ret = 41;
+			}
+			if (ret != 0) {
+				throw new WTPwdPolicyException(ret, "Password does not satisfy directory policy [{}]", ret);
+			}
+			
+			if (oldPassword != null) {
+				directory.updateUserPassword(opts, userPid.getDomainId(), userPid.getUserId(), oldPassword, newPassword);
+			} else {
+				directory.updateUserPassword(opts, userPid.getDomainId(), userPid.getUserId(), newPassword);
+			}
+
+			CoreUserSettings cus = new CoreUserSettings(userPid);
+			cus.setPasswordLastChange(DateTimeUtils.now());
+			cus.setPasswordForceChange(false);
+			
+		} catch (DirectoryException ex) {
+			if (isDirectoryNameNotFoundException(ex)) {
+				throw new WTNotFoundException(ex, "User not found [{}]", userPid);
+			} else {
+				throw new WTException(ex, "Directory error");
+			}
+		}
+	}
+	
+	public ResultVoid deleteUser(final String domainId, final String userId, final boolean updateDirectory) throws WTException {
+		Check.notEmpty(domainId, "domainId");
+		Check.notEmpty(userId, "userId");
+		UserProfileId userPid = new UserProfileId(domainId, userId);
+		Connection con = null;
+		
+		String userSid = subjectSidCache.getSid(userPid, GenericSubject.Type.USER);
+		if (userSid == null) throw new WTNotFoundException("User not found [{}]", userPid);
+		
+		// Make sure that some data are in cache before permanent user deletion (useful for events below)
+		lookupProfilePersonalInfo(userPid, false);
+		lookupProfileData(userPid, false);
+		
+		try {
+			con = wta.getConnectionManager().getConnection(false);
+			LOGGER.debug("Deleting user '{}'", userId);
+			doUserDelete(con, userPid.getDomainId(), userPid.getUserId());
+			
+			if (updateDirectory) {
+				ODomain odomain = doODomainGet(con, userPid.getDomainId());
+				if (odomain == null) throw new WTException("Domain not found [{}]", userPid.getDomainId());
+				AuthenticationDomain ad = createAuthenticationDomain(odomain);
+				AbstractDirectory directory = getAuthDirectory(ad.getDirUri());
+				DirectoryOptions opts = wta.createDirectoryOptions(ad);
+				
+				if (directory.hasCapability(DirectoryCapability.USERS_WRITE)) {
+					directory.deleteUser(opts, userPid.getDomainId(), userPid.getUserId());
+				}
+			}
+			
+			DbUtils.commitQuietly(con);
+			
+		} catch (DirectoryException ex) {
+			DbUtils.rollbackQuietly(con);
+			if (isDirectoryNameNotFoundException(ex)) {
+				throw new WTNotFoundException(ex, "User not found [{}]", userPid);
+			} else {
+				throw ExceptionUtils.wrapThrowable(ex);
+			}
+		} catch (Exception ex) {
+			DbUtils.rollbackQuietly(con);
+			throw ExceptionUtils.wrapThrowable(ex);
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+		
+		wta.getLicenseManager().revokeLicenseLease(userPid);
+		
+		// Fire events
+		EventBus.PostResult postResult = fireEvent(new UserUpdateEvent(UserUpdateEvent.Type.DELETE, userPid), true, true);
+		// -> START Backward compatibility section: performs legacy actions
+		wta.getServiceManager().invokeOnUserRemoved(userPid);
+		// <- END Backward compatibility section
+		// Clear settings
+		wta.getSettingsManager().deleteUserSettings(userPid);
+		// Clear any cached data
+		subjectSidCache.remove(userPid, GenericSubject.Type.USER);
+		clearProfileCache(userPid);
+		
+		return new ResultVoid(postResult.getHandlerErrorsCauses());
+	}
+	
+	public boolean isUserPasswordChangeNeeded(final String domainId, final String userId, final char[] password) throws WTException {
+		Check.notEmpty(domainId, "domainId");
+		Check.notEmpty(userId, "userId");
+		UserProfileId userPid = new UserProfileId(domainId, userId);
+		if (Principal.xisAdmin(userPid.getDomainId(), userPid.getUserId())) return false;
+		
+		AuthenticationDomain ad = createAuthenticationDomain(userPid);
+		AbstractDirectory directory = getAuthDirectory(ad.getDirUri());
+		if (!directory.hasCapability(DirectoryCapability.PASSWORD_WRITE)) return false;
+		
+		DomainBase.PasswordPolicies pwdPolicies = getDomainPasswordPolicies(userPid.getDomainId());
+		if (pwdPolicies.getVerifyAtLogin() || pwdPolicies.getExpiration() != null) {
+			if (pwdPolicies.getVerifyAtLogin()) {
+				DirectoryOptions opts = wta.createDirectoryOptions(ad);
+				wta.setDirectoryOptionsPasswordPolicies(ad, opts, pwdPolicies);
+				int ret = directory.validatePasswordPolicy(opts, userPid.getUserId(), password);
+				if (ret != 0) return true;
+			}
+			
+			if (pwdPolicies.getExpiration() != null) {
+				CoreUserSettings cus = new CoreUserSettings(userPid);
+				DateTime lastChange = cus.getPasswordLastChange();
+				// NB: No last-change timestamp means password change needed!
+				if (lastChange == null || DateTimeUtils.datesBetween(lastChange, DateTimeUtils.now().toDateTime(DateTimeZone.UTC)) > pwdPolicies.getExpiration()) return true;
+			}
+		}
+		
+		CoreUserSettings cus = new CoreUserSettings(userPid);
+		if (cus.getPasswordForceChange()) return true;
+		return false;
+	}
+	
+	public int bulkUpdatePersonalEmailDomain(final String domainId, final Collection<String> userIds, String newPersonalEmailDomain) throws WTException {
+		Check.notEmpty(domainId, "domainId");
+		Check.notNull(userIds, "userIds");
+		UserInfoDAO uiDao = UserInfoDAO.getInstance();
+		Connection con = null;
+		
+		int ret = -1;
+		try {
+			if (userIds.isEmpty()) return -1;
+			con = wta.getConnectionManager().getConnection(false);
+			
+			String newEmailDomain = "@" + StringUtils.removeStart(newPersonalEmailDomain, "@");
+			ret = uiDao.updateEmailDomainByProfiles(con, domainId, userIds, newEmailDomain);
+			DbUtils.commitQuietly(con);
+			
+		} catch (Exception ex) {
+			DbUtils.rollbackQuietly(con);
+			throw ExceptionUtils.wrapThrowable(ex);
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+		
+		// Clear any cached data
+		for (String userId : userIds) clearProfileCache(new UserProfileId(domainId, userId));
+		
+		return ret;
+	}
+	
+	public Set<String> listResourceIds(final String domainId, final EnabledCond enabled) throws WTException {
+		Check.notEmpty(domainId, "domainId");
+		Check.notNull(enabled, "enabled");
+		ResourceDAO resDao = ResourceDAO.getInstance();
+		Connection con = null;
+		
+		try {
+			con = wta.getConnectionManager().getConnection();
+			return resDao.selectIdsByDomainEnabled(con, domainId, enabled);
+			
+		} catch (Exception ex) {
+			throw ExceptionUtils.wrapThrowable(ex);
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
+	public Map<String, Resource> listResources(final String domainId, final EnabledCond enabled) throws WTException {
+		Check.notEmpty(domainId, "domainId");
+		Check.notNull(enabled, "enabled");
+		ResourceDAO resDao = ResourceDAO.getInstance();
+		Connection con = null;
+		
+		// This only fill basic user info: NO assignations and permissions related info will be returned!
+		
+		try {
+			con = wta.getConnectionManager().getConnection();
+			List<VResource> vres = resDao.selectByDomainEnabled(con, domainId, enabled);
+			Map<String, Resource> items = new LinkedHashMap<>(vres.size());
+			for (VResource vre : vres) {
+				items.put(vre.getUserId(), AppManagerUtils.fillResource(new Resource(), vre));
+			}
+			return items;
+			
+		} catch (Exception ex) {
+			throw ExceptionUtils.wrapThrowable(ex);
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
+	public boolean checkResourceIdAvailability(final String domainId, final String resourceIdToCheck) throws WTException {
+		Check.notEmpty(domainId, "domainId");
+		Check.notEmpty(resourceIdToCheck, "resourceIdToCheck");
+		ResourceDAO resDao = ResourceDAO.getInstance();
+		Connection con = null;
+		
+		try {
+			con = wta.getConnectionManager().getConnection();
+			return resDao.idIsAvailableByDomain(con, domainId, resourceIdToCheck);
+			
+		} catch (Exception ex) {
+			throw ExceptionUtils.wrapThrowable(ex);
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
+	public Resource getResource(final String domainId, final String resourceId, final BitFlags<ResourceGetOption> options) throws WTException {
+		Check.notEmpty(domainId, "domainId");
+		Check.notEmpty(resourceId, "resourceId");
+		Connection con = null;
+		
+		try {
+			con = wta.getConnectionManager().getConnection();
+			return doResourceGet(con, domainId, resourceId, ResourceProcessOpt.fromResourceGetOptions(options));
+			
+		} catch (Exception ex) {
+			throw ExceptionUtils.wrapThrowable(ex);
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
+	public boolean getResourceEnabled(final String domainId, final String resourceId) throws WTException {
+		Check.notEmpty(domainId, "domainId");
+		Check.notEmpty(resourceId, "resourceId");
+		ResourceDAO resDao = ResourceDAO.getInstance();
+		Connection con = null;
+		
+		try {
+			con = wta.getConnectionManager().getConnection();
+			Boolean enabled = resDao.selectEnabledByProfile(con, domainId, resourceId);
+			if (enabled == null) throw new WTNotFoundException("Resource not found [{}@{}]", resourceId, domainId);
+			return enabled;
+			
+		} catch (Exception ex) {
+			throw ExceptionUtils.wrapThrowable(ex);
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
+	public ResourcePermissions getResourcePermissions(final String domainId, final String resourceId, final boolean subjectsAsSID) throws WTException {
+		Check.notEmpty(domainId, "domainId");
+		Check.notEmpty(resourceId, "resourceId");
+		Connection con = null;
+		
+		try {
+			con = wta.getConnectionManager().getConnection();
+			return doResourcePermissionsGet(con, domainId, resourceId, subjectsAsSID);
+			
+		} catch (Exception ex) {
+			throw ExceptionUtils.wrapThrowable(ex);
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
+	public Result<Resource> addResource(final String domainId, final String resourceId, final ResourceBase resource, final BitFlags<ResourceUpdateOption> options) throws WTException {
+		Check.notEmpty(domainId, "domainId");
+		Check.notEmpty(resourceId, "resourceId");
+		Check.notNull(resource, "resource");
+		UserProfileId resourcePid = new UserProfileId(domainId, resourceId);
+		Connection con = null;
+		
+		Resource newResource = null;
+		try {
+			con = wta.getConnectionManager().getConnection(false);
+			String resourceSid = null; // Internally auto-generated
+			ResourceUpdateResult res = doResourceInsert(con, resourcePid.getDomainId(), resourcePid.getUserId(), resourceSid, resource, ResourceProcessOpt.fromResourceUpdateOptions(options));
+			DbUtils.commitQuietly(con);
+			
+			if (res.changedPermissionSids != null) clearAuthorizationInfo(domainId, res.changedPermissionSids, options.has(ResourceUpdateOption.SUBJECTS_AS_SID));
+			subjectSidCache.add(res.ouser.getProfileId(), res.ouser.getUserSid(), GenericSubject.Type.RESOURCE);
+			newResource = doResourceGet(con, resourcePid.getDomainId(), resourcePid.getUserId(), ResourceProcessOpt.fromResourceUpdateOptions(options));
+			
+		} catch (Exception ex) {
+			DbUtils.rollbackQuietly(con);
+			throw ExceptionUtils.wrapThrowable(ex);
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+		
+		EventBus.PostResult postResult = fireEvent(new ResourceUpdateEvent(ResourceUpdateEvent.Type.CREATE, resourcePid), true, true);
+		return new Result(newResource, postResult.getHandlerErrorsCauses());
+	}
+	
+	public ResultVoid updateResource(final String domainId, final String resourceId, final ResourceBase resource, final BitFlags<ResourceUpdateOption> options) throws WTException {
+		Check.notEmpty(domainId, "domainId");
+		Check.notEmpty(resourceId, "resourceId");
+		Check.notNull(resource, "resource");
+		ResourceDAO resDao = ResourceDAO.getInstance();
+		UserProfileId resourcePid = new UserProfileId(domainId, resourceId);
+		Connection con = null;
+		
+		VUserData before = null;
+		Boolean newEnabled = null;
+		try {
+			con = wta.getConnectionManager().getConnection(false);
+			before = resDao.viewDataByProfile(con, domainId, resourceId);
+			ResourceUpdateResult res = doResourceUpdate(con, resourcePid.getDomainId(), resourcePid.getUserId(), resource, ResourceProcessOpt.fromResourceUpdateOptions(options));
+			DbUtils.commitQuietly(con);
+			
+			if (res.changedPermissionSids != null) clearAuthorizationInfo(domainId, res.changedPermissionSids, options.has(ResourceUpdateOption.SUBJECTS_AS_SID));
+			if (!before.getEnabled().equals(res.ouser.getEnabled())) newEnabled = res.ouser.getEnabled();
+			
+		} catch (Exception ex) {
+			DbUtils.rollbackQuietly(con);
+			throw ExceptionUtils.wrapThrowable(ex);
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+		
+		EventBus.PostResult postResult = fireEvent(new ResourceUpdateEvent(ResourceUpdateEvent.Type.UPDATE, resourcePid), true, true);
+		if (newEnabled != null && before != null) {
+			fireEvent(new ResourceAvailabilityChangeEvent(newEnabled, resourcePid, EnumUtils.forSerializedName(before.getCustom1(), ResourceBase.Type.class)));
+		}
+		return new ResultVoid(postResult.getHandlerErrorsCauses());
+	}
+	
+	public void updateResourceAvailability(final String domainId, final String resourceId, final boolean enabled) throws WTException {
+		Check.notEmpty(domainId, "domainId");
+		Check.notEmpty(resourceId, "resourceId");
+		UserProfileId resourcePid = new UserProfileId(domainId, resourceId);
+		ResourceDAO resDao = ResourceDAO.getInstance();
+		Connection con = null;
+		
+		VUserData before = null;
+		Boolean newEnabled = null;
+		try {
+			con = wta.getConnectionManager().getConnection();
+			before = resDao.viewDataByProfile(con, domainId, resourceId);
+			boolean ret = resDao.updateEnabledByProfile(con, domainId, resourceId, enabled) == 1;
+			if (!ret) throw new WTNotFoundException("Resource not found [{}]", resourcePid);
+			if (!before.getEnabled().equals(enabled)) newEnabled = enabled;
+			
+		} catch (Exception ex) {
+			throw ExceptionUtils.wrapThrowable(ex);
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+		
+		if (newEnabled != null && before != null) {
+			fireEvent(new ResourceAvailabilityChangeEvent(newEnabled, resourcePid, EnumUtils.forSerializedName(before.getCustom1(), ResourceBase.Type.class)));
+		}
+	}
+	
+	public ResultVoid deleteResource(final String domainId, final String resourceId) throws WTException {
+		Check.notEmpty(domainId, "domainId");
+		Check.notEmpty(resourceId, "resourceId");
+		UserProfileId resourcePid = new UserProfileId(domainId, resourceId);
+		Connection con = null;
+		
+		// Make sure that some data are in cache before permanent resource deletion (useful for events below)
+		lookupProfilePersonalInfo(resourcePid, false);
+		lookupProfileData(resourcePid, false);
+		
+		try {
+			con = wta.getConnectionManager().getConnection(false);
+			doResourceDelete(con, resourcePid.getDomainId(), resourcePid.getUserId());
+			
+			DbUtils.commitQuietly(con);
+			
+		} catch (Exception ex) {
+			DbUtils.rollbackQuietly(con);
+			throw ExceptionUtils.wrapThrowable(ex);
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+		
+		EventBus.PostResult postResult = fireEvent(new ResourceUpdateEvent(ResourceUpdateEvent.Type.DELETE, resourcePid), true, true);
+		subjectSidCache.remove(resourcePid, GenericSubject.Type.RESOURCE);
+		clearProfileCache(resourcePid); // Clear any cached data
+		
+		return new ResultVoid(postResult.getHandlerErrorsCauses());
+	}
+	
+	public Set<String> listGroupIds(final String domainId) throws WTException {
+		Check.notEmpty(domainId, "domainId");
+		GroupDAO grpDao = GroupDAO.getInstance();
+		Connection con = null;
+		
+		try {
+			con = wta.getConnectionManager().getConnection();
+			return grpDao.selectIdsByDomain(con, domainId);
+			
+		} catch (Exception ex) {
+			throw ExceptionUtils.wrapThrowable(ex);
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
+	public Map<String, Group> listGroups(final String domainId) throws WTException {
+		Check.notEmpty(domainId, "domainId");
+		GroupDAO grpDao = GroupDAO.getInstance();
+		Connection con = null;
+		
+		// This only fill basic user info: NO assignations and permissions related info will be returned!
+		
+		try {
+			con = wta.getConnectionManager().getConnection();
+			List<OGroup> ogroups = grpDao.selectByDomain(con, domainId);
+			Map<String, Group> items = new LinkedHashMap<>(ogroups.size());
+			for (OGroup ogroup : ogroups) {
+				items.put(ogroup.getUserId(), AppManagerUtils.fillGroup(new Group(BUILT_IN_GROUPS.contains(ogroup.getUserId())), ogroup));
+			}
+			return items;
+			
+		} catch (Exception ex) {
+			throw ExceptionUtils.wrapThrowable(ex);
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
+	public boolean checkGroupIdAvailability(final String domainId, final String groupIdToCheck) throws WTException {
+		Check.notEmpty(domainId, "domainId");
+		Check.notEmpty(groupIdToCheck, "groupIdToCheck");
+		GroupDAO grpDao = GroupDAO.getInstance();
+		Connection con = null;
+		
+		try {
+			con = wta.getConnectionManager().getConnection();
+			return grpDao.idIsAvailableByDomain(con, domainId, groupIdToCheck);
+			
+		} catch (Exception ex) {
+			throw ExceptionUtils.wrapThrowable(ex);
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
+	public Group getGroup(final String domainId, final String groupId, final BitFlags<GroupGetOption> options) throws WTException {
+		Check.notEmpty(domainId, "domainId");
+		Check.notEmpty(groupId, "groupId");
+		Check.notNull(options, "options");
+		Connection con = null;
+		
+		try {
+			con = wta.getConnectionManager().getConnection();
+			return doGroupGet(con, domainId, groupId, GroupProcessOpt.fromGroupGetOptions(options));
+			
+		} catch (Exception ex) {
+			throw ExceptionUtils.wrapThrowable(ex);
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
+	public Result<Group> addGroup(final String domainId, final String groupId, final GroupBase group, final BitFlags<GroupUpdateOption> options) throws WTException {
+		Check.notEmpty(domainId, "domainId");
+		Check.notEmpty(groupId, "groupId");
+		Check.notNull(group, "group");
+		Check.notNull(options, "options");
+		UserProfileId groupPid = new UserProfileId(domainId, groupId);
+		Connection con = null;
+		
+		Group newGroup = null;
+		try {
+			con = wta.getConnectionManager().getConnection(false);
+			
+			String groupSid = null; // Internally auto-generated
+			GroupInsertResult result = doGroupInsert(con, groupPid.getDomainId(), groupPid.getUserId(), groupSid, group, GroupProcessOpt.fromGroupUpdateOptions(options));
+			
+			DbUtils.commitQuietly(con);
+			
+			subjectSidCache.add(result.ogroup.getProfileId(), result.ogroup.getGroupSid(), GenericSubject.Type.GROUP);
+			newGroup = doGroupGet(con, groupPid.getDomainId(), groupPid.getUserId(), GroupProcessOpt.fromGroupUpdateOptions(options));
+			
+		} catch (Exception ex) {
+			DbUtils.rollbackQuietly(con);
+			throw ExceptionUtils.wrapThrowable(ex);
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+		
+		// Fire events
+		EventBus.PostResult postResult = fireEvent(new GroupUpdateEvent(GroupUpdateEvent.Type.CREATE, groupPid), true, true);
+		
+		return new Result(newGroup, postResult.getHandlerErrorsCauses());
+	}
+	
+	public ResultVoid updateGroup(final String domainId, final String groupId, final GroupBase group, final BitFlags<GroupUpdateOption> options) throws WTException {
+		Check.notEmpty(domainId, "domainId");
+		Check.notEmpty(groupId, "groupId");
+		Check.notNull(group, "group");
+		Check.notNull(options, "options");
+		UserProfileId groupPid = new UserProfileId(domainId, groupId);
+		Connection con = null;
+		
+		try {
+			con = wta.getConnectionManager().getConnection(false);
+			doGroupUpdate(con, groupPid.getDomainId(), groupPid.getUserId(), group, GroupProcessOpt.fromGroupUpdateOptions(options));
+			DbUtils.commitQuietly(con);
+			
+		} catch (Exception ex) {
+			DbUtils.rollbackQuietly(con);
+			throw ExceptionUtils.wrapThrowable(ex);
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+		
+		// Fire events
+		EventBus.PostResult postResult = fireEvent(new GroupUpdateEvent(GroupUpdateEvent.Type.UPDATE, groupPid), true, true);
+		
+		return new ResultVoid(postResult.getHandlerErrorsCauses());
+	}
+	
+	public ResultVoid deleteGroup(final String domainId, final String groupId) throws WTException {
+		Check.notEmpty(domainId, "domainId");
+		Check.notEmpty(groupId, "groupId");
+		UserProfileId groupPid = new UserProfileId(domainId, groupId);
+		Connection con = null;
+		
+		try {
+			if (BUILT_IN_GROUPS.contains(groupId)) throw new WTException("Built-in group cannot be removed");
+			con = wta.getConnectionManager().getConnection(false);
+			LOGGER.debug("Deleting group '{}'", groupPid.getUserId());
+			doGroupDelete(con, groupPid.getDomainId(), groupPid.getUserId());
+			
+			DbUtils.commitQuietly(con);
+			
+		} catch (Exception ex) {
+			DbUtils.rollbackQuietly(con);
+			throw ExceptionUtils.wrapThrowable(ex);
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+		
+		// Fire events
+		EventBus.PostResult postResult = fireEvent(new GroupUpdateEvent(GroupUpdateEvent.Type.DELETE, groupPid), true, true);
+		
+		return new ResultVoid(postResult.getHandlerErrorsCauses());
+	}
+	
+	public Map<String, Role> listRoles(final String domainId) throws WTException {
+		Check.notEmpty(domainId, "domainId");
+		RoleDAO rolDao = RoleDAO.getInstance();
+		Connection con = null;
+		
+		// This only fill basic user info: NO assignations and permissions related info will be returned!
+		
+		try {
+			con = wta.getConnectionManager().getConnection();
+			List<ORole> oroles = rolDao.selectByDomain(con, domainId);
+			Map<String, Role> items = new LinkedHashMap<>(oroles.size());
+			for (ORole orole : oroles) {
+				items.put(orole.getRoleSid(), AppManagerUtils.fillRole(new Role(false), orole));
+			}
+			return items;
+			
+		} catch (Exception ex) {
+			throw ExceptionUtils.wrapThrowable(ex);
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
+	public boolean checkRoleIdAvailability(final String domainId, final String roleIdToCheck) throws WTException {
+		Check.notEmpty(domainId, "domainId");
+		Check.notEmpty(roleIdToCheck, "roleIdToCheck");
+		RoleDAO rolDao = RoleDAO.getInstance();
+		Connection con = null;
+		
+		try {
+			con = wta.getConnectionManager().getConnection();
+			return rolDao.idIsAvailableByDomain(con, domainId, roleIdToCheck);
+			
+		} catch (Exception ex) {
+			throw ExceptionUtils.wrapThrowable(ex);
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
+	public Role getRole(final String domainId, final String roleSid, final BitFlags<RoleGetOption> options) throws WTException {
+		Check.notEmpty(domainId, "domainId");
+		Check.notEmpty(roleSid, "roleSid");
+		Connection con = null;
+		
+		try {
+			con = wta.getConnectionManager().getConnection();
+			return doRoleGet(con, domainId, roleSid, RoleProcessOpt.fromRoleGetOptions(options));
+			
+		} catch (Exception ex) {
+			throw ExceptionUtils.wrapThrowable(ex);
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
+	public Result<Role> addRole(final String domainId, final String roleId, final RoleBase role, final BitFlags<RoleUpdateOption> options) throws WTException {
+		Check.notEmpty(domainId, "domainId");
+		Check.notEmpty(roleId, "roleId");
+		Check.notNull(role, "role");
+		UserProfileId rolePid = new UserProfileId(domainId, roleId);
+		Connection con = null;
+		
+		Role newRole = null;
+		try {
+			con = wta.getConnectionManager().getConnection(false);
+			
+			String roleSid = null; // Internally auto-generated
+			RoleInsertResult result = doRoleInsert(con, rolePid.getDomainId(), rolePid.getUserId(), roleSid, role, RoleProcessOpt.fromRoleUpdateOptions(options));
+			
+			DbUtils.commitQuietly(con);
+			
+			subjectSidCache.add(result.orole.getProfileId(), result.orole.getRoleSid(), GenericSubject.Type.ROLE);
+			newRole = doRoleGet(con, rolePid.getDomainId(), result.orole.getRoleSid(), RoleProcessOpt.fromRoleUpdateOptions(options));
+			
+		} catch (Exception ex) {
+			DbUtils.rollbackQuietly(con);
+			throw ExceptionUtils.wrapThrowable(ex);
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+		
+		return new Result(newRole);
+	}
+	
+	public ResultVoid updateRole(final String domainId, final String roleSid, final RoleBase role, final BitFlags<RoleUpdateOption> options) throws WTException {
+		Check.notEmpty(domainId, "domainId");
+		Check.notEmpty(roleSid, "roleSid");
+		Check.notNull(role, "role");
+		Connection con = null;
+		
+		try {
+			con = wta.getConnectionManager().getConnection(false);
+			doRoleUpdate(con, domainId, roleSid, role, RoleProcessOpt.fromRoleUpdateOptions(options));
+			DbUtils.commitQuietly(con);
+			
+		} catch (Exception ex) {
+			DbUtils.rollbackQuietly(con);
+			throw ExceptionUtils.wrapThrowable(ex);
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+		
+		return new ResultVoid();
+	}
+	
+	public ResultVoid deleteRole(final String domainId, final String roleSid) throws WTException {
+		Check.notEmpty(domainId, "domainId");
+		Check.notEmpty(roleSid, "roleSid");
+		Connection con = null;
+		
+		try {
+			con = wta.getConnectionManager().getConnection(false);
+			LOGGER.debug("Deleting role '{}'", roleSid);
+			doRoleDelete(con, domainId, roleSid);
+			
+			DbUtils.commitQuietly(con);
+			
+		} catch (Exception ex) {
+			DbUtils.rollbackQuietly(con);
+			throw ExceptionUtils.wrapThrowable(ex);
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+		
+		return new ResultVoid();
+	}
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	@Deprecated
 	public List<ODomain> listByInternetDomain(String internetDomain) throws WTException {
 		DomainDAO dao = DomainDAO.getInstance();
 		Connection con = null;
@@ -450,272 +1998,10 @@ public final class WebTopManager {
 		}
 	}
 	
-	public ODomain getDomain(String domainId) throws WTException {
-		Connection con = null;
-		
-		try {
-			con = wta.getConnectionManager().getConnection();
-			return getDomain(con, domainId);
-			
-		} catch(SQLException ex) {
-			throw new WTException(ex, "DB error");
-		} finally {
-			DbUtils.closeQuietly(con);
-		}
-	}
 	
-	private ODomain getDomain(Connection con, String domainId) throws WTException {
-		DomainDAO domDao = DomainDAO.getInstance();
-		
-		try {
-			return domDao.selectById(con, domainId);
-			
-		} catch(DAOException ex) {
-			throw new WTException(ex, "DB error");
-		}
-	}
-	
-	public DomainEntity getDomainEntity(String domainId) throws WTException {
-		ODomain odomain = getDomain(domainId);
-		try {
-			if (odomain == null) return null;
-			DomainEntity domain = AppManagerUtils.fillDomainEntity(new DomainEntity(), odomain);
-			domain.setDirPassword(decDirPassword(domain.getDirPassword()));
-			return domain;
-			
-		} catch(URISyntaxException ex) {
-			throw new WTException(ex, "Invalid directory URI");
-		}
-	}
-	
-	public DomainEntity.PasswordPolicies getDomainPasswordPolicies(String domainId) throws WTException {
-		DomainDAO domDao = DomainDAO.getInstance();
-		Connection con = null;
-		
-		try {
-			if (Principal.xisAdminDomain(domainId)) {
-				return new DomainEntity.PasswordPolicies(null, null, null, null, null, null, null);
-				
-			} else {
-				con = wta.getConnectionManager().getConnection();
-				return AppManagerUtils.createDomainPasswordPolicies(domDao.selectPasswordPoliciesById(con, domainId));
-			}	
-			
-		} catch(Throwable t) {
-			throw ExceptionUtils.wrapThrowable(t);
-		} finally {
-			DbUtils.closeQuietly(con);
-		}
-	}
-	
-	public void initDomainWithDefaults(String domainId) throws WTException {
-		ODomain odom = getDomain(domainId);
-		if (odom == null) throw new WTException("Domain not found [{}]", domainId);
-		
-		Connection con = null;
-		try {
-			con = wta.getConnectionManager().getConnection();
-			doPrepareDomain(con, odom);
-			
-		} catch(SQLException | DAOException ex) {
-			throw new WTException(ex, "DB error");
-		} finally {
-			DbUtils.closeQuietly(con);
-		}
-	}
-	
-	private boolean doPrepareDomain(Connection con, ODomain domain) throws WTException {
-		GroupDAO grpDao = GroupDAO.getInstance();
-		UserDAO usrDao = UserDAO.getInstance();
-		boolean changed = false;
-		
-		final List<String> BUILT_IN_GROUPS = Arrays.asList(GROUPID_ADMINS, GROUPID_USERS, GROUPID_PEC_ACCOUNTS);
-		Map<String, OGroup> groups = grpDao.selectByDomainIn(con, domain.getDomainId(), BUILT_IN_GROUPS);
-		
-		// Prepare built-in groups
-		logger.debug("[{}] Checking built-in groups...", domain.getDomainId());
-		if (!groups.containsKey(GROUPID_ADMINS)) {
-			OGroup ogroup = doGroupInsert(con, domain.getDomainId(), GROUPID_ADMINS, "Admins");
-			addToGroupUidCache(new GroupUid(ogroup.getDomainId(), ogroup.getUserId(), ogroup.getUserUid()));
-			changed = true;
-		}
-		if (!groups.containsKey(GROUPID_USERS)) {
-			OGroup ogroup = doGroupInsert(con, domain.getDomainId(), GROUPID_USERS, "Users");
-			addToGroupUidCache(new GroupUid(ogroup.getDomainId(), ogroup.getUserId(), ogroup.getUserUid()));
-			changed = true;
-		}
-		if (!groups.containsKey(GROUPID_PEC_ACCOUNTS)) {
-			OGroup ogroup = doGroupInsert(con, domain.getDomainId(), GROUPID_PEC_ACCOUNTS, "PEC Accounts");
-			addToGroupUidCache(new GroupUid(ogroup.getDomainId(), ogroup.getUserId(), ogroup.getUserUid()));
-			changed = true;
-		}
-		
-		// Prepare built-in admin(for domain) user
-		logger.debug("[{}] Checking built-in domain admin...", domain.getDomainId());
-		if (!usrDao.existByDomainUser(con, domain.getDomainId(), DOMAINADMIN_USERID)) {
-			UserEntity ue = new UserEntity();
-			ue.setDomainId(domain.getDomainId());
-			ue.setUserId(DOMAINADMIN_USERID);
-			ue.setEnabled(true);
-			ue.setFirstName("DomainAdmin");
-			ue.setLastName(domain.getDescription());
-			ue.setDisplayName(ue.getFirstName() + " [" + domain.getDescription() + "]");
-			ue.getAssignedGroups().add(new AssignedGroup(WebTopManager.GROUPID_ADMINS));
-			addUser(true, ue, true, null);
-			changed = true;
-		}
-		return changed;
-	}
-	
-	public void initDomainHomeFolder(String domainId) throws SecurityException {
-		synchronized(lock3) {
-			// Main folder (/domains/{domainId})
-			File domainDir = new File(wta.getHomePath(domainId));
-			if (!domainDir.exists()) domainDir.mkdir();
-			
-			// Internal folders...
-			File tempDir = new File(wta.getTempPath(domainId));
-			if (!tempDir.exists()) tempDir.mkdir();
-			
-			File imagesDir = new File(wta.getImagesPath(domainId));
-			if (!imagesDir.exists()) imagesDir.mkdir();
-			
-			for (String sid : wta.getServiceManager().listRegisteredServices()) {
-				File svcDir = new File(wta.getServiceHomePath(domainId, sid));
-				if (!svcDir.exists()) svcDir.mkdir();
-			}
-		}	
-	}
-	
-	public ODomain addDomain(DomainEntity domain) throws WTException {
-		DomainDAO dodao = DomainDAO.getInstance();
-		Connection con = null;
-		ODomain odomain = null;
-		
-		try {
-			con = wta.getConnectionManager().getConnection(false);
-			
-			logger.debug("Inserting domain");
-			odomain = new ODomain();
-			fillDomain(odomain, domain);
-			dodao.insert(con, odomain);
-			
-			DbUtils.commitQuietly(con);
-			
-		} catch(SQLException | DAOException ex) {
-			DbUtils.rollbackQuietly(con);
-			throw new WTException(ex, "DB error");
-		} finally {
-			DbUtils.closeQuietly(con);
-		}
-		
-		// Update cache
-		domainCache.init();
-		
-		return odomain;
-	}
-	
-	public void updateDomain(DomainEntity domain) throws WTException {
-		DomainDAO dodao = DomainDAO.getInstance();
-		Connection con = null;
-		
-		try {
-			con = wta.getConnectionManager().getConnection(false);
-			
-			logger.debug("Updating domain");
-			ODomain odomain = new ODomain();
-			fillDomain(odomain, domain);
-			dodao.update(con, odomain);
-			
-			DbUtils.commitQuietly(con);
-			
-		} catch(SQLException | DAOException ex) {
-			DbUtils.rollbackQuietly(con);
-			throw new WTException(ex, "DB error");
-		} finally {
-			DbUtils.closeQuietly(con);
-		}
-		
-		// Update cache
-		domainCache.init();
-	}
-	
-	public void deleteDomain(String domainId) throws WTException {
-		DomainDAO domdao = DomainDAO.getInstance();
-		Connection con = null;
-		ODomain odomain = null;
-		List<OUser> ousers = null;
-		
-		try {
-			con = wta.getConnectionManager().getConnection(false);
-			
-			odomain = domdao.selectById(con, domainId);
-			if(odomain == null) throw new WTException("Domain not found [{0}]", odomain);
-			ousers = listUsers(domainId, false);
-			
-			logger.debug("Deleting domain");
-			ActivityDAO.getInstance().deleteByDomain(con, domainId);
-			CausalDAO.getInstance().deleteByDomain(con, domainId);
-			
-			AutosaveDAO.getInstance().deleteByDomain(con, domainId);
-			ServiceStoreEntryDAO.getInstance().deleteByDomain(con, domainId);
-			SnoozedReminderDAO.getInstance().deleteByDomain(con, domainId);
-			MessageQueueDAO.getInstance().deleteByDomain(con, domainId);
-			AuditLogDAO.getInstance().deleteByDomain(con, domainId);
-			
-			DomainSettingDAO.getInstance().deleteByDomain(con, domainId);
-			UserSettingDAO.getInstance().deleteByDomain(con, domainId);
-			
-			RoleAssociationDAO.getInstance().deleteByDomain(con, domainId);
-			RolePermissionDAO.getInstance().deleteByDomain(con, domainId);
-			RoleDAO.getInstance().deleteByDomain(con, domainId);
-			ShareDAO.getInstance().deleteByDomain(con, domainId);
-			ShareDataDAO.getInstance().deleteByDomain(con, domainId);
-			
-			UserAssociationDAO.getInstance().deleteByDomain(con, domainId);
-			UserInfoDAO.getInstance().deleteByDomain(con, domainId);
-			UserDAO.getInstance().deleteByDomain(con, domainId);
-			GroupDAO.getInstance().deleteByDomain(con, domainId);
-			domdao.deleteById(con, domainId);
-			
-			DbUtils.commitQuietly(con);
-			
-		} catch(SQLException | DAOException ex) {
-			DbUtils.rollbackQuietly(con);
-			throw new WTException(ex, "DB error");
-		} finally {
-			DbUtils.closeQuietly(con);
-		}
-		
-		// Update cache
-		domainCache.init();
-		initUserUidCache();
-		initGroupUidCache();
-		cleanupUserCache();
-		
-		try {
-			AuthenticationDomain ad = createAuthenticationDomain(odomain);
-			AbstractDirectory directory = getAuthDirectory(ad.getDirUri());
-			DirectoryOptions opts = wta.createDirectoryOptions(ad);
-			
-			if(directory.hasCapability(DirectoryCapability.USERS_WRITE)) {
-				for(OUser ouser : ousers) {
-					final UserProfileId pid = new UserProfileId(ouser.getDomainId(), ouser.getUserId());
-					directory.deleteUser(opts, pid.getDomainId(), pid.getUserId());
-				}
-			}
-			
-		} catch(URISyntaxException ex) {
-			throw new WTException(ex, "Invalid domain auth URI");
-		} catch(DirectoryException ex) {
-			throw new WTException(ex, "DirectoryException error");
-		}
-
-		//TODO: chiamare controller per eliminare dominio per i servizi
-	}
 	
 	public List<PublicImage> listDomainPublicImages(String domainId) throws WTException {
-		String path = wta.getImagesPath(domainId);
+		String path = wta.getFileSystem().getImagesPath(domainId);
 		String baseUrl = WT.getPublicImagesUrl(domainId);
 		File dir = new File(path);
 		ArrayList<PublicImage> items = new ArrayList<>();
@@ -727,1263 +2013,127 @@ public final class WebTopManager {
 		return items;
 	}
 	
-	public List<OUser> listUsers(String domainId, boolean enabledOnly) throws WTException {
-		UserDAO dao = UserDAO.getInstance();
+	
+	
+	
+	
+	
+	
+	
+	
+	/*
+	public Set<GenericSubject> expandSubjectsToUsers2(final String domainId, final Collection<String> subjects, final boolean subjectsArePids, final boolean returnPids, boolean transitive) throws WTException {
+		Set<GenericSubject> items = new LinkedHashSet<>();
+		
+		BitFlags<SubjectGetOption> options = BitFlags.with(SubjectGetOption.USERS, SubjectGetOption.GROUPS);
+		if (subjectsArePids) options.set(SubjectGetOption.PID_AS_KEY);
+		Map<String, GenericSubject> map = listSubjects(domainId, options);
+		
+		for (String subject : subjects) {
+			GenericSubject gs = map.get(subject);
+			if (gs != null) items.add(gs);
+		}
+		return items;
+	}
+	*/
+	
+	public Set<UserProfileId> expandSubjectsToUserProfiles(final String domainId, final Collection<String> subjects, final boolean subjectsAsSID) throws WTException {
+		UserAssociationDAO uasDao = UserAssociationDAO.getInstance();
 		Connection con = null;
-		
-		try {
-			con = wta.getConnectionManager().getConnection();
-			if(enabledOnly) {
-				return dao.selectEnabledByDomain(con, domainId);
-			} else {
-				return dao.selectByDomain(con, domainId);
-			}
-			
-		} catch(SQLException | DAOException ex) {
-			throw new WTException(ex, "DB error");
-		} finally {
-			DbUtils.closeQuietly(con);
-		}
-	}
-	
-	public List<UserProfileId> listUserProfileIdsByEmail(String emailAddress) throws WTException {
-		UserInfoDAO uidao = UserInfoDAO.getInstance();
-		Connection con = null;
-		
-		try {
-			con = wta.getConnectionManager().getConnection();
-			
-			List<UserId> uids = uidao.viewByEmail(con, emailAddress);
-			ArrayList<UserProfileId> items = new ArrayList<>();
-			for(UserId uid : uids) {
-				items.add(new UserProfileId(uid.getDomainId(), uid.getUserId()));
-			}
-			return items;
-			
-		} catch(SQLException | DAOException ex) {
-			DbUtils.rollbackQuietly(con);
-			throw new WTException(ex, "DB error");
-		} finally {
-			DbUtils.closeQuietly(con);
-		}
-	}
-	
-	public OUser getUser(UserProfileId pid) throws WTException {
-		UserDAO dao = UserDAO.getInstance();
-		Connection con = null;
-		
-		try {
-			con = wta.getConnectionManager().getConnection();
-			return dao.selectByDomainUser(con, pid.getDomainId(), pid.getUserId());
-			
-		} catch(SQLException | DAOException ex) {
-			throw new WTException(ex, "DB error");
-		} finally {
-			DbUtils.closeQuietly(con);
-		}
-	}
-	
-	public UserEntity getUserEntity(UserProfileId pid) throws WTException {
-		Connection con = null;
-		
-		try {
-			con = wta.getConnectionManager().getConnection();
-			return getUserEntity(con, pid);
-			
-		} catch(SQLException ex) {
-			throw new WTException(ex, "DB error");
-		} finally {
-			DbUtils.closeQuietly(con);
-		}
-	}
-	
-	private UserEntity getUserEntity(Connection con, UserProfileId pid) throws WTException {
-		UserDAO dao = UserDAO.getInstance();
-		UserInfoDAO uidao = UserInfoDAO.getInstance();
-		UserAssociationDAO uassdao = UserAssociationDAO.getInstance();
-		RoleAssociationDAO rolassdao = RoleAssociationDAO.getInstance();
-		
-		try {
-			OUser ouser = dao.selectByDomainUser(con, pid.getDomainId(), pid.getUserId());
-			if(ouser == null) throw new WTException("User not found [{0}]", pid.toString());
-			OUserInfo ouseri = uidao.selectByDomainUser(con, pid.getDomainId(), pid.getUserId());
-			if(ouseri == null) throw new WTException("User info not found [{0}]", pid.toString());
-			
-			List<AssignedGroup> assiGroups = uassdao.viewAssignedByUser(con, ouser.getUserUid());
-			List<AssignedRole> assiRoles = rolassdao.viewAssignedByUser(con, ouser.getUserUid());
-			EntityPermissions perms = extractPermissions(con, ouser.getUserUid());
-			
-			UserEntity user = new UserEntity(ouser, ouseri);
-			user.setAssignedGroups(assiGroups);
-			user.setAssignedRoles(assiRoles);
-			user.setPermissions(perms.others);
-			user.setServicesPermissions(perms.services);
-			
-			return user;
-			
-		} catch(DAOException ex) {
-			throw new WTException(ex, "DB error");
-		}
-	}
-	
-	public String getUserSecret(UserProfileId profileId) throws WTException {
-		UserDAO useDao = UserDAO.getInstance();
-		
-		try {
-			lockSecretGet.lock(profileId.toString());
-			Connection con = null;
-			
-			try {
-				con = wta.getConnectionManager().getConnection();
-				OUser ouser = useDao.selectSecretByProfile(con, profileId.getDomainId(), profileId.getUserId());
-				if (ouser == null) throw new WTException("User not found [{}]", profileId);
 
-				String secret = ouser.getSecret();
-				if (StringUtils.isBlank(secret)) {
-					secret = generateSecretKey();				
-					if (useDao.updateSecretByProfile(con, profileId.getDomainId(), profileId.getUserId(), secret) != 1) {
-						throw new WTException("Unable to set generated secret [{}]", profileId);
-					}
-				}
-				return secret;
-				
-			} catch(Throwable t) {
-				throw ExceptionUtils.wrapThrowable(t);
-			} finally {
-				DbUtils.closeQuietly(con);
-			}
-
-		} finally {
-			lockSecretGet.unlock(profileId.toString());
-		}
-	}
-	
-	public void addUser(boolean updateDirectory, UserEntity user, char[] password) throws WTException {
-		addUser(updateDirectory, user, true, password);
-	}
-	
-	public void addUser(boolean updateDirectory, UserEntity user, boolean updatePassword, char[] password) throws WTException {
-		UserProfileId addedPid = null;
-		Connection con = null;
-		
-		try {
-			con = wta.getConnectionManager().getConnection(false);
-			
-			ODomain domain = getDomain(user.getDomainId());
-			if (domain == null) throw new WTException("Domain not found [{}]", user.getDomainId());
-			AuthenticationDomain ad = createAuthenticationDomain(domain);
-			
-			user.ensureCoherence();
-			user.getAssignedGroups().add(new AssignedGroup(WebTopManager.GROUPID_USERS));
-			
-			OUser ouser = null;
-			if (updateDirectory) {
-				AbstractDirectory authDir = getAuthDirectory(ad.getDirUri());
-				DirectoryOptions opts = wta.createDirectoryOptions(ad);
-				
-				if (authDir.hasCapability(DirectoryCapability.USERS_WRITE)) {
-					if (!authDir.validateUsername(opts, user.getUserId())) {
-						throw new WTException("Username does not satisfy directory requirements [{}]", ad.getDirUri().getScheme());
-					}
-				}
-				if (updatePassword && authDir.hasCapability(DirectoryCapability.PASSWORD_WRITE)) {
-					wta.setDirectoryOptionsPasswordPolicies(ad, opts, AppManagerUtils.createDomainPasswordPolicies(domain));
-					if (password == null) {
-						password = authDir.generatePassword(opts);
-					} else {
-						int ret = authDir.validatePasswordPolicy(opts, user.getUserId(), password);
-						if (ret != 0) {
-							throw new WTPwdPolicyException(ret, "Password does not satisfy directory policy [{}, {}]", ad.getDirUri().getScheme(), ret);
-						}
-					}
-				}
-				
-				ouser = doUserInsert(con, domain, user);
-				addedPid = new UserProfileId(ouser.getDomainId(), ouser.getUserId());
-				
-				// Insert user in directory (if necessary)
-				if (authDir.hasCapability(DirectoryCapability.USERS_WRITE)) {
-					logger.debug("Adding user into directory...");
-					try {
-						authDir.addUser(opts, domain.getDomainId(), createAuthUser(user));
-					} catch(EntryException ex1) {
-						logger.warn("Insertion skipped: user already exists [{}]", user.getUserId());
-					}
-				}
-				if (updatePassword && authDir.hasCapability(DirectoryCapability.PASSWORD_WRITE)) {
-					logger.debug("Updating its password");
-					authDir.updateUserPassword(opts, addedPid.getDomainId(), addedPid.getUserId(), password);
-					new CoreUserSettings(wta.getSettingsManager(), addedPid).setPasswordLastChange(DateTimeUtils.now());
-				}
-				
-			} else {
-				ouser = doUserInsert(con, domain, user);
-				addedPid = new UserProfileId(ouser.getDomainId(), ouser.getUserId());
-			}
-			
-			DbUtils.commitQuietly(con);
-			
-			// Update cache
-			addToUserUidCache(new UserUid(addedPid.getDomainId(), addedPid.getUserId(), ouser.getUserUid()));
-
-			// Explicitly sets some important (locale & timezone) user settings to their defaults
-			CoreServiceSettings css = new CoreServiceSettings(wta.getSettingsManager(), CoreManifest.ID, addedPid.getDomainId());
-			CoreUserSettings cus = new CoreUserSettings(wta.getSettingsManager(), addedPid);
-			cus.setLanguageTag(css.getDefaultLanguageTag());
-			cus.setTimezone(css.getDefaultTimezone());
-			
-		} catch(SQLException | DAOException ex) {
-			DbUtils.rollbackQuietly(con);
-			throw new WTException(ex, "DB error");
-		} catch(URISyntaxException ex) {
-			throw new WTException(ex, "Invalid domain auth URI");
-		} catch(DirectoryException ex) {
-			throw new WTException(ex, "DirectoryException error");
-		} finally {
-			DbUtils.closeQuietly(con);
-		}
-		
-		// Performs some actions after the add operation
-		if (addedPid != null) {
-			List<Throwable> errors = wta.getServiceManager().invokeOnUserAdded(addedPid);
-			if (!errors.isEmpty()) throw new WTMultiCauseWarnException(errors, "Errors in user related listeners");
-		}		
-	}
-	
-	public CheckUserResult checkUser(UserProfileId pid) throws WTException {
-		return checkUser(pid.getDomainId(), pid.getUserId());
-	}
-	
-	public CheckUserResult checkUser(String domainId, String userId) throws WTException {
-		UserDAO dao = UserDAO.getInstance();
-		Connection con = null;
-		
 		try {
 			con = wta.getConnectionManager().getConnection();
-			OUser o = dao.selectByDomainUser(con, domainId, userId);
-			return new CheckUserResult(o != null, o != null ? o.getEnabled() : false);
 			
-		} catch(SQLException | DAOException ex) {
-			throw new WTException(ex, "DB error");
-		} finally {
-			DbUtils.closeQuietly(con);
-		}
-	}
-	
-	public void updateUser(UserEntity user) throws WTException {
-		Connection con = null;
-		
-		try {
-			con = WT.getConnection(CoreManifest.ID, false);
-			
-			user.ensureCoherence();
-			doUserUpdate(con, user);
-			
-			DbUtils.commitQuietly(con);
-			
-		} catch(SQLException | DAOException ex) {
-			DbUtils.rollbackQuietly(con);
-			throw new WTException(ex, "DB error");
-		} finally {
-			DbUtils.closeQuietly(con);
-		}
-	}
-	
-	public boolean updateUser(UserProfileId pid, boolean enabled) throws WTException {
-		UserDAO dao = UserDAO.getInstance();
-		Connection con = null;
-		
-		try {
-			con = wta.getConnectionManager().getConnection();
-			return dao.updateEnabledByDomainUser(con, pid.getDomainId(), pid.getUserId(), enabled) == 1;
-			
-		} catch(SQLException | DAOException ex) {
-			throw new WTException(ex, "DB error");
-		} finally {
-			DbUtils.closeQuietly(con);
-		}
-	}
-	
-	public int updateUserEmailDomain(List<UserProfileId> pids, String newEmailDomain) throws WTException {
-		UserInfoDAO uiDao = UserInfoDAO.getInstance();
-		Connection con = null;
-		
-		try {
-			if (pids.isEmpty()) return -1;
-			con = wta.getConnectionManager().getConnection(false);
-			
-			String domainId = pids.get(0).getDomainId();
-			List<String> userIds = pids.stream().map(pid -> pid.getUserId()).collect(Collectors.toList());
-			String emailDomain = "@" + StringUtils.removeStart(newEmailDomain, "@");
-			int ret = uiDao.updateEmailDomainByProfiles(con, domainId, userIds, emailDomain);
-			DbUtils.commitQuietly(con);
-			
-			// Clean-up cache!
-			for (UserProfileId pid : pids) cleanUserProfileCache(pid);
-			
-			return ret;
-			
-		} catch(Throwable t) {
-			DbUtils.rollbackQuietly(con);
-			throw ExceptionUtils.wrapThrowable(t);
-		} finally {
-			DbUtils.closeQuietly(con);
-		}
-	}
-	
-	public void updateUserPassword(UserProfileId profileId, char[] oldPassword, char[] newPassword) throws WTException, EntryException {
-		AuthenticationDomain ad = createAuthenticationDomain(profileId);
-		
-		try {
-			AbstractDirectory directory = getAuthDirectory(ad.getDirUri());
-			if (!directory.hasCapability(DirectoryCapability.PASSWORD_WRITE)) {
-				throw new WTException("Directory has no write capability");
-			}
-			
-			DirectoryOptions opts = wta.createDirectoryOptions(ad);
-			DomainEntity.PasswordPolicies pwdPolicies = getDomainPasswordPolicies(profileId.getDomainId());
-			wta.setDirectoryOptionsPasswordPolicies(ad, opts, pwdPolicies);
-			int ret = directory.validatePasswordPolicy(opts, profileId.getUserId(), newPassword);
-			if (ret == 0 && oldPassword != null && pwdPolicies.getAvoidOldSimilarity()) {
-				int similarityThres = 5;
-				if (StringUtils.getLevenshteinDistance(new String(oldPassword), new String(newPassword)) < similarityThres) ret = 41;
-			}
-			if (ret != 0) {
-				throw new WTPwdPolicyException(ret, "Password does not satisfy directory policy [{}]", ret);
-			}
-			
-			if (oldPassword != null) {
-				directory.updateUserPassword(opts, profileId.getDomainId(), profileId.getUserId(), oldPassword, newPassword);
-			} else {
-				directory.updateUserPassword(opts, profileId.getDomainId(), profileId.getUserId(), newPassword);
-			}
-
-			CoreUserSettings cus = new CoreUserSettings(profileId);
-			cus.setPasswordLastChange(DateTimeUtils.now());
-			cus.setPasswordForceChange(false);
-			
-		} catch(DirectoryException ex) {
-			throw new WTException(ex, "Directory error");
-		}
-	}
-	
-	public boolean isUserPasswordChangeNeeded(UserProfileId profileId, char[] password) throws WTException {
-		if (Principal.xisAdmin(profileId.getDomainId(), profileId.getUserId())) return false;
-		
-		AuthenticationDomain ad = createAuthenticationDomain(profileId);
-		AbstractDirectory directory = getAuthDirectory(ad.getDirUri());
-		if (!directory.hasCapability(DirectoryCapability.PASSWORD_WRITE)) return false;
-		
-		DomainEntity.PasswordPolicies pwdPolicies = getDomainPasswordPolicies(profileId.getDomainId());
-		if (pwdPolicies.getVerifyAtLogin() || pwdPolicies.getExpiration() != null) {
-			if (pwdPolicies.getVerifyAtLogin()) {
-				DirectoryOptions opts = wta.createDirectoryOptions(ad);
-				wta.setDirectoryOptionsPasswordPolicies(ad, opts, pwdPolicies);
-				int ret = directory.validatePasswordPolicy(opts, profileId.getUserId(), password);
-				if (ret != 0) return true;
-			}
-			
-			if (pwdPolicies.getExpiration() != null) {
-				CoreUserSettings cus = new CoreUserSettings(profileId);
-				DateTime lastChange = cus.getPasswordLastChange();
-				// NB: No last-change timestamp means password change needed!
-				if (lastChange == null || DateTimeUtils.datesBetween(lastChange, DateTimeUtils.now().toDateTime(DateTimeZone.UTC)) > pwdPolicies.getExpiration()) return true;
-			}
-		}
-		
-		CoreUserSettings cus = new CoreUserSettings(profileId);
-		if (cus.getPasswordForceChange()) return true;
-		
-		return false;
-	}
-	
-	public void deleteUser(UserProfileId pid, boolean cleanupDirectory) throws WTException {
-		UserDAO udao = UserDAO.getInstance();
-		UserInfoDAO uidao = UserInfoDAO.getInstance();
-		UserAssociationDAO uadao = UserAssociationDAO.getInstance();
-		RoleAssociationDAO rolassdao = RoleAssociationDAO.getInstance();
-		RolePermissionDAO rpdao = RolePermissionDAO.getInstance();
-		Connection con = null;
-		
-		try {
-			con = WT.getConnection(CoreManifest.ID, false);
-			
-			OUser user = udao.selectByDomainUser(con, pid.getDomainId(), pid.getUserId());
-			if (user == null) throw new WTException("User not found [{0}]", pid.toString());
-			
-			logger.debug("[{}] Clearing user licenses...", user.getUserUid());
-			wta.getLicenseManager().revokeLicenseLease(pid);
-			
-			logger.debug("[{}] Clearing permissions...", user.getUserUid());
-			rpdao.deleteByRole(con, user.getUserUid());
-			logger.debug("[{}] Clearing groups associations...", user.getUserUid());
-			uadao.deleteByUser(con, user.getUserUid());
-			logger.debug("[{}] Clearing roles associations...", user.getUserUid());
-			rolassdao.deleteByUser(con, user.getUserUid());
-			logger.debug("[{}] Clearing userInfo...", pid.toString());
-			uidao.deleteByDomainUser(con, pid.getDomainId(), pid.getUserId());
-			logger.debug("[{}] Clearing user...", pid.toString());
-			udao.deleteByDomainUser(con, pid.getDomainId(), pid.getUserId());
-			
-			if (cleanupDirectory) {
-				ODomain domain = getDomain(pid.getDomainId());
-				if (domain == null) throw new WTException("Domain not found [{}]", pid.getDomainId());
-				
-				AuthenticationDomain ad = createAuthenticationDomain(domain);
-				AbstractDirectory directory = getAuthDirectory(ad.getDirUri());
-				DirectoryOptions opts = wta.createDirectoryOptions(ad);
-				
-				if (directory.hasCapability(DirectoryCapability.USERS_WRITE)) {
-					directory.deleteUser(opts, pid.getDomainId(), pid.getUserId());
-				}
-			}
-			
-			DbUtils.commitQuietly(con);
-			
-		} catch(URISyntaxException ex) {
-			DbUtils.rollbackQuietly(con);
-			throw new WTException(ex, "Invalid URI");
-		} catch(DirectoryException ex) {
-			DbUtils.rollbackQuietly(con);
-			throw new WTException(ex, "Directory error");
-		} catch(Throwable t) {
-			DbUtils.rollbackQuietly(con);
-			throw ExceptionUtils.wrapThrowable(t);
-		} finally {
-			DbUtils.closeQuietly(con);
-		}
-		
-		// Performs some actions after the remove operation
-		List<Throwable> errors = wta.getServiceManager().invokeOnUserRemoved(pid);
-		wta.getSettingsManager().deleteUserSettings(pid);
-		
-		// Update cache
-		removeFromUserUidCache(pid);
-		removeFromUserCache(pid);
-		
-		if (!errors.isEmpty()) throw new WTMultiCauseWarnException(errors, "Errors in user related listeners");
-	}
-	
-	/**
-	 * Returns the internal UID associated to specified group; 
-	 * usually applied to defaults/built-in groups.
-	 * @param domainId The domain ID.
-	 * @param groupId The group ID.
-	 * @return The group's UID if found; null otherwise
-	 */
-	public String getGroupUid(String domainId, String groupId) {
-		UserProfileId pid = new UserProfileId(domainId, groupId);
-		try {
-			return groupToUid(pid);
-		} catch(WTRuntimeException ex) {
-			logger.debug("Unable to get group's UID [{}]", pid.toString(), ex);
-			return null;
-		}
-	}
-	
-	/**
-	 * Returns the internal UID associated to specified user.
-	 * @param domainId The domain ID.
-	 * @param userId The user ID.
-	 * @return The user's UID if found; null otherwise
-	 */
-	public String getUserUid(String domainId, String userId) {
-		UserProfileId pid = new UserProfileId(domainId, userId);
-		try {
-			return userToUid(pid);
-		} catch(WTRuntimeException ex) {
-			logger.debug("Unable to get user's UID [{}]", pid.toString(), ex);
-			return null;
-		}
-	}
-	
-	public List<DirectoryUser> listDirectoryUsers(ODomain domain) throws WTException {
-		UserDAO dao = UserDAO.getInstance();
-		Connection con = null;
-		
-		try {
-			AuthenticationDomain ad = createAuthenticationDomain(domain);
-			AbstractDirectory directory = getAuthDirectory(ad.getDirUri());
-			DirectoryOptions opts = wta.createDirectoryOptions(ad);
-			
-			con = wta.getConnectionManager().getConnection();
-			Map<String, OUser> wtUsers = dao.selectByDomain2(con, domain.getDomainId());
-			
-			ArrayList<DirectoryUser> items = new ArrayList<>();
-			
-			if(directory.hasCapability(DirectoryCapability.USERS_READ)) {
-				for(AuthUser userEntry : directory.listUsers(opts, domain.getDomainId())) {
-					items.add(new DirectoryUser(domain.getDomainId(), userEntry, wtUsers.get(userEntry.userId)));
-				}
-				
-			} else {
-				for(OUser ouser : wtUsers.values()) {
-					final AbstractDirectory.AuthUser userEntry = new AbstractDirectory.AuthUser(ouser.getUserId(), ouser.getDisplayName(), null, null, null);
-					items.add(new DirectoryUser(domain.getDomainId(), userEntry, ouser));
-				}
-			}
-			
-			return items;
-			
-		} catch(SQLException | DAOException ex) {
-			throw new WTException(ex, "DB error");
-		} catch(URISyntaxException ex) {
-			throw new WTException(ex, "Invalid URI");
-		} catch(DirectoryException ex) {
-			throw new WTException(ex, "Directory error");
-		} finally {
-			DbUtils.closeQuietly(con);
-		}
-	}
-	
-	public boolean updateUserDisplayName(UserProfileId pid, String displayName) throws WTException {
-		UserDAO dao = UserDAO.getInstance();
-		Connection con = null;
-		
-		try {
-			con = wta.getConnectionManager().getConnection();
-			return dao.updateDisplayNameByDomainUser(con, pid.getDomainId(), pid.getUserId(), displayName) == 1;
-			
-		} catch(SQLException | DAOException ex) {
-			throw new WTException(ex, "DB error");
-		} finally {
-			DbUtils.closeQuietly(con);
-		}
-	}
-	
-	public UserProfile.PersonalInfo getUserPersonalInfo(UserProfileId pid) throws WTException {
-		UserInfoDAO dao = UserInfoDAO.getInstance();
-		Connection con = null;
-		
-		try {
-			con = wta.getConnectionManager().getConnection();
-			OUserInfo oui = dao.selectByDomainUser(con, pid.getDomainId(), pid.getUserId());
-			return (oui == null) ? null : new UserProfile.PersonalInfo(oui);
-			
-		} catch(SQLException | DAOException ex) {
-			throw new WTException(ex, "DB error");
-		} finally {
-			DbUtils.closeQuietly(con);
-		}
-	}
-	
-	public boolean updateUserPersonalInfo(UserProfileId pid, UserProfile.PersonalInfo userPersonalInfo) throws WTException {
-		UserInfoDAO dao = UserInfoDAO.getInstance();
-		Connection con = null;
-		
-		try {
-			con = wta.getConnectionManager().getConnection();
-			OUserInfo oui = createUserInfo(userPersonalInfo);
-			oui.setDomainId(pid.getDomainId());
-			oui.setUserId(pid.getUserId());
-			return dao.update(con, oui) == 1;
-			
-		} catch(SQLException | DAOException ex) {
-			throw new WTException(ex, "DB error");
-		} finally {
-			DbUtils.closeQuietly(con);
-		}
-	}
-	
-	public List<OGroup> listGroups(String domainId) throws WTException {
-		GroupDAO dao = GroupDAO.getInstance();
-		Connection con = null;
-		
-		try {
-			con = wta.getConnectionManager().getConnection();
-			return dao.selectByDomain(con, domainId);
-			
-		} catch(SQLException | DAOException ex) {
-			throw new WTException(ex, "DB error");
-		} finally {
-			DbUtils.closeQuietly(con);
-		}
-	}
-	
-	public GroupEntity getGroupEntity(UserProfileId pid) throws WTException {
-		Connection con = null;
-		
-		try {
-			con = wta.getConnectionManager().getConnection();
-			return getGroupEntity(con, pid);
-			
-		} catch(SQLException ex) {
-			throw new WTException(ex, "DB error");
-		} finally {
-			DbUtils.closeQuietly(con);
-		}
-	}
-	
-	private GroupEntity getGroupEntity(Connection con, UserProfileId pid) throws WTException {
-		GroupDAO dao = GroupDAO.getInstance();
-		UserAssociationDAO uassdao = UserAssociationDAO.getInstance();
-		RoleAssociationDAO rolassdao = RoleAssociationDAO.getInstance();
-		
-		try {
-			OGroup ogroup = dao.selectByDomainGroup(con, pid.getDomainId(), pid.getUserId());
-			if(ogroup == null) throw new WTException("Group not found [{0}]", pid.toString());
-			
-			List<AssignedUser> assiUsers = uassdao.viewAssignedByGroup(con, ogroup.getGroupUid());
-			List<AssignedRole> assiRoles = rolassdao.viewAssignedByGroup(con, ogroup.getGroupUid());
-			EntityPermissions perms = extractPermissions(con, ogroup.getGroupUid());
-			
-			GroupEntity group = new GroupEntity(ogroup);
-			group.setAssignedUsers(assiUsers);
-			group.setAssignedRoles(assiRoles);
-			group.setPermissions(perms.others);
-			group.setServicesPermissions(perms.services);
-			
-			return group;
-			
-		} catch(DAOException ex) {
-			throw new WTException(ex, "DB error");
-		}
-	}
-	
-	public void addGroup(GroupEntity group) throws WTException {
-		Connection con = null;
-		
-		try {
-			con = wta.getConnectionManager().getConnection(false);
-			
-			ODomain domain = getDomain(group.getDomainId());
-			if(domain == null) throw new WTException("Domain not found [{0}]", group.getDomainId());
-			
-			OGroup ogroup = doGroupInsert(con, domain.getDomainId(), group);
-			
-			DbUtils.commitQuietly(con);
-			
-			// Update cache
-			addToGroupUidCache(new GroupUid(ogroup.getDomainId(), group.getGroupId(), ogroup.getGroupUid()));
-			
-		} catch(SQLException | DAOException ex) {
-			DbUtils.rollbackQuietly(con);
-			throw new WTException(ex, "DB error");
-		} finally {
-			DbUtils.closeQuietly(con);
-		}
-	}
-	
-	public void updateGroup(GroupEntity group) throws WTException {
-		Connection con = null;
-		
-		try {
-			con = WT.getConnection(CoreManifest.ID, false);
-			
-			doGroupUpdate(con, group);
-			
-			DbUtils.commitQuietly(con);
-			
-		} catch(SQLException | DAOException ex) {
-			DbUtils.rollbackQuietly(con);
-			throw new WTException(ex, "DB error");
-		} finally {
-			DbUtils.closeQuietly(con);
-		}
-	}
-	
-	public void deleteGroup(UserProfileId pid) throws WTException {
-		GroupDAO udao = GroupDAO.getInstance();
-		UserAssociationDAO uadao = UserAssociationDAO.getInstance();
-		RoleAssociationDAO rolassdao = RoleAssociationDAO.getInstance();
-		RolePermissionDAO rpdao = RolePermissionDAO.getInstance();
-		Connection con = null;
-		
-		try {
-			con = WT.getConnection(CoreManifest.ID, false);
-			
-			OGroup group = udao.selectByDomainGroup(con, pid.getDomainId(), pid.getUserId());
-			if(group == null) throw new WTException("Group not found [{0}]", pid.toString());
-			
-			logger.debug("Deleting permissions");
-			rpdao.deleteByRole(con, group.getGroupUid());
-			logger.debug("Deleting groups associations");
-			uadao.deleteByGroup(con, group.getGroupUid());
-			logger.debug("Deleting roles associations");
-			rolassdao.deleteByUser(con, group.getGroupUid());
-			logger.debug("Deleting group");
-			udao.deleteByDomainGroup(con, pid.getDomainId(), pid.getUserId());
-			
-			DbUtils.commitQuietly(con);
-			
-			// Update cache
-			removeFromGroupUidCache(pid);
-			
-		} catch(SQLException | DAOException ex) {
-			DbUtils.rollbackQuietly(con);
-			throw new WTException(ex, "DB error");
-		} finally {
-			DbUtils.closeQuietly(con);
-		}
-	}
-	
-	private boolean forgetProductLicense(String serviceId, String productId, String internetName) {
-		String key = new CompositeId(serviceId, productId, internetName).toString();
-		return productLicenseCache.remove(key) != null;
-	}
-	
-	public ProductLicense getProductLicense(BaseServiceProduct product) {
-		if (product == null) return null;
-		/*
-		String key = new CompositeId(product.SERVICE_ID, product.getProductId(), product.getInternetName()).toString();
-		ProductLicense plic = productLicenseCache.computeIfAbsent(key, value -> {
-			try {
-				ServiceLicense rlic = getServiceLicense(product.SERVICE_ID, product.getProductId(), product.getInternetName());
-				if (rlic != null) {
-					ProductLicense plicNew = new ProductLicense(
-						ProductLicense.LicenseType.LICENSE_TEXT,
-						ProductLicense.ActivationLicenseType.OFF_NO_ACTIVATION,
-						product,
-						rlic.getLicenseText()
-					);
-					plicNew.validate();
-					return plicNew;
+			Set<UserProfileId> items = new LinkedHashSet<>();
+			for (String subject : subjects) {
+				String subjectSid = null;
+				if (!subjectsAsSID) {
+					final UserProfileId pid = UserProfileId.parseQuielty(subject);
+					if (pid != null) subjectSid = subjectSidCache.getSid(pid, GenericSubject.Type.GROUP, GenericSubject.Type.USER);
 				} else {
-					logger.debug("License is missing, creating a dummy one! [{}]", key);
-					return new DummyProductLicense();
-					
+					subjectSid = subject;
 				}
-			} catch(Throwable t) {
-				logger.error("Error retrieving registered license [{}]", key, t);
-			}
-			return null;
-		});
-		return (plic instanceof DummyProductLicense) ? null : plic;
-		*/
-		return null;
-	}
-	
-	/*
-	public List<ServiceLicense2> listServiceLicenses(String domainId) throws WTException {
-		LicenseDAO licDao = LicenseDAO.getInstance();
-		Connection con = null;
-		
-		try {
-			con = wta.getConnectionManager().getConnection();
-			
-			ArrayList<ServiceLicense2> items = new ArrayList<>();
-			for (VLicense vlic : licDao.viewByDomain(con, domainId)) {
-				Set<String> users = new LinkedHashSet(new CId(vlic.getUserIds()).getTokens());
-				items.add(AppManagerUtils.createServiceLicense(vlic, users));
-			}
-			return items;
-			
-		} catch(Throwable t) {
-			throw ExceptionUtils.wrapThrowable(t);
-		} finally {
-			DbUtils.closeQuietly(con);
-		}
-	}
-	
-	public ServiceLicense2 getServiceLicense(String domainId, ProductId product) throws WTException {
-		Connection con = null;
-		
-		try {
-			con = wta.getConnectionManager().getConnection();
-			return doServiceLicenseGet(con, domainId, product, true);
-			
-		} catch(Throwable t) {
-			throw ExceptionUtils.wrapThrowable(t);
-		} finally {
-			DbUtils.closeQuietly(con);
-		}
-	}
-	
-	private ServiceLicense2 doServiceLicenseGet(Connection con, String domainId, ProductId product, boolean processLeases) throws DAOException, WTException {
-		LicenseDAO licDao = LicenseDAO.getInstance();
-		LicenseLeaseDAO lleaDao = LicenseLeaseDAO.getInstance();
-		
-		OLicense2 olic = licDao.select(con, domainId, product.getServiceId(), product.getProductCode());
-		if (olic == null) return null;
-		
-		ServiceLicense2 lic = AppManagerUtils.createServiceLicense(olic);
-		if (processLeases) {
-			Set<String> userIds = lleaDao.selectUsersByDomainServiceProduct(con, domainId, product.getServiceId(), product.getProductCode());
-			lic.setLeasedUsers(userIds);
-		}
-		return lic;
-	}
-	
-	private <T extends OLicense2> T fillOLicenseWithDefaults(T tgt) {
-		if ((tgt != null)) {
-			if (tgt.getAutoLease() == null) tgt.setAutoLease(true);
-		}
-		return tgt;
-	}
-	*/
 
-	
-	/*
-	public boolean assignServiceLicenseLease(String domainId, ProductId product, String userId, String activationString) throws WTException {
-		ServiceLicense2 license = getServiceLicense(domainId, product);
-		if (license == null) throw new WTException("TODO exception");
-		
-		return internalAssignServiceLicense(domainId, license, userId, activationString);
-	}
-	
-	public boolean revokeServiceLicenseLease(String domainId, ProductId product, String userId) throws WTException {
-		ServiceLicense2 license = getServiceLicense(domainId, product);
-		if (license == null) throw new WTException("TODO exception");
-		
-		return internalRevokeServiceLicenseLease(domainId, license, userId);
-	}
-	
-	private boolean internalRevokeServiceLicenseLease(String domainId, ServiceLicense2 license, String userId) throws WTException {
-		LicenseLeaseDAO lleaDao = LicenseLeaseDAO.getInstance();
-		Connection con = null;
-		
-		try {
-			ProductLicense prodLic = checkProductLicense(license);
-			//skip validity check???
-			
-			con = wta.getConnectionManager().getConnection();
-			String aString = lleaDao.selectActivationStringByDomainServiceProductUser(con, domainId, license.getProductId().getServiceId(), productCode, userId);
-			if (aString == null) throw new WTException("TODO exception");
-			
-			boolean ret = false;
-			try {
-				prodLic.setLicenseActivationString(aString);
-				prodLic.autoDeactivate();
-			} finally {
-				ret = lleaDao.delete(con, domainId, license.getProductId().getServiceId(), license.getProductId().getProductCode(), userId) == 1;
-			}
-			return ret;
-			
-		} catch(Throwable t) {
-			throw ExceptionUtils.wrapThrowable(t);
-		} finally {
-			DbUtils.closeQuietly(con);
-		}
-	}
-	
-	private boolean internalAssignServiceLicense(String domainId, ServiceLicense2 license, String userId, String activationString) throws WTException {
-		LicenseLeaseDAO lleaDao = LicenseLeaseDAO.getInstance();
-		Connection con = null;
-		
-		try {
-			ProductLicense prodLic = checkProductLicense(license);
-			
-			if (StringUtils.isBlank(activationString)) {
-				logger.debug("Activation string not provided. Trying automatic activation...");
-				prodLic.autoActivate();
-			} else {
-				prodLic.setLicenseActivationString(activationString);
-			}
-			if (!prodLic.getLicenseInfo().isActivated()) throw new WTException();
-			
-			OLicenseLease ollea = new OLicenseLease();
-			ollea.setDomainId(domainId);
-			ollea.setServiceId(license.getProductId().getServiceId());
-			ollea.setProductCode(license.getProductId().getProductCode());
-			ollea.setUserId(userId);
-			ollea.setActivationString(prodLic.getLicenseActivationString());
-			
-			con = wta.getConnectionManager().getConnection();
-			boolean ret = lleaDao.insert(con, ollea) == 1;
-			return ret;
-		
-		} catch(Throwable t) {
-			throw ExceptionUtils.wrapThrowable(t);
-		} finally {
-			DbUtils.closeQuietly(con);
-		}
-	}
-	
-	private ProductLicense checkProductLicense(ServiceLicense2 license) throws WTException {
-		return checkProductLicense(license.getDomainId(), license.getProductId(), license.getString());
-	}
-	
-	private ProductLicense checkProductLicense(String domainId, ProductId productId, String licenseString) throws WTException {
-		String internetName = WT.getDomainInternetName(domainId);
-		ProductLicense prodLic = ProductUtils.getProductLicense(internetName, productId, licenseString);
-		if (prodLic == null) throw new WTException("Unknown product '{}'", productId.getProductCode());
-		if (!prodLic.getLicenseInfo().isValid()) throw new WTException("License provided for '{}' is not valid", productId.getProductCode());
-		return prodLic;
-	}
-	
-	public ServiceLicense2 addServiceLicense(ServiceLicense2 license) throws WTException {
-		LicenseDAO licDao = LicenseDAO.getInstance();
-		Connection con = null;
-		
-		try {
-			ProductLicense prodLic = checkProductLicense(license);
-			
-			con = wta.getConnectionManager().getConnection();
-			OLicense2 olic = AppManagerUtils.createOLicense(license);
-			fillOLicenseWithDefaults(olic);
-			boolean ret = licDao.insert(con, olic) == 1;
-			if (ret) {
-				// Cleanup cached dummy ProductLicense
-				//forgetProductLicense(license.getServiceId(), license.getProductId(), license.getInternetName());
-				return license;
-			} else {
-				return null;
-			}
-			
-		} catch(Throwable t) {
-			throw ExceptionUtils.wrapThrowable(t);
-		} finally {
-			DbUtils.closeQuietly(con);
-		}
-	}
-	
-	public boolean deleteServiceLicense(String domainId, ProductId product) throws WTException {
-		LicenseDAO licDao = LicenseDAO.getInstance();
-		Connection con = null;
-		
-		try {
-			con = wta.getConnectionManager().getConnection();
-			boolean ret = licDao.delete(con, domainId, product.getServiceId(), product.getProductCode()) == 1;
-			//TODO delete lease
-			if (ret) {
-				// Cleanup cached ProductLicense
-				//forgetProductLicense(domainId, serviceId, productId);
-			}
-			return ret;
-			
-		} catch(Throwable t) {
-			throw ExceptionUtils.wrapThrowable(t);
-		} finally {
-			DbUtils.closeQuietly(con);
-		}
-	}
-	*/
-	
-	
-	
-	
-	/*
-	public List<ServiceLicense> listServiceLicenses(String interneName) throws WTException {
-		LicenseDAO licDao = LicenseDAO.getInstance();
-		Connection con = null;
-		
-		try {
-			con = wta.getConnectionManager().getConnection();
-			
-			ArrayList<ServiceLicense> items = new ArrayList<>();
-			for (OLicense olic : licDao.selectByInternetName(con, interneName)) {
-				items.add(AppManagerUtils.createServiceLicense(olic));
+				if (subjectSid == null) {
+					LOGGER.trace("");
+					continue;
+				}
+
+				final GenericSubject.Type subjectType = subjectSidCache.getSidType(subjectSid);
+				if (GenericSubject.Type.USER.equals(subjectType)) { // Already a User, use as is...
+					final UserProfileId pid;
+					if (!subjectsAsSID) {
+						pid = UserProfileId.parseQuielty(subject); // subject was already parsed as Pid successfully
+					} else {
+						pid = subjectSidCache.getPid(subjectSid, GenericSubject.Type.USER);
+					}
+					if (pid != null && pid.hasDomain(domainId)) items.add(pid);
+					
+				} else if (GenericSubject.Type.GROUP.equals(subjectType)) { // Subject is group: expand to users...
+					Set<String> userSids = uasDao.viewUserSidsByGroup(con, subjectSid);
+					for (String userSid : userSids) {
+						final UserProfileId pid = subjectSidCache.getPid(userSid, GenericSubject.Type.USER);
+						if (pid != null && pid.hasDomain(domainId)) items.add(pid);
+					}
+				}
 			}
 			return items;
 			
-		} catch(Throwable t) {
-			throw ExceptionUtils.wrapThrowable(t);
+		} catch (Exception ex) {
+			throw ExceptionUtils.wrapThrowable(ex);
 		} finally {
 			DbUtils.closeQuietly(con);
 		}
 	}
 	
-	public ServiceLicense getServiceLicense(String serviceId, String productId, String interneName) throws WTException {
-		LicenseDAO licDao = LicenseDAO.getInstance();
+	public Map<String, GenericSubject> listSubjects(final String domainId, final BitFlags<SubjectGetOption> options) throws WTException {
+		UserDAO useDao = UserDAO.getInstance();
+		ResourceDAO resDao = ResourceDAO.getInstance();
+		GroupDAO groDao = GroupDAO.getInstance();
+		RoleDAO rolDao = RoleDAO.getInstance();
 		Connection con = null;
 		
 		try {
+			boolean sidsAsKeys = !options.has(SubjectGetOption.PID_AS_KEY);
 			con = wta.getConnectionManager().getConnection();
-			return AppManagerUtils.createServiceLicense(licDao.select(con, serviceId, productId, interneName));
 			
-		} catch(Throwable t) {
-			throw ExceptionUtils.wrapThrowable(t);
-		} finally {
-			DbUtils.closeQuietly(con);
-		}
-	}
-	
-	public ServiceLicense addServiceLicense(ServiceLicense license) throws WTException {
-		LicenseDAO licDao = LicenseDAO.getInstance();
-		Connection con = null;
-		
-		try {
-			String domainId = domainCache.internetNameToDomainId(license.getInternetName());
-			if (domainId == null) throw new WTException("Unable to get domain associated to provided internet-name [{}]", license.getInternetName());
-			
-			con = wta.getConnectionManager().getConnection();
-			OLicense olic = AppManagerUtils.createOLicense(license);
-			boolean ret = licDao.insert(con, olic) == 1;
-			if (ret) {
-				// Cleanup cached dummy ProductLicense
-				forgetProductLicense(license.getServiceId(), license.getProductId(), license.getInternetName());
-				return license;
-			} else {
-				return null;
+			LinkedHashMap<String, GenericSubject> items = new LinkedHashMap<>();
+			if (options.has(SubjectGetOption.USERS)) {
+				for (OUser ouser: useDao.selectEnabledByDomain(con, domainId)) {
+					items.put(sidsAsKeys ? ouser.getUserSid() : ouser.getUserId(), new GenericSubject(ouser));
+				}
 			}
-			
-		} catch(Throwable t) {
-			throw ExceptionUtils.wrapThrowable(t);
-		} finally {
-			DbUtils.closeQuietly(con);
-		}
-	}
-	
-	public boolean deleteServiceLicense(String serviceId, String productId, String interneName) throws WTException {
-		LicenseDAO licDao = LicenseDAO.getInstance();
-		Connection con = null;
-		
-		try {
-			con = wta.getConnectionManager().getConnection();
-			boolean ret = licDao.delete(con, serviceId, productId, interneName) == 1;
-			if (ret) {
-				// Cleanup cached ProductLicense
-				forgetProductLicense(serviceId, productId, interneName);
+			if (options.has(SubjectGetOption.RESOURCES)) {
+				for (VResource vres: resDao.selectByDomainEnabled(con, domainId, EnabledCond.ENABLED_ONLY)) {
+					items.put(sidsAsKeys ? vres.getResourceSid() : vres.getResourceId(), new GenericSubject(vres));
+				}
 			}
-			return ret;
-			
-		} catch(Throwable t) {
-			throw ExceptionUtils.wrapThrowable(t);
-		} finally {
-			DbUtils.closeQuietly(con);
-		}
-	}
-	*/
-	
-	/**
-	 * Lists domain real roles (those defined as indipendent role).
-	 * @param domainId The domain ID.
-	 * @return
-	 * @throws WTException 
-	 */
-	public List<Role> listRoles(String domainId) throws WTException {
-		RoleDAO dao = RoleDAO.getInstance();
-		ArrayList<Role> items = new ArrayList<>();
-		Connection con = null;
-		
-		try {
-			con = WT.getConnection(CoreManifest.ID);
-			
-			List<ORole> roles = dao.selectByDomain(con, domainId);
-			for(ORole erole : roles) items.add(new Role(erole));
-			
-		} catch(SQLException | DAOException ex) {
-			throw new WTException(ex, "DB error");
-		} finally {
-			DbUtils.closeQuietly(con);
-		}
-		return items;
-	}
-	
-	/**
-	 * Lists domain users roles (those coming from a user).
-	 * @param domainId The domain ID.
-	 * @return
-	 * @throws WTException 
-	 */
-	public List<Role> listUsersRoles(String domainId) throws WTException {
-		UserDAO dao = UserDAO.getInstance();
-		ArrayList<Role> items = new ArrayList<>();
-		Connection con = null;
-		
-		try {
-			con = WT.getConnection(CoreManifest.ID);
-			
-			List<OUser> users = dao.selectEnabledByDomain(con, domainId);
-			for(OUser user: users) items.add(new Role(user));
-			
-		} catch(SQLException | DAOException ex) {
-			throw new WTException(ex, "DB error");
-		} finally {
-			DbUtils.closeQuietly(con);
-		}
-		return items;
-	}
-	
-	/**
-	 * Lists domain groups roles (those coming from a group).
-	 * @param domainId The domain ID.
-	 * @return
-	 * @throws WTException 
-	 */
-	public List<Role> listGroupsRoles(String domainId) throws WTException {
-		GroupDAO dao = GroupDAO.getInstance();
-		ArrayList<Role> items = new ArrayList<>();
-		Connection con = null;
-		
-		try {
-			con = WT.getConnection(CoreManifest.ID);
-			
-			List<OGroup> groups = dao.selectByDomain(con, domainId);
-			for(OGroup group: groups) items.add(new Role(group));
-			
-		} catch(SQLException | DAOException ex) {
-			throw new WTException(ex, "DB error");
-		} finally {
-			DbUtils.closeQuietly(con);
-		}
-		return items;
-	}
-	
-	public List<AssignedRole> listAssignedRoles(String userUid) throws WTException {
-		RoleAssociationDAO rolassdao = RoleAssociationDAO.getInstance();
-		Connection con = null;
-		
-		try {
-			con = WT.getConnection(CoreManifest.ID);
-			return rolassdao.viewAssignedByUser(con, userUid);
-			
-		} catch(SQLException | DAOException ex) {
-			throw new WTException(ex, "DB error");
-		} finally {
-			DbUtils.closeQuietly(con);
-		}
-	}
-	
-	/**
-	 * Retrieves the domain ID for the specified role.
-	 * @param uid
-	 * @return
-	 * @throws WTException 
-	 */
-	public String getRoleDomain(String uid) throws WTException {
-		Connection con = null;
-		
-		try {
-			con = WT.getConnection(CoreManifest.ID);
-			
-			RoleDAO roldao = RoleDAO.getInstance();
-			ORole role = roldao.selectByUid(con, uid);
-			if(role != null) return role.getDomainId();
-			
-			UserDAO usedao = UserDAO.getInstance();
-			OUser user = usedao.selectByUid(con, uid);
-			if(user != null) return user.getDomainId();
-			
-			GroupDAO grpdao = GroupDAO.getInstance();
-			OGroup group = grpdao.selectByUid(con, uid);
-			if(group != null) return group.getDomainId();
-			
-		} catch(SQLException | DAOException ex) {
-			throw new WTException(ex, "DB error");
-		} finally {
-			DbUtils.closeQuietly(con);
-		}
-		return null;
-	}
-	
-	public RoleEntity getRole(String uid) throws WTException {
-		RoleDAO roldao = RoleDAO.getInstance();
-		Connection con = null;
-		
-		try {
-			con = WT.getConnection(CoreManifest.ID);
-			
-			ORole orole = roldao.selectByUid(con, uid);
-			if(orole == null) throw new WTException("Role not found [{0}]", uid);
-			
-			EntityPermissions perms = extractPermissions(con, uid);
-			RoleEntity role = new RoleEntity(orole);
-			role.setPermissions(perms.others);
-			role.setServicesPermissions(perms.services);
-			
-			return role;
-			
-		} catch(SQLException | DAOException ex) {
-			throw new WTException(ex, "DB error");
-		} finally {
-			DbUtils.closeQuietly(con);
-		}
-	}
-	
-	public void addRole(RoleEntity role) throws WTException {
-		RoleDAO roldao = RoleDAO.getInstance();
-		Connection con = null;
-		
-		try {
-			con = WT.getConnection(CoreManifest.ID, false);
-			
-			ORole orole = new ORole();
-			orole.setRoleUid(IdentifierUtils.getUUID());
-			orole.setDomainId(role.getDomainId());
-			orole.setName(role.getName());
-			orole.setDescription(role.getDescription());
-			roldao.insert(con, orole);
-			
-			for(ORolePermission perm : role.getPermissions()) {
-				doInsertPermission(con, orole.getRoleUid(), perm.getServiceId(), perm.getKey(), perm.getAction(), "*");
+			if (options.has(SubjectGetOption.GROUPS)) {
+				for (OGroup ogroup: groDao.selectByDomain(con, domainId)) {
+					items.put(sidsAsKeys ? ogroup.getGroupSid() : ogroup.getGroupId(), new GenericSubject(ogroup));
+				}
 			}
-			for(ORolePermission perm : role.getServicesPermissions()) {
-				doInsertPermission(con, orole.getRoleUid(), CoreManifest.ID, "SERVICE", ServicePermission.ACTION_ACCESS, perm.getInstance());
+			if (options.has(SubjectGetOption.ROLES)) {
+				for (ORole orole: rolDao.selectByDomain(con, domainId)) {
+					items.put(sidsAsKeys ? orole.getRoleSid() : orole.getRoleId(), new GenericSubject(orole));
+				}
 			}
+			return items;
 			
-			DbUtils.commitQuietly(con);
-			
-		} catch(SQLException | DAOException ex) {
-			DbUtils.rollbackQuietly(con);
-			throw new WTException(ex, "DB error");
-		} finally {
-			DbUtils.closeQuietly(con);
-		}
-	}
-	
-	public void updateRole(RoleEntity role) throws WTException {
-		RoleDAO roldao = RoleDAO.getInstance();
-		RolePermissionDAO rolperdao = RolePermissionDAO.getInstance();
-		Connection con = null;
-		
-		try {
-			RoleEntity oldRole = getRole(role.getRoleUid());
-			if(oldRole == null) throw new WTException("Role not found [{0}]", role.getRoleUid());
-			
-			con = WT.getConnection(CoreManifest.ID, false);
-			
-			ORole orole = new ORole();
-			orole.setRoleUid(role.getRoleUid());
-			orole.setName(role.getName());
-			orole.setDescription(role.getDescription());
-			roldao.update(con, orole);
-			
-			LangUtils.CollectionChangeSet<ORolePermission> changeSet1 = LangUtils.getCollectionChanges(oldRole.getPermissions(), role.getPermissions());
-			for(ORolePermission perm : changeSet1.deleted) {
-				rolperdao.deleteById(con, perm.getRolePermissionId());
-			}
-			for(ORolePermission perm : changeSet1.inserted) {
-				doInsertPermission(con, oldRole.getRoleUid(), perm.getServiceId(), perm.getKey(), perm.getAction(), "*");
-			}
-			
-			LangUtils.CollectionChangeSet<ORolePermission> changeSet2 = LangUtils.getCollectionChanges(oldRole.getServicesPermissions(), role.getServicesPermissions());
-			for(ORolePermission perm : changeSet2.deleted) {
-				rolperdao.deleteById(con, perm.getRolePermissionId());
-			}
-			for(ORolePermission perm : changeSet2.inserted) {
-				doInsertPermission(con, oldRole.getRoleUid(), CoreManifest.ID, "SERVICE", ServicePermission.ACTION_ACCESS, perm.getInstance());
-			}
-			
-			DbUtils.commitQuietly(con);
-		
-		} catch(SQLException | DAOException ex) {
-			DbUtils.rollbackQuietly(con);
-			throw new WTException(ex, "DB error");
-		} finally {
-			DbUtils.closeQuietly(con);
-		}
-	}
-	
-	public void deleteRole(String uid) throws WTException {
-		RoleDAO roldao = RoleDAO.getInstance();
-		RoleAssociationDAO rolassdao = RoleAssociationDAO.getInstance();
-		RolePermissionDAO rolperdao = RolePermissionDAO.getInstance();
-		Connection con = null;
-		
-		try {
-			con = WT.getConnection(CoreManifest.ID, false);
-			
-			roldao.deleteByUid(con, uid);
-			rolassdao.deleteByRole(con, uid);
-			rolperdao.deleteByRole(con, uid);
-			DbUtils.commitQuietly(con);
-			
-		} catch(SQLException | DAOException ex) {
-			DbUtils.rollbackQuietly(con);
-			throw new WTException(ex, "DB error");
+		} catch (Exception ex) {
+			throw ExceptionUtils.wrapThrowable(ex);
 		} finally {
 			DbUtils.closeQuietly(con);
 		}
 	}
 	
 	public List<String> getComputedRolesAsStringByUser(UserProfileId pid, boolean self, boolean transitive) throws WTException {
-		ArrayList<String> uids = new ArrayList<>();
+		ArrayList<String> sids = new ArrayList<>();
 		Set<RoleWithSource> roles = getComputedRolesByUser(pid, self, transitive);
 		for(RoleWithSource role : roles) {
-			uids.add(role.getRoleUid());
+			sids.add(role.getRoleUid());
 		}
-		return uids;
+		return sids;
 	}
 	
 	public Set<RoleWithSource> getComputedRolesByUser(UserProfileId pid, boolean self, boolean transitive) throws WTException {
@@ -1994,39 +2144,39 @@ public final class WebTopManager {
 		
 		try {
 			con = WT.getConnection(CoreManifest.ID);
-			String userUid = usrm.userToUid(pid);
+			String userSid = usrm.lookupSubjectSid(pid, GenericSubject.Type.USER);
 			
 			if(self) {
 				UserDAO usedao = UserDAO.getInstance();
-				OUser user = usedao.selectByUid(con, userUid);
-				roles.add(new RoleWithSource(RoleWithSource.SOURCE_USER, userUid, user.getDomainId(), pid.getUserId(), user.getDisplayName()));
+				OUser user = usedao.selectBySid(con, userSid);
+				roles.add(new RoleWithSource(RoleWithSource.SOURCE_USER, userSid, user.getDomainId(), pid.getUserId(), user.getDisplayName()));
 			}
 			
 			RoleDAO roldao = RoleDAO.getInstance();
 			
 			// Gets by group
-			List<ORole> groles = roldao.selectFromGroupsByUser(con, userUid);
+			List<ORole> groles = roldao.selectFromGroupsByUser(con, userSid);
 			for(ORole role : groles) {
-				if(roleMap.contains(role.getRoleUid())) continue; // Skip duplicates
-				roleMap.add(role.getRoleUid());
-				roles.add(new RoleWithSource(RoleWithSource.SOURCE_GROUP, role.getRoleUid(), role.getDomainId(), role.getName(), role.getDescription()));
+				if(roleMap.contains(role.getRoleSid())) continue; // Skip duplicates
+				roleMap.add(role.getRoleSid());
+				roles.add(new RoleWithSource(RoleWithSource.SOURCE_GROUP, role.getRoleSid(), role.getDomainId(), role.getName(), role.getDescription()));
 			}
 			
 			// Gets direct assigned roles
-			List<ORole> droles = roldao.selectDirectByUser(con, userUid);
+			List<ORole> droles = roldao.selectDirectByUser(con, userSid);
 			for(ORole role : droles) {
-				if(roleMap.contains(role.getRoleUid())) continue; // Skip duplicates
-				roleMap.add(role.getRoleUid());
-				roles.add(new RoleWithSource(RoleWithSource.SOURCE_ROLE, role.getRoleUid(), role.getDomainId(), role.getName(), role.getDescription()));
+				if(roleMap.contains(role.getRoleSid())) continue; // Skip duplicates
+				roleMap.add(role.getRoleSid());
+				roles.add(new RoleWithSource(RoleWithSource.SOURCE_ROLE, role.getRoleSid(), role.getDomainId(), role.getName(), role.getDescription()));
 			}
 			
 			// Get transivite roles (belonging to groups)
 			if(transitive) {
-				List<ORole> troles = roldao.selectTransitiveFromGroupsByUser(con, userUid);
+				List<ORole> troles = roldao.selectTransitiveFromGroupsByUser(con, userSid);
 				for(ORole role : troles) {
-					if(roleMap.contains(role.getRoleUid())) continue; // Skip duplicates
-					roleMap.add(role.getRoleUid());
-					roles.add(new RoleWithSource(RoleWithSource.SOURCE_TRANSITIVE, role.getRoleUid(), role.getDomainId(), role.getName(), role.getDescription()));
+					if(roleMap.contains(role.getRoleSid())) continue; // Skip duplicates
+					roleMap.add(role.getRoleSid());
+					roles.add(new RoleWithSource(RoleWithSource.SOURCE_TRANSITIVE, role.getRoleSid(), role.getDomainId(), role.getName(), role.getDescription()));
 				}
 			}
 		} catch(SQLException | DAOException ex) {
@@ -2037,23 +2187,27 @@ public final class WebTopManager {
 		return roles;
 	}
 	
-	public List<ORolePermission> listRolePermissions(String roleUid) throws Exception {
+	/**
+	 * @deprecated Create new method with string result
+	 */
+	@Deprecated
+	public List<ORolePermission> listRolePermissions(String roleSid) throws Exception {
 		Connection con = null;
 		
 		try {
 			con = WT.getConnection(CoreManifest.ID);
 			RolePermissionDAO dao = RolePermissionDAO.getInstance();
-			return dao.selectByRoleUid(con, roleUid);
+			return dao.selectByRoleSid(con, roleSid);
 		
 		} finally {
 			DbUtils.closeQuietly(con);
 		}
 	}
 	
-	public EntityPermissions extractPermissions(Connection con, String roleUid) throws WTException {
+	public EntityPermissions extractPermissions(Connection con, String roleSid) throws WTException {
 		RolePermissionDAO rolperdao = RolePermissionDAO.getInstance();
 		
-		List<ORolePermission> operms = rolperdao.selectByRoleUid(con, roleUid);
+		List<ORolePermission> operms = rolperdao.selectByRoleSid(con, roleSid);
 		ArrayList<ORolePermission> othersPerms = new ArrayList<>();
 		ArrayList<ORolePermission> servicesPerms = new ArrayList<>();
 		for(ORolePermission operm : operms) {
@@ -2067,481 +2221,1816 @@ public final class WebTopManager {
 		}
 		
 		return new EntityPermissions(othersPerms, servicesPerms);
-	}
+	}	
 	
-	public UserProfile.PersonalInfo userPersonalInfo(UserProfileId pid) throws WTException {
-		synchronized(cacheUserToPersonalInfo) {
-			if(!cacheUserToPersonalInfo.containsKey(pid)) {
-				UserProfile.PersonalInfo upi = getUserPersonalInfo(pid);
-				if(upi == null) throw new WTException("UserPersonalInfo not found [{0}]", pid.toString());
-				cacheUserToPersonalInfo.put(pid, upi);
-				return upi;
-			} else {
-				return cacheUserToPersonalInfo.get(pid);
-			}
-		}
-	}
-	
-	public UserProfile.Data userData(UserProfileId pid) throws WTException {
-		synchronized(cacheUserToData) {
-			if(!cacheUserToData.containsKey(pid)) {
-				final UserProfile.Data ud = getUserData(pid);
-				if (ud == null) return null;
-				cacheUserToData.put(pid, ud);
-				return ud;
-			} else {
-				return cacheUserToData.get(pid);
-			}
-		}
-	}
-	
-	public void ensureProfileDomain(String domainId) throws AuthException {
-		if (domainId == null) return;
-		UserProfileId runPid = RunContext.getRunProfileId();
-		if (RunContext.isWebTopAdmin(runPid)) return;
-		if (!runPid.hasDomain(domainId)) throw new AuthException("Running profile's domain [{0}] does not match with passed one [{1}]", runPid.getDomainId(), domainId);
-	}
-	
-	public UserProfileId guessUserProfileIdByProfileUsername(String profileUsername) throws WTException {
-		UserProfileId iaPid = null;
-		try {
-			iaPid = new UserProfileId(profileUsername);
-		} catch(UnsupportedOperationException ex) {
-			return null;
-		}
-		
-		String domainId = domainInternetNameToDomainId(iaPid.getDomain());
+	public UserProfileId guessProfileIdAuthenticationAddress(final String authAddress) throws WTException {
+		UserProfileId pid = UserProfileId.parseQuielty(authAddress);
+		if (pid == null) return null;
+		String domainId = authDomainNameToDomainId(pid.getDomain());
 		if (domainId == null) return null;
 		ensureProfileDomain(domainId);
-		return new UserProfileId(domainId, iaPid.getUser());
+		return new UserProfileId(domainId, pid.getUser());
 	}
 	
-	public UserProfileId guessUserProfileIdByPersonalAddress(String personalAddress) throws WTException {
+	public UserProfileId guessProfileIdByPersonalAddress(final String personalAddress) throws WTException {
+		Check.notNull(personalAddress, "personalAddress");
+		UserInfoDAO uiDao = UserInfoDAO.getInstance();
+		Connection con = null;
+		
+		try {
+			con = wta.getConnectionManager().getConnection();
+			List<ProfileIdentifier> pids = uiDao.viewByEmail(con, personalAddress);
+			if (pids.isEmpty()) return null;
+			
+			ProfileIdentifier pid = pids.get(0);
+			ensureProfileDomain(pid.getDomainId());
+			return new UserProfileId(pid.getDomainId(), pid.getUserId());
+			
+		} catch (Exception ex) {
+			throw ExceptionUtils.wrapThrowable(ex);
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
+	public Set<UserProfileId> guessProfileIdsByPersonalAddress(final String personalAddress) throws WTException {
+		Check.notNull(personalAddress, "personalAddress");
 		UserInfoDAO uiDao = UserInfoDAO.getInstance();
 		Connection con = null;
 		
 		try {
 			con = wta.getConnectionManager().getConnection();
 			
-			List<UserId> uids = uiDao.viewByEmail(con, personalAddress);
-			if (uids.isEmpty()) return null;
+			List<ProfileIdentifier> pids = uiDao.viewByEmail(con, personalAddress);
+			return pids.stream()
+				.filter((pid) -> ensureProfileDomainQuietly(pid.getDomainId()))
+				.map((pid) -> pid.toProfileId())
+				.collect(Collectors.toSet());
 			
-			UserId uid = uids.get(0);
-			ensureProfileDomain(uid.getDomainId());
-			return new UserProfileId(uid.getDomainId(), uid.getUserId());
-			
-		} catch(SQLException | DAOException ex) {
-			DbUtils.rollbackQuietly(con);
-			throw new WTException(ex, "DB error");
+		} catch (Exception ex) {
+			throw ExceptionUtils.wrapThrowable(ex);
 		} finally {
 			DbUtils.closeQuietly(con);
 		}
 	}
 	
-	public UserProfile.Data userDataByEmail(String emailAddress) throws WTException {
-		UserInfoDAO uidao = UserInfoDAO.getInstance();
+	
+	
+	
+	
+	
+	
+	
+	
+	/**
+	 * Lists FolderShare (Root->Folder two-level sharing) origins for specified profileId.
+	 * @param targetProfileId The Profile ID under investigation.
+	 * @param serviceId The related service ID.
+	 * @param context The context-name (or groupName) of the share.
+	 * @return A list of origin objects
+	 * @throws WTException 
+	 */
+	public List<FolderShareOrigin> listFolderShareOrigins(final UserProfileId targetProfileId, final String serviceId, final String context) throws WTException {
+		Check.notNull(targetProfileId, "targetProfileId");
+		Check.notEmpty(serviceId, "serviceId");
+		Check.notEmpty(context, "context");
+		ShareDAO shaDao = ShareDAO.getInstance();
+		Connection con = null;
+		
+		// In order to find share origins, we need to look for any folders 
+		// of at least a permission, then collect their owner uids.
+		// So, we look into permissions table returning any row that have any 
+		// possible share keys ("*_FOLDER@SHARE" or "*_ITEMS@SHARE") and 
+		// satisfying a set of subject uids. Then we can get a list of unique 
+		// uids (from shares table) that originating the share.
+
+		final String targetSubjectSid = subjectSidCache.getSid(targetProfileId, GenericSubject.Type.USER, GenericSubject.Type.RESOURCE);
+		final List<String> targetSubjectSids = getComputedRolesAsStringByUser(targetProfileId, true, true);
+		final List<String> TARGET_PERMISSION_KEYS = buildFolderShareKeys(context);
+		
+		try {
+			con = WT.getCoreConnection();
+			Set<String> originSids = shaDao.viewOriginatingSidsByRoleServiceKey(con, serviceId, context, targetSubjectSids, TARGET_PERMISSION_KEYS);
+			ArrayList<FolderShareOrigin> origins = new ArrayList<>();
+			for (String uid : originSids) {
+				if (uid.equals(targetSubjectSid)) continue; // Skip self				
+				UserProfileId rootProfileId = subjectSidCache.getPid(uid, GenericSubject.Type.USER, GenericSubject.Type.RESOURCE);
+				UserProfile.Data udata = lookupProfileData(rootProfileId, true);
+				origins.add(new FolderShareOrigin(rootProfileId, udata.getDisplayName()));
+			}
+			
+			Collections.sort(origins, (FolderShareOrigin so1, FolderShareOrigin so2) -> so1.getDisplayName().compareTo(so2.getDisplayName()));
+			return origins;
+			
+		} catch (Exception ex) {
+			LOGGER.error("Unable to compute share origins for '{}' [{}, {}]", targetProfileId, serviceId, context);
+			throw ExceptionUtils.wrapThrowable(ex);
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
+	/**
+	 * Get FolderShare (Root->Folder two-level sharing) Folders for specified profileId.
+	 * @param targetProfileId The Profile ID under investigation.
+	 * @param originProfileId The source Origin ID of the share.
+	 * @param serviceId The related service ID.
+	 * @param context The context-name (or groupName) of the share.
+	 * @return
+	 * @throws WTException 
+	 */
+	public FolderShareOriginFolders getFolderShareOriginFolders(final UserProfileId targetProfileId, final UserProfileId originProfileId, final String serviceId, final String context) throws WTException {
+		Check.notNull(targetProfileId, "targetProfileId");
+		Check.notNull(originProfileId, "originProfileId");
+		Check.notEmpty(serviceId, "serviceId");
+		Check.notEmpty(context, "context");
+		ShareDAO shaDao = ShareDAO.getInstance();
+		Connection con = null;
+		
+		// In order to find share instances, we need to look for any folders 
+		// of at least a permission, then collect their instance ids.
+		// So, we look into permissions table returning any row that have any 
+		// possible share keys ("*_FOLDER@SHARE" or "*_ITEMS@SHARE") and 
+		// satisfying a set of subject uids. Then we can get a list of unique 
+		// instances (from shares table) that originating the share.
+
+		final String originSubjectSid = subjectSidCache.getSid(originProfileId, GenericSubject.Type.USER, GenericSubject.Type.RESOURCE);
+		//final String targetSubjectSid = aclSubjectCache.getSid(targetProfileId);
+		final List<String> targetSubjectSids = getComputedRolesAsStringByUser(targetProfileId, true, true);
+		final List<String> TARGET_PERMISSION_KEYS = buildFolderShareKeys(context);
+		
+		try {
+			con = WT.getCoreConnection();
+			Set<String> instances = shaDao.viewInstancesByOriginServiceContextPermissions(con, originSubjectSid, serviceId, context, targetSubjectSids, TARGET_PERMISSION_KEYS);
+			boolean wildcardFound = instances.remove(FolderSharing.INSTANCE_WILDCARD);
+			return new FolderShareOriginFolders(instances, wildcardFound);
+			
+		} catch (Exception ex) {
+			LOGGER.error("Unable to compute share folders for '{}' [{}, {}, {}]", targetProfileId, originSubjectSid, serviceId, context);
+			throw ExceptionUtils.wrapThrowable(ex);
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
+	/**
+	 * Evaluates passed FolderShare rights, described under-the-hood by actions, against profile's permissions.
+	 * @param targetProfileId The Profile ID under investigation.
+	 * @param originProfileId The source Origin ID of the share.
+	 * @param serviceId The related service ID.
+	 * @param context The context-name (or groupName) of the share.
+	 * @param scope Specifies the depth of the analysis: at top with wildcard or down with a specific folder.
+	 * @param throwOnMissingShare Set to `false` to NOT throw WTNotFoundException if share at requested scope is not available.
+	 * @param target Specifies the target of the actions: folder or folder's items.
+	 * @param actions The permission actions to check.
+	 * @return
+	 * @throws com.sonicle.webtop.core.app.sdk.WTNotFoundException
+	 * @throws WTException 
+	 */
+	public boolean[] evaluateFolderSharePermission(final UserProfileId targetProfileId, final UserProfileId originProfileId, final String serviceId, final String context, final FolderSharing.Scope scope, final boolean throwOnMissingShare, final FolderShare.EvalTarget target, final String[] actions) throws WTNotFoundException, WTException {
+		Check.notNull(targetProfileId, "targetProfileId");
+		Check.notNull(originProfileId, "originProfileId");
+		Check.notEmpty(serviceId, "serviceId");
+		Check.notEmpty(context, "context");
+		Check.notNull(scope, "scope");
+		Check.notNull(target, "target");
+		Check.notNull(actions, "actions");
+		ShareDAO shaDao = ShareDAO.getInstance();
+		Connection con = null;
+		
+		final String originSubjectSid = subjectSidCache.getSid(originProfileId, GenericSubject.Type.USER, GenericSubject.Type.RESOURCE);
+		final String shareInstance;
+		if (scope instanceof FolderSharing.WildcardScope) {
+			shareInstance = FolderSharing.INSTANCE_WILDCARD;
+			
+		} else if (scope instanceof FolderSharing.FolderScope) {
+			shareInstance = ((FolderSharing.FolderScope)scope).getFolderId();
+
+		} else {
+			throw new IllegalArgumentException("Unsupported scope");
+		}
+		
+		String permissionKey = null;
+		if (FolderShare.EvalTarget.FOLDER.equals(target)) {
+			permissionKey = FolderShare.buildFolderPermissionKey(context);
+		} else if (FolderShare.EvalTarget.FOLDER_ITEMS.equals(target)) {
+			permissionKey = FolderShare.buildItemsPermissionKey(context);
+		}
+		
+		try {
+			con = WT.getCoreConnection();
+			Integer shareId = shaDao.selectIdByUserServiceKeyInstance(con, originSubjectSid, serviceId, context, shareInstance);
+			if (shareId == null) {
+				if (!throwOnMissingShare) return null;
+				throw new WTNotFoundException("Share not found [{}, {}, {}, {}]", originSubjectSid, serviceId, context, shareInstance);
+			}
+			
+			boolean[] bools = new boolean[actions.length];
+			for (int i=0; i<actions.length; i++) {
+				bools[i] = RunContext.isPermitted(true, targetProfileId, serviceId, permissionKey, actions[i], String.valueOf(shareId));
+				if (LOGGER.isTraceEnabled()) LOGGER.trace("SharePermission eval: [{}] for [{}] -> {}", ServicePermission.permissionString(ServicePermission.namespacedName(serviceId, permissionKey), actions[i], String.valueOf(shareId)), targetProfileId, bools[i]);
+			}
+			return bools;
+			
+		} catch (Exception ex) {
+			LOGGER.error("Unable to evaluate permissions for '{}' [{}, {}, {}, {}]", targetProfileId, originSubjectSid, serviceId, context, shareInstance);
+			throw ExceptionUtils.wrapThrowable(ex);
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
+	/**
+	 * Evaluates all available FolderShare rights against profile's permissions.
+	 * @param targetProfileId The Profile ID under investigation.
+	 * @param originProfileId The source Origin ID of the share.
+	 * @param serviceId The related service ID.
+	 * @param context The context-name (or groupName) of the share.
+	 * @param scope Specifies the depth of the analysis: at top with wildcard or down with a specific folder.
+	 * @param throwOnMissingShare Set to `false` to NOT throw WTNotFoundException if share at requested scope is not available.
+	 * @return
+	 * @throws WTException 
+	 */
+	public FolderShare.Permissions evaluateFolderSharePermissions(final UserProfileId targetProfileId, final UserProfileId originProfileId, final String serviceId, final String context, final FolderSharing.Scope scope, final boolean throwOnMissingShare) throws WTException {
+		Check.notNull(originProfileId, "originProfileId");
+		Check.notEmpty(serviceId, "serviceId");
+		Check.notEmpty(context, "context");
+		Check.notNull(scope, "scope");
+		ShareDAO shaDao = ShareDAO.getInstance();
+		Connection con = null;
+		
+		final String FOLDER_PERMISSION_KEY = FolderShare.buildFolderPermissionKey(context);
+		final String ITEMS_PERMISSION_KEY = FolderShare.buildItemsPermissionKey(context);
+		
+		final String originSubjectSid = subjectSidCache.getSid(originProfileId, GenericSubject.Type.USER, GenericSubject.Type.RESOURCE);
+		boolean skipWildcardReservedRights = true;
+		final String shareInstance;
+		if (scope instanceof FolderSharing.WildcardScope) {
+			skipWildcardReservedRights = false;
+			shareInstance = FolderSharing.INSTANCE_WILDCARD;
+
+		} else if (scope instanceof FolderSharing.FolderScope) {
+			shareInstance = ((FolderSharing.FolderScope)scope).getFolderId();
+
+		} else {
+			throw new IllegalArgumentException("Unsupported scope");
+		}
+		
+		try {
+			con = WT.getCoreConnection();
+			Integer shareId = shaDao.selectIdByUserServiceKeyInstance(con, originSubjectSid, serviceId, context, shareInstance);
+			if (shareId == null) {
+				if (!throwOnMissingShare) return null;
+				throw new WTNotFoundException("Share not found [{}, {}, {}, {}]", originSubjectSid, serviceId, context, shareInstance);
+			}
+			
+			FolderShare.FolderPermissions folderPerms = new FolderShare.FolderPermissions();
+			for (FolderShare.FolderRight right : EnumUtils.allTypesOf(FolderShare.FolderRight.class)) {
+				if (skipWildcardReservedRights && right.isReservedForWildcard()) continue;
+				if (RunContext.isPermitted(true, targetProfileId, serviceId, FOLDER_PERMISSION_KEY, right.name(), String.valueOf(shareId))) {
+					folderPerms.set(right);
+				}
+			}
+			FolderShare.ItemsPermissions itemsPerms = new FolderShare.ItemsPermissions();
+			for (FolderShare.ItemsRight right : EnumUtils.allTypesOf(FolderShare.ItemsRight.class)) {
+				if (RunContext.isPermitted(true, targetProfileId, serviceId, ITEMS_PERMISSION_KEY, right.name(), String.valueOf(shareId))) {
+					itemsPerms.set(right);
+				}
+			}
+			return new FolderShare.Permissions(folderPerms, itemsPerms);
+			
+		} catch (Exception ex) {
+			LOGGER.error("Unable to evaluate permissions for '{}' [{}, {}, {}, {}]", targetProfileId, originSubjectSid, serviceId, context, shareInstance);
+			throw ExceptionUtils.wrapThrowable(ex);
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
+	/**
+	 * Returns a list of permission applied to a specific FolderShare (Root->Folder two-level sharing).
+	 * This is suitable for completing sharing panel where all permissions for 
+	 * a shared entity are grouped together in a single representation.
+	 * @param originProfileId The FolderShare origin profile to be checked.
+	 * @param serviceId The related service ID.
+	 * @param context The context-name (or groupName) of the share.
+	 * @param scope The level to evaluate: wildcard or folder-specific.
+	 * @return
+	 * @throws WTException 
+	 */
+	public List<FolderSharing.SubjectRights> getFolderShareSharingRights(final UserProfileId originProfileId, final String serviceId, final String context, final FolderSharing.Scope scope) throws WTException {
+		Check.notNull(originProfileId, "originProfileId");
+		Check.notEmpty(serviceId, "serviceId");
+		Check.notEmpty(context, "context");
+		Check.notNull(scope, "scope");
+		Connection con = null;
+		
+		try {
+			String originSid = subjectSidCache.getSid(originProfileId, GenericSubject.Type.USER, GenericSubject.Type.RESOURCE);
+			con = WT.getCoreConnection();
+			return doFolderShareSharingRightsGet(con, originSid, serviceId, context, scope);
+			
+		} catch (Exception ex) {
+			throw ExceptionUtils.wrapThrowable(ex);
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
+	/**
+	 * Updates the set of permissions associated to a FolderShare (Root->Folder two-level sharing).
+	 * @param originProfileId The FolderShare origin profile to be updated.
+	 * @param serviceId The related service ID.
+	 * @param context The context-name (or groupName) of the share.
+	 * @param scope The level to modify: wildcard or folder-specific.
+	 * @param rights A collection of righs to apply.
+	 * @throws WTException 
+	 */
+	public void updateFolderShareSharingRights(final UserProfileId originProfileId, final String serviceId, final String context, final FolderSharing.Scope scope, final Collection<FolderSharing.SubjectRights> rights) throws WTException {
+		Check.notNull(originProfileId, "originProfileId");
+		Check.notEmpty(serviceId, "serviceId");
+		Check.notEmpty(context, "context");
+		Check.notNull(scope, "level");
+		Check.notNull(rights, "rights");
+		Connection con = null;
+		
+		try {
+			String originSid = subjectSidCache.getSid(originProfileId, GenericSubject.Type.USER, GenericSubject.Type.RESOURCE);
+			con = WT.getCoreConnection();
+			doFolderShareSharingRightsUpdate(con, originSid, serviceId, context, scope, rights);
+			DbUtils.commitQuietly(con);
+			
+		} catch (Exception ex) {
+			throw ExceptionUtils.wrapThrowable(ex);
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	
+	
+	
+	
+	
+	
+	
+	private ODomain doODomainGet(Connection con, String domainId) throws WTException {
+		DomainDAO domDao = DomainDAO.getInstance();
+		return domDao.selectById(con, domainId);
+	}
+	
+	private static enum DomainProcessOpt implements BitFlagsEnum<DomainProcessOpt> {
+		PROCESS_DIRECTORY(1 << 1);
+		
+		private int mask = 0;
+		private DomainProcessOpt(int mask) { this.mask = mask; }
+		@Override
+		public long mask() { return this.mask; }
+		
+		public static BitFlags<DomainProcessOpt> fromDomainGetOptions(BitFlags<DomainGetOption> options) {
+			// Flag values are compatible for now, simpy instantiate new object...
+			return BitFlags.newFrom(DomainProcessOpt.class, options);
+		}
+		
+		public static BitFlags<DomainProcessOpt> fromDomainUpdateOptions(BitFlags<DomainUpdateOption> options) {
+			// Flag values are compatible for now, simpy instantiate new object...
+			return BitFlags.newFrom(DomainProcessOpt.class, options);
+		}
+	}
+	
+	private Domain doDomainGet(final Connection con, final String domainId, final BitFlags<DomainProcessOpt> options) throws WTException {
+		DomainDAO domDao = DomainDAO.getInstance();
+		
+		ODomain odomain = options.has(DomainProcessOpt.PROCESS_DIRECTORY) ? domDao.selectById(con, domainId) : domDao.selectBasicById(con, domainId);
+		if (odomain == null) return null;
+		
+		Domain domain = AppManagerUtils.fillDomain(new Domain(), odomain);
+		decryptDomainDirPassword(domain);
+		return domain;
+	}
+	
+	private ODomain doDomainInsert(final Connection con, final String domainId, final DomainBase domain) throws WTException {
+		DomainDAO domDao = DomainDAO.getInstance();
+		
+		encryptDomainDirPassword(domain);
+		ODomain odomain = AppManagerUtils.fillODomain(new ODomain(), domain);
+		odomain.setDomainId(domainId);
+		ODomain.fillDefaultsForInsert(odomain);
+		ODomain.validate(odomain);
+		
+		domDao.insert(con, odomain);
+		return odomain;
+	}
+	
+	private DomainUpdateResult doDomainUpdate(final Connection con, final String domainId, final DomainBase domain, final boolean setDirPassword, final BitFlags<DomainProcessOpt> options) throws WTException {
+		DomainDAO domDao = DomainDAO.getInstance();
+		
+		if (setDirPassword) encryptDomainDirPassword(domain);
+		ODomain odomain = AppManagerUtils.fillODomain(new ODomain(), domain);
+		odomain.setDomainId(domainId);
+		ODomain.fillDefaultsForUpdate(odomain);
+		ODomain.validate(odomain);
+		
+		boolean ret = (options.has(DomainProcessOpt.PROCESS_DIRECTORY) ? domDao.update(con, odomain, setDirPassword) : domDao.updateBasic(con, odomain)) == 1;
+		if (!ret) throw new WTNotFoundException("Domain not found [{}]", domainId);
+		return new DomainUpdateResult(odomain);
+	}
+	
+	private void doDomainDelete(final Connection con, final String domainId) {
+		LOGGER.debug("[{}] Deleting activities...", domainId);
+		ActivityDAO.getInstance().deleteByDomain(con, domainId);
+		LOGGER.debug("[{}] Deleting causals...", domainId);
+		CausalDAO.getInstance().deleteByDomain(con, domainId);
+		LOGGER.debug("[{}] Deleting master-data...", domainId);
+		MasterDataDAO.getInstance().deleteByDomain(con, domainId);
+		LOGGER.debug("[{}] Deleting IM data...", domainId);
+		IMMessageDAO.getInstance().deleteByDomain(con, domainId);
+		IMChatDAO.getInstance().deleteByDomain(con, domainId);
+		LOGGER.debug("[{}] Deleting CustomFields data...", domainId);
+		CustomPanelDAO.getInstance().deleteByDomain(con, domainId);
+		CustomFieldDAO.getInstance().deleteByDomain(con, domainId);
+		LOGGER.debug("[{}] Deleting tags...", domainId);
+		TagDAO.getInstance().deleteByDomain(con, domainId);
+		LOGGER.debug("[{}] Deleting sharing data...", domainId);
+		ShareDataDAO.getInstance().deleteByDomain(con, domainId);
+		ShareDAO.getInstance().deleteByDomain(con, domainId);
+		LOGGER.debug("[{}] Deleting permissions...", domainId);
+		RolePermissionDAO.getInstance().deleteByDomain(con, domainId);
+		LOGGER.debug("[{}] Deleting roles...", domainId);
+		RoleAssociationDAO.getInstance().deleteByDomain(con, domainId);
+		RoleDAO.getInstance().deleteByDomain(con, domainId);
+		LOGGER.debug("[{}] Deleting groups/users...", domainId);
+		UserAssociationDAO.getInstance().deleteByDomain(con, domainId);
+		UserInfoDAO.getInstance().deleteByDomain(con, domainId);
+		UserDAO.getInstance().deleteByDomain(con, domainId);
+		GroupDAO.getInstance().deleteByDomain(con, domainId);
+		LOGGER.debug("[{}] Deleting settings (user+domain)...", domainId);
+		UserSettingDAO.getInstance().deleteByDomain(con, domainId);
+		DomainSettingDAO.getInstance().deleteByDomain(con, domainId);
+		LOGGER.debug("[{}] Deleting management tables...", domainId);
+		AutosaveDAO.getInstance().deleteByDomain(con, domainId);
+		ServiceStoreEntryDAO.getInstance().deleteByDomain(con, domainId);
+		SnoozedReminderDAO.getInstance().deleteByDomain(con, domainId);
+		MessageQueueDAO.getInstance().deleteByDomain(con, domainId);
+		LOGGER.debug("[{}] Deleting DataSources...", domainId);
+		DataSourceDAO.getInstance().deleteByDomain(con, domainId);
+		LOGGER.debug("[{}] Deleting Licenses...", domainId);
+		LicenseDAO.getInstance().deleteByDomain(con, domainId);
+		
+		//LOGGER.debug("[{}] Deleting logs...", domainId);
+		//AuditLogDAO.getInstance().deleteByDomain(con, domainId);
+		//DomainAccessLogDAO.getInstance().deleteByDomain(con, domainId);
+		
+		LOGGER.debug("[{}] Deleting domain...", domainId);
+		DomainDAO.getInstance().deleteById(con, domainId);
+	}
+	
+	private class DomainUpdateResult {
+		public final ODomain odomain;
+		
+		public DomainUpdateResult(ODomain odomain) {
+			this.odomain = odomain;
+		}
+	}
+	
+	private class DomainInitResult {
+		public final boolean subjectCacheUpdated;
+		public final Result<User> adminResult;
+		public final ArrayList<HomedThrowable> errors;
+		
+		public DomainInitResult(boolean subjectCacheUpdated, Result<User> adminResult, ArrayList<HomedThrowable> errors) {
+			this.subjectCacheUpdated = subjectCacheUpdated;
+			this.adminResult = adminResult;
+			this.errors = errors;
+		}
+	}
+	
+	private DomainInitResult doDomainInitCheck(final String domainId) throws WTException {
+		RoleDAO rolDao = RoleDAO.getInstance();
+		GroupDAO grpDao = GroupDAO.getInstance();
+		UserDAO usrDao = UserDAO.getInstance();
+		Connection con = null;
+		ArrayList<HomedThrowable> errors = new ArrayList<>();
+		boolean cacheUpdated = false;
+		Result<User> domainAdminResult = null;
+		
+		try {
+			con = wta.getConnectionManager().getConnection();
+		
+			// Prepare built-in roles
+			LOGGER.debug("[{}] Checking built-in roles...", domainId);
+			Map<String, ORole> roles = rolDao.selectByDomainIn(con, domainId, BUILT_IN_ROLES);
+			if (!roles.containsKey(DOMAINADMIN_ROLEID)) {
+				try {
+					RoleBase role = new RoleBase();
+					role.setDescription("Describes rights of the Domain Administrator");
+					role.setAllowedServiceIds(LangUtils.asSet("com.sonicle.webtop.core.admin", "com.sonicle.webtop.vfs"));
+					BitFlags<RoleProcessOpt> options = BitFlags.with(RoleProcessOpt.PROCESS_SERVICEPERMISSIONS);
+					RoleInsertResult result = doRoleInsert(con, domainId, DOMAINADMIN_ROLEID, null, role, options);
+					subjectSidCache.add(result.orole.getProfileId(), result.orole.getRoleSid(), GenericSubject.Type.ROLE);
+					cacheUpdated = true;
+
+				} catch (Exception ex) {
+					LOGGER.error("[{}] Unable to add built-in '{}' role", domainId, DOMAINADMIN_ROLEID, ex);
+					errors.add(new HomedThrowable(CoreManifest.ID, new WTException(ex, "Unable to add built-in '{}' role", DOMAINADMIN_ROLEID)));
+				}	
+			}
+			if (!roles.containsKey(PECACCOUNT_ROLEID)) {
+				try {
+					RoleBase role = new RoleBase();
+					role.setDescription("Represents an account used as PEC container.");
+					//role.setAllowedServiceIds(LangUtils.asSet("com.sonicle.webtop.core.admin", "com.sonicle.webtop.vfs"));
+					RoleInsertResult result = doRoleInsert(con, domainId, PECACCOUNT_ROLEID, null, role, BitFlags.noneOf(RoleProcessOpt.class));
+					subjectSidCache.add(result.orole.getProfileId(), result.orole.getRoleSid(), GenericSubject.Type.ROLE);
+					cacheUpdated = true;
+
+				} catch (Exception ex) {
+					LOGGER.error("[{}] Unable to add built-in '{}' role", domainId, PECACCOUNT_ROLEID, ex);
+					errors.add(new HomedThrowable(CoreManifest.ID, new WTException(ex, "Unable to add built-in '{}' role", PECACCOUNT_ROLEID)));
+				}
+			}
+			
+			// Prepare built-in groups
+			LOGGER.debug("[{}] Checking built-in groups...", domainId);
+			Map<String, OGroup> groups = grpDao.selectByDomainIn(con, domainId, BUILT_IN_GROUPS);
+			/*
+			if (!groups.containsKey(GROUPID_ADMINS)) {
+				try {
+					GroupInsertResult result = doGroupInsert(con, domainId, GROUPID_ADMINS, "Admins");
+					subjectSidCache2.add(result.ogroup.getProfileId(), result.ogroup.getGroupSid(), GenericSubject.Type.GROUP);
+					cacheUpdated = true;
+
+				} catch (Exception ex) {
+					LOGGER.error("[{}] Unable to add built-in '{}' group", domainId, GROUPID_ADMINS, ex);
+					errors.add(new HomedThrowable(CoreManifest.ID, new WTException(ex, "Unable to add built-in '{}' group", GROUPID_ADMINS)));
+				}	
+			}
+			*/
+			if (!groups.containsKey(GROUPID_USERS)) {
+				try {
+					GroupInsertResult result = doGroupInsert(con, domainId, GROUPID_USERS, "Users");
+					subjectSidCache.add(result.ogroup.getProfileId(), result.ogroup.getGroupSid(), GenericSubject.Type.GROUP);
+					cacheUpdated = true;
+
+				} catch (Exception ex) {
+					LOGGER.error("[{}] Unable to add built-in '{}' group", domainId, GROUPID_USERS, ex);
+					errors.add(new HomedThrowable(CoreManifest.ID, new WTException(ex, "Unable to add built-in '{}' group", GROUPID_USERS)));
+				}
+			}
+			if (!groups.containsKey(GROUPID_PEC_ACCOUNTS)) {
+				try {
+					GroupInsertResult result = doGroupInsert(con, domainId, GROUPID_PEC_ACCOUNTS, "Groups all PEC Accounts");
+					subjectSidCache.add(result.ogroup.getProfileId(), result.ogroup.getGroupSid(), GenericSubject.Type.GROUP);
+					cacheUpdated = true;
+
+				} catch (Exception ex) {
+					LOGGER.error("[{}] Unable to add built-in '{}' group", domainId, GROUPID_PEC_ACCOUNTS, ex);
+					errors.add(new HomedThrowable(CoreManifest.ID, new WTException(ex, "Unable to add built-in '{}' group", GROUPID_PEC_ACCOUNTS)));
+				}
+			}
+			
+			// Prepare built-in (domain) admin user
+			LOGGER.debug("[{}] Checking built-in domain admin...", domainId);
+			if (!usrDao.existByDomainUser(con, domainId, DOMAINADMIN_USERID)) {
+				try {
+					UserBase user = new UserBase();
+					user.setEnabled(true);
+					user.setFirstName("Admin");
+					user.setLastName(domainId);
+					user.setDisplayName(user.getFirstName() + " (" + domainId + ")");
+					//user.setAssignedGroups(LangUtils.asSet(new UserProfileId(domainId, GROUPID_USERS).toString()));
+					//user.getAssignedGroups().add(new UserProfileId(domainId, GROUPID_USERS).toString());
+					user.setAssignedRoles(LangUtils.asSet(new UserProfileId(domainId, DOMAINADMIN_ROLEID).toString()));
+					BitFlags<UserUpdateOption> options = BitFlags.with(UserUpdateOption.ROLE_ASSOCIATIONS);
+					domainAdminResult = addUser(domainId, DOMAINADMIN_USERID, user, true, true, null, options, null);
+					//domainAdminResult = addUser(domainId, DOMAINADMIN_USERID, user, true, true, null, UserUpdateOption.internalDefaultFlags().unset(UserUpdateOption.SUBJECTS_AS_SID));
+					cacheUpdated = true;
+
+				} catch (Exception ex) {
+					LOGGER.error("[{}] Unable to add built-in '{}' user", domainId, DOMAINADMIN_USERID, ex);
+					errors.add(new HomedThrowable(CoreManifest.ID, new WTException(ex, "Unable to add built-in '{}' user", DOMAINADMIN_USERID)));
+				}
+			}
+			
+		} catch (Exception ex) {
+			errors.add(new HomedThrowable(CoreManifest.ID, ex));
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+		
+		return new DomainInitResult(cacheUpdated, domainAdminResult, errors);
+	}
+	
+	private void doDomainInitHomeFolder(final String domainId) throws SecurityException {
+		synchronized(foldersLock) {
+			// Main folder (/domains/{domainId})
+			File domainDir = new File(wta.getFileSystem().getHomePath(domainId));
+			if (!domainDir.exists()) domainDir.mkdir();
+			
+			// Internal folders...
+			File tempDir = new File(wta.getFileSystem().getTempPath(domainId));
+			if (!tempDir.exists()) tempDir.mkdir();
+			
+			File imagesDir = new File(wta.getFileSystem().getImagesPath(domainId));
+			if (!imagesDir.exists()) imagesDir.mkdir();
+			
+			for (String sid : wta.getServiceManager().listRegisteredServices()) {
+				File svcDir = new File(wta.getFileSystem().getServiceHomePath(domainId, sid));
+				if (!svcDir.exists()) svcDir.mkdir();
+			}
+		}	
+	}
+	
+	private void doDomainDeleteHomeFolder(final String domainId) {
+		synchronized(foldersLock) {
+			// Deletes logically domain folder by simply historycizing it...
+			// Main folder (/domains/{domainId})
+			File domainDir = new File(wta.getFileSystem().getHomePath(domainId));
+			if (domainDir.exists()) {
+				String nowSuffix = DateTimeUtils.print(DateTimeUtils.createFormatter("yyyyMMddHHmmssSSS", DateTimeZone.UTC), DateTimeUtils.now(true));
+				String deletedDomainDirString = wta.getFileSystem().getHomePath(domainId + "." + nowSuffix);
+				File deletedDomainDir = new File(deletedDomainDirString);
+				if (!deletedDomainDir.exists()) {
+					domainDir.renameTo(deletedDomainDir);
+					LOGGER.warn("Domain folder deletion can be a lengthy operation. Please delete '{}' folder manually.", deletedDomainDirString);
+				}
+			}
+		}
+	}
+	
+	private static enum UserProcessOpt implements BitFlagsEnum<UserProcessOpt> {
+		SUBJECTS_AS_SID(1 << 0), PROCESS_GROUPASSOCIATIONS(1 << 1), PROCESS_ROLEASSOCIATIONS(1 << 2), PROCESS_PERMISSIONS(1 << 3), PROCESS_SERVICEPERMISSIONS(1 << 4);
+		
+		private int mask = 0;
+		private UserProcessOpt(int mask) { this.mask = mask; }
+		@Override
+		public long mask() { return this.mask; }
+		
+		public static BitFlags<UserProcessOpt> fromUserGetOptions(BitFlags<UserGetOption> options) {
+			// Flag values are compatible for now, simpy instantiate new object...
+			return BitFlags.newFrom(UserProcessOpt.class, options);
+		}
+		
+		public static BitFlags<UserProcessOpt> fromUserUpdateOptions(BitFlags<UserUpdateOption> options) {
+			// Flag values are compatible for now, simpy instantiate new object...
+			return BitFlags.newFrom(UserProcessOpt.class, options);
+		}
+	}
+	
+	private User doUserGet(final Connection con, final String domainId, final String userId, final BitFlags<UserProcessOpt> options) throws WTException {
+		UserDAO useDao = UserDAO.getInstance();
+		UserAssociationDAO uasDao = UserAssociationDAO.getInstance();
+		RoleAssociationDAO rasDao = RoleAssociationDAO.getInstance();
+		RolePermissionDAO prmDao = RolePermissionDAO.getInstance();
+		final boolean subjectsAsSID = options.has(UserProcessOpt.SUBJECTS_AS_SID);
+		
+		VUser vuser = useDao.selectByProfile(con, domainId, userId);
+		if (vuser == null) return null;
+		
+		Set<String> assignedGroups = null;
+		if (options.has(UserProcessOpt.PROCESS_GROUPASSOCIATIONS)) {
+			assignedGroups = uasDao.viewGroupSidsByUser(con, vuser.getUserSid());
+			if (!subjectsAsSID) {
+				assignedGroups = assignedGroups.stream()
+					.map((userSid) -> subjectSidCache.getPid(userSid, GenericSubject.Type.GROUP))
+					.filter((userPid) -> userPid != null)
+					.map((userPid) -> userPid.toString())
+					.collect(Collectors.toSet());
+			}
+		}
+		Set<String> assignedRoles = null;
+		if (options.has(UserProcessOpt.PROCESS_ROLEASSOCIATIONS)) {
+			assignedRoles = rasDao.viewRoleSidsBySubject(con, vuser.getUserSid());
+			if (!subjectsAsSID) {
+				assignedRoles = assignedRoles.stream()
+					.map((roleSid) -> subjectSidCache.getPid(roleSid, GenericSubject.Type.ROLE))
+					.filter((rolePid) -> rolePid != null)
+					.map((rolePid) -> rolePid.toString())
+					.collect(Collectors.toSet());
+			}
+		}
+		
+		Set<PermissionString> permissions = null;
+		if (options.has(UserProcessOpt.PROCESS_PERMISSIONS)) {
+			Map<Integer, ORolePermission> map = prmDao.viewSubjectEntriesBySubjectCondition(con, vuser.getUserSid(), RolePermissionDAO.createServicePermissionAndKeysExcludeCondition(buildFolderShareKeysALL("%")));
+			permissions = map.values().stream()
+				.map((orperm) -> toPermissionString(orperm))
+				.collect(Collectors.toSet());
+		}
+		
+		Set<String> allowedServiceIds = null;
+		if (options.has(UserProcessOpt.PROCESS_SERVICEPERMISSIONS)) {
+			Map<Integer, ORolePermission> map = prmDao.viewSubjectEntriesBySubjectCondition(con, vuser.getUserSid(), RolePermissionDAO.createServicePermissionOnlyCondition());
+			allowedServiceIds = map.values().stream()
+				.map((orperm) -> orperm.getInstance())
+				.collect(Collectors.toSet());
+		}
+		
+		User user = AppManagerUtils.fillUser(new User(), vuser);
+		user.setAssignedGroups(assignedGroups);
+		user.setAssignedRoles(assignedRoles);
+		user.setPermissions(permissions);
+		user.setAllowedServiceIds(allowedServiceIds);
+		return user;
+	}
+	
+	private UserInsertResult doUserInsert(final Connection con, final String domainId, final String userId, final String userSid, final UserBase user, final BitFlags<UserProcessOpt> options, final String defaultGroup) throws WTException {
+		UserDAO useDao = UserDAO.getInstance();
+		UserInfoDAO uinDao = UserInfoDAO.getInstance();
+		UserAssociationDAO uasDao = UserAssociationDAO.getInstance();
+		RoleAssociationDAO rasDao = RoleAssociationDAO.getInstance();
+		RolePermissionDAO permsDao = RolePermissionDAO.getInstance();
+		final String authDomain = domainIdToDomainInternetName(domainId);
+		final boolean subjectsAsSID = options.has(UserProcessOpt.SUBJECTS_AS_SID);
+		
+		OUserInfo ouin = AppManagerUtils.fillOUserInfo(new OUserInfo(), user);
+		ouin.setDomainId(domainId);
+		ouin.setUserId(userId);
+		ouin.sanitize();
+		OUser.fillDefaultsForInsert(ouin, userId, domainIdToDomainInternetName(authDomain));
+		
+		// Make sure set email is valid
+		if (InternetAddressUtils.toInternetAddress(ouin.getEmail()) == null) throw new WTException("Invalid personal email address: '{}'", ouin.getEmail());
+		
+		OUser ouse = AppManagerUtils.fillOUser(new OUser(), user);
+		ouse.setDomainId(domainId);
+		ouse.setUserId(userId);
+		ouse.setUserSid(userSid);
+		ouse.sanitize();
+		OUser.fillDefaultsForInsert(ouse, ouin.getFirstName(), ouin.getLastName());
+		
+		uinDao.insert(con, ouin);
+		useDao.insert(con, ouse);
+		
+		if (options.has(UserProcessOpt.PROCESS_GROUPASSOCIATIONS) || !StringUtils.isBlank(defaultGroup)) {
+			if (!StringUtils.isBlank(defaultGroup)) {
+				if (user.getAssignedGroups() != null) {
+					user.getAssignedGroups().add(defaultGroup);
+				} else {
+					user.setAssignedGroups(LangUtils.asSet(defaultGroup));
+				}
+			}
+			Check.notNull(user.getAssignedGroups(), "assignedGroups");
+			Set<String> assigned = parseSubjectsAsSids(user.getAssignedGroups(), !subjectsAsSID, domainId, GenericSubject.Type.GROUP);
+			uasDao.batchInsert(con, ouse.getUserSid(), assigned);
+		}
+		if (options.has(UserProcessOpt.PROCESS_ROLEASSOCIATIONS) && (user.getAssignedRoles() != null)) {
+			Check.notNull(user.getAssignedRoles(), "assignedRoles");
+			Set<String> assigned = parseSubjectsAsSids(user.getAssignedRoles(), !subjectsAsSID, domainId, GenericSubject.Type.ROLE);
+			rasDao.batchInsert(con, ouse.getUserSid(), assigned);
+		}
+		if (options.has(UserProcessOpt.PROCESS_PERMISSIONS) && (user.getPermissions() != null)) {
+			Check.notNull(user.getPermissions(), "permissions");
+			int[] ret1 = permsDao.batchInsertOfSubject(con, ouse.getUserSid(), toPermissionBatchInsertEntries(user.getPermissions()));
+		}
+		if (options.has(UserProcessOpt.PROCESS_SERVICEPERMISSIONS) && (user.getAllowedServiceIds() != null)) {
+			Check.notNull(user.getAllowedServiceIds(), "allowedServiceIds");
+			int[] ret2 = permsDao.batchInsertOfSubject(con, ouse.getUserSid(), toServicePermissionBatchInsertEntries(user.getAllowedServiceIds()));
+		}
+		
+		return new UserInsertResult(ouse, ouin);
+	}
+	
+	private void doUserUpdate(final Connection con, final String domainId, final String userId, final UserBase user, final BitFlags<UserProcessOpt> options) throws WTException {
+		UserDAO useDao = UserDAO.getInstance();
+		UserInfoDAO uinDao = UserInfoDAO.getInstance();
+		UserAssociationDAO uasDao = UserAssociationDAO.getInstance();
+		RoleAssociationDAO rasDao = RoleAssociationDAO.getInstance();
+		RolePermissionDAO prmDao = RolePermissionDAO.getInstance();
+		UserProfileId userPid = new UserProfileId(domainId, userId);
+		final boolean subjectsAsSID = options.has(UserProcessOpt.SUBJECTS_AS_SID);
+		String userSid = lookupSubjectSid(userPid, GenericSubject.Type.USER);
+		
+		OUserInfo ouin = AppManagerUtils.fillOUserInfo(new OUserInfo(), user);
+		ouin.setDomainId(domainId);
+		ouin.setUserId(userId);
+		
+		OUser ouse = AppManagerUtils.fillOUser(new OUser(), user);
+		ouse.setDomainId(domainId);
+		ouse.setUserId(userId);
+		
+		boolean ret = uinDao.updateFirstLastName(con, ouin) == 1;
+		if (ret) ret = useDao.updateEnabledDisplayName(con, ouse) == 1;
+		if (!ret) throw new WTNotFoundException("User not found [{}]", userPid);
+		
+		if (options.has(UserProcessOpt.PROCESS_GROUPASSOCIATIONS)) {
+			Check.notNull(user.getAssignedGroups(), "assignedGroups");
+			Set<String> assigned = parseSubjectsAsSids(user.getAssignedGroups(), !subjectsAsSID, domainId, GenericSubject.Type.GROUP);
+			LangUtils.CollectionChangeSet<String> changeSet = LangUtils.getCollectionChanges(uasDao.viewGroupSidsByUser(con, userSid), assigned);
+			uasDao.batchInsert(con, userSid, changeSet.inserted);
+			uasDao.deleteByUserGroups(con, userSid, changeSet.deleted);
+		}
+		if (options.has(UserProcessOpt.PROCESS_ROLEASSOCIATIONS)) {
+			Check.notNull(user.getAssignedRoles(), "assignedRoles");
+			Set<String> assigned = parseSubjectsAsSids(user.getAssignedRoles(), !subjectsAsSID, domainId, GenericSubject.Type.ROLE);
+			LangUtils.CollectionChangeSet<String> changeSet = LangUtils.getCollectionChanges(rasDao.viewRoleSidsBySubject(con, userSid), assigned);
+			rasDao.batchInsert(con, userSid, changeSet.inserted);
+			rasDao.deleteBySubjectRolesSids(con, userSid, changeSet.deleted);
+		}
+		if (options.has(UserProcessOpt.PROCESS_PERMISSIONS)) {
+			Check.notNull(user.getPermissions(), "permissions");
+			Map<Integer, RolePermissionDAO.SubjectEntry> map = prmDao.viewSubjectEntriesBySubjectCondition(con, userSid, RolePermissionDAO.createServicePermissionAndKeysExcludeCondition(buildFolderShareKeysALL("%"))).entrySet().stream()
+				.collect(Collectors.toMap(
+					Map.Entry::getKey,
+					(entry) -> toSubjectEntry(entry.getValue())
+				));
+			//Map<Integer, RolePermissionDAO.SubjectEntry> map = prmDao.viewSubjectEntriesBySubjectCondition(con, userSid, RolePermissionDAO.createServicePermissionExcludeCondition());
+			LangUtils.CollectionChangeSet<RolePermissionDAO.SubjectEntry> changeSet = LangUtils.getCollectionChanges(map.values(), toPermissionBatchInsertEntries(user.getPermissions()));
+			prmDao.batchInsertOfSubject(con, userSid, changeSet.inserted);
+			if (!changeSet.deleted.isEmpty()) {
+				Map<RolePermissionDAO.SubjectEntry, Integer> inversedMap = map.entrySet().stream()
+					.collect(Collectors.toMap(Entry::getValue, Entry::getKey));
+				List<Integer> ids = changeSet.deleted.stream()
+					.map((subjectEntry) -> inversedMap.get(subjectEntry))
+					.filter((id) -> id != null)
+					.collect(Collectors.toList());
+				prmDao.deleteByIds(con, ids);
+			}
+			
+		}
+		if (options.has(UserProcessOpt.PROCESS_SERVICEPERMISSIONS)) {
+			Check.notNull(user.getAllowedServiceIds(), "allowedServiceIds");
+			Map<Integer, RolePermissionDAO.SubjectEntry> map = prmDao.viewSubjectEntriesBySubjectCondition(con, userSid, RolePermissionDAO.createServicePermissionOnlyCondition()).entrySet().stream()
+				.collect(Collectors.toMap(
+					Map.Entry::getKey,
+					(entry) -> toSubjectEntry(entry.getValue())
+				));
+			//Map<Integer, RolePermissionDAO.SubjectEntry> map = prmDao.viewSubjectEntriesBySubjectCondition(con, userSid, RolePermissionDAO.createServicePermissionOnlyCondition());
+			LangUtils.CollectionChangeSet<RolePermissionDAO.SubjectEntry> changeSet = LangUtils.getCollectionChanges(map.values(), toServicePermissionBatchInsertEntries(user.getAllowedServiceIds()));
+			prmDao.batchInsertOfSubject(con, userSid, changeSet.inserted);
+			if (!changeSet.deleted.isEmpty()) {
+				Map<RolePermissionDAO.SubjectEntry, Integer> inversedMap = map.entrySet().stream()
+					.collect(Collectors.toMap(Entry::getValue, Entry::getKey));
+				List<Integer> ids = changeSet.deleted.stream()
+					.map((subjectEntry) -> inversedMap.get(subjectEntry))
+					.filter((id) -> id != null)
+					.collect(Collectors.toList());
+				prmDao.deleteByIds(con, ids);
+			}
+		}
+	}
+	
+	private boolean doUserDelete(final Connection con, final String domainId, final String userId) throws WTNotFoundException {
+		UserDAO useDao = UserDAO.getInstance();
+		UserInfoDAO uinDao = UserInfoDAO.getInstance();
+		UserAssociationDAO uasDao = UserAssociationDAO.getInstance();
+		RoleAssociationDAO rasDao = RoleAssociationDAO.getInstance();
+		RolePermissionDAO prmDao = RolePermissionDAO.getInstance();
+		
+		UserProfileId userPid = new UserProfileId(domainId, userId);
+		String userSid = subjectSidCache.getSid(userPid, GenericSubject.Type.USER);
+		if (userSid == null) throw new WTNotFoundException("User UID not found [{}@{}]", userId, domainId);
+		
+		LOGGER.debug("[{}] Deleting permissions of '{}'...", userId, userSid);
+		prmDao.deleteBySubject(con, userSid);
+		LOGGER.debug("[{}] Deleting groups-associations of '{}'...", userId, userSid);
+		uasDao.deleteByUser(con, userSid);
+		LOGGER.debug("[{}] Deleting roles-associations of '{}'...", userId, userSid);
+		rasDao.deleteBySubject(con, userSid);
+		LOGGER.debug("[{}] Deleting domain user '{}'...", userId, userPid.toString());
+		uinDao.deleteByDomainUser(con, domainId, userId);
+		return useDao.deleteByDomainUser(con, domainId, userId) == 1;
+	}
+	
+	private static class UserInsertResult {
+		public final OUser ouser;
+		public final OUserInfo ouserinfo;
+		
+		public UserInsertResult(OUser ouser, OUserInfo ouserinfo) {
+			this.ouser = ouser;
+			this.ouserinfo = ouserinfo;
+		}
+	}
+	
+	private static enum GroupProcessOpt implements BitFlagsEnum<GroupProcessOpt> {
+		SUBJECTS_AS_SID(1 << 0), PROCESS_USERASSOCIATIONS(1 << 1), PROCESS_ROLEASSOCIATIONS(1 << 2), PROCESS_PERMISSIONS(1 << 3), PROCESS_SERVICEPERMISSIONS(1 << 4);
+		
+		private int mask = 0;
+		private GroupProcessOpt(int mask) { this.mask = mask; }
+		@Override
+		public long mask() { return this.mask; }
+		
+		public static BitFlags<GroupProcessOpt> fromGroupGetOptions(BitFlags<GroupGetOption> options) {
+			// Flag values are compatible for now, simpy instantiate new object...
+			return BitFlags.newFrom(GroupProcessOpt.class, options);
+		}
+		
+		public static BitFlags<GroupProcessOpt> fromGroupUpdateOptions(BitFlags<GroupUpdateOption> options) {
+			// Flag values are compatible for now, simpy instantiate new object...
+			return BitFlags.newFrom(GroupProcessOpt.class, options);
+		}
+	}
+	
+	private Group doGroupGet(final Connection con, final String domainId, final String groupId, final BitFlags<GroupProcessOpt> options) throws WTException {
+		GroupDAO grpDao = GroupDAO.getInstance();
+		UserAssociationDAO uasDao = UserAssociationDAO.getInstance();
+		RoleAssociationDAO rasDao = RoleAssociationDAO.getInstance();
+		RolePermissionDAO prmDao = RolePermissionDAO.getInstance();
+		final boolean subjectsAsSID = options.has(GroupProcessOpt.SUBJECTS_AS_SID);
+		
+		OGroup ogroup = grpDao.selectByProfile(con, domainId, groupId);
+		if (ogroup == null) return null;
+		
+		Set<String> assignedUsers = null;
+		if (options.has(GroupProcessOpt.PROCESS_USERASSOCIATIONS)) {
+			assignedUsers = uasDao.viewUserSidsByGroup(con, ogroup.getGroupSid());
+			if (!subjectsAsSID) {
+				assignedUsers = assignedUsers.stream()
+					.map((userSid) -> subjectSidCache.getPid(userSid, GenericSubject.Type.USER))
+					.filter((userPid) -> userPid != null)
+					.map((userPid) -> userPid.toString())
+					.collect(Collectors.toSet());
+			}
+		}
+		Set<String> assignedRoles = null;
+		if (options.has(GroupProcessOpt.PROCESS_ROLEASSOCIATIONS)) {
+			assignedRoles = rasDao.viewRoleSidsBySubject(con, ogroup.getGroupSid());
+			if (!subjectsAsSID) {
+				assignedRoles = assignedRoles.stream()
+					.map((roleSid) -> subjectSidCache.getPid(roleSid, GenericSubject.Type.ROLE))
+					.filter((rolePid) -> rolePid != null)
+					.map((rolePid) -> rolePid.toString())
+					.collect(Collectors.toSet());
+			}
+		}
+		
+		Set<PermissionString> permissions = null;
+		if (options.has(GroupProcessOpt.PROCESS_PERMISSIONS)) {
+			Map<Integer, ORolePermission> map = prmDao.viewSubjectEntriesBySubjectCondition(con, ogroup.getGroupSid(), RolePermissionDAO.createServicePermissionAndKeysExcludeCondition(buildFolderShareKeysALL("%")));
+			permissions = map.values().stream()
+				.map((orperm) -> toPermissionString(orperm))
+				.collect(Collectors.toSet());
+		}
+		
+		Set<String> allowedServiceIds = null;
+		if (options.has(GroupProcessOpt.PROCESS_SERVICEPERMISSIONS)) {
+			Map<Integer, ORolePermission> map = prmDao.viewSubjectEntriesBySubjectCondition(con, ogroup.getGroupSid(), RolePermissionDAO.createServicePermissionOnlyCondition());
+			allowedServiceIds = map.values().stream()
+				.map((orperm) -> orperm.getInstance())
+				.collect(Collectors.toSet());
+		}
+		
+		Group group = AppManagerUtils.fillGroup(new Group(BUILT_IN_GROUPS.contains(groupId)), ogroup);
+		group.setAssignedUsers(assignedUsers);
+		group.setAssignedRoles(assignedRoles);
+		group.setPermissions(permissions);
+		group.setAllowedServiceIds(allowedServiceIds);
+		return group;
+	}
+	
+	private GroupInsertResult doGroupInsert(final Connection con, final String domainId, final String groupId, final String description) throws WTException {
+		GroupBase group = new GroupBase();
+		group.setDescription(description);
+		return doGroupInsert(con, domainId, groupId, null, group, BitFlags.noneOf(GroupProcessOpt.class));
+	}
+	
+	private GroupInsertResult doGroupInsert(final Connection con, final String domainId, final String groupId, final String groupSid, final GroupBase group, final BitFlags<GroupProcessOpt> options) throws WTException {
+		GroupDAO grpDao = GroupDAO.getInstance();
+		UserAssociationDAO uasDao = UserAssociationDAO.getInstance();
+		RoleAssociationDAO rasDao = RoleAssociationDAO.getInstance();
+		RolePermissionDAO permsDao = RolePermissionDAO.getInstance();
+		final boolean subjectsAsSID = options.has(GroupProcessOpt.SUBJECTS_AS_SID);
+		
+		OGroup ogroup = AppManagerUtils.fillOGroup(new OGroup(), group);
+		ogroup.setDomainId(domainId);
+		ogroup.setUserId(groupId);
+		ogroup.setGroupSid(groupSid);
+		OGroup.fillDefaultsForInsert(ogroup);
+		OGroup.validate(ogroup);
+		
+		grpDao.insert(con, ogroup);
+		if (options.has(GroupProcessOpt.PROCESS_USERASSOCIATIONS)) {
+			Check.notNull(group.getAssignedUsers(), "assignedUsers");
+			Set<String> assigned = parseSubjectsAsSids(group.getAssignedUsers(), !subjectsAsSID, domainId, GenericSubject.Type.USER);
+			uasDao.batchInsert(con, assigned, ogroup.getGroupSid());
+		}
+		if (options.has(GroupProcessOpt.PROCESS_ROLEASSOCIATIONS)) {
+			Check.notNull(group.getAssignedRoles(), "assignedRoles");
+			Set<String> assigned = parseSubjectsAsSids(group.getAssignedRoles(), !subjectsAsSID, domainId, GenericSubject.Type.ROLE);
+			rasDao.batchInsert(con, ogroup.getGroupSid(), assigned);
+		}
+		if (options.has(GroupProcessOpt.PROCESS_PERMISSIONS)) {
+			Check.notNull(group.getPermissions(), "permissions");
+			int[] ret1 = permsDao.batchInsertOfSubject(con, ogroup.getGroupSid(), toPermissionBatchInsertEntries(group.getPermissions()));
+		}
+		if (options.has(GroupProcessOpt.PROCESS_SERVICEPERMISSIONS)) {
+			Check.notNull(group.getAllowedServiceIds(), "allowedServiceIds");
+			int[] ret2 = permsDao.batchInsertOfSubject(con, ogroup.getGroupSid(), toServicePermissionBatchInsertEntries(group.getAllowedServiceIds()));
+		}
+		
+		return new GroupInsertResult(ogroup);
+	}
+	
+	private void doGroupUpdate(final Connection con, final String domainId, final String groupId, final GroupBase group, final BitFlags<GroupProcessOpt> options) throws WTException {
+		GroupDAO grpDao = GroupDAO.getInstance();
+		UserAssociationDAO uasDao = UserAssociationDAO.getInstance();
+		RoleAssociationDAO rasDao = RoleAssociationDAO.getInstance();
+		RolePermissionDAO prmDao = RolePermissionDAO.getInstance();
+		UserProfileId groupPid = new UserProfileId(domainId, groupId);
+		
+		final boolean subjectsAsSID = options.has(GroupProcessOpt.SUBJECTS_AS_SID);
+		String groupSid = lookupSubjectSid(groupPid, GenericSubject.Type.GROUP);
+		
+		boolean ret = grpDao.updateDescriptionByProfile(con, domainId, groupId, group.getDescription()) == 1;
+		if (!ret) throw new WTNotFoundException("Group not found [{}]", groupPid);
+		
+		if (options.has(GroupProcessOpt.PROCESS_USERASSOCIATIONS)) {
+			Check.notNull(group.getAssignedUsers(), "assignedUsers");
+			Set<String> assigned = parseSubjectsAsSids(group.getAssignedUsers(), !subjectsAsSID, domainId, GenericSubject.Type.USER);
+			LangUtils.CollectionChangeSet<String> changeSet = LangUtils.getCollectionChanges(uasDao.viewUserSidsByGroup(con, groupSid), assigned);
+			uasDao.batchInsert(con, changeSet.inserted, groupSid);
+			uasDao.deleteByGroupUsers(con, groupSid, changeSet.deleted);
+		}
+		if (options.has(GroupProcessOpt.PROCESS_ROLEASSOCIATIONS)) {
+			Check.notNull(group.getAssignedRoles(), "assignedRoles");
+			Set<String> assigned = parseSubjectsAsSids(group.getAssignedRoles(), !subjectsAsSID, domainId, GenericSubject.Type.ROLE);
+			LangUtils.CollectionChangeSet<String> changeSet = LangUtils.getCollectionChanges(rasDao.viewRoleSidsBySubject(con, groupSid), assigned);
+			rasDao.batchInsert(con, groupSid, changeSet.inserted);
+			rasDao.deleteBySubjectRolesSids(con, groupSid, changeSet.deleted);
+		}
+		if (options.has(GroupProcessOpt.PROCESS_PERMISSIONS)) {
+			Check.notNull(group.getPermissions(), "permissions");
+			Map<Integer, RolePermissionDAO.SubjectEntry> map = prmDao.viewSubjectEntriesBySubjectCondition(con, groupSid, RolePermissionDAO.createServicePermissionAndKeysExcludeCondition(buildFolderShareKeysALL("%"))).entrySet().stream()
+				.collect(Collectors.toMap(
+					Map.Entry::getKey,
+					(entry) -> toSubjectEntry(entry.getValue())
+				));
+			LangUtils.CollectionChangeSet<RolePermissionDAO.SubjectEntry> changeSet = LangUtils.getCollectionChanges(map.values(), toPermissionBatchInsertEntries(group.getPermissions()));
+			prmDao.batchInsertOfSubject(con, groupSid, changeSet.inserted);
+			if (!changeSet.deleted.isEmpty()) {
+				Map<RolePermissionDAO.SubjectEntry, Integer> inversedMap = map.entrySet().stream()
+					.collect(Collectors.toMap(Entry::getValue, Entry::getKey));
+				List<Integer> ids = changeSet.deleted.stream()
+					.map((subjectEntry) -> inversedMap.get(subjectEntry))
+					.filter((id) -> id != null)
+					.collect(Collectors.toList());
+				prmDao.deleteByIds(con, ids);
+			}
+			
+		}
+		if (options.has(GroupProcessOpt.PROCESS_SERVICEPERMISSIONS)) {
+			Check.notNull(group.getAllowedServiceIds(), "allowedServiceIds");
+			Map<Integer, RolePermissionDAO.SubjectEntry> map = prmDao.viewSubjectEntriesBySubjectCondition(con, groupSid, RolePermissionDAO.createServicePermissionOnlyCondition()).entrySet().stream()
+				.collect(Collectors.toMap(
+					Map.Entry::getKey,
+					(entry) -> toSubjectEntry(entry.getValue())
+				));
+			LangUtils.CollectionChangeSet<RolePermissionDAO.SubjectEntry> changeSet = LangUtils.getCollectionChanges(map.values(), toServicePermissionBatchInsertEntries(group.getAllowedServiceIds()));
+			prmDao.batchInsertOfSubject(con, groupSid, changeSet.inserted);
+			if (!changeSet.deleted.isEmpty()) {
+				Map<RolePermissionDAO.SubjectEntry, Integer> inversedMap = map.entrySet().stream()
+					.collect(Collectors.toMap(Entry::getValue, Entry::getKey));
+				List<Integer> ids = changeSet.deleted.stream()
+					.map((subjectEntry) -> inversedMap.get(subjectEntry))
+					.filter((id) -> id != null)
+					.collect(Collectors.toList());
+				prmDao.deleteByIds(con, ids);
+			}
+		}
+	}
+	
+	private boolean doGroupDelete(final Connection con, final String domainId, final String groupId) throws WTNotFoundException {
+		GroupDAO grpDao = GroupDAO.getInstance();
+		UserAssociationDAO uasDao = UserAssociationDAO.getInstance();
+		RoleAssociationDAO rasDao = RoleAssociationDAO.getInstance();
+		RolePermissionDAO prmDao = RolePermissionDAO.getInstance();
+		
+		UserProfileId groupPid = new UserProfileId(domainId, groupId);
+		String groupSid = subjectSidCache.getSid(groupPid, GenericSubject.Type.GROUP);
+		if (groupSid == null) throw new WTNotFoundException("Group UID not found [{}]", groupPid);
+		
+		LOGGER.debug("[{}] Deleting permissions of '{}'...", groupPid, groupSid);
+		prmDao.deleteBySubject(con, groupSid);
+		LOGGER.debug("[{}] Deleting groups-associations of '{}'...", groupPid, groupSid);
+		uasDao.deleteByGroup(con, groupSid);
+		LOGGER.debug("[{}] Deleting roles-associations of '{}'...", groupPid, groupSid);
+		rasDao.deleteBySubject(con, groupSid);
+		LOGGER.debug("[{}] Deleting domain user...", groupPid);
+		return grpDao.deleteByProfile(con, domainId, groupId) == 1;
+	}
+	
+	private static class GroupInsertResult {
+		public final OGroup ogroup;
+		
+		public GroupInsertResult(OGroup ogroup) {
+			this.ogroup = ogroup;
+		}
+	}
+	
+	private static enum RoleProcessOpt implements BitFlagsEnum<RoleProcessOpt> {
+		SUBJECTS_AS_SID(1 << 0), PROCESS_SUBJECTASSOCIATIONS(1 << 1), PROCESS_PERMISSIONS(1 << 3), PROCESS_SERVICEPERMISSIONS(1 << 4);//, SUBJECTS_AS_PIDS(1 << 16);
+		
+		private int mask = 0;
+		private RoleProcessOpt(int mask) { this.mask = mask; }
+		@Override
+		public long mask() { return this.mask; }
+		
+		public static BitFlags<RoleProcessOpt> fromRoleGetOptions(BitFlags<RoleGetOption> options) {
+			// Flag values are compatible for now, simpy instantiate new object...
+			return BitFlags.newFrom(RoleProcessOpt.class, options);
+		}
+		
+		public static BitFlags<RoleProcessOpt> fromRoleUpdateOptions(BitFlags<RoleUpdateOption> options) {
+			// Flag values are compatible for now, simpy instantiate new object...
+			return BitFlags.newFrom(RoleProcessOpt.class, options);
+		}
+	}
+	
+	private Role doRoleGet(final Connection con, final String domainId, final String roleId, final BitFlags<RoleProcessOpt> options) throws WTException {
+		RoleDAO rolDao = RoleDAO.getInstance();
+		RoleAssociationDAO rasDao = RoleAssociationDAO.getInstance();
+		RolePermissionDAO prmDao = RolePermissionDAO.getInstance();
+		final boolean subjectsAsSID = options.has(RoleProcessOpt.SUBJECTS_AS_SID);
+		ORole orole = rolDao.selectByProfile(con, domainId, roleId);
+		if (orole == null) return null;
+		
+		Set<String> assignedSubjects = null;
+		if (options.has(RoleProcessOpt.PROCESS_SUBJECTASSOCIATIONS)) {
+			assignedSubjects = rasDao.viewRoleSidsBySubject(con, orole.getRoleSid());
+			if (!subjectsAsSID) {
+				assignedSubjects = assignedSubjects.stream()
+					.map((roleSid) -> subjectSidCache.getPid(roleSid, GenericSubject.Type.USER, GenericSubject.Type.GROUP))
+					.filter((rolePid) -> rolePid != null)
+					.map((rolePid) -> rolePid.toString())
+					.collect(Collectors.toSet());
+			}
+		}
+		
+		Set<PermissionString> permissions = null;
+		if (options.has(RoleProcessOpt.PROCESS_PERMISSIONS)) {
+			Map<Integer, ORolePermission> map = prmDao.viewSubjectEntriesBySubjectCondition(con, orole.getRoleSid(), RolePermissionDAO.createServicePermissionAndKeysExcludeCondition(buildFolderShareKeysALL("%")));
+			permissions = map.values().stream()
+				.map((orperm) -> toPermissionString(orperm))
+				.collect(Collectors.toSet());
+		}
+		
+		Set<String> allowedServiceIds = null;
+		if (options.has(RoleProcessOpt.PROCESS_SERVICEPERMISSIONS)) {
+			Map<Integer, ORolePermission> map = prmDao.viewSubjectEntriesBySubjectCondition(con, orole.getRoleSid(), RolePermissionDAO.createServicePermissionOnlyCondition());
+			allowedServiceIds = map.values().stream()
+				.map((orperm) -> orperm.getInstance())
+				.collect(Collectors.toSet());
+		}
+		
+		Role role = AppManagerUtils.fillRole(new Role(false), orole);
+		role.setAssignedSubjects(assignedSubjects);
+		role.setPermissions(permissions);
+		role.setAllowedServiceIds(allowedServiceIds);
+		return role;
+	}
+	
+	private RoleInsertResult doRoleInsert(final Connection con, final String domainId, final String roleId, final String roleSid, final RoleBase role, final BitFlags<RoleProcessOpt> options) throws WTException {
+		RoleDAO rolDao = RoleDAO.getInstance();
+		RoleAssociationDAO rasDao = RoleAssociationDAO.getInstance();
+		RolePermissionDAO permsDao = RolePermissionDAO.getInstance();
+		final boolean subjectsAsSID = options.has(RoleProcessOpt.SUBJECTS_AS_SID);
+		
+		ORole orole = AppManagerUtils.fillORole(new ORole(), role);
+		orole.setDomainId(domainId);
+		orole.setRoleId(roleId);
+		orole.setRoleSid(roleSid);
+		ORole.fillDefaultsForInsert(orole);
+		ORole.validate(orole);
+		
+		rolDao.insert(con, orole);
+		if (options.has(RoleProcessOpt.PROCESS_SUBJECTASSOCIATIONS)) {
+			Check.notNull(role.getAssignedSubjects(), "assignedSubjects");
+			Set<String> assigned = parseSubjectsAsSids(role.getAssignedSubjects(), !subjectsAsSID, domainId, GenericSubject.Type.USER, GenericSubject.Type.GROUP);
+			rasDao.batchInsert(con, assigned, orole.getRoleSid());
+		}
+		if (options.has(RoleProcessOpt.PROCESS_PERMISSIONS)) {
+			Check.notNull(role.getPermissions(), "permissions");
+			int[] ret1 = permsDao.batchInsertOfSubject(con, orole.getRoleSid(), toPermissionBatchInsertEntries(role.getPermissions()));
+		}
+		if (options.has(RoleProcessOpt.PROCESS_SERVICEPERMISSIONS)) {
+			Check.notNull(role.getAllowedServiceIds(), "allowedServiceIds");
+			int[] ret2 = permsDao.batchInsertOfSubject(con, orole.getRoleSid(), toServicePermissionBatchInsertEntries(role.getAllowedServiceIds()));
+		}
+		
+		return new RoleInsertResult(orole);
+	}
+	
+	private void doRoleUpdate(final Connection con, final String domainId, final String roleId, final RoleBase role, final BitFlags<RoleProcessOpt> options) throws WTException {
+		RoleDAO rolDao = RoleDAO.getInstance();
+		RoleAssociationDAO rasDao = RoleAssociationDAO.getInstance();
+		RolePermissionDAO prmDao = RolePermissionDAO.getInstance();
+		UserProfileId rolePid = new UserProfileId(domainId, roleId);
+		final boolean subjectsAsSID = options.has(RoleProcessOpt.SUBJECTS_AS_SID);
+		String roleSid = lookupSubjectSid(rolePid, GenericSubject.Type.ROLE);
+		
+		boolean ret = rolDao.updateDescriptionByProfile(con, domainId, roleId, role.getDescription()) == 1;
+		if (!ret) throw new WTNotFoundException("Role not found [{}]", rolePid);
+		
+		if (options.has(RoleProcessOpt.PROCESS_SUBJECTASSOCIATIONS)) {
+			Check.notNull(role.getAssignedSubjects(), "assignedSubjects");
+			Set<String> assigned = parseSubjectsAsSids(role.getAssignedSubjects(), !subjectsAsSID, domainId, GenericSubject.Type.USER, GenericSubject.Type.GROUP);
+			LangUtils.CollectionChangeSet<String> changeSet = LangUtils.getCollectionChanges(rasDao.viewSubjectSidsByRole(con, roleSid), assigned);
+			rasDao.batchInsert(con, changeSet.inserted, roleSid);
+			rasDao.deleteBySubjectsRoleSid(con, changeSet.deleted, roleSid);
+		}
+		if (options.has(RoleProcessOpt.PROCESS_PERMISSIONS)) {
+			Check.notNull(role.getPermissions(), "permissions");
+			Map<Integer, RolePermissionDAO.SubjectEntry> map = prmDao.viewSubjectEntriesBySubjectCondition(con, roleSid, RolePermissionDAO.createServicePermissionAndKeysExcludeCondition(buildFolderShareKeysALL("%"))).entrySet().stream()
+				.collect(Collectors.toMap(
+					Map.Entry::getKey,
+					(entry) -> toSubjectEntry(entry.getValue())
+				));
+			LangUtils.CollectionChangeSet<RolePermissionDAO.SubjectEntry> changeSet = LangUtils.getCollectionChanges(map.values(), toPermissionBatchInsertEntries(role.getPermissions()));
+			prmDao.batchInsertOfSubject(con, roleSid, changeSet.inserted);
+			if (!changeSet.deleted.isEmpty()) {
+				Map<RolePermissionDAO.SubjectEntry, Integer> inversedMap = map.entrySet().stream()
+					.collect(Collectors.toMap(Entry::getValue, Entry::getKey));
+				List<Integer> ids = changeSet.deleted.stream()
+					.map((subjectEntry) -> inversedMap.get(subjectEntry))
+					.filter((id) -> id != null)
+					.collect(Collectors.toList());
+				prmDao.deleteByIds(con, ids);
+			}
+			
+		}
+		if (options.has(RoleProcessOpt.PROCESS_SERVICEPERMISSIONS)) {
+			Check.notNull(role.getAllowedServiceIds(), "allowedServiceIds");
+			Map<Integer, RolePermissionDAO.SubjectEntry> map = prmDao.viewSubjectEntriesBySubjectCondition(con, roleSid, RolePermissionDAO.createServicePermissionOnlyCondition()).entrySet().stream()
+				.collect(Collectors.toMap(
+					Map.Entry::getKey,
+					(entry) -> toSubjectEntry(entry.getValue())
+				));
+			LangUtils.CollectionChangeSet<RolePermissionDAO.SubjectEntry> changeSet = LangUtils.getCollectionChanges(map.values(), toServicePermissionBatchInsertEntries(role.getAllowedServiceIds()));
+			prmDao.batchInsertOfSubject(con, roleSid, changeSet.inserted);
+			if (!changeSet.deleted.isEmpty()) {
+				Map<RolePermissionDAO.SubjectEntry, Integer> inversedMap = map.entrySet().stream()
+					.collect(Collectors.toMap(Entry::getValue, Entry::getKey));
+				List<Integer> ids = changeSet.deleted.stream()
+					.map((subjectEntry) -> inversedMap.get(subjectEntry))
+					.filter((id) -> id != null)
+					.collect(Collectors.toList());
+				prmDao.deleteByIds(con, ids);
+			}
+		}
+	}
+	
+	private boolean doRoleDelete(final Connection con, final String domainId, final String roleId) throws WTNotFoundException {
+		RoleDAO rolDao = RoleDAO.getInstance();
+		RoleAssociationDAO rasDao = RoleAssociationDAO.getInstance();
+		RolePermissionDAO prmDao = RolePermissionDAO.getInstance();
+		
+		UserProfileId rolePid = new UserProfileId(domainId, roleId);
+		String roleSid = subjectSidCache.getSid(rolePid, GenericSubject.Type.ROLE);
+		if (roleSid == null) throw new WTNotFoundException("Role UID not found [{}]", rolePid);
+		
+		LOGGER.debug("[{}] Deleting permissions of '{}'...", rolePid, roleSid);
+		prmDao.deleteBySubject(con, roleSid);
+		LOGGER.debug("[{}] Deleting roles-associations of '{}'...", rolePid, roleSid);
+		rasDao.deleteByRole(con, roleSid);
+		LOGGER.debug("[{}] Deleting domain role '{}'...", rolePid, roleSid);
+		return rolDao.deleteBySid(con, roleSid) == 1;
+	}
+	
+	private static class RoleInsertResult {
+		public final ORole orole;
+		
+		public RoleInsertResult(ORole orole) {
+			this.orole = orole;
+		}
+	}
+	
+	private static enum ResourceProcessOpt implements BitFlagsEnum<ResourceProcessOpt> {
+		SUBJECTS_AS_SID(1 << 0), PROCESS_PERMISSIONS(1 << 1);
+		
+		private int mask = 0;
+		private ResourceProcessOpt(int mask) { this.mask = mask; }
+		@Override
+		public long mask() { return this.mask; }
+		
+		public static BitFlags<ResourceProcessOpt> fromResourceGetOptions(BitFlags<ResourceGetOption> options) {
+			// Flag values are compatible for now, simpy instantiate new object...
+			return BitFlags.newFrom(ResourceProcessOpt.class, options);
+		}
+		
+		public static BitFlags<ResourceProcessOpt> fromResourceUpdateOptions(BitFlags<ResourceUpdateOption> options) {
+			// Flag values are compatible for now, simpy instantiate new object...
+			return BitFlags.newFrom(ResourceProcessOpt.class, options);
+		}
+	}
+	
+	private Resource doResourceGet(final Connection con, final String domainId, final String resourceId, final BitFlags<ResourceProcessOpt> options) throws WTException {
+		ResourceDAO resDao = ResourceDAO.getInstance();
+		final boolean subjectsAsSID = options.has(ResourceProcessOpt.SUBJECTS_AS_SID);
+		
+		VResource vre = resDao.selectByProfile(con, domainId, resourceId);
+		if (vre == null) return null;
+		
+		ResourcePermissions permissions = null;
+		if (options.has(ResourceProcessOpt.PROCESS_PERMISSIONS)) {
+			permissions = doResourcePermissionsGet(con, domainId, resourceId, subjectsAsSID);
+		}
+		
+		Resource resource = AppManagerUtils.fillResource(new Resource(), vre);
+		if (permissions != null) {
+			resource.setManagerSubject(permissions.getManagerSubject());
+			resource.setAllowedSubjects(permissions.getAllowedSubjects());
+		}
+		return resource;
+	}
+	
+	private ResourcePermissions doResourcePermissionsGet(final Connection con, final String domainId, final String resourceId, final boolean subjectsAsSID) {
+		final UserProfileId resourcePid = new UserProfileId(domainId, resourceId);
+		String manager = null;
+		Set<String> alloweds = new LinkedHashSet<>();
+		String originSid = subjectSidCache.getSid(resourcePid, GenericSubject.Type.RESOURCE);
+		
+		List<FolderSharing.SubjectRights> subRights = doFolderShareSharingRightsGet(con, originSid, CoreManifest.ID, "RESOURCE", FolderSharing.Scope.wildcard());
+		for (FolderSharing.SubjectRights rights : subRights) {
+			if (hasResourceManagerPermissions(rights.getFolderPermissions(), rights.getItemsPermissions())) {
+				if (manager == null) { // Safe-check, should not happen to have 2 managers... in that case take the first!
+					manager = (!subjectsAsSID) ? subjectSidCache.getPidAsString(rights.getAclSubjectSid(), GenericSubject.Type.USER, GenericSubject.Type.GROUP) : rights.getAclSubjectSid();
+				}
+			} else if (rights.getFolderPermissions().has(FolderShare.FolderRight.READ)) {
+				final String allowed = (!subjectsAsSID) ? subjectSidCache.getPidAsString(rights.getAclSubjectSid(), GenericSubject.Type.USER, GenericSubject.Type.GROUP) : rights.getAclSubjectSid();
+				if (allowed != null) alloweds.add(allowed);
+			}
+		}
+		return new ResourcePermissions(manager, alloweds);
+	}
+	
+	private ResourceUpdateResult doResourceInsert(final Connection con, final String domainId, final String resourceId, final String resourceSid, final ResourceBase resource, final BitFlags<ResourceProcessOpt> options) throws WTException {
+		ResourceDAO resDao = ResourceDAO.getInstance();
+		final boolean subjectsAsSID = options.has(ResourceProcessOpt.SUBJECTS_AS_SID);
+		
+		OUserInfo ouin = AppManagerUtils.fillOUserInfo(new OUserInfo(), resource);
+		ouin.setDomainId(domainId);
+		ouin.setUserId(resourceId);
+		OResource.fillDefaultsForInsert(ouin, resourceId, domainIdToDomainInternetName(domainId));
+		OResource.validate(ouin);
+		
+		OUser ouse = AppManagerUtils.fillOUser(new OUser(), resource);
+		ouse.setDomainId(domainId);
+		ouse.setUserId(resourceId);
+		ouse.setUserSid(resourceSid);
+		OResource.fillDefaultsForInsert(ouse);
+		OResource.validate(ouse);
+		
+		resDao.insert(con, ouin);
+		resDao.insert(con, ouse);
+		
+		Set<String> newPermissionSids = new HashSet<>();
+		if (options.has(ResourceProcessOpt.PROCESS_PERMISSIONS)) {
+			Check.notNull(resource.getAllowedSubjects(), "allowedSubjects");
+			
+			// Update sharing
+			ArrayList<FolderSharing.SubjectRights> srights = new ArrayList<>();
+			if (!StringUtils.isBlank(resource.getManagerSubject())) {
+				// This is treated as collection here, but extracted first below!
+				Set<String> managers = parseSubjectsAsSids(Arrays.asList(resource.getManagerSubject()), !subjectsAsSID, domainId, GenericSubject.Type.USER, GenericSubject.Type.GROUP);
+				if (!managers.isEmpty()) {
+					final String managerSid = managers.iterator().next();
+					newPermissionSids.add(managerSid);
+					srights.add(new FolderSharing.SubjectRights(managerSid, buildResourceFolderPermissions(true), buildResourceItemsPermissions(true)));	
+				}
+			}
+			Set<String> alloweds = parseSubjectsAsSids(resource.getAllowedSubjects(), !subjectsAsSID, domainId, GenericSubject.Type.USER, GenericSubject.Type.GROUP);
+			for (String sid : alloweds) {
+				newPermissionSids.add(sid);
+				srights.add(new FolderSharing.SubjectRights(sid, buildResourceFolderPermissions(false)));
+			}
+			doFolderShareSharingRightsUpdate(con, ouse.getUserSid(), CoreManifest.ID, "RESOURCE", FolderSharing.Scope.wildcard(), srights);
+		}
+		
+		return new ResourceUpdateResult(ouse, ouin, newPermissionSids);
+	}
+	
+	private ResourceUpdateResult doResourceUpdate(final Connection con, final String domainId, final String resourceId, final ResourceBase resource, final BitFlags<ResourceProcessOpt> options) throws WTNotFoundException {
+		ResourceDAO resDao = ResourceDAO.getInstance();
+		final boolean subjectsAsSID = options.has(ResourceProcessOpt.SUBJECTS_AS_SID);
+		
+		OUserInfo ouin = AppManagerUtils.fillOUserInfo(new OUserInfo(), resource);
+		ouin.setDomainId(domainId);
+		ouin.setUserId(resourceId);
+		OResource.fillDefaultsForInsert(ouin, resourceId, domainIdToDomainInternetName(domainId));
+		OResource.validate(ouin);
+		
+		OUser ouse = AppManagerUtils.fillOUser(new OUser(), resource);
+		ouse.setDomainId(domainId);
+		ouse.setUserId(resourceId);
+		OResource.fillDefaultsForInsert(ouse);
+		OResource.validate(ouse);
+		
+		boolean ret = resDao.update(con, ouin) == 1;
+		if (ret) ret = resDao.update(con, ouse) == 1;
+		if (!ret) throw new WTNotFoundException("Resource not found [{}@{}]", resourceId, domainId);
+		
+		Set<String> oldPermissionSids = null;
+		Set<String> newPermissionSids = null;
+		if (options.has(ResourceProcessOpt.PROCESS_PERMISSIONS)) {
+			Check.notNull(resource.getAllowedSubjects(), "allowedSubjects");
+			oldPermissionSids = doResourcePermissionsGet(con, domainId, resourceId, subjectsAsSID).getAllSubjects();
+			newPermissionSids = new HashSet<>();
+			
+			// Update sharing
+			ArrayList<FolderSharing.SubjectRights> srights = new ArrayList<>();
+			if (!StringUtils.isBlank(resource.getManagerSubject())) {
+				// This is treated as collection here, but extracted first below!
+				Set<String> managers = parseSubjectsAsSids(Arrays.asList(resource.getManagerSubject()), !subjectsAsSID, domainId, GenericSubject.Type.USER, GenericSubject.Type.GROUP);
+				if (!managers.isEmpty()) {
+					// READ right for manager is implicit, managers can obviously manage resource fully!
+					// Manager has also CREATE, DELETE, UPDATE right in order to maintain requests.
+					final String managerSid = managers.iterator().next();
+					newPermissionSids.add(managerSid);
+					srights.add(new FolderSharing.SubjectRights(managerSid, buildResourceFolderPermissions(true), buildResourceItemsPermissions(true)));	
+				}
+			}
+			Set<String> alloweds = parseSubjectsAsSids(resource.getAllowedSubjects(), !subjectsAsSID, domainId, GenericSubject.Type.USER, GenericSubject.Type.GROUP);
+			for (String sid : alloweds) {
+				// READ right allows to access the resource, any allowed subject must have it!
+				newPermissionSids.add(sid);
+				srights.add(new FolderSharing.SubjectRights(sid, buildResourceFolderPermissions(false)));
+			}
+			String originSid = subjectSidCache.getSid(ouse.getProfileId(), GenericSubject.Type.RESOURCE);
+			doFolderShareSharingRightsUpdate(con, originSid, CoreManifest.ID, "RESOURCE", FolderSharing.Scope.wildcard(), srights);
+		}
+		
+		return new ResourceUpdateResult(ouse, ouin, LangUtils.computeChangeSet(oldPermissionSids, newPermissionSids).getMoved());
+	}
+	
+	private void doResourceDelete(final Connection con, final String domainId, final String resourceId) throws WTNotFoundException {
+		UserInfoDAO uinDao = UserInfoDAO.getInstance();
+		ResourceDAO resDao = ResourceDAO.getInstance();
+		
+		// Remove sharing
+		String originSid = subjectSidCache.getSid(new UserProfileId(domainId, resourceId), GenericSubject.Type.RESOURCE);
+		doFolderShareSharingRightsDelete(con, originSid, CoreManifest.ID, "RESOURCE", FolderSharing.Scope.wildcard());
+		
+		uinDao.deleteByDomainUser(con, domainId, resourceId);
+		boolean ret = resDao.deleteByDomainId(con, domainId, resourceId) == 1;
+		if (!ret) throw new WTNotFoundException("Resource not found [{}@{}]", resourceId, domainId);
+	}
+	
+	private static boolean hasResourceManagerPermissions(final FolderShare.FolderPermissions folderPermissions, final FolderShare.ItemsPermissions itemsPermissions) {
+		if (!folderPermissions.has(FolderShare.FolderRight.READ)) return false;
+		if (!itemsPermissions.has(FolderShare.ItemsRight.CREATE)) return false;
+		if (!itemsPermissions.has(FolderShare.ItemsRight.DELETE)) return false;
+		if (!itemsPermissions.has(FolderShare.ItemsRight.UPDATE)) return false;
+		return true;
+	}
+	
+	private static class ResourceUpdateResult {
+		public final OUser ouser;
+		public final OUserInfo ouserinfo;
+		public final Set<String> changedPermissionSids;
+		
+		public ResourceUpdateResult(OUser ouser, OUserInfo ouserinfo, Set<String> changedPermissionSids) {
+			this.ouser = ouser;
+			this.ouserinfo = ouserinfo;
+			this.changedPermissionSids = changedPermissionSids;
+		}
+	}
+	
+	/**
+	 * Checks if passed SID is really valid: has a matching PID with a specified domain ID
+	 */
+	private boolean evalSidConstraints(String sid, String constrainDomainId, GenericSubject.Type... validTypes) {
+		UserProfileId pid = subjectSidCache.getPid(sid, validTypes);
+		if (pid == null) return false;
+		return pid.hasDomain(constrainDomainId);
+	}
+	
+	/**
+	 * Checks if passed PID is really valid: has the specified domain ID and a matching SID
+	 */
+	private boolean evalPidConstraints(UserProfileId pid, String constrainDomainId, GenericSubject.Type... validTypes) {
+		if (pid == null || !pid.hasDomain(constrainDomainId)) return false;
+		String sid = subjectSidCache.getSid(pid, validTypes);
+		return sid != null;
+	}
+	
+	public Set<String> parseSubjectsAsStringPids(Collection<String> subjects, boolean subjectsAsPids, String validDomainId, GenericSubject.Type... validTypes) {
+		return parseSubjectsAsPids(subjects, subjectsAsPids, validDomainId, validTypes)
+			.stream()
+			.map((pid) -> pid.toString())
+			.collect(Collectors.toSet());
+	}
+	
+	public Set<String> parseSubjectsAsStringLocals(Collection<String> subjects, boolean subjectsAsPids, String validDomainId, GenericSubject.Type... validTypes) {
+		return parseSubjectsAsPids(subjects, subjectsAsPids, validDomainId, validTypes)
+			.stream()
+			.map((pid) -> pid.getLocal())
+			.collect(Collectors.toSet());
+	}
+	
+	public Set<UserProfileId> parseSubjectsAsPids(Collection<String> subjects, boolean subjectsAsPids, String validDomainId, GenericSubject.Type... validTypes) {
+		if (subjectsAsPids) {
+			return subjects.stream()
+				// parses each value as ProfileId
+				.map((spid) -> UserProfileId.parseQuielty(spid, validDomainId))
+				// Filter out non-matching values from source (eventually they will be deleted when processing changes)
+				.filter((pid) -> evalPidConstraints(pid, validDomainId, validTypes))
+				.collect(Collectors.toSet());
+			
+		} else {
+			// If passed subjects are sids...
+			return subjects.stream()
+				// skipping NULLs and objects with non-matching domain
+				.filter((sid) -> (sid != null))
+				// then lookup related PID
+				.map((sid) -> subjectSidCache.getPid(sid, validTypes))
+				// making sure that match was successful
+				.filter((sid) -> (sid != null))
+				.collect(Collectors.toSet());
+		}
+	}
+	
+	private Set<String> parseSubjectsAsSids(Collection<String> subjects, boolean subjectsAsPids, String validDomainId, GenericSubject.Type... validTypes) {
+		if (subjectsAsPids) {
+			// If passed subjects are pids...
+			return subjects.stream()
+				// parses each value as ProfileId
+				.map((spid) -> UserProfileId.parseQuielty(spid, validDomainId))
+				// skipping NULLs and objects with non-matching domain
+				.filter((pid) -> (pid != null && pid.hasDomain(validDomainId)))
+				// then lookup related SID
+				.map((pid) -> subjectSidCache.getSid(pid, validTypes))
+				// making sure that match was successful
+				.filter((sid) -> (sid != null))
+				.collect(Collectors.toSet());
+		} else {
+			return subjects.stream()
+				// Filter out non-matching values from source (eventually they will be deleted when processing changes)
+				.filter((sid) -> evalSidConstraints(sid, validDomainId, validTypes))
+				.collect(Collectors.toSet());
+		}
+	}
+	
+	private static FolderShare.FolderPermissions buildResourceFolderPermissions(final boolean manager) {
+		FolderShare.FolderPermissions perms = new FolderShare.FolderPermissions();
+		perms.set(FolderShare.FolderRight.READ);
+		return perms;
+	}
+	
+	private static FolderShare.ItemsPermissions buildResourceItemsPermissions(final boolean manager) {
+		FolderShare.ItemsPermissions perms = null;
+		if (manager) {
+			perms = new FolderShare.ItemsPermissions();
+			perms.set(FolderShare.ItemsRight.CREATE);
+			perms.set(FolderShare.ItemsRight.DELETE);
+			perms.set(FolderShare.ItemsRight.UPDATE);	
+		}
+		return perms;
+	}
+	
+	private void clearAuthorizationInfo(String domainId, Collection<String> subjects, boolean subjectsAsSID) throws WTException {
+		WTRealm realm = (WTRealm)ShiroUtils.getRealmByName(WTRealm.NAME);
+		for (UserProfileId profileId : expandSubjectsToUserProfiles(domainId, subjects, subjectsAsSID)) {
+			if (LOGGER.isTraceEnabled()) LOGGER.trace("[{}] Clearing authz-info for profile '{}'", domainId, profileId);
+			RunContext.clearCachedAuthorizationInfo(realm, RunContext.buildPrincipalCollection(profileId.getDomainId(), profileId.getUserId()));
+		}
+	}
+	
+	private OShare doShareInsert(Connection con, String originSid, String serviceId, String shareKey, String instance) {
+		ShareDAO shaDao = ShareDAO.getInstance();
+		
+		OShare oshare = new OShare();
+		oshare.setUserUid(originSid);
+		oshare.setServiceId(serviceId);
+		oshare.setKey(shareKey);
+		oshare.setInstance(instance);
+		oshare.setShareId(shaDao.getSequence(con).intValue());
+		boolean ret = shaDao.insert(con, oshare) == 1;
+		return !ret ? null : oshare;
+	}
+	
+	private List<FolderSharing.SubjectRights> doFolderShareSharingRightsGet(final Connection con, final String originSid, final String serviceId, final String context, final FolderSharing.Scope level) throws DAOException {
+		ShareDAO shaDao = ShareDAO.getInstance();
+		RolePermissionDAO permsDao = RolePermissionDAO.getInstance();
+		
+		final List<String> TARGET_PERMISSION_KEYS = Arrays.asList(
+			FolderShare.buildFolderPermissionKey(context),
+			FolderShare.buildItemsPermissionKey(context)
+		);
+
+		boolean skipOriginPerms = true;
+		String shareInstance = null;
+		if (level instanceof FolderSharing.WildcardScope) {
+			skipOriginPerms = false;
+			shareInstance = FolderSharing.INSTANCE_WILDCARD;
+
+		} else if (level instanceof FolderSharing.FolderScope) {
+			FolderSharing.FolderScope flevel = ((FolderSharing.FolderScope)level);
+			shareInstance = flevel.getFolderId();
+
+		} else {
+			throw new IllegalArgumentException("Unsupported level");
+		}
+
+		ArrayList<FolderSharing.SubjectRights> items = new ArrayList<>();
+		OShare oshare = shaDao.selectByUserServiceKeyInstance(con, originSid, serviceId, context, shareInstance);
+		if (oshare != null) {
+			Map<String, List<ORolePermission>> map = permsDao.groupSubjectsByByServiceKeysInstance(con, serviceId, TARGET_PERMISSION_KEYS, oshare.getShareIdAsString());
+			for (Map.Entry<String, List<ORolePermission>> entry : map.entrySet()) {
+				items.add(toSubjectPermissions(entry.getKey(), context, entry.getValue(), skipOriginPerms));
+			}
+		}
+		return items;
+	}
+	
+	public void doFolderShareSharingRightsUpdate(final Connection con, final String originSid, final String serviceId, final String context, final FolderSharing.Scope level, final Collection<FolderSharing.SubjectRights> rights) throws DAOException {
+		ShareDAO shaDao = ShareDAO.getInstance();
+		RolePermissionDAO permsDao = RolePermissionDAO.getInstance();
+		
+		final List<String> TARGET_PERMISSION_KEYS = buildFolderShareKeys(context);
+
+		boolean skipOriginPerms = true;
+		String shareInstance = null;
+		OShare oshare = null;
+		if (level instanceof FolderSharing.WildcardScope) {
+			skipOriginPerms = false;
+			shareInstance = FolderSharing.INSTANCE_WILDCARD;
+
+		} else if (level instanceof FolderSharing.FolderScope) {
+			FolderSharing.FolderScope flevel = ((FolderSharing.FolderScope)level);
+			shareInstance = flevel.getFolderId();
+
+		} else {
+			throw new IllegalArgumentException("Unsupported level");
+		}
+
+		oshare = shaDao.selectByUserServiceKeyInstance(con, originSid, serviceId, context, shareInstance);
+		if (oshare != null) {
+			permsDao.deleteByServiceKeysInstance(con, serviceId, TARGET_PERMISSION_KEYS, oshare.getShareIdAsString());
+		} else {
+			oshare = doShareInsert(con, originSid, serviceId, context, shareInstance);
+		}
+		if (!rights.isEmpty()) {
+			Set<RolePermissionDAO.ServiceEntry> entries = toSharePermissionBatchInsertEntries(context, oshare.getShareIdAsString(), rights, skipOriginPerms);
+			int[] ret = permsDao.batchInsertOfService(con, serviceId, entries);
+		}
+	}
+	
+	public void doFolderShareSharingRightsDelete(final Connection con, final String originSid, final String serviceId, final String context, final FolderSharing.Scope scope) throws DAOException {
+		ShareDAO shaDao = ShareDAO.getInstance();
+		RolePermissionDAO permsDao = RolePermissionDAO.getInstance();
+		
+		final List<String> TARGET_PERMISSION_KEYS = buildFolderShareKeys(context);
+		
+		String shareInstance = null;
+		if (scope instanceof FolderSharing.WildcardScope) {
+			shareInstance = FolderSharing.INSTANCE_WILDCARD;
+
+		} else if (scope instanceof FolderSharing.FolderScope) {
+			FolderSharing.FolderScope flevel = ((FolderSharing.FolderScope)scope);
+			shareInstance = flevel.getFolderId();
+
+		} else {
+			throw new IllegalArgumentException("Unsupported level");
+		}
+		
+		Set<Integer> deleted = shaDao.deleteByUserServiceKeyInstance(con, originSid, serviceId, context, shareInstance);
+		if (!deleted.isEmpty()) {
+			Set<String> instances = deleted.stream().map(id -> String.valueOf(id)).collect(Collectors.toSet());
+			permsDao.deleteByServiceKeysInstances(con, serviceId, TARGET_PERMISSION_KEYS, instances);
+		}
+	}
+	
+	private FolderSharing.SubjectRights toSubjectPermissions(String aclSubjectSid, String context, Collection<ORolePermission> operms, boolean skipWildcardReservedRights) {
+		final String FOLDER_PERMISSION_KEY = FolderShare.buildFolderPermissionKey(context);
+		final String ITEMS_PERMISSION_KEY = FolderShare.buildItemsPermissionKey(context);
+		
+		FolderShare.FolderPermissions folderPerms = new FolderShare.FolderPermissions();
+		FolderShare.ItemsPermissions itemsPerms = new FolderShare.ItemsPermissions();
+		for (ORolePermission osubperm : operms) {
+			if (FOLDER_PERMISSION_KEY.equals(osubperm.getKey())) {
+				FolderShare.FolderRight right = EnumUtils.forName(osubperm.getAction(), FolderShare.FolderRight.class);
+				if (right != null) {
+					if (!skipWildcardReservedRights || !right.isReservedForWildcard()) folderPerms.set(right);
+				}
+				
+			} else if (ITEMS_PERMISSION_KEY.equals(osubperm.getKey())) {
+				FolderShare.ItemsRight right = EnumUtils.forName(osubperm.getAction(), FolderShare.ItemsRight.class);
+				if (right != null) itemsPerms.set(right);
+			}
+		}
+		return new FolderSharing.SubjectRights(aclSubjectSid, folderPerms, itemsPerms);
+	}
+	
+	private Set<RolePermissionDAO.ServiceEntry> toSharePermissionBatchInsertEntries(String context, String instance, Collection<FolderSharing.SubjectRights> srights, boolean skipOriginOnlyPerms) {
+		final String FOLDER_PERMISSION_KEY = FolderShare.buildFolderPermissionKey(context);
+		final String ITEMS_PERMISSION_KEY = FolderShare.buildItemsPermissionKey(context);
+		
+		LinkedHashSet<RolePermissionDAO.ServiceEntry> items = null;
+		for (FolderSharing.SubjectRights rights : srights) {
+			if (items == null) items = new LinkedHashSet<>(srights.size());
+			for (String right : FolderShare.toRightNames(rights.getFolderPermissions())) {
+				if (!skipOriginOnlyPerms || !FolderShare.FolderRight.isReservedForWildcard(right)) {
+					items.add(new RolePermissionDAO.ServiceEntry(rights.getAclSubjectSid(), FOLDER_PERMISSION_KEY, right, instance));
+				}
+			}
+			for (String right : FolderShare.toRightNames(rights.getItemsPermissions())) {
+				items.add(new RolePermissionDAO.ServiceEntry(rights.getAclSubjectSid(), ITEMS_PERMISSION_KEY, right, instance));
+			}
+		}
+		return items;
+	}
+	
+	private List<String> buildFolderShareKeys(String context) {
+		return Arrays.asList(
+			FolderShare.buildFolderPermissionKey(context),
+			FolderShare.buildItemsPermissionKey(context)
+		);
+	}
+	
+	/**
+	 * @deprecated use buildFolderShareKeys instead when OLD sharing was completely removed!
+	 */
+	@Deprecated
+	private List<String> buildFolderShareKeysALL(String context) {
+		return Arrays.asList(
+			FolderShare.buildFolderPermissionKey(context),
+			FolderShare.buildItemsPermissionKey(context),
+			"%@SHARE_ROOT",
+			"%@SHARE_ELEMENTS",
+			"%@SHARE_FOLDER"
+		);
+	}
+	
+	private static boolean isDirectoryNameNotFoundException(final DirectoryException ex) {
+		return LangUtils.hasFollowingCauseChain(ex, org.ldaptive.LdapException.class, javax.naming.NameNotFoundException.class);
+	}
+	
+	private PermissionString toPermissionString(ORolePermission orperm) {
+		return PermissionString.build(orperm.getServiceId(), orperm.getContext(), orperm.getAction(), orperm.getInstance());
+	}
+	
+	private RolePermissionDAO.SubjectEntry toSubjectEntry(ORolePermission orperm) {
+		return new RolePermissionDAO.SubjectEntry(orperm.getServiceId(), orperm.getContext(), orperm.getAction(), orperm.getInstance());
+	}
+	
+	private Set<RolePermissionDAO.SubjectEntry> toPermissionBatchInsertEntries(Set<PermissionString> permissions) {
+		LinkedHashSet<RolePermissionDAO.SubjectEntry> items = new LinkedHashSet<>(permissions.size());
+		for (PermissionString permission : permissions) {
+			if (permission == null) continue;
+			items.add(new RolePermissionDAO.SubjectEntry(permission.getServiceId(), permission.getContext(), permission.getAction(), permission.getInstance()));
+		}
+		return items;
+	}
+	
+	private Set<RolePermissionDAO.SubjectEntry> toServicePermissionBatchInsertEntries(Set<String> serviceIds) {
+		LinkedHashSet<RolePermissionDAO.SubjectEntry> items = new LinkedHashSet<>(serviceIds.size());
+		for (String serviceId : serviceIds) {
+			if (serviceId == null) continue;
+			final ServicePermissionString sps = ServicePermissionString.build(serviceId);
+			items.add(new RolePermissionDAO.SubjectEntry(sps.getServiceId(), sps.getContext(), sps.getAction(), sps.getInstance()));
+		}
+		return items;
+	}
+	
+	private UserProfile.PersonalInfo doGetProfilePersonalInfo(UserProfileId profileId) throws WTException {
+		UserInfoDAO dao = UserInfoDAO.getInstance();
 		Connection con = null;
 		
 		try {
 			con = wta.getConnectionManager().getConnection();
+			OUserInfo oui = dao.selectByDomainUser(con, profileId.getDomainId(), profileId.getUserId());
+			return (oui == null) ? null : new UserProfile.PersonalInfo(oui);
 			
-			List<UserId> uids = uidao.viewByEmail(con, emailAddress);
-			if (uids.isEmpty()) return null;
-			
-			UserId uid = uids.get(0);
-			UserProfileId pid = new UserProfileId(uid.getDomainId(), uid.getUserId());
-			return userData(pid);
-			
-		} catch(SQLException | DAOException ex) {
-			DbUtils.rollbackQuietly(con);
+		} catch (SQLException | DAOException ex) {
 			throw new WTException(ex, "DB error");
 		} finally {
 			DbUtils.closeQuietly(con);
 		}
 	}
 	
-	public String userToUid(UserProfileId pid) {
-		return userToUid(pid,true);
-	}
-	
-	public String userToUid(UserProfileId pid, boolean mandatory) {
-		synchronized(lock1) {
-			if(!cacheUserToUserUid.containsKey(pid)) {
-				if (mandatory)
-					throw new WTRuntimeException("[userToUidCache] Cache miss on key {0}", pid.toString());
-				return null;
-			}
-			return cacheUserToUserUid.get(pid);
-		}
-	}
-	
-	public UserProfileId uidToUser(String uid) {
-		synchronized(lock1) {
-			if(!cacheUserUidToUser.containsKey(uid)) throw new WTRuntimeException("[uidToUserCache] Cache miss on key {0}", uid);
-			return cacheUserUidToUser.get(uid);
-		}
-	}
-	
-	public String groupToUid(UserProfileId pid) {
-		synchronized(lock2) {
-			if(!cacheGroupToGroupUid.containsKey(pid)) throw new WTRuntimeException("[groupToUidCache] Cache miss on key {0}", pid.toString());
-			return cacheGroupToGroupUid.get(pid);
-		}
-	}
-	
-	public UserProfileId uidToGroup(String uid) {
-		synchronized(lock2) {
-			if(!cacheGroupUidToGroup.containsKey(uid)) throw new WTRuntimeException("[uidToGroupCache] Cache miss on key {0}", uid);
-			return cacheGroupUidToGroup.get(uid);
-		}
-	}
-	
-	private OGroup doGroupInsert(Connection con, String domainId, String groupId, String displayName) throws DAOException, WTException {
-		GroupEntity ge = new GroupEntity();
-		ge.setGroupId(groupId);
-		ge.setDisplayName(displayName);
-		return doGroupInsert(con, domainId, ge);
-	}
-	
-	private OGroup doGroupInsert(Connection con, String domainId, GroupEntity group) throws DAOException, WTException {
-		GroupDAO dao = GroupDAO.getInstance();
+	private UserProfile.Data doGetProfileData(final UserProfileId profileId) throws WTException {
+		UserDAO useDao = UserDAO.getInstance();
+		ResourceDAO resDao = ResourceDAO.getInstance();
+		Connection con = null;
 		
-		// Insert Group record
-		logger.debug("Inserting group... [{}]", group.getGroupId());
-		OGroup ogroup = new OGroup();
-		ogroup.setDomainId(domainId);
-		ogroup.setGroupId(group.getGroupId());
-		ogroup.setEnabled(true);
-		ogroup.setGroupUid(IdentifierUtils.getUUID());
-		ogroup.setDisplayName(group.getDisplayName());
-		ogroup.setSecret(null);
-		dao.insert(con, ogroup);
-		
-		logger.debug("Inserting users associations...");
-		HashSet<String> usedUserUids = new HashSet<>();
-		for (AssignedUser assiUser : group.getAssignedUsers()) {
-			final String userUid = userToUid(new UserProfileId(group.getDomainId(), assiUser.getUserId()));
-			if (!usedUserUids.contains(userUid)) { // Avoid userUid duplicates
-				doInsertUserAssociation(con, userUid, ogroup.getGroupUid());
-				usedUserUids.add(userUid);
-			}
-		}
-		
-		logger.debug("Inserting roles associations");
-		HashSet<String> usedRoleUids = new HashSet<>();
-		for(AssignedRole assiRole : group.getAssignedRoles()) {
-			final String roleUid = assiRole.getRoleUid();
-			if (!usedRoleUids.contains(roleUid)) { // Avoid roles duplicates
-				doInsertRoleAssociation(con, ogroup.getGroupUid(), roleUid);
-				usedRoleUids.add(roleUid);
-			}
-		}
-		
-		// Insert permissions
-		logger.debug("Inserting permissions");
-		for(ORolePermission perm : group.getPermissions()) {
-			doInsertPermission(con, ogroup.getGroupUid(), perm.getServiceId(), perm.getKey(), perm.getAction(), "*");
-		}
-		for(ORolePermission perm : group.getServicesPermissions()) {
-			doInsertPermission(con, ogroup.getGroupUid(), CoreManifest.ID, "SERVICE", ServicePermission.ACTION_ACCESS, perm.getInstance());
-		}
-		
-		return ogroup;
-	}
-	
-	private void doGroupUpdate(Connection con, GroupEntity group) throws DAOException, WTException {
-		GroupDAO dao = GroupDAO.getInstance();
-		UserAssociationDAO uadao = UserAssociationDAO.getInstance();
-		RoleAssociationDAO rolassdao = RoleAssociationDAO.getInstance();
-		RolePermissionDAO rpdao = RolePermissionDAO.getInstance();
-		
-		GroupEntity oldGroup = getGroupEntity(con, group.getProfileId());
-		if(oldGroup == null) throw new WTException("Group not found [{0}]", group.getProfileId().toString());
-		
-		logger.debug("Updating group");
-		OGroup ogroup = new OGroup();
-		ogroup.setDomainId(group.getDomainId());
-		ogroup.setGroupId(group.getGroupId());
-		ogroup.setDisplayName(group.getDisplayName());
-		dao.update(con, ogroup);
-		
-		logger.debug("Updating users associations");
-		LangUtils.CollectionChangeSet<AssignedUser> changeSet1 = LangUtils.getCollectionChanges(oldGroup.getAssignedUsers(), group.getAssignedUsers());
-		for(AssignedUser assiUser : changeSet1.deleted) {
-			uadao.deleteById(con, assiUser.getUserAssociationId());
-		}
-		for(AssignedUser assiUser : changeSet1.inserted) {
-			final String userUid = userToUid(new UserProfileId(group.getDomainId(), assiUser.getUserId()));
-			doInsertUserAssociation(con, userUid, oldGroup.getGroupUid());
-		}
-		
-		logger.debug("Updating roles associations");
-		LangUtils.CollectionChangeSet<AssignedRole> changeSet2 = LangUtils.getCollectionChanges(oldGroup.getAssignedRoles(), group.getAssignedRoles());
-		for(AssignedRole assiRole : changeSet2.deleted) {
-			rolassdao.deleteById(con, assiRole.getRoleAssociationId());
-		}
-		for(AssignedRole assiRole : changeSet2.inserted) {
-			doInsertRoleAssociation(con, oldGroup.getGroupUid(), assiRole.getRoleUid());
-		}
-
-		logger.debug("Updating permissions");
-		LangUtils.CollectionChangeSet<ORolePermission> changeSet3 = LangUtils.getCollectionChanges(oldGroup.getPermissions(), group.getPermissions());
-		for(ORolePermission perm : changeSet3.deleted) {
-			rpdao.deleteById(con, perm.getRolePermissionId());
-		}
-		for(ORolePermission perm : changeSet3.inserted) {
-			doInsertPermission(con, oldGroup.getGroupUid(), perm.getServiceId(), perm.getKey(), perm.getAction(), "*");
-		}
-
-		LangUtils.CollectionChangeSet<ORolePermission> changeSet4 = LangUtils.getCollectionChanges(oldGroup.getServicesPermissions(), group.getServicesPermissions());
-		for(ORolePermission perm : changeSet4.deleted) {
-			rpdao.deleteById(con, perm.getRolePermissionId());
-		}
-		for(ORolePermission perm : changeSet4.inserted) {
-			doInsertPermission(con, oldGroup.getGroupUid(), CoreManifest.ID, "SERVICE", ServicePermission.ACTION_ACCESS, perm.getInstance());
-		}
-	}
-	
-	private AuthUser createAuthUser(UserEntity user) {
-		return new AuthUser(user.getUserId(), user.getDisplayName(), user.getFirstName(), user.getLastName(), null);
-	}
-	
-	private OUser doUserInsert(Connection con, ODomain domain, UserEntity user) throws DAOException, WTException {
-		UserDAO udao = UserDAO.getInstance();
-		UserInfoDAO uidao = UserInfoDAO.getInstance();
-		
-		InternetAddress email = InternetAddressUtils.toInternetAddress(user.getUserId(), domain.getInternetName(), null);
-		if(email == null) throw new WTException("Cannot create a valid email address [{0}, {1}]", user.getUserId(), domain.getInternetName());
-		
-		// Insert User record
-		logger.debug("Inserting user");
-		OUser ouser = new OUser();
-		ouser.setDomainId(domain.getDomainId());
-		ouser.setUserId(user.getUserId());
-		ouser.setEnabled(user.getEnabled());
-		ouser.setUserUid(IdentifierUtils.getUUID());
-		ouser.setDisplayName(user.getDisplayName());
-		ouser.setSecret(generateSecretKey());
-		udao.insert(con, ouser);
-		
-		// Insert UserInfo record
-		logger.debug("Inserting userInfo");
-		OUserInfo oui = new OUserInfo();
-		oui.setDomainId(domain.getDomainId());
-		oui.setUserId(user.getUserId());
-		oui.setFirstName(user.getFirstName());
-		oui.setLastName(user.getLastName());
-		oui.setEmail(email.getAddress());
-		uidao.insert(con, oui);
-		
-		logger.debug("Inserting groups associations");
-		HashSet<String> usedGroupUids = new HashSet<>();
-		for(AssignedGroup assiGroup : user.getAssignedGroups()) {
-			final String groupUid = groupToUid(new UserProfileId(user.getDomainId(), assiGroup.getGroupId()));
-			if (!usedGroupUids.contains(groupUid)) {
-				// Due to built-in assigned groups, collection of assigned
-				// groups can contain duplicates; so skip them.
-				doInsertUserAssociation(con, ouser.getUserUid(), groupUid);
-				usedGroupUids.add(groupUid);
-			}
-		}
-		
-		logger.debug("Inserting roles associations");
-		HashSet<String> usedRoleUids = new HashSet<>();
-		for(AssignedRole assiRole : user.getAssignedRoles()) {
-			final String roleUid = assiRole.getRoleUid();
-			if (!usedRoleUids.contains(roleUid)) {
-				// Due to built-in assigned roles, collection of assigned
-				// roles can contain duplicates; so skip them.
-				doInsertRoleAssociation(con, ouser.getUserUid(), roleUid);
-				usedRoleUids.add(roleUid);
-			}
-		}
-		
-		// Insert permissions
-		logger.debug("Inserting permissions");
-		for(ORolePermission perm : user.getPermissions()) {
-			doInsertPermission(con, ouser.getUserUid(), perm.getServiceId(), perm.getKey(), perm.getAction(), "*");
-		}
-		for(ORolePermission perm : user.getServicesPermissions()) {
-			doInsertPermission(con, ouser.getUserUid(), CoreManifest.ID, "SERVICE", ServicePermission.ACTION_ACCESS, perm.getInstance());
-		}
-		
-		return ouser;
-	}
-	
-	private void doUserUpdate(Connection con, UserEntity user) throws DAOException, WTException {
-		UserDAO udao = UserDAO.getInstance();
-		UserInfoDAO uidao = UserInfoDAO.getInstance();
-		UserAssociationDAO uadao = UserAssociationDAO.getInstance();
-		RoleAssociationDAO rolassdao = RoleAssociationDAO.getInstance();
-		RolePermissionDAO rpdao = RolePermissionDAO.getInstance();
-		
-		UserEntity oldUser = getUserEntity(con, user.getProfileId());
-		if(oldUser == null) throw new WTException("User not found [{0}]", user.getProfileId().toString());
-		
-		logger.debug("Updating user");
-		OUser ouser = new OUser();
-		ouser.setDomainId(user.getDomainId());
-		ouser.setUserId(user.getUserId());
-		ouser.setEnabled(user.getEnabled());
-		ouser.setDisplayName(user.getDisplayName());
-		udao.updateEnabledDisplayName(con, ouser);
-
-		logger.debug("Updating userInfo");
-		OUserInfo ouseri = new OUserInfo();
-		ouseri.setDomainId(user.getDomainId());
-		ouseri.setUserId(user.getUserId());
-		ouseri.setFirstName(user.getFirstName());
-		ouseri.setLastName(user.getLastName());
-		uidao.updateFirstLastName(con, ouseri);
-		
-		logger.debug("Updating groups associations");
-		LangUtils.CollectionChangeSet<AssignedGroup> changeSet1 = LangUtils.getCollectionChanges(oldUser.getAssignedGroups(), user.getAssignedGroups());
-		for(AssignedGroup assiGroup : changeSet1.deleted) {
-			uadao.deleteById(con, assiGroup.getUserAssociationId());
-		}
-		for(AssignedGroup assiGroup : changeSet1.inserted) {
-			final String groupUid = groupToUid(new UserProfileId(user.getDomainId(), assiGroup.getGroupId()));
-			doInsertUserAssociation(con, oldUser.getUserUid(), groupUid);
-		}
-		
-		logger.debug("Updating roles associations");
-		LangUtils.CollectionChangeSet<AssignedRole> changeSet2 = LangUtils.getCollectionChanges(oldUser.getAssignedRoles(), user.getAssignedRoles());
-		for(AssignedRole assiRole : changeSet2.deleted) {
-			rolassdao.deleteById(con, assiRole.getRoleAssociationId());
-		}
-		for(AssignedRole assiRole : changeSet2.inserted) {
-			doInsertRoleAssociation(con, oldUser.getUserUid(), assiRole.getRoleUid());
-		}
-
-		logger.debug("Updating permissions");
-		LangUtils.CollectionChangeSet<ORolePermission> changeSet3 = LangUtils.getCollectionChanges(oldUser.getPermissions(), user.getPermissions());
-		for(ORolePermission perm : changeSet3.deleted) {
-			rpdao.deleteById(con, perm.getRolePermissionId());
-		}
-		for(ORolePermission perm : changeSet3.inserted) {
-			doInsertPermission(con, oldUser.getUserUid(), perm.getServiceId(), perm.getKey(), perm.getAction(), "*");
-		}
-
-		LangUtils.CollectionChangeSet<ORolePermission> changeSet4 = LangUtils.getCollectionChanges(oldUser.getServicesPermissions(), user.getServicesPermissions());
-		for(ORolePermission perm : changeSet4.deleted) {
-			rpdao.deleteById(con, perm.getRolePermissionId());
-		}
-		for(ORolePermission perm : changeSet4.inserted) {
-			doInsertPermission(con, oldUser.getUserUid(), CoreManifest.ID, "SERVICE", ServicePermission.ACTION_ACCESS, perm.getInstance());
-		}
-	}
-	
-	private void fillDomain(ODomain o, DomainEntity domain) throws WTException {
-		o.setDomainId(domain.getDomainId());
-		o.setInternetName(domain.getInternetName());
-		o.setEnabled(domain.getEnabled());
-		o.setDescription(domain.getDescription());
-		o.setUserAutoCreation(domain.getUserAutoCreation());
-		o.setDirUri(domain.getDirUri().toString());
-		
-		String scheme = domain.getDirUri().getScheme();
-		if (scheme.equals(WebTopDirectory.SCHEME)) {
-			o.setDirConnectionSecurity(null);
-			o.setDirAdmin(null);
-			o.setDirPassword(null);
+		VUserData vuser = null;
+		try {
+			con = wta.getConnectionManager().getConnection();
+			vuser = useDao.viewDataByProfile(con, profileId.getDomainId(), profileId.getUserId());
+			if (vuser == null) vuser = resDao.viewDataByProfile(con, profileId.getDomainId(), profileId.getUserId());
 			
-		} else if (scheme.equals(LdapWebTopDirectory.SCHEME)) {
-			o.setDirConnectionSecurity(EnumUtils.getName(domain.getDirConnSecurity()));
-			o.setDirAdmin(domain.getDirAdmin());
-			setDirPassword(o, domain.getDirPassword());
-			
-		} else if (scheme.equals(LdapDirectory.SCHEME)) {
-			o.setDirConnectionSecurity(EnumUtils.getName(domain.getDirConnSecurity()));
-			o.setDirAdmin(domain.getDirAdmin());
-			setDirPassword(o, domain.getDirPassword());
-			
-			o.setDirPasswordPolicy(false);
-		} else if (scheme.equals(ImapDirectory.SCHEME)) {
-			o.setDirConnectionSecurity(EnumUtils.getName(domain.getDirConnSecurity()));
-			o.setDirAdmin(null);
-			o.setDirPassword(null);
-			
-		} else if (scheme.equals(SmbDirectory.SCHEME) || scheme.equals(SftpDirectory.SCHEME)) {
-			o.setDirConnectionSecurity(null);
-			o.setDirAdmin(null);
-			o.setDirPassword(null);
-			
-		} else if (scheme.equals(ADDirectory.SCHEME)) {
-			o.setDirConnectionSecurity(EnumUtils.getName(domain.getDirConnSecurity()));
-			o.setDirAdmin(domain.getDirAdmin());
-			setDirPassword(o, domain.getDirPassword());
-			
-		} else if (scheme.equals(LdapNethDirectory.SCHEME)) {
-			o.setDirConnectionSecurity(EnumUtils.getName(domain.getDirConnSecurity()));
-			o.setDirAdmin(domain.getDirAdmin());
-			setDirPassword(o, domain.getDirPassword());
+		} catch (Exception ex) {
+			throw ExceptionUtils.wrapThrowable(ex);
+		} finally {
+			DbUtils.closeQuietly(con);
 		}
-		o.setDirCaseSensitive(domain.getDirCaseSensitive());
-		if (domain.getDirParameters() instanceof ParamsLdapDirectory) {
-			o.setDirParameters(LangUtils.serialize(domain.getDirParameters(), ParamsLdapDirectory.class));
-		} else {
-			o.setDirParameters(null);
-		}
-		AppManagerUtils.fillODomain(o, domain.getPasswordPolicies());
-	}
-	
-	private OUserAssociation doInsertUserAssociation(Connection con, String userUid, String groupUid) throws WTException {
-		UserAssociationDAO uadao = UserAssociationDAO.getInstance();
+		if (vuser == null) return null;
 		
-		OUserAssociation oua = new OUserAssociation();
-		oua.setUserAssociationId(uadao.getSequence(con).intValue());
-		oua.setUserUid(userUid);
-		oua.setGroupUid(groupUid);
-		uadao.insert(con, oua);
-		return oua;
-	}
-	
-	private ORoleAssociation doInsertRoleAssociation(Connection con, String userUid, String roleUid) throws WTException {
-		RoleAssociationDAO rolassdao = RoleAssociationDAO.getInstance();
+		String internetName = WT.getDomainInternetName(profileId.getDomainId());
+		CoreUserSettings cus = new CoreUserSettings(profileId);
+		UserProfile.PersonalInfo pinfo = lookupProfilePersonalInfo(profileId, true);
 		
-		ORoleAssociation ora = new ORoleAssociation();
-		ora.setRoleAssociationId(rolassdao.getSequence(con).intValue());
-		ora.setUserUid(userUid);
-		ora.setRoleUid(roleUid);
-		rolassdao.insert(con, ora);
-		return ora;
-	}
-	
-	private ORolePermission doInsertPermission(Connection con, String roleUid, String serviceId, String key, String action, String instance) throws WTException {
-		RolePermissionDAO rpdao = RolePermissionDAO.getInstance();
-		
-		ORolePermission perm = new ORolePermission();
-		perm.setRolePermissionId(rpdao.getSequence(con).intValue());
-		perm.setRoleUid(roleUid);
-		perm.setServiceId(serviceId);
-		perm.setKey(key);
-		perm.setAction(action);
-		perm.setInstance(instance);
-		
-		rpdao.insert(con, perm);
-		return perm;
-	}
-	
-	private UserProfile.Data getUserData(UserProfileId pid) throws WTException {
-		OUser ouser = getUser(pid);
-		if (ouser == null) return null;
-		
-		String internetName = WT.getDomainInternetName(pid.getDomainId());
-		CoreUserSettings cus = new CoreUserSettings(pid);
-		UserProfile.PersonalInfo upi = userPersonalInfo(pid);
-		
-		DomainAccount internetAccount = new DomainAccount(internetName, pid.getUserId());
-		InternetAddress profileIa = InternetAddressUtils.toInternetAddress(pid.getUserId(), internetName, ouser.getDisplayName());
-		InternetAddress personalIa = InternetAddressUtils.toInternetAddress(upi.getEmail(), ouser.getDisplayName());
+		DomainAccount internetAccount = new DomainAccount(internetName, profileId.getUserId());
+		InternetAddress profileIa = InternetAddressUtils.toInternetAddress(profileId.getUserId(), internetName, vuser.getDisplayName());
+		InternetAddress personalIa = InternetAddressUtils.toInternetAddress(pinfo.getEmail(), vuser.getDisplayName());
 		if (personalIa == null) {
 			personalIa = profileIa;
-			logger.warn("User does not have a valid email in personal info. Check it! [{}]", pid.toString());
+			LOGGER.warn("User does not have a valid email in personal info. Check it! [{}]", profileId.toString());
 		}
-		return new UserProfile.Data(internetAccount, ouser.getDisplayName(), cus.getLanguageTag(), cus.getTimezone(), 
-				cus.getStartDay(), cus.getShortDateFormat(), cus.getLongDateFormat(), cus.getShortTimeFormat(), cus.getLongTimeFormat(), 
-				profileIa, personalIa);
+		return new UserProfile.Data(internetAccount, vuser.getDisplayName(), cus.getLanguageTag(), cus.getTimezone(), 
+			cus.getStartDay(), cus.getShortDateFormat(), cus.getLongDateFormat(), cus.getShortTimeFormat(), cus.getLongTimeFormat(), 
+			profileIa, personalIa);
 	}
 	
 	private OUserInfo createUserInfo(UserProfile.PersonalInfo upi) {
@@ -2569,11 +4058,33 @@ public final class WebTopManager {
 		return oui;
 	}
 	
+	private EventBus.PostResult fireEvent(EventBase event) {
+		return fireEvent(event, false, false);
+	}
+	
+	private EventBus.PostResult fireEvent(EventBase event, boolean trackHandlerErrors, boolean logTrackedErrors) {
+		EventBus.PostResult result = wta.getEventBus().postNow(event, trackHandlerErrors);
+		if (logTrackedErrors) logEventBusHandlerErrors(result);
+		return result;
+	}
+	
+	private void logEventBusHandlerErrors(EventBus.PostResult result) {
+		if (result.hasHandlerErrors()) {
+			for (EventBus.HandlerError error : result.getHandlerErrors()) {
+				Class clazz = error.getHandlerMethodDeclaringClass();
+				String serviceId = WT.findServiceId(clazz);
+				LOGGER.error("[{}] {} -> {}", serviceId, ClassUtils.getSimpleClassName(clazz), error.getHandlerMethodName(), error.getDeepestCause());
+			}
+		}	
+	}
+	
 	private String decDirPassword(String ep) {
+		if (ep == null) return null;
 		return PasswordUtils.decryptDES(ep, new String(new char[]{'p','a','s','s','w','o','r','d'}));
 	}
 	
 	private String encDirPassword(String dp) {
+		if (dp == null) return null;
 		return PasswordUtils.encryptDES(dp, new String(new char[]{'p','a','s','s','w','o','r','d'}));
 	}
 	
@@ -2581,10 +4092,271 @@ public final class WebTopManager {
 		o.setDirPassword(encDirPassword(dp));
 	}
 	
+	private void encryptDomainDirPassword(DomainBase domain) {
+		final String scheme = domain.getDirScheme();
+		if (LdapWebTopDirectory.SCHEME.equals(scheme)
+				|| LdapDirectory.SCHEME.equals(scheme)
+				|| ADDirectory.SCHEME.equals(scheme)
+				|| LdapNethDirectory.SCHEME.equals(scheme)) {
+			
+			domain.setDirPassword(encDirPassword(domain.getDirPassword()));
+		}
+	}
+	
+	private void decryptDomainDirPassword(DomainBase domain) {
+		final String scheme = domain.getDirScheme();
+		if (LdapWebTopDirectory.SCHEME.equals(scheme)
+				|| LdapDirectory.SCHEME.equals(scheme)
+				|| ADDirectory.SCHEME.equals(scheme)
+				|| LdapNethDirectory.SCHEME.equals(scheme)) {
+			
+			domain.setDirPassword(decDirPassword(domain.getDirPassword()));
+		}
+	}
+	
+	private boolean ensureProfileDomainQuietly(String domainId) throws AuthException {
+		try {
+			ensureProfileDomain(domainId);
+			return true;
+		} catch (AuthException ex) {
+			return false;
+		}
+	}
+	
+	private void ensureProfileDomain(String domainId) throws AuthException {
+		if (domainId == null) return;
+		UserProfileId runPid = RunContext.getRunProfileId();
+		if (RunContext.isWebTopAdmin(runPid)) return;
+		if (!runPid.hasDomain(domainId)) throw new AuthException("Running profile's domain [{0}] does not match with passed one [{1}]", runPid.getDomainId(), domainId);
+	}
+	
 	private class CacheDomainInfo extends AbstractBulkCache {
+		
+		private class Data {
+			public final String domainId;
+			public final String publicId;
+			public final String authDomainName;
+			public final String domainName;
+			public final String publicFqdn;
+			
+			public Data(String domainId, String publicId, String authDomainName, String domainName, String publicFqdn) {
+				this.domainId = domainId;
+				this.publicId = publicId;
+				this.authDomainName = authDomainName;
+				this.domainName = domainName;
+				this.publicFqdn = publicFqdn;
+			}
+		}
+		
+		private HashMap<String, Data> byDomainId = new HashMap<>();
+		private HashMap<String, Data> byPublicId = new HashMap<>();
+		private HashMap<String, Data> byAuthDomainName = new HashMap<>(); // InternetName -> AuthDomainName
+		private HashMap<String, Data> byDomainName = new HashMap<>(); // InternetName -> DomainName
+		private HashMap<String, Data> byPublicFqdn = new HashMap<>(); // PublicInternetName -> publicFQDN
+		
+		@Override
+		protected void internalBuildCache() {
+			DomainDAO domDao = DomainDAO.getInstance();
+			Connection con = null;
+			
+			try {
+				LOGGER.debug("[DomainInfoCache] Building cache...");
+				HashMap<String, Data> _byDomainId = new HashMap<>();
+				HashMap<String, Data> _byPublicId = new HashMap<>();
+				HashMap<String, Data> _byAuthDomainName = new HashMap<>();
+				HashMap<String, Data> _byDomainName = new HashMap<>();
+				HashMap<String, Data> _byPublicFqdn = new HashMap<>();
+				
+				con = wta.getConnectionManager().getConnection();
+				for (ODomain odomain : domDao.selectInfo(con)) {
+					final Boolean enabled = odomain.getEnabled();
+					final String publicInternetName;
+					CoreServiceSettings dss = new CoreServiceSettings(wta.getSettingsManager(), CoreManifest.ID, odomain.getDomainId());
+					URI publicUri = URIUtils.createURIQuietly(dss.getPublicBaseUrl());
+					if (publicUri != null && !StringUtils.isBlank(publicUri.getHost())) {
+						publicInternetName = publicUri.getHost();
+					} else {
+						publicInternetName = null;
+					}
+					
+					final Data data = new Data(
+						odomain.getDomainId(),
+						domainIdToDomainPublicId(odomain.getDomainId()),
+						odomain.getAuthDomainName(),
+						odomain.getDomainName(),
+						publicInternetName
+					);
+					
+					LOGGER.debug("[DomainInfoCache] Working on '{}'", data.domainId);
+					_byDomainId.put(data.domainId, data);
+					// Public name (scrambled id)
+					_byPublicId.put(data.publicId, data);
+					LOGGER.trace("[DomainInfoCache] {} -> {}", data.publicId, data.domainId);
+					// Authentication DomainName
+					if (enabled) {
+						_byAuthDomainName.put(data.authDomainName, data);
+						LOGGER.trace("[DomainInfoCache] {} -> {}", data.authDomainName, data.domainId);
+					}
+					// Default DomainName
+					if (enabled) {
+						_byDomainName.put(data.domainName, data);
+						LOGGER.trace("[DomainInfoCache] {} -> {}", data.domainName, data.domainId);
+					}
+					// Public FQDN (host.domain.tld)
+					if (enabled) {
+						Data oldData = _byPublicFqdn.put(data.publicFqdn, data);
+						LOGGER.trace("[DomainInfoCache] {} -> {}", data.publicFqdn, data.domainId);
+						if (oldData != null) {
+							LOGGER.warn("[DomainInfoCache] publicFQDN -> domainId : duplicated association for {}", data.publicFqdn);
+							LOGGER.warn("[DomainInfoCache] {} overrides {}!", data.domainId, oldData.domainId);
+						}
+					}
+				}
+				this.byDomainId = _byDomainId;
+				this.byPublicId = _byPublicId;
+				this.byAuthDomainName = _byAuthDomainName;
+				this.byDomainName = _byDomainName;
+				this.byPublicFqdn = _byPublicFqdn;
+				LOGGER.debug("[DomainInfoCache] Cached {} domains", byDomainId.size());
+				
+			} catch (Exception ex) {
+				DbUtils.closeQuietly(con);
+				if (this.getInitCount() == 0) {
+					throw new WTRuntimeException(ex, "[DomainInfoCache] Unable to build cache");
+				} else {
+					LOGGER.error("[DomainInfoCache] Unable to build cache", ex);
+				}
+			}
+		}
+		
+		@Override
+		protected void internalCleanupCache() {
+			LOGGER.debug("[DomainInfoCache] Cleaning-up cache...");
+			this.byDomainId = new HashMap<>();
+			this.byPublicId = new HashMap<>();
+			this.byAuthDomainName = new HashMap<>();
+			this.byDomainName = new HashMap<>();
+			this.byPublicFqdn = new HashMap<>();
+		}
+		
+		public int getSize() {
+			this.internalCheckBeforeGetDoNotLockThis();
+			long stamp = this.readLock();
+			try {
+				return byDomainId.size();
+			} finally {
+				this.unlockRead(stamp);
+			}
+		}
+		
+		public boolean exists(final String domainId) {
+			this.internalCheckBeforeGetDoNotLockThis();
+			long stamp = this.readLock();
+			try {
+				return this.byDomainId.containsKey(domainId);
+			} finally {
+				this.unlockRead(stamp);
+			}
+		}
+		
+		public String publicIdToDomainId(final String publicId) {
+			this.internalCheckBeforeGetDoNotLockThis();
+			long stamp = this.readLock();
+			try {
+				final Data data = this.byPublicId.get(publicId);
+				return data != null ? data.domainId : null;
+			} finally {
+				this.unlockRead(stamp);
+			}
+		}
+		
+		public String domainIdToAuthDomainName(final String domainId) {
+			this.internalCheckBeforeGetDoNotLockThis();
+			long stamp = this.readLock();
+			try {
+				final Data data = this.byDomainId.get(domainId);
+				return data != null ? data.authDomainName : null;
+			} finally {
+				this.unlockRead(stamp);
+			}
+		}
+		
+		public String authDomainNameToDomainIdIfOnlyOne(final String authDomainName) {
+			this.internalCheckBeforeGetDoNotLockThis();
+			long stamp = this.readLock();
+			try {
+				if (this.byAuthDomainName.size() == 1) {
+					Map.Entry<String, Data> entry = this.byAuthDomainName.entrySet().iterator().next();
+					return entry.getValue().domainId;
+				} else {
+					return null;
+				}
+			} finally {
+				this.unlockRead(stamp);
+			}
+		}
+		
+		public String authDomainNameToDomainId(final String authDomainName) {
+			this.internalCheckBeforeGetDoNotLockThis();
+			long stamp = this.readLock();
+			try {
+				final Data data = this.byAuthDomainName.get(authDomainName);
+				return data != null ? data.domainId : null;
+			} finally {
+				this.unlockRead(stamp);
+			}
+		}
+		
+		public String domainIdToDomainName(final String domainId) {
+			this.internalCheckBeforeGetDoNotLockThis();
+			long stamp = this.readLock();
+			try {
+				final Data data = this.byDomainId.get(domainId);
+				return data != null ? data.domainName : null;
+			} finally {
+				this.unlockRead(stamp);
+			}
+		}
+		
+		public String domainNameToDomainId(final String domainName) {
+			this.internalCheckBeforeGetDoNotLockThis();
+			long stamp = this.readLock();
+			try {
+				final Data data = this.byDomainName.get(domainName);
+				return data != null ? data.domainId : null;
+			} finally {
+				this.unlockRead(stamp);
+			}
+		}
+		
+		public String publicFqdnToDomainId(String publicFqdn) {
+			this.internalCheckBeforeGetDoNotLockThis();
+			long stamp = this.readLock();
+			try {
+				final Data data = this.byPublicFqdn.get(publicFqdn);
+				return data != null ? data.domainId : null;
+			} finally {
+				this.unlockRead(stamp);
+			}
+		}
+		
+		public String domainIdToPublicFqdn(String domainId) {
+			this.internalCheckBeforeGetDoNotLockThis();
+			long stamp = this.readLock();
+			try {
+				final Data data = this.byDomainId.get(domainId);
+				return data != null ? data.publicFqdn : null;
+			} finally {
+				this.unlockRead(stamp);
+			}
+		}
+		
+		/*
 		private HashMap<String, String> publicNameToDomainId = new HashMap<>();
-		private HashMap<String, String> domainInternetNameToDomainId = new HashMap<>();
-		private HashMap<String, String> domainIdToDomainInternetName = new HashMap<>();
+		private HashMap<String, String> authDomainNameToDomainId = new HashMap<>();
+		private HashMap<String, String> domainIdToAuthDomainName = new HashMap<>();
+		private HashMap<String, String> domainNameToDomainId = new HashMap<>();
+		private HashMap<String, String> domainIdToDomainName = new HashMap<>();
 		private HashMap<String, String> publicInternetNameToDomainId = new HashMap<>();
 		private HashMap<String, String> domainIdToPublicInternetName = new HashMap<>();
 		
@@ -2594,70 +4366,126 @@ public final class WebTopManager {
 			Connection con = null;
 			
 			try {
-				logger.debug("[DomainInfoCache] Building cache...");
+				LOGGER.debug("[DomainInfoCache] Building cache...");
 				con = wta.getConnectionManager().getConnection();
 				HashMap<String, String> hmPublicNameToDomainId = new HashMap<>();
-				HashMap<String, String> hmDomainInternetNameToDomainId = new HashMap<>();
-				HashMap<String, String> hmDomainIdToDomainInternetName = new HashMap<>();
-				HashMap<String, String> hmPublicInternetNameToDomainId = new HashMap<>();
-				HashMap<String, String> hmDomainIdToPublicInternetName = new HashMap<>();
+				HashMap<String, String> hmDomainIdToAuthDomainName = new HashMap<>();
+				HashMap<String, String> hmAuthDomainNameToDomainId = new HashMap<>();
 				
-				for (Map.Entry<String, String> entry : domDao.selectEnabledInternetNames(con).entrySet()) {
-					final String domainId = entry.getKey();
-					final String internetName = entry.getValue();
+				HashMap<String, String> hmDomainIdToDomainName = new HashMap<>();
+				HashMap<String, String> hmDomainNameToDomainId = new HashMap<>();
+				
+				HashMap<String, String> hmDomainIdToPublicInternetName = new HashMap<>();
+				HashMap<String, String> hmPublicInternetNameToDomainId = new HashMap<>();
+				
+				for (ODomain odomain : domDao.selectInfo(con)) {
+					final String domainId = odomain.getDomainId();
+					final Boolean enabled = odomain.getEnabled();
+					final String authDomainName = odomain.getAuthDomainName();
+					final String domainName = odomain.getDomainName();
 					
-					logger.debug("[DomainInfoCache] Working on '{}'", domainId);
+					LOGGER.debug("[DomainInfoCache] Working on '{}'", domainId);
+					
+					// Public name (scrambled id)
 					String pubName = domainIdToPublicName(domainId);
 					hmPublicNameToDomainId.put(pubName, domainId);
-					logger.trace("[DomainInfoCache] {} -> {}", pubName, domainId);
+					LOGGER.trace("[DomainInfoCache] {} -> {}", pubName, domainId);
 					
-					hmDomainInternetNameToDomainId.put(internetName, domainId);
-					logger.trace("[DomainInfoCache] {} -> {}", internetName, domainId);
+					// Authentication DomainName
+					hmDomainIdToAuthDomainName.put(domainId, authDomainName);
+					LOGGER.trace("[DomainInfoCache] {} -> {}", domainId, authDomainName);
+					if (enabled) {
+						hmAuthDomainNameToDomainId.put(authDomainName, domainId);
+						LOGGER.trace("[DomainInfoCache] {} -> {}", authDomainName, domainId);
+					}
 					
-					hmDomainIdToDomainInternetName.put(domainId, internetName);
-					logger.trace("[DomainInfoCache] {} -> {}", domainId, internetName);
+					// Default DomainName (eg. for email addresses)
+					hmDomainIdToDomainName.put(domainId, domainName);
+					LOGGER.trace("[DomainInfoCache] {} -> {}", domainId, domainName);
+					if (enabled) {
+						hmDomainNameToDomainId.put(domainName, domainId);
+						LOGGER.trace("[DomainInfoCache] {} -> {}", domainName, domainId);
+					}
 					
-					String pubInternetName = entry.getValue();
+					// Public FQDN (host.domain.tld)
 					CoreServiceSettings dss = new CoreServiceSettings(wta.getSettingsManager(), CoreManifest.ID, domainId);
 					URI publicUri = URIUtils.createURIQuietly(dss.getPublicBaseUrl());
 					if (publicUri != null && !StringUtils.isBlank(publicUri.getHost())) {
-						pubInternetName = publicUri.getHost();
-					}
-					
-					String oldPubInternetName = hmPublicInternetNameToDomainId.put(pubInternetName, domainId);
-					logger.trace("[DomainInfoCache] {} -> {}", pubInternetName, domainId);
-					
-					hmDomainIdToPublicInternetName.put(domainId, pubInternetName);
-					logger.trace("[DomainInfoCache] {} -> {}", domainId, pubInternetName);
-					
-					if (oldPubInternetName != null) {
-						logger.warn("[DomainInfoCache] publicInternetName -> domainId : duplicated association for {}", pubInternetName);
-						logger.warn("[DomainInfoCache] [{} -> {}] overridden!", pubInternetName, oldPubInternetName);
+						String pubInternetName = publicUri.getHost();
+						hmDomainIdToPublicInternetName.put(domainId, pubInternetName);
+						LOGGER.trace("[DomainInfoCache] {} -> {}", domainId, pubInternetName);
+						if (enabled) {
+							String oldPubInternetName = hmPublicInternetNameToDomainId.put(pubInternetName, domainId);
+							LOGGER.trace("[DomainInfoCache] {} -> {}", pubInternetName, domainId);
+
+							if (oldPubInternetName != null) {
+								LOGGER.warn("[DomainInfoCache] publicInternetName -> domainId : duplicated association for {}", pubInternetName);
+								LOGGER.warn("[DomainInfoCache] [{} -> {}] overridden!", pubInternetName, oldPubInternetName);
+							}
+						}
 					}
 				}
-				this.publicNameToDomainId = hmPublicNameToDomainId;
-				this.domainInternetNameToDomainId = hmDomainInternetNameToDomainId;
-				this.domainIdToDomainInternetName = hmDomainIdToDomainInternetName;
-				this.publicInternetNameToDomainId = hmPublicInternetNameToDomainId;
-				this.domainIdToPublicInternetName = hmDomainIdToPublicInternetName;
-				logger.debug("[DomainInfoCache] Cached {} domains", publicNameToDomainId.size());
 				
-			} catch(Throwable t) {
+				//for (Map.Entry<String, String> entry : domDao.selectEnabledInternetNames(con).entrySet()) {
+				//	final String domainId = entry.getKey();
+				//	final String internetName = entry.getValue();
+				//	
+				//	LOGGER.debug("[DomainInfoCache] Working on '{}'", domainId);
+				//	String pubName = domainIdToPublicName(domainId);
+				//	hmPublicNameToDomainId.put(pubName, domainId);
+				//	LOGGER.trace("[DomainInfoCache] {} -> {}", pubName, domainId);
+				//	
+				//	hmDomainInternetNameToDomainId.put(internetName, domainId);
+				//	LOGGER.trace("[DomainInfoCache] {} -> {}", internetName, domainId);
+				//	
+				//	hmDomainIdToDomainInternetName.put(domainId, internetName);
+				//	LOGGER.trace("[DomainInfoCache] {} -> {}", domainId, internetName);
+				//	
+				//	String pubInternetName = entry.getValue();
+				//	CoreServiceSettings dss = new CoreServiceSettings(wta.getSettingsManager(), CoreManifest.ID, domainId);
+				//	URI publicUri = URIUtils.createURIQuietly(dss.getPublicBaseUrl());
+				//	if (publicUri != null && !StringUtils.isBlank(publicUri.getHost())) {
+				//		pubInternetName = publicUri.getHost();
+				//	}
+				//	
+				//	String oldPubInternetName = hmPublicInternetNameToDomainId.put(pubInternetName, domainId);
+				//	LOGGER.trace("[DomainInfoCache] {} -> {}", pubInternetName, domainId);
+				//	
+				//	hmDomainIdToPublicInternetName.put(domainId, pubInternetName);
+				//	LOGGER.trace("[DomainInfoCache] {} -> {}", domainId, pubInternetName);
+				//	
+				//	if (oldPubInternetName != null) {
+				//		LOGGER.warn("[DomainInfoCache] publicInternetName -> domainId : duplicated association for {}", pubInternetName);
+				//		LOGGER.warn("[DomainInfoCache] [{} -> {}] overridden!", pubInternetName, oldPubInternetName);
+				//	}
+				//}
+				this.publicNameToDomainId = hmPublicNameToDomainId;
+				this.domainIdToAuthDomainName = hmDomainIdToAuthDomainName;
+				this.authDomainNameToDomainId = hmAuthDomainNameToDomainId;
+				this.domainIdToPublicInternetName = hmDomainIdToPublicInternetName;
+				this.publicInternetNameToDomainId = hmPublicInternetNameToDomainId;
+				LOGGER.debug("[DomainInfoCache] Cached {} domains", publicNameToDomainId.size());
+				
+			} catch (Exception ex) {
 				DbUtils.closeQuietly(con);
 				if (this.getInitCount() == 0) {
-					throw new WTRuntimeException(t, "[DomainInfoCache] Unable to build cache");
+					throw new WTRuntimeException(ex, "[DomainInfoCache] Unable to build cache");
 				} else {
-					logger.error("[DomainInfoCache] Unable to build cache", t);
+					LOGGER.error("[DomainInfoCache] Unable to build cache", ex);
 				}
 			}
 		}
-
+		
 		@Override
 		protected void internalCleanupCache() {
-			logger.debug("[DomainInfoCache] Cleaning-up cache...");
+			LOGGER.debug("[DomainInfoCache] Cleaning-up cache...");
 			this.publicNameToDomainId = new HashMap<>();
-			this.domainInternetNameToDomainId = new HashMap<>();
-			this.domainIdToDomainInternetName = new HashMap<>();
+			this.authDomainNameToDomainId = new HashMap<>();
+			this.domainIdToAuthDomainName = new HashMap<>();
+			
+			this.domainNameToDomainId = new HashMap<>();
+			this.domainIdToDomainName = new HashMap<>();
+			
 			this.publicInternetNameToDomainId = new HashMap<>();
 			this.domainIdToPublicInternetName = new HashMap<>();
 		}
@@ -2666,7 +4494,17 @@ public final class WebTopManager {
 			return publicNameToDomainId.size();
 		}
 		
-		public String publicNameToDomainId(String publicName) {
+		public boolean exists(final String domainId) {
+			this.internalCheckBeforeGetDoNotLockThis();
+			long stamp = this.readLock();
+			try {
+				return this.domainIdToAuthDomainName.containsKey(domainId);
+			} finally {
+				this.unlockRead(stamp);
+			}
+		}
+		
+		public String publicNameToDomainId(final String publicName) {
 			this.internalCheckBeforeGetDoNotLockThis();
 			long stamp = this.readLock();
 			try {
@@ -2676,21 +4514,21 @@ public final class WebTopManager {
 			}
 		}
 		
-		public String domainInternetNameToDomainId(String domainInternetName) {
+		public String domainIdToAuthDomainName(final String domainId) {
 			this.internalCheckBeforeGetDoNotLockThis();
 			long stamp = this.readLock();
 			try {
-				return this.domainInternetNameToDomainId.get(domainInternetName);
+				return this.domainIdToAuthDomainName.get(domainId);
 			} finally {
 				this.unlockRead(stamp);
 			}
 		}
 		
-		public String domainIdToDomainInternetName(String domainId) {
+		public String authDomainNameToDomainId(final String authFQDN) {
 			this.internalCheckBeforeGetDoNotLockThis();
 			long stamp = this.readLock();
 			try {
-				return this.domainIdToDomainInternetName.get(domainId);
+				return this.authDomainNameToDomainId.get(authFQDN);
 			} finally {
 				this.unlockRead(stamp);
 			}
@@ -2715,128 +4553,10 @@ public final class WebTopManager {
 				this.unlockRead(stamp);
 			}
 		}
+		*/
 	}
 	
-	private void cleanupUserCache() {
-		synchronized(cacheUserToData) {
-			cacheUserToData.clear();
-		}
-		synchronized(cacheUserToPersonalInfo) {
-			cacheUserToPersonalInfo.clear();
-		}
-	}
-	
-	private void addToUserCache(UserProfileId pid, UserProfile.Data userData) {
-		synchronized(cacheUserToData) {
-			cacheUserToData.put(pid, userData);
-		}
-	}
-	
-	private void addToUserCache(UserProfileId pid, UserProfile.PersonalInfo userPersonalInfo) {
-		synchronized(cacheUserToPersonalInfo) {
-			cacheUserToPersonalInfo.put(pid, userPersonalInfo);
-		}
-	}
-	
-	private void removeFromUserCache(UserProfileId pid) {
-		synchronized(cacheUserToData) {
-			cacheUserToData.remove(pid);
-		}
-		synchronized(cacheUserToPersonalInfo) {
-			cacheUserToPersonalInfo.remove(pid);
-		}
-	}
-	
-	private void initUserUidCache() {
-		Connection con = null;
-		
-		try {
-			synchronized(lock1) {
-				UserDAO dao = UserDAO.getInstance();
-				
-				con = wta.getConnectionManager().getConnection();
-				List<UserUid> uids = dao.viewAllUids(con);
-				cleanupUserUidCache();
-				for(UserUid uid : uids) {
-					addToUserUidCache(uid);
-				}
-			}
-		} catch(SQLException ex) {
-			throw new WTRuntimeException(ex, "Unable to init user UID cache");
-		} finally {
-			DbUtils.closeQuietly(con);
-		}
-	}
-	
-	private void cleanupUserUidCache() {
-		synchronized(lock1) {
-			cacheUserToUserUid.clear();
-			cacheUserUidToUser.clear();
-		}
-	}
-	
-	private void addToUserUidCache(UserUid uid) {
-		synchronized(lock1) {
-			UserProfileId pid = new UserProfileId(uid.getDomainId(), uid.getUserId());
-			cacheUserToUserUid.put(pid, uid.getUserUid());
-			cacheUserUidToUser.put(uid.getUserUid(), pid);
-		}
-	}
-	
-	private void removeFromUserUidCache(UserProfileId pid) {
-		synchronized(lock1) {
-			if(cacheUserToUserUid.containsKey(pid)) {
-				String uid = cacheUserToUserUid.remove(pid);
-				cacheUserUidToUser.remove(uid);
-			}
-		}
-	}
-	
-	private void initGroupUidCache() {
-		Connection con = null;
-		
-		try {
-			synchronized(lock2) {
-				GroupDAO dao = GroupDAO.getInstance();
-				
-				con = wta.getConnectionManager().getConnection();
-				List<GroupUid> uids = dao.viewAllUids(con);
-				cleanupGroupUidCache();
-				for(GroupUid uid : uids) {
-					addToGroupUidCache(uid);
-				}
-			}
-		} catch(SQLException ex) {
-			throw new WTRuntimeException(ex, "Unable to init group UID cache");
-		} finally {
-			DbUtils.closeQuietly(con);
-		}
-	}
-	
-	private void cleanupGroupUidCache() {
-		synchronized(lock2) {
-			cacheGroupToGroupUid.clear();
-			cacheGroupUidToGroup.clear();
-		}
-	}
-	
-	private void addToGroupUidCache(GroupUid uid) {
-		synchronized(lock2) {
-			UserProfileId pid = new UserProfileId(uid.getDomainId(), uid.getUserId());
-			cacheGroupToGroupUid.put(pid, uid.getUserUid());
-			cacheGroupUidToGroup.put(uid.getUserUid(), pid);
-		}
-	}
-	
-	private void removeFromGroupUidCache(UserProfileId pid) {
-		synchronized(lock2) {
-			if(cacheGroupToGroupUid.containsKey(pid)) {
-				String uid = cacheGroupToGroupUid.remove(pid);
-				cacheGroupUidToGroup.remove(uid);
-			}
-		}
-	}
-	
+	/*
     private void createCyrusUser(String login,String domainId) throws WTCyrusException {
 		String host=wta.getSettingsManager().getServiceSetting(domainId, "com.sonicle.webtop.mail", BaseServiceSettings.DEFAULT_PREFIX+"host");
 		int port=Integer.parseInt(wta.getSettingsManager().getServiceSetting(domainId, "com.sonicle.webtop.mail", BaseServiceSettings.DEFAULT_PREFIX+"port"));
@@ -2887,6 +4607,270 @@ public final class WebTopManager {
 			throw new WTCyrusException(exc);
         }
     }
+	*/
+	
+	private void cleanupProfileCache() {
+		profileToDataCache.cleanUp();
+		profileToPersonalInfoCache.cleanUp();
+	}
+	
+	private class ProfileDataCacheLoader implements CacheLoader<UserProfileId, UserProfile.Data> {
+
+		@Override
+		public UserProfile.Data load(UserProfileId k) throws Exception {
+			try {
+				LOGGER.trace("[UserProfileDataCache] Loading... [{}]", k);
+				return doGetProfileData(k);
+				
+			} catch (Exception ex) {
+				LOGGER.error("[UserProfileDataCache] Unable to lookup [{}]", k, ex);
+				return null;
+			}
+		}
+	}
+	
+	private class ProfilePersonalInfoCacheLoader implements CacheLoader<UserProfileId, UserProfile.PersonalInfo> {
+
+		@Override
+		public UserProfile.PersonalInfo load(UserProfileId k) throws Exception {
+			try {
+				LOGGER.trace("[UserProfilePersonalInfoCache] Loading... [{}]", k);
+				return doGetProfilePersonalInfo(k);
+				
+			} catch (Exception ex) {
+				LOGGER.error("[UserProfilePersonalInfoCache] Unable to lookup [{}]", k, ex);
+				return null;
+			}
+		}
+	}
+	
+	private class SubjectSidCache {
+		private final LoadingCache<String, Optional<SubjectSid>> userPidToSid = Caffeine.newBuilder().build(new PidToSidLoader());
+		private final LoadingCache<String, Optional<SubjectSid>> rolePidToSid = Caffeine.newBuilder().build(new PidToSidLoader());
+		private final LoadingCache<String, Optional<SubjectPid>> sidToPid = Caffeine.newBuilder().build(new SidToPidLoader());
+	
+		public void init() {
+			UserDAO useDao = UserDAO.getInstance();
+			RoleDAO rolDao = RoleDAO.getInstance();
+			Connection con = null;
+
+			try {
+				LOGGER.trace("[Subject Sid <-> Pid Cache] Loading all...");
+				con = wta.getConnectionManager().getConnection(CoreManifest.ID);
+				// Load data from users/resocurces/groups
+				List<OUser> ousers = useDao.selectAllAsSubjects(con);
+				for (OUser ouser : ousers) {
+					sidToPid.put(ouser.getUserSid(), Optional.ofNullable(new SubjectPid(ouser)));
+					userPidToSid.put(ouser.getProfileId().toString(), Optional.ofNullable(new SubjectSid(ouser)));
+				}
+				// Load data from roles
+				List<ORole> oroles = rolDao.selectAllAsSubjects(con);
+				for (ORole orole : oroles) {
+					sidToPid.put(orole.getRoleSid(), Optional.ofNullable(new SubjectPid(orole)));
+					rolePidToSid.put(orole.getProfileId().toString(), Optional.ofNullable(new SubjectSid(orole)));
+				}
+
+			} catch (Throwable t) {
+				LOGGER.error("[Subject Sid <-> Pid Cache] Unable to load all", t);
+			} finally {
+				DbUtils.closeQuietly(con);
+			}
+		}
+		
+		public void cleanup() {
+			sidToPid.cleanUp();
+			userPidToSid.cleanUp();
+			rolePidToSid.cleanUp();
+		}
+		
+		public void cleanupByDomain(final String domainId) {
+			Check.notNull(domainId, "domainId");
+			
+			Set<String> uids = new LinkedHashSet<>();
+			Set<String> userPids = new LinkedHashSet<>();
+			Set<String> rolePids = new LinkedHashSet<>();
+			userPidToSid.asMap().forEach((k, v) -> {
+				if (k.equals("@" + domainId)) {
+					userPids.add(k);
+					if (v.isPresent()) uids.add(v.get().getSid());
+				}
+			});
+			rolePidToSid.asMap().forEach((k, v) -> {
+				if (k.equals("@" + domainId)) {
+					rolePids.add(k);
+					if (v.isPresent()) uids.add(v.get().getSid());
+				}
+			});
+			sidToPid.invalidateAll(uids);
+			userPidToSid.invalidateAll(userPids);
+			rolePidToSid.invalidateAll(rolePids);
+		}
+		
+		public void add(final UserProfileId pid, final String sid, final GenericSubject.Type type) {
+			Check.notNull(pid, "pid");
+			Check.notEmpty(sid, "sid");
+			Check.notNull(type, "type");
+			
+			sidToPid.put(sid, Optional.ofNullable(new SubjectPid(type, pid.toString())));
+			if (GenericSubject.Type.ROLE.equals(type)) {
+				rolePidToSid.put(pid.toString(), Optional.ofNullable(new SubjectSid(type, sid)));
+			} else {
+				userPidToSid.put(pid.toString(), Optional.ofNullable(new SubjectSid(type, sid)));
+			}
+		}
+		
+		public void remove(final UserProfileId pid, final GenericSubject.Type type) {
+			Check.notNull(pid, "pid");
+			Check.notNull(type, "type");
+			
+			Optional<SubjectSid> opt = null;
+			if (GenericSubject.Type.ROLE.equals(type)) {
+				opt = rolePidToSid.get(pid.toString());
+			} else {
+				opt = userPidToSid.get(pid.toString());
+			}
+			if ((opt != null) && opt.isPresent()) sidToPid.invalidate(opt.get().getSid());
+			if (GenericSubject.Type.ROLE.equals(type)) {
+				rolePidToSid.invalidate(pid.toString());
+			} else {
+				userPidToSid.invalidate(pid.toString());
+			}
+		}
+		
+		public GenericSubject.Type getSidType(final String sid) {
+			Check.notNull(sid, "sid");
+			
+			Optional<SubjectPid> opt = sidToPid.get(sid);
+			if (!opt.isPresent()) {
+				return null;
+			} else {
+				return opt.get().getType();
+			}
+		}
+		
+		public UserProfileId getPid(final String sid, final GenericSubject.Type... validTypes) {
+			Check.notNull(sid, "sid");
+			
+			Optional<SubjectPid> opt = sidToPid.get(sid);
+			if (!opt.isPresent()) {
+				return null;
+			} else {
+				SubjectPid sp = opt.get();
+				Set<GenericSubject.Type> constraints = toSet(validTypes);
+				if (constraints != null) {
+					return constraints.contains(sp.getType()) ? sp.getProfileId() : null;
+				} else {
+					return sp.getProfileId();
+				}
+			}
+		}
+		
+		public String getPidAsString(final String sid, final GenericSubject.Type... validTypes) {
+			UserProfileId pid = getPid(sid, validTypes);
+			return (pid != null) ? pid.toString() : null;
+		}
+		
+		public String getSid(final UserProfileId pid, final GenericSubject.Type... validTypes) {
+			Check.notNull(pid, "pid");
+			Check.notEmpty(validTypes, "validTypes");
+			
+			SubjectSid ss = null;
+			Set<GenericSubject.Type> constraints = toSet( validTypes);
+			if (constraints.size() > 1 || !constraints.contains(GenericSubject.Type.ROLE)) {
+				Optional<SubjectSid> opt = userPidToSid.get(pid.toString());
+				if ((opt != null) && opt.isPresent()) ss = opt.get();
+			}
+			if ((ss == null) && constraints.contains(GenericSubject.Type.ROLE)) {
+				Optional<SubjectSid> opt = rolePidToSid.get(pid.toString());
+				if ((opt != null) && opt.isPresent()) ss = opt.get();
+			}
+			
+			if (ss == null) {
+				return null;
+			} else {
+				return constraints.contains(ss.getType()) ? ss.getSid() : null;
+			}
+		}
+		
+		private Set<GenericSubject.Type> toSet(GenericSubject.Type... types) {
+			return (types != null) ? new LinkedHashSet<>(Arrays.asList(types)) : new LinkedHashSet<>(0);
+		}
+		
+		private Set<GenericSubject.Type> toTypeSet(GenericSubject.Type type, GenericSubject.Type... moreTypes) {
+			Set<GenericSubject.Type> set = null;
+			if (type != null) {
+				set = new LinkedHashSet<>();
+				set.add(type);
+				if (moreTypes != null) {
+					for (GenericSubject.Type more : moreTypes) set.add(more);
+				}
+			}
+			return set;
+		}
+		
+		private class PidToSidLoader implements CacheLoader<String, Optional<SubjectSid>> {
+			
+			@Override
+			public Optional<SubjectSid> load(String k) throws Exception {
+				UserDAO useDao = UserDAO.getInstance();
+				RoleDAO rolDao = RoleDAO.getInstance();
+				Connection con = null;
+
+				try {
+					LOGGER.trace("[SubjectPidToSidCache] Loading... [{}]", k);
+					SubjectSid value = null;
+
+					UserProfileId pid = new UserProfileId(k);
+					con = wta.getConnectionManager().getConnection(CoreManifest.ID);
+					// Load data from users/resocurces/groups
+					OUser ouser = useDao.selectAsSubjectByDomainId(con, pid.getDomainId(), pid.getUserId());
+					if (ouser != null) value = new SubjectSid(ouser);
+					// Load data from roles
+					ORole orole = rolDao.selectAsSubjectByDomainName(con, pid.getDomainId(), pid.getUserId());
+					if (orole != null) value = new SubjectSid(orole);
+
+					return Optional.ofNullable(value);
+
+				} catch (Throwable t) {
+					LOGGER.error("[SubjectPidToSidCache] Unable to load [{}]", k, t);
+					return null;
+				} finally {
+					DbUtils.closeQuietly(con);
+				}
+			}
+		}
+
+		private class SidToPidLoader implements CacheLoader<String, Optional<SubjectPid>> {
+
+			@Override
+			public Optional<SubjectPid> load(String k) throws Exception {
+				UserDAO useDao = UserDAO.getInstance();
+				RoleDAO rolDao = RoleDAO.getInstance();
+				Connection con = null;
+
+				try {
+					LOGGER.trace("[SubjectSidToPidCache] Loading... [{}]", k);
+					SubjectPid value = null;
+
+					con = wta.getConnectionManager().getConnection(CoreManifest.ID);
+					// Load data from users/resocurces/groups
+					OUser ouser = useDao.selectAsSubjectBySidEnabled(con, k, EnabledCond.ANY_STATE);
+					if (ouser != null) value = new SubjectPid(ouser);
+					// Load data from roles
+					ORole orole = rolDao.selectAsSubjectBySid(con, k);
+					if (orole != null) value = new SubjectPid(orole);
+
+					return Optional.ofNullable(value);
+
+				} catch (Exception ex) {
+					LOGGER.error("[SubjectSidToPidCache] Unable to load [{}]", k, ex);
+					return null;
+				} finally {
+					DbUtils.closeQuietly(con);
+				}
+			}
+		}
+	}
 	
 	public static class CheckUserResult {
 		public boolean exist;
@@ -2895,18 +4879,6 @@ public final class WebTopManager {
 		public CheckUserResult(boolean exist, boolean enabled) {
 			this.exist = exist;
 			this.enabled = enabled;
-		}
-	}
-	
-	public static class UserUidBag {
-		public String userUid;
-		public String roleUid;
-		
-		public UserUidBag() {}
-		
-		public UserUidBag(String uid, String roleUid) {
-			this.userUid = uid;
-			this.roleUid = roleUid;
 		}
 	}
 	

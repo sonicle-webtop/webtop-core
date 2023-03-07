@@ -1,0 +1,415 @@
+package com.sonicle.webtop.core.swagger.v1.model;
+
+import com.fasterxml.jackson.annotation.JsonTypeName;
+import com.sonicle.webtop.core.swagger.v1.model.ApiDirectoryPasswordPolicies;
+import com.sonicle.webtop.core.swagger.v1.model.ApiDomainBaseDirRawParameters;
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
+import javax.validation.constraints.*;
+import javax.validation.Valid;
+
+import io.swagger.annotations.*;
+import java.util.Objects;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonValue;
+import com.fasterxml.jackson.annotation.JsonTypeName;
+
+/**
+ * The domain base data.
+ **/
+@ApiModel(description = "The domain base data.")
+@JsonTypeName("DomainBase")
+@javax.annotation.Generated(value = "org.openapitools.codegen.languages.JavaJAXRSSpecServerCodegen", date = "2023-01-19T09:40:24.427+01:00[Europe/Berlin]")
+public class ApiDomainBase   {
+  private @Valid Boolean enabled;
+  private @Valid String displayName;
+  private @Valid String authDomainName;
+  private @Valid String domainName;
+  private @Valid String publicURL;
+  private @Valid Boolean userAutoCreation;
+  private @Valid String dirUri;
+  private @Valid String dirAdmin;
+  private @Valid String dirPassword;
+  public enum DirConnSecurityEnum {
+
+    OFF(String.valueOf("OFF")), SSL(String.valueOf("SSL")), STARTTLS(String.valueOf("STARTTLS"));
+
+
+    private String value;
+
+    DirConnSecurityEnum (String v) {
+        value = v;
+    }
+
+    public String value() {
+        return value;
+    }
+
+    @Override
+    @JsonValue
+    public String toString() {
+        return String.valueOf(value);
+    }
+
+    /**
+     * Convert a String into String, as specified in the
+     * <a href="https://download.oracle.com/otndocs/jcp/jaxrs-2_0-fr-eval-spec/index.html">See JAX RS 2.0 Specification, section 3.2, p. 12</a>
+     */
+	public static DirConnSecurityEnum fromString(String s) {
+        for (DirConnSecurityEnum b : DirConnSecurityEnum.values()) {
+            // using Objects.toString() to be safe if value type non-object type
+            // because types like 'int' etc. will be auto-boxed
+            if (java.util.Objects.toString(b.value).equals(s)) {
+                return b;
+            }
+        }
+        throw new IllegalArgumentException("Unexpected string value '" + s + "'");
+	}
+	
+    @JsonCreator
+    public static DirConnSecurityEnum fromValue(String value) {
+        for (DirConnSecurityEnum b : DirConnSecurityEnum.values()) {
+            if (b.value.equals(value)) {
+                return b;
+            }
+        }
+        throw new IllegalArgumentException("Unexpected value '" + value + "'");
+    }
+}
+
+  private @Valid DirConnSecurityEnum dirConnSecurity;
+  private @Valid Boolean dirCaseSensitive;
+  private @Valid ApiDomainBaseDirRawParameters dirRawParameters;
+  private @Valid ApiDirectoryPasswordPolicies passwordPolicies;
+
+  /**
+   * Represent the availability status
+   **/
+  public ApiDomainBase enabled(Boolean enabled) {
+    this.enabled = enabled;
+    return this;
+  }
+
+  
+  @ApiModelProperty(required = true, value = "Represent the availability status")
+  @JsonProperty("enabled")
+  @NotNull
+  public Boolean getEnabled() {
+    return enabled;
+  }
+
+  @JsonProperty("enabled")
+  public void setEnabled(Boolean enabled) {
+    this.enabled = enabled;
+  }
+
+  /**
+   * Descriptive name for display purposes
+   **/
+  public ApiDomainBase displayName(String displayName) {
+    this.displayName = displayName;
+    return this;
+  }
+
+  
+  @ApiModelProperty(required = true, value = "Descriptive name for display purposes")
+  @JsonProperty("displayName")
+  @NotNull
+  public String getDisplayName() {
+    return displayName;
+  }
+
+  @JsonProperty("displayName")
+  public void setDisplayName(String displayName) {
+    this.displayName = displayName;
+  }
+
+  /**
+   * Authentication DomainName
+   **/
+  public ApiDomainBase authDomainName(String authDomainName) {
+    this.authDomainName = authDomainName;
+    return this;
+  }
+
+  
+  @ApiModelProperty(required = true, value = "Authentication DomainName")
+  @JsonProperty("authDomainName")
+  @NotNull
+  public String getAuthDomainName() {
+    return authDomainName;
+  }
+
+  @JsonProperty("authDomainName")
+  public void setAuthDomainName(String authDomainName) {
+    this.authDomainName = authDomainName;
+  }
+
+  /**
+   * [Not used for now] Primary DomainName (defaults to auth DomainName).
+   **/
+  public ApiDomainBase domainName(String domainName) {
+    this.domainName = domainName;
+    return this;
+  }
+
+  
+  @ApiModelProperty(value = "[Not used for now] Primary DomainName (defaults to auth DomainName).")
+  @JsonProperty("domainName")
+  public String getDomainName() {
+    return domainName;
+  }
+
+  @JsonProperty("domainName")
+  public void setDomainName(String domainName) {
+    this.domainName = domainName;
+  }
+
+  /**
+   * Public URL to access the service, it uses &#39;public.url&#39; settings for now.
+   **/
+  public ApiDomainBase publicURL(String publicURL) {
+    this.publicURL = publicURL;
+    return this;
+  }
+
+  
+  @ApiModelProperty(required = true, value = "Public URL to access the service, it uses 'public.url' settings for now.")
+  @JsonProperty("publicURL")
+  @NotNull
+  public String getPublicURL() {
+    return publicURL;
+  }
+
+  @JsonProperty("publicURL")
+  public void setPublicURL(String publicURL) {
+    this.publicURL = publicURL;
+  }
+
+  /**
+   * Specifies if user auto-creation at logon is active.
+   **/
+  public ApiDomainBase userAutoCreation(Boolean userAutoCreation) {
+    this.userAutoCreation = userAutoCreation;
+    return this;
+  }
+
+  
+  @ApiModelProperty(required = true, value = "Specifies if user auto-creation at logon is active.")
+  @JsonProperty("userAutoCreation")
+  @NotNull
+  public Boolean getUserAutoCreation() {
+    return userAutoCreation;
+  }
+
+  @JsonProperty("userAutoCreation")
+  public void setUserAutoCreation(Boolean userAutoCreation) {
+    this.userAutoCreation = userAutoCreation;
+  }
+
+  /**
+   * The URL of underlyning authentication directory.
+   **/
+  public ApiDomainBase dirUri(String dirUri) {
+    this.dirUri = dirUri;
+    return this;
+  }
+
+  
+  @ApiModelProperty(required = true, value = "The URL of underlyning authentication directory.")
+  @JsonProperty("dirUri")
+  @NotNull
+  public String getDirUri() {
+    return dirUri;
+  }
+
+  @JsonProperty("dirUri")
+  public void setDirUri(String dirUri) {
+    this.dirUri = dirUri;
+  }
+
+  /**
+   * Username to access Directory as Admin.
+   **/
+  public ApiDomainBase dirAdmin(String dirAdmin) {
+    this.dirAdmin = dirAdmin;
+    return this;
+  }
+
+  
+  @ApiModelProperty(value = "Username to access Directory as Admin.")
+  @JsonProperty("dirAdmin")
+  public String getDirAdmin() {
+    return dirAdmin;
+  }
+
+  @JsonProperty("dirAdmin")
+  public void setDirAdmin(String dirAdmin) {
+    this.dirAdmin = dirAdmin;
+  }
+
+  /**
+   * Password of the Admin username.
+   **/
+  public ApiDomainBase dirPassword(String dirPassword) {
+    this.dirPassword = dirPassword;
+    return this;
+  }
+
+  
+  @ApiModelProperty(value = "Password of the Admin username.")
+  @JsonProperty("dirPassword")
+  public String getDirPassword() {
+    return dirPassword;
+  }
+
+  @JsonProperty("dirPassword")
+  public void setDirPassword(String dirPassword) {
+    this.dirPassword = dirPassword;
+  }
+
+  /**
+   * Specifies the security level of the connection.
+   **/
+  public ApiDomainBase dirConnSecurity(DirConnSecurityEnum dirConnSecurity) {
+    this.dirConnSecurity = dirConnSecurity;
+    return this;
+  }
+
+  
+  @ApiModelProperty(value = "Specifies the security level of the connection.")
+  @JsonProperty("dirConnSecurity")
+  public DirConnSecurityEnum getDirConnSecurity() {
+    return dirConnSecurity;
+  }
+
+  @JsonProperty("dirConnSecurity")
+  public void setDirConnSecurity(DirConnSecurityEnum dirConnSecurity) {
+    this.dirConnSecurity = dirConnSecurity;
+  }
+
+  /**
+   * Specifies whether Directory is case-sensitive during usernames evaluation.
+   **/
+  public ApiDomainBase dirCaseSensitive(Boolean dirCaseSensitive) {
+    this.dirCaseSensitive = dirCaseSensitive;
+    return this;
+  }
+
+  
+  @ApiModelProperty(value = "Specifies whether Directory is case-sensitive during usernames evaluation.")
+  @JsonProperty("dirCaseSensitive")
+  public Boolean getDirCaseSensitive() {
+    return dirCaseSensitive;
+  }
+
+  @JsonProperty("dirCaseSensitive")
+  public void setDirCaseSensitive(Boolean dirCaseSensitive) {
+    this.dirCaseSensitive = dirCaseSensitive;
+  }
+
+  /**
+   **/
+  public ApiDomainBase dirRawParameters(ApiDomainBaseDirRawParameters dirRawParameters) {
+    this.dirRawParameters = dirRawParameters;
+    return this;
+  }
+
+  
+  @ApiModelProperty(value = "")
+  @JsonProperty("dirRawParameters")
+  public ApiDomainBaseDirRawParameters getDirRawParameters() {
+    return dirRawParameters;
+  }
+
+  @JsonProperty("dirRawParameters")
+  public void setDirRawParameters(ApiDomainBaseDirRawParameters dirRawParameters) {
+    this.dirRawParameters = dirRawParameters;
+  }
+
+  /**
+   **/
+  public ApiDomainBase passwordPolicies(ApiDirectoryPasswordPolicies passwordPolicies) {
+    this.passwordPolicies = passwordPolicies;
+    return this;
+  }
+
+  
+  @ApiModelProperty(value = "")
+  @JsonProperty("passwordPolicies")
+  public ApiDirectoryPasswordPolicies getPasswordPolicies() {
+    return passwordPolicies;
+  }
+
+  @JsonProperty("passwordPolicies")
+  public void setPasswordPolicies(ApiDirectoryPasswordPolicies passwordPolicies) {
+    this.passwordPolicies = passwordPolicies;
+  }
+
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+    ApiDomainBase domainBase = (ApiDomainBase) o;
+    return Objects.equals(this.enabled, domainBase.enabled) &&
+        Objects.equals(this.displayName, domainBase.displayName) &&
+        Objects.equals(this.authDomainName, domainBase.authDomainName) &&
+        Objects.equals(this.domainName, domainBase.domainName) &&
+        Objects.equals(this.publicURL, domainBase.publicURL) &&
+        Objects.equals(this.userAutoCreation, domainBase.userAutoCreation) &&
+        Objects.equals(this.dirUri, domainBase.dirUri) &&
+        Objects.equals(this.dirAdmin, domainBase.dirAdmin) &&
+        Objects.equals(this.dirPassword, domainBase.dirPassword) &&
+        Objects.equals(this.dirConnSecurity, domainBase.dirConnSecurity) &&
+        Objects.equals(this.dirCaseSensitive, domainBase.dirCaseSensitive) &&
+        Objects.equals(this.dirRawParameters, domainBase.dirRawParameters) &&
+        Objects.equals(this.passwordPolicies, domainBase.passwordPolicies);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(enabled, displayName, authDomainName, domainName, publicURL, userAutoCreation, dirUri, dirAdmin, dirPassword, dirConnSecurity, dirCaseSensitive, dirRawParameters, passwordPolicies);
+  }
+
+  @Override
+  public String toString() {
+    StringBuilder sb = new StringBuilder();
+    sb.append("class ApiDomainBase {\n");
+    
+    sb.append("    enabled: ").append(toIndentedString(enabled)).append("\n");
+    sb.append("    displayName: ").append(toIndentedString(displayName)).append("\n");
+    sb.append("    authDomainName: ").append(toIndentedString(authDomainName)).append("\n");
+    sb.append("    domainName: ").append(toIndentedString(domainName)).append("\n");
+    sb.append("    publicURL: ").append(toIndentedString(publicURL)).append("\n");
+    sb.append("    userAutoCreation: ").append(toIndentedString(userAutoCreation)).append("\n");
+    sb.append("    dirUri: ").append(toIndentedString(dirUri)).append("\n");
+    sb.append("    dirAdmin: ").append(toIndentedString(dirAdmin)).append("\n");
+    sb.append("    dirPassword: ").append(toIndentedString(dirPassword)).append("\n");
+    sb.append("    dirConnSecurity: ").append(toIndentedString(dirConnSecurity)).append("\n");
+    sb.append("    dirCaseSensitive: ").append(toIndentedString(dirCaseSensitive)).append("\n");
+    sb.append("    dirRawParameters: ").append(toIndentedString(dirRawParameters)).append("\n");
+    sb.append("    passwordPolicies: ").append(toIndentedString(passwordPolicies)).append("\n");
+    sb.append("}");
+    return sb.toString();
+  }
+
+  /**
+   * Convert the given object to string with each line indented by 4 spaces
+   * (except the first line).
+   */
+  private String toIndentedString(Object o) {
+    if (o == null) {
+      return "null";
+    }
+    return o.toString().replace("\n", "\n    ");
+  }
+
+
+}
+

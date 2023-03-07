@@ -216,6 +216,15 @@ Ext.define('Sonicle.webtop.core.sdk.BaseService', {
 	},
 	
 	/**
+	 * Returns the localized string associated to the passed key template.
+	 * @param {String} key The resource key template.
+	 * @return {String} The localized string or template itself if parsing goes wrong.
+	 */
+	resTpl: function(tpl) {
+		return WT.resTpl(this.ID, tpl);
+	},
+	
+	/**
 	 * Builds CSS class name namespacing it using service xid.
 	 * @param {String} name The CSS class name part.
 	 * @return {String} The concatenated CSS class name.

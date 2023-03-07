@@ -43,6 +43,7 @@ Ext.define('Sonicle.webtop.core.ux.data.BadgeNotificationModel', {
 		WTF.roField('iconCls', 'string'),
 		WTF.roField('title', 'string'),
 		WTF.roField('body', 'string'),
+		WTF.roField('bodyIconCls', 'string'),
 		WTF.roField('data', 'string'),
 		WTF.roField('autoClear', 'boolean'),
 		WTF.roField('callbackService', 'boolean')

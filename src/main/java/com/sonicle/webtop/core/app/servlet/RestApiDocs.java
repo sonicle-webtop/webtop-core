@@ -71,7 +71,7 @@ public class RestApiDocs extends AssetsServlet {
 		final String pathInfo = req.getPathInfo();
 		if (pathInfo == null) {
 			final String reqUrl = ServletUtils.getRequestURLString(req);
-			resp.sendError(HttpServletResponse.SC_NOT_FOUND, "No docs available here: please navigate to a URL like '" + reqUrl + "/<service-id>'");
+			resp.sendError(HttpServletResponse.SC_NOT_FOUND, "No docs available here: please navigate to a URL like '" + reqUrl + "/<service-id>' to see documentation page.");
 			
 		} else if (!StringUtils.equals(pathInfo, "/") && StringUtils.countMatches(pathInfo, "/") < 2) {
 			final String redirectUrl = ServletUtils.getRequestURLString(req) + "/" + RESOURCE_INDEX;

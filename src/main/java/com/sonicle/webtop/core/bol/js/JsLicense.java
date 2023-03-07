@@ -48,14 +48,4 @@ public class JsLicense {
 	public String key;
 
 	public JsLicense() {}
-	
-	public ServiceLicense toServiceLicense() {
-		ServiceLicense item = new ServiceLicense();
-		
-		item.setDomainId(domainId);
-		item.setProductId(ProductId.build(serviceId, productId));
-		item.setLicenseString(key);
-		
-		return item;
-	}
 }

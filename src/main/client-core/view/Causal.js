@@ -35,6 +35,7 @@ Ext.define('Sonicle.webtop.core.view.Causal', {
 	alternateClassName: 'WTA.view.Causal',
 	extend: 'WTA.sdk.ModelView',
 	requires: [
+		'Sonicle.webtop.core.model.SubjectLkp',
 		'Sonicle.webtop.core.model.Causal'
 	],
 	
@@ -77,13 +78,16 @@ Ext.define('Sonicle.webtop.core.view.Causal', {
 					hideEmptyLabel: false,
 					boxLabel: me.mys.res('causal.fld-readOnly.lbl')
 				},
-				WTF.localCombo('id', 'desc', {
+				WTF.localCombo('id', 'labelNameWithDN', {
 					bind: '{record.userId}',
 					store: {
 						autoLoad: true,
-						model: 'WTA.model.Simple',
-						proxy: WTF.proxy(me.mys.ID, 'LookupDomainUsers', 'users', {
-							extraParams: {wildcard: true}
+						model: 'WTA.model.SubjectLkp',
+						proxy: WTF.proxy(me.mys.ID, 'LookupSubjects', null, {
+							extraParams: {
+								wildcard: true,
+								users: true
+							}
 						})
 					},
 					fieldLabel: me.mys.res('causal.fld-user.lbl'),

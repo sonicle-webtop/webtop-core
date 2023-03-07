@@ -205,82 +205,44 @@ Ext.define('Sonicle.webtop.core.app.Util', {
 		return Sonicle.String.humanReadableSize(bytes, opts);
 	},
 	
-	/*
-	 * 
-	 * @param {type} proxy
-	 * @param {type} params
-	 * @returns {undefined}
+	/**
+	 * @deprecated use Sonicle.Data.removeExtraParams() instead
 	 */
 	removeExtraParams: function(proxy, params) {
-		if(!Ext.isArray(params)) params = [params];
-		if(!proxy.isProxy && !proxy.isStore) return;
-		proxy = (proxy.isStore) ? proxy.getProxy() : proxy;
-		var obj = {};
-		Ext.iterate(proxy.getExtraParams(), function(k,v) {
-			if(params.indexOf(k) !== -1) obj[k] = v;
-		});
-		proxy.setExtraParams(obj);
+		Ext.log.warn('"WTU.removeExtraParams" is deprecated. Use "Sonicle.Data.removeExtraParams" instead.');
+		Sonicle.Data.removeExtraParams.apply(this, arguments);
 	},
 	
 	/**
-	 * Applies extra params to passed proxy.
-	 * @param {Ext.data.proxy.Proxy/Ext.data.Store} proxy The proxy.
-	 * @param {Object} params Extra params to apply.
-	 * @param {Boolean} [clear=false] 'true' to clear previous params, 'false' to merge them.
+	 * @deprecated use Sonicle.Data.applyExtraParams() instead
 	 */
 	applyExtraParams: function(proxy, params, clear) {
-		if(arguments.length === 2) clear = false;
-		if(!proxy.isProxy && !proxy.isStore) return;
-		proxy = (proxy.isStore) ? proxy.getProxy() : proxy;
-		var obj = Ext.apply((clear) ? {} : proxy.getExtraParams(), params);
-		proxy.setExtraParams(obj);
+		Ext.log.warn('"WTU.applyExtraParams" is deprecated. Use "Sonicle.Data.applyExtraParams" instead.');
+		Sonicle.Data.applyExtraParams.apply(this, arguments);
 	},
 	
 	/**
-	 * Applies extra params to passed store's proxy and then performs a reload.
-	 * @param {Ext.data.Store} store The store.
-	 * @param {Object} params Extra params to apply.
-	 * @param {Boolean} [overwrite=false] 'true' to clear previous params, 'false' to merge them.
+	 * @deprecated use Sonicle.Data.storeNeedsSync() instead
 	 */
 	loadWithExtraParams: function(store, params, overwrite) {
-		if (!store.isStore) return;
-		WTU.applyExtraParams(store, params, overwrite);
-		store.load();
+		Ext.log.warn('"WTU.loadWithExtraParams" is deprecated. Use "Sonicle.Data.loadWithExtraParams" instead.');
+		Sonicle.Data.loadWithExtraParams.apply(this, arguments);
 	},
 	
 	/**
-	 * Checks if a store needs a sync operation.
-	 * @param {Ext.data.Store} store The store.
-	 * @returns {Boolean}
+	 * @deprecated use Sonicle.Data.storeNeedsSync() instead
 	 */
 	needsSync: function(store) {
-		var needsSync = false;
-		if (store.isStore) {
-			if (store.getNewRecords().length > 0) needsSync = true;
-			if (store.getUpdatedRecords().length > 0) needsSync = true;
-			if (store.getRemovedRecords().length > 0) needsSync = true;
-		}
-		return needsSync;
+		Ext.log.warn('"WTU.needsSync" is deprecated. Use "Sonicle.Data.storeNeedsSync" instead.');
+		return Sonicle.Data.storeNeedsSync(store);
 	},
 	
 	/**
-	 * Deep-clone a store.
-	 * @param {Ext.data.Store} store The store to be cloned.
-	 * @returns {Ext.data.Store} The new store
+	 * @deprecated use Sonicle.Data.storeDeepClone() instead
 	 */
 	deepClone: function(store) {
-		var source = Ext.isString(store) ? Ext.data.StoreManager.lookup(store) : store,
-				target;
-		
-		if (source && source.isStore) {
-			target = Ext.create(source.$className, {
-				model: source.model
-			});
-			target.add(Ext.Array.map(source.getRange(), function(rec) {
-				return rec.copy();
-			}));
-		}
-		return target;
+		Ext.log.warn('"WTU.deepClone" is deprecated. Use "Sonicle.Data.storeDeepClone" instead.');
+		return Sonicle.Data.storeDeepClone(store);
 	},
 	
 	/**

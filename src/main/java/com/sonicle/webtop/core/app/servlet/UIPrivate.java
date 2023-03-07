@@ -37,7 +37,6 @@ import com.sonicle.commons.LangUtils;
 import com.sonicle.commons.PathUtils;
 import com.sonicle.commons.web.ServletUtils;
 import com.sonicle.commons.web.json.CId;
-import com.sonicle.security.auth.EntryException;
 import com.sonicle.webtop.core.CoreLocaleKey;
 import com.sonicle.webtop.core.CoreSettings;
 import com.sonicle.webtop.core.app.AbstractServlet;
@@ -50,9 +49,9 @@ import com.sonicle.webtop.core.app.WT;
 import com.sonicle.webtop.core.app.WebTopApp;
 import com.sonicle.webtop.core.app.WebTopProps;
 import com.sonicle.webtop.core.app.WebTopSession;
+import com.sonicle.webtop.core.app.model.DomainBase;
 import com.sonicle.webtop.core.app.sdk.WTPwdPolicyException;
 import com.sonicle.webtop.core.bol.js.JsWTSPrivate;
-import com.sonicle.webtop.core.model.DomainEntity;
 import com.sonicle.webtop.core.sdk.UserProfile;
 import com.sonicle.webtop.core.sdk.UserProfileId;
 import com.sonicle.webtop.core.sdk.WTException;
@@ -106,7 +105,7 @@ public class UIPrivate extends AbstractServlet {
 						if (Arrays.equals(password.toCharArray(), RunContext.getPrincipal().getPassword())) {
 							throw new PasswordMustBeDifferent();
 						}
-						wta.getWebTopManager().updateUserPassword(pid, RunContext.getPrincipal().getPassword(), password.toCharArray());
+						wta.getWebTopManager().updateUserPassword(pid.getDomainId(), pid.getUserId(), RunContext.getPrincipal().getPassword(), password.toCharArray());
 						((com.sonicle.security.Principal)RunContext.getPrincipal()).setPassword(password.toCharArray());
 						wts.clearProperty(CoreManifest.ID, UIPrivate.WTSPROP_PASSWORD_CHANGEUPONLOGIN);
 						writePage = false;
@@ -116,16 +115,16 @@ public class UIPrivate extends AbstractServlet {
 					failureMessage = wta.lookupResource(wts.getLocale(), CoreLocaleKey.TPL_PASSWORD_ERROR_MUSTBEDIFFERENT);
 				} catch (WTPwdPolicyException ex) {
 					logger.debug("Password change failure: password does not satisfy password policies [{}]", ex.getCode(), ex);
-					DomainEntity.PasswordPolicies policies = wta.getWebTopManager().getDomainPasswordPolicies(pid.getDomainId());
+					DomainBase.PasswordPolicies policies = wta.getWebTopManager().getDomainPasswordPolicies(pid.getDomainId());
 					failureMessage = lookupPolicyExceptionCodeMessage(wta, wts.getLocale(), ex.getCode(), policies);
-				} catch(WTException | EntryException ex) {
+				} catch (WTException ex) {
 					//TODO: display a centralized error page (like Throwable catch below)
 					logger.error("Unable to update password", ex);
 					failureMessage = wta.lookupResource(wts.getLocale(), CoreLocaleKey.TPL_PASSWORD_ERROR_UNEXPECTED);
 				}
 				
 				if (writePage) {
-					DomainEntity.PasswordPolicies policies = wta.getWebTopManager().getDomainPasswordPolicies(pid.getDomainId());
+					DomainBase.PasswordPolicies policies = wta.getWebTopManager().getDomainPasswordPolicies(pid.getDomainId());
 					writePasswordChangePage(wta, wts.getLocale(), policies, pid.getUserId(), failureMessage, response);
 				} else {
 					ServletUtils.forwardRequest(request, response, UIPrivate.URL);
@@ -152,7 +151,7 @@ public class UIPrivate extends AbstractServlet {
 		}
 	}
 	
-	private String lookupPolicyExceptionCodeMessage(WebTopApp wta, Locale locale, int code, DomainEntity.PasswordPolicies passwordPolicies) {
+	private String lookupPolicyExceptionCodeMessage(WebTopApp wta, Locale locale, int code, DomainBase.PasswordPolicies passwordPolicies) {
 		switch(code) {
 			case 1:
 				return wta.lookupAndFormatResource(locale, CoreLocaleKey.TPL_PASSWORD_ERROR_MINLENGTH, false, passwordPolicies.getMinLength());
@@ -169,7 +168,7 @@ public class UIPrivate extends AbstractServlet {
 		}
 	}
 	
-	private void writePasswordChangePage(WebTopApp wta, Locale locale, DomainEntity.PasswordPolicies passwordPolicies, String username, String failureMessage, HttpServletResponse response) throws IOException, TemplateException {
+	private void writePasswordChangePage(WebTopApp wta, Locale locale, DomainBase.PasswordPolicies passwordPolicies, String username, String failureMessage, HttpServletResponse response) throws IOException, TemplateException {
 		Map tplMap = new HashMap();
 		AbstractServlet.fillPageVars(tplMap, locale, null);
 		AbstractServlet.fillSystemVars(tplMap, wta, locale, false, false);

@@ -11,6 +11,9 @@ import com.sonicle.commons.LangUtils;
 import com.sonicle.commons.PathUtils;
 import com.sonicle.commons.RegexUtils;
 import com.sonicle.commons.web.json.JsonResult;
+import com.sonicle.mail.TransportHostParams;
+import com.sonicle.mail.TransportProtocol;
+import com.sonicle.security.Principal;
 import com.sonicle.security.otp.provider.SonicleAuth;
 import static com.sonicle.webtop.core.CoreSettings.*;
 import com.sonicle.webtop.core.app.CoreManifest;
@@ -25,6 +28,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.regex.Pattern;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.shiro.SecurityUtils;
 import org.joda.time.LocalTime;
 
 /**
@@ -51,6 +55,10 @@ public class CoreServiceSettings extends BaseServiceSettings {
 		return PathUtils.ensureTrailingSeparator(getString(ZPUSH_PATH, null));
 	}
 	
+	/**
+	 * @deprecated in favor of 'webtop.home' property
+	 */
+	@Deprecated
 	public String getHomePath() {
 		return PathUtils.ensureTrailingSeparator(getString(HOME_PATH, null));
 	}
@@ -125,6 +133,23 @@ public class CoreServiceSettings extends BaseServiceSettings {
 	
 	public String getAddonNotifierUrl() {
 		return getString(ADDON_NOTIFIER_URL, null);
+	}
+	
+	public TransportHostParams getTransportHostParams(final Principal principal) {
+		final char[] cpass = principal.getPassword();
+		return getTransportHostParams(principal.getFullInternetName(), (cpass != null) ? new String(cpass) : null);
+	}
+	
+	public TransportHostParams getTransportHostParams(final String defaultUsername, final String defaultPassword) {
+		TransportHostParams thp = new TransportHostParams(getSMTPHost(), getSMTPPort(), TransportProtocol.parse("SMTP", isSMTPStartTLS()));
+		
+		String username = defaultUsername;
+		String password = defaultPassword;
+		if (isSMTPAuthentication()) {
+			thp.withUsername(username);
+			thp.withPassword(password);
+		}
+		return thp.withTrustHost(true);
 	}
 	
 	public String getSMTPHost() {

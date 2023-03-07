@@ -82,15 +82,6 @@ public abstract class BaseManager {
 		}
 	}
 	
-	protected final Locale guessLocale() {
-		UserProfile.Data ud = null;
-		ud = WT.getUserData(getTargetProfileId());
-		if (ud != null) return ud.getLocale();
-		ud = WT.getUserData(RunContext.getRunProfileId());
-		if (ud != null) return ud.getLocale();
-		return WT.LOCALE_ENGLISH;
-	}
-	
 	/**
 	 * @deprecated Use ExceptionUtils.wrapThrowable(t) instead
 	 */
@@ -103,6 +94,39 @@ public abstract class BaseManager {
 		} else {
 			return new WTException(ex);
 		}
+	}
+	
+	/**
+	 * @deprecated use ensureProfile instead
+	 */
+	@Deprecated
+	public void ensureUser() throws AuthException {
+		ensureProfile();
+	}
+	
+	/**
+	 * @deprecated use ensureProfileDomain instead
+	 */
+	@Deprecated
+	public void ensureUserDomain() throws AuthException {
+		ensureProfileDomain();
+	}
+	
+	/**
+	 * @deprecated use ensureProfileDomain instead
+	 */
+	@Deprecated
+	public void ensureUserDomain(String domainId) throws AuthException {
+		ensureProfileDomain(domainId);
+	}
+	
+	protected final Locale guessLocale() {
+		UserProfile.Data ud = null;
+		ud = WT.getProfileData(getTargetProfileId());
+		if (ud != null) return ud.getLocale();
+		ud = WT.getProfileData(RunContext.getRunProfileId());
+		if (ud != null) return ud.getLocale();
+		return WT.LOCALE_ENGLISH;
 	}
 	
 	/**
@@ -391,38 +415,5 @@ public abstract class BaseManager {
 		Session s=(wts != null) ? wts.getMailSession() : null;
 		if (s==null) s=WT.getGlobalMailSession(getTargetProfileId());
 		return s;
-	}
-	
-	/**
-	 * @deprecated use ensureProfile instead
-	 * Checks if the running profile (see runContext) and target profile are the same.
-	 * This security check is skipped for SysAdmin.
-	 * @throws AuthException When profiles not match.
-	 */
-	@Deprecated
-	public void ensureUser() throws AuthException {
-		ensureProfile();
-	}
-	
-	/**
-	 * @deprecated use ensureProfileDomain instead
-	 * Checks if the running profile's domain ID (see runContext) and target profile's domain ID are the same.
-	 * This security check is skipped for SysAdmin.
-	 * @throws AuthException When domain IDs do not match.
-	 */
-	@Deprecated
-	public void ensureUserDomain() throws AuthException {
-		ensureProfileDomain();
-	}
-	
-	/**
-	 * @deprecated use ensureProfileDomain instead
-	 * Checks if the running profile's domain ID (see runContext) and passed domain ID matches.
-	 * @param domainId Required domain ID.
-	 * @throws AuthException When domain IDs do not match.
-	 */
-	@Deprecated
-	public void ensureUserDomain(String domainId) throws AuthException {
-		ensureProfileDomain(domainId);
 	}
 }

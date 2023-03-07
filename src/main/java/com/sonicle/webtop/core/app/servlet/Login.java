@@ -44,11 +44,13 @@ import com.sonicle.webtop.core.app.WT;
 import com.sonicle.webtop.core.app.WebTopManager;
 import com.sonicle.webtop.core.app.WebTopApp;
 import com.sonicle.webtop.core.app.WebTopSession;
-import com.sonicle.webtop.core.bol.ODomain;
+import com.sonicle.webtop.core.app.model.Domain;
+import com.sonicle.webtop.core.app.model.EnabledCond;
 import freemarker.template.Template;
 import freemarker.template.TemplateException;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -124,7 +126,7 @@ public class Login extends AbstractServlet {
 		
 		try {
 			CoreServiceSettings css = new CoreServiceSettings(CoreManifest.ID, "*");
-			WebTopManager usem = wta.getWebTopManager();
+			WebTopManager wtMgr = wta.getWebTopManager();
 			WebTopSession wts = SessionContext.getCurrent();
 			Locale locale = wts.getLocale();
 			
@@ -148,11 +150,11 @@ public class Login extends AbstractServlet {
 			}
 			
 			// Prepare domains list
-			List<ODomain> enabledDomains = usem.listDomains(true);
+			Collection<Domain> enabledDomains = wtMgr.listDomains(EnabledCond.ENABLED_ONLY).values();
 			List<HtmlSelect> domains = new ArrayList<>();
 			if(enabledDomains.size() > 1) domains.add(new HtmlSelect("", wta.lookupResource(locale, CoreLocaleKey.TPL_LOGIN_DOMAIN_PROMPT, true)));
-			for(ODomain dom : enabledDomains) {
-				domains.add(new HtmlSelect(dom.getDomainId(), dom.getDescription()));
+			for(Domain domain : enabledDomains) {
+				domains.add(new HtmlSelect(domain.getDomainId(), domain.getDisplayName()));
 			}
 			
 			writePage(wta, css, locale, domains, maintenanceMessage, failureMessage, response);

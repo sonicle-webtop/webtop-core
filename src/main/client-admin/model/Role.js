@@ -1,6 +1,6 @@
 /*
  * WebTop Services is a Web Application framework developed by Sonicle S.r.l.
- * Copyright (C) 2014 Sonicle S.r.l.
+ * Copyright (C) 2022 Sonicle S.r.l.
  *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by
@@ -29,16 +29,17 @@
  * version 3, these Appropriate Legal Notices must retain the display of the
  * Sonicle logo and Sonicle copyright notice. If the display of the logo is not
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
- * display the words "Copyright (C) 2014 Sonicle S.r.l.".
+ * display the words "Copyright (C) 2022 Sonicle S.r.l.".
  */
 Ext.define('Sonicle.webtop.core.admin.model.Role', {
 	extend: 'WTA.ux.data.BaseModel',
 	requires: [
 		'Sonicle.data.writer.Json',
-		'Sonicle.webtop.core.admin.model.AssignedService',
-		'Sonicle.webtop.core.admin.model.RolePermission'
+		'Sonicle.data.validator.Username',
+		'Sonicle.webtop.core.admin.model.PermissionString',
+		'Sonicle.webtop.core.admin.model.AllowedService'
 	],
-	proxy: WTF.apiProxy('com.sonicle.webtop.core.admin', 'ManageRoles', 'data', {
+	proxy: WTF.apiProxy('com.sonicle.webtop.core.admin', 'ManageDomainRole', 'data', {
 		writer: {
 			type: 'sojson',
 			writeAssociations: true
@@ -46,15 +47,16 @@ Ext.define('Sonicle.webtop.core.admin.model.Role', {
 	}),
 	
 	identifier: 'negativestring',
-	idProperty: 'roleUid',
+	idProperty: 'id',
 	fields: [
-		WTF.field('roleUid', 'string', false),
-		WTF.field('domainId', 'string', false),
-		WTF.field('name', 'string', false),
+		WTF.field('id', 'string', false),
+		WTF.field('roleId', 'string', true, {
+			validators: ['presence', 'sousername']
+		}),
 		WTF.field('description', 'string', true)
 	],
 	hasMany: [
-		WTF.hasMany('assignedServices', 'Sonicle.webtop.core.admin.model.AssignedService'),
-		WTF.hasMany('permissions', 'Sonicle.webtop.core.admin.model.RolePermission')
+		WTF.hasMany('permissions', 'Sonicle.webtop.core.admin.model.PermissionString'),
+		WTF.hasMany('allowedServices', 'Sonicle.webtop.core.admin.model.AllowedService')
 	]
 });

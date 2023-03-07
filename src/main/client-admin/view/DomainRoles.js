@@ -34,7 +34,7 @@
 Ext.define('Sonicle.webtop.core.admin.view.DomainRoles', {
 	extend: 'WTA.sdk.DockableView',
 	requires: [
-		'Sonicle.webtop.core.admin.model.GridDomainRole'
+		'Sonicle.webtop.core.admin.model.GridRole'
 	],
 	
 	/**
@@ -47,9 +47,11 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainRoles', {
 		title: '{domainRoles.tit}',
 		iconCls: 'wtadm-icon-roles'
 	},
+	actionsResPrefix: 'domainRoles',
 	
 	constructor: function(cfg) {
 		var me = this;
+		if (!cfg.domainId) Ext.raise('domainId is mandatory');
 		me.callParent([cfg]);
 		
 		if(!cfg.title) {
@@ -69,57 +71,61 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainRoles', {
 			reference: 'gp',
 			store: {
 				autoLoad: true,
-				autoSync: true,
-				model: 'Sonicle.webtop.core.admin.model.GridDomainRole',
-				proxy: WTF.apiProxy(me.mys.ID, 'ManageDomainRoles', 'roles', {
+				model: 'Sonicle.webtop.core.admin.model.GridRole',
+				proxy: WTF.proxy(me.mys.ID, 'ManageDomainRoles', null, {
 					extraParams: {
-						domainId: me.domainId
+						domainId: me.domainId,
+						crud: 'read'
 					},
 					writer: {
 						allowSingle: false // Always wraps records into an array
 					}
-				}),
-				listeners: {
-					remove: function(s, recs) {
-						// Fix for updating selection
-						me.lref('gp').getSelectionModel().deselect(recs);
-					}
-				}
+				})
 			},
-			columns: [{
-				xtype: 'rownumberer'	
-			}, {
-				dataIndex: 'name',
-				header: me.mys.res('domainRoles.gp.name.lbl'),
-				flex: 1
-			}, {
-				dataIndex: 'description',
-				header: me.mys.res('domainRoles.gp.description.lbl'),
-				flex: 2
-			}, {
-				dataIndex: 'roleUid',
-				header: me.mys.res('domainRoles.gp.roleUid.lbl'),
-				tdCls: 'x-selectable',
-				hidden: true,
-				flex: 2
-			}],
+			columns: [
+				{
+					xtype: 'rownumberer'
+				}, {
+					dataIndex: 'roleId',
+					header: me.res('domainRoles.gp.roleId.lbl'),
+					flex: 1
+				}, {
+					dataIndex: 'description',
+					header: me.res('domainRoles.gp.description.lbl'),
+					flex: 2
+				}, {
+					dataIndex: 'roleSid',
+					header: me.res('domainRoles.gp.roleSid.lbl'),
+					tdCls: 'x-selectable',
+					hidden: true,
+					flex: 1
+				}, {
+					xtype: 'soactioncolumn',
+					items: [
+						{
+							iconCls: 'far fa-edit',
+							tooltip: WT.res('act-edit.lbl'),
+							handler: function(g, ridx) {
+								var rec = g.getStore().getAt(ridx);
+								me.editRoleUI(rec);
+							}
+						}, {
+							iconCls: 'far fa-trash-alt',
+							tooltip: WT.res('act-remove.lbl'),
+							handler: function(g, ridx) {
+								var rec = g.getStore().getAt(ridx);
+								me.deleteRoleUI(rec);
+							}
+						}
+					]
+				}
+			],
 			tbar: [
 				me.addAct('add', {
-					text: WT.res('act-add.lbl'),
 					tooltip: null,
-					iconCls: 'wt-icon-add',
+					iconCls: null,
 					handler: function() {
-						me.addRoleUI(me.domainId);
-					}
-				}),
-				me.addAct('remove', {
-					text: WT.res('act-remove.lbl'),
-					tooltip: null,
-					iconCls: 'wt-icon-remove',
-					disabled: true,
-					handler: function() {
-						var rec = me.lref('gp').getSelection()[0];
-						if(rec) me.deleteRoleUI(rec);
+						me.addRoleUI();
 					}
 				}),
 				'->',
@@ -138,45 +144,104 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainRoles', {
 				}
 			}
 		});
-		
-		me.getViewModel().bind({
-			bindTo: '{gp.selection}'
-		}, function(sel) {
-			me.getAct('remove').setDisabled((sel) ? false : true);
+	},
+	
+	addRole: function(domainId, opts) {
+		var me = this,
+			vw = WT.createView(me.mys.ID, 'view.Role', {
+				swapReturn: true,
+				viewCfg: {
+					domainId: domainId
+				}
+			});
+
+		vw.on('viewsave', function(s, success, model, op) {
+			Ext.callback(opts.callback, opts.scope || me, [success, model, op]);
+		});
+		vw.showView(function() {
+			vw.begin('new', {
+				data: {}
+			});
 		});
 	},
 	
-	addRoleUI: function(domainId) {
+	editRole: function(domainId, roleId, opts) {
+		opts = opts || {};
+		var me = this,
+			vw = WT.createView(me.mys.ID, 'view.Role', {
+				swapReturn: true,
+				viewCfg: {
+					domainId: domainId
+				}
+			});
+
+		vw.on('viewsave', function(s, success, model, op) {
+			Ext.callback(opts.callback, opts.scope || me, [success, model, op]);
+		});
+		vw.showView(function() {
+			vw.begin('edit', {
+				data: {
+					id: roleId
+				}
+			});
+		});
+	},
+	
+	deleteRole: function(domainId, roleId, opts) {
+		opts = opts || {};
 		var me = this;
-		me.mys.addRole(domainId, {
-			callback: function(success) {
-				if(success) {
-					me.lref('gp').getStore().load();
-				}
+		WT.ajaxReq(me.mys.ID, 'ManageDomainRole', {
+			params: {
+				crud: 'delete',
+				domainId: domainId,
+				id: roleId
+			},
+			callback: function(success, json) {
+				Ext.callback(opts.callback, opts.scope || me, [success, json.data, json]);
 			}
 		});
 	},
 	
-	editRoleUI: function(rec) {
-		var me = this,
-				roleUid = rec.get('roleUid');
-		me.mys.editRole(roleUid, {
-			callback: function(success) {
-				if(success) {
-					me.lref('gp').getStore().load();
+	privates: {
+		addRoleUI: function() {
+			var me = this,
+				gp = me.lref('gp');
+
+			me.addRole(me.domainId, {
+				callback: function(success, model, op) {
+					WT.handleMessage(success, op);
+					if (success) gp.getStore().load();
 				}
-			}
-		});
-	},
-	
-	deleteRoleUI: function(rec) {
-		var me = this,
-				sto = me.lref('gp').getStore();
-		
-		WT.confirm(WT.res('confirm.delete'), function(bid) {
-			if(bid === 'yes') {
-				sto.remove(rec);
-			}
-		}, me);
+			});
+		},
+
+		editRoleUI: function(rec) {
+			var me = this,
+				gp = me.lref('gp');
+
+			me.editRole(me.domainId, rec.getId(), {
+				callback: function(success, model, op) {
+					WT.handleMessage(success, op);
+					if (success) gp.getStore().load();
+				}
+			});
+		},
+
+		deleteRoleUI: function(rec) {
+			var me = this;
+			WT.confirm(me.res('domainRoles.confirm.delete', rec.get('roleId')), function(bid) {
+				if (bid === 'yes') {
+					me.wait();
+					me.deleteRole(me.domainId, rec.getId(), {
+						callback: function(success, data, json) {
+							me.unwait();
+							if (success) me.lref('gp').getStore().load();
+							WT.handleError(success, json);
+							WT.handleMessage(success, json);
+						}
+					});
+				}
+			}, me);
+		}
 	}
 });

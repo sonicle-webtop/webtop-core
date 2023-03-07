@@ -62,13 +62,14 @@ import com.sonicle.webtop.core.app.WT;
 import com.sonicle.webtop.core.app.WebTopSession;
 import com.sonicle.webtop.core.app.io.dbutils.FilterInfo;
 import com.sonicle.webtop.core.app.io.dbutils.RowsAndCols;
+import com.sonicle.webtop.core.app.model.Domain;
+import com.sonicle.webtop.core.app.model.EnabledCond;
 import com.sonicle.webtop.core.app.provider.RecipientsProviderBase;
 import com.sonicle.webtop.core.app.sdk.BaseEvent;
 import com.sonicle.webtop.core.app.sdk.EventListener;
 import com.sonicle.webtop.core.app.sdk.WTIntegrityException;
 import com.sonicle.webtop.core.app.sdk.msg.BaseDataChangedSM;
 import com.sonicle.webtop.core.app.sdk.msg.LicenseUsageFailSM;
-import com.sonicle.webtop.core.app.util.ProductUtils;
 import com.sonicle.webtop.core.msg.IMChatRoomAdded;
 import com.sonicle.webtop.core.msg.IMChatRoomMessageReceived;
 import com.sonicle.webtop.core.msg.IMChatRoomRemoved;
@@ -77,9 +78,9 @@ import com.sonicle.webtop.core.msg.IMChatRoomUpdated;
 import com.sonicle.webtop.core.msg.IMFriendPresenceUpdated;
 import com.sonicle.webtop.core.msg.IMFriendsUpdated;
 import com.sonicle.webtop.core.bol.OAutosave;
-import com.sonicle.webtop.core.bol.ODomain;
 import com.sonicle.webtop.core.bol.OUser;
 import com.sonicle.webtop.core.bol.events.TagChangedEvent;
+import com.sonicle.webtop.core.bol.js.JsAclSubjectLkp;
 import com.sonicle.webtop.core.bol.js.JsActivityLkp;
 import com.sonicle.webtop.core.bol.js.JsAutosave;
 import com.sonicle.webtop.core.bol.js.JsCausalLkp;
@@ -112,8 +113,6 @@ import com.sonicle.webtop.core.bol.js.JsTrustedDevice;
 import com.sonicle.webtop.core.bol.js.JsWhatsnewTab;
 import com.sonicle.webtop.core.bol.js.TrustedDeviceCookie;
 import com.sonicle.webtop.core.model.Recipient;
-import com.sonicle.webtop.core.bol.model.Role;
-import com.sonicle.webtop.core.bol.model.RoleWithSource;
 import com.sonicle.webtop.core.model.ServicePermission;
 import com.sonicle.webtop.core.model.Activity;
 import com.sonicle.webtop.core.model.AuditLog;
@@ -125,6 +124,8 @@ import com.sonicle.webtop.core.model.CustomPanel;
 import com.sonicle.webtop.core.model.DataSourceQuery;
 import com.sonicle.webtop.core.model.DataSourceBase;
 import com.sonicle.webtop.core.model.DataSourcePooled;
+import com.sonicle.webtop.core.app.model.GenericSubject;
+import com.sonicle.webtop.core.bol.js.JsSubjectLkp;
 import com.sonicle.webtop.core.model.IMChat;
 import com.sonicle.webtop.core.model.IMMessage;
 import com.sonicle.webtop.core.model.ListTagsOpt;
@@ -136,13 +137,13 @@ import com.sonicle.webtop.core.model.Tag;
 import com.sonicle.webtop.core.model.UILayout;
 import com.sonicle.webtop.core.model.UILookAndFeel;
 import com.sonicle.webtop.core.model.UITheme;
-import com.sonicle.webtop.core.products.AuditProduct;
 import com.sonicle.webtop.core.products.TMCEPremiumProduct;
 import com.sonicle.webtop.core.util.AppLocale;
 import com.sonicle.webtop.core.sdk.BaseService;
-import com.sonicle.webtop.core.sdk.UserProfile;
+import com.sonicle.webtop.core.sdk.BaseServiceProduct;
 import com.sonicle.webtop.core.sdk.ServiceMessage;
 import com.sonicle.webtop.core.sdk.UploadException;
+import com.sonicle.webtop.core.sdk.UserProfile;
 import com.sonicle.webtop.core.sdk.UserProfileId;
 import com.sonicle.webtop.core.sdk.WTException;
 import com.sonicle.webtop.core.sdk.interfaces.IServiceUploadStreamListener;
@@ -319,8 +320,9 @@ public class Service extends BaseService implements EventListener {
 		vars.put("wtEditorFontSizes", ss.getEditorFontSizes());
 		vars.put("wtEditorPasteMode", EnumUtils.toSerializedName(ss.getEditorPasteImportMode()));
 		if (TMCEPremiumProduct.installed()) {
-			vars.put("wtEditorPP", WT.isLicensed(ProductUtils.getProduct(SERVICE_ID, TMCEPremiumProduct.PRODUCT_ID, profile.getDomainId())));
-			vars.put("wtEditorACE", WT.isLicensed(ProductUtils.getProduct(SERVICE_ID, TMCEPremiumProduct.PRODUCT_ID, profile.getDomainId())));
+			BaseServiceProduct serviceProduct = WT.findServiceProduct(TMCEPremiumProduct.PRODUCT_ID, profile.getDomainId());
+			vars.put("wtEditorPP", WT.isLicensed(serviceProduct));
+			vars.put("wtEditorACE", WT.isLicensed(serviceProduct));
 		}
 		vars.put("wtGeolocationProvider", EnumUtils.toSerializedName(ss.getGeolocationProvider()));
 		
@@ -573,7 +575,7 @@ public class Service extends BaseService implements EventListener {
 		try {
 			Boolean assignableOnly = ServletUtils.getBooleanParameter(request, "assignableOnly", false);
 			
-			for(String sid : coreMgr.listWTInstalledServices()) {
+			for(String sid : coreMgr.listInstalledServices()) {
 				if(assignableOnly && sid.equals(CoreManifest.ID)) continue;
 				items.add(new JsSimple(sid, WT.lookupResource(sid, locale, BaseService.RESOURCE_SERVICE_NAME)));
 			}
@@ -589,7 +591,7 @@ public class Service extends BaseService implements EventListener {
 		ArrayList<JsServicePermissionLkp> items = new ArrayList<>();
 		
 		try {
-			for(String sid : coreMgr.listWTInstalledServices()) {
+			for(String sid : coreMgr.listInstalledServices()) {
 				for(ServicePermission perm : coreMgr.listServicePermissions(sid)) {
 					for(String action : perm.getActions()) {
 						items.add(new JsServicePermissionLkp(sid, perm.getGroupName(), action));
@@ -625,12 +627,12 @@ public class Service extends BaseService implements EventListener {
 			}
 			*/
 			
-			if(wildcard && RunContext.isSysAdmin()) {
+			if (wildcard && RunContext.isSysAdmin()) {
 				items.add(JsSimple.wildcard(lookupResource(up.getLocale(), CoreLocaleKey.WORD_ALL_MALE)));
 			}
-			List<ODomain> domains = coreMgr.listDomains(true);
-			for(ODomain domain : domains) {
-				items.add(new JsSimple(domain.getDomainId(), JsSimple.description(domain.getDescription(), domain.getDomainId())));
+			Collection<Domain> domains = coreMgr.listDomains(EnabledCond.ENABLED_ONLY).values();
+			for(Domain domain : domains) {
+				items.add(new JsSimple(domain.getDomainId(), JsSimple.description(domain.getDisplayName(), domain.getDomainId())));
 			}
 			new JsonResult("domains", items, items.size()).printTo(out);
 			
@@ -640,6 +642,61 @@ public class Service extends BaseService implements EventListener {
 		}
 	}
 	
+	public void processLookupAclSubjects(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
+		UserProfile up = getEnv().getProfile();
+		
+		try {
+			boolean wildcard = ServletUtils.getBooleanParameter(request, "wildcard", false);
+			boolean users = ServletUtils.getBooleanParameter(request, "users", false);
+			boolean resources = ServletUtils.getBooleanParameter(request, "resources", false);
+			boolean groups = ServletUtils.getBooleanParameter(request, "groups", false);
+			boolean roles = ServletUtils.getBooleanParameter(request, "roles", false);
+			
+			List<JsAclSubjectLkp> items = new ArrayList<>();
+			if (wildcard) items.add(JsAclSubjectLkp.wildcard(lookupResource(up.getLocale(), CoreLocaleKey.WORD_ALL_MALE)));
+			for (GenericSubject subject : coreMgr.listSubjects(users, resources, groups, roles, false).values()) {
+				items.add(new JsAclSubjectLkp(subject.getSid(), subject.getDisplayName(), subject.getName(), EnumUtils.toSerializedName(subject.getType())));
+			}
+			new JsonResult(items).printTo(out);
+			
+		} catch (Throwable t) {
+			logger.error("Error in LookupAclSubjects", t);
+			new JsonResult(t).printTo(out);
+		}
+	}
+	
+	public void processLookupSubjects(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
+		UserProfile up = getEnv().getProfile();
+		
+		try {
+			boolean wildcard = ServletUtils.getBooleanParameter(request, "wildcard", false);
+			boolean users = ServletUtils.getBooleanParameter(request, "users", false);
+			boolean resources = ServletUtils.getBooleanParameter(request, "resources", false);
+			boolean groups = ServletUtils.getBooleanParameter(request, "groups", false);
+			boolean roles = ServletUtils.getBooleanParameter(request, "roles", false);
+			boolean fullId = ServletUtils.getBooleanParameter(request, "fullId", false);
+			
+			List<JsSubjectLkp> items = new ArrayList<>();
+			if (wildcard) items.add(JsSubjectLkp.wildcard(lookupResource(up.getLocale(), CoreLocaleKey.WORD_ALL_MALE)));
+			for (GenericSubject subject : coreMgr.listSubjects(users, resources, groups, roles, true).values()) {
+				InternetAddress personalAddress = null;
+				if (GenericSubject.Type.USER.equals(subject.getType()) || GenericSubject.Type.RESOURCE.equals(subject.getType())) {
+					personalAddress = WT.getProfilePersonalAddress(new UserProfileId(subject.getDomainId(), subject.getName()));
+				}
+				items.add(new JsSubjectLkp(fullId ? subject.getProfileId().toString() : subject.getName(), subject.getName(), subject.getDisplayName(), (personalAddress != null) ? personalAddress.getAddress() : null, subject.getType()));
+			}
+			new JsonResult(items).printTo(out);
+			
+		} catch (Throwable t) {
+			logger.error("Error in LookupSubjects", t);
+			new JsonResult(t).printTo(out);
+		}
+	}
+	
+	/**
+	 * @deprecated keep until transition to new Sharing is completed
+	 */
+	@Deprecated
 	public void processLookupDomainRoles(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
 		List<JsRoleLkp> items = new ArrayList<>();
 		UserProfile up = getEnv().getProfile();
@@ -651,62 +708,14 @@ public class Service extends BaseService implements EventListener {
 			boolean roles = ServletUtils.getBooleanParameter(request, "roles", true);
 			
 			if(wildcard) items.add(JsRoleLkp.wildcard(lookupResource(up.getLocale(), CoreLocaleKey.WORD_ALL_MALE)));
-			if(users) {
-				for(Role role : coreMgr.listUsersRoles()) {
-					items.add(new JsRoleLkp(role, RoleWithSource.SOURCE_USER));
-				}
+			for (GenericSubject subject : coreMgr.listSubjects(users, false, groups, roles, false).values()) {
+				items.add(new JsRoleLkp(subject));
 			}
-			if(groups) {
-				for(Role role : coreMgr.listGroupsRoles()) {
-					items.add(new JsRoleLkp(role, RoleWithSource.SOURCE_GROUP));
-				}
-			}
-			if (roles) {
-				for(Role role : coreMgr.listRoles()) {
-					items.add(new JsRoleLkp(role, RoleWithSource.SOURCE_ROLE));
-				}
-			}
-			
 			new JsonResult("roles", items, items.size()).printTo(out);
 			
 		} catch (Exception ex) {
 			logger.error("Error in LookupDomainRoles", ex);
 			new JsonResult(false, "Unable to lookup roles").printTo(out);
-		}
-	}
-	
-	public void processLookupDomainUsers(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
-		List<JsSimple> items = new ArrayList<>();
-		UserProfile up = getEnv().getProfile();
-		
-		try {
-			boolean wildcard = ServletUtils.getBooleanParameter(request, "wildcard", false);
-			boolean fullId = ServletUtils.getBooleanParameter(request, "fullId", false);
-			String domainId = ServletUtils.getStringParameter(request, "domainId", null);
-			
-			List<OUser> users;
-			if(RunContext.isSysAdmin()) {
-				if(!StringUtils.isEmpty(domainId)) {
-					CoreAdminManager coreAdmMgr = getCoreAdminManager();
-					users = coreAdmMgr.listUsers(domainId, true);
-				} else {
-					users = coreMgr.listUsers(true);
-				}
-			} else { // Domain users can only see users belonging to their own domain
-				users = coreMgr.listUsers(true);
-			}
-			
-			if(wildcard) items.add(JsSimple.wildcard(lookupResource(up.getLocale(), CoreLocaleKey.WORD_ALL_MALE)));
-			for(OUser user : users) {
-				final String id = fullId ? new UserProfileId(user.getDomainId(), user.getUserId()).toString() : user.getUserId();
-				items.add(new JsSimple(id, JsSimple.description(user.getDisplayName(), user.getUserId())));
-			}
-			
-			new JsonResult("users", items, items.size()).printTo(out);
-			
-		} catch (Exception ex) {
-			logger.error("Error in LookupUsers", ex);
-			new JsonResult(false, "Unable to lookup users").printTo(out);
 		}
 	}
 	

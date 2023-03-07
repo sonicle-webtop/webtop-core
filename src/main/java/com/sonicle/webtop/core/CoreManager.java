@@ -43,13 +43,13 @@ import com.sonicle.commons.URIUtils;
 import com.sonicle.commons.beans.PageInfo;
 import com.sonicle.commons.beans.VirtualAddress;
 import com.sonicle.commons.db.DbUtils;
+import com.sonicle.commons.flags.BitFlags;
 import com.sonicle.commons.time.DateTimeUtils;
 import com.sonicle.commons.web.json.CompositeId;
 import com.sonicle.commons.web.json.JsonResult;
 import com.sonicle.commons.web.json.JsonUtils;
 import com.sonicle.commons.web.json.ipstack.IPLookupResponse;
 import com.sonicle.security.auth.directory.AbstractDirectory;
-import com.sonicle.webtop.core.app.AuditLogManager;
 import com.sonicle.webtop.core.app.RunContext;
 import com.sonicle.webtop.core.app.CoreManifest;
 import com.sonicle.webtop.core.app.DataSourcesManager;
@@ -63,9 +63,12 @@ import com.sonicle.webtop.core.app.WebTopApp;
 import com.sonicle.webtop.core.app.io.dbutils.FilterInfo;
 import com.sonicle.webtop.core.app.io.dbutils.FilterableArrayListHandler;
 import com.sonicle.webtop.core.app.io.dbutils.RowsAndCols;
+import com.sonicle.webtop.core.app.model.AclSubjectGetOption;
+import com.sonicle.webtop.core.app.model.Domain;
+import com.sonicle.webtop.core.app.model.DomainBase;
+import com.sonicle.webtop.core.app.model.EnabledCond;
 import com.sonicle.webtop.core.app.pbx.PbxProvider;
 import com.sonicle.webtop.core.app.provider.RecipientsProviderBase;
-import com.sonicle.webtop.core.app.sdk.AuditReferenceDataEntry;
 import com.sonicle.webtop.core.app.sdk.ChangedEvent;
 import com.sonicle.webtop.core.app.sdk.EventListener;
 import com.sonicle.webtop.core.app.sdk.WTNotFoundException;
@@ -99,7 +102,6 @@ import com.sonicle.webtop.core.model.SharePermsElements;
 import com.sonicle.webtop.core.model.SharePermsFolder;
 import com.sonicle.webtop.core.model.IncomingShareRoot;
 import com.sonicle.webtop.core.model.Recipient;
-import com.sonicle.webtop.core.bol.model.Role;
 import com.sonicle.webtop.core.bol.model.Sharing;
 import com.sonicle.webtop.core.model.SharePermsRoot;
 import com.sonicle.webtop.core.bol.model.SyncDevice;
@@ -124,6 +126,7 @@ import com.sonicle.webtop.core.dal.ShareDAO;
 import com.sonicle.webtop.core.dal.ShareDataDAO;
 import com.sonicle.webtop.core.dal.TagDAO;
 import com.sonicle.webtop.core.dal.UserDAO;
+import com.sonicle.webtop.core.app.model.GenericSubject;
 import com.sonicle.webtop.core.model.Activity;
 import com.sonicle.webtop.core.model.AuditLog;
 import com.sonicle.webtop.core.model.Causal;
@@ -137,6 +140,8 @@ import com.sonicle.webtop.core.model.DataSourceQuery;
 import com.sonicle.webtop.core.model.DataSourceBase;
 import com.sonicle.webtop.core.model.DataSourcePooled;
 import com.sonicle.webtop.core.model.DomainEntity;
+import com.sonicle.webtop.core.app.model.FolderShare;
+import com.sonicle.webtop.core.app.model.FolderShareOriginFolders;
 import com.sonicle.webtop.core.model.IMChat;
 import com.sonicle.webtop.core.model.IMMessage;
 import com.sonicle.webtop.core.model.ListTagsOpt;
@@ -146,6 +151,15 @@ import com.sonicle.webtop.core.model.MasterDataLookup;
 import com.sonicle.webtop.core.model.Meeting;
 import com.sonicle.webtop.core.model.PublicImage;
 import com.sonicle.webtop.core.model.RecipientFieldType;
+import com.sonicle.webtop.core.app.model.FolderShareOrigin;
+import com.sonicle.webtop.core.app.model.FolderSharing;
+import com.sonicle.webtop.core.app.model.Group;
+import com.sonicle.webtop.core.app.model.Resource;
+import com.sonicle.webtop.core.app.model.ResourceGetOption;
+import com.sonicle.webtop.core.app.model.ResourcePermissions;
+import com.sonicle.webtop.core.app.model.SubjectGetOption;
+import com.sonicle.webtop.core.app.model.User;
+import com.sonicle.webtop.core.app.model.UserGetOption;
 import com.sonicle.webtop.core.model.Tag;
 import com.sonicle.webtop.core.model.UILayout;
 import com.sonicle.webtop.core.model.UITheme;
@@ -175,8 +189,8 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import jakarta.mail.internet.InternetAddress;
-import net.sf.qualitycheck.Check;
 import java.util.HashMap;
+import java.util.stream.Collectors;
 import net.sf.qualitycheck.Check;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.client.utils.URIBuilder;
@@ -210,6 +224,34 @@ public class CoreManager extends BaseManager {
 	private static final int MAX_CFIELDS_FREE = 6*2/4; // -> 3
 	private boolean webtopRcptProviderEnabled = true;
 	private boolean autoRcptProviderEnabled = true;
+	
+	/**
+	 * @deprecated use lookupProfilePersonalInfo instead (will be removed in v.5.16.0)
+	 */
+	@Deprecated
+	public UserProfile.PersonalInfo getUserPersonalInfo(UserProfileId pid) throws WTException {
+		return lookupProfilePersonalInfo(pid);
+	}
+	
+	/**
+	 * @deprecated use lookupUserSid instead (will be removed in v.5.16.0)
+	 */
+	@Deprecated
+	public String getUserUid(UserProfileId profileId) throws WTException {
+		return lookupUserSid(profileId);
+	}
+	
+	/**
+	 * @deprecated use lookupUserProfileIdBySid instead (will be removed in v.5.16.0)
+	 */
+	@Deprecated
+	public UserProfileId userUidToProfileId(String userUid) {
+		try {
+			return lookupUserProfileIdBySid(userUid);
+		} catch (WTException ex) {
+			return null;
+		}
+	}
 	
 	public CoreManager(WebTopApp wta, boolean fastInit, UserProfileId targetProfileId) {
 		super(fastInit, targetProfileId);
@@ -304,7 +346,7 @@ public class CoreManager extends BaseManager {
 		themes.put("gray", new UITheme("gray", "Gray", false));
 		
 		// Then load extra ones...
-		//TODO: maybe improve this with dynamic discovery using such sort of file descriptor
+		//TODO: maybe improve this of dynamic discovery using such sort of file descriptor
 		CoreServiceSettings css = new CoreServiceSettings(CoreManifest.ID, getTargetProfileId().getDomainId());
 		for (Map.Entry<String, String> entry : css.getThemesExtra().entrySet()) {
 			final String themeId = entry.getKey();
@@ -332,7 +374,7 @@ public class CoreManager extends BaseManager {
 		lafs.put("default", new UILookAndFeel("default", WT.getPlatformName()));
 		
 		// Then load extra ones...
-		//TODO: maybe improve this with dynamic discovery using such sort of file descriptor
+		//TODO: maybe improve this of dynamic discovery using such sort of file descriptor
 		CoreServiceSettings css = new CoreServiceSettings(CoreManifest.ID, getTargetProfileId().getDomainId());
 		for (Map.Entry<String, String> entry : css.getThemesExtra().entrySet()) {
 			final String lafId = entry.getKey();
@@ -382,48 +424,190 @@ public class CoreManager extends BaseManager {
 		}
 	}
 	
+	public Set<String> listInstalledServices() {
+		ServiceManager svcMgr = wta.getServiceManager();
+		return svcMgr.listRegisteredServices();
+	}
+	
+	public List<ServicePermission> listServicePermissions(String serviceId) throws WTException {
+		ServiceManager svcMgr = wta.getServiceManager();
+		List<ServicePermission> perms = svcMgr.getDeclaredPermissions(serviceId);
+		if (perms == null) throw new WTException("Service not found [{0}]", serviceId);
+		return perms;
+	}
+	
+	/**
+	 * Lists configured domain IDs according to specified options.
+	 * @param enabled
+	 * @return
+	 * @throws WTException 
+	 */
+	public Set<String> listDomainIds(final EnabledCond enabled) throws WTException {
+		Check.notNull(enabled, "enabled");
+		WebTopManager wtMgr = wta.getWebTopManager();
+		
+		Set<String> domainIds = wtMgr.listDomainIds(enabled);
+		if (RunContext.isSysAdmin()) {
+			return domainIds;
+		} else {
+			Set<String> set = new LinkedHashSet<>();
+			for (String domainId : domainIds) {
+				if (RunContext.isWebTopDomainAdmin(domainId)) {
+					set.add(domainId);
+					break;
+				}
+			}
+			return set;
+		}
+	}
+	
+	public Map<String, Domain> listDomains(final EnabledCond enabled) throws WTException {
+		Check.notNull(enabled, "enabled");
+		WebTopManager wtMgr = wta.getWebTopManager();
+		
+		Map<String, Domain> domains = wtMgr.listDomains(enabled);
+		if (RunContext.isSysAdmin()) {
+			return domains;
+		} else {
+			Map<String, Domain> map = new LinkedHashMap<>();
+			for (Domain domain : domains.values()) {
+				if (RunContext.isWebTopDomainAdmin(domain.getDomainId())) {
+					map.put(domain.getDomainId(), domain);
+					break;
+				}
+			}
+			return map;
+		}
+	}
+	
+	/**
+	 * Used by aliseoweb, vfs
+	 * @deprecated use listDomains instead
+	 */
+	@Deprecated
 	public List<ODomain> listDomains(boolean enabledOnly) throws WTException {
 		WebTopManager wtmgr = wta.getWebTopManager();
 		
 		if(RunContext.isSysAdmin()) {
-			return wtmgr.listDomains(enabledOnly);
+			return wtmgr.OLD_listDomains(enabledOnly);
 		} else {
-			ODomain domain = wtmgr.getDomain(RunContext.getRunProfileId().getDomain());
-			return domain.getEnabled() ? Arrays.asList(domain) : new ArrayList<ODomain>();
+			ODomain domain = wtmgr.OLD_getDomain(RunContext.getRunProfileId().getDomain());
+			return domain.getEnabled() ? Arrays.asList(domain) : new ArrayList<>();
 		}
 	}
 	
+	//TODO: create new method of a model instance in return
+	@Deprecated
 	public ODomain getDomain() throws WTException {
 		return getDomain(getTargetProfileId().getDomainId());
 	}
 	
+	/**
+	 * Used by aliseoweb
+	 * @deprecated use getDomain instead
+	 */
+	@Deprecated
 	public ODomain getDomain(String domainId) throws WTException {
 		WebTopManager wtmgr = wta.getWebTopManager();
 		
 		if (RunContext.isSysAdmin()) {
-			return wtmgr.getDomain(domainId);
+			return wtmgr.OLD_getDomain(domainId);
 		} else {
 			ensureUserDomain(domainId);
-			return wtmgr.getDomain(domainId);
+			return wtmgr.OLD_getDomain(domainId);
 		}
 	}
 	
-	public DomainEntity.PasswordPolicies getDomainPasswordPolicies() throws WTException {
+	public DomainBase.PasswordPolicies getDomainPasswordPolicies() throws WTException {
+		WebTopManager wtMgr = wta.getWebTopManager();
 		String domainId = getTargetProfileId().getDomainId();
+		
 		// SysAdmin can access all, others are locked on their domains
 		if (!RunContext.isSysAdmin()) ensureProfileDomain(domainId);
-		return wta.getWebTopManager().getDomainPasswordPolicies(domainId);
+		return wtMgr.getDomainPasswordPolicies(domainId);
 	}
 	
 	public List<PublicImage> listDomainPublicImages() throws WTException {
 		WebTopManager wtmgr = wta.getWebTopManager();
 		String domainId = getTargetProfileId().getDomainId();
+		return wtmgr.listDomainPublicImages(domainId);
+	}
+	
+	/**
+	 * Lists avaiable resources IDs according to specified options.
+	 * @param enabled
+	 * @return
+	 * @throws WTException 
+	 */
+	public Set<String> listResourceIds(final EnabledCond enabled) throws WTException {
+		Check.notNull(enabled, "enabled");
+		WebTopManager wtMgr = wta.getWebTopManager();
 		
-		try {
-			return wtmgr.listDomainPublicImages(domainId);
-		} catch(Exception ex) {
-			throw new WTException(ex, "Unable to list domain's public images [{0}]", domainId);
-		}
+		String targetDomainId = getTargetProfileId().getDomainId();
+		ensureProfileDomain(targetDomainId);
+		return wtMgr.listResourceIds(targetDomainId, enabled);
+	}
+	
+	/**
+	 * Lists avaiable resources according to specified options.
+	 * @param enabled
+	 * @return
+	 * @throws WTException 
+	 */
+	public Map<String, Resource> listResources(final EnabledCond enabled) throws WTException {
+		Check.notNull(enabled, "enabled");
+		WebTopManager wtMgr = wta.getWebTopManager();
+		
+		String targetDomainId = getTargetProfileId().getDomainId();
+		ensureProfileDomain(targetDomainId);
+		return wtMgr.listResources(targetDomainId, enabled);
+	}
+	
+	/**
+	 * Get resource of specified ID.
+	 * @param resourceId
+	 * @param options
+	 * @return
+	 * @throws WTException 
+	 */
+	public Resource getResource(final String resourceId, final BitFlags<ResourceGetOption> options) throws WTException {
+		Check.notEmpty(resourceId, "resourceId");
+		WebTopManager wtMgr = wta.getWebTopManager();
+		
+		String targetDomainId = getTargetProfileId().getDomainId();
+		ensureProfileDomain(targetDomainId);
+		return wtMgr.getResource(targetDomainId, resourceId, options);
+	}
+	
+	/**
+	 * Get resource's enables status.
+	 * @param resourceId
+	 * @return
+	 * @throws WTException 
+	 */
+	public boolean getResourceEnabled(final String resourceId) throws WTException {
+		Check.notEmpty(resourceId, "resourceId");
+		WebTopManager wtMgr = wta.getWebTopManager();
+		
+		String targetDomainId = getTargetProfileId().getDomainId();
+		ensureProfileDomain(targetDomainId);
+		return wtMgr.getResourceEnabled(targetDomainId, resourceId);
+	}
+	
+	/**
+	 * Get resource's permission configuration.
+	 * @param resourceId
+	 * @param subjectsAsSID
+	 * @return
+	 * @throws WTException 
+	 */
+	public ResourcePermissions getResourcePermissions(final String resourceId, final boolean subjectsAsSID) throws WTException {
+		Check.notEmpty(resourceId, "resourceId");
+		WebTopManager wtMgr = wta.getWebTopManager();
+		String domainId = getTargetProfileId().getDomainId();
+
+		RunContext.ensureIsWebTopDomainAdmin(domainId);
+		return wtMgr.getResourcePermissions(domainId, resourceId, subjectsAsSID);
 	}
 	
 	/**
@@ -432,6 +616,7 @@ public class CoreManager extends BaseManager {
 	 * @return The role list.
 	 * @throws WTException If something go wrong.
 	 */
+	/*
 	public List<Role> listRoles() throws WTException {
 		String domainId = getTargetProfileId().getDomainId();
 		
@@ -440,11 +625,12 @@ public class CoreManager extends BaseManager {
 		
 		WebTopManager wtmgr = wta.getWebTopManager();
 		try {
-			return wtmgr.listRoles(domainId);
+			return wtmgr.listRoles_OLD(domainId);
 		} catch(Exception ex) {
 			throw new WTException(ex, "Unable to list roles [{0}]", domainId);
 		}
 	}
+	*/
 	
 	/**
 	 * Lists domain users roles (those coming from a user).
@@ -452,6 +638,7 @@ public class CoreManager extends BaseManager {
 	 * @return The role list.
 	 * @throws WTException If something go wrong.
 	 */
+	/*
 	public List<Role> listUsersRoles() throws WTException {
 		String domainId = getTargetProfileId().getDomainId();
 		
@@ -465,6 +652,7 @@ public class CoreManager extends BaseManager {
 			throw new WTException(ex, "Unable to list users roles [{0}]", domainId);
 		}
 	}
+	*/
 	
 	/**
 	 * Lists domain groups roles (those coming from a group).
@@ -472,6 +660,7 @@ public class CoreManager extends BaseManager {
 	 * @return The role list.
 	 * @throws WTException If something go wrong.
 	 */
+	/*
 	public List<Role> listGroupsRoles() throws WTException {
 		String domainId = getTargetProfileId().getDomainId();
 		
@@ -485,7 +674,27 @@ public class CoreManager extends BaseManager {
 			throw new WTException(ex, "Unable to list groups roles [{0}]", domainId);
 		}
 	}
+	*/
 	
+	public Map<String, GenericSubject> listSubjects(final boolean users, final boolean resources, final boolean groups, final boolean roles, final boolean useProfileIdAsKey) throws WTException {
+		WebTopManager wtMgr = wta.getWebTopManager();
+		String domainId = getTargetProfileId().getDomainId();
+		
+		ensureProfileDomain();
+		BitFlags<SubjectGetOption> options = new BitFlags<>(SubjectGetOption.class);
+		if (users) options.set(SubjectGetOption.USERS);
+		if (resources) options.set(SubjectGetOption.RESOURCES);
+		if (groups) options.set(SubjectGetOption.GROUPS);
+		if (roles) options.set(SubjectGetOption.ROLES);
+		if (useProfileIdAsKey) options.set(SubjectGetOption.PID_AS_KEY);
+		return wtMgr.listSubjects(domainId, options);
+	}
+	
+	/**
+	 * Used in aliseoweb, drm
+	 * @deprecated use listSubjects, listUserIds, listUserProfileIds or listUsers instead
+	 */
+	@Deprecated
 	public List<OUser> listUsers(boolean enabledOnly) throws WTException {
 		String domainId = getTargetProfileId().getDomainId();
 		WebTopManager wtmgr = wta.getWebTopManager();
@@ -502,10 +711,58 @@ public class CoreManager extends BaseManager {
 		return wtmgr.listUserProfileIdsByEmail(emailAddress);
 	}
 	
-	public OUser getUser() throws WTException {
-		return getUser(getTargetProfileId());
+	public Set<String> listUserIds(final EnabledCond enabled) throws WTException {
+		Check.notNull(enabled, "enabled");
+		WebTopManager wtMgr = wta.getWebTopManager();
+		String domainId = getTargetProfileId().getDomainId();
+		
+		ensureProfileDomain(domainId);
+		return wtMgr.listUserIds(domainId, enabled);
 	}
 	
+	public Set<UserProfileId> listUserProfileIds(final EnabledCond enabled) throws WTException {
+		Check.notNull(enabled, "enabled");
+		WebTopManager wtMgr = wta.getWebTopManager();
+		String domainId = getTargetProfileId().getDomainId();
+		
+		ensureProfileDomain(domainId);
+		return wtMgr.listUserIds(domainId, enabled)
+			.stream()
+			.map((userId) -> new UserProfileId(domainId, userId))
+			.collect(Collectors.toSet());
+	}
+	
+	public Map<String, User> listUsers(final EnabledCond enabled) throws WTException {
+		Check.notNull(enabled, "enabled");
+		WebTopManager wtMgr = wta.getWebTopManager();
+		String domainId = getTargetProfileId().getDomainId();
+		
+		ensureProfileDomain(domainId);
+		return wtMgr.listUsers(domainId, enabled);
+	}
+	
+	public User getUser(final BitFlags<UserGetOption> options) throws WTException {
+		Check.notNull(options, "options");
+		WebTopManager wtMgr = wta.getWebTopManager();
+		UserProfileId pid = getTargetProfileId();
+		
+		ensureProfileDomain(pid.getDomainId());
+		return wtMgr.getUser(pid.getDomainId(), pid.getUserId(), options);
+	}
+	
+	public Set<UserProfileId> expandSubjectsToUserProfiles(final Collection<String> subjects, final boolean subjectsAsSID) throws WTException {
+		WebTopManager wtMgr = wta.getWebTopManager();
+		String domainId = getTargetProfileId().getDomainId();
+		
+		RunContext.ensureIsWebTopDomainAdmin(domainId);
+		return wtMgr.expandSubjectsToUserProfiles(domainId, subjects, subjectsAsSID);
+	}
+	
+	/**
+	 * Used by aliseoweb service
+	 * @deprecated 
+	 */
+	@Deprecated
 	public OUser getUser(UserProfileId pid) throws WTException {
 		WebTopManager wtmgr = wta.getWebTopManager();
 		
@@ -518,27 +775,56 @@ public class CoreManager extends BaseManager {
 		}
 	}
 	
+	/**
+	 * Returns current target profile Data.
+	 * @return
+	 * @throws WTException 
+	 */
 	public UserProfile.Data getUserData() throws WTException {
-		return wta.getWebTopManager().userData(getTargetProfileId());
+		return wta.getWebTopManager().lookupProfileData(getTargetProfileId(), true);
 	}
 	
-	public String getUserUid(UserProfileId pid) throws WTException {
-		return wta.getWebTopManager().userToUid(pid,false);
+	/**
+	 * Returns current target profile SID.
+	 * @return
+	 * @throws WTException 
+	 */
+	public String getUserSid() throws WTException {
+		return lookupUserSid(getTargetProfileId());
 	}
 	
-	public UserProfile.PersonalInfo getUserPersonalInfo() throws WTException {
-		return getUserPersonalInfo(getTargetProfileId());
+	/**
+	 * Returns the SID associated to passed profile ID of a user.
+	 * @param profileId The target profile ID.
+	 * @return
+	 * @throws WTException 
+	 */
+	public String lookupUserSid(final UserProfileId profileId) throws WTException {
+		Check.notNull(profileId, "profileId");
+		if (!RunContext.isSysAdmin()) ensureUserDomain(profileId.getDomainId());
+		return wta.getWebTopManager().lookupSubjectSid(profileId, GenericSubject.Type.USER);
 	}
 	
-	public UserProfile.PersonalInfo getUserPersonalInfo(UserProfileId pid) throws WTException {
-		WebTopManager wtmgr = wta.getWebTopManager();
-		
-		if(RunContext.isSysAdmin()) {
-			return wtmgr.getUserPersonalInfo(pid);
-		} else {
-			ensureUserDomain(pid.getDomainId());
-			return wtmgr.getUserPersonalInfo(pid);
-		}
+	/**
+	 * Returns the profile ID related to the passed SID of a user.
+	 * @param userSid The target SID.
+	 * @return
+	 * @throws WTException 
+	 */
+	public UserProfileId lookupUserProfileIdBySid(final String userSid) throws WTException {
+		Check.notNull(userSid, "userSid");
+		UserProfileId pid = wta.getWebTopManager().lookupSubjectProfile(userSid, GenericSubject.Type.USER);
+		if (pid != null) ensureUserDomain(pid.getDomainId());
+		return pid;
+	}
+	
+	public UserProfile.PersonalInfo getProfilePersonalInfo() throws WTException {
+		return lookupProfilePersonalInfo(getTargetProfileId());
+	}
+	
+	public UserProfile.PersonalInfo lookupProfilePersonalInfo(final UserProfileId profileId) throws WTException {
+		if (!RunContext.isSysAdmin()) ensureUserDomain(profileId.getDomainId());
+		return wta.getWebTopManager().lookupProfilePersonalInfo(profileId, true);
 	}
 	
 	public boolean updateUserDisplayName(String displayName) throws WTException {
@@ -566,28 +852,40 @@ public class CoreManager extends BaseManager {
 	}
 	
 	public void updateUserPassword(char[] oldPassword, char[] newPassword) throws WTException {
-		WebTopManager wtmgr = wta.getWebTopManager();
+		WebTopManager wtMgr = wta.getWebTopManager();
 		
 		try {
 			ensureProfile();
 			if (oldPassword == null) throw new WTException("Old password must be provided");
-			wtmgr.updateUserPassword(getTargetProfileId(), oldPassword, newPassword);
-		} catch(Throwable t) {
-			throw new WTException(t, "Unable to change user password [{0}]", getTargetProfileId().toString());
+			wtMgr.updateUserPassword(getTargetProfileId().getDomainId(), getTargetProfileId().getUserId(), oldPassword, newPassword);
+			
+		} catch (Exception ex) {
+			throw new WTException(ex, "Unable to change user password [{0}]", getTargetProfileId().toString());
 		}
 	}
 	
 	public void cleanUserProfileCache() {
 		ensureCallerService(SERVICE_ID, "cleanupUserProfileCache");
-		wta.getWebTopManager().cleanUserProfileCache(getTargetProfileId());
+		wta.getWebTopManager().clearProfileCache(getTargetProfileId());
 	}
 	
+	/**
+	 * @deprecated
+	 */
+	@Deprecated
 	public List<OGroup> listGroups() throws WTException {
 		String domainId = getTargetProfileId().getDomainId();
 		WebTopManager wtmgr = wta.getWebTopManager();
 		
 		try {
-			return wtmgr.listGroups(domainId);
+			ArrayList<OGroup> items = new ArrayList<>();
+			for (Group group : wtmgr.listGroups(domainId).values()) {
+				OGroup ogroup = new OGroup();
+				ogroup.setGroupId(group.getGroupId());
+				ogroup.setDisplayName(group.getGroupId());
+				items.add(ogroup);
+			}
+			return items;
 		} catch(Exception ex) {
 			throw new WTException(ex, "Unable to list groups [{0}]", domainId);
 		}
@@ -605,17 +903,7 @@ public class CoreManager extends BaseManager {
 	
 	
 	
-	public List<String> listWTInstalledServices() {
-		ServiceManager svcm = wta.getServiceManager();
-		return svcm.listRegisteredServices();
-	}
 	
-	public List<ServicePermission> listServicePermissions(String serviceId) throws WTException {
-		ServiceManager svcm = wta.getServiceManager();
-		List<ServicePermission> perms = svcm.getDeclaredPermissions(serviceId);
-		if (perms == null) throw new WTException("Service not found [{0}]", serviceId);
-		return perms;
-	}
 	
 	public Set<String> listAllowedServices() {
 		LinkedHashSet<String> ids = new LinkedHashSet<>();
@@ -706,9 +994,7 @@ public class CoreManager extends BaseManager {
 	
 	
 	
-	public UserProfileId userUidToProfileId(String userUid) {
-		return wta.getWebTopManager().uidToUser(userUid);
-	}
+	
 	
 	
 	
@@ -1455,7 +1741,7 @@ public class CoreManager extends BaseManager {
 	}
 	
 	/**
-	 * Gets the CustomPanel with the specified ID.
+	 * Gets the CustomPanel of the specified ID.
 	 * @param serviceId The owning Service ID.
 	 * @param panelId The CustomPanel ID.
 	 * @return CustomPanel object or null if not found.
@@ -1549,7 +1835,7 @@ public class CoreManager extends BaseManager {
 	}
 	
 	/**
-	 * Updates specified CustomPanel's ordering number with the provided one.
+	 * Updates specified CustomPanel's ordering number of the provided one.
 	 * @param serviceId The owning Service ID.
 	 * @param panelId The CustomPanel ID.
 	 * @param newOrder New order position.
@@ -1582,7 +1868,7 @@ public class CoreManager extends BaseManager {
 	}
 	
 	/**
-	 * Deletes the specified CustomPanel, removing any associations with CustomField(s).
+	 * Deletes the specified CustomPanel, removing any associations of CustomField(s).
 	 * @param serviceId The owning Service ID.
 	 * @param panelId The CustomPanel ID.
 	 * @throws WTException 
@@ -1733,7 +2019,7 @@ public class CoreManager extends BaseManager {
 	}
 	
 	/**
-	 * Gets the CustomField with the specified ID.
+	 * Gets the CustomField of the specified ID.
 	 * @param serviceId The owning Service ID.
 	 * @param fieldId The CustomField ID.
 	 * @return CustomField object or null if not found.
@@ -1857,7 +2143,7 @@ public class CoreManager extends BaseManager {
 	}
 	
 	/**
-	 * Deletes the specified CustomField, removing associations with any CustomPanel(s).
+	 * Deletes the specified CustomField, removing associations of any CustomPanel(s).
 	 * @param serviceId The owning Service ID.
 	 * @param fieldId The CustomField ID.
 	 * @throws WTException 
@@ -2476,54 +2762,92 @@ public class CoreManager extends BaseManager {
 		return otp.checkCode(getTargetProfileId(), params, code);
 	}
 	
-	public List<IncomingShareRoot> listIncomingShareRoots(String serviceId, String groupName) throws WTException {
-		WebTopManager wtmgr = wta.getWebTopManager();
-		ShareDAO shadao = ShareDAO.getInstance();
-		UserDAO usedao = UserDAO.getInstance();
+	public List<FolderSharing.SubjectRights> getFolderShareSharingRights(final UserProfileId originProfileId, final String serviceId, final String context, final FolderSharing.Scope scope) throws WTException {
+		WebTopManager wtMgr = wta.getWebTopManager();
+		return wtMgr.getFolderShareSharingRights(originProfileId, serviceId, context, scope);
+	}
+	
+	public void updateFolderShareSharingRights(final UserProfileId originProfileId, final String serviceId, final String context, final FolderSharing.Scope scope, final Collection<FolderSharing.SubjectRights> rights) throws WTException {
+		WebTopManager wtMgr = wta.getWebTopManager();
+		wtMgr.updateFolderShareSharingRights(originProfileId, serviceId, context, scope, rights);
+	}
+	
+	/**
+	 * Enumerates FolderShare origins.
+	 * @param serviceId The related service ID.
+	 * @param context The context-name (or groupName) of the share.
+	 * @return
+	 * @throws WTException 
+	 */
+	public List<FolderShareOrigin> listFolderShareOrigins(final String serviceId, final String context) throws WTException {
+		WebTopManager wtMgr = wta.getWebTopManager();
 		UserProfileId targetPid = getTargetProfileId();
-		Connection con = null;
-		
-		try {
-			String profileUid = wtmgr.userToUid(targetPid);
-			List<String> roleUids = wtmgr.getComputedRolesAsStringByUser(targetPid, true, true);
-			
-			String rootKey = OShare.buildRootKey(groupName);
-			String folderKey = OShare.buildFolderKey(groupName);
-			String rootPermissionKey = ServiceSharePermission.buildRootPermissionKey(groupName);
-			String folderPermissionKey = ServiceSharePermission.buildFolderPermissionKey(groupName);
-			String elementsPermissionKey = ServiceSharePermission.buildElementsPermissionKey(groupName);
-			
-			con = WT.getCoreConnection();
-			
-			// In order to find incoming root, we need to pass through folders
-			// that have at least a permission, getting incoming uids.
-			// We look into permission returning each share instance that have 
-			// "*@SHARE_FOLDER" as key and satisfies a set of roles. Then we can
-			// get a list of unique uids (from shares table) that owns the share.
-			List<String> permissionKeys = Arrays.asList(rootPermissionKey, folderPermissionKey, elementsPermissionKey);
-			List<String> originUids = shadao.viewOriginByRoleServiceKey(con, roleUids, serviceId, folderKey, permissionKeys);
-			ArrayList<IncomingShareRoot> roots = new ArrayList<>();
-			for (String uid : originUids) {
-				if (uid.equals(profileUid)) continue; // Skip self role
-				
-				// Foreach incoming uid we have to find the root share and then
-				// test if READ right is allowed
-				
-				OShare root = shadao.selectByUserServiceKeyInstance(con, uid, serviceId, rootKey, OShare.INSTANCE_ROOT);
-				if (root == null) continue;
-				OUser user = usedao.selectByUid(con, uid);
-				if (user == null) continue;
-				
-				roots.add(new IncomingShareRoot(root.getShareId().toString(), wtmgr.uidToUser(root.getUserUid()), user.getDisplayName()));
-			}
-			Collections.sort(roots, (IncomingShareRoot ish1, IncomingShareRoot ish2) -> ish1.getDescription().compareTo(ish2.getDescription()));
-			return roots;
-			
-		} catch(SQLException | DAOException ex) {
-			throw new WTException(ex, "Unable to list share roots for {0}", targetPid.toString());
-		} finally {
-			DbUtils.closeQuietly(con);
-		}
+		return wtMgr.listFolderShareOrigins(targetPid, serviceId, context);
+	}
+	
+	/**
+	 * Enumerates FolderShare folders.
+	 * @param serviceId The related service ID.
+	 * @param context The context-name (or groupName) of the share.
+	 * @param originProfileId The source profileId of the share we are getting folders.
+	 * @return
+	 * @throws WTException 
+	 */
+	public FolderShareOriginFolders getFolderShareOriginFolders(final String serviceId, final String context, final UserProfileId originProfileId) throws WTException {
+		WebTopManager wtMgr = wta.getWebTopManager();
+		UserProfileId targetPid = getTargetProfileId();
+		return wtMgr.getFolderShareOriginFolders(targetPid, originProfileId, serviceId, context);
+	}
+	
+	/**
+	 * Evaluates passed FolderShare right, described under-the-hood by action, against profile's permissions.
+	 * @param serviceId The related service ID.
+	 * @param context The context-name (or groupName) of the share.
+	 * @param originProfileId The source profileId of the share we are checking permissions.
+	 * @param scope 
+	 * @param throwOnMissingShare Set to `false` to NOT throw WTNotFoundException if share at requested scope is not available.
+	 * @param target Permission selector: folder or elements
+	 * @param action Permission action to evaluate.
+	 * @return
+	 * @throws WTException 
+	 */
+	public Boolean evaluateFolderSharePermission(final String serviceId, final String context, final UserProfileId originProfileId, final FolderSharing.Scope scope, final boolean throwOnMissingShare, final FolderShare.EvalTarget target, final String action) throws WTException {
+		boolean[] bools = evaluateFolderSharePermission(serviceId, context, originProfileId, scope, throwOnMissingShare, target, new String[]{action});
+		return bools != null ? bools[0] : null;
+	}
+	
+	/**
+	 * Evaluates passed FolderShare rights, described under-the-hood by actions, against profile's permissions.
+	 * @param serviceId The related service ID.
+	 * @param context The context-name (or groupName) of the share.
+	 * @param originProfileId The source profileId of the share we are checking permissions.
+	 * @param scope 
+	 * @param throwOnMissingShare Set to `false` to NOT throw WTNotFoundException if share at requested scope is not available.
+	 * @param target Permission selector: folder or elements
+	 * @param actions Permission actions to evaluate.
+	 * @return
+	 * @throws WTException 
+	 */
+	public boolean[] evaluateFolderSharePermission(final String serviceId, final String context, final UserProfileId originProfileId, final FolderSharing.Scope scope, final boolean throwOnMissingShare, final FolderShare.EvalTarget target, final String[] actions) throws WTException {
+		WebTopManager wtMgr = wta.getWebTopManager();
+		UserProfileId targetPid = getTargetProfileId();
+		return wtMgr.evaluateFolderSharePermission(targetPid, originProfileId, serviceId, context, scope, throwOnMissingShare, target, actions);
+	}
+	
+	/**
+	 * Evaluates all available FolderShare rights against profile's permissions.
+	 * @param serviceId The related service ID.
+	 * @param context The context-name (or groupName) of the share.
+	 * @param originProfileId The source profileId of the share we are checking permissions.
+	 * @param scope
+	 * @param throwOnMissingShare Set to `false` to NOT throw WTNotFoundException if share at requested scope is not available.
+	 * @return
+	 * @throws WTException 
+	 */
+	public FolderShare.Permissions evaluateFolderSharePermissions(final String serviceId, final String context, final UserProfileId originProfileId, final FolderSharing.Scope scope, final boolean throwOnMissingShare) throws WTException {
+		WebTopManager wtMgr = wta.getWebTopManager();
+		UserProfileId targetPid = getTargetProfileId();
+		return wtMgr.evaluateFolderSharePermissions(targetPid, originProfileId, serviceId, context, scope, throwOnMissingShare);
 	}
 	
 	/**
@@ -2619,13 +2943,63 @@ public class CoreManager extends BaseManager {
 	}
 	
 	/**
-	 * Lists incoming share folders (level 1, eg: Calendars, Categories, etc) 
-	 * for the targetProfile.
-	 * @param rootShareId The root share ID
-	 * @param groupName The permission groupName
-	 * @return
-	 * @throws WTException 
+	 * @deprecated use listFolderShareOrigins instead
 	 */
+	@Deprecated
+	public List<IncomingShareRoot> listIncomingShareRoots(String serviceId, String groupName) throws WTException {
+		WebTopManager wtmgr = wta.getWebTopManager();
+		ShareDAO shadao = ShareDAO.getInstance();
+		UserDAO usedao = UserDAO.getInstance();
+		UserProfileId targetPid = getTargetProfileId();
+		Connection con = null;
+		
+		try {
+			String profileUid = wtmgr.lookupSubjectSid(targetPid, GenericSubject.Type.USER);
+			List<String> roleUids = wtmgr.getComputedRolesAsStringByUser(targetPid, true, true);
+			
+			String rootKey = OShare.buildRootKey(groupName);
+			String folderKey = OShare.buildFolderKey(groupName);
+			String rootPermissionKey = ServiceSharePermission.buildRootPermissionKey(groupName);
+			String folderPermissionKey = ServiceSharePermission.buildFolderPermissionKey(groupName);
+			String elementsPermissionKey = ServiceSharePermission.buildElementsPermissionKey(groupName);
+			
+			con = WT.getCoreConnection();
+			
+			// In order to find incoming root, we need to pass through folders
+			// that have at least a permission, getting incoming uids.
+			// We look into permission returning each share instance that have 
+			// "*@SHARE_FOLDER" as key and satisfies a set of roles. Then we can
+			// get a list of unique uids (from shares table) that owns the share.
+			List<String> permissionKeys = Arrays.asList(rootPermissionKey, folderPermissionKey, elementsPermissionKey);
+			List<String> originUids = shadao.viewOriginByRoleServiceKey(con, roleUids, serviceId, folderKey, permissionKeys);
+			ArrayList<IncomingShareRoot> roots = new ArrayList<>();
+			for (String uid : originUids) {
+				if (uid.equals(profileUid)) continue; // Skip self role
+				
+				// Foreach incoming uid we have to find the root share and then
+				// test if READ right is allowed
+				
+				OShare root = shadao.selectByUserServiceKeyInstance2(con, uid, serviceId, rootKey, OShare.INSTANCE_ROOT);
+				if (root == null) continue;
+				OUser user = usedao.selectBySid(con, uid);
+				if (user == null) continue;
+				
+				roots.add(new IncomingShareRoot(root.getShareId().toString(), wtmgr.lookupSubjectProfile(root.getUserUid(), GenericSubject.Type.USER), user.getDisplayName()));
+			}
+			Collections.sort(roots, (IncomingShareRoot ish1, IncomingShareRoot ish2) -> ish1.getDescription().compareTo(ish2.getDescription()));
+			return roots;
+			
+		} catch(SQLException | DAOException ex) {
+			throw new WTException(ex, "Unable to list share roots for {0}", targetPid.toString());
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
+	/**
+	 * @deprecated use getFolderShareOriginFolders instead
+	 */
+	@Deprecated
 	public List<OShare> listIncomingShareFolders(String rootShareId, String groupName) throws WTException {
 		ShareDAO shadao = ShareDAO.getInstance();
 		Connection con = null;
@@ -2662,7 +3036,7 @@ public class CoreManager extends BaseManager {
 		Connection con = null;
 		
 		try {
-			String profileUid = usrm.userToUid(getTargetProfileId());
+			String profileUid = usrm.lookupSubjectSid(getTargetProfileId(), GenericSubject.Type.USER);
 			con = WT.getCoreConnection();
 			
 			OShare share = shadao.selectById(con, Integer.valueOf(shareId));
@@ -2684,6 +3058,7 @@ public class CoreManager extends BaseManager {
 		}
 	}
 	
+	@Deprecated
 	public boolean[] areActionsPermittedOnShare(String shareId, String permissionTarget, String[] actions) throws WTException {
 		ShareDAO shadao = ShareDAO.getInstance();
 		Connection con = null;
@@ -2702,6 +3077,7 @@ public class CoreManager extends BaseManager {
 		}
 	}
 	
+	@Deprecated
 	public boolean[] areActionsPermittedOnShare(OShare share, String permissionTarget, String[] actions) throws WTException {
 		String instance = String.valueOf(share.getShareId());
 		String groupName = OShare.extractGroupNameFromKey(share.getKey());
@@ -2715,33 +3091,40 @@ public class CoreManager extends BaseManager {
 		return perms;
 	}
 	
+	@Deprecated
 	public boolean isShareRootPermitted(String shareId, String action) throws WTException {
 		return areActionsPermittedOnShare(shareId, ServiceSharePermission.TARGET_ROOT, new String[]{action})[0];
 	}
 	
+	@Deprecated
 	public boolean isShareFolderPermitted(String shareId, String action) throws WTException {
 		return areActionsPermittedOnShare(shareId, ServiceSharePermission.TARGET_FOLDER, new String[]{action})[0];
 	}
 	
+	@Deprecated
 	public boolean isShareElementsPermitted(String shareId, String action) throws WTException {
 		return areActionsPermittedOnShare(shareId, ServiceSharePermission.TARGET_ELEMENTS, new String[]{action})[0];
 	}
 	
+	@Deprecated
 	public SharePermsRoot getShareRootPermissions(String shareId) throws WTException {
 		boolean[] bools = areActionsPermittedOnShare(shareId, ServiceSharePermission.TARGET_ROOT, SharePermsRoot.ACTIONS);
 		return new SharePermsRoot(SharePermsRoot.ACTIONS, bools);
 	}
 	
+	@Deprecated
 	public SharePermsFolder getShareFolderPermissions(String shareId) throws WTException {
 		boolean[] bools = areActionsPermittedOnShare(shareId, ServiceSharePermission.TARGET_FOLDER, SharePermsFolder.ACTIONS);
 		return new SharePermsFolder(SharePermsFolder.ACTIONS, bools);
 	}
 	
+	@Deprecated
 	public SharePermsElements getShareElementsPermissions(String shareId) throws WTException {
 		boolean[] bools = areActionsPermittedOnShare(shareId, ServiceSharePermission.TARGET_ELEMENTS, SharePermsElements.ACTIONS);
 		return new SharePermsElements(SharePermsElements.ACTIONS, bools);
 	}
 	
+	@Deprecated
 	public Sharing getSharing(String serviceId, String groupName, String shareId) throws WTException {
 		WebTopManager usrm = wta.getWebTopManager();
 		ShareDAO shadao = ShareDAO.getInstance();
@@ -2764,8 +3147,8 @@ public class CoreManager extends BaseManager {
 			// Retrieves the root share
 			OShare rootShare = null;
 			if(rootId.equals("0")) {
-				String puid = usrm.userToUid(getTargetProfileId());
-				rootShare = shadao.selectByUserServiceKeyInstance(con, puid, serviceId, rootShareKey, OShare.INSTANCE_ROOT);
+				String puid = usrm.lookupSubjectSid(getTargetProfileId(), GenericSubject.Type.USER);
+				rootShare = shadao.selectByUserServiceKeyInstance2(con, puid, serviceId, rootShareKey, OShare.INSTANCE_ROOT);
 			} else {
 				rootShare = shadao.selectById(con, Integer.valueOf(rootId));
 			}
@@ -2779,7 +3162,7 @@ public class CoreManager extends BaseManager {
 					LinkedHashSet<String> roleUids = new LinkedHashSet<>();
 					roleUids.addAll(listRoles(serviceId, rootPermissionKey, rootShare.getShareId().toString()));
 					
-					OShare folderShare = shadao.selectByUserServiceKeyInstance(con, rootShare.getUserUid(), serviceId, folderShareKey, OShare.INSTANCE_WILDCARD);
+					OShare folderShare = shadao.selectByUserServiceKeyInstance2(con, rootShare.getUserUid(), serviceId, folderShareKey, OShare.INSTANCE_WILDCARD);
 					if(folderShare != null) roleUids.addAll(listRoles(serviceId, folderPermissionKey, folderShare.getShareId().toString()));
 
 					for(String roleUid : roleUids) {
@@ -2809,7 +3192,7 @@ public class CoreManager extends BaseManager {
 
 				} else if(level == 1) {
 					String folderId = cid.getToken(1);
-					OShare folderShare = shadao.selectByUserServiceKeyInstance(con, rootShare.getUserUid(), serviceId, folderShareKey, folderId);
+					OShare folderShare = shadao.selectByUserServiceKeyInstance2(con, rootShare.getUserUid(), serviceId, folderShareKey, folderId);
 
 					if(folderShare != null) {
 						List<String> roleUids = listRoles(serviceId, folderPermissionKey, folderShare.getShareId().toString());
@@ -2839,6 +3222,7 @@ public class CoreManager extends BaseManager {
 		}
 	}
 	
+	@Deprecated
 	public void updateSharing(String serviceId, String groupName, Sharing sharing) throws WTException {
 		WebTopManager usrm = wta.getWebTopManager();
 		ShareDAO shadao = ShareDAO.getInstance();
@@ -2856,7 +3240,7 @@ public class CoreManager extends BaseManager {
 		// At next level, we have permissions for only the Work category.
 		
 		try {
-			String puid = usrm.userToUid(getTargetProfileId());
+			String puid = usrm.lookupSubjectSid(getTargetProfileId(), GenericSubject.Type.USER);
 			
 			// Parses the sharing ID as a composite key:
 			// - "0"		for root share
@@ -2876,14 +3260,14 @@ public class CoreManager extends BaseManager {
 			// Retrieves the root share
 			OShare rootShare = null;
 			if(rootId.equals("0")) {
-				rootShare = shadao.selectByUserServiceKeyInstance(con, puid, serviceId, rootKey, OShare.INSTANCE_ROOT);
+				rootShare = shadao.selectByUserServiceKeyInstance2(con, puid, serviceId, rootKey, OShare.INSTANCE_ROOT);
 			} else {
 				rootShare = shadao.selectById(con, Integer.valueOf(rootId));
 			}
 			if(rootShare == null) rootShare = addRootShare(con, puid, serviceId, rootKey);
 			
 			if(level == 0) {
-				OShare folderShare = shadao.selectByUserServiceKeyInstance(con, rootShare.getUserUid(), serviceId, folderKey, OShare.INSTANCE_WILDCARD);
+				OShare folderShare = shadao.selectByUserServiceKeyInstance2(con, rootShare.getUserUid(), serviceId, folderKey, OShare.INSTANCE_WILDCARD);
 				
 				if(!sharing.getRights().isEmpty()) {
 					removeRootSharePermissions(con, rootShare.getShareId().toString(), serviceId, groupName);
@@ -2912,7 +3296,7 @@ public class CoreManager extends BaseManager {
 				
 			} else if(level == 1) {
 				String folderId = cid.getToken(1);
-				OShare folderShare = shadao.selectByUserServiceKeyInstance(con, rootShare.getUserUid(), serviceId, folderKey, folderId);
+				OShare folderShare = shadao.selectByUserServiceKeyInstance2(con, rootShare.getUserUid(), serviceId, folderKey, folderId);
 				
 				if(!sharing.getRights().isEmpty()) {
 					if(folderShare == null) {
@@ -3020,7 +3404,7 @@ public class CoreManager extends BaseManager {
 		
 		try {
 			con = WT.getCoreConnection();
-			String uuid = usrm.userToUid(pid);
+			String uuid = usrm.lookupSubjectSid(pid, GenericSubject.Type.USER);
 			return dao.selectByUserServiceKey(con, uuid, serviceId, shareKey);
 			
 		} catch(SQLException | DAOException ex) {
@@ -3457,23 +3841,25 @@ public class CoreManager extends BaseManager {
 				}
 			} else if (RECIPIENT_PROVIDER_WEBTOP_SOURCE_ID.equals(soId)) {
 				if (!fieldType.equals(RecipientFieldType.LIST)) {
+					WebTopManager wtMgr = wta.getWebTopManager();
 					recipients = new ArrayList<>();
 					//TODO: Find a way to handle other RecipientFieldTypes
 					if (fieldType.equals(RecipientFieldType.EMAIL)) {
-						List<OUser> users=listUsers(true);
-						for(OUser user: users) {
-							UserProfile.Data userData=WT.getUserData(new UserProfileId(user.getDomainId(),user.getUserId()));
-							if (userData!=null) {
-								if (StringUtils.containsIgnoreCase(user.getDisplayName(),queryText) || StringUtils.containsIgnoreCase(userData.getPersonalEmailAddress(),queryText))
+						final String domainId = getTargetProfileId().getDomainId();
+						for (String userId : wtMgr.listUserIds(domainId, EnabledCond.ENABLED_ONLY)) {
+							final UserProfile.Data userData = WT.getUserData(new UserProfileId(domainId, userId));
+							if (userData != null) {
+								if (StringUtils.containsIgnoreCase(userData.getDisplayName(), queryText) || StringUtils.containsIgnoreCase(userData.getPersonalEmailAddress(), queryText)) {
 									recipients.add(
 										new Recipient(
-												RECIPIENT_PROVIDER_WEBTOP_SOURCE_ID, 
-												lookupResource(getLocale(), CoreLocaleKey.INTERNETRECIPIENT_WEBTOP), 
-												RECIPIENT_PROVIDER_AUTO_SOURCE_ID, 
-												user.getDisplayName(), 
-												userData.getPersonalEmailAddress()
+											RECIPIENT_PROVIDER_WEBTOP_SOURCE_ID, 
+											lookupResource(getLocale(), CoreLocaleKey.INTERNETRECIPIENT_WEBTOP), 
+											RECIPIENT_PROVIDER_AUTO_SOURCE_ID, 
+											userData.getDisplayName(), 
+											userData.getPersonalEmailAddress()
 										)
 									);
+								}
 							}
 						}
 					}
@@ -3547,10 +3933,10 @@ public class CoreManager extends BaseManager {
 					domainMatch = true;
 					match = "@" + wtMgr.domainIdToDomainInternetName(targetPid.getDomainId());
 				} else {
-					match = wtMgr.authProfile(targetPid).toString();
+					match = wtMgr.toAuthProfileId(targetPid).toString();
 				}
 			} else {
-				match = wtMgr.authProfile(targetPid).toString();
+				match = wtMgr.toAuthProfileId(targetPid).toString();
 			}
 			
 			ArrayList<SyncDevice> devices = new ArrayList<>();
@@ -3579,10 +3965,10 @@ public class CoreManager extends BaseManager {
 				if (UserProfileId.isWildcardUser(targetPid)) {
 					zpush.removeDevice(deviceId);
 				} else {
-					zpush.removeUserDevice(wtMgr.authProfile(targetPid).toString(), deviceId);
+					zpush.removeUserDevice(wtMgr.toAuthProfileId(targetPid).toString(), deviceId);
 				}
 			} else {
-				zpush.removeUserDevice(wtMgr.authProfile(targetPid).toString(), deviceId);
+				zpush.removeUserDevice(wtMgr.toAuthProfileId(targetPid).toString(), deviceId);
 			}
 			
 		} catch(Exception ex) {
@@ -3597,7 +3983,7 @@ public class CoreManager extends BaseManager {
 			WebTopManager wtMgr = wta.getWebTopManager();
 			ZPushManager zpush = createZPushManager();
 			ensureProfile(true);
-			return zpush.getDetailedInfo(deviceId, wtMgr.authProfile(targetPid).toString(), lineSep);
+			return zpush.getDetailedInfo(deviceId, wtMgr.toAuthProfileId(targetPid).toString(), lineSep);
 			
 		} catch(Exception ex) {
 			throw new WTException(ex);
@@ -3823,6 +4209,10 @@ public class CoreManager extends BaseManager {
 		CREATE, UPDATE, DELETE, MOVE
 	}
 	
+	/**
+	 * @deprecated move to BitFlagsEnum interface
+	 */
+	@Deprecated
 	public static enum CustomFieldListOptions implements BitFlagEnum {
 		SEARCHABLE(1), PREVIEWABLE(2);
 		

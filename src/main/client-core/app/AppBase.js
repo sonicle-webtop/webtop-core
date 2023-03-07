@@ -62,6 +62,7 @@ Ext.define('Sonicle.webtop.core.app.AppBase', {
 		'Sonicle.webtop.core.ux.data.SimpleModel',
 		'Sonicle.webtop.core.ux.data.ArrayStore',
 		'Sonicle.webtop.core.ux.panel.Panel',
+		'Sonicle.webtop.core.ux.panel.PanelContainer',
 		'Sonicle.webtop.core.ux.panel.Fields',
 		'Sonicle.webtop.core.ux.panel.Form',
 		'Sonicle.webtop.core.ux.panel.Tab'

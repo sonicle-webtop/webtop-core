@@ -6,6 +6,7 @@
 .wtadm-icon-addDomain { background-image: url('domain-add_16.svg') !important; background-size: contain; }
 .wtadm-icon-editDomain { background-image: url('domain-edit_16.svg') !important; background-size: contain; }
 .wtadm-icon-deleteDomain { background-image: url('domain-delete_16.svg') !important; background-size: contain; }
+.wtadm-icon-initCheckDomain { background-image: url('domain-initcheck_16.svg') !important; background-size: contain; }
 .wtadm-icon-selectStmt { background-image: url('stmtSelect_16.svg') !important; background-size: contain; }
 .wtadm-icon-play1Stmt { background-image: url('stmtPlay1_16.svg') !important; background-size: contain; }
 .wtadm-icon-playStmt { background-image: url('stmtPlay_16.svg') !important; background-size: contain; }
@@ -51,9 +52,5 @@
 .wtadm-icon-stmtStatus-warning { background-image: url('stmtStatus-warning_16.svg') !important; background-size: contain; }
 .wtadm-icon-stmtStatus-skipped { background-image: url('stmtStatus-skipped_16.svg') !important; background-size: contain; }
 
-.wtadm-gpusers-row-disabled { color: #E60D35; }
 .wtadm-domainAccessLog-warning { background-color: #FFFFE0; }
 .wtadm-domainAccessLog-danger { background-color: #FFCCCB; }
-
-.wtadm-gpfetchers-row-disabled { color: #E60D35; }
-.wtadm-gprelays-row-disabled { color: #E60D35; }
