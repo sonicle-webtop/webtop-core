@@ -54,7 +54,7 @@ public abstract class BaseBackgroundServiceTask implements Job {
 	
 	public abstract Logger getLogger();
 	//public abstract String getName();
-	public abstract void executeWork(JobExecutionContext jec, DateTime now) throws Exception;
+	public abstract void executeWork(JobExecutionContext jec, TaskContext context) throws Exception;
 
 	@Override
 	public void execute(JobExecutionContext jec) throws JobExecutionException {
@@ -88,7 +88,7 @@ public abstract class BaseBackgroundServiceTask implements Job {
 
 		try {
 			getLogger().debug("Started [{}]", now);
-			executeWork(jec, now);
+			executeWork(jec, new TaskContext(now));
 			
 		} catch (Exception ex) {
 			getLogger().error("Error", ex);
@@ -103,5 +103,17 @@ public abstract class BaseBackgroundServiceTask implements Job {
 	
 	protected final boolean shouldStop() {
 		return WebTopApp.isShuttingDown();
+	}
+	
+	public static class TaskContext {
+		private final DateTime executeInstant;
+		
+		public TaskContext(DateTime executeInstant) {
+			this.executeInstant = executeInstant;
+		}
+
+		public DateTime getExecuteInstant() {
+			return executeInstant;
+		}
 	}
 }
