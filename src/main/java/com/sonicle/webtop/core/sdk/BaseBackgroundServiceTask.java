@@ -88,7 +88,7 @@ public abstract class BaseBackgroundServiceTask implements Job {
 
 		try {
 			getLogger().debug("Started [{}]", now);
-			executeWork(jec, new TaskContext(now));
+			executeWork(jec, new TaskContext(getBackgroundService(jec), now));
 			
 		} catch (Exception ex) {
 			getLogger().error("Error", ex);
@@ -106,10 +106,16 @@ public abstract class BaseBackgroundServiceTask implements Job {
 	}
 	
 	public static class TaskContext {
+		private final BaseBackgroundService backgroundService;
 		private final DateTime executeInstant;
 		
-		public TaskContext(DateTime executeInstant) {
+		public TaskContext(BaseBackgroundService backgroundService, DateTime executeInstant) {
+			this.backgroundService = backgroundService;
 			this.executeInstant = executeInstant;
+		}
+		
+		public BaseBackgroundService getBackgroundService() {
+			return backgroundService;
 		}
 
 		public DateTime getExecuteInstant() {
