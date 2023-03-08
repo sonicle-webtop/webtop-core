@@ -85,6 +85,7 @@ import jakarta.mail.MessagingException;
 import jakarta.mail.Session;
 import jakarta.mail.internet.InternetAddress;
 import jakarta.mail.internet.MimeBodyPart;
+import jakarta.mail.internet.MimeMessage;
 import jakarta.mail.internet.MimeMultipart;
 import javax.sql.DataSource;
 import net.sf.jasperreports.engine.JRException;
@@ -786,8 +787,20 @@ public class WT {
 		getWTA().notify(profileId, messages, enqueueIfOffline);
 	}
 	
-	public static void sendEmail(final UserProfileId sendingProfileId, final EmailMessage email, final String moveToFolderAfterSent) throws WTEmailSendException {
-		getWTA().sendEmail(sendingProfileId, email, moveToFolderAfterSent);
+	public static void sendEmailMessage(final UserProfileId sendingProfileId, final MimeMessage message) throws WTEmailSendException {
+		getWTA().sendEmailMessage(sendingProfileId, message, null);
+	}
+	
+	public static void sendEmailMessage(final UserProfileId sendingProfileId, final MimeMessage message, final String moveToFolderAfterSent) throws WTEmailSendException {
+		getWTA().sendEmailMessage(sendingProfileId, message, moveToFolderAfterSent);
+	}
+	
+	public static void sendEmailMessage(final UserProfileId sendingProfileId, final EmailMessage message) throws WTEmailSendException {
+		getWTA().sendEmailMessage(sendingProfileId, message, null);
+	}
+	
+	public static void sendEmailMessage(final UserProfileId sendingProfileId, final EmailMessage message, final String moveToFolderAfterSent) throws WTEmailSendException {
+		getWTA().sendEmailMessage(sendingProfileId, message, moveToFolderAfterSent);
 	}
 	
 	@Deprecated

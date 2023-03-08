@@ -43,12 +43,14 @@ import com.sonicle.commons.MailUtils;
 import com.sonicle.commons.PathUtils;
 import com.sonicle.commons.web.ContextUtils;
 import com.sonicle.commons.web.manager.TomcatManager;
+import com.sonicle.mail.MimeUtils;
 import com.sonicle.mail.PropsBuilder;
 import com.sonicle.mail.StoreHostParams;
 import com.sonicle.mail.StoreUtils;
 import com.sonicle.mail.TransportHostParams;
 import com.sonicle.mail.TransportUtils;
 import com.sonicle.mail.email.EmailMessage;
+import com.sonicle.mail.email.Recipient;
 import com.sonicle.mail.producer.MimeMessageProducer;
 import com.sonicle.security.AuthenticationDomain;
 import com.sonicle.security.CryptoUtils;
@@ -125,6 +127,7 @@ import jakarta.mail.internet.MimeMultipart;
 import jakarta.mail.internet.MimeUtility;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.InputStream;
 import java.net.InetAddress;
 import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
@@ -140,6 +143,7 @@ import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.httpclient.contrib.ssl.EasySSLProtocolSocketFactory;
 import org.apache.commons.httpclient.protocol.Protocol;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.io.output.QueueOutputStream;
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.vfs2.FileSystemException;
@@ -1131,6 +1135,131 @@ public final class WebTopApp {
 		return session;
 	}
 	
+	public void sendEmailMessage(final UserProfileId sendingProfileId, final MimeMessage message, final String moveToFolderAfterSent) throws WTEmailSendException {
+		sendEmailMessage(sendingProfileId, (Object)message, moveToFolderAfterSent);
+	}
+	
+	public void sendEmailMessage(final UserProfileId sendingProfileId, final EmailMessage message, final String moveToFolderAfterSent) throws WTEmailSendException {
+		sendEmailMessage(sendingProfileId, (Object)message, moveToFolderAfterSent);
+	}
+	
+	private void sendEmailMessage(final UserProfileId sendingProfileId, final Object message, final String moveToFolderAfterSent) throws WTEmailSendException {
+		
+		// Checks if the running profile (see runContext) and sending profile are the same.
+		UserProfileId runPid = RunContext.getRunProfileId();
+		if (!RunContext.isWebTopAdmin(runPid)) {
+			if (!runPid.equals(sendingProfileId)) {
+				if (wtMgr.lookupSubjectSidQuietly(sendingProfileId, GenericSubject.Type.RESOURCE) == null) {
+					throw new AuthException("Running profile [{0}] does not match with sending profile [{1}]", runPid, sendingProfileId);
+				}
+			}
+			//if (!runPid.equals(sendingProfileId)) throw new AuthException("Running profile [{0}] does not match with sending profile [{1}]", runPid, sendingProfileId);
+		}
+		//TODO: maybe add a permission that allows sending emails
+		
+		// Extract sending address
+		String sendingAddress = null;
+		if (message instanceof MimeMessage) {
+			InternetAddress ia = null;
+			try {
+				ia = MimeUtils.getFromAddress((MimeMessage)message);
+			} catch (MessagingException ex) { /* Do nothing... */ }
+			if (ia != null) sendingAddress = ia.getAddress();
+			
+		} else if (message instanceof EmailMessage) {
+			Recipient rcpt = ((EmailMessage)message).getFromRecipient();
+			if (rcpt != null) sendingAddress = rcpt.getAddress();
+			
+		} else {
+			throw new IllegalArgumentException("Message Type NOT supported");
+		}
+		
+		// Creates new transport session
+		final TransportHostParams transportParams;
+		final jakarta.mail.Session transportSession;
+		try {
+			// For now, it's supposed that SMTP auth is not mandatory, sending 
+			// from localhost is always permitted. If we can extract credential 
+			// from current principal simply use them, otherwise no credential 
+			// will be used during connection.
+			//TODO: transport: where take credentials to connect? Principal may be a system user
+			CoreServiceSettings css = new CoreServiceSettings(CoreManifest.ID, sendingProfileId.getDomainId());
+			transportParams = css.getTransportHostParams((Principal)SecurityUtils.getSubject().getPrincipal());
+			Properties defaultProps = getMailBasePropsBuilder(true, false).build();
+			// Avoid slowness of call to message.saveChanges() due to DNS lookups
+			// https://stackoverflow.com/questions/44435457/mimemessage-savechanges-is-really-slow
+			// https://javaee.github.io/javamail/docs/api/
+			// https://javaee.github.io/javamail/FAQ#commonmistakes
+			if (!StringUtils.isBlank(sendingAddress)) defaultProps.setProperty("mail.from", sendingAddress);
+			transportSession = TransportUtils.createSession(transportParams, defaultProps);
+			
+		} catch (GeneralSecurityException ex) {
+			throw new WTEmailSendException(false, false, "Unable to create Transport session", ex);
+		}
+		
+		// Prepares new MimeMessage
+		MimeMessage mimeMessage = null;
+		if (message instanceof MimeMessage) {
+			try {
+				QueueOutputStream os = new QueueOutputStream();
+				try (InputStream is = os.newQueueInputStream()) {
+					mimeMessage = new MimeMessage(transportSession, is);
+					mimeMessage.saveChanges();
+				}
+			} catch (IOException | MessagingException ex) {
+				throw new WTEmailSendException(false, false, "Unable to create mimeMessage", ex);
+			}
+			
+		} else if (message instanceof EmailMessage) {
+			try {
+				mimeMessage = MimeMessageProducer.produceMimeMessage((EmailMessage)message, transportSession);
+				mimeMessage.saveChanges();
+
+			} catch (UnsupportedEncodingException | MessagingException ex) {
+				throw new WTEmailSendException(false, false, "Unable to create mimeMessage", ex);
+			}
+		}
+		
+		// Send message using transport
+		Transport transport = null;
+		try {
+			transport = TransportUtils.open(transportSession, transportParams.getProtocol());
+			TransportUtils.send(transport, mimeMessage);
+			
+		} catch (MessagingException ex) {
+			throw new WTEmailSendException(false, false, "Unable to send message", ex);
+		} finally {
+			TransportUtils.closeQuietly(transport);
+		}
+		
+		// If necessary, copy sent message into specified folder
+		if (!StringUtils.isBlank(moveToFolderAfterSent)) {
+			Store store = null;
+			Folder moveToFolder = null;
+			
+			try {
+				// We cannot access our MailService here, so replicate its logic!
+				DummyMailUserSettings mus = new DummyMailUserSettings(sendingProfileId);
+				String user = WT.buildDomainInternetAddress(sendingProfileId.getDomainId(), sendingProfileId.getUserId(), null).getAddress();
+				
+				final StoreHostParams storeParams = mus.getMailboxHostDefinition(true, user, null);
+				final jakarta.mail.Session storeSession = StoreUtils.createSession(storeParams, 1, getMailBasePropsBuilder(false, true).build());
+				
+				store = StoreUtils.open(storeSession, storeParams.getProtocol());
+				moveToFolder = StoreUtils.openFolder(store, moveToFolderAfterSent, true);
+				StoreUtils.setMessageSeen(mimeMessage, true);
+				StoreUtils.moveMessage(mimeMessage, null, moveToFolder, false);
+				
+			} catch (GeneralSecurityException | MessagingException ex) {
+				throw new WTEmailSendException(true, false, ex, "Unable to save message into '{}'", moveToFolderAfterSent);
+			} finally {
+				StoreUtils.closeQuietly(moveToFolder, false);
+				StoreUtils.closeQuietly(store);
+			}
+		}
+	}
+	
+	/*
 	public void sendEmail(final UserProfileId sendingProfileId, final EmailMessage email, final String moveToFolderAfterSent) throws WTEmailSendException {
 		
 		// Checks if the running profile (see runContext) and sending profile are the same.
@@ -1178,7 +1307,7 @@ public final class WebTopApp {
 			throw new WTEmailSendException(false, false, "Unable to create mimeMessage", ex);
 		}
 		
-		// Send message using trasport
+		// Send message using transport
 		Transport transport = null;
 		try {
 			transport = TransportUtils.open(transportSession, transportParams.getProtocol());
@@ -1216,6 +1345,7 @@ public final class WebTopApp {
 			}
 		}
 	}
+	*/
 	
 	public void sendEmail(jakarta.mail.Session session, boolean rich, 
 			String from, String[] to, String[] cc, String[] bcc, 
