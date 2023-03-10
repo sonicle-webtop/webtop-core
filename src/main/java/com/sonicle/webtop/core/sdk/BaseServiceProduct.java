@@ -96,7 +96,7 @@ public abstract class BaseServiceProduct extends AbstractProduct {
 		if (HardwareIDSource.DOMAIN_ID.equals(hwIdSource)) {
 			s = domainId;
 		} else if (HardwareIDSource.DOMAIN_INTERNET_NAME.equals(hwIdSource)) {
-			s = WT.getDomainInternetName(domainId);
+			s = WT.getPrimaryDomainName(domainId);
 		}
 		return StringUtils.replace(s, ".", "-");
 	}

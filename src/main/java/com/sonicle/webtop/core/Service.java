@@ -240,8 +240,9 @@ public class Service extends BaseService implements EventListener {
 			}
 			
 			final String xmppResource = getWts().getId() + "@" + WT.getPlatformName();
-			final String internetName = WT.getDomainInternetName(pid.getDomainId());
-			XMPPTCPConnectionConfiguration.Builder builder = XMPPHelper.setupConfigBuilder(ss.getXMPPHost(), ss.getXMPPPort(), internetName, principal.getUserId(), new String(principal.getPassword()), xmppResource);
+			final String authDomainName = WT.getAuthDomainName(pid.getDomainId());
+			//TODO: which domain-name is needed here?
+			XMPPTCPConnectionConfiguration.Builder builder = XMPPHelper.setupConfigBuilder(ss.getXMPPHost(), ss.getXMPPPort(), authDomainName, principal.getUserId(), new String(principal.getPassword()), xmppResource);
 			final String nickname = profile.getDisplayName();
 			xmppCli = new XMPPClient(builder, ss.getXMPPMucSubdomain(), nickname, new XMPPServiceListenerImpl(), history);
 		}
@@ -354,7 +355,7 @@ public class Service extends BaseService implements EventListener {
 				vars.put("editorAttachPatterns-"+apploc.getId().substring(0,2), patterns);
 		}
 		
-		vars.put("domainInternetName", WT.getDomainInternetName(profile.getDomainId()));
+		vars.put("domainInternetName", WT.getPrimaryDomainName(profile.getDomainId()));
 		vars.put("profileId", profile.getStringId());
 		vars.put("domainId", profile.getDomainId());
 		vars.put("userId", profile.getUserId());

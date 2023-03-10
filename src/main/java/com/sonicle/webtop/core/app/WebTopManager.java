@@ -531,7 +531,7 @@ public final class WebTopManager {
 	 */
 	public UserProfileId toAuthProfileId(final UserProfileId profileId) throws WTException {
 		Check.notNull(profileId, "profileId");
-		String authInternetName = domainIdToDomainInternetName(profileId.getDomainId());
+		String authInternetName = domainIdToAuthDomainName(profileId.getDomainId());
 		if (authInternetName == null) throw new WTException("Cannot find internet-name for '{}'", profileId.getDomainId());
 		return new UserProfileId(authInternetName, profileId.getUserId());
 	}
@@ -566,7 +566,12 @@ public final class WebTopManager {
 		return domainCache.publicIdToDomainId(domainPublicId);
 	}
 	
-	public String domainIdToDomainInternetName(final String domainId) {
+	/**
+	 * Lookup the authentication domain-name from passed domain ID.
+	 * @param domainId The domain ID to decode.
+	 * @return 
+	 */
+	public String domainIdToAuthDomainName(final String domainId) {
 		if (StringUtils.equals(domainId, SYSADMIN_DOMAINID)) {
 			return INTERNETNAME_LOCAL;
 		} else {
@@ -574,8 +579,35 @@ public final class WebTopManager {
 		}
 	}
 	
+	/**
+	 * Lookup a domain ID from its authentication domain-name.
+	 * @param authDomainName The authentication domain-name to find the corresponding domain ID.
+	 * @return 
+	 */
 	public String authDomainNameToDomainId(final String authDomainName) {
 		return domainCache.authDomainNameToDomainId(authDomainName);
+	}
+	
+	/**
+	 * Lookup the domain-name from passed domain ID, usually the same of above authentication domain-name.
+	 * @param domainId The domain ID to decode.
+	 * @return 
+	 */
+	public String domainIdToDomainName(final String domainId) {
+		if (StringUtils.equals(domainId, SYSADMIN_DOMAINID)) {
+			return INTERNETNAME_LOCAL;
+		} else {
+			return domainCache.domainIdToDomainName(domainId);
+		}
+	}
+	
+	/**
+	 * Lookup a domain ID from its domain-name.
+	 * @param domainName The domain-name to find the corresponding domain ID.
+	 * @return 
+	 */
+	public String domainNameToDomainId(final String domainName) {
+		return domainCache.domainNameToDomainId(domainName);
 	}
 	
 	public String publicFqdnToDomainId(String publicFqdn, boolean strict) {
@@ -2941,14 +2973,13 @@ public final class WebTopManager {
 		UserAssociationDAO uasDao = UserAssociationDAO.getInstance();
 		RoleAssociationDAO rasDao = RoleAssociationDAO.getInstance();
 		RolePermissionDAO permsDao = RolePermissionDAO.getInstance();
-		final String authDomain = domainIdToDomainInternetName(domainId);
 		final boolean subjectsAsSID = options.has(UserProcessOpt.SUBJECTS_AS_SID);
 		
 		OUserInfo ouin = AppManagerUtils.fillOUserInfo(new OUserInfo(), user);
 		ouin.setDomainId(domainId);
 		ouin.setUserId(userId);
 		ouin.sanitize();
-		OUser.fillDefaultsForInsert(ouin, userId, domainIdToDomainInternetName(authDomain));
+		OUser.fillDefaultsForInsert(ouin, userId, domainIdToDomainName(domainId));
 		
 		// Make sure set email is valid
 		if (InternetAddressUtils.toInternetAddress(ouin.getEmail()) == null) throw new WTException("Invalid personal email address: '{}'", ouin.getEmail());
@@ -3561,7 +3592,7 @@ public final class WebTopManager {
 		OUserInfo ouin = AppManagerUtils.fillOUserInfo(new OUserInfo(), resource);
 		ouin.setDomainId(domainId);
 		ouin.setUserId(resourceId);
-		OResource.fillDefaultsForInsert(ouin, resourceId, domainIdToDomainInternetName(domainId));
+		OResource.fillDefaultsForInsert(ouin, resourceId, domainIdToDomainName(domainId));
 		OResource.validate(ouin);
 		
 		OUser ouse = AppManagerUtils.fillOUser(new OUser(), resource);
@@ -3607,7 +3638,7 @@ public final class WebTopManager {
 		OUserInfo ouin = AppManagerUtils.fillOUserInfo(new OUserInfo(), resource);
 		ouin.setDomainId(domainId);
 		ouin.setUserId(resourceId);
-		OResource.fillDefaultsForInsert(ouin, resourceId, domainIdToDomainInternetName(domainId));
+		OResource.fillDefaultsForInsert(ouin, resourceId, domainIdToDomainName(domainId));
 		OResource.validate(ouin);
 		
 		OUser ouse = AppManagerUtils.fillOUser(new OUser(), resource);
@@ -4017,12 +4048,12 @@ public final class WebTopManager {
 		}
 		if (vuser == null) return null;
 		
-		String internetName = WT.getDomainInternetName(profileId.getDomainId());
+		String authDomainName = WT.getAuthDomainName(profileId.getDomainId());
 		CoreUserSettings cus = new CoreUserSettings(profileId);
 		UserProfile.PersonalInfo pinfo = lookupProfilePersonalInfo(profileId, true);
 		
-		DomainAccount internetAccount = new DomainAccount(internetName, profileId.getUserId());
-		InternetAddress profileIa = InternetAddressUtils.toInternetAddress(profileId.getUserId(), internetName, vuser.getDisplayName());
+		DomainAccount internetAccount = new DomainAccount(authDomainName, profileId.getUserId());
+		InternetAddress profileIa = InternetAddressUtils.toInternetAddress(profileId.getUserId(), authDomainName, vuser.getDisplayName());
 		InternetAddress personalIa = InternetAddressUtils.toInternetAddress(pinfo.getEmail(), vuser.getDisplayName());
 		if (personalIa == null) {
 			personalIa = profileIa;

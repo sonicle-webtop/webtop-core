@@ -112,7 +112,15 @@ public class WT {
 	}
 	
 	/**
-	 * @deprecated Use getProfileData instead (will be removed in v.5.16.0)
+	 * @deprecated Use getAuthDomainName instead (will be removed in v.5.17.0)
+	 */
+	@Deprecated
+	public static String getDomainInternetName(final String domainId) {
+		return getAuthDomainName(domainId);
+	}
+	
+	/**
+	 * @deprecated Use getProfileData instead (will be removed in v.5.17.0)
 	 */
 	@Deprecated
 	public static UserProfile.Data getUserData(UserProfileId profileId) {
@@ -120,7 +128,7 @@ public class WT {
 	}
 	
 	/**
-	 * @deprecated Use getProfilePersonalInfo instead (will be removed in v.5.16.0)
+	 * @deprecated Use getProfilePersonalInfo instead (will be removed in v.5.17.0)
 	 */
 	@Deprecated
 	public static UserProfile.PersonalInfo getUserPersonalInfo(UserProfileId profileId) {
@@ -128,7 +136,7 @@ public class WT {
 	}
 	
 	/**
-	 * @deprecated Use guessProfileDataByPersonalAddress instead (will be removed in v.5.16.0)
+	 * @deprecated Use guessProfileDataByPersonalAddress instead (will be removed in v.5.17.0)
 	 */
 	@Deprecated
 	public static UserProfile.Data guessUserData(String emailAddress) {
@@ -136,7 +144,7 @@ public class WT {
 	}
 	
 	/**
-	 * @deprecated Use getProfilePersonalAddress instead (will be removed in v.5.16.0)
+	 * @deprecated Use getProfilePersonalAddress instead (will be removed in v.5.17.0)
 	 */
 	@Deprecated
 	public static InternetAddress getUserPersonalEmail(UserProfileId profileId) {
@@ -144,7 +152,7 @@ public class WT {
 	}
 	
 	/**
-	 * @deprecated Use getProfileAddress instead (will be removed in v.5.16.0)
+	 * @deprecated Use getProfileAddress instead (will be removed in v.5.17.0)
 	 */
 	@Deprecated
 	public static InternetAddress getUserProfileEmail(UserProfileId profileId) {
@@ -152,7 +160,7 @@ public class WT {
 	}
 	
 	/**
-	 * @deprecated Use guessProfileIdByPersonalAddress instead (will be removed in v.5.16.0)
+	 * @deprecated Use guessProfileIdByPersonalAddress instead (will be removed in v.5.17.0)
 	 */
 	@Deprecated
 	public static UserProfileId guessUserProfileIdByEmailAddress(String personalAddress) {
@@ -160,7 +168,7 @@ public class WT {
 	}
 	
 	/**
-	 * @deprecated Use guessProfileIdByAuthAddress instead (will be removed in v.5.16.0)
+	 * @deprecated Use guessProfileIdByAuthAddress instead (will be removed in v.5.17.0)
 	 */
 	@Deprecated
 	public static UserProfileId guessUserProfileIdProfileUsername(String profileUsername) {
@@ -168,7 +176,7 @@ public class WT {
 	}
 	
 	/**
-	 * @deprecated use getGroupUidOfPecAccounts instead (will be removed in v.5.16.0)
+	 * @deprecated use getGroupUidOfPecAccounts instead (will be removed in v.5.17.0)
 	 */
 	@Deprecated
 	public static String getGroupUidForPecAccounts(String domainId) {
@@ -238,9 +246,10 @@ public class WT {
 		return getWTA().isInMaintenance();
 	}
 	
+	//TODO: check usages
 	public static InternetAddress buildDomainInternetAddress(String domainId, String local, String personal) {
-		String internetName = WT.getDomainInternetName(domainId);
-		return InternetAddressUtils.toInternetAddress(local, internetName, personal);
+		String authDomainName = WT.getAuthDomainName(domainId);
+		return InternetAddressUtils.toInternetAddress(local, authDomainName, personal);
 	}
 	
 	public static InternetAddress getNoReplyAddress(String domainId) {
@@ -585,16 +594,31 @@ public class WT {
 	}
 	
 	/**
-	 * Gets the internet-name (authentication) configured for the passed domain.
+	 * Gets the domain-name configured for the passed domain.
 	 * @param domainId The target domain ID.
-	 * @return Authentication internet-name
+	 * @return Primary domain-name.
 	 */
-	public static String getDomainInternetName(final String domainId) {
+	public static String getPrimaryDomainName(final String domainId) {
 		//if (StringUtils.isBlank(domainId)) return null;
 		try {
-			return getWTA().getWebTopManager().domainIdToDomainInternetName(domainId);
+			return getWTA().getWebTopManager().domainIdToDomainName(domainId);
 		} catch (Exception ex) {
-			logger.warn("Unable to get internet-name for domain [{}]", domainId, ex);
+			logger.warn("Unable to get domain-name (primary) for domain [{}]", domainId, ex);
+			return null;
+		}
+	}
+	
+	/**
+	 * Gets the authentication domain-name configured for the passed domain.
+	 * @param domainId The target domain ID.
+	 * @return Authentication domain-name.
+	 */
+	public static String getAuthDomainName(final String domainId) {
+		//if (StringUtils.isBlank(domainId)) return null;
+		try {
+			return getWTA().getWebTopManager().domainIdToAuthDomainName(domainId);
+		} catch (Exception ex) {
+			logger.warn("Unable to get domain-name (authentication) for domain [{}]", domainId, ex);
 			return null;
 		}
 	}

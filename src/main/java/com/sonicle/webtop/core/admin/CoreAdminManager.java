@@ -1029,7 +1029,7 @@ public class CoreAdminManager extends BaseManager {
 		ensureUserDomain(domainId);
 		
 		try {
-			String internetName = WT.getDomainInternetName(domainId);
+			String internetName = WT.getPrimaryDomainName(domainId);
 			if (internetName == null) throw new WTException();
 			
 			con = WT.getConnection(SERVICE_ID);
@@ -1076,7 +1076,7 @@ public class CoreAdminManager extends BaseManager {
 		ensureUserDomain(pid.getDomainId());
 		
 		try {
-			String internetName = WT.getDomainInternetName(pid.getDomainId());
+			String internetName = WT.getPrimaryDomainName(pid.getDomainId());
 			if (internetName == null) throw new WTException("Domain not found [{0}]", pid.getDomainId());
 			UserProfile.Data ud = WT.getUserData(pid);
 			if (ud == null) throw new WTException("User-data not found [{0}]", pid.toString());
@@ -1111,7 +1111,7 @@ public class CoreAdminManager extends BaseManager {
 		ensureUserDomain(pid.getDomainId());
 		
 		try {
-			String internetName = WT.getDomainInternetName(pid.getDomainId());
+			String internetName = WT.getPrimaryDomainName(pid.getDomainId());
 			if (internetName == null) throw new WTException("Domain not found [{0}]", pid.getDomainId());
 			UserProfile.Data ud = WT.getUserData(pid);
 			if (ud == null) throw new WTException("User-data not found [{0}]", pid.toString());
@@ -1143,7 +1143,7 @@ public class CoreAdminManager extends BaseManager {
 		ensureUserDomain(domainId);
 		
 		try {
-			String internetName = WT.getDomainInternetName(domainId);
+			String internetName = WT.getPrimaryDomainName(domainId);
 			if (internetName == null) throw new WTException();
 			
 			con = WT.getConnection(SERVICE_ID);
@@ -1172,7 +1172,7 @@ public class CoreAdminManager extends BaseManager {
 		ensureUserDomain(domainId);
 		
 		try {
-			String internetName = WT.getDomainInternetName(domainId);
+			String internetName = WT.getPrimaryDomainName(domainId);
 			if (internetName == null) throw new WTException();
 			
 			con = WT.getConnection(SERVICE_ID);
@@ -1219,7 +1219,7 @@ public class CoreAdminManager extends BaseManager {
 		ensureUserDomain(pid.getDomainId());
 		
 		try {
-			String internetName = WT.getDomainInternetName(pid.getDomainId());
+			String internetName = WT.getPrimaryDomainName(pid.getDomainId());
 			if (internetName == null) throw new WTException("Domain not found [{0}]", pid.getDomainId());
 			UserProfile.Data ud = WT.getUserData(pid);
 			if (ud == null) throw new WTException("User-data not found [{0}]", pid.toString());
@@ -1258,7 +1258,7 @@ public class CoreAdminManager extends BaseManager {
 		ensureUserDomain(pid.getDomainId());
 		
 		try {
-			String internetName = WT.getDomainInternetName(pid.getDomainId());
+			String internetName = WT.getPrimaryDomainName(pid.getDomainId());
 			if (internetName == null) throw new WTException("Domain not found [{0}]", pid.getDomainId());
 			UserProfile.Data ud = WT.getUserData(pid);
 			if (ud == null) throw new WTException("User-data not found [{0}]", pid.toString());
@@ -1293,7 +1293,7 @@ public class CoreAdminManager extends BaseManager {
 		ensureUserDomain(domainId);
 		
 		try {
-			String internetName = WT.getDomainInternetName(domainId);
+			String internetName = WT.getPrimaryDomainName(domainId);
 			if (internetName == null) throw new WTException();
 			
 			con = WT.getConnection(SERVICE_ID);

@@ -3931,7 +3931,7 @@ public class CoreManager extends BaseManager {
 			if (RunContext.isSysAdmin()) {
 				if (UserProfileId.isWildcardUser(targetPid)) {
 					domainMatch = true;
-					match = "@" + wtMgr.domainIdToDomainInternetName(targetPid.getDomainId());
+					match = "@" + wtMgr.domainIdToAuthDomainName(targetPid.getDomainId());
 				} else {
 					match = wtMgr.toAuthProfileId(targetPid).toString();
 				}
