@@ -1,3 +1,9 @@
+$	5.16.0
+	%	Version 5.16.0
+	*	<h1>Resources management</h1>
+		<p>A dedicated management has been introduced into Admin perspective, in order to deal with impersonal entities: rooms and equipments.<br>
+		Resources will receive booking requests to their email address, which will be automatically accepted if the occupation of the time slot allows it; organizer will be informed through a notification about request result.</p>
+		<img src="5.16.0_resources.png"/>
 $	5.14.0
 	%	Version 5.14.0
 	*	<h1>New Audit Module</h1>

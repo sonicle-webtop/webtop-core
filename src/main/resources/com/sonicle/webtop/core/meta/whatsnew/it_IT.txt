@@ -1,3 +1,9 @@
+$	5.16.0
+	%	Versione 5.16.0
+	*	<h1>Gestione risorse</h1>
+		<p>E' stata introdotta una nuova sezione nel pannello amministrativo che permette la gestione di tutte quelle entita' impersonali: stanze ed attrezzature.<br>
+		Le risorse riceveranno le richieste di prenotazione tramite il loro indirizzo email e saranno automaticamente accettate se l'occupazione dello slot orario lo permette; l'organizzatore sara' informato tramite notifica riguardo l'esito della richiesta.</p>
+		<img src="5.16.0_resources.png"/>
 $	5.14.0
 	%	Versione 5.14.0
 	*	<h1>Nuovo Modulo Audit</h1>
