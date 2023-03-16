@@ -2347,8 +2347,12 @@ public final class WebTopManager {
 			for (String uid : originSids) {
 				if (uid.equals(targetSubjectSid)) continue; // Skip self				
 				UserProfileId rootProfileId = subjectSidCache.getPid(uid, GenericSubject.Type.USER, GenericSubject.Type.RESOURCE);
-				UserProfile.Data udata = lookupProfileData(rootProfileId, true);
-				origins.add(new FolderShareOrigin(rootProfileId, udata.getDisplayName()));
+				if (rootProfileId == null) {
+					LOGGER.warn("Unable to lookup USER/RESOURCE profileId for uid '{}'", uid);
+				} else {
+					UserProfile.Data udata = lookupProfileData(rootProfileId, true);
+					origins.add(new FolderShareOrigin(rootProfileId, udata.getDisplayName()));
+				}
 			}
 			
 			Collections.sort(origins, (FolderShareOrigin so1, FolderShareOrigin so2) -> so1.getDisplayName().compareTo(so2.getDisplayName()));
