@@ -376,7 +376,7 @@ public class CoreManager extends BaseManager {
 		// Then load extra ones...
 		//TODO: maybe improve this of dynamic discovery using such sort of file descriptor
 		CoreServiceSettings css = new CoreServiceSettings(CoreManifest.ID, getTargetProfileId().getDomainId());
-		for (Map.Entry<String, String> entry : css.getThemesExtra().entrySet()) {
+		for (Map.Entry<String, String> entry : css.getLAFsExtra().entrySet()) {
 			final String lafId = entry.getKey();
 			if (!lafs.containsKey(lafId) && !StringUtils.isBlank(lafId)) {
 				final String lafName = StringUtils.defaultIfBlank(entry.getValue(), lafId);
