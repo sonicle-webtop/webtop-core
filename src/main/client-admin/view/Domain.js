@@ -137,10 +137,11 @@ Ext.define('Sonicle.webtop.core.admin.view.Domain', {
 					}, {
 						xtype: 'textfield',
 						bind: '{record.authDomainName}',
-						fieldLabel: me.res('domain.fld-authDomainName.lbl'),
+						//fieldLabel: me.res('domain.fld-authDomainName.lbl'),
+						fieldLabel: me.res('domain.fld-domainName.lbl'),
 						emptyText: 'example.com',
 						anchor: '100%'
-					}, {
+					}/*, {
 						xtype: 'textfield',
 						bind: {
 							value: '{record.domainName}',
@@ -149,7 +150,7 @@ Ext.define('Sonicle.webtop.core.admin.view.Domain', {
 						fieldLabel: me.res('domain.fld-domainName.lbl'),
 						emptyText: 'example.com',
 						anchor: '100%'
-					}, {
+					}*/, {
 						xtype: 'checkbox',
 						bind: '{foUserAutoCreation}',
 						hideEmptyLabel: false,
