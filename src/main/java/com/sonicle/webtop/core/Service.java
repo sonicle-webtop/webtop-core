@@ -321,9 +321,7 @@ public class Service extends BaseService implements EventListener {
 		vars.put("wtEditorFontSizes", ss.getEditorFontSizes());
 		vars.put("wtEditorPasteMode", EnumUtils.toSerializedName(ss.getEditorPasteImportMode()));
 		if (TMCEPremiumProduct.installed()) {
-			BaseServiceProduct serviceProduct = WT.findServiceProduct(TMCEPremiumProduct.PRODUCT_ID, profile.getDomainId());
-			vars.put("wtEditorPP", WT.isLicensed(serviceProduct));
-			vars.put("wtEditorACE", WT.isLicensed(serviceProduct));
+			vars.put("wtEditorPP", WT.isLicensed(WT.findServiceProduct(TMCEPremiumProduct.PRODUCT_ID, profile.getDomainId())));
 		}
 		vars.put("wtGeolocationProvider", EnumUtils.toSerializedName(ss.getGeolocationProvider()));
 		

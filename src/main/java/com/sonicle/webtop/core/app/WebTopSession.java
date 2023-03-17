@@ -1023,7 +1023,7 @@ public class WebTopSession {
 		js.appManifest.addJs(VENDOR_PATH + "/atmosphere/2.3.9/" + "atmosphere.min.js");
 		js.appManifest.addJs(VENDOR_PATH + "/jsxc/3.4.0/" + "jsxc.dep.js");
 		if (useNewHTMLEditor) {
-			js.appManifest.addJs(VENDOR_PATH + "/tinymce/5.7.0/" + "tinymce.min.js");
+			js.appManifest.addJs(VENDOR_PATH + "/tinymce/6.3.1/" + "tinymce.min.js");
 		} else {
 			js.appManifest.addJs(VENDOR_PATH + "/tinymce/4.3.12/" + "tinymce.min.js");
 		}
@@ -1045,6 +1045,7 @@ public class WebTopSession {
 		//js.appManifest.addJs(VENDOR_PATH + "/jsxc/3.4.0/" + "jsxc.dep.js");
 		//js.appManifest.addJs(VENDOR_PATH + "/tinymce/5.6.2/" + "tinymce.js");
 		//js.appManifest.addJs(VENDOR_PATH + "/tinymce/4.3.12/" + "tinymce.js");
+		//js.appManifest.addJs(VENDOR_PATH + "/tinymce/6.3.1/" + "tinymce.js");
 		//js.appManifest.addJs(VENDOR_PATH + "/plupload/2.3.6/" + "moxie.js");
 		//js.appManifest.addJs(VENDOR_PATH + "/plupload/2.3.6/" + "plupload.dev.js");
 		// <-------------------------------------------------------------------

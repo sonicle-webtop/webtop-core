@@ -40,34 +40,36 @@ Ext.define('Sonicle.webtop.core.ux.field.htmleditor.Field', {
 	
 	constructor: function(cfg) {
 		var me = this,
-				icfg = Sonicle.Utils.getConstructorConfigs(me, cfg, [
-					{fonts: true}, {fontSizes: true}, {fontColors: true}, {fontColorsTilesPerRow: true}, {toolIcons: true}
-				]),
-				toolTexts = function(toolName) {
-					var prefix = 'htmleditor.tool.',
-							obj = {
-								tooltipTitle: WT.res(prefix + toolName + '.tip.tit'),
-								tooltipText: WT.res(prefix + toolName + '.tip.txt')
-							};
-					Ext.iterate(Ext.Array.slice(arguments, 1), function(textName) {
-						obj[textName+'Text'] = WT.res(prefix + toolName + '.' + textName + 'Text');
-					});
-					return obj;
-				},
-				toolIcons = function(toolName) {
-					var prefix = 'wt-icon-htmled-',
-							obj = {
-								toolIconCls: prefix + toolName
-							};
-					Ext.iterate(Ext.Array.slice(arguments, 1), function(icon) {
-						obj[icon+'IconCls'] = prefix + icon;
-					});
-					return obj;
-				};
+			icfg = Sonicle.Utils.getConstructorConfigs(me, cfg, [
+				{fonts: true}, {fontSizes: true}, {fontColors: true}, {fontColorsTilesPerRow: true}, {toolIcons: true}
+			]),
+			toolTexts = function(toolName) {
+				var prefix = 'htmleditor.tool.',
+						obj = {
+							tooltipTitle: WT.res(prefix + toolName + '.tip.tit'),
+							tooltipText: WT.res(prefix + toolName + '.tip.txt')
+						};
+				Ext.iterate(Ext.Array.slice(arguments, 1), function(textName) {
+					obj[textName+'Text'] = WT.res(prefix + toolName + '.' + textName + 'Text');
+				});
+				return obj;
+			},
+			toolIcons = function(toolName) {
+				var prefix = 'wt-icon-htmled-',
+						obj = {
+							toolIconCls: prefix + toolName
+						};
+				Ext.iterate(Ext.Array.slice(arguments, 1), function(icon) {
+					obj[icon+'IconCls'] = prefix + icon;
+				});
+				return obj;
+			};
 		
 		cfg.language = Sonicle.Object.getValue(me.self.LANG_MAP, WT.getLanguageCode(), 'en');
-		cfg.pluginPowerPaste = WT.getVar('wtEditorPP');
-		cfg.pluginAdvCodeEditor = WT.getVar('wtEditorACE');
+		cfg.pluginPowerPaste = !!WT.getVar('wtEditorPP');
+		cfg.pluginAdvCodeEditor = !!WT.getVar('wtEditorPP');
+		cfg.pluginCaseChange = !!WT.getVar('wtEditorPP');
+		cfg.pluginAutoCorrect = !!WT.getVar('wtEditorPP');
 		cfg.pasteWordMode = cfg.pasteHtmlMode = WT.getVar('wtEditorPasteMode');
 		
 		cfg.toolTexts = Ext.merge({
@@ -78,7 +80,7 @@ Ext.define('Sonicle.webtop.core.ux.field.htmleditor.Field', {
 			bold: toolTexts('bold'),
 			italic: toolTexts('italic'),
 			underline: toolTexts('underline'),
-			formattools: toolTexts('formattools', 'strikethrough', 'subscript', 'superscript', 'blockquote', 'code', 'pre', 'outdent', 'indent', 'clearformat'),
+			formattools: toolTexts('formattools', 'strikethrough', 'subscript', 'superscript', 'blockquote', 'code', 'pre', 'outdent', 'indent', 'clearformat', 'lowercase', 'uppercase', 'titlecase', 'capitalization'),
 			alignselect: toolTexts('alignselect', 'alignLeft', 'alignCenter', 'alignRight', 'alignJustify'),
 			bulllistselect: toolTexts('bulllistselect', 'default', 'circle', 'square'),
 			numlistselect: toolTexts('numlistselect', 'default', 'lowerAlpha', 'lowerGreek', 'lowerRoman', 'upperAlpha', 'upperRoman'),
@@ -96,7 +98,7 @@ Ext.define('Sonicle.webtop.core.ux.field.htmleditor.Field', {
 			bold: toolIcons('bold'),
 			italic: toolIcons('italic'),
 			underline: toolIcons('underline'),
-			formattools: toolIcons('formattools', 'strikethrough', 'subscript', 'superscript', 'blockquote', 'code', 'pre', 'outdent', 'indent', 'clearformat'),
+			formattools: toolIcons('formattools', 'strikethrough', 'subscript', 'superscript', 'blockquote', 'code', 'pre', 'outdent', 'indent', 'clearformat', 'lowercase', 'uppercase', 'titlecase'),
 			alignselect: toolIcons('', 'alignLeft', 'alignCenter', 'alignRight', 'alignJustify'),
 			bulllistselect: toolIcons('bulletList'),
 			numlistselect: toolIcons('numberList'),

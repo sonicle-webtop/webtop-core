@@ -251,6 +251,10 @@
 .wt-icon-htmled-template { background-image: url('htmleditor/template_16.svg') !important; background-size: contain; }
 .wt-icon-htmled-addTemplate { background-image: url('htmleditor/template-add_16.svg') !important; background-size: contain; }
 .wt-icon-htmled-variable { background-image: url('htmleditor/variable_16.svg') !important; background-size: contain; }
+.wt-icon-htmled-lowercase { background-image: url('htmleditor/character-case_16.svg') !important; background-size: contain; }
+.wt-icon-htmled-uppercase { background-image: url('htmleditor/character-case_16.svg') !important; background-size: contain; }
+.wt-icon-htmled-sentencecase { background-image: url('htmleditor/character-case_16.svg') !important; background-size: contain; }
+.wt-icon-htmled-titlecase { background-image: url('htmleditor/character-case_16.svg') !important; background-size: contain; }
 
 /* Icons: file types */
 .wt-ftype-application { background-image: url('ftypes/application_16.svg') !important; background-size: contain; }
