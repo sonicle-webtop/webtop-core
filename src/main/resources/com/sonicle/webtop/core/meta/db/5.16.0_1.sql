@@ -6,7 +6,7 @@
 ALTER TABLE "core"."users" DROP CONSTRAINT "users_pkey";
 
 -- ----------------------------
--- Sanitize group names replacing spaces with '-' and removing ita accented chars to un-accented version
+-- Sanitize group names replacing spaces with '-' and translating accented chars to un-accented version
 -- In other languages accented letters needs to be fixed manually in database!
 -- ----------------------------
 UPDATE "core"."users"
@@ -43,7 +43,7 @@ CREATE UNIQUE INDEX "users_ak2" ON "core"."users" USING btree ("domain_id", "use
 -- Sanitize role names replacing spaces with '-'
 -- ----------------------------
 UPDATE "core"."roles"
-SET "name" = trim(regexp_replace("name", '\s+', '-', 'g'));
+SET "name" = translate(trim(regexp_replace("name", '\s+', '-', 'g')), 'àèéìòù', 'aeeiou');
 
 -- ----------------------------
 -- Rename duplicated role names by adding a numbered suffix (done across all domains)

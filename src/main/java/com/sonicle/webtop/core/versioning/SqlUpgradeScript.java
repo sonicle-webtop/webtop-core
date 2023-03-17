@@ -41,6 +41,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Scanner;
@@ -122,7 +123,7 @@ public class SqlUpgradeScript {
 				is = getClass().getResourceAsStream(jarResourceName);
 				if (is == null) throw new ResourceNotFoundException("Null InputStream!");
 			}
-			readFile(new InputStreamReader(is, "ISO-8859-15"), rawContent, true);
+			readFile(new InputStreamReader(is, StandardCharsets.UTF_8), rawContent, true);
 			//br = new BufferedReader(new InputStreamReader(is, "ISO-8859-15"));
 			//readFile(br);
 		} finally {
