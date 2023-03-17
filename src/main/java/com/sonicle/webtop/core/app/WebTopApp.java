@@ -951,7 +951,7 @@ public final class WebTopApp {
 			home = css.getHomePath();
 			if (!StringUtils.isBlank(home)) {
 				logger.warn("!!!!!!!!!!!!!!!  WARNING  !!!!!!!!!!!!!!!");
-				logger.warn("Core setting 'home.path' is deprecated and will be removed in soon future.");
+				logger.warn("Setting 'home.path' in DB table is deprecated and will be removed in soon future.");
 				logger.warn("Please, use 'webtop.home' property instead.");
 				logger.warn("!!!!!!!!!!!!!!!  WARNING  !!!!!!!!!!!!!!!");
 			}

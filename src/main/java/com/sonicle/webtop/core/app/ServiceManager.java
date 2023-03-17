@@ -1304,7 +1304,7 @@ public class ServiceManager {
 			if (xidToServiceId.containsKey(xid)) throw new WTRuntimeException("Service XID (short ID) is already bound to a service [{0} -> {1}]", xid, xidToServiceId.get(xid));
 			
 			desc = new ServiceDescriptor(manifest);
-			logger.info("[private:{}, public:{}, job:{}, background:{}, userOptions:{}]", desc.hasPrivateService(), desc.hasPublicService(), desc.hasJobService(), desc.hasBackgroundService(), desc.hasUserOptionsService());
+			logger.info("[private:{}, public:{}, background:{}, job(DEP):{}, userOptions:{}]", desc.hasPrivateService(), desc.hasPublicService(), desc.hasBackgroundService(), desc.hasJobService(), desc.hasUserOptionsService());
 			
 			// Register dataSources
 			try {
