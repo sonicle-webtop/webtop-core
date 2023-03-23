@@ -2874,7 +2874,7 @@ public class CoreManager extends BaseManager {
 	 * @param serviceId The related service ID.
 	 * @param context The context-name (or groupName) of the share.
 	 * @param originProfileId The origin profileId of which getting rights.
-	 * @param instance The identifier of the entity involved in the lookup.
+	 * @param instance The identifier of the shared-entity involved in the lookup.
 	 * @param permissionKey The permission-keys involved in the lookup.
 	 * @return
 	 * @throws WTException 
@@ -2903,7 +2903,7 @@ public class CoreManager extends BaseManager {
 	 * @param serviceId The related service ID.
 	 * @param context The context-name (or groupName) of the share.
 	 * @param originProfileId The origin profileId of which getting rights.
-	 * @param instance The identifier of the entity involved in the lookup.
+	 * @param instance The identifier of the shared-entity involved in the lookup.
 	 * @param permissionKey The permission-keys involved in the lookup.
 	 * @param rights The rights collection to set.
 	 * @throws WTException 
@@ -2927,16 +2927,43 @@ public class CoreManager extends BaseManager {
 		wtMgr.updateFolderShareRights(originProfileId, serviceId, context, scope, rights);
 	}
 	
-	public <T> T getShareData(final String serviceId, final String context, final UserProfileId originProfileId, final String instance, Class<T> dataType, final boolean throwOnMissingShare) throws WTNotFoundException, WTException {
+	/**
+	 * Gets stored Share data involved in sharing between origin to target.
+	 * @param <T>
+	 * @param targetProfileId
+	 * @param serviceId The related service ID.
+	 * @param context The context-name (or groupName) of the share.
+	 * @param originProfileId The origin profileId of the sharing.
+	 * @param instance The identifier of the shared-entity involved in the lookup.
+	 * @param dataType The Class type of saved raw data.
+	 * @param throwOnMissingShare Set to `false` to return null instead of throwing an exception on missing share.
+	 * @return
+	 * @throws WTNotFoundException
+	 * @throws WTException 
+	 */
+	public <T> T getShareData(final UserProfileId targetProfileId, final String serviceId, final String context, final UserProfileId originProfileId, final String instance, Class<T> dataType, final boolean throwOnMissingShare) throws WTNotFoundException, WTException {
 		WebTopManager wtMgr = wta.getWebTopManager();
-		UserProfileId targetPid = getTargetProfileId();
-		return wtMgr.getShareData(targetPid, serviceId, context, originProfileId, instance, dataType, throwOnMissingShare);
+		return wtMgr.getShareData(targetProfileId, serviceId, context, originProfileId, instance, dataType, throwOnMissingShare);
 	}
 	
-	public <T> boolean updateShareData(final String serviceId, final String context, final UserProfileId originProfileId, final String instance, T data, Class<T> dataType, final boolean throwOnMissingShare) throws WTNotFoundException, WTException {
+	/**
+	 * Stores passed Share data within sharing between origin to target.
+	 * @param <T>
+	 * @param targetProfileId
+	 * @param serviceId The related service ID.
+	 * @param context The context-name (or groupName) of the share.
+	 * @param originProfileId The origin profileId of the sharing.
+	 * @param instance The identifier of the shared-entity involved in the lookup.
+	 * @param data The data object.
+	 * @param dataType The Class type of passed data.
+	 * @param throwOnMissingShare Set to `false` to return null instead of throwing an exception on missing share.
+	 * @return
+	 * @throws WTNotFoundException
+	 * @throws WTException 
+	 */
+	public <T> boolean updateShareData(final UserProfileId targetProfileId, final String serviceId, final String context, final UserProfileId originProfileId, final String instance, T data, Class<T> dataType, final boolean throwOnMissingShare) throws WTNotFoundException, WTException {
 		WebTopManager wtMgr = wta.getWebTopManager();
-		UserProfileId targetPid = getTargetProfileId();
-		return wtMgr.updateShareData(targetPid, serviceId, context, originProfileId, instance, data, dataType, throwOnMissingShare);
+		return wtMgr.updateShareData(targetProfileId, serviceId, context, originProfileId, instance, data, dataType, throwOnMissingShare);
 	}
 	
 	/**
