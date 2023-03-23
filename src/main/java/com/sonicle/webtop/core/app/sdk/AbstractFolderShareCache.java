@@ -34,7 +34,7 @@ package com.sonicle.webtop.core.app.sdk;
 
 import com.sonicle.commons.cache.AbstractBulkCache;
 import com.sonicle.webtop.core.app.model.FolderShareOriginFolders;
-import com.sonicle.webtop.core.app.model.FolderShareOrigin;
+import com.sonicle.webtop.core.app.model.ShareOrigin;
 import com.sonicle.webtop.core.sdk.UserProfileId;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -53,7 +53,7 @@ import org.apache.commons.collections4.multimap.ArrayListValuedHashMap;
  * @param <T>
  * @param <O>
  */
-public abstract class AbstractFolderShareCache <T, O extends FolderShareOrigin> extends AbstractBulkCache {
+public abstract class AbstractFolderShareCache <T, O extends ShareOrigin> extends AbstractBulkCache {
 	protected final List<O> origins = new ArrayList<>();
 	protected final Map<UserProfileId, O> originByProfile = new HashMap<>();
 	protected final Map<T, O> originByFolderId = new HashMap<>();

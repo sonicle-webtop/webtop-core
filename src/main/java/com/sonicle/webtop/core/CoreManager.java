@@ -151,12 +151,12 @@ import com.sonicle.webtop.core.model.MasterDataLookup;
 import com.sonicle.webtop.core.model.Meeting;
 import com.sonicle.webtop.core.model.PublicImage;
 import com.sonicle.webtop.core.model.RecipientFieldType;
-import com.sonicle.webtop.core.app.model.FolderShareOrigin;
 import com.sonicle.webtop.core.app.model.FolderSharing;
 import com.sonicle.webtop.core.app.model.Group;
 import com.sonicle.webtop.core.app.model.Resource;
 import com.sonicle.webtop.core.app.model.ResourceGetOption;
 import com.sonicle.webtop.core.app.model.ResourcePermissions;
+import com.sonicle.webtop.core.app.model.ShareOrigin;
 import com.sonicle.webtop.core.app.model.SubjectGetOption;
 import com.sonicle.webtop.core.app.model.User;
 import com.sonicle.webtop.core.app.model.UserGetOption;
@@ -2762,14 +2762,18 @@ public class CoreManager extends BaseManager {
 		return otp.checkCode(getTargetProfileId(), params, code);
 	}
 	
-	public List<FolderSharing.SubjectRights> getFolderShareSharingRights(final UserProfileId originProfileId, final String serviceId, final String context, final FolderSharing.Scope scope) throws WTException {
+	/**
+	 * Enumerates Share origins.
+	 * @param serviceId The related service ID.
+	 * @param context The context-name (or groupName) of the share.
+	 * @param targetPermissionKeys The permission-keys involved in the lookup.
+	 * @return
+	 * @throws WTException 
+	 */
+	public List<ShareOrigin> listShareOrigins(final String serviceId, final String context, final Collection<String> targetPermissionKeys) throws WTException {
 		WebTopManager wtMgr = wta.getWebTopManager();
-		return wtMgr.getFolderShareSharingRights(originProfileId, serviceId, context, scope);
-	}
-	
-	public void updateFolderShareSharingRights(final UserProfileId originProfileId, final String serviceId, final String context, final FolderSharing.Scope scope, final Collection<FolderSharing.SubjectRights> rights) throws WTException {
-		WebTopManager wtMgr = wta.getWebTopManager();
-		wtMgr.updateFolderShareSharingRights(originProfileId, serviceId, context, scope, rights);
+		UserProfileId targetPid = getTargetProfileId();
+		return wtMgr.listShareOrigins(targetPid, targetPermissionKeys, serviceId, context);
 	}
 	
 	/**
@@ -2779,10 +2783,25 @@ public class CoreManager extends BaseManager {
 	 * @return
 	 * @throws WTException 
 	 */
-	public List<FolderShareOrigin> listFolderShareOrigins(final String serviceId, final String context) throws WTException {
+	public List<ShareOrigin> listFolderShareOrigins(final String serviceId, final String context) throws WTException {
 		WebTopManager wtMgr = wta.getWebTopManager();
 		UserProfileId targetPid = getTargetProfileId();
 		return wtMgr.listFolderShareOrigins(targetPid, serviceId, context);
+	}
+	
+	/**
+	 * Enumerates Share instances related to specified permission-key.
+	 * @param serviceId The related service ID.
+	 * @param context The context-name (or groupName) of the share.
+	 * @param originProfileId The source profileId of the share we are getting folders.
+	 * @param targetPermissionKeys The permission-keys involved in the lookup.
+	 * @return
+	 * @throws WTException 
+	 */
+	public Set<String> getShareOriginInstances(final String serviceId, final String context, final UserProfileId originProfileId, final Collection<String> targetPermissionKeys) throws WTException {
+		WebTopManager wtMgr = wta.getWebTopManager();
+		UserProfileId targetPid = getTargetProfileId();
+		return wtMgr.getShareOriginInstances(targetPid, targetPermissionKeys, originProfileId, serviceId, context);
 	}
 	
 	/**
@@ -2848,6 +2867,76 @@ public class CoreManager extends BaseManager {
 		WebTopManager wtMgr = wta.getWebTopManager();
 		UserProfileId targetPid = getTargetProfileId();
 		return wtMgr.evaluateFolderSharePermissions(targetPid, originProfileId, serviceId, context, scope, throwOnMissingShare);
+	}
+	
+	/**
+	 * Gets Share rights of an instance of that origin.
+	 * @param serviceId The related service ID.
+	 * @param context The context-name (or groupName) of the share.
+	 * @param originProfileId The origin profileId of which getting rights.
+	 * @param instance The identifier of the entity involved in the lookup.
+	 * @param permissionKey The permission-keys involved in the lookup.
+	 * @return
+	 * @throws WTException 
+	 */
+	public List<com.sonicle.webtop.core.app.model.Sharing.SubjectRights> getShareRights(final String serviceId, final String context, final UserProfileId originProfileId, final String instance, final String permissionKey) throws WTException {
+		WebTopManager wtMgr = wta.getWebTopManager();
+		return wtMgr.getShareRights(originProfileId, serviceId, context, instance, permissionKey);
+	}
+	
+	/**
+	 * Gets FolderShare rights of an origin.
+	 * @param serviceId The related service ID.
+	 * @param context The context-name (or groupName) of the share.
+	 * @param originProfileId The origin profileId of which getting rights.
+	 * @param scope The scope of the search: wildcard for root target or folder for specific instance.
+	 * @return
+	 * @throws WTException 
+	 */
+	public List<FolderSharing.SubjectRights> getFolderShareRights(final String serviceId, final String context, final UserProfileId originProfileId, final FolderSharing.Scope scope) throws WTException {
+		WebTopManager wtMgr = wta.getWebTopManager();
+		return wtMgr.getFolderShareRights(originProfileId, serviceId, context, scope);
+	}
+	
+	/**
+	 * Sets Share rights to an instance of that origin.
+	 * @param serviceId The related service ID.
+	 * @param context The context-name (or groupName) of the share.
+	 * @param originProfileId The origin profileId of which getting rights.
+	 * @param instance The identifier of the entity involved in the lookup.
+	 * @param permissionKey The permission-keys involved in the lookup.
+	 * @param rights The rights collection to set.
+	 * @throws WTException 
+	 */
+	public void updateShareRights(final String serviceId, final String context, final UserProfileId originProfileId, final String instance, final String permissionKey, final Collection<com.sonicle.webtop.core.app.model.Sharing.SubjectRights> rights) throws WTException {
+		WebTopManager wtMgr = wta.getWebTopManager();
+		wtMgr.updateShareRights(originProfileId, serviceId, context, instance, permissionKey, rights);
+	}
+	
+	/**
+	 * Sets FolderShare rights of an origin.
+	 * @param serviceId The related service ID.
+	 * @param context The context-name (or groupName) of the share.
+	 * @param originProfileId The origin profileId of which setting rights.
+	 * @param scope The scope of the search: wildcard for root target or folder for specific instance.
+	 * @param rights The rights collection to set.
+	 * @throws WTException 
+	 */
+	public void updateFolderShareRights(final String serviceId, final String context, final UserProfileId originProfileId, final FolderSharing.Scope scope, final Collection<FolderSharing.SubjectRights> rights) throws WTException {
+		WebTopManager wtMgr = wta.getWebTopManager();
+		wtMgr.updateFolderShareRights(originProfileId, serviceId, context, scope, rights);
+	}
+	
+	public <T> T getShareData(final String serviceId, final String context, final UserProfileId originProfileId, final String instance, Class<T> dataType, final boolean throwOnMissingShare) throws WTNotFoundException, WTException {
+		WebTopManager wtMgr = wta.getWebTopManager();
+		UserProfileId targetPid = getTargetProfileId();
+		return wtMgr.getShareData(targetPid, serviceId, context, originProfileId, instance, dataType, throwOnMissingShare);
+	}
+	
+	public <T> boolean updateShareData(final String serviceId, final String context, final UserProfileId originProfileId, final String instance, T data, Class<T> dataType, final boolean throwOnMissingShare) throws WTNotFoundException, WTException {
+		WebTopManager wtMgr = wta.getWebTopManager();
+		UserProfileId targetPid = getTargetProfileId();
+		return wtMgr.updateShareData(targetPid, serviceId, context, originProfileId, instance, data, dataType, throwOnMissingShare);
 	}
 	
 	/**
