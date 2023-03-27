@@ -4255,7 +4255,8 @@ public final class WebTopManager {
 					if (StringUtils.isEmpty(rawData)) {
 						shadDao.deleteByShareUser(con, oshare.getShareId(), configuration.getSubjectSid());
 					} else {
-						shadDao.insert(con, oshare.getShareId(), configuration.getSubjectSid(), rawData);
+						int ret1 = shadDao.update(con, oshare.getShareId(), configuration.getSubjectSid(), rawData);
+						if (ret1 == 0) ret1 = shadDao.insert(con, oshare.getShareId(), configuration.getSubjectSid(), rawData);
 					}
 				}
 			}
