@@ -2426,7 +2426,7 @@ public final class WebTopManager {
 	 * @return A set of rights for involved subject IDs (SIDs).
 	 * @throws WTException 
 	 */
-	public <T> Set<Sharing.SubjectConfiguration> getShareConfigurations(final UserProfileId originProfileId, final String serviceId, final String context, final String instance, final String permissionKey, final Class<T> typeOfData) throws WTException {
+	public <T> Map<String, Sharing.SubjectConfiguration> getShareConfigurations(final UserProfileId originProfileId, final String serviceId, final String context, final String instance, final String permissionKey, final Class<T> typeOfData) throws WTException {
 		Check.notNull(originProfileId, "originProfileId");
 		Check.notEmpty(serviceId, "serviceId");
 		Check.notEmpty(context, "context");
@@ -4211,12 +4211,12 @@ public final class WebTopManager {
 		return !ret ? null : oshare;
 	}
 	
-	private <T> Set<Sharing.SubjectConfiguration> doShareConfigurationsGet(final Connection con, final String originSid, final String serviceId, final String shareContext, final String shareInstance, final String permissionKey, final Class<T> typeOfData) throws DAOException {
+	private <T> Map<String, Sharing.SubjectConfiguration> doShareConfigurationsGet(final Connection con, final String originSid, final String serviceId, final String shareContext, final String shareInstance, final String permissionKey, final Class<T> typeOfData) throws DAOException {
 		ShareDAO shaDao = ShareDAO.getInstance();
 		ShareDataDAO shadDao = ShareDataDAO.getInstance();
 		RolePermissionDAO permsDao = RolePermissionDAO.getInstance();
 		
-		Set<Sharing.SubjectConfiguration> items = new LinkedHashSet<>();
+		Map<String, Sharing.SubjectConfiguration> items = new LinkedHashMap<>();
 		OShare oshare = shaDao.selectByUserServiceKeyInstance(con, originSid, serviceId, shareContext, shareInstance);
 		if (oshare != null) {
 			Map<String, List<ORolePermission>> permissionMap = permsDao.groupSubjectsByByServiceKeysInstance(con, serviceId, Arrays.asList(permissionKey), oshare.getShareIdAsString());
@@ -4226,7 +4226,7 @@ public final class WebTopManager {
 			subjectSids.addAll(dataMap.keySet());
 			for (String subjectSid : subjectSids) {
 				if (permissionMap.containsKey(subjectSid)) {
-					items.add(toSharingSubjectConfiguration(subjectSid, permissionMap.get(subjectSid), dataMap.get(subjectSid), typeOfData));
+					items.put(subjectSid, toSharingSubjectConfiguration(subjectSid, permissionMap.get(subjectSid), dataMap.get(subjectSid), typeOfData));
 				}
 			}
 		}

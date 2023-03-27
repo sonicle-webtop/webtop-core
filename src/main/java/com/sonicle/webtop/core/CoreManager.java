@@ -2801,7 +2801,7 @@ public class CoreManager extends BaseManager {
 	 * @return
 	 * @throws WTException 
 	 */
-	public Set<com.sonicle.webtop.core.app.model.Sharing.SubjectConfiguration> getShareSubjectConfiguration(final String serviceId, final String context, final UserProfileId originProfileId, final String instance, final String permissionKey) throws WTException {
+	public Map<String, com.sonicle.webtop.core.app.model.Sharing.SubjectConfiguration> getShareSubjectConfiguration(final String serviceId, final String context, final UserProfileId originProfileId, final String instance, final String permissionKey) throws WTException {
 		return getShareSubjectConfiguration(serviceId, context, originProfileId, instance, permissionKey, null);
 	}
 	
@@ -2817,9 +2817,24 @@ public class CoreManager extends BaseManager {
 	 * @return
 	 * @throws WTException 
 	 */
-	public <T> Set<com.sonicle.webtop.core.app.model.Sharing.SubjectConfiguration> getShareSubjectConfiguration(final String serviceId, final String context, final UserProfileId originProfileId, final String instance, final String permissionKey, final Class<T> typeOfData) throws WTException {
+	public <T> Map<String, com.sonicle.webtop.core.app.model.Sharing.SubjectConfiguration> getShareSubjectConfiguration(final String serviceId, final String context, final UserProfileId originProfileId, final String instance, final String permissionKey, final Class<T> typeOfData) throws WTException {
 		WebTopManager wtMgr = wta.getWebTopManager();
 		return wtMgr.getShareConfigurations(originProfileId, serviceId, context, instance, permissionKey, typeOfData);
+	}
+	
+	/**
+	 * Applies a set of Share configurations related to an instance of a Origin.
+	 * @param <T>
+	 * @param serviceId The related service ID.
+	 * @param context The context-name of the Share.
+	 * @param originProfileId The originating Share's profileId.
+	 * @param instance The identifier of the shared-entity involved in the lookup.
+	 * @param permissionKey The permission-keys involved in the lookup.
+	 * @param configurations A set of configurations: one for each involved Subject ID.
+	 * @throws WTException 
+	 */
+	public <T> void updateShareConfigurations(final String serviceId, final String context, final UserProfileId originProfileId, final String instance, final String permissionKey, final Set<com.sonicle.webtop.core.app.model.Sharing.SubjectConfiguration> configurations) throws WTException {
+		updateShareConfigurations(serviceId, context, originProfileId, instance, permissionKey, configurations, null);
 	}
 	
 	/**
