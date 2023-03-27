@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" width="16px" height="16px" viewBox="0 0 16 16" enable-background="new 0 0 16 16" xml:space="preserve">
+  <g id="icon">
+    <path d="M0,7.5h5.4M2.93,10.009M5.444,7.508M2.93,5.007M5.444,7.508M2.93,10.009l2.514,-2.501L2.93,5.007" fill="none" stroke="#228BCB" stroke-width="1" stroke-miterlimit="10"/>
+    <line x1="2" y1="1.5" x2="16" y2="1.5" fill="#FFFFFF" stroke="#383838" stroke-width="1" stroke-miterlimit="10"/>
+    <line x1="7" y1="3.5" x2="16" y2="3.5" fill="#FFFFFF" stroke="#383838" stroke-width="1" stroke-miterlimit="10"/>
+    <line x1="7" y1="5.5" x2="16" y2="5.5" fill="#FFFFFF" stroke="#383838" stroke-width="1" stroke-miterlimit="10"/>
+    <line x1="7" y1="7.5" x2="16" y2="7.5" fill="#FFFFFF" stroke="#383838" stroke-width="1" stroke-miterlimit="10"/>
+    <line x1="7" y1="9.5" x2="16" y2="9.5" fill="#FFFFFF" stroke="#383838" stroke-width="1" stroke-miterlimit="10"/>
+    <line x1="7" y1="11.5" x2="16" y2="11.5" fill="#FFFFFF" stroke="#383838" stroke-width="1" stroke-miterlimit="10"/>
+    <line x1="2" y1="13.5" x2="16" y2="13.5" fill="#FFFFFF" stroke="#383838" stroke-width="1" stroke-miterlimit="10"/>
+  </g>
+</svg>
