@@ -37,7 +37,8 @@ import com.sonicle.commons.EnumUtils;
 import com.sonicle.webtop.core.app.model.FolderShare;
 import com.sonicle.webtop.core.app.model.FolderSharing;
 import java.util.ArrayList;
-import java.util.List;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 /**
  *
@@ -54,7 +55,7 @@ public class JsFolderSharing {
 	
 	public JsFolderSharing() {}
 	
-	public JsFolderSharing(String id, Type type, String originId, String folderId, String originName, String folderName, List<FolderSharing.SubjectRights> rightsCollection) {
+	public JsFolderSharing(String id, Type type, String originId, String folderId, String originName, String folderName, Set<FolderSharing.SubjectConfiguration> configurations) {
 		this.id = id;
 		this.type = EnumUtils.toSerializedName(type);
 		this.originId = originId;
@@ -62,13 +63,13 @@ public class JsFolderSharing {
 		this.originName = originName;
 		this.folderName = folderName;
 		this.rights = new ArrayList<>();
-		for (FolderSharing.SubjectRights rightsEntry : rightsCollection) {
-			this.rights.add(new RightsSet(rightsEntry));
+		for (FolderSharing.SubjectConfiguration configuration : configurations) {
+			this.rights.add(new RightsSet(configuration));
 		}
 	}
 	
-	public List<FolderSharing.SubjectRights> toSubjectRights() {
-		ArrayList<FolderSharing.SubjectRights> list = new ArrayList<>(rights.size());
+	public Set<FolderSharing.SubjectConfiguration> toSubjectConfigurations() {
+		Set<FolderSharing.SubjectConfiguration> list = new LinkedHashSet<>(rights.size());
 		for (RightsSet set : rights) {
 			final FolderShare.FolderPermissions folderPermissions = new FolderShare.FolderPermissions();
 			if (set.folderManage) folderPermissions.set(FolderShare.FolderRight.MANAGE);
@@ -81,7 +82,7 @@ public class JsFolderSharing {
 			if (set.itemsDelete) itemsPermissions.set(FolderShare.ItemsRight.DELETE);
 			//final FolderShare.FolderPermissions2 folderPermissions = new FolderShare.FolderPermissions2(set.folder);
 			//final FolderShare.ItemsPermissions2 itemsPermissions = new FolderShare.ItemsPermissions2(set.items);
-			list.add(new FolderSharing.SubjectRights(set.subjectSid, folderPermissions, itemsPermissions));
+			list.add(new FolderSharing.SubjectConfiguration(set.subjectSid, folderPermissions, itemsPermissions));
 		}
 		return list;
 	}
@@ -106,8 +107,8 @@ public class JsFolderSharing {
 		
 		public RightsSet() {}
 		
-		public RightsSet(FolderSharing.SubjectRights rights) {
-			this.subjectSid = rights.getAclSubjectSid();
+		public RightsSet(FolderSharing.SubjectConfiguration rights) {
+			this.subjectSid = rights.getSubjectSid();
 			this.folderManage = rights.getFolderPermissions().has(FolderShare.FolderRight.MANAGE);
 			this.folderRead = rights.getFolderPermissions().has(FolderShare.FolderRight.READ);
 			this.folderUpdate = rights.getFolderPermissions().has(FolderShare.FolderRight.UPDATE);
