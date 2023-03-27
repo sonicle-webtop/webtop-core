@@ -2823,163 +2823,6 @@ public final class WebTopManager {
 		}
 	}
 	
-	/**
-	 * Gets stored Share data involved in sharing process between origin and target.
-	 * @param <T>
-	 * @param targetProfileId The Share target profile whose data needs to be returned.
-	 * @param serviceId The related service ID.
-	 * @param context The context-name (or groupName) of the share.
-	 * @param originProfileId The Share origin profile to be updated.
-	 * @param instance The identifier of the entity that actually shared.
-	 * @param dataType The Class type of saved raw data.
-	 * @param throwOnMissingShare Set to `false` to return null instead of throwing an exception on missing share.
-	 * @return Deserializes data object of specified type.
-	 * @throws WTNotFoundException If share is missing and throwOnMissingShare is set
-	 * @throws WTException 
-	 */
-	public <T> T getShareData(final UserProfileId targetProfileId, final String serviceId, final String context, final UserProfileId originProfileId, final String instance, Class<T> dataType, final boolean throwOnMissingShare) throws WTNotFoundException, WTException {
-		Check.notNull(targetProfileId, "targetProfileId");
-		Check.notEmpty(serviceId, "serviceId");
-		Check.notEmpty(context, "context");
-		Check.notNull(originProfileId, "originProfileId");
-		Check.notEmpty(instance, "instance");
-		ShareDAO shaDao = ShareDAO.getInstance();
-		ShareDataDAO shadDao = ShareDataDAO.getInstance();
-		Connection con = null;
-		
-		// Define lookup targets
-		final String targetSubjectSid = subjectSidCache.getSid(targetProfileId, GenericSubject.Type.GROUP, GenericSubject.Type.USER, GenericSubject.Type.RESOURCE, GenericSubject.Type.ROLE);
-		final String originSubjectSid = subjectSidCache.getSid(originProfileId, GenericSubject.Type.USER, GenericSubject.Type.RESOURCE);
-		
-		try {
-			con = WT.getCoreConnection();
-			Integer shareId = shaDao.selectIdByUserServiceKeyInstance(con, originSubjectSid, serviceId, context, instance);
-			if (shareId == null) {
-				if (!throwOnMissingShare) return null;
-				throw new WTNotFoundException("Share lookup failed for instance '{}' [{}, {}, {}]", instance, originSubjectSid, serviceId, context);
-			}
-			
-			String rawData = shadDao.selectValueByShareUser(con, shareId, targetSubjectSid);
-			return rawData != null ? LangUtils.deserialize(rawData, null, dataType) : null;
-			
-		} catch (Exception ex) {
-			LOGGER.error("Unable to get share data for '{}' [{}, {}, {}, {}]", targetProfileId, originSubjectSid, serviceId, context, instance);
-			throw ExceptionUtils.wrapThrowable(ex);
-		} finally {
-			DbUtils.closeQuietly(con);
-		}
-	}
-	
-	/**
-	 * Gets stored FolderShare (Root->Folder two-level sharing) data involved in sharing process between origin and target.
-	 * @param <T>
-	 * @param targetProfileId The Share target profile whose data needs to be returned.
-	 * @param originProfileId The Share origin profile to be updated.
-	 * @param serviceId The related service ID.
-	 * @param context The context-name (or groupName) of the share.
-	 * @param scope The level on which perform the operation: wildcard or folder-specific.
-	 * @param dataType The Class type of saved raw data.
-	 * @param throwOnMissingShare Set to `false` to return null instead of throwing an exception on missing share.
-	 * @return
-	 * @throws WTNotFoundException If share is missing and throwOnMissingShare is set
-	 * @throws WTException 
-	 */
-	public <T> T getFolderShareData(final UserProfileId targetProfileId, final UserProfileId originProfileId, final String serviceId, final String context, final FolderSharing.Scope scope, Class<T> dataType, final boolean throwOnMissingShare) throws WTNotFoundException, WTException {
-		Check.notNull(scope, "scope");
-		
-		final String instance;
-		if (scope instanceof FolderSharing.WildcardScope) {
-			instance = FolderSharing.INSTANCE_WILDCARD;
-		} else if (scope instanceof FolderSharing.FolderScope) {
-			instance = ((FolderSharing.FolderScope)scope).getFolderId();
-		} else {
-			throw new IllegalArgumentException("Unsupported scope");
-		}
-		
-		return getShareData(targetProfileId, serviceId, context, originProfileId, instance, dataType, throwOnMissingShare);
-	}
-	
-	/**
-	 * Stores passed Share data object.
-	 * @param <T>
-	 * @param targetProfileId The Share target profile whose data needs to be returned.
-	 * @param serviceId The related service ID.
-	 * @param context The context-name (or groupName) of the share.
-	 * @param originProfileId The Share origin profile to be updated.
-	 * @param instance The identifier of the entity that actually shared.
-	 * @param data The data object.
-	 * @param dataType The Class type of passed data.
-	 * @param throwOnMissingShare Set to `false` to return null instead of throwing an exception on missing share.
-	 * @return
-	 * @throws WTNotFoundException If share is missing and throwOnMissingShare is set
-	 * @throws WTException 
-	 */
-	public <T> boolean updateShareData(final UserProfileId targetProfileId, final String serviceId, final String context, final UserProfileId originProfileId, final String instance, T data, Class<T> dataType, final boolean throwOnMissingShare) throws WTNotFoundException, WTException {
-		Check.notNull(targetProfileId, "targetProfileId");
-		Check.notEmpty(serviceId, "serviceId");
-		Check.notEmpty(context, "context");
-		Check.notNull(originProfileId, "originProfileId");
-		Check.notEmpty(instance, "instance");
-		ShareDAO shaDao = ShareDAO.getInstance();
-		ShareDataDAO shadDao = ShareDataDAO.getInstance();
-		Connection con = null;
-		
-		// Define lookup targets
-		final String targetSubjectSid = subjectSidCache.getSid(targetProfileId, GenericSubject.Type.GROUP, GenericSubject.Type.USER, GenericSubject.Type.RESOURCE, GenericSubject.Type.ROLE);
-		final String originSubjectSid = subjectSidCache.getSid(originProfileId, GenericSubject.Type.USER, GenericSubject.Type.RESOURCE);
-		
-		try {
-			con = WT.getCoreConnection();
-			Integer shareId = shaDao.selectIdByUserServiceKeyInstance(con, originSubjectSid, serviceId, context, instance);
-			if (shareId == null) {
-				if (throwOnMissingShare) throw new WTNotFoundException("Share lookup failed for instance '{}' [{}, {}, {}]", instance, originSubjectSid, serviceId, context);
-				return false;
-				
-			} else {
-				String rawData = LangUtils.serialize(data, dataType);
-				int ret = shadDao.update(con, shareId, targetSubjectSid, rawData);
-				if (ret == 0) ret = shadDao.insert(con, shareId, targetSubjectSid, rawData);
-				return ret > 0;
-			}
-			
-		} catch (Exception ex) {
-			LOGGER.error("Unable to set share data for '{}' [{}, {}, {}, {}]", targetProfileId, originSubjectSid, serviceId, context, instance);
-			throw ExceptionUtils.wrapThrowable(ex);
-		} finally {
-			DbUtils.closeQuietly(con);
-		}
-	}
-	
-	/**
-	 * Stores passed FolderShare (Root->Folder two-level sharing) data object.
-	 * @param <T>
-	 * @param targetProfileId The Share target profile whose data needs to be returned.
-	 * @param originProfileId The Share origin profile to be updated.
-	 * @param serviceId The related service ID.
-	 * @param context The context-name (or groupName) of the share.
-	 * @param scope The level on which perform the operation: wildcard or folder-specific.
-	 * @param data The data object.
-	 * @param dataType The Class type of passed data.
-	 * @param throwOnMissingShare Set to `false` to return null instead of throwing an exception on missing share.
-	 * @return
-	 * @throws WTNotFoundException If share is missing and throwOnMissingShare is set
-	 * @throws WTException 
-	 */
-	public <T> boolean updateFolderShareData(final UserProfileId targetProfileId, final UserProfileId originProfileId, final String serviceId, final String context, final FolderSharing.Scope scope, T data, Class<T> dataType, final boolean throwOnMissingShare) throws WTNotFoundException, WTException {
-		Check.notNull(scope, "scope");
-		
-		final String instance;
-		if (scope instanceof FolderSharing.WildcardScope) {
-			instance = FolderSharing.INSTANCE_WILDCARD;
-		} else if (scope instanceof FolderSharing.FolderScope) {
-			instance = ((FolderSharing.FolderScope)scope).getFolderId();
-		} else {
-			throw new IllegalArgumentException("Unsupported scope");
-		}
-		
-		return updateShareData(targetProfileId, serviceId, context, originProfileId, instance, data, dataType, throwOnMissingShare);
-	}
-	
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	
 	
@@ -4197,7 +4040,7 @@ public final class WebTopManager {
 			RunContext.clearCachedAuthorizationInfo(realm, RunContext.buildPrincipalCollection(profileId.getDomainId(), profileId.getUserId()));
 		}
 	}
-	
+		
 	private OShare doShareInsert(Connection con, String originSid, String serviceId, String shareKey, String instance) {
 		ShareDAO shaDao = ShareDAO.getInstance();
 		
@@ -4255,12 +4098,19 @@ public final class WebTopManager {
 					if (StringUtils.isEmpty(rawData)) {
 						shadDao.deleteByShareUser(con, oshare.getShareId(), configuration.getSubjectSid());
 					} else {
-						int ret1 = shadDao.update(con, oshare.getShareId(), configuration.getSubjectSid(), rawData);
-						if (ret1 == 0) ret1 = shadDao.insert(con, oshare.getShareId(), configuration.getSubjectSid(), rawData);
+						int ret1 = doShareDataUpdate(con, oshare.getShareId(), configuration.getSubjectSid(), rawData);
 					}
 				}
 			}
 		}
+	}
+	
+	private int doShareDataUpdate(Connection con, int shareId, String userSid, String rawData) throws DAOException {
+		ShareDataDAO shadDao = ShareDataDAO.getInstance();
+		
+		int ret = shadDao.update(con, shareId, userSid, rawData);
+		if (ret == 0) ret = shadDao.insert(con, shareId, userSid, rawData);
+		return ret;
 	}
 	
 	private <T> Set<FolderSharing.SubjectConfiguration> doFolderShareConfigurationsGet(final Connection con, final String originSid, final String serviceId, final String shareContext, final FolderSharing.Scope level, final Class<T> typeOfData) throws DAOException {
@@ -4338,7 +4188,16 @@ public final class WebTopManager {
 			Set<RolePermissionDAO.ServiceEntry> entries = toSharePermissionBatchInsertEntries(shareContext, oshare.getShareIdAsString(), configurations, skipOriginPerms);
 			int[] ret = permsDao.batchInsertOfService(con, serviceId, entries);
 			// Update data
-			//TODO...
+			if (typeOfData != null) {
+				for (FolderSharing.SubjectConfiguration configuration : configurations) {
+					final String rawData = configuration.getRawData(typeOfData);
+					if (StringUtils.isEmpty(rawData)) {
+						shadDao.deleteByShareUser(con, oshare.getShareId(), configuration.getSubjectSid());
+					} else {
+						int ret1 = doShareDataUpdate(con, oshare.getShareId(), configuration.getSubjectSid(), rawData);
+					}
+				}
+			}
 		}
 	}
 	
