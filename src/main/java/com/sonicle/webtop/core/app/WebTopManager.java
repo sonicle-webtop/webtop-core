@@ -2381,6 +2381,106 @@ public final class WebTopManager {
 	}
 	
 	/**
+	 * 
+	 * @param targetProfileId The Profile ID under investigation.
+	 * @param targetPermissionKeys The permission-keys involved in the lookup.
+	 * @param originProfileId The Profile ID of the origin.
+	 * @param serviceId The related service ID.
+	 * @param context The context-name (or groupName) of the share.
+	 * @return
+	 * @throws WTException 
+	 */
+	public Set<String> getShareOriginInstances(final UserProfileId targetProfileId, final Collection<String> targetPermissionKeys, final UserProfileId originProfileId, final String serviceId, final String context) throws WTException {
+		Check.notNull(targetProfileId, "targetProfileId");
+		Check.notNull(originProfileId, "originProfileId");
+		Check.notEmpty(serviceId, "serviceId");
+		Check.notEmpty(context, "context");
+		ShareDAO shaDao = ShareDAO.getInstance();
+		Connection con = null;
+		
+		// Define lookup targets
+		final String originSubjectSid = subjectSidCache.getSid(originProfileId, GenericSubject.Type.USER, GenericSubject.Type.RESOURCE);
+		final List<String> targetSubjectSids = getComputedRolesAsStringByUser(targetProfileId, true, true);
+		
+		try {
+			con = WT.getCoreConnection();
+			return shaDao.viewInstancesByOriginServiceContextPermissions(con, originSubjectSid, serviceId, context, targetSubjectSids, targetPermissionKeys);
+			
+		} catch (Exception ex) {
+			LOGGER.error("Unable to compute share origin-instances for '{}' [{}, {}, {}]", targetProfileId, originSubjectSid, serviceId, context);
+			throw ExceptionUtils.wrapThrowable(ex);
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
+	/**
+	 * Returns Share configurations related to an instance of a Origin.
+	 * @param <T>
+	 * @param originProfileId The originating Share's profileId.
+	 * @param serviceId The related service ID.
+	 * @param context The context-name of the Share.
+	 * @param instance The identifier of the entity that is (or being) shared.
+	 * @param permissionKey The permission-key to target.
+	 * @param typeOfData Type of Data object in configuration. Set to <null> to not process Data.
+	 * @return A set of rights for involved subject IDs (SIDs).
+	 * @throws WTException 
+	 */
+	public <T> Set<Sharing.SubjectConfiguration> getShareConfigurations(final UserProfileId originProfileId, final String serviceId, final String context, final String instance, final String permissionKey, final Class<T> typeOfData) throws WTException {
+		Check.notNull(originProfileId, "originProfileId");
+		Check.notEmpty(serviceId, "serviceId");
+		Check.notEmpty(context, "context");
+		Check.notEmpty(instance, "instance");
+		Check.notEmpty(permissionKey, "permissionKey");
+		Connection con = null;
+		
+		try {
+			String originSid = subjectSidCache.getSid(originProfileId, GenericSubject.Type.USER, GenericSubject.Type.RESOURCE);
+			con = WT.getCoreConnection();
+			return doShareConfigurationsGet(con, originSid, serviceId, context, instance, permissionKey, typeOfData);
+			
+		} catch (Exception ex) {
+			throw ExceptionUtils.wrapThrowable(ex);
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
+	/**
+	 * Applies a set of Share configurations related to an instance of a Origin.
+	 * @param <T>
+	 * @param originProfileId The originating Share's profileId.
+	 * @param serviceId The related service ID.
+	 * @param context The context-name of the Share.
+	 * @param instance The identifier of the entity that is (or being) shared.
+	 * @param permissionKey The permission-key to target.
+	 * @param configurations A set of configurations: one for each involved subject ID.
+	 * @param typeOfData Type of Data object in configuration. Set to <null> to not process Data.
+	 * @throws WTException 
+	 */
+	public <T> void updateShareConfigurations(final UserProfileId originProfileId, final String serviceId, final String context, final String instance, final String permissionKey, final Set<Sharing.SubjectConfiguration> configurations, final Class<T> typeOfData) throws WTException {
+		Check.notNull(originProfileId, "originProfileId");
+		Check.notEmpty(serviceId, "serviceId");
+		Check.notEmpty(context, "context");
+		Check.notEmpty(instance, "instance");
+		Check.notEmpty(permissionKey, "permissionKey");
+		Check.notNull(configurations, "configurations");
+		Connection con = null;
+		
+		try {
+			String originSid = subjectSidCache.getSid(originProfileId, GenericSubject.Type.USER, GenericSubject.Type.RESOURCE);
+			con = WT.getCoreConnection();
+			doShareConfigurationsUpdate(con, originSid, serviceId, context, instance, permissionKey, configurations, typeOfData);
+			DbUtils.commitQuietly(con);
+			
+		} catch (Exception ex) {
+			throw ExceptionUtils.wrapThrowable(ex);
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
+	/**
 	 * Lists FolderShare (Root->Folder two-level sharing) origins for specified profileId.
 	 * @param targetProfileId The Profile ID under investigation.
 	 * @param serviceId The related service ID.
@@ -2449,40 +2549,6 @@ public final class WebTopManager {
 			
 		} catch (Exception ex) {
 			LOGGER.error("Unable to compute folder-share origins for '{}' [{}, {}]", targetProfileId, serviceId, context);
-			throw ExceptionUtils.wrapThrowable(ex);
-		} finally {
-			DbUtils.closeQuietly(con);
-		}
-	}
-	
-	/**
-	 * 
-	 * @param targetProfileId The Profile ID under investigation.
-	 * @param targetPermissionKeys The permission-keys involved in the lookup.
-	 * @param originProfileId The Profile ID of the origin.
-	 * @param serviceId The related service ID.
-	 * @param context The context-name (or groupName) of the share.
-	 * @return
-	 * @throws WTException 
-	 */
-	public Set<String> getShareOriginInstances(final UserProfileId targetProfileId, final Collection<String> targetPermissionKeys, final UserProfileId originProfileId, final String serviceId, final String context) throws WTException {
-		Check.notNull(targetProfileId, "targetProfileId");
-		Check.notNull(originProfileId, "originProfileId");
-		Check.notEmpty(serviceId, "serviceId");
-		Check.notEmpty(context, "context");
-		ShareDAO shaDao = ShareDAO.getInstance();
-		Connection con = null;
-		
-		// Define lookup targets
-		final String originSubjectSid = subjectSidCache.getSid(originProfileId, GenericSubject.Type.USER, GenericSubject.Type.RESOURCE);
-		final List<String> targetSubjectSids = getComputedRolesAsStringByUser(targetProfileId, true, true);
-		
-		try {
-			con = WT.getCoreConnection();
-			return shaDao.viewInstancesByOriginServiceContextPermissions(con, originSubjectSid, serviceId, context, targetSubjectSids, targetPermissionKeys);
-			
-		} catch (Exception ex) {
-			LOGGER.error("Unable to compute share origin-instances for '{}' [{}, {}, {}]", targetProfileId, originSubjectSid, serviceId, context);
 			throw ExceptionUtils.wrapThrowable(ex);
 		} finally {
 			DbUtils.closeQuietly(con);
@@ -2695,47 +2761,18 @@ public final class WebTopManager {
 	}
 	
 	/**
-	 * Returns a list of rights applied to a specific Share.
-	 * @param originProfileId The FolderShare origin profile to be checked.
-	 * @param serviceId The related service ID.
-	 * @param context The context-name (or groupName) of the share.
-	 * @param instance The identifier of the entity that is (or being) shared.
-	 * @param permissionKey The permission-key to target.
-	 * @return A collection of rights.
-	 * @throws WTException 
-	 */
-	public List<Sharing.SubjectRights> getShareRights(final UserProfileId originProfileId, final String serviceId, final String context, final String instance, final String permissionKey) throws WTException {
-		Check.notNull(originProfileId, "originProfileId");
-		Check.notEmpty(serviceId, "serviceId");
-		Check.notEmpty(context, "context");
-		Check.notEmpty(instance, "instance");
-		Check.notEmpty(permissionKey, "permissionKey");
-		Connection con = null;
-		
-		try {
-			String originSid = subjectSidCache.getSid(originProfileId, GenericSubject.Type.USER, GenericSubject.Type.RESOURCE);
-			con = WT.getCoreConnection();
-			return doShareSubjectRightsGet(con, originSid, serviceId, context, instance, permissionKey);
-			
-		} catch (Exception ex) {
-			throw ExceptionUtils.wrapThrowable(ex);
-		} finally {
-			DbUtils.closeQuietly(con);
-		}
-	}
-	
-	/**
-	 * Returns a list of rights applied to a specific FolderShare (Root->Folder two-level sharing).
-	 * This is suitable for completing sharing panel where all permissions for 
-	 * a shared entity are grouped together in a single representation.
+	 * Returns a list of rights applied to a specific FolderShare (Root->Folder two-level sharing).This is suitable for completing sharing panel where all permissions for 
+ a shared entity are grouped together in a single representation.
+	 * @param <T>
 	 * @param originProfileId The FolderShare origin profile to be checked.
 	 * @param serviceId The related service ID.
 	 * @param context The context-name (or groupName) of the share.
 	 * @param scope The level to evaluate: wildcard or folder-specific.
+	 * @param typeOfData Type of Data object in configuration. Set to <null> to not process Data.
 	 * @return A collection of rights.
 	 * @throws WTException 
 	 */
-	public List<FolderSharing.SubjectRights> getFolderShareRights(final UserProfileId originProfileId, final String serviceId, final String context, final FolderSharing.Scope scope) throws WTException {
+	public <T> Set<FolderSharing.SubjectConfiguration> getFolderShareConfigurations(final UserProfileId originProfileId, final String serviceId, final String context, final FolderSharing.Scope scope, final Class<T> typeOfData) throws WTException {
 		Check.notNull(originProfileId, "originProfileId");
 		Check.notEmpty(serviceId, "serviceId");
 		Check.notEmpty(context, "context");
@@ -2745,39 +2782,7 @@ public final class WebTopManager {
 		try {
 			String originSid = subjectSidCache.getSid(originProfileId, GenericSubject.Type.USER, GenericSubject.Type.RESOURCE);
 			con = WT.getCoreConnection();
-			return doFolderShareSubjectRightsGet(con, originSid, serviceId, context, scope);
-			
-		} catch (Exception ex) {
-			throw ExceptionUtils.wrapThrowable(ex);
-		} finally {
-			DbUtils.closeQuietly(con);
-		}
-	}
-	
-	/**
-	 * Updates the set of rights associated to a Share.
-	 * @param originProfileId The FolderShare origin profile to be updated.
-	 * @param serviceId The related service ID.
-	 * @param context The context-name (or groupName) of the share.
-	 * @param instance The identifier of the entity that is (or being) shared.
-	 * @param permissionKey The permission-key to target.
-	 * @param rights A collection of rights to be applied.
-	 * @throws WTException 
-	 */
-	public void updateShareRights(final UserProfileId originProfileId, final String serviceId, final String context, final String instance, final String permissionKey, final Collection<Sharing.SubjectRights> rights) throws WTException {
-		Check.notNull(originProfileId, "originProfileId");
-		Check.notEmpty(serviceId, "serviceId");
-		Check.notEmpty(context, "context");
-		Check.notEmpty(instance, "instance");
-		Check.notEmpty(permissionKey, "permissionKey");
-		Check.notNull(rights, "rights");
-		Connection con = null;
-		
-		try {
-			String originSid = subjectSidCache.getSid(originProfileId, GenericSubject.Type.USER, GenericSubject.Type.RESOURCE);
-			con = WT.getCoreConnection();
-			doFolderShareRightsUpdate(con, originSid, serviceId, context, instance, permissionKey, rights);
-			DbUtils.commitQuietly(con);
+			return doFolderShareConfigurationsGet(con, originSid, serviceId, context, scope, typeOfData);
 			
 		} catch (Exception ex) {
 			throw ExceptionUtils.wrapThrowable(ex);
@@ -2788,25 +2793,27 @@ public final class WebTopManager {
 	
 	/**
 	 * Updates the set of rights associated to a FolderShare (Root->Folder two-level sharing).
+	 * @param <T>
 	 * @param originProfileId The FolderShare origin profile to be updated.
 	 * @param serviceId The related service ID.
 	 * @param context The context-name (or groupName) of the share.
 	 * @param scope The level on which perform the operation: wildcard or folder-specific.
-	 * @param rights A collection of rights to be applied.
+	 * @param configurations A set of configurations: one for each involved subject ID.
+	 * @param typeOfData Type of Data object in configuration. Set to <null> to not process Data.
 	 * @throws WTException 
 	 */
-	public void updateFolderShareRights(final UserProfileId originProfileId, final String serviceId, final String context, final FolderSharing.Scope scope, final Collection<FolderSharing.SubjectRights> rights) throws WTException {
+	public <T> void updateFolderShareConfigurations(final UserProfileId originProfileId, final String serviceId, final String context, final FolderSharing.Scope scope, final Set<FolderSharing.SubjectConfiguration> configurations, final Class<T> typeOfData) throws WTException {
 		Check.notNull(originProfileId, "originProfileId");
 		Check.notEmpty(serviceId, "serviceId");
 		Check.notEmpty(context, "context");
 		Check.notNull(scope, "level");
-		Check.notNull(rights, "rights");
+		Check.notNull(configurations, "configurations");
 		Connection con = null;
 		
 		try {
 			String originSid = subjectSidCache.getSid(originProfileId, GenericSubject.Type.USER, GenericSubject.Type.RESOURCE);
 			con = WT.getCoreConnection();
-			doFolderShareSharingRightsUpdate(con, originSid, serviceId, context, scope, rights);
+			doFolderShareConfigurationUpdate(con, originSid, serviceId, context, scope, configurations, typeOfData);
 			DbUtils.commitQuietly(con);
 			
 		} catch (Exception ex) {
@@ -3945,14 +3952,14 @@ public final class WebTopManager {
 		Set<String> alloweds = new LinkedHashSet<>();
 		String originSid = subjectSidCache.getSid(resourcePid, GenericSubject.Type.RESOURCE);
 		
-		List<FolderSharing.SubjectRights> subRights = doFolderShareSubjectRightsGet(con, originSid, CoreManifest.ID, "RESOURCE", FolderSharing.Scope.wildcard());
-		for (FolderSharing.SubjectRights rights : subRights) {
-			if (hasResourceManagerPermissions(rights.getFolderPermissions(), rights.getItemsPermissions())) {
+		Set<FolderSharing.SubjectConfiguration> configurations = doFolderShareConfigurationsGet(con, originSid, CoreManifest.ID, "RESOURCE", FolderSharing.Scope.wildcard(), null);
+		for (FolderSharing.SubjectConfiguration configuration : configurations) {
+			if (hasResourceManagerPermissions(configuration.getFolderPermissions(), configuration.getItemsPermissions())) {
 				if (manager == null) { // Safe-check, should not happen to have 2 managers... in that case take the first!
-					manager = (!subjectsAsSID) ? subjectSidCache.getPidAsString(rights.getAclSubjectSid(), GenericSubject.Type.USER, GenericSubject.Type.GROUP) : rights.getAclSubjectSid();
+					manager = (!subjectsAsSID) ? subjectSidCache.getPidAsString(configuration.getSubjectSid(), GenericSubject.Type.USER, GenericSubject.Type.GROUP) : configuration.getSubjectSid();
 				}
-			} else if (rights.getFolderPermissions().has(FolderShare.FolderRight.READ)) {
-				final String allowed = (!subjectsAsSID) ? subjectSidCache.getPidAsString(rights.getAclSubjectSid(), GenericSubject.Type.USER, GenericSubject.Type.GROUP) : rights.getAclSubjectSid();
+			} else if (configuration.getFolderPermissions().has(FolderShare.FolderRight.READ)) {
+				final String allowed = (!subjectsAsSID) ? subjectSidCache.getPidAsString(configuration.getSubjectSid(), GenericSubject.Type.USER, GenericSubject.Type.GROUP) : configuration.getSubjectSid();
 				if (allowed != null) alloweds.add(allowed);
 			}
 		}
@@ -3984,22 +3991,22 @@ public final class WebTopManager {
 			Check.notNull(resource.getAllowedSubjects(), "allowedSubjects");
 			
 			// Update sharing
-			ArrayList<FolderSharing.SubjectRights> srights = new ArrayList<>();
+			Set<FolderSharing.SubjectConfiguration> configurations = new LinkedHashSet<>();
 			if (!StringUtils.isBlank(resource.getManagerSubject())) {
 				// This is treated as collection here, but extracted first below!
 				Set<String> managers = parseSubjectsAsSids(Arrays.asList(resource.getManagerSubject()), !subjectsAsSID, domainId, GenericSubject.Type.USER, GenericSubject.Type.GROUP);
 				if (!managers.isEmpty()) {
 					final String managerSid = managers.iterator().next();
 					newPermissionSids.add(managerSid);
-					srights.add(new FolderSharing.SubjectRights(managerSid, buildResourceFolderPermissions(true), buildResourceItemsPermissions(true)));	
+					configurations.add(new FolderSharing.SubjectConfiguration(managerSid, buildResourceFolderPermissions(true), buildResourceItemsPermissions(true)));	
 				}
 			}
 			Set<String> alloweds = parseSubjectsAsSids(resource.getAllowedSubjects(), !subjectsAsSID, domainId, GenericSubject.Type.USER, GenericSubject.Type.GROUP);
 			for (String sid : alloweds) {
 				newPermissionSids.add(sid);
-				srights.add(new FolderSharing.SubjectRights(sid, buildResourceFolderPermissions(false)));
+				configurations.add(new FolderSharing.SubjectConfiguration(sid, buildResourceFolderPermissions(false)));
 			}
-			doFolderShareSharingRightsUpdate(con, ouse.getUserSid(), CoreManifest.ID, "RESOURCE", FolderSharing.Scope.wildcard(), srights);
+			doFolderShareConfigurationUpdate(con, ouse.getUserSid(), CoreManifest.ID, "RESOURCE", FolderSharing.Scope.wildcard(), configurations, null);
 		}
 		
 		return new ResourceUpdateResult(ouse, ouin, newPermissionSids);
@@ -4033,7 +4040,7 @@ public final class WebTopManager {
 			newPermissionSids = new HashSet<>();
 			
 			// Update sharing
-			ArrayList<FolderSharing.SubjectRights> srights = new ArrayList<>();
+			Set<FolderSharing.SubjectConfiguration> configurations = new LinkedHashSet<>();
 			if (!StringUtils.isBlank(resource.getManagerSubject())) {
 				// This is treated as collection here, but extracted first below!
 				Set<String> managers = parseSubjectsAsSids(Arrays.asList(resource.getManagerSubject()), !subjectsAsSID, domainId, GenericSubject.Type.USER, GenericSubject.Type.GROUP);
@@ -4042,17 +4049,17 @@ public final class WebTopManager {
 					// Manager has also CREATE, DELETE, UPDATE right in order to maintain requests.
 					final String managerSid = managers.iterator().next();
 					newPermissionSids.add(managerSid);
-					srights.add(new FolderSharing.SubjectRights(managerSid, buildResourceFolderPermissions(true), buildResourceItemsPermissions(true)));	
+					configurations.add(new FolderSharing.SubjectConfiguration(managerSid, buildResourceFolderPermissions(true), buildResourceItemsPermissions(true)));	
 				}
 			}
 			Set<String> alloweds = parseSubjectsAsSids(resource.getAllowedSubjects(), !subjectsAsSID, domainId, GenericSubject.Type.USER, GenericSubject.Type.GROUP);
 			for (String sid : alloweds) {
 				// READ right allows to access the resource, any allowed subject must have it!
 				newPermissionSids.add(sid);
-				srights.add(new FolderSharing.SubjectRights(sid, buildResourceFolderPermissions(false)));
+				configurations.add(new FolderSharing.SubjectConfiguration(sid, buildResourceFolderPermissions(false)));
 			}
 			String originSid = subjectSidCache.getSid(ouse.getProfileId(), GenericSubject.Type.RESOURCE);
-			doFolderShareSharingRightsUpdate(con, originSid, CoreManifest.ID, "RESOURCE", FolderSharing.Scope.wildcard(), srights);
+			doFolderShareConfigurationUpdate(con, originSid, CoreManifest.ID, "RESOURCE", FolderSharing.Scope.wildcard(), configurations, null);
 		}
 		
 		return new ResourceUpdateResult(ouse, ouin, LangUtils.computeChangeSet(oldPermissionSids, newPermissionSids).getMoved());
@@ -4204,23 +4211,60 @@ public final class WebTopManager {
 		return !ret ? null : oshare;
 	}
 	
-	private List<Sharing.SubjectRights> doShareSubjectRightsGet(final Connection con, final String originSid, final String serviceId, final String shareContext, final String shareInstance, final String permissionKey) throws DAOException {
+	private <T> Set<Sharing.SubjectConfiguration> doShareConfigurationsGet(final Connection con, final String originSid, final String serviceId, final String shareContext, final String shareInstance, final String permissionKey, final Class<T> typeOfData) throws DAOException {
 		ShareDAO shaDao = ShareDAO.getInstance();
+		ShareDataDAO shadDao = ShareDataDAO.getInstance();
 		RolePermissionDAO permsDao = RolePermissionDAO.getInstance();
 		
-		ArrayList<Sharing.SubjectRights> items = new ArrayList<>();
+		Set<Sharing.SubjectConfiguration> items = new LinkedHashSet<>();
 		OShare oshare = shaDao.selectByUserServiceKeyInstance(con, originSid, serviceId, shareContext, shareInstance);
 		if (oshare != null) {
-			Map<String, List<ORolePermission>> map = permsDao.groupSubjectsByByServiceKeysInstance(con, serviceId, Arrays.asList(permissionKey), oshare.getShareIdAsString());
-			for (Map.Entry<String, List<ORolePermission>> entry : map.entrySet()) {
-				items.add(toSubjectRights(entry.getKey(), entry.getValue()));
+			Map<String, List<ORolePermission>> permissionMap = permsDao.groupSubjectsByByServiceKeysInstance(con, serviceId, Arrays.asList(permissionKey), oshare.getShareIdAsString());
+			Map<String, String> dataMap = shadDao.mapByShare(con, oshare.getShareId());
+			LinkedHashSet<String> subjectSids = new LinkedHashSet<>();
+			subjectSids.addAll(permissionMap.keySet());
+			subjectSids.addAll(dataMap.keySet());
+			for (String subjectSid : subjectSids) {
+				if (permissionMap.containsKey(subjectSid)) {
+					items.add(toSharingSubjectConfiguration(subjectSid, permissionMap.get(subjectSid), dataMap.get(subjectSid), typeOfData));
+				}
 			}
 		}
 		return items;
 	}
 	
-	private List<FolderSharing.SubjectRights> doFolderShareSubjectRightsGet(final Connection con, final String originSid, final String serviceId, final String shareContext, final FolderSharing.Scope level) throws DAOException {
+	public <T> void doShareConfigurationsUpdate(final Connection con, final String originSid, final String serviceId, final String shareContext, final String shareInstance, final String permissionKey, final Set<Sharing.SubjectConfiguration> configurations, Class<T> typeOfData) throws DAOException {
 		ShareDAO shaDao = ShareDAO.getInstance();
+		ShareDataDAO shadDao = ShareDataDAO.getInstance();
+		RolePermissionDAO permsDao = RolePermissionDAO.getInstance();
+		
+		OShare oshare = shaDao.selectByUserServiceKeyInstance(con, originSid, serviceId, shareContext, shareInstance);
+		if (oshare != null) {
+			permsDao.deleteByServiceKeysInstance(con, serviceId, Arrays.asList(permissionKey), oshare.getShareIdAsString());
+		} else {
+			oshare = doShareInsert(con, originSid, serviceId, shareContext, shareInstance);
+		}
+		if (!configurations.isEmpty()) {
+			// Update permissions
+			Set<RolePermissionDAO.ServiceEntry> entries = toSharePermissionBatchInsertEntries(permissionKey, oshare.getShareIdAsString(), configurations);
+			int[] ret = permsDao.batchInsertOfService(con, serviceId, entries);
+			// Update data
+			if (typeOfData != null) {
+				for (Sharing.SubjectConfiguration configuration : configurations) {
+					final String rawData = configuration.getRawData(typeOfData);
+					if (StringUtils.isEmpty(rawData)) {
+						shadDao.deleteByShareUser(con, oshare.getShareId(), configuration.getSubjectSid());
+					} else {
+						shadDao.insert(con, oshare.getShareId(), configuration.getSubjectSid(), rawData);
+					}
+				}
+			}
+		}
+	}
+	
+	private <T> Set<FolderSharing.SubjectConfiguration> doFolderShareConfigurationsGet(final Connection con, final String originSid, final String serviceId, final String shareContext, final FolderSharing.Scope level, final Class<T> typeOfData) throws DAOException {
+		ShareDAO shaDao = ShareDAO.getInstance();
+		ShareDataDAO shadDao = ShareDataDAO.getInstance();
 		RolePermissionDAO permsDao = RolePermissionDAO.getInstance();
 		
 		final List<String> TARGET_PERMISSION_KEYS = Arrays.asList(
@@ -4241,36 +4285,28 @@ public final class WebTopManager {
 		} else {
 			throw new IllegalArgumentException("Unsupported level");
 		}
-
-		ArrayList<FolderSharing.SubjectRights> items = new ArrayList<>();
+		
+		Set<FolderSharing.SubjectConfiguration> items = new LinkedHashSet<>();
 		OShare oshare = shaDao.selectByUserServiceKeyInstance(con, originSid, serviceId, shareContext, shareInstance);
 		if (oshare != null) {
-			Map<String, List<ORolePermission>> map = permsDao.groupSubjectsByByServiceKeysInstance(con, serviceId, TARGET_PERMISSION_KEYS, oshare.getShareIdAsString());
-			for (Map.Entry<String, List<ORolePermission>> entry : map.entrySet()) {
-				items.add(toSubjectRights(entry.getKey(), entry.getValue(), shareContext, skipOriginPerms));
+			Map<String, List<ORolePermission>> permissionMap = permsDao.groupSubjectsByByServiceKeysInstance(con, serviceId, TARGET_PERMISSION_KEYS, oshare.getShareIdAsString());
+			Map<String, String> dataMap = shadDao.mapByShare(con, oshare.getShareId());
+			LinkedHashSet<String> subjectSids = new LinkedHashSet<>();
+			subjectSids.addAll(permissionMap.keySet());
+			subjectSids.addAll(dataMap.keySet());
+			
+			for (String subjectSid : subjectSids) {
+				if (permissionMap.containsKey(subjectSid)) {
+					items.add(toSharingSubjectConfiguration(subjectSid, permissionMap.get(subjectSid), dataMap.get(subjectSid), typeOfData, shareContext, skipOriginPerms));
+				}
 			}
 		}
 		return items;
 	}
 	
-	public void doFolderShareRightsUpdate(final Connection con, final String originSid, final String serviceId, final String shareContext, final String shareInstance, final String permissionKey, final Collection<Sharing.SubjectRights> rights) throws DAOException {
+	public <T> void doFolderShareConfigurationUpdate(final Connection con, final String originSid, final String serviceId, final String shareContext, final FolderSharing.Scope level, final Set<FolderSharing.SubjectConfiguration> configurations, final Class<T> typeOfData) throws DAOException {
 		ShareDAO shaDao = ShareDAO.getInstance();
-		RolePermissionDAO permsDao = RolePermissionDAO.getInstance();
-		
-		OShare oshare = shaDao.selectByUserServiceKeyInstance(con, originSid, serviceId, shareContext, shareInstance);
-		if (oshare != null) {
-			permsDao.deleteByServiceKeysInstance(con, serviceId, Arrays.asList(permissionKey), oshare.getShareIdAsString());
-		} else {
-			oshare = doShareInsert(con, originSid, serviceId, shareContext, shareInstance);
-		}
-		if (!rights.isEmpty()) {
-			Set<RolePermissionDAO.ServiceEntry> entries = toSharePermissionBatchInsertEntries(permissionKey, oshare.getShareIdAsString(), rights);
-			int[] ret = permsDao.batchInsertOfService(con, serviceId, entries);
-		}
-	}
-	
-	public void doFolderShareSharingRightsUpdate(final Connection con, final String originSid, final String serviceId, final String shareContext, final FolderSharing.Scope level, final Collection<FolderSharing.SubjectRights> rights) throws DAOException {
-		ShareDAO shaDao = ShareDAO.getInstance();
+		ShareDataDAO shadDao = ShareDataDAO.getInstance();
 		RolePermissionDAO permsDao = RolePermissionDAO.getInstance();
 		
 		final List<String> TARGET_PERMISSION_KEYS = buildFolderShareKeys(shareContext);
@@ -4296,9 +4332,12 @@ public final class WebTopManager {
 		} else {
 			oshare = doShareInsert(con, originSid, serviceId, shareContext, shareInstance);
 		}
-		if (!rights.isEmpty()) {
-			Set<RolePermissionDAO.ServiceEntry> entries = toSharePermissionBatchInsertEntries(shareContext, oshare.getShareIdAsString(), rights, skipOriginPerms);
+		if (!configurations.isEmpty()) {
+			// Update permissions
+			Set<RolePermissionDAO.ServiceEntry> entries = toSharePermissionBatchInsertEntries(shareContext, oshare.getShareIdAsString(), configurations, skipOriginPerms);
 			int[] ret = permsDao.batchInsertOfService(con, serviceId, entries);
+			// Update data
+			//TODO...
 		}
 	}
 	
@@ -4327,15 +4366,19 @@ public final class WebTopManager {
 		}
 	}
 	
-	private Sharing.SubjectRights toSubjectRights(String aclSubjectSid, Collection<ORolePermission> operms) {
+	private <T> Sharing.SubjectConfiguration toSharingSubjectConfiguration(String subjectSid, Collection<ORolePermission> operms, String rawData, Class<T> typeOfData) {
 		Set<String> actions = new LinkedHashSet<>();
 		for (ORolePermission operm : operms) {
 			actions.add(operm.getAction());
 		}
-		return new Sharing.SubjectRights(aclSubjectSid, actions);
+		if (typeOfData != null) {
+			return new Sharing.SubjectConfiguration(subjectSid, actions, rawData, typeOfData);
+		} else {
+			return new Sharing.SubjectConfiguration(subjectSid, actions);
+		}
 	}
 	
-	private FolderSharing.SubjectRights toSubjectRights(String aclSubjectSid, Collection<ORolePermission> operms, String shareContext, boolean skipWildcardReservedRights) {
+	private <T> FolderSharing.SubjectConfiguration toSharingSubjectConfiguration(String subjectSid, Collection<ORolePermission> operms, String rawData, Class<T> typeOfData, String shareContext, boolean skipWildcardReservedRights) {
 		final String FOLDER_PERMISSION_KEY = FolderShare.buildFolderPermissionKey(shareContext);
 		final String ITEMS_PERMISSION_KEY = FolderShare.buildItemsPermissionKey(shareContext);
 		
@@ -4353,34 +4396,40 @@ public final class WebTopManager {
 				if (right != null) itemsPerms.set(right);
 			}
 		}
-		return new FolderSharing.SubjectRights(aclSubjectSid, folderPerms, itemsPerms);
+		if (typeOfData != null) {
+			return new FolderSharing.SubjectConfiguration(subjectSid, folderPerms, itemsPerms, rawData, typeOfData);
+		} else {
+			return new FolderSharing.SubjectConfiguration(subjectSid, folderPerms, itemsPerms);
+		}
 	}
 	
-	private Set<RolePermissionDAO.ServiceEntry> toSharePermissionBatchInsertEntries(String permissionKey, String instance, Collection<Sharing.SubjectRights> rights) {
+	private Set<RolePermissionDAO.ServiceEntry> toSharePermissionBatchInsertEntries(String permissionKey, String instance, Collection<Sharing.SubjectConfiguration> configurations) {
 		LinkedHashSet<RolePermissionDAO.ServiceEntry> items = null;
-		for (Sharing.SubjectRights sr : rights) {
-			if (items == null) items = new LinkedHashSet<>(rights.size());
-			for (String action : sr.getActions()) {
-				items.add(new RolePermissionDAO.ServiceEntry(sr.getAclSubjectSid(), permissionKey, action, instance));
+		for (Sharing.SubjectConfiguration configuration : configurations) {
+			if (items == null) items = new LinkedHashSet<>(configurations.size());
+			
+			Set<String> set = configuration.getActions();
+			for (String action : set) {
+				items.add(new RolePermissionDAO.ServiceEntry(configuration.getSubjectSid(), permissionKey, action, instance));
 			}
 		}
 		return items;
 	}
 	
-	private Set<RolePermissionDAO.ServiceEntry> toSharePermissionBatchInsertEntries(String shareContext, String shareInstance, Collection<FolderSharing.SubjectRights> srights, boolean skipOriginOnlyPerms) {
+	private Set<RolePermissionDAO.ServiceEntry> toSharePermissionBatchInsertEntries(String shareContext, String shareInstance, Collection<FolderSharing.SubjectConfiguration> configurations, boolean skipOriginOnlyPerms) {
 		final String FOLDER_PERMISSION_KEY = FolderShare.buildFolderPermissionKey(shareContext);
 		final String ITEMS_PERMISSION_KEY = FolderShare.buildItemsPermissionKey(shareContext);
 		
 		LinkedHashSet<RolePermissionDAO.ServiceEntry> items = null;
-		for (FolderSharing.SubjectRights rights : srights) {
-			if (items == null) items = new LinkedHashSet<>(srights.size());
-			for (String right : FolderShare.toRightNames(rights.getFolderPermissions())) {
+		for (FolderSharing.SubjectConfiguration configuration : configurations) {
+			if (items == null) items = new LinkedHashSet<>(configurations.size());
+			for (String right : FolderShare.toRightNames(configuration.getFolderPermissions())) {
 				if (!skipOriginOnlyPerms || !FolderShare.FolderRight.isReservedForWildcard(right)) {
-					items.add(new RolePermissionDAO.ServiceEntry(rights.getAclSubjectSid(), FOLDER_PERMISSION_KEY, right, shareInstance));
+					items.add(new RolePermissionDAO.ServiceEntry(configuration.getSubjectSid(), FOLDER_PERMISSION_KEY, right, shareInstance));
 				}
 			}
-			for (String right : FolderShare.toRightNames(rights.getItemsPermissions())) {
-				items.add(new RolePermissionDAO.ServiceEntry(rights.getAclSubjectSid(), ITEMS_PERMISSION_KEY, right, shareInstance));
+			for (String right : FolderShare.toRightNames(configuration.getItemsPermissions())) {
+				items.add(new RolePermissionDAO.ServiceEntry(configuration.getSubjectSid(), ITEMS_PERMISSION_KEY, right, shareInstance));
 			}
 		}
 		return items;
