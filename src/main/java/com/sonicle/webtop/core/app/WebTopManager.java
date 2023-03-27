@@ -2422,11 +2422,12 @@ public final class WebTopManager {
 	 * @param context The context-name of the Share.
 	 * @param instance The identifier of the entity that is (or being) shared.
 	 * @param permissionKey The permission-key to target.
-	 * @param typeOfData Type of Data object in configuration. Set to <null> to not process Data.
+	 * @param permissionProfileIds Set of target profileIds associated with permission-key above. Optional.
+	 * @param typeOfData Type of Data object in configuration. Set to <null> to not process Data. Optional.
 	 * @return A set of rights for involved subject IDs (SIDs).
 	 * @throws WTException 
 	 */
-	public <T> Map<String, Sharing.SubjectConfiguration> getShareConfigurations(final UserProfileId originProfileId, final String serviceId, final String context, final String instance, final String permissionKey, final Class<T> typeOfData) throws WTException {
+	public <T> Map<String, Sharing.SubjectConfiguration> getShareConfigurations(final UserProfileId originProfileId, final String serviceId, final String context, final String instance, final String permissionKey, final Set<UserProfileId> permissionProfileIds, final Class<T> typeOfData) throws WTException {
 		Check.notNull(originProfileId, "originProfileId");
 		Check.notEmpty(serviceId, "serviceId");
 		Check.notEmpty(context, "context");
@@ -2436,8 +2437,17 @@ public final class WebTopManager {
 		
 		try {
 			String originSid = subjectSidCache.getSid(originProfileId, GenericSubject.Type.USER, GenericSubject.Type.RESOURCE);
+			Set<String> permissionSids = permissionProfileIds.stream()
+				// skipping NULLs and objects with non-matching domain
+				.filter((pid) -> (pid != null))
+				// then lookup related PID
+				.map((pid) -> subjectSidCache.getSid(pid, GenericSubject.Type.USER))
+				// making sure that match was successful
+				.filter((sid) -> (sid != null))
+				.collect(Collectors.toSet());
+			
 			con = WT.getCoreConnection();
-			return doShareConfigurationsGet(con, originSid, serviceId, context, instance, permissionKey, typeOfData);
+			return doShareConfigurationsGet(con, originSid, serviceId, context, instance, permissionKey, permissionSids, typeOfData);
 			
 		} catch (Exception ex) {
 			throw ExceptionUtils.wrapThrowable(ex);
@@ -2782,7 +2792,7 @@ public final class WebTopManager {
 		try {
 			String originSid = subjectSidCache.getSid(originProfileId, GenericSubject.Type.USER, GenericSubject.Type.RESOURCE);
 			con = WT.getCoreConnection();
-			return doFolderShareConfigurationsGet(con, originSid, serviceId, context, scope, typeOfData);
+			return doFolderShareConfigurationsGet(con, originSid, serviceId, context, scope, typeOfData, null);
 			
 		} catch (Exception ex) {
 			throw ExceptionUtils.wrapThrowable(ex);
@@ -3795,7 +3805,7 @@ public final class WebTopManager {
 		Set<String> alloweds = new LinkedHashSet<>();
 		String originSid = subjectSidCache.getSid(resourcePid, GenericSubject.Type.RESOURCE);
 		
-		Set<FolderSharing.SubjectConfiguration> configurations = doFolderShareConfigurationsGet(con, originSid, CoreManifest.ID, "RESOURCE", FolderSharing.Scope.wildcard(), null);
+		Set<FolderSharing.SubjectConfiguration> configurations = doFolderShareConfigurationsGet(con, originSid, CoreManifest.ID, "RESOURCE", FolderSharing.Scope.wildcard(), null, null);
 		for (FolderSharing.SubjectConfiguration configuration : configurations) {
 			if (hasResourceManagerPermissions(configuration.getFolderPermissions(), configuration.getItemsPermissions())) {
 				if (manager == null) { // Safe-check, should not happen to have 2 managers... in that case take the first!
@@ -4054,7 +4064,7 @@ public final class WebTopManager {
 		return !ret ? null : oshare;
 	}
 	
-	private <T> Map<String, Sharing.SubjectConfiguration> doShareConfigurationsGet(final Connection con, final String originSid, final String serviceId, final String shareContext, final String shareInstance, final String permissionKey, final Class<T> typeOfData) throws DAOException {
+	private <T> Map<String, Sharing.SubjectConfiguration> doShareConfigurationsGet(final Connection con, final String originSid, final String serviceId, final String shareContext, final String shareInstance, final String permissionKey, final Set<String> permissionSids, final Class<T> typeOfData) throws DAOException {
 		ShareDAO shaDao = ShareDAO.getInstance();
 		ShareDataDAO shadDao = ShareDataDAO.getInstance();
 		RolePermissionDAO permsDao = RolePermissionDAO.getInstance();
@@ -4062,14 +4072,14 @@ public final class WebTopManager {
 		Map<String, Sharing.SubjectConfiguration> items = new LinkedHashMap<>();
 		OShare oshare = shaDao.selectByUserServiceKeyInstance(con, originSid, serviceId, shareContext, shareInstance);
 		if (oshare != null) {
-			Map<String, List<ORolePermission>> permissionMap = permsDao.groupSubjectsByByServiceKeysInstance(con, serviceId, Arrays.asList(permissionKey), oshare.getShareIdAsString());
+			Map<String, List<ORolePermission>> permsMap = permsDao.mapByServiceKeysInstanceRoles(con, serviceId, Arrays.asList(permissionKey), oshare.getShareIdAsString(), permissionSids);
 			Map<String, String> dataMap = shadDao.mapByShare(con, oshare.getShareId());
 			LinkedHashSet<String> subjectSids = new LinkedHashSet<>();
-			subjectSids.addAll(permissionMap.keySet());
+			subjectSids.addAll(permsMap.keySet());
 			subjectSids.addAll(dataMap.keySet());
 			for (String subjectSid : subjectSids) {
-				if (permissionMap.containsKey(subjectSid)) {
-					items.put(subjectSid, toSharingSubjectConfiguration(subjectSid, permissionMap.get(subjectSid), dataMap.get(subjectSid), typeOfData));
+				if (permsMap.containsKey(subjectSid)) {
+					items.put(subjectSid, toSharingSubjectConfiguration(subjectSid, permsMap.get(subjectSid), dataMap.get(subjectSid), typeOfData));
 				}
 			}
 		}
@@ -4113,7 +4123,7 @@ public final class WebTopManager {
 		return ret;
 	}
 	
-	private <T> Set<FolderSharing.SubjectConfiguration> doFolderShareConfigurationsGet(final Connection con, final String originSid, final String serviceId, final String shareContext, final FolderSharing.Scope level, final Class<T> typeOfData) throws DAOException {
+	private <T> Set<FolderSharing.SubjectConfiguration> doFolderShareConfigurationsGet(final Connection con, final String originSid, final String serviceId, final String shareContext, final FolderSharing.Scope level, final Class<T> typeOfData, final Set<String> targetSids) throws DAOException {
 		ShareDAO shaDao = ShareDAO.getInstance();
 		ShareDataDAO shadDao = ShareDataDAO.getInstance();
 		RolePermissionDAO permsDao = RolePermissionDAO.getInstance();
@@ -4140,7 +4150,7 @@ public final class WebTopManager {
 		Set<FolderSharing.SubjectConfiguration> items = new LinkedHashSet<>();
 		OShare oshare = shaDao.selectByUserServiceKeyInstance(con, originSid, serviceId, shareContext, shareInstance);
 		if (oshare != null) {
-			Map<String, List<ORolePermission>> permissionMap = permsDao.groupSubjectsByByServiceKeysInstance(con, serviceId, TARGET_PERMISSION_KEYS, oshare.getShareIdAsString());
+			Map<String, List<ORolePermission>> permissionMap = permsDao.mapByServiceKeysInstanceRoles(con, serviceId, TARGET_PERMISSION_KEYS, oshare.getShareIdAsString(), targetSids);
 			Map<String, String> dataMap = shadDao.mapByShare(con, oshare.getShareId());
 			LinkedHashSet<String> subjectSids = new LinkedHashSet<>();
 			subjectSids.addAll(permissionMap.keySet());
@@ -4226,11 +4236,12 @@ public final class WebTopManager {
 		}
 	}
 	
-	private <T> Sharing.SubjectConfiguration toSharingSubjectConfiguration(String subjectSid, Collection<ORolePermission> operms, String rawData, Class<T> typeOfData) {
+	private <T> Sharing.SubjectConfiguration toSharingSubjectConfiguration(String subjectSid, Collection<ORolePermission> orolePermissions, String rawData, Class<T> typeOfData) {
 		Set<String> actions = new LinkedHashSet<>();
-		for (ORolePermission operm : operms) {
-			actions.add(operm.getAction());
+		for (ORolePermission orolePermission : orolePermissions) {
+			actions.add(orolePermission.getAction());
 		}
+		
 		if (typeOfData != null) {
 			return new Sharing.SubjectConfiguration(subjectSid, actions, rawData, typeOfData);
 		} else {
@@ -4238,21 +4249,21 @@ public final class WebTopManager {
 		}
 	}
 	
-	private <T> FolderSharing.SubjectConfiguration toSharingSubjectConfiguration(String subjectSid, Collection<ORolePermission> operms, String rawData, Class<T> typeOfData, String shareContext, boolean skipWildcardReservedRights) {
+	private <T> FolderSharing.SubjectConfiguration toSharingSubjectConfiguration(String subjectSid, Collection<ORolePermission> orolePermissions, String rawData, Class<T> typeOfData, String shareContext, boolean skipWildcardReservedRights) {
 		final String FOLDER_PERMISSION_KEY = FolderShare.buildFolderPermissionKey(shareContext);
 		final String ITEMS_PERMISSION_KEY = FolderShare.buildItemsPermissionKey(shareContext);
 		
 		FolderShare.FolderPermissions folderPerms = new FolderShare.FolderPermissions();
 		FolderShare.ItemsPermissions itemsPerms = new FolderShare.ItemsPermissions();
-		for (ORolePermission osubperm : operms) {
-			if (FOLDER_PERMISSION_KEY.equals(osubperm.getKey())) {
-				FolderShare.FolderRight right = EnumUtils.forName(osubperm.getAction(), FolderShare.FolderRight.class);
+		for (ORolePermission orolePermission : orolePermissions) {
+			if (FOLDER_PERMISSION_KEY.equals(orolePermission.getKey())) {
+				FolderShare.FolderRight right = EnumUtils.forName(orolePermission.getAction(), FolderShare.FolderRight.class);
 				if (right != null) {
 					if (!skipWildcardReservedRights || !right.isReservedForWildcard()) folderPerms.set(right);
 				}
 				
-			} else if (ITEMS_PERMISSION_KEY.equals(osubperm.getKey())) {
-				FolderShare.ItemsRight right = EnumUtils.forName(osubperm.getAction(), FolderShare.ItemsRight.class);
+			} else if (ITEMS_PERMISSION_KEY.equals(orolePermission.getKey())) {
+				FolderShare.ItemsRight right = EnumUtils.forName(orolePermission.getAction(), FolderShare.ItemsRight.class);
 				if (right != null) itemsPerms.set(right);
 			}
 		}

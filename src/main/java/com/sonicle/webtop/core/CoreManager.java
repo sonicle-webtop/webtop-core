@@ -2814,13 +2814,31 @@ public class CoreManager extends BaseManager {
 	 * @param originProfileId The originating Share's profileId.
 	 * @param instance The identifier of the shared-entity involved in the lookup.
 	 * @param permissionKey The permission-keys involved in the lookup.
-	 * @param typeOfData
+	 * @param typeOfData Type of Data object in configuration. Set to <null> to not process Data. Optional.
 	 * @return
 	 * @throws WTException 
 	 */
 	public <T> Map<String, com.sonicle.webtop.core.app.model.Sharing.SubjectConfiguration> getShareSubjectConfiguration(final String serviceId, final String context, final UserProfileId originProfileId, final String instance, final String permissionKey, final Class<T> typeOfData) throws WTException {
 		WebTopManager wtMgr = wta.getWebTopManager();
-		return wtMgr.getShareConfigurations(originProfileId, serviceId, context, instance, permissionKey, typeOfData);
+		return wtMgr.getShareConfigurations(originProfileId, serviceId, context, instance, permissionKey, null, typeOfData);
+	}
+	
+	/**
+	 * Gets Share configurations related to an instance of a Origin.
+	 * @param <T>
+	 * @param serviceId The related service ID.
+	 * @param context The context-name of the Share.
+	 * @param originProfileId The originating Share's profileId.
+	 * @param instance The identifier of the shared-entity involved in the lookup.
+	 * @param permissionKey The permission-keys involved in the lookup.
+	 * @param permissionProfileIds Set of target profileIds associated with permission-key above. Optional.
+	 * @param typeOfData Type of Data object in configuration. Set to <null> to not process Data. Optional.
+	 * @return
+	 * @throws WTException 
+	 */
+	public <T> Map<String, com.sonicle.webtop.core.app.model.Sharing.SubjectConfiguration> getShareSubjectConfiguration(final String serviceId, final String context, final UserProfileId originProfileId, final String instance, final String permissionKey, final Set<UserProfileId> permissionProfileIds, final Class<T> typeOfData) throws WTException {
+		WebTopManager wtMgr = wta.getWebTopManager();
+		return wtMgr.getShareConfigurations(originProfileId, serviceId, context, instance, permissionKey, permissionProfileIds, typeOfData);
 	}
 	
 	/**
