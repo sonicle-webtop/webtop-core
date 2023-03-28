@@ -2437,7 +2437,7 @@ public final class WebTopManager {
 		
 		try {
 			String originSid = subjectSidCache.getSid(originProfileId, GenericSubject.Type.USER, GenericSubject.Type.RESOURCE);
-			Set<String> permissionSids = permissionProfileIds.stream()
+			Set<String> permissionSids = (permissionProfileIds == null) ? null : permissionProfileIds.stream()
 				// skipping NULLs and objects with non-matching domain
 				.filter((pid) -> (pid != null))
 				// then lookup related PID
@@ -2592,6 +2592,7 @@ public final class WebTopManager {
 	}
 	
 	/**
+	 * @deprecated 
 	 * Get FolderShare (Root->Folder two-level sharing) Folders for specified profileId.
 	 * @param targetProfileId The Profile ID under investigation.
 	 * @param originProfileId The source Origin ID of the share.
@@ -2600,6 +2601,7 @@ public final class WebTopManager {
 	 * @return
 	 * @throws WTException 
 	 */
+	@Deprecated
 	public FolderShareOriginFolders getFolderShareOriginFolders_OLD(final UserProfileId targetProfileId, final UserProfileId originProfileId, final String serviceId, final String context) throws WTException {
 		Check.notNull(targetProfileId, "targetProfileId");
 		Check.notNull(originProfileId, "originProfileId");
