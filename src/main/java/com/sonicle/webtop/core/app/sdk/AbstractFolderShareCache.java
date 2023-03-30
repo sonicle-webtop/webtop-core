@@ -39,7 +39,7 @@ import com.sonicle.webtop.core.sdk.UserProfileId;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -55,9 +55,9 @@ import org.apache.commons.collections4.multimap.ArrayListValuedHashMap;
  */
 public abstract class AbstractFolderShareCache <T, O extends FolderShareOrigin> extends AbstractBulkCache {
 	protected final List<O> origins = new ArrayList<>();
-	protected final Map<UserProfileId, O> originByProfile = new HashMap<>();
-	protected final Map<T, O> originByFolderId = new HashMap<>();
-	protected final Map<UserProfileId, FolderShareOriginFolders> foldersByProfile = new HashMap<>();
+	protected final Map<UserProfileId, O> originByProfile = new LinkedHashMap<>();
+	protected final Map<T, O> originByFolderId = new LinkedHashMap<>();
+	protected final Map<UserProfileId, FolderShareOriginFolders> foldersByProfile = new LinkedHashMap<>();
 	protected final MultiValuedMap<UserProfileId, T> folderIdsByProfile = new ArrayListValuedHashMap<>();
 	protected final Set<T> folderIds = new LinkedHashSet<>();
 	
