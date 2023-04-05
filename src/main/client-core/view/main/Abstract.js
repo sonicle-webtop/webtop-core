@@ -35,6 +35,7 @@ Ext.define('Sonicle.webtop.core.view.main.Abstract', {
 	alternateClassName: 'WTA.view.main.Abstract',
 	extend: 'Ext.container.Viewport',
 	requires: [
+		'Sonicle.Announcement',
 		'WTA.view.main.AbstractC',
 		'WTA.ux.NotificationButton',
 		'WTA.ux.TaskBar',
@@ -56,7 +57,10 @@ Ext.define('Sonicle.webtop.core.view.main.Abstract', {
 	],
 	controller: Ext.create('WTA.view.main.AbstractC'),
 	
-	layout: 'fit',
+	layout: {
+		type: "vbox",
+		align: "stretch"
+	},
 	referenceHolder: true,
 	
 	viewModel: {
@@ -141,12 +145,17 @@ Ext.define('Sonicle.webtop.core.view.main.Abstract', {
 				borderRightWidth: '1px !important'
 			});
 		}
+		
+		Sonicle.Announcement.register(me.add({
+			xtype: 'soannouncementbar'
+		}));
 		cmp0 = me.add({
 			xtype: 'panel',
 			border: false,
 			bodyStyle: bstyle,
 			bodyCls: 'wt-viewport-body',
-			layout: 'border'
+			layout: 'border',
+			flex: 1
 		});
 		
 		me.addAsDocked(cmp0, me.createTopDockCmp(), 'top', 'tdock');

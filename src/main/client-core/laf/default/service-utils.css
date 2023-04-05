@@ -1,4 +1,15 @@
 
+:root {
+	--announcementbar-alert-color: #fff;
+	--announcementbar-alert-bg-color: #cc4b31;
+	--announcementbar-warning-color: #fff;
+	--announcementbar-warning-bg-color: #e9b665;
+	--announcementbar-info-color: #fff;
+	--announcementbar-info-bg-color: #529fbe;
+	--announcementbar-success-color: #000;
+	--announcementbar-success-bg-color: #4da07d
+}
+
 .wt-pointer-default { cursor: default !important; }
 .wt-pointer-link { cursor: pointer !important; }
 .wt-selectable {
