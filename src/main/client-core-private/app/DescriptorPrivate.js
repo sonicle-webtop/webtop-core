@@ -99,7 +99,7 @@ Ext.define('Sonicle.webtop.core.app.DescriptorPrivate', {
 		}
 	},
 	
-	doInstanceInit: function(inst) {
+	doInstanceInit: function(inst, miniCfg) {
 		inst.privateInit.call(inst);
 		this.callParent(arguments);
 	}

@@ -72,6 +72,7 @@ Ext.define('Sonicle.webtop.core.view.main.Abstract', {
 	},
 	
 	config: {
+		miniMode: false,
 		servicesCount: -1
 	},
 	
@@ -158,14 +159,37 @@ Ext.define('Sonicle.webtop.core.view.main.Abstract', {
 			flex: 1
 		});
 		
-		me.addAsDocked(cmp0, me.createTopDockCmp(), 'top', 'tdock');
-		me.addAsDocked(cmp0, me.createBottomDockCmp(), 'bottom', 'bdock');
-		me.addAsDocked(cmp0, ldock, 'left', 'ldock');
-		me.addAsDocked(cmp0, rdock, 'right', 'rdock');
-		if (WT.getVar('imEnabled') === true) {
-			me.addAsRegion(cmp0, me.createEastCmp(), 'east');
-		}
-		me.addAsRegion(cmp0, me.createCenterCmp(), 'center');
+		var tdock=me.createTopDockCmp(),
+			bdock=me.createBottomDockCmp();
+
+		//add docks and components only if not in mini mode
+		if (!me.miniMode) {
+			me.addAsDocked(cmp0, tdock, 'top', 'tdock');
+			me.addAsDocked(cmp0, bdock, 'bottom', 'bdock');
+			me.addAsDocked(cmp0, ldock, 'left', 'ldock');
+			me.addAsDocked(cmp0, rdock, 'right', 'rdock');
+			if (WT.getVar('imEnabled') === true) {
+				me.addAsRegion(cmp0, me.createEastCmp(), 'east');
+			}
+			me.addAsRegion(cmp0, me.createCenterCmp(), 'center');
+		} else {
+			me.addAsRegion(cmp0,
+			{
+				xtype: 'container',
+				layout: {
+					type: 'vbox',
+					pack: 'center',
+					align: 'middle'
+				},
+				items: [{
+					xtype: 'label',
+					text: WT.res('viewport.minimode.message'),
+					cls: 'wt-theme-text-header1',
+					style: 'font-size:1.2em'
+				}]
+			},
+			'center' );
+		}		
 	},
 	
 	getCollapsible: function() {
@@ -181,7 +205,8 @@ Ext.define('Sonicle.webtop.core.view.main.Abstract', {
 	},
 	
 	getTaskBar: function() {
-		return this.bottomDockCmp().getComponent(0);
+		var bdock=this.bottomDockCmp();
+		return bdock?bdock.getComponent(0):null;
 	},
 	
 	getPortalButton: Ext.emptyFn,

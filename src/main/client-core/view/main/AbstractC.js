@@ -85,7 +85,7 @@ Ext.define('Sonicle.webtop.core.view.main.AbstractC', {
 	
 	getIMButton: function() {
 		var tdock = this.getView().topDockCmp();
-		return tdock.lookupReference('imbtn');
+		return tdock?tdock.lookupReference('imbtn'):null;
 	},
 	
 	getIMPanel: function() {
@@ -394,6 +394,7 @@ Ext.define('Sonicle.webtop.core.view.main.AbstractC', {
 				draggable: floating ? false : true,
 				maximized: floating ? false : dockCfg.maximized,
 				minimized: floating ? false : dockCfg.minimized,
+				closable: floating ? false : (Ext.isDefined(dockCfg.closable)?dockCfg.closable:true),
 				defaultAlign: floating ? 'br-br' : 'c-c'
 			});
 		} else {
@@ -429,7 +430,8 @@ Ext.define('Sonicle.webtop.core.view.main.AbstractC', {
 			me.floatingWins.push(win.getId());
 			me.floatingWinsMap[win.getId()] = true;
 		} else {
-			me.getView().getTaskBar().addButton(win);
+			var tb=me.getView().getTaskBar();
+			if (tb) tb.addButton(win);
 		}
 		return (swapReturn || floating) ? view : win;
 	},
@@ -556,7 +558,7 @@ Ext.define('Sonicle.webtop.core.view.main.AbstractC', {
 			var me = this,
 					vw = me.getView(),
 					taskbar = vw.getTaskBar();
-			taskbar.setActiveService(svc.ID);
+			if (taskbar) taskbar.setActiveService(svc.ID);
 		},
 		
 		toggleWinListeners: function(win, fn) {
@@ -578,21 +580,24 @@ Ext.define('Sonicle.webtop.core.view.main.AbstractC', {
 		onWinActivate: function(s) {
 			var me = this;
 			if (me.floatingWinsMap[s.getId()] !== true) {
-				me.getView().getTaskBar().toggleButton(s, true);
+				var tb = me.getView().getTaskBar();
+				if (tb) tb.toggleButton(s, true);
 			}
 		},
 
 		onWinHide: function(s) {
 			var me = this;
 			if (me.floatingWinsMap[s.getId()] !== true) {
-				me.getView().getTaskBar().toggleButton(s, false);
+				var tb = me.getView().getTaskBar();
+				if (tb) tb.toggleButton(s, false);
 			}
 		},
 
 		onWinTitleChange: function(s) {
 			var me = this;
 			if (me.floatingWinsMap[s.getId()] !== true) {
-				me.getView().getTaskBar().updateButtonTitle(s);
+				var tb = me.getView().getTaskBar();
+				if (tb) tb.updateButtonTitle(s);
 			}
 		},
 
@@ -605,7 +610,8 @@ Ext.define('Sonicle.webtop.core.view.main.AbstractC', {
 			
 			if (!viewId) Ext.Error.raise('View not found by Ct ['+winId+']');
 			if (!floating) {
-				me.getView().getTaskBar().removeButton(s);
+				var tb = me.getView().getTaskBar();
+				if (tb) tb.removeButton(s);
 			}
 			me.toggleWinListeners(s, 'un');
 			
@@ -624,7 +630,8 @@ Ext.define('Sonicle.webtop.core.view.main.AbstractC', {
 					targetEl = Ext.getBody(),
 					availWidth = targetEl.getWidth(true),
 					arr = me.floatingWins,
-					taskbarHeight = me.getView().getTaskBar().getHeight(),
+					tb = me.getView().getTaskBar(),
+					taskbarHeight = tb ? tb.getHeight() : 0,
 					padding = {x: 10, y: taskbarHeight || 20},
 					xspacing = 10, lineoff = 20,
 					xoff = padding.x, yoff = padding.y,

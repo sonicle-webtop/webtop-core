@@ -171,28 +171,33 @@ Ext.define('Sonicle.webtop.core.Service', {
 		
 		if (WT.getVar('imEnabled')) {
 			me.onPushMessage('imFriendsUpdated', function(msg) {
-				me.getVPController().getIMPanel().loadFriends();
+				var ip = me.getVPController().getIMPanel();
+				if (ip) ip.loadFriends();
 			});
 			me.onPushMessage('imFriendPresenceUpdated', function(msg) {
-				var pl = msg.payload;
-				me.getVPController().getIMPanel().updateFriendPresence(pl.id, pl.presenceStatus, pl.statusMessage);
+				var pl = msg.payload,
+					ip = me.getVPController().getIMPanel();
+				if (ip) ip.updateFriendPresence(pl.id, pl.presenceStatus, pl.statusMessage);
 				me.setChatRoomFriendPresenceUI(pl.chatId, pl.friendFullId, pl.presenceStatus);
 			});
 			me.onPushMessage('imChatRoomAdded', function(msg) {
-				var pl = msg.payload;
-				me.getVPController().getIMPanel().loadChats();
+				var pl = msg.payload,
+					ip = me.getVPController().getIMPanel();
+				if (ip) ip.loadChats();
 				if (!pl.self) me.showIMChatAddedNotification(pl.chatId, pl.chatName, pl.ownerId, pl.ownerNick);
 			});
 			me.onPushMessage('imChatRoomRemoved', function(msg) {
-				me.getVPController().getIMPanel().loadChats();
+				var ip = me.getVPController().getIMPanel();
+				if (ip) ip.loadChats();
 			});
 			me.onPushMessage('imChatRoomClosed', function(msg) {
 				var pl = msg.payload;
 				me.showIMChatClosedNotification(pl.chatId, pl.chatName, pl.ownerId, pl.ownerNick);
 			});
 			me.onPushMessage('imChatRoomUpdated', function(msg) {
-				var pl = msg.payload;
-				me.getVPController().getIMPanel().updateChatName(pl.chatId, pl.chatName);
+				var pl = msg.payload,
+					ip = me.getVPController().getIMPanel();
+				if (ip) ip.updateChatName(pl.chatId, pl.chatName);
 			});
 			me.onPushMessage('imChatRoomMessageReceived', function(msg) {
 				var pl = msg.payload,
@@ -207,10 +212,11 @@ Ext.define('Sonicle.webtop.core.Service', {
 							var pnlIm = me.getVPController().getIMPanel(),
 								ps = json.data ? json.data.presenceStatus : null;
 							if (ps) {
-								pnlIm.setPresenceStatus(json.data.presenceStatus);
-								me.getVPController().getIMButton().setPresenceStatus(ps);
+								var imb=me.getVPController().getIMButton();
+								if (pnlIm) pnlIm.setPresenceStatus(json.data.presenceStatus);
+								if (imb) imb.setPresenceStatus(ps);
 							}
-							pnlIm.loadFriends();
+							if (pnlIm) pnlIm.loadFriends();
 							
 							//if BOSH url configured, intialize RTC
 							var boshUrl=WT.getVar('boshUrl');
@@ -458,7 +464,8 @@ Ext.define('Sonicle.webtop.core.Service', {
 		var me = this;
 		me.updateIMPresenceStatus(status, {
 			callback: function(success) {
-				if (success) me.getVPController().getIMButton().setPresenceStatus(status);
+				var imb = me.getVPController().getIMButton();
+				if (success && imb) imb.setPresenceStatus(status);
 			}
 		});
 	},
@@ -473,15 +480,17 @@ Ext.define('Sonicle.webtop.core.Service', {
 	},
 	
 	clearIMNewMsgNotification: function(chatId) {
-		var me = this;
-		me.getVPController().getIMPanel().updateChatHotMarker(chatId, false);
+		var me = this,
+			ip = me.getVPController().getIMPanel();
+		if (ip) ip.updateChatHotMarker(chatId, false);
 		WT.clearBadgeNotification(me.ID, me.self.noTagIMNewMsg(chatId));
 	},
 	
 	showIMNewMsgNotification: function(chatId, title, body, data, opts) {
 		opts = opts || {};
-		var me = this;
-		if (opts.hotMarker === true) me.getVPController().getIMPanel().updateChatHotMarker(chatId, true);
+		var me = this,
+			ip = me.getVPController().getIMPanel();
+		if (opts.hotMarker === true && ip) ip.updateChatHotMarker(chatId, true);
 		if (opts.sound === true && WT.getVar('imSoundOnMessageReceived')) opts.play = 'wt-im-receive';
 		me.showIMNotification(me.self.noTagIMNewMsg(chatId), title, body, data, opts);
 	},

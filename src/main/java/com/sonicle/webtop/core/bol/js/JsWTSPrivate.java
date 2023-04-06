@@ -46,6 +46,10 @@ public class JsWTSPrivate extends JsWTS {
 	public String securityToken;
 	public String pushUrl;
 	public String layoutClassName;
+	public boolean miniMode = false;
+	public String miniServiceName;
+	public String miniServiceAction;
+	public String miniServiceArgs;
 	public HashSet<String> roles = new HashSet<>();
 	public ArrayList<Vars> servicesVars = new ArrayList<>();
 	public ArrayList<Permissions> servicesPerms = new ArrayList<>();

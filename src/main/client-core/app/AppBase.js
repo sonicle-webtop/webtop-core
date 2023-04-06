@@ -75,6 +75,12 @@ Ext.define('Sonicle.webtop.core.app.AppBase', {
 	pushUrl: null,
 	
 	/**
+	 * mini mode
+	 */
+	miniMode: false,
+	miniCfg: null,
+	
+	/**
 	 * @property {Ext.util.HashMap} locales
 	 * A collection of locale classes.
 	 */
@@ -116,6 +122,13 @@ Ext.define('Sonicle.webtop.core.app.AppBase', {
 		me.contextPath = WTS.contextPath;
 		me.baseUrl = window.location.origin + me.contextPath;
 		me.pushUrl = WTS.pushUrl;
+		me.miniMode = WTS.miniMode;
+		if (me.miniMode)
+			me.miniCfg = {
+				service: WTS.miniServiceName,
+				action: WTS.miniServiceAction,
+				args: WTS.miniServiceArgs
+			}
 		me.locales = Ext.create('Ext.util.HashMap');
 		me.descriptors = Ext.create('Ext.util.HashMap');
 		me.services = [];

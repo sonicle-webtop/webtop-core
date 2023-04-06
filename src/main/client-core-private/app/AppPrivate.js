@@ -116,6 +116,7 @@ Ext.define('Sonicle.webtop.core.app.AppPrivate', {
 		
 		// Creates main viewport
 		vp = me.viewport = me.getView(me.views[0]).create({
+			miniMode: me.miniMode,
 			servicesCount: sids.length-1 //TODO: calcolare il numero di servizi visibili
 		});
 		vpc = me.viewport.getController();
@@ -129,107 +130,122 @@ Ext.define('Sonicle.webtop.core.app.AppPrivate', {
 		var newActs = [];
 		Ext.iterate(sids, function(sid) {
 			var desc = me.getDescriptor(sid);
-			if (desc.initService()) {
-				var svc = desc.getInstance();
-				vpc.addServiceButton(desc);
-				// Collect newActions (if any)
-				if (svc.hasNewActions()) XArr.push(newActs, svc.getNewActions());
-				//if (svc.hasNewActions()) vpc.addNewActions(svc.getNewActions());
+			//core always inits in normal mode
+			var initState=(sid===sids[0])?desc.initService():desc.initService(me.miniCfg);
+			if (initState) {
+				//if mini service mode skip buttons and actions
+				if (!me.miniMode) {
+					var svc = desc.getInstance();
+					vpc.addServiceButton(desc);
+					// Collect newActions (if any)
+					if (svc.hasNewActions()) XArr.push(newActs, svc.getNewActions());
+					//if (svc.hasNewActions()) vpc.addNewActions(svc.getNewActions());
+				}				
 			}
 		});
 		
-		XArr.sort(newActs, function(e1, e2) {
-			var o1 = e1.initialConfig.order,
-				o2 = e2.initialConfig.order;
-			return Sonicle.Number.compare(Ext.isNumber(o1) ? o1 : 0, Ext.isNumber(o2) ? o2 : 0);
-		});
-		vpc.addNewActions(newActs);
-		
-		var llinks = Ext.JSON.decode(WT.getVar('wtLauncherLinks'), true);
-		if (Ext.isArray(llinks)) {
-			Ext.iterate(llinks, function(link) {
-				if (!Ext.isObject(link)) return;
-				if (!link.hasOwnProperty('href') || !link.hasOwnProperty('icon')) return;
-				vpc.addLinkButton(link);
+		if (!me.miniMode) {
+			XArr.sort(newActs, function(e1, e2) {
+				var o1 = e1.initialConfig.order,
+					o2 = e2.initialConfig.order;
+				return Sonicle.Number.compare(Ext.isNumber(o1) ? o1 : 0, Ext.isNumber(o2) ? o2 : 0);
 			});
+			vpc.addNewActions(newActs);
 		}
-		
-		// Sets startup service
-		var deflt = me.findDefaultService();
-		me.activateService(deflt);
-		
-		// If necessary, show whatsnew
-		if (WT.getVar('isWhatsnewNeeded')) {
-			vpc.showWhatsnew(false);
-		}
-		
-		WTA.PushManager.setUrl(me.pushUrl + '/' + WT.getSessionId());
-		//WTA.PushManager.setEventsDebug(true);
-		WTA.PushManager.on({
-			receive: function(s,messages) {
-				Ext.each(messages, function(msg) {
-					if (msg && msg.service) {
-						var svc = me.getService(msg.service);
-						if(svc) svc.handlePushMessage(msg);
-					}
+
+		//Only if not in mini service mode
+		if (!me.miniMode) {
+			//add launcher links
+			var llinks = Ext.JSON.decode(WT.getVar('wtLauncherLinks'), true);
+			if (Ext.isArray(llinks)) {
+				Ext.iterate(llinks, function(link) {
+					if (!Ext.isObject(link)) return;
+					if (!link.hasOwnProperty('href') || !link.hasOwnProperty('icon')) return;
+					vpc.addLinkButton(link);
 				});
-			},
-			connectionlost: function() {
-				WT.showBadgeNotification(WT.ID, {
-					tag: 'connlost-' + Date.now(),
-					title: WT.res('not.conn.lost.tit'),
-					body: WT.res('not.conn.lost.body')
-				});
-			},
-			connectionrestored: function() {
-				WT.showBadgeNotification(WT.ID, {
-					tag: 'connrestored-' + Date.now(),
-					title: WT.res('not.conn.restored.tit'),
-					body: WT.res('not.conn.restored.body')
-				});
-			},
-			servererror: function(s, status) {
-				if (status === 401) {
-					WT.confirm(WT.res('warn.conn.forbidden'), function(bid) {
-						if (bid === 'ok') WT.logout();
-					}, me, {
-						itemId: 'pushservererror',
-						title: WT.res('warning'),
-						icon: Ext.Msg.WARNING,
-						buttons: Ext.Msg.OK,
-						config: {
-							buttonText: {
-								ok: WT.res('word.continue')
-							}
-						}
-					});
-				} else if (status >= 500) {
-					WT.confirm(WT.res(WT.ID, 'warn.conn.error', status), function(bid) {
-						if (bid === 'ok') WTA.PushManager.connect();
-					}, me, {
-						itemId: 'pushservererror',
-						title: WT.res('warning'),
-						icon: Ext.Msg.WARNING,
-						buttons: Ext.Msg.OK,
-						config: {
-							buttonText: {
-								ok: WT.res('word.reconnect')
-							}
-						}
-					});
-				}
 			}
-		});
-		WTA.PushManager.connect();
-		/*
-		Sonicle.PageActivityMonitor.on('change', function(s, idle) {
-			console.log('ActivityMonitor: ' + (idle ? 'user is idle' : 'user is working'));
-		});
-		*/
-		Sonicle.PageActivityMonitor.start();
-		Sonicle.DesktopNotificationMgr.on('requestpermission', function() {
-			WT.info(WT.res('info.browser.permission.notification'));
-		});
+			
+			// Sets startup service
+			var deflt = me.findDefaultService();
+			me.activateService(deflt);
+
+			// If necessary, show whatsnew
+			if (WT.getVar('isWhatsnewNeeded')) {
+				vpc.showWhatsnew(false);
+			}
+			
+			//Setup websocket
+			WTA.PushManager.setUrl(me.pushUrl + '/' + WT.getSessionId());
+			//WTA.PushManager.setEventsDebug(true);
+			WTA.PushManager.on({
+				receive: function(s,messages) {
+					Ext.each(messages, function(msg) {
+						if (msg && msg.service) {
+							var svc = me.getService(msg.service);
+							if(svc) svc.handlePushMessage(msg);
+						}
+					});
+				},
+				connectionlost: function() {
+					WT.showBadgeNotification(WT.ID, {
+						tag: 'connlost-' + Date.now(),
+						title: WT.res('not.conn.lost.tit'),
+						body: WT.res('not.conn.lost.body')
+					});
+				},
+				connectionrestored: function() {
+					WT.showBadgeNotification(WT.ID, {
+						tag: 'connrestored-' + Date.now(),
+						title: WT.res('not.conn.restored.tit'),
+						body: WT.res('not.conn.restored.body')
+					});
+				},
+				servererror: function(s, status) {
+					if (status === 401) {
+						WT.confirm(WT.res('warn.conn.forbidden'), function(bid) {
+							if (bid === 'ok') WT.logout();
+						}, me, {
+							itemId: 'pushservererror',
+							title: WT.res('warning'),
+							icon: Ext.Msg.WARNING,
+							buttons: Ext.Msg.OK,
+							config: {
+								buttonText: {
+									ok: WT.res('word.continue')
+								}
+							}
+						});
+					} else if (status >= 500) {
+						WT.confirm(WT.res(WT.ID, 'warn.conn.error', status), function(bid) {
+							if (bid === 'ok') WTA.PushManager.connect();
+						}, me, {
+							itemId: 'pushservererror',
+							title: WT.res('warning'),
+							icon: Ext.Msg.WARNING,
+							buttons: Ext.Msg.OK,
+							config: {
+								buttonText: {
+									ok: WT.res('word.reconnect')
+								}
+							}
+						});
+					}
+				}
+			});
+			WTA.PushManager.connect();
+			/*
+			Sonicle.PageActivityMonitor.on('change', function(s, idle) {
+				console.log('ActivityMonitor: ' + (idle ? 'user is idle' : 'user is working'));
+			});
+			*/
+			Sonicle.PageActivityMonitor.start();
+			Sonicle.DesktopNotificationMgr.on('requestpermission', function() {
+				WT.info(WT.res('info.browser.permission.notification'));
+			});
+
+		} else {
+			//me.activateService(me.miniServiceName);
+		}
 		
 		me.hideLoadingLayer();
 	},

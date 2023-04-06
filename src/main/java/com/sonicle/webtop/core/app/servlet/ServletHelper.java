@@ -107,6 +107,7 @@ public class ServletHelper {
 	}
 	
 	public static String sanitizeBaseUrl(String url) {
+		url = StringUtils.substringBefore(url, "?");
 		url = StringUtils.substringBefore(url, Login.URL);
 		url = StringUtils.substringBefore(url, Logout.URL);
 		url = StringUtils.substringBefore(url, UIPrivate.URL);

@@ -124,7 +124,7 @@ Ext.define('Sonicle.webtop.core.app.DescriptorBase', {
 		return this.initCalled;
 	},
 	
-	initService: function() {
+	initService: function(miniCfg) {
 		var me = this, inst;
 		if (!me.initCalled) {
 			WTA.Log.debug('Initializing service [{0}]', me.getId());
@@ -132,7 +132,7 @@ Ext.define('Sonicle.webtop.core.app.DescriptorBase', {
 			if (!inst) return false;
 			
 			try {
-				me.doInstanceInit(inst);
+				me.doInstanceInit(inst, miniCfg);
 				me.initCalled = true;
 			} catch(e) {
 				WTA.Log.error('Error while initializing instance');
@@ -147,7 +147,8 @@ Ext.define('Sonicle.webtop.core.app.DescriptorBase', {
 		Ext.raise('If you see this there is something wrong. This method must be overridden!');
 	},
 	
-	doInstanceInit: function(inst) {
-		inst.init.call(inst);
+	doInstanceInit: function(inst, miniCfg) {
+		if (!miniCfg) inst.init.call(inst);
+		else inst.initMiniMode.call(inst, miniCfg);
 	}
 });

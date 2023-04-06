@@ -821,12 +821,16 @@ public class WebTopSession {
 		if (RunContext.isWebTopAdmin()) {
 			for (String sid : svcm.listRegisteredServices()) {
 				if (sid.equals(CoreManifest.ID)) continue;
+				//mini service action: keep specific service only
+				if (js.miniMode && !sid.equals(js.miniServiceName)) continue;
 				ServiceDescriptor descriptor = svcm.getDescriptor(sid);
 				fillServiceReferences(svcm, js, descriptor, locale, theme, lookAndFeel);
 			}
 		} else {
 			for (String sid : privateSids) {
 				if (sid.equals(CoreManifest.ID)) continue;
+				//mini service action: keep specific service only
+				if (js.miniMode && !sid.equals(js.miniServiceName)) continue;
 				ServiceDescriptor descriptor = svcm.getDescriptor(sid);
 				fillServiceReferences(svcm, js, descriptor, locale, theme, lookAndFeel);
 			}
@@ -836,6 +840,8 @@ public class WebTopSession {
 		
 		// Evaluate services
 		for (String sid : privateSids) {
+			//mini service action: keep core and specific service only
+			if (!sid.equals(CoreManifest.ID) && js.miniMode && !sid.equals(js.miniServiceName)) continue;
 			ServiceDescriptor descriptor = svcm.getDescriptor(sid);
 			//fillServiceReferences(svcm, js, descriptor, locale, theme, lookAndFeel);
 			fillStartupForService(svcm, js, descriptor, locale);

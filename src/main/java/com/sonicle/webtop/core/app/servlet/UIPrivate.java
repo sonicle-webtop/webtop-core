@@ -137,7 +137,7 @@ public class UIPrivate extends AbstractServlet {
 			} else {
 				//ServletUtils.forwardRequest(request, response, Start.URL);
 				wts.initPrivateEnvironment(request);
-				writePrivatePage(wta, wts, WT.getPublicContextPath(pid.getDomainId()), response);
+				writePrivatePage(wta, wts, WT.getPublicContextPath(pid.getDomainId()), request, response);
 			}
 			
 		} catch(MaintenanceException ex) {
@@ -205,7 +205,7 @@ public class UIPrivate extends AbstractServlet {
 		WT.writeTemplate(CoreManifest.ID, "tpl/page/password.html", tplMap, response.getWriter());
 	}
 	
-	private void writePrivatePage(WebTopApp wta, WebTopSession wts, String baseUrl, HttpServletResponse response)  throws IOException, TemplateException {
+	private void writePrivatePage(WebTopApp wta, WebTopSession wts, String baseUrl, HttpServletRequest request, HttpServletResponse response)  throws IOException, TemplateException {
 		String userTitle = null;
 		if (wts.getProfileId() != null) {
 			UserProfile.Data ud = WT.getUserData(wts.getProfileId());
@@ -224,6 +224,10 @@ public class UIPrivate extends AbstractServlet {
 		jswts.securityToken = wts.getCSRFToken();
 		jswts.contextPath = baseUrl;
 		jswts.pushUrl = PathUtils.concatPaths(wts.getClientUrl(), PushEndpoint.URL);
+		jswts.miniServiceName=ServletUtils.getStringParameter(request, "service", null);
+		jswts.miniServiceAction=ServletUtils.getStringParameter(request, "action", null);
+		jswts.miniServiceArgs=ServletUtils.getStringParameter(request, "args", null);
+		jswts.miniMode=(jswts.miniServiceName!=null);
 		wts.fillStartup(jswts);
 		tplMap.put("WTS", LangUtils.unescapeUnicodeBackslashes(jswts.toJson()));
 		
