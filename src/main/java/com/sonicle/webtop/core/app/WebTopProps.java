@@ -72,6 +72,7 @@ public class WebTopProps {
 	public static final String PROP_WTDIR_SIMILARITY_TOKENSIZE = "webtop.directory.similarity.tokensize";
 	public static final String PROP_SESSION_FORCESECURECOOKIE = "webtop.session.forcesecurecookie";
 	public static final String PROP_PROVISIONING_API_TOKEN = "webtop.provisioning.api.token";
+	public static final String PROP_OPENAPI_SPEC_DISABLERESOURCE = "webtop.openapi.spec.disableresource";
 	
 	public static void init() {
 		Properties systemProps = System.getProperties();
@@ -147,6 +148,7 @@ public class WebTopProps {
 		WebTopApp.logger.info("{} = {} [{}]", PROP_SESSION_FORCESECURECOOKIE, properties.getProperty(PROP_SESSION_FORCESECURECOOKIE), getSessionForceSecureCookie(emptyProperties));
 		WebTopApp.logger.info("{} = {} [{}]", PROP_HOME, properties.getProperty(PROP_HOME), getHome(emptyProperties));
 		WebTopApp.logger.info("{} = {} [{}]", PROP_PROVISIONING_API_TOKEN, PasswordUtils.printRedacted(properties.getProperty(PROP_PROVISIONING_API_TOKEN)), PasswordUtils.printRedacted(getProvisioningApiToken(emptyProperties)));
+		WebTopApp.logger.info("{} = {} [{}]", PROP_OPENAPI_SPEC_DISABLERESOURCE, properties.getProperty(PROP_OPENAPI_SPEC_DISABLERESOURCE), getOpenApiSpecDisableResource(emptyProperties));
 	}
 	
 	public static void checkOldPropsUsage(Properties properties) {
@@ -296,6 +298,10 @@ public class WebTopProps {
 	
 	public static String getProvisioningApiToken(Properties props) {
 		return PropUtils.getStringProperty(props, PROP_PROVISIONING_API_TOKEN, null);
+	}
+	
+	public static boolean getOpenApiSpecDisableResource(Properties props) {
+		return PropUtils.getBooleanProperty(props, PROP_OPENAPI_SPEC_DISABLERESOURCE, false);
 	}
 	
 	private static void copyOldProp(Properties props, String oldKey, String newKey) {
