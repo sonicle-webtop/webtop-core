@@ -1662,21 +1662,23 @@ public class ServiceManager {
 	
 	private JobDetail createJobTask(String serviceId, BaseJobService service, TaskDefinition taskDef) {
 		String classBaseName = taskDef.clazz.getSimpleName();
+		String group = "dep:" + serviceId;
 		
 		JobDataMap data = (taskDef.data != null) ? taskDef.data : new JobDataMap();
 		data.put("jobService", service);
 		JobBuilder jb = JobBuilder.newJob(taskDef.clazz)
 				.usingJobData(data)
-				.withIdentity(classBaseName, serviceId);
+				.withIdentity(classBaseName, group);
 		if (!StringUtils.isEmpty(taskDef.description)) jb.withDescription(taskDef.description);
 		return jb.build();
 	}
 	
 	private Trigger createJobTaskTrigger(String serviceId, TaskDefinition taskDef) {
 		String classBaseName = taskDef.clazz.getSimpleName();
+		String group = "dep:" + serviceId;
 		
 		TriggerBuilder tb = taskDef.trigger.getTriggerBuilder()
-				.withIdentity(classBaseName, serviceId)
+				.withIdentity(classBaseName, group)
 				.startNow();
 		return tb.build();
 	}
@@ -1713,14 +1715,16 @@ public class ServiceManager {
 	}
 	
 	private boolean unscheduleJobServiceTasks(String serviceId) {
-		try {
-			Set<JobKey> keys = scheduler.getJobKeys(GroupMatcher.jobGroupEquals(serviceId));
+		String group = "dep:" + serviceId;
+		
+		try {	
+			Set<JobKey> keys = scheduler.getJobKeys(GroupMatcher.jobGroupEquals(group));
 			scheduler.deleteJobs(new ArrayList<>(keys));
-			logger.debug("Deleted tasks for group [{}]", serviceId);
+			logger.debug("Deleted tasks for group [{}]", group);
 			return true;
 			
 		} catch(SchedulerException ex) {
-			logger.error("Error deleting tasks for group [{}]", serviceId, ex);
+			logger.error("Error deleting tasks for group [{}]", group, ex);
 			return false;
 		}
 	}
