@@ -32,7 +32,7 @@
  */
 package com.sonicle.webtop.core.app;
 
-import com.sonicle.commons.LangUtils;
+import com.sonicle.commons.ClassUtils;
 import com.sonicle.commons.PathUtils;
 import com.sonicle.commons.web.ServletUtils;
 import com.sonicle.webtop.core.app.servlet.RestApi;
@@ -48,9 +48,7 @@ import io.swagger.v3.oas.integration.SwaggerConfiguration;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.servers.Server;
 import io.swagger.v3.parser.core.models.SwaggerParseResult;
-import java.io.IOException;
-import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
+import java.net.URL;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
@@ -68,7 +66,6 @@ import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 import javax.ws.rs.ext.ExceptionMapper;
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.shiro.web.jaxrs.ShiroFeature;
 import org.glassfish.jersey.internal.util.collection.StringKeyIgnoreCaseMultivaluedMap;
@@ -123,6 +120,7 @@ public class ServiceApiJaxRsResourceApplication extends ResourceConfig {
 	
 	private void registerServiceApiEndpoints(WebTopApp wta, ServletConfig servletConfig) {
 		ServiceManager svcMgr = wta.getServiceManager();
+		boolean specResourceDisabled = WebTopProps.getOpenApiSpecDisableResource(wta.getProperties());
 		
 		String serviceId = servletConfig.getInitParameter(RestApi.INIT_PARAM_WEBTOP_SERVICE_ID);
 		if (StringUtils.isBlank(serviceId)) throw new WTRuntimeException("Invalid servlet init parameter [{}]", RestApi.INIT_PARAM_WEBTOP_SERVICE_ID);
@@ -132,7 +130,12 @@ public class ServiceApiJaxRsResourceApplication extends ResourceConfig {
 		
 		if (desc.hasOpenApiDefinitions()) {
 			for (ServiceDescriptor.OpenApiDefinition apiDefinition : desc.getOpenApiDefinitions()) {
-				registerServiceApiSpecResources(servletConfig, desc, apiDefinition);
+				if (!specResourceDisabled) {
+					registerServiceApiSpecResources(servletConfig, desc, apiDefinition);
+				} else {
+					LOGGER.debug("[{}] JAX-RS Spec resource is disabled: '{}' will NOT be published!", servletConfig.getServletName(), apiDefinition.oasFile);
+				}
+				
 				// Register API implementation classes
 				for (Class clazz : apiDefinition.resourceClasses) {
 					javax.ws.rs.Path pathAnnotation = (javax.ws.rs.Path)ClassHelper.getClassAnnotation(clazz.getSuperclass(), javax.ws.rs.Path.class);
@@ -146,20 +149,21 @@ public class ServiceApiJaxRsResourceApplication extends ResourceConfig {
 	
 	private void registerServiceApiSpecResources(ServletConfig servletConfig, ServiceDescriptor descriptor, ServiceDescriptor.OpenApiDefinition apiDefinition) {
 		try {
-			LOGGER.debug("[{}] Parsing OpenAPI spec '{}'", servletConfig.getServletName(), apiDefinition.oasFile);
-			String rawOpenApi = readOpenAPISpec(apiDefinition.oasFile);
-			SwaggerParseResult result = new OpenAPIParser().readContents(rawOpenApi, null, null);
+			LOGGER.debug("[{}] Parsing OpenAPI Spec '{}'", servletConfig.getServletName(), apiDefinition.oasFile);
+			String oasURL = findOpenAPISpecURL(apiDefinition.oasFile);
+			SwaggerParseResult result = new OpenAPIParser().readLocation(oasURL, null, null);
 			OpenAPI openAPI = result.getOpenAPI();
 			if (openAPI != null) {
 				openAPI.info(descriptor.buildOpenApiInfo(apiDefinition));
 				SwaggerConfiguration swaggerConfig = new SwaggerConfiguration()
-					.scannerClass("io.swagger.v3.jaxrs2.integration.JaxrsApplicationAndResourcePackagesAnnotationScanner")
+					// Disable scannerClass: the Spec is not rebuilt from annotations anymore!
+					//.scannerClass("io.swagger.v3.jaxrs2.integration.JaxrsApplicationAndResourcePackagesAnnotationScanner")
 					.openAPI(openAPI)
-					// Sets our filter Class in order to customize OpenAPI spec adding server informations
+					// Sets our filter Class in order to customize OpenAPI Spec adding server informations
 					.filterClass(DynamicServerSpecFilter.class.getName())
 					.prettyPrint(false);
 				
-				LOGGER.debug("[{}] Registering JAX-RS spec resource at '/openapi.[json|yaml]'", servletConfig.getServletName());
+				LOGGER.debug("[{}] Registering JAX-RS Spec resource at '/openapi.[json|yaml]'", servletConfig.getServletName());
 				ServiceOpenApiResource oar = new ServiceOpenApiResource(); // "*/openapi.json", "*/openapi.yaml"
 				oar.setOpenApiConfiguration(swaggerConfig);
 				register(oar);
@@ -168,20 +172,14 @@ public class ServiceApiJaxRsResourceApplication extends ResourceConfig {
 				register(ahoar);
 			}
 		} catch (Exception ex) {
-			LOGGER.error("[{}] Unable to configure JAX-RS spec resource", ex, servletConfig.getServletName());
+			LOGGER.error("[{}] Unable to configure JAX-RS Spec resource", ex, servletConfig.getServletName());
 		}
 	}
 	
-	public String readOpenAPISpec(String name) throws IOException {
-		InputStream is = null;
-		
-		try {
-			is = LangUtils.findClassLoader(getClass()).getResourceAsStream(name);
-			if (is == null) throw new IOException("InputStream is null");
-			return IOUtils.toString(is, StandardCharsets.UTF_8);
-		} finally {
-			IOUtils.closeQuietly(is);
-		}
+	private String findOpenAPISpecURL(String name) {
+		URL url = ClassUtils.getClassLoaderOf(getClass()).getResource(name);
+		if (url == null) throw new WTRuntimeException("Cannot get the URL for resource '{}' from classloader", name);
+		return url.toExternalForm();
 	}
 	
 	public static class DynamicServerSpecFilter extends AbstractSpecFilter {
