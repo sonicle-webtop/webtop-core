@@ -32,7 +32,7 @@
  */
 package com.sonicle.webtop.core.app;
 
-import com.sonicle.commons.ClassUtils;
+import com.sonicle.commons.LangUtils;
 import com.sonicle.commons.PathUtils;
 import com.sonicle.commons.web.ServletUtils;
 import com.sonicle.webtop.core.app.servlet.RestApi;
@@ -48,7 +48,9 @@ import io.swagger.v3.oas.integration.SwaggerConfiguration;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.servers.Server;
 import io.swagger.v3.parser.core.models.SwaggerParseResult;
-import java.net.URL;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
@@ -66,6 +68,7 @@ import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 import javax.ws.rs.ext.ExceptionMapper;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.shiro.web.jaxrs.ShiroFeature;
 import org.glassfish.jersey.internal.util.collection.StringKeyIgnoreCaseMultivaluedMap;
@@ -150,8 +153,8 @@ public class ServiceApiJaxRsResourceApplication extends ResourceConfig {
 	private void registerServiceApiSpecResources(ServletConfig servletConfig, ServiceDescriptor descriptor, ServiceDescriptor.OpenApiDefinition apiDefinition) {
 		try {
 			LOGGER.debug("[{}] Parsing OpenAPI Spec '{}'", servletConfig.getServletName(), apiDefinition.oasFile);
-			String oasURL = findOpenAPISpecURL(apiDefinition.oasFile);
-			SwaggerParseResult result = new OpenAPIParser().readLocation(oasURL, null, null);
+			String rawOpenApi = readOpenAPISpec(apiDefinition.oasFile);
+			SwaggerParseResult result = new OpenAPIParser().readContents(rawOpenApi, null, null);
 			OpenAPI openAPI = result.getOpenAPI();
 			if (openAPI != null) {
 				openAPI.info(descriptor.buildOpenApiInfo(apiDefinition));
@@ -176,10 +179,15 @@ public class ServiceApiJaxRsResourceApplication extends ResourceConfig {
 		}
 	}
 	
-	private String findOpenAPISpecURL(String name) {
-		URL url = ClassUtils.getClassLoaderOf(getClass()).getResource(name);
-		if (url == null) throw new WTRuntimeException("Cannot get the URL for resource '{}' from classloader", name);
-		return url.toExternalForm();
+	public String readOpenAPISpec(String name) throws IOException {
+		InputStream is = null;
+		try {
+			is = LangUtils.findClassLoader(getClass()).getResourceAsStream(name);
+			if (is == null) throw new IOException("InputStream is null");
+			return IOUtils.toString(is, StandardCharsets.UTF_8);
+		} finally {
+			IOUtils.closeQuietly(is);
+		}
 	}
 	
 	public static class DynamicServerSpecFilter extends AbstractSpecFilter {
