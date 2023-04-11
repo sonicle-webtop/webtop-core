@@ -218,7 +218,6 @@ Ext.define('Sonicle.webtop.core.view.CustomFields', {
 						disabled: '{!foAddEnabled}'
 					},
 					text: WT.res('act-add.lbl'),
-					iconCls: 'wt-icon-addCustomField',
 					handler: function() {
 						me.addCustomFieldUI();
 					}

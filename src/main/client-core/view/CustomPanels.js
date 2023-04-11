@@ -164,7 +164,6 @@ Ext.define('Sonicle.webtop.core.view.CustomPanels', {
 				me.addAct('add', {
 					text: WT.res('act-add.lbl'),
 					tooltip: null,
-					iconCls: 'wt-icon-add',
 					handler: function() {
 						me.addCustomPanelUI();
 					}

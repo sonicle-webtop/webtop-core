@@ -273,7 +273,6 @@ Ext.define('Sonicle.webtop.core.view.CustomPanel', {
 								me.addAct('add', {
 									text: WT.res('act-add.lbl'),
 									tooltip: null,
-									iconCls: 'wt-icon-addCustomField',
 									handler: function() {
 										me.showFieldPicker();
 									}
