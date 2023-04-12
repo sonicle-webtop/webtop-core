@@ -2,8 +2,7 @@
 <!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
 <svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" width="32px" height="32px" viewBox="0 0 32 32" enable-background="new 0 0 32 32" xml:space="preserve">
   <g id="icon">
-    <path d="M1.501,16.001c0,-8.007,6.492,-14.499,14.5,-14.499s14.5,6.491,14.5,14.499S24.008,30.5,16,30.5S1.501,24.009,1.501,16.001zM7.155,27.489M24.918,27.434" fill="#FEFEFF" stroke="#6A4905" stroke-width="1.1" stroke-miterlimit="50"/>
-    <path d="M15.5,4v12.308L23.6,23.5" fill="none" stroke="#E29B0A" stroke-width="1.2" stroke-miterlimit="50"/>
-    <path d="M28,17h-2v-2h2V17zM17,26h-2v2h2V26zM6,15H4v2h2V15zM9,23H7v2h2V23zM25,7h-2v2h2V7zM9,7H7v2h2V7z" fill="#E69E0B"/>
+    <path d="M1.501,16.001c0,-8.007,6.492,-14.499,14.5,-14.499s14.5,6.491,14.5,14.499S24.008,30.5,16,30.5S1.501,24.009,1.501,16.001zM7.155,27.489M24.918,27.434" fill="#FEFEFF" stroke="#CF8A1D" stroke-width="1.1" stroke-miterlimit="10"/>
+    <path d="M15.5,4v12.508l9.5,-0.008" fill="none" stroke="#CF8A1D" stroke-width="1.2" stroke-miterlimit="10"/>
   </g>
 </svg>

@@ -2,9 +2,8 @@
 <!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
 <svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" width="16px" height="16px" viewBox="0 0 16 16" enable-background="new 0 0 16 16" xml:space="preserve">
   <g id="icon">
-    <path d="M15.5,15.5H0.5v-4h15V15.5z" fill="#FFFFFF" stroke="#383838" stroke-width="1" stroke-miterlimit="10"/>
-    <path d="M15.5,11.5H0.5V8.5h15V11.5z" fill="#FFFFFF" stroke="#383838" stroke-width="1" stroke-miterlimit="10"/>
-    <path d="M15,15H1v-3h14V15z" fill="#92CBEE" opacity="0.5"/>
-    <path d="M7.5,5.1V0M5.05,2.9l2.4,2.4l2.4,-2.4" fill="none" stroke="#383838" stroke-width="1" stroke-miterlimit="10"/>
+    <path d="M0.5,10.5V1.5h15v9" fill="#FFFFFF" stroke="#383838" stroke-width="1" stroke-miterlimit="50"/>
+    <rect x="0.5" y="10.5" width="15" height="4" fill="#92CBEE" stroke="#0964B0" stroke-width="1" stroke-linecap="round" stroke-miterlimit="50"/>
+    <path d="M7.5,8.75V4M5.285,6.499L7.5,8.714l2.215,-2.215" fill="#FFFFFF" stroke="#383838" stroke-width="1" stroke-miterlimit="50"/>
   </g>
 </svg>

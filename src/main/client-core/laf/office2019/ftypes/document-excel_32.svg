@@ -3,11 +3,11 @@
 <svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" width="32px" height="32px" viewBox="0 0 32 32" enable-background="new 0 0 32 32" xml:space="preserve">
   <g id="main">
     <g id="icon">
-      <path d="M4.5,29.5L15.5,29.5L15.5,15.5L25.5,15.5L25.5,8.5L18.5,1.5L4.5,1.5zz" fill="#FFFFFF"/>
-      <path d="M4,1.5L4,29.5L4,30L4.5,30L15.5,30L15.5,29L5,29L5,2L18.29,2L25,8.707L25,15.5L26,15.5L26,8.5L26,8.293L25.85,8.146L18.85,1.146L18.71,1L18.5,1L4.5,1L4,1zz" fill="#383838"/>
-      <path d="M18,8.5L18,9L18.5,9L25.5,9L25.5,8L19,8L19,1.5L18,1.5zz" fill="#383838"/>
-      <path d="M22,11.5L8,11.5zM22,14.5L8,14.5zz" fill="#FFFFFF"/>
-      <path d="M8,12L22,12L22,11L8,11zM8,15L22,15L22,14L8,14zM8,18L15.5,18L15.5,17L8,17zM8,21L15.5,21L15.5,20L8,20zM8,24L15.5,24L15.5,23L8,23zz" fill="#228BCB"/>
+      <path d="M6.5,29.5L15.5,29.5L15.5,15.5L29.5,15.5L29.5,8.5L21.5,0.5L6.5,0.5zz" fill="#FFFFFF"/>
+      <path d="M6,7L7,7L7,1L21,1L21,9L29,9L29,15.5L30,15.5L30,8.293L21.71,0L6,0zM28.29,8L22,8L22,1.707zM6,30L15.5,30L15.5,29L7,29L7,27L6,27zz" fill="#383838"/>
+      <path d="M0.5,24.5L15.5,24.5L15.5,15.5L18.5,15.5L18.5,9.5L0.5,9.5zz" fill="#FFFFFF"/>
+      <path d="M0,9.5L0,24.5L0,25L0.5,25L15.5,25L15.5,24L1,24L1,10L18,10L18,15.5L19,15.5L19,9.5L19,9L18.5,9L0.5,9L0,9zz" fill="#4EA17E"/>
+      <path d="M6,12L1,12L1,13L6,13L6,15L1,15L1,16L6,16L6,18L1,18L1,19L6,19L6,21L1,21L1,22L6,22L6,24L7,24L7,22L12,22L12,24L13,24L13,22L15.5,22L15.5,21L13,21L13,19L15.5,19L15.5,18L13,18L13,16L15.5,16L15.5,15.5L18,15.5L18,15L13,15L13,13L18,13L18,12L13,12L13,10L12,10L12,12L7,12L7,10L6,10zM12,13L12,15L7,15L7,13zM12,16L12,18L7,18L7,16zM12,19L12,21L7,21L7,19zz" fill="#4EA17E" opacity="0.3"/>
     </g>
     <g id="overlay">
       <rect x="17.5" y="17.5" width="14" height="14" fill="#FFFFFF" stroke="#17AB4F" stroke-width="1" stroke-miterlimit="10"/>

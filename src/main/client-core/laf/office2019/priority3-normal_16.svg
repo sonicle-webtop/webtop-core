@@ -2,8 +2,8 @@
 <!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
 <svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" width="16px" height="16px" viewBox="0 0 16 16" enable-background="new 0 0 16 16" xml:space="preserve">
   <g id="icon">
-    <path d="M8,1.5l7.125,13H0.875L8,1.5z" fill="#99D4EB" stroke="#34ABD8" stroke-width="1" stroke-linecap="round" stroke-miterlimit="50"/>
-    <line x1="8" y1="6" x2="8" y2="11" fill="#FFFFFF" stroke="#11495E" stroke-width="1.2" stroke-miterlimit="50"/>
-    <line x1="8" y1="12" x2="8" y2="13" fill="#FFFFFF" stroke="#11495E" stroke-width="1.2" stroke-miterlimit="50"/>
+    <path d="M8,1.5l7.125,13H0.875L8,1.5z" fill="#A5C2DF" stroke="#4C86C1" stroke-width="1" stroke-linecap="round" stroke-miterlimit="50"/>
+    <line x1="8" y1="6" x2="8" y2="11" fill="#FFFFFF" stroke="#1C3753" stroke-width="1.2" stroke-miterlimit="50"/>
+    <line x1="8" y1="12" x2="8" y2="13" fill="#FFFFFF" stroke="#1C3753" stroke-width="1.2" stroke-miterlimit="50"/>
   </g>
 </svg>

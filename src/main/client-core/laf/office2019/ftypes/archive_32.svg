@@ -2,7 +2,9 @@
 <!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
 <svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" width="32px" height="32px" viewBox="0 0 32 32" enable-background="new 0 0 32 32" xml:space="preserve">
   <g id="icon">
-    <path d="M28.5,11.5v18H3.5V11.5M21,19.5L21,19.5c0,-1.105,-0.895,-2,-2,-2h-6c-1.105,0,-2,0.895,-2,2v0c0,1.105,0.895,2,2,2h6C20.105,21.5,21,20.605,21,19.5z" fill="#FEFEFF" stroke="#6A4905" stroke-width="1" stroke-miterlimit="50"/>
-    <rect x="1.5" y="3.5" width="29" height="8" fill="#F9D48A" stroke="#A36F07" stroke-width="1" stroke-linecap="round" stroke-miterlimit="50"/>
+    <polygon points="26.5,30.5 4.5,30.5 4.5,1.5 19.5,1.5 26.5,8.5" fill="#FFFFFF" stroke-linejoin="miter"/>
+    <path d="M13.5,3.5h4M13.5,5.5h4M13.5,7.5h4M13.5,9.5h4M13.5,11.5h4M13.5,13.5h4M15.5,1.5v15.2" fill="#FFFFFF" stroke="#ED8730" stroke-width="1" stroke-miterlimit="10"/>
+    <path d="M15.434,22.5L15.434,22.5c-1.124,0,-2.003,-0.971,-1.891,-2.09l0.391,-3.91h3l0.391,3.91C17.436,21.529,16.558,22.5,15.434,22.5z" fill="#FFFFFF" stroke="#ED8730" stroke-width="1" stroke-miterlimit="10"/>
+    <path d="M19.707,1H4v30h23V8.293L19.707,1zM20,2.707L25.293,8H20V2.707zM5,30V2h14v7h7v21H5z" fill="#383838"/>
   </g>
 </svg>

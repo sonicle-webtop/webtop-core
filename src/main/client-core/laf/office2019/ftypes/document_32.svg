@@ -2,10 +2,9 @@
 <!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
 <svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" width="32px" height="32px" viewBox="0 0 32 32" enable-background="new 0 0 32 32" xml:space="preserve">
   <g id="icon">
-    <polygon points="26.5,30.5 5.5,30.5 5.5,2.5 19.5,2.5 26.5,9.5" fill="#FFFFFF" stroke="#383838" stroke-width="1" stroke-miterlimit="50" stroke-linejoin="miter"/>
-    <polyline points="26.5,9.5 19.5,9.5 19.5,2.5" fill="none" stroke="#383838" stroke-width="1" stroke-miterlimit="50" stroke-linejoin="miter"/>
-    <path d="M9,12.5h14M9,15.5h14M9,18.5h4.5M9,21.5h4.5M9,24.5h4.5" fill="#FFFFFF" stroke="#228BCB" stroke-width="1" stroke-miterlimit="50"/>
-    <line x1="9" y1="9.5" x2="16" y2="9.5" fill="none" stroke="#228BCB" stroke-width="1" stroke-miterlimit="50"/>
-    <rect x="15.5" y="18.5" width="7" height="6" fill="#92CBEE" stroke="#0964B0" stroke-width="1" stroke-linecap="round" stroke-miterlimit="50"/>
+    <polygon points="27.5,30.5 4.5,30.5 4.5,1.5 19.5,1.5 27.5,9.5" fill="#FFFFFF" stroke-linejoin="miter"/>
+    <path d="M19.707,1H4v30h24V9.293L19.707,1zM20,2.707L26.293,9H20V2.707zM5,30V2h14v8h8v20H5z" fill="#383838"/>
+    <path d="M24.5,27h-4.5v-1h4.5V27zM24.5,24h-4.5v-1h4.5V24zM24.5,21h-4.5v-1h4.5V21zM24.5,18h-4.5v-1h4.5V18zM24.5,15H7.5v-1h17V15zM17,12H7.5v-1h9.5V12zM17,9H7.5V8h9.5V9zM17,6H7.5V5h9.5V6z" fill="#78797A" opacity="0.5"/>
+    <rect x="7.5" y="17.5" width="10" height="10" fill="#92CBEE" stroke="#0964B0" stroke-width="1" stroke-linecap="round" stroke-miterlimit="10"/>
   </g>
 </svg>

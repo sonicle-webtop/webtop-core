@@ -2,8 +2,7 @@
 <!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
 <svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" width="16px" height="16px" viewBox="0 0 16 16" enable-background="new 0 0 16 16" xml:space="preserve">
   <g id="icon">
-    <path d="M0.5,8C0.5,3.858,3.858,0.5,8,0.5s7.5,3.358,7.5,7.5s-3.358,7.5,-7.5,7.5S0.5,12.142,0.5,8zM3.425,13.943M12.612,13.914" fill="#FFFFFF" stroke="#383838" stroke-width="1" stroke-miterlimit="50"/>
-    <path d="M7.5,2v6.359l4.19,3.72" fill="none" stroke="#228BCB" stroke-width="1" stroke-miterlimit="50"/>
-    <path d="M14,8.5h-1V7.5h1V8.5zM8.5,13H7.5v1h1V13zM3,7.5H2v1h1V7.5zM4.6,11.4H3.6v1h1V11.4zM12.4,3.6h-1v1h1V3.6zM4.6,3.6H3.6v1h1V3.6z" fill="#78797A"/>
+    <path d="M1.499,8.015C1.499,4.417,4.407,1.5,7.994,1.5s6.495,2.917,6.495,6.515s-2.908,6.515,-6.495,6.515S1.499,11.614,1.499,8.015zM4.032,13.178M11.988,13.153M13.72,15.6l-1.731,-2.447M1.897,5.764C1.062,5.274,0.5,4.366,0.5,3.326C0.5,1.765,1.764,0.5,3.323,0.5c1.038,0,1.945,0.561,2.435,1.397M10.242,1.897C10.733,1.061,11.639,0.5,12.677,0.5C14.236,0.5,15.5,1.765,15.5,3.326c0,1.04,-0.562,1.948,-1.397,2.439M4.032,13.178L2.317,15.6" fill="#FFFFFF" stroke="#383838" stroke-width="1" stroke-miterlimit="50"/>
+    <path d="M7.5,3.3v4.853l2.841,2.844" fill="none" stroke="#228BCB" stroke-width="1.2" stroke-miterlimit="50"/>
   </g>
 </svg>

@@ -2,7 +2,8 @@
 <!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
 <svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" width="32px" height="32px" viewBox="0 0 32 32" enable-background="new 0 0 32 32" xml:space="preserve">
   <g id="icon">
-    <polygon points="26.5,30.5 5.5,30.5 5.5,2.5 18.5,2.5 26.5,10.5" fill="#FFFFFE" stroke="#697483" stroke-width="1" stroke-linecap="round" stroke-miterlimit="50" stroke-linejoin="miter"/>
-    <polyline points="26.5,10.5 18.5,10.5 18.5,2.5" fill="none" stroke="#697483" stroke-width="1" stroke-linecap="round" stroke-miterlimit="50" stroke-linejoin="miter"/>
+    <polygon points="26.5,30.5 4.5,30.5 4.5,1.5 19.5,1.5 26.5,8.5" fill="#FFFFFF" stroke-linejoin="miter"/>
+    <polygon points="26.5,30.5 4.5,30.5 4.5,1.5 19.5,1.5 26.5,8.5" fill="#C8C6C4" stroke-linejoin="miter" opacity="0.3"/>
+    <path d="M19.707,1H4v30h23V8.293L19.707,1zM20,2.707L25.293,8H20V2.707zM5,30V2h14v7h7v21H5z" fill="#383838"/>
   </g>
 </svg>

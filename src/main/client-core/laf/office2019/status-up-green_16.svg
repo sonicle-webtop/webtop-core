@@ -2,7 +2,7 @@
 <!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
 <svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" width="16px" height="16px" viewBox="0 0 16 16" enable-background="new 0 0 16 16" xml:space="preserve">
   <g id="icon">
-    <path d="M14.5,7.5c0,3.866,-3.134,7,-7,7S0.5,11.366,0.5,7.5S3.634,0.5,7.5,0.5S14.5,3.634,14.5,7.5z" fill="#FFFFFF" stroke="#7CA547" stroke-width="1" stroke-miterlimit="50"/>
-    <path d="M3.611,7.246L7.5,3.357l3.889,3.889M7.5,11.975V3.711" fill="none" stroke="#7CA547" stroke-width="1" stroke-miterlimit="50"/>
+    <path d="M14.5,7.5c0,3.866,-3.134,7,-7,7S0.5,11.366,0.5,7.5S3.634,0.5,7.5,0.5S14.5,3.634,14.5,7.5z" fill="#FFFFFF" stroke="#17AB4F" stroke-width="1" stroke-miterlimit="50"/>
+    <path d="M3.611,7.246L7.5,3.357l3.889,3.889M7.5,11.975V3.711" fill="none" stroke="#17AB4F" stroke-width="1" stroke-miterlimit="50"/>
   </g>
 </svg>

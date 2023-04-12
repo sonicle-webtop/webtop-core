@@ -3,10 +3,11 @@
 <svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" width="16px" height="16px" viewBox="0 0 16 16" enable-background="new 0 0 16 16" xml:space="preserve">
   <g id="main">
     <g id="icon">
-      <path d="M3.5,2.933L3.5,12.03L3.5,14.5L5.8,14.5L5.8,5.8L14.5,5.8L14.5,4.557L10.53,0.5L3.5,0.5zz" fill="#FFFFFF"/>
-      <path d="M3,0.5L3,2.933L4,2.933L4,1L10.32,1L14,4.761L14,5.8L15,5.8L15,4.557L15,4.353L14.86,4.207L10.89,0.1504L10.74,0L10.53,0L3.5,0L3,0zM3,14.5L3,15L3.5,15L5.8,15L5.8,14L4,14L4,12.03L3,12.03zz" fill="#383838"/>
-      <path d="M10,4.5L10,5L10.5,5L14.5,5L14.5,4L11,4L11,0.5L10,0.5zz" fill="#383838"/>
-      <path d="M0,5L8,5L8,4L0,4zM0,7L5.8,7L5.8,6L0,6zM0,9L5.8,9L5.8,8L0,8zM0,11L5.8,11L5.8,10L0,10zz" fill="#228BCB"/>
+      <path d="M2.5,4L10,4L10,5.8L14.5,5.8L14.5,4.557L10.53,0.5L2.5,0.5zz" fill="#FFFFFF"/>
+      <path d="M2,4L3,4L3,1L10,1L10,5L14,5L14,5.8L15,5.8L15,4.353L10.74,0L2,0zM13.26,4L11,4L11,1.693zz" fill="#383838"/>
+      <path d="M0.5,14.5L5.8,14.5L5.8,5.8L8.5,5.8L8.5,5.5L0.5,5.5zz" fill="#FFFFFF"/>
+      <path d="M0,5.5L0,14.5L0,15L0.5,15L5.8,15L5.8,14L1,14L1,6L5.8,6L5.8,5.8L9,5.8L9,5.5L9,5L8.5,5L0.5,5L0,5zz" fill="#4EA17E"/>
+      <path d="M4,8L1,8L1,9L4,9L4,11L1,11L1,12L4,12L4,14L5,14L5,12L5.8,12L5.8,11L5,11L5,9L5.8,9L5.8,8L5,8L5,6L4,6zz" fill="#4EA17E" opacity="0.3"/>
     </g>
     <g id="overlay">
       <rect x="7.5" y="7.5" width="8" height="8" fill="#FFFFFF" stroke="#17AB4F" stroke-width="1" stroke-miterlimit="10"/>

@@ -3,7 +3,8 @@
 <svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" width="32px" height="32px" viewBox="0 0 32 32" enable-background="new 0 0 32 32" xml:space="preserve">
   <g id="icon">
     <rect x="1.5" y="3.5" width="29" height="25" fill="#FFFFFF"/>
-    <circle cx="24" cy="9" r="2.5" fill="#FFFFFF" stroke="#ED8730" stroke-width="1" stroke-miterlimit="10"/>
+    <circle cx="24" cy="9" r="2.5" fill="#F7DA8E" stroke="#E57428" stroke-width="1" stroke-miterlimit="10"/>
+    <path d="M30.5,28.4H1.5v-9.1c5.722,-7.308,8.632,-6.852,14.833,0.6c4.496,-5.223,9.249,-3.326,14.167,3.1V28.4z" fill="#ACD8B1"/>
     <path d="M16.388,19.76c5.523,-5.925,9.485,-1.782,14.112,2.909M23.725,25.652C13.93,21.896,10.746,5.181,1.5,20.071" fill="none" stroke="#0BA04A" stroke-width="1.2" stroke-miterlimit="10"/>
     <path d="M31,29H1V3h30V29zM2,28h28V4H2V28z" fill="#383838"/>
   </g>

@@ -4,8 +4,8 @@
   <g id="icon">
     <polygon points="11.533,0.5 3.5,0.5 3.5,5 10,5 10,15.5 15.5,15.5 15.5,4.557" fill="#FFFFFF" stroke-linejoin="miter"/>
     <path d="M11.744,0H3v5h1V1h7v4h4v10h-5v1h6V4.353L11.744,0zM12,4V1.693L14.256,4H12z" fill="#383838"/>
-    <rect x="0.5" y="6.5" width="8" height="9" fill="#FFFFFF" stroke="#228BCB" stroke-width="1" stroke-miterlimit="10"/>
-    <path d="M8,9.5" fill="none" stroke="#0964B0" stroke-width="1" stroke-miterlimit="10"/>
-    <path d="M4.5,7v8M1,9.5h7M1,12.5h7" fill="none" stroke="#228BCB" stroke-width="1" stroke-miterlimit="10" opacity="0.3"/>
+    <rect x="0.5" y="6.5" width="8" height="9" fill="#FFFFFF" stroke="#4EA17E" stroke-width="1" stroke-miterlimit="10"/>
+    <path d="M8,9.5" fill="none" stroke="#4EA17E" stroke-width="1" stroke-miterlimit="10"/>
+    <path d="M4.5,7v8M1,9.5h7M1,12.5h7" fill="none" stroke="#4EA17E" stroke-width="1" stroke-miterlimit="10" opacity="0.3"/>
   </g>
 </svg>

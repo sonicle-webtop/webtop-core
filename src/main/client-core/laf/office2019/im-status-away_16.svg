@@ -10,8 +10,8 @@
       <path d="M2.5,9L3.5,9L3.5,8L2.5,8zM4.5,9L5.5,9L5.5,8L4.5,8zM6.5,8.767L6.775,8.315L7.011,8L6.5,8zz" fill="#238BCB"/>
     </g>
     <g id="overlay">
-      <path d="M7.5,11.5c0,-2.209,1.791,-4,4,-4s4,1.791,4,4s-1.791,4,-4,4S7.5,13.709,7.5,11.5zM9.06,14.669M13.96,14.654" fill="#FEFEFF" stroke="#6A4905" stroke-width="1" stroke-miterlimit="10"/>
-      <path d="M11.5,9v2.534l1.737,1.926" fill="none" stroke="#E29B0A" stroke-width="1" stroke-miterlimit="10"/>
+      <path d="M7.5,11.5c0,-2.209,1.791,-4,4,-4s4,1.791,4,4s-1.791,4,-4,4S7.5,13.709,7.5,11.5zM9.06,14.669M13.96,14.654" fill="#FEFEFF" stroke="#61410E" stroke-width="1" stroke-miterlimit="10"/>
+      <path d="M11.5,9v2.534l1.737,1.926" fill="none" stroke="#CF8A1D" stroke-width="1" stroke-miterlimit="10"/>
     </g>
   </g>
 </svg>

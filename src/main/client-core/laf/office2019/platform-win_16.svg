@@ -2,11 +2,12 @@
 <!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
 <svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" width="16px" height="16px" viewBox="0 0 16 16" enable-background="new 0 0 16 16" xml:space="preserve">
   <g id="icon">
-    <g>
-      <rect x="8" y="2" width="7" height="6" fill="#3E79B4"/>
-      <rect y="2" width="7" height="6" fill="#3E79B4"/>
-      <rect y="9" width="7" height="5.9" fill="#3E79B4"/>
-      <rect x="8" y="9" width="7" height="5.9" fill="#3E79B4"/>
-    </g>
+    <path d="M2.5,3.5v1.627l8.062,-1.084c0.232,-0.031,0.438,0.149,0.438,0.383V13.5h4.5V3.5H2.5z" fill="#FFFFFF"/>
+    <polygon points="2,3 2,5.195 3,5.06 3,4 6,4 6,4.657 7,4.523 7,4 15,4 15,13 11,13 11,14 16,14 16,3" fill="#383838" stroke-linejoin="miter"/>
+    <path d="M11,10h3v1h-3V10zM11,6v1h3V6H11zM11,9h3V8h-3V9z" fill="#787979"/>
+    <rect x="2.5" y="0.5" width="13" height="3" fill="#92CBEE"/>
+    <path d="M16,4H2V0h14V4zM3,3h12V1H3V3z" fill="#0964B0"/>
+    <path d="M14,2.5h-1V1.5h1V2.5zM12,1.5h-1v1h1V1.5zM10,1.5H9v1h1V1.5z" fill="#383838"/>
+    <path d="M9.5,15.3L0.5,14.09V6.91L9.5,5.7V15.3zM0.703,10.5h8.439M4.451,6.556v7.887" fill="#92CBEE" stroke="#0964B0" stroke-width="1" stroke-linecap="round" stroke-miterlimit="10"/>
   </g>
 </svg>
