@@ -36,7 +36,8 @@ Ext.define('Sonicle.webtop.core.ux.field.Search', {
 	alias: ['widget.wtsearchfield'],
 	requires: [
 		'Sonicle.Object',
-		'Sonicle.String'
+		'Sonicle.String',
+		'Sonicle.form.field.search.data.SuggestionModel'
 	],
 	uses: [
 		'Sonicle.webtop.core.ux.panel.CustomFieldsBase'
@@ -56,6 +57,28 @@ Ext.define('Sonicle.webtop.core.ux.field.Search', {
 	 * Set to `false` to not use query's any-text in highlighting.
 	 */
 	highlightAnyText: true,
+	
+	/**
+	 * @cfg {String} [suggestionServiceId]
+	 * Target WebTop service ID.
+	 */
+	
+	/**
+	 * @cfg {String} [suggestionAction=ManageSearchSuggestions]
+	 * The action-name to be called against service above.
+	 */
+	suggestionAction: 'ManageSearchSuggestions',
+	
+	/**
+	 * @cfg {String} [suggestionContext]
+	 * The suggestion context-name to be passed to above {@link #suggestionAction}.
+	 */
+	
+	/**
+	 * @cfg {Boolean} [enableQuerySaving=false]
+	 * Set to `true` to enable search saving.
+	 */
+	enableQuerySaving: false,
 	
 	/**
      * @event query
@@ -86,7 +109,76 @@ Ext.define('Sonicle.webtop.core.ux.field.Search', {
 		if (Ext.isEmpty(cfg.usageText)) {
 			cfg.usageText = WT.res('wtsearchfield.usage');
 		}
+		if (Ext.isEmpty(cfg.saveTooltip)) {
+			cfg.saveTooltip = WT.res('wtsearchfield.save');
+		}
 		me.callParent([cfg]);
+	},
+	
+	initComponent: function() {
+		var me = this,
+			suggest, save;
+		
+		me.suggestEnabled = suggest = !Ext.isEmpty(me.suggestionServiceId) && !Ext.isEmpty(me.suggestionContext);
+		me.saveQueryEnabled = save = me.suggestEnabled && me.enableQuerySaving;
+		
+		if (suggest) {
+			Ext.apply(me, {
+				listConfig: Ext.apply(me.listConfig || {}, {
+					displayField: 'label',
+					getInnerTpl: function(displayField) {
+						return '{label}&nbsp;<span class="wt-text-smaller-20 wt-opacity-50">{preview}</span>';
+					},
+					enableButton: true,
+					getButtonTooltip: function() {
+						return WT.res('wtsearchfield.suggestion.entry.button.tip');
+					},
+					buttonHandler: function(s, e, rec) {
+						rec.drop();
+						rec.store.sync();
+					}
+				}),
+				store: {
+					autoLoad: true,
+					model: 'Sonicle.form.field.search.data.SuggestionModel',
+					proxy: WTF.apiProxy(me.suggestionServiceId, me.suggestionAction, null, {
+						extraParams: {
+							context: me.suggestionContext
+						},
+						writer: {
+							allowSingle: false // Always wraps records into an array
+						}
+					})
+				},
+				valueField: 'query',
+				displayField: 'query',
+				sourceField: 'type',
+				getSource: function(values, value) {
+					var SM = Sonicle.form.field.search.data.SuggestionModel,
+						s = value;
+					if (SM.TYPE_RECENT === value) s = '['+WT.res('wtsearchfield.suggestion.recent')+']';
+					if (SM.TYPE_FAV === value) s = '['+WT.res('wtsearchfield.suggestion.favorite')+']';
+					return s;
+				},
+				sourceCls: 'wt-text-smaller-20 wt-opacity-50'
+			});
+		}
+		Ext.apply(me, {
+			saveButton: save
+		});
+		
+		me.callParent(arguments);
+		if (save) {
+			me.on('save', me.onSaveQuery, me);
+		}
+	},
+	
+	destroy: function() {
+		var me = this;
+		if (me.saveQueryEnabled) {
+			me.un('save', me.onSaveQuery, me);
+		}
+		me.callParent();
 	},
 	
 	/**
@@ -165,6 +257,51 @@ Ext.define('Sonicle.webtop.core.ux.field.Search', {
 			}
 		}
 		return null;
+	},
+	
+	privates: {
+		onSaveQuery: function(s, value, qObj) {
+			var me = this;
+			me.suspendInputFocusing++;
+			if (Ext.isEmpty(value)) {
+				WT.warn(WT.res('wtsearchfield.error.query.save.empty'));
+			} else {
+				WT.prompt(WT.res('wtsearchfield.prompt.query.save.lbl'), {
+					title: WT.res('wtsearchfield.prompt.query.save.tit'),
+					value: '',
+					fn: function(bid, name, cfg) {
+						me.suspendInputFocusing--;
+						if (bid === 'ok') {
+							if (Ext.isEmpty(name)) {
+								Ext.MessageBox.show(Ext.apply({}, {msg: cfg.msg}, cfg));
+							} else {
+								me.saveQuery(name, value, {
+									callback: function(success, data, json) {
+										WT.handleError(success, json);
+									}
+								});
+							}	
+						}
+					}
+				});
+			}
+		},
+		
+		saveQuery: function(name, queryText, opts) {
+			opts = opts || {};
+			var me = this;
+			WT.ajaxReq(me.suggestionServiceId, me.suggestionAction, {
+				params: {
+					crud: 'save',
+					context: me.suggestionContext,
+					name: name,
+					queryText: queryText
+				},
+				callback: function(success, json) {
+					Ext.callback(opts.callback, opts.scope || me, [success, json.data, json]);
+				}
+			});
+		}
 	},
 	
 	statics: {

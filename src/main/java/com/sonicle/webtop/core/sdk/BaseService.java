@@ -39,28 +39,30 @@ import com.sonicle.commons.web.ServletUtils;
 import com.sonicle.commons.web.json.Payload;
 import com.sonicle.commons.web.json.JsonResult;
 import com.sonicle.commons.web.json.MapItem;
+import com.sonicle.commons.web.json.PayloadAsList;
 import com.sonicle.webtop.core.CoreManager;
-import com.sonicle.webtop.core.CoreServiceSettings;
 import com.sonicle.webtop.core.CoreUserSettings;
 import com.sonicle.webtop.core.app.AbstractEnvironmentService;
-import com.sonicle.webtop.core.app.CoreManifest;
-import com.sonicle.webtop.core.app.RunContext;
 import com.sonicle.webtop.core.app.WT;
 import com.sonicle.webtop.core.app.WebTopApp;
+import com.sonicle.webtop.core.app.sdk.bol.js.JsSearchSuggestion;
 import com.sonicle.webtop.core.bol.OServiceStoreEntry;
 import com.sonicle.webtop.core.bol.js.JsValue;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  *
  * @author malbinola
  */
 public abstract class BaseService extends AbstractEnvironmentService<PrivateEnvironment> {
+	public static final String META_CONTEXT_FAV_SUFFIX = "-favorite";
 
 	@Override
 	public void ready() throws WTException {
@@ -106,6 +108,58 @@ public abstract class BaseService extends AbstractEnvironmentService<PrivateEnvi
 		} catch (Exception ex) {
 			//logger.error("Error executing action SetToolComponentWidth", ex);
 			new JsonResult(false, "Unable to save Tool width").printTo(out);
+		}
+	}
+	
+	public void processManageSearchSuggestions(HttpServletRequest request, HttpServletResponse response, PrintWriter out) throws WTException {
+		CoreManager core = WT.getCoreManager();
+		ArrayList<Object[]> items = null;
+		
+		try {
+			String context = ServletUtils.getStringParameter(request, "context", true);	
+			String crud = ServletUtils.getStringParameter(request, "crud", true);
+			if (Crud.READ.equals(crud)) {
+				String query = ServletUtils.getStringParameter(request, "query", null);
+				
+				items = new ArrayList<>();
+				if (query != null) { // Recents
+					Map<String, String> recentEntries = core.listMetaEntriesValuesByQuery(SERVICE_ID, context, "%"+query+"%", 10, true);
+					for (String entryValue : recentEntries.values()) {
+						items.add(JsSearchSuggestion.asObjectItem(JsSearchSuggestion.Type.RECENT, entryValue, ""));
+					}
+				}
+				// Favorites
+				Map<String, String> favoriteEntries = core.listMetaEntriesValuesByQuery(SERVICE_ID, context + META_CONTEXT_FAV_SUFFIX, StringUtils.isBlank(query) ? null : "%"+query+"%", 1000, true);
+				for (Map.Entry<String, String> entry : favoriteEntries.entrySet()) {
+					items.add(JsSearchSuggestion.asObjectItem(JsSearchSuggestion.Type.FAVORITE, entry.getValue(), entry.getKey()));
+				}
+				
+				new JsonResult(items).printTo(out);
+				
+			} else if (Crud.SAVE.equals(crud)) {
+				String name = ServletUtils.getStringParameter(request, "name", true);
+				String queryText = ServletUtils.getStringParameter(request, "queryText", true);
+				
+				core.saveMetaEntry(SERVICE_ID, context + META_CONTEXT_FAV_SUFFIX, name, queryText, false);
+				new JsonResult().printTo(out);
+				
+			} else if (Crud.DELETE.equals(crud)) {
+				PayloadAsList<JsSearchSuggestion.List> pl = ServletUtils.getPayloadAsList(request, JsSearchSuggestion.List.class);
+				
+				for (JsSearchSuggestion entry : pl.data) {
+					if (JsSearchSuggestion.Type.RECENT.equals(entry.type)) {
+						boolean ret = core.deleteMetaEntry(SERVICE_ID, context, entry.query, true) == 1;
+						if (!ret) throw new WTException("Entry not found [{}, {}]", context, entry.query);
+					} else if (JsSearchSuggestion.Type.FAVORITE.equals(entry.type)) {
+						boolean ret = core.deleteMetaEntry(SERVICE_ID, context + META_CONTEXT_FAV_SUFFIX, entry.name, true) == 1;
+						if (!ret) throw new WTException("Entry not found [{}, {}]", context + META_CONTEXT_FAV_SUFFIX, entry.name);
+					}
+				}
+				new JsonResult().printTo(out);
+			}
+		} catch (Exception ex) {
+			WebTopApp.logger.error("Error in ManageSearchSuggestions", ex);
+			new JsonResult(ex).printTo(out);
 		}
 	}
 	
