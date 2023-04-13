@@ -2441,7 +2441,7 @@ public final class WebTopManager {
 				// skipping NULLs and objects with non-matching domain
 				.filter((pid) -> (pid != null))
 				// then lookup related PID
-				.map((pid) -> subjectSidCache.getSid(pid, GenericSubject.Type.USER))
+				.map((pid) -> subjectSidCache.getSid(pid, GenericSubject.Type.GROUP, GenericSubject.Type.USER, GenericSubject.Type.RESOURCE, GenericSubject.Type.ROLE))
 				// making sure that match was successful
 				.filter((sid) -> (sid != null))
 				.collect(Collectors.toSet());
@@ -2834,6 +2834,135 @@ public final class WebTopManager {
 			DbUtils.closeQuietly(con);
 		}
 	}
+	
+	/**
+	 * Enumerates meta-entries whose keys matching the specified search-query.
+	 * @param profileId The profile ID owning the entry.
+	 * @param serviceId The related service ID.
+	 * @param context The meta-entry context.
+	 * @param keyQuery The search-query to apply on key (supports SQL wildcards). Can be NULL.
+	 * @param maxResults Max results to return.
+	 * @param caseInsensitiveKey Set to `true` to perform a case-insentive match on the key.
+	 * @return A map of results.
+	 * @throws WTException 
+	 */
+	public Map<String, String> listMetaEntriesValuesByQuery(final UserProfileId profileId, final String serviceId, final String context, final String keyQuery, final int maxResults, final boolean caseInsensitiveKey) throws WTException {
+		Check.notNull(profileId, "profileId");
+		Check.notEmpty(serviceId, "serviceId");
+		Check.notEmpty(context, "context");
+		Check.notNegative(maxResults, "maxResults");
+		ServiceStoreEntryDAO sseDao = ServiceStoreEntryDAO.getInstance();
+		Connection con = null;
+		
+		try {
+			con = WT.getCoreConnection();
+			if (StringUtils.isBlank(keyQuery)) {
+				return sseDao.mapValuesByProfileServiceContextLimit(con, profileId.getDomainId(), profileId.getUserId(), serviceId, context, maxResults);
+			} else {
+				return sseDao.mapValuesByProfileServiceContextLikeKeyLimit(con, profileId.getDomainId(), profileId.getUserId(), serviceId, context, keyQuery, maxResults, caseInsensitiveKey);
+			}
+			
+		} catch (Exception ex) {
+			throw ExceptionUtils.wrapThrowable(ex);
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
+	/**
+	 * Checks if a meta-entry exists.
+	 * @param profileId The profile ID owning the entry.
+	 * @param serviceId The meta-entry service ID.
+	 * @param context The meta-entry context.
+	 * @param key The meta-entry key.
+	 * @param caseInsensitiveKey Set to `true` to perform a case-insentive match on the key.
+	 * @return Boolean value according if a match is found or not.
+	 * @throws WTException 
+	 */
+	public boolean existMetaEntryKey(final UserProfileId profileId, final String serviceId, final String context, final String key, final boolean caseInsensitiveKey) throws WTException {
+		Check.notNull(profileId, "profileId");
+		Check.notEmpty(serviceId, "serviceId");
+		Check.notEmpty(context, "context");
+		Check.notEmpty(key, "key");
+		ServiceStoreEntryDAO sseDao = ServiceStoreEntryDAO.getInstance();
+		Connection con = null;
+		
+		try {
+			con = WT.getCoreConnection();
+			return sseDao.existKeyByProfileServiceContextKey(con, profileId.getDomainId(), profileId.getUserId(), serviceId, context, key, caseInsensitiveKey);
+			
+		} catch (Exception ex) {
+			throw ExceptionUtils.wrapThrowable(ex);
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
+	/**
+	 * Inserts or updates the value of a meta-entry.
+	 * @param profileId The profile ID owning the entry.
+	 * @param serviceId The related service ID.
+	 * @param context The meta-entry context.
+	 * @param key The meta-entry key.
+	 * @param value The meta-entry value.
+	 * @param forceKeyCaseInsensitive Set to `true` to internally treat the key as case-insensitive.
+	 * @return
+	 * @throws WTException 
+	 */
+	public boolean addOrUpdateMetaEntry(final UserProfileId profileId, final String serviceId, final String context, final String key, final String value, final boolean forceKeyCaseInsensitive) throws WTException {
+		Check.notNull(profileId, "profileId");
+		Check.notEmpty(serviceId, "serviceId");
+		Check.notEmpty(context, "context");
+		Check.notEmpty(key, "key");
+		ServiceStoreEntryDAO sseDao = ServiceStoreEntryDAO.getInstance();
+		Connection con = null;
+		
+		try {
+			String sanitizedKey = StringUtils.trim(key);
+			if (forceKeyCaseInsensitive) sanitizedKey = StringUtils.upperCase(key);
+			con = WT.getCoreConnection();
+			int ret = sseDao.update(con, profileId.getDomainId(), profileId.getUserId(), serviceId, context, sanitizedKey, value);
+			if (ret == 0) ret = sseDao.insert(con, profileId.getDomainId(), profileId.getUserId(), serviceId, context, sanitizedKey, value);
+			return ret == 1;
+			
+		} catch (Exception ex) {
+			throw ExceptionUtils.wrapThrowable(ex);
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
+	/**
+	 * Deletes a meta-entry.
+	 * @param profileId The profile ID owning the entry.
+	 * @param serviceId The related service ID.
+	 * @param context The meta-entry context.
+	 * @param key The meta-entry key.
+	 * @param caseInsensitiveKey Set to `true` to perform a case-insentive match on the key.
+	 * @return The number of entries involved in the operation.
+	 * @throws WTException 
+	 */
+	public int deleteMetaEntry(final UserProfileId profileId, final String serviceId, final String context, final String key, final boolean caseInsensitiveKey) throws WTException {
+		Check.notNull(profileId, "profileId");
+		Check.notEmpty(serviceId, "serviceId");
+		Check.notEmpty(context, "context");
+		Check.notEmpty(key, "key");
+		ServiceStoreEntryDAO sseDao = ServiceStoreEntryDAO.getInstance();
+		Connection con = null;
+		
+		try {
+			String sanitizedKey = StringUtils.trim(key);
+			con = WT.getCoreConnection();
+			return sseDao.delete(con, profileId.getDomainId(), profileId.getUserId(), serviceId, context, sanitizedKey, caseInsensitiveKey);
+			
+		} catch (Exception ex) {
+			throw ExceptionUtils.wrapThrowable(ex);
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
+	
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	
@@ -4564,7 +4693,7 @@ public final class WebTopManager {
 						publicInternetName
 					);
 					
-					LOGGER.debug("[DomainInfoCache] Working on '{}'", data.domainId);
+					LOGGER.trace("[DomainInfoCache] Working on '{}'", data.domainId);
 					_byDomainId.put(data.domainId, data);
 					// Public name (scrambled id)
 					_byPublicId.put(data.publicId, data);

@@ -3639,6 +3639,76 @@ public class CoreManager extends BaseManager {
 		}
 	}
 	
+	/**
+	 * Enumerates meta-entries whose keys matching the specified search-query.
+	 * @param serviceId The related service ID.
+	 * @param context The meta-entry context.
+	 * @param keyQuery The search-query to apply on key (supports SQL wildcards). Can be NULL.
+	 * @param maxResults Max results to return.
+	 * @param caseInsensitiveKey Set to `true` to perform a case-insentive match on the key.
+	 * @return A map of results.
+	 * @throws WTException 
+	 */
+	public Map<String, String> listMetaEntriesValuesByQuery(final String serviceId, final String context, final String keyQuery, final int maxResults, final boolean caseInsensitiveKey) throws WTException {
+		WebTopManager wtMgr = wta.getWebTopManager();
+		
+		ensureProfileDomain(getTargetProfileId().getDomainId());
+		return wtMgr.listMetaEntriesValuesByQuery(getTargetProfileId(), serviceId, context, keyQuery, maxResults, caseInsensitiveKey);
+	}
+	
+	/**
+	 * Checks if a meta-entry exists.
+	 * @param serviceId The related service ID.
+	 * @param context The meta-entry context.
+	 * @param key The meta-entry key.
+	 * @param caseInsensitiveKey Set to `true` to perform a case-insentive match on the key.
+	 * @return Boolean value according if a match is found or not.
+	 * @throws WTException 
+	 */
+	public boolean existMetaEntryKey(final String serviceId, final String context, final String key, final boolean caseInsensitiveKey) throws WTException {
+		WebTopManager wtMgr = wta.getWebTopManager();
+		
+		ensureProfileDomain(getTargetProfileId().getDomainId());
+		return wtMgr.existMetaEntryKey(getTargetProfileId(), serviceId, context, key, caseInsensitiveKey);
+	}
+	
+	/**
+	 * Stores (inserts/updates) the value of a meta-entry.
+	 * @param serviceId The related service ID.
+	 * @param context The meta-entry context.
+	 * @param key The meta-entry key.
+	 * @param value The meta-entry value.
+	 * @param forceKeyCaseInsensitive Set to `true` to internally treat the key as case-insensitive.
+	 * @return
+	 * @throws WTException 
+	 */
+	public boolean saveMetaEntry(final String serviceId, final String context, final String key, final String value, final boolean forceKeyCaseInsensitive) throws WTException {
+		WebTopManager wtMgr = wta.getWebTopManager();
+		
+		ensureProfileDomain(getTargetProfileId().getDomainId());
+		return wtMgr.addOrUpdateMetaEntry(getTargetProfileId(), serviceId, context, key, value, forceKeyCaseInsensitive);
+	}
+	
+	/**
+	 * Deletes a meta-entry.
+	 * @param serviceId The related service ID.
+	 * @param context The meta-entry context.
+	 * @param key The meta-entry key.
+	 * @param caseInsensitiveKey Set to `true` to perform a case-insentive match on the key.
+	 * @return The number of entries involved in the operation.
+	 * @throws WTException 
+	 */
+	public int deleteMetaEntry(final String serviceId, final String context, final String key, final boolean caseInsensitiveKey) throws WTException {
+		WebTopManager wtMgr = wta.getWebTopManager();
+		
+		ensureProfileDomain(getTargetProfileId().getDomainId());
+		return wtMgr.deleteMetaEntry(getTargetProfileId(), serviceId, context, key, caseInsensitiveKey);
+	}
+	
+	/**
+	 * @deprecated Use listMetaEntriesValuesByQuery (with insensitive flag) instead
+	 */
+	@Deprecated
 	public List<OServiceStoreEntry> listServiceStoreEntriesByQuery(String serviceId, String context, String query, int max) {
 		ServiceStoreEntryDAO sseDao = ServiceStoreEntryDAO.getInstance();
 		UserProfileId targetPid = getTargetProfileId();
@@ -3661,6 +3731,11 @@ public class CoreManager extends BaseManager {
 		}
 	}
 	
+	/**
+	 * @deprecated use existMetaEntryKey (with insensitive flag) instead
+	 *  - used by mail service: WT.getCoreManager().getServiceStoreEntry(SERVICE_ID, "receipt", messageid)==null
+	 */
+	@Deprecated
 	public OServiceStoreEntry getServiceStoreEntry(String serviceId, String context, String key) {
 		ServiceStoreEntryDAO sseDao = ServiceStoreEntryDAO.getInstance();
 		UserProfileId targetPid = getTargetProfileId();
@@ -3677,6 +3752,10 @@ public class CoreManager extends BaseManager {
 		}
 	}
 	
+	/**
+	 * @deprecated use saveMetaEntry(forcing insensitive key) instead
+	 */
+	@Deprecated
 	public void addServiceStoreEntry(String serviceId, String context, String key, String value) {
 		ServiceStoreEntryDAO sseDao = ServiceStoreEntryDAO.getInstance();
 		UserProfileId targetPid = getTargetProfileId();
@@ -3688,7 +3767,7 @@ public class CoreManager extends BaseManager {
 			con = WT.getCoreConnection();
 			osse = sseDao.select(con, targetPid.getDomainId(), targetPid.getUserId(), serviceId, context, key);
 			if (osse != null) {
-				sseDao.update(con, osse.getDomainId(), osse.getUserId(), osse.getServiceId(), osse.getContext(), key, value);
+				sseDao.update_OLD(con, osse.getDomainId(), osse.getUserId(), osse.getServiceId(), osse.getContext(), key, value);
 			} else {
 				osse = new OServiceStoreEntry();
 				osse.setDomainId(targetPid.getDomainId());
@@ -3707,38 +3786,10 @@ public class CoreManager extends BaseManager {
 		}
 	}
 	
-	public void deleteServiceStoreEntry() {
-		ServiceStoreEntryDAO sseDao = ServiceStoreEntryDAO.getInstance();
-		UserProfileId targetPid = getTargetProfileId();
-		Connection con = null;
-		
-		try {
-			con = WT.getCoreConnection();
-			sseDao.deleteByDomainUser(con, targetPid.getDomainId(), targetPid.getUserId());
-			
-		} catch(SQLException | DAOException ex) {
-			logger.error("Error deleting servicestore entry [{}]", targetPid, ex);
-		} finally {
-			DbUtils.closeQuietly(con);
-		}
-	}
-	
-	public void deleteServiceStoreEntry(String serviceId) {
-		ServiceStoreEntryDAO sseDao = ServiceStoreEntryDAO.getInstance();
-		UserProfileId targetPid = getTargetProfileId();
-		Connection con = null;
-		
-		try {
-			con = WT.getCoreConnection();
-			sseDao.deleteByDomainUserService(con, targetPid.getDomainId(), targetPid.getUserId(), serviceId);
-			
-		} catch(SQLException | DAOException ex) {
-			logger.error("Error deleting servicestore entry [{}, {}]", targetPid, serviceId, ex);
-		} finally {
-			DbUtils.closeQuietly(con);
-		}
-	}
-	
+	/**
+	 * @deprecated use deleteMetaEntry (with insensitive flag) instead
+	 */
+	@Deprecated
 	public void deleteServiceStoreEntry(String serviceId, String context, String key) {
 		ServiceStoreEntryDAO sseDao = ServiceStoreEntryDAO.getInstance();
 		UserProfileId targetPid = getTargetProfileId();
@@ -3746,7 +3797,7 @@ public class CoreManager extends BaseManager {
 		
 		try {
 			con = WT.getCoreConnection();
-			sseDao.delete(con, targetPid.getDomainId(), targetPid.getUserId(), serviceId, context, key);
+			sseDao.delete_OLD(con, targetPid.getDomainId(), targetPid.getUserId(), serviceId, context, key);
 			
 		} catch(SQLException | DAOException ex) {
 			logger.error("Error deleting servicestore entry [{}, {}, {}, {}]", targetPid, serviceId, context, key, ex);
