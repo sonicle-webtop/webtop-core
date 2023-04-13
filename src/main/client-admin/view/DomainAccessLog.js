@@ -226,7 +226,7 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainAccessLog', {
 									if (v === true) {
 										return rec.genGeoCountryFlagMarkup() + '&nbsp;' + Ext.String.htmlEncode(rec.genGeoDescription());
 									} else {
-										meta.tdCls = 'wt-text-smaller20 wt-text-wt-theme-text-lighter2';
+										meta.tdCls = 'wt-text-smaller-20 wt-text-wt-theme-text-lighter2';
 										var key = geoAvail && rec.get('isAddressPublic') ? 'domainAccessLog.gp.details.geoInfo.avail.emp' : 'domainAccessLog.gp.details.geoInfo.unavail.emp';
 										return '(' + me.res(key) + ')';
 									}

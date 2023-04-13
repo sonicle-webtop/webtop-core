@@ -28,9 +28,9 @@
 .wt-striked { text-decoration: line-through; }
 .wt-text-centered { text-align: center; }
 .wt-centered { text-align: center; }
-.wt-text-smaller10 { font-size:0.9em; }
-.wt-text-smaller20 { font-size:0.8em; }
-.wt-text-bigger20 { font-size:1.2em; }
+.wt-text-smaller-10 { font-size: 0.9em; }
+.wt-text-smaller-20 { font-size: 0.8em; }
+.wt-text-bigger-20 { font-size: 1.2em; }
 .wt-text-ellipsis { text-overflow: ellipsis; overflow: hidden; white-space: nowrap; }
 
 .wt-opacity-100 { opacity: 1 !important; }
