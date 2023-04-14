@@ -168,6 +168,7 @@ Ext.define('Sonicle.webtop.core.ux.field.Search', {
 		});
 		
 		me.callParent(arguments);
+		me.listConfig.disableFocusSaving = true;
 		if (save) {
 			me.on('save', me.onSaveQuery, me);
 		}
