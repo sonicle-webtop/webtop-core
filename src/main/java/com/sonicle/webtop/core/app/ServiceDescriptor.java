@@ -36,7 +36,6 @@ package com.sonicle.webtop.core.app;
 import com.sonicle.webtop.core.app.util.ClassHelper;
 import com.sonicle.commons.LangUtils;
 import com.sonicle.webtop.core.sdk.BaseBackgroundService;
-import com.sonicle.webtop.core.sdk.BaseRestApiEndpoint;
 import com.sonicle.webtop.core.sdk.BaseController;
 import com.sonicle.webtop.core.sdk.BasePublicService;
 import com.sonicle.webtop.core.sdk.BaseService;
@@ -82,7 +81,6 @@ public class ServiceDescriptor {
 	private Class jobServiceClass = null;
 	private Class backgroundServiceClass = null;
 	private Class userOptionsServiceClass = null;
-	private final List<ApiEndpointClass> restApiEndpointClasses = new ArrayList<>();
 	private final List<OpenApiDefinition> openApiDefinitions = new ArrayList<>();
 	private boolean upgraded = false;
 	private final HashMap<String, Whatsnew> whatsnewCache = new HashMap<>();
@@ -98,13 +96,6 @@ public class ServiceDescriptor {
 		backgroundServiceClass = ClassHelper.loadClass(true, manifest.getBackgroundServiceClassName(), BaseBackgroundService.class, "BackgroundService");
 		userOptionsServiceClass = ClassHelper.loadClass(true, manifest.getUserOptionsServiceClassName(), BaseUserOptionsService.class, "UserOptionsService");
 		
-		for (ServiceManifest.RestApiEndpoint rae : manifest.getApiEndpoints()) {
-			// Deprecated
-			final Class clazz = ClassHelper.loadClass(false, rae.className, BaseRestApiEndpoint.class, "RestApiEndpoint");
-			if (clazz != null) {
-				restApiEndpointClasses.add(new ApiEndpointClass(clazz, sanitizeApiEndpointPath(manifest.getId(), rae.path)));
-			}
-		}
 		for (ServiceManifest.RestApi ra : manifest.getRestApis()) {
 			Set<Class<?>> classes = findSubTypesClassesOf(ra.implPackage, com.sonicle.webtop.core.sdk.BaseRestApiResource.class);
 			openApiDefinitions.add(new OpenApiDefinition(ra.oasFilePath, ra.context, ra.implPackage, classes));
@@ -174,14 +165,6 @@ public class ServiceDescriptor {
 	
 	public Class getBackgroundServiceClass() {
 		return backgroundServiceClass;
-	}
-	
-	public boolean hasRestApiEndpoints() {
-		return !restApiEndpointClasses.isEmpty();
-	}
-	
-	public List<ApiEndpointClass> getRestApiEndpoints() {
-		return restApiEndpointClasses;
 	}
 	
 	public boolean hasOpenApiDefinitions() {
@@ -323,17 +306,6 @@ public class ServiceDescriptor {
 			}
 		}
 		return output;
-	}
-	
-	
-	public static class ApiEndpointClass {
-		public final Class clazz;
-		public final String path;
-		
-		public ApiEndpointClass(Class clazz, String path) {
-			this.clazz = clazz;
-			this.path = path;
-		}
 	}
 	
 	public static class OpenApiDefinition {

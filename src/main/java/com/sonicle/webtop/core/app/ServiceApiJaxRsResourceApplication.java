@@ -93,32 +93,10 @@ public class ServiceApiJaxRsResourceApplication extends ResourceConfig {
 		
 		register(ShiroFeature.class); // Add Shiro integration
 		//register(new ServiceModelProcessor());
-		register(new AuthExceptionMapper()); // Needed for legacy encpoints (in new ones is not applicable due to explicit throws in resource)
-		register(new WTExceptionMapper()); // Needed for legacy encpoints (in new ones is not applicable due to explicit throws in resource)
 		register(org.glassfish.jersey.jackson.JacksonFeature.class);
 		//register(MultiPartFeature.class); // if needed
 		
-		//TODO: deprecate legacy endpoints!!!
-		registerLegacyApiEndpoints(wta, servletConfig);
 		registerServiceApiEndpoints(wta, servletConfig);
-	}
-	
-	@Deprecated
-	private void registerLegacyApiEndpoints(WebTopApp wta, ServletConfig servletConfig) {
-		ServiceManager svcMgr = wta.getServiceManager();
-		
-		String serviceId = servletConfig.getInitParameter(RestApi.INIT_PARAM_WEBTOP_SERVICE_ID);
-		if (StringUtils.isBlank(serviceId)) throw new WTRuntimeException("Invalid servlet init parameter [" + RestApi.INIT_PARAM_WEBTOP_SERVICE_ID + "]");
-		
-		ServiceDescriptor desc = svcMgr.getDescriptor(serviceId);
-		if (desc == null) throw new WTRuntimeException("Service descriptor not found [{0}]", serviceId);
-		
-		if (desc.hasRestApiEndpoints()) {
-			// Take only the first. We do not support many endpoints anymore!!!
-			ServiceDescriptor.ApiEndpointClass endpointClass = desc.getRestApiEndpoints().get(0);
-			LOGGER.debug("[{}] Registering JaxRs resource (legacy) [{}] -> [{}]", servletConfig.getServletName(), endpointClass.clazz.getName(), "/");
-			registerResources(Resource.builder(endpointClass.clazz).path("/").build());
-		}
 	}
 	
 	private void registerServiceApiEndpoints(WebTopApp wta, ServletConfig servletConfig) {

@@ -203,7 +203,7 @@ public class ContextLoader {
 			for (String serviceId : svcMgr.listRegisteredServices()) {
 				ServiceDescriptor desc = svcMgr.getDescriptor(serviceId);
 				
-				if (desc.hasOpenApiDefinitions() || desc.hasRestApiEndpoints()) {
+				if (desc.hasOpenApiDefinitions()) {
 					addRestApiServlet(servletContext, desc);
 				}
 			}

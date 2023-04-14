@@ -24,7 +24,6 @@
 		</userOptions>
 		<jobService className=".JobService" />
 		
-		<restApiEndpoint name=".RestApiEndpoint" />
 		<restApis>
 			<restApi oasFile="openapi-v1.json" />
 		</restApis>

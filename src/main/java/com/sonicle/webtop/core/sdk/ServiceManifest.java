@@ -88,7 +88,6 @@ public class ServiceManifest {
 	protected String userOptionsViewJsClassName;
 	protected String userOptionsModelJsClassName;
 	protected Boolean hidden;
-	protected Map<String, RestApiEndpoint> restApiEndpoints = new LinkedHashMap<>();
 	protected Map<String, RestApi> restApis = new LinkedHashMap<>();
 	protected ArrayList<ServicePermission> permissions = new ArrayList<>();
 	protected ArrayList<Portlet> portlets = new ArrayList<>();
@@ -235,18 +234,6 @@ public class ServiceManifest {
 		}
 		
 		hidden = svcEl.getBoolean("hidden", false);
-		
-		hconf = svcEl.configurationsAt("restApiEndpoint");
-		if (!hconf.isEmpty()) {
-			for (HierarchicalConfiguration el : hconf) {
-				final String name = el.getString("[@name]");
-				if (StringUtils.isBlank(name)) throw new WTException(invalidAttributeValueEx("restApiEndpoint", "name"));
-				final String path = el.getString("[@path]", "");
-				
-				if (restApiEndpoints.containsKey(path)) throw new WTException(invalidAttributeValueEx("restApiEndpoint", "path"));
-				restApiEndpoints.put(path, new RestApiEndpoint(buildJavaClassName(javaPackage, name), path));
-			}
-		}
 		
 		if (!svcEl.configurationsAt("restApis").isEmpty()) {
 			List<HierarchicalConfiguration<ImmutableNode>> restApiEls = svcEl.configurationsAt("restApis.restApi");
@@ -429,14 +416,6 @@ public class ServiceManifest {
 	 */
 	public String getManagerClassName() {
 		return managerClassName;
-	}
-	
-	public RestApiEndpoint getApiEndpoint(String path) {
-		return restApiEndpoints.get(path);
-	}
-	
-	public Collection<RestApiEndpoint> getApiEndpoints() {
-		return restApiEndpoints.values();
 	}
 	
 	public Collection<RestApi> getRestApis() {

@@ -488,20 +488,6 @@ public class ServiceManager {
 	}
 	
 	/**
-	 * Lists IDs of services that have api implementation.
-	 * @return List of services' IDs.
-	 */
-	public List<String> listServicesWithRestApiEndpoints() {
-		ArrayList<String> list = new ArrayList<>();
-		synchronized(lock1) {
-			for (ServiceDescriptor descr : descriptors.values()) {
-				if (descr.hasRestApiEndpoints()) list.add(descr.getManifest().getId());
-			}
-		}
-		return list;
-	}
-	
-	/**
 	 * Lists IDs of services that have private implementation.
 	 * @return List of services' IDs.
 	 */
