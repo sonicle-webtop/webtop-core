@@ -292,9 +292,6 @@ public class Service extends BaseService implements EventListener {
 		UserProfile profile = getEnv().getProfile();
 		ServiceVars vars = new ServiceVars();
 		
-		// New HTMLEditor activation flag: temporary until full transition!!!
-		vars.put("useNewHTMLEditor", us.getUseNewHTMLEditor());
-		
 		boolean docServerEnabled = getDocumentServerEnabled();
 		vars.put("docServerEnabled", docServerEnabled);
 		if (docServerEnabled) {

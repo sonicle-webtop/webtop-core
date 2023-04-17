@@ -804,9 +804,7 @@ public class WebTopSession {
 		}
 		Locale locale = getLocale();
 		
-		// New HTMLEditor activation flag: temporary until full transition!!!
-		boolean useNewHTMLEditor = cus.getUseNewHTMLEditor();
-		fillAppReferences(js, locale, theme, false, useNewHTMLEditor);
+		fillAppReferences(js, locale, theme, false);
 		js.layoutClassName = StringUtils.capitalize(layout);
 		
 		List<String> privateSids = getPrivateServices(true);
@@ -943,7 +941,7 @@ public class WebTopSession {
 			theme += "-touch";
 		}
 
-		fillAppReferences(js, locale, theme, false, false);
+		fillAppReferences(js, locale, theme, false);
 		
 		// Include Core references
 		//js.appManifest.name = coreManifest.getJsPackageName();
@@ -998,17 +996,17 @@ public class WebTopSession {
 		return is;
 	}
 	
-	private void fillAppReferences(JsWTS js, Locale locale, String theme, boolean rtl, boolean useNewHTMLEditor) {
+	private void fillAppReferences(JsWTS js, Locale locale, String theme, boolean rtl) {
 		js.appManifest.name = "Sonicle.webtop.core.app.App";
 		js.appManifest.id = "5ae25afe-182c-466c-a6ad-0a3af0ee74b5";
 		js.appManifest.theme = theme;
 		js.themeName = theme;
 		js.platformName = wta.getPlatformName();
 		js.fileTypes = wta.getFileTypes().toString();
-		fillExtJsReferences(js, locale, theme, rtl, useNewHTMLEditor);
+		fillExtJsReferences(js, locale, theme, rtl);
 	}
 	
-	private void fillExtJsReferences(JsWTS js, Locale locale, String theme, boolean rtl, boolean useNewHTMLEditor) {
+	private void fillExtJsReferences(JsWTS js, Locale locale, String theme, boolean rtl) {
 		js.appManifest.framework = "ext";
 		js.appManifest.toolkit = "classic";
 		
@@ -1028,11 +1026,7 @@ public class WebTopSession {
 		js.appManifest.addJs(VENDOR_PATH + "/screenfull/3.3.2/" + "screenfull.min.js");
 		js.appManifest.addJs(VENDOR_PATH + "/atmosphere/2.3.9/" + "atmosphere.min.js");
 		js.appManifest.addJs(VENDOR_PATH + "/jsxc/3.4.0/" + "jsxc.dep.js");
-		if (useNewHTMLEditor) {
-			js.appManifest.addJs(VENDOR_PATH + "/tinymce/6.3.1/" + "tinymce.min.js");
-		} else {
-			js.appManifest.addJs(VENDOR_PATH + "/tinymce/4.3.12/" + "tinymce.min.js");
-		}
+		js.appManifest.addJs(VENDOR_PATH + "/tinymce/6.3.1/" + "tinymce.min.js");
 		js.appManifest.addJs(VENDOR_PATH + "/plupload/2.3.6/" + "plupload.full.min.js"); // Remember to update paths in Factory.js
 		js.appManifest.addJs(VENDOR_PATH + "/rrule/2.1.0/" + "rrule.min.js");
 		js.appManifest.addJs(VENDOR_PATH + "/markjs/8.11.1/" + "mark.min.js");

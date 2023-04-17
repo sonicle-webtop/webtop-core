@@ -573,14 +573,6 @@ public class CoreServiceSettings extends BaseServiceSettings {
 		return getLong(DEFAULT_PREFIX + IM_UPLOAD_MAXFILESIZE, (long)10485760); // 10MB
 	}
 	
-	/**
-	 * Returns new HTMLEditor activation flag.
-	 * (temporary until full transition)
-	 */
-	public boolean getUseNewHTMLEditor() {
-		return getBoolean(DEFAULT_PREFIX + NEWHTMLEDITOR, true);
-	}
-	
 	public static class ServicesOrder extends ArrayList<String> {
 		public ServicesOrder() {
 			super();

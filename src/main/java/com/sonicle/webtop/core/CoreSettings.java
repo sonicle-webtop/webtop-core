@@ -877,13 +877,6 @@ public class CoreSettings {
 	public static final String POPULAR_MEETING_PROVIDERS = "meeting.popular.providers";
 	
 	/**
-	 * [user]
-	 * [boolean]
-	 * Activates new HTMLEditor based on TinyMCE 5.x.x (temporary until full transition)
-	 */
-	public static final String NEWHTMLEDITOR = "test.newhtmleditor";
-	
-	/**
 	 * [domain+system]
 	 * [enum]
 	 * Meeting provider
