@@ -404,8 +404,8 @@ public class LicenseManager {
 			for (VLicense vlic : licDao.viewByDomain(con, domainId)) {
 				realIds.add(ProductId.build(vlic.getServiceId(), vlic.getProductCode()).toString());
 				List<OLicenseLease> oleases = lleaDao.selectByDomainServiceProduct(con, domainId, vlic.getServiceId(), vlic.getProductCode());
-				final ServiceLicense serviceLicense = AppManagerUtils.createServiceLicense(vlic, oleases);
 				
+				final ServiceLicense serviceLicense = AppManagerUtils.createServiceLicense(vlic, oleases);
 				if (options.has(LicenseListOption.EXTENDED_INFO)) {
 					try {
 						BaseServiceProduct product = ProductRegistry.getInstance().getServiceProductOrThrow(serviceLicense.getProductCode(), domainId);
@@ -426,8 +426,17 @@ public class LicenseManager {
 						if (realIds.contains(productId.toString())) continue;
 						BaseServiceProduct product = ProductRegistry.getInstance().getServiceProduct(productId, domainId);
 						if (product != null && StringUtils.isBlank(product.getBuiltInLicenseString())) continue;
-
-						items.add(AppManagerUtils.createBuiltInServiceLicense(product));
+						
+						final ServiceLicense serviceLicense = AppManagerUtils.createBuiltInServiceLicense(product);
+						if (options.has(LicenseListOption.EXTENDED_INFO)) {
+							try {
+								ProductLicense productLicense = getProductLicenseOrThrow(product);
+								serviceLicense.setExtendedInfo(doLicenseGetExtendedInfo(serviceLicense, product, productLicense, ativationHwID));
+							} catch (Exception ex2) {
+								LOGGER.error("Unable to build extended info for '{}'", ex2, serviceLicense.getProductCode());
+							}
+						}
+						items.add(serviceLicense);
 					}
 				}
 			}
