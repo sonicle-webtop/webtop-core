@@ -63,7 +63,8 @@ Ext.define('Sonicle.webtop.core.app.util.FoldersTree2', {
 						val += (opts.defaultText || 'default');
 						val += ')</span>';
 					} else {
-						var ir = WTA.util.FoldersTree2.toRightsObj(node.getItemsRights());
+						//var ir = !node.newRights ? WTA.util.FoldersTree2.toRightsObj(node.getItemsRights()) : node.getItemsRights2();
+						var ir = node.getItemsRights();
 						if (!ir.CREATE && !ir.UPDATE && !ir.DELETE) meta.tdCls += ' wt-theme-text-lighter2';
 					}
 					return val;
@@ -106,7 +107,8 @@ Ext.define('Sonicle.webtop.core.app.util.FoldersTree2', {
 					
 				} else if (node.isFolder()) {
 					if (!isPers) {
-						var ir = WTA.util.FoldersTree2.toRightsObj(node.getItemsRights());
+						//var ir = !node.newRights ? WTA.util.FoldersTree2.toRightsObj(node.getItemsRights()) : node.getItemsRights2();
+						var ir = node.getItemsRights();
 						if (!ir.CREATE && !ir.UPDATE && !ir.DELETE) meta.tdCls += ' wt-theme-text-lighter2';
 					}
 					if (node.isDefaultFolder()) {
@@ -173,7 +175,7 @@ Ext.define('Sonicle.webtop.core.app.util.FoldersTree2', {
 	 * @returns {Object} Object with CREATE, READ, UPDATE, DELETE, MANAGE booleans.
 	 */
 	toRightsObj: function(rights) {
-		var iof = function(s,v) { return s ? s.indexOf(v) !== -1 : false; },
+		var iof = function(s,v) { return Ext.isString(s) ? s.indexOf(v) !== -1 : false; },
 				obj = {};
 		obj['CREATE'] = iof(rights, 'c');
 		obj['READ'] = iof(rights, 'r');
@@ -274,15 +276,16 @@ Ext.define('Sonicle.webtop.core.app.util.FoldersTree2', {
 	 */
 	getFolderForAdd: function(tree, folderId) {
 		var me = this,
-				node, er;
+			node, ir;
 		if (!Ext.isEmpty(folderId)) {
 			node = me.getFolderById(tree, folderId);
 		} else {
 			node = me.getDefaultOrBuiltInFolder(tree);
 		}
 		if (node) {
-			er = WTA.util.FoldersTree2.toRightsObj(node.getItemsRights());
-			if (er.CREATE) return node;
+			//ir = !node.newRights ? WTA.util.FoldersTree2.toRightsObj(node.getItemsRights()) : node.getItemsRights2();
+			ir = node.getItemsRights();
+			if (ir.CREATE) return node;
 		}
 		return null;
 	}

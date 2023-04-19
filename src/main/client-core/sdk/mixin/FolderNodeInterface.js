@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2022 Sonicle S.r.l.
+ * Copyright (C) 2023 Sonicle S.r.l.
  *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by
@@ -28,22 +28,27 @@
  * version 3, these Appropriate Legal Notices must retain the display of the
  * Sonicle logo and Sonicle copyright notice. If the display of the logo is not
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
- * display the words "Copyright (C) 2022 Sonicle S.r.l.".
+ * display the words "Copyright (C) 2023 Sonicle S.r.l.".
  */
-Ext.define('Sonicle.webtop.core.mixin.FolderNodeInterface2', {
-	alternateClassName: 'WTA.mixin.FolderNodeInterface2',
+Ext.define('Sonicle.webtop.core.sdk.mixin.FolderNodeInterface', {
+	alternateClassName: 'WTA.sdk.mixin.FolderNodeInterface',
 	extend: 'Ext.Mixin',
 	requires: [
-		Sonicle.String
+		'Sonicle.String',
+		'WTA.util.FoldersTree2'
 	],
 	mixinConfig: {
-		id: 'foldernodeinterface2'
+		id: 'wtfoldernodeinterface2'
 	},
 	
-	colorField: '',
-	defaultField: '',
-	builtInField: '',
-	activeField: '',
+	colorField: '', //'_color',
+	defaultField: '', //'_default',
+	builtInField: '', //'_builtIn',
+	activeField: '', //'_active',
+	originPermsField: '', //'_orPerms',
+	folderPermsField: '', //'_foPerms',
+	itemsPermsField: '', //'_itPerms',
+	
 	originRightsField: '',
 	folderRightsField: '',
 	itemsRightsField: '',
@@ -60,7 +65,14 @@ Ext.define('Sonicle.webtop.core.mixin.FolderNodeInterface2', {
 		return 'G' === this.parseId().type;
 	},
 	
+	/**
+	 * @deprecated use getOwnerPid instead
+	 */
 	getOwnerId: function() {
+		return this.getOwnerPid();
+	},
+	
+	getOwnerPid: function() {
 		return (this.isOrigin() || this.isFolder()) ? this.parseId().origin : null;
 	},
 	
@@ -72,9 +84,31 @@ Ext.define('Sonicle.webtop.core.mixin.FolderNodeInterface2', {
 		return Sonicle.String.substrBeforeLast(this.getOwnerId(), '@');
 	},
 	
-	getOriginRights: function() {
+	getOriginPerms: function() {
 		var me = this;
-		return me.isOrigin() ? me.get(me.originRightsField) : null;
+		return me.isOrigin() ? me.get(me.originPermsField) : null;
+	},
+	
+	getFolderPerms: function() {
+		var me = this;
+		return (me.isOrigin() || me.isFolder()) ? me.get(me.folderPermsField) : null;
+	},
+	
+	getItemsPerms: function() {
+		var me = this;
+		return (me.isOrigin() || me.isFolder()) ? me.get(me.itemsPermsField) : null;
+	},
+	
+	getOriginRights: function() {
+		return WTA.util.FoldersTree2.toRightsObj(this.getOriginPerms());
+	},
+	
+	getFolderRights: function() {
+		return WTA.util.FoldersTree2.toRightsObj(this.getFolderPerms());
+	},
+	
+	getItemsRights: function() {
+		return WTA.util.FoldersTree2.toRightsObj(this.getItemsPerms());
 	},
 	
 	getFolderId: function() {
@@ -84,16 +118,6 @@ Ext.define('Sonicle.webtop.core.mixin.FolderNodeInterface2', {
 	getFolderColor: function() {
 		var me = this;
 		return me.isFolder() ? me.get(me.colorField) : false;
-	},
-	
-	getFolderRights: function() {
-		var me = this;
-		return (me.isOrigin() || me.isFolder()) ? me.get(me.folderRightsField) : null;
-	},
-	
-	getItemsRights: function() {
-		var me = this;
-		return (me.isOrigin() || me.isFolder()) ? me.get(me.itemsRightsField) : null;
 	},
 	
 	isBuiltInFolder: function() {
