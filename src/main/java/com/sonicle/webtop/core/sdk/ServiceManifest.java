@@ -79,7 +79,6 @@ public class ServiceManifest {
 	protected String privateServiceClassName;
 	protected String userOptionsServiceClassName;
 	protected String publicServiceClassName;
-	protected String jobServiceClassName;
 	protected String backgroundServiceClassName;
 	protected String privateServiceJsClassName;
 	protected String privateServiceVarsModelJsClassName;
@@ -202,20 +201,6 @@ public class ServiceManifest {
 			publicServiceClassName = LangUtils.buildClassName(javaPackage, StringUtils.defaultIfEmpty(svcEl.getString("publicServiceClassName"), "PublicService"));
 			publicServiceJsClassName = StringUtils.defaultIfEmpty(svcEl.getString("publicServiceJsClassName"), cn);
 			publicServiceVarsModelJsClassName = StringUtils.defaultIfEmpty(svcEl.getString("publicServiceVarsModelJsClassName"), "model.PublicServiceVars");
-		}
-		
-		hconf = svcEl.configurationsAt("jobService");
-		if (!hconf.isEmpty()) {
-			if (hconf.size() > 1) throw new WTException(invalidCardinalityEx("jobService", "*1"));
-			
-			final String cn = hconf.get(0).getString("[@className]");
-			if (StringUtils.isBlank(cn)) throw new WTException(invalidAttributeValueEx("jobService", "className"));
-			jobServiceClassName = LangUtils.buildClassName(javaPackage, cn);
-			
-		} else { // Old-style configuration
-			if (svcEl.containsKey("jobServiceClassName")) {
-				jobServiceClassName = LangUtils.buildClassName(javaPackage, StringUtils.defaultIfEmpty(svcEl.getString("jobServiceClassName"), "JobService"));
-			}
 		}
 		
 		hconf = svcEl.configurationsAt("backgroundService");
@@ -442,15 +427,6 @@ public class ServiceManifest {
 	 */
 	public String getPublicServiceClassName() {
 		return publicServiceClassName;
-	}
-	
-	/**
-	 * Gets the class name of server-side job service implementation.
-	 * (eg. com.sonicle.webtop.core.CoreJobService)
-	 * @return The class name.
-	 */
-	public String getJobServiceClassName() {
-		return jobServiceClassName;
 	}
 	
 	/**

@@ -49,8 +49,6 @@ import com.sonicle.webtop.core.dal.DAOException;
 import com.sonicle.webtop.core.dal.UpgradeStatementDAO;
 import com.sonicle.webtop.core.model.ServicePermission;
 import com.sonicle.webtop.core.sdk.BaseController;
-import com.sonicle.webtop.core.sdk.BaseJobService;
-import com.sonicle.webtop.core.sdk.BaseJobService.TaskDefinition;
 import com.sonicle.webtop.core.sdk.BaseManager;
 import com.sonicle.webtop.core.sdk.BasePublicService;
 import com.sonicle.webtop.core.sdk.BaseUserOptionsService;
@@ -154,7 +152,6 @@ public class ServiceManager {
 	private final LinkedHashMap<String, BaseController> controllers = new LinkedHashMap<>();
 	private final HashMap<String, String> serviceIdToPublicName = new HashMap<>();
 	private final HashMap<String, String> publicNameToServiceId = new HashMap<>();
-	private final LinkedHashMap<String, BaseJobService> jobServices = new LinkedHashMap<>();
 	private final LinkedHashMap<String, BaseBackgroundService> backgroundServices = new LinkedHashMap<>();
 	
 	/**
@@ -175,18 +172,14 @@ public class ServiceManager {
 		
 		// Cleanup public/job services
 		BasePublicService publicInst = null;
-		BaseJobService jobInst = null;
 		for(String serviceId : listPrivateServices()) {
 			// Cleanup job service
 			//TODO: effettuare lo shutdown dei task
-			jobInst = jobServices.remove(serviceId);
-			if(jobInst != null) cleanupJobService(jobInst);
 			final BaseBackgroundService bgInst = backgroundServices.get(serviceId);
 			if (bgInst != null) cleanupBackgroundService(bgInst);
 		}
 		
 		backgroundServices.clear();
-		jobServices.clear();
 		descriptors.clear();
 		xidToServiceId.clear();
 		serviceIdToJsPath.clear();
@@ -310,16 +303,6 @@ public class ServiceManager {
 		int okJobs = 0, failJobs = 0;
 		int okBgs = 0, failBgs = 0;
 		for(String serviceId : listPrivateServices()) {
-			if(getDescriptor(serviceId).hasJobService()) {
-				if(!isInMaintenance(serviceId)) {
-					if(createJobService(serviceId)) {
-						okJobs++;
-					} else {
-						failJobs++;
-						//TODO: invalidare startup servizio, job non inizializzato?
-					}
-				}
-			}
 			if (getDescriptor(serviceId).hasBackgroundService()) {
 				if (!isInMaintenance(serviceId)) {
 					if (createBackgroundService(serviceId)) okBgs++; else failBgs++;
@@ -328,19 +311,6 @@ public class ServiceManager {
 		}
 		logger.debug("Instantiated {} of {} job services", okJobs, (okJobs+failJobs));
 		logger.debug("Instantiated {} of {} background services", okBgs, (okBgs+failBgs));
-	}
-	
-	/**
-	 * Initialize each JobService instance.
-	 * Postpone this methos call, WebTopApp instance must be set!
-	 */
-	public void initializeJobServices() {
-		// Inits job services
-		synchronized(jobServices) {
-			for(Entry<String, BaseJobService> entry : jobServices.entrySet()) {
-				initializeJobService(entry.getValue());
-			}
-		}
 	}
 	
 	/**
@@ -510,20 +480,6 @@ public class ServiceManager {
 		synchronized(lock1) {
 			for(ServiceDescriptor descr : descriptors.values()) {
 				if(descr.hasPublicService()) list.add(descr.getManifest().getId());
-			}
-		}
-		return list;
-	}
-	
-	/**
-	 * Lists IDs of services that have job implementation.
-	 * @return List of services' IDs.
-	 */
-	public List<String> listJobServices() {
-		ArrayList<String> list = new ArrayList<>();
-		synchronized(lock1) {
-			for(ServiceDescriptor descr : descriptors.values()) {
-				if(descr.hasJobService()) list.add(descr.getManifest().getId());
 			}
 		}
 		return list;
@@ -830,32 +786,6 @@ public class ServiceManager {
 		}
 	}
 	
-	public void scheduleAllJobServicesTasks() {
-		if(!wta.isLatest()) return; // Make sure we are in latest webapp
-		synchronized(jobServices) {
-			for(Entry<String, BaseJobService> entry : jobServices.entrySet()) {
-				scheduleJobServiceTasks(entry.getKey(), entry.getValue());
-			}
-		}
-	}
-	
-	public void unscheduleAllJobServicesTasks() {
-		synchronized(jobServices) {
-			for(Entry<String, BaseJobService> entry : jobServices.entrySet()) {
-				unscheduleJobServiceTasks(entry.getKey());
-			}
-		}
-	}
-	
-	public boolean canExecuteTaskWork(JobKey taskKey) {
-		if (wta.isLatest()) {
-			return true;
-		} else {
-			unscheduleAllJobServicesTasks();
-			return false;
-		}
-	}
-	
 	private boolean createController(String serviceId) {
 		ServiceDescriptor descriptor = getDescriptor(serviceId);
 		if (!descriptor.hasController()) return false;
@@ -1057,67 +987,6 @@ public class ServiceManager {
 		if (logger.isTraceEnabled() && (end != 0)) logger.trace("[{}] PublicService: cleanup() took {} ms [{}]", instance.SERVICE_ID, TimeUnit.MILLISECONDS.convert(end-start, TimeUnit.NANOSECONDS), instance.SERVICE_ID);
 	}
 	
-	private boolean createJobService(String serviceId) {
-		synchronized(jobServices) {
-			if (jobServices.containsKey(serviceId)) throw new WTRuntimeException("Cannot add job service twice");
-			BaseJobService inst = instantiateJobService(serviceId);
-			if(inst != null) {
-				jobServices.put(serviceId, inst);
-				return true;
-			} else {
-				return false;
-			}
-		}
-	}
-	
-	private BaseJobService instantiateJobService(String serviceId) {
-		ServiceDescriptor descr = getDescriptor(serviceId);
-		if (!descr.hasJobService()) throw new WTRuntimeException("Service '{}' has no job class", serviceId);
-		
-		BaseJobService instance = null;
-		try {
-			if (logger.isTraceEnabled()) logger.trace("[{}] JobService: instantiating class '{}'", serviceId, descr.getManifest().getJobServiceClassName());
-			instance = (BaseJobService)descr.getJobServiceClass().newInstance();
-		} catch(Throwable t) {
-			logger.error("[{}] JobService: instantiation of '{}' throws errors", serviceId, descr.getManifest().getJobServiceClassName(), t);
-			return null;
-		}
-		instance.configure(wta.getAdminSubject());
-		return instance;
-	}
-	
-	private void initializeJobService(BaseJobService instance) {
-		long start = 0, end = 0;
-		logger.trace("[{}] JobService: calling initialize()", instance.SERVICE_ID);
-		try {
-			LoggerUtils.setContextDC(instance.SERVICE_ID);
-			start = System.nanoTime();
-			instance.initialize();
-			end = System.nanoTime();
-		} catch(Throwable t) {
-			logger.error("[{}] JobService: initialize() throws errors [{}]", instance.SERVICE_ID, instance.getClass().getCanonicalName(), t);
-		} finally {
-			LoggerUtils.clearContextServiceDC();
-		}
-		if (logger.isTraceEnabled() && (end != 0)) logger.trace("[{}] JobService: initialize() took {} ms", instance.SERVICE_ID, TimeUnit.MILLISECONDS.convert(end-start, TimeUnit.NANOSECONDS), instance.SERVICE_ID);
-	}
-	
-	private void cleanupJobService(BaseJobService instance) {
-		long start = 0, end = 0;
-		logger.trace("[{}] JobService: calling cleanup()", instance.SERVICE_ID);
-		try {
-			LoggerUtils.setContextDC(instance.getManifest().getId());
-			start = System.nanoTime();
-			instance.cleanup();
-			end = System.nanoTime();
-		} catch(Throwable t) {
-			logger.error("[{}] JobService: cleanup() throws errors [{}]", instance.SERVICE_ID, instance.getClass().getCanonicalName(), t);
-		} finally {
-			LoggerUtils.clearContextServiceDC();
-		}
-		if (logger.isTraceEnabled() && (end != 0)) logger.trace("[{}] JobService: cleanup() took {} ms", instance.SERVICE_ID, TimeUnit.MILLISECONDS.convert(end-start, TimeUnit.NANOSECONDS), instance.SERVICE_ID);
-	}
-	
 	private boolean createBackgroundService(String serviceId) {
 		synchronized(backgroundServices) {
 			if (backgroundServices.containsKey(serviceId)) throw new WTRuntimeException("Cannot add BackgroundService twice");
@@ -1290,7 +1159,7 @@ public class ServiceManager {
 			if (xidToServiceId.containsKey(xid)) throw new WTRuntimeException("Service XID (short ID) is already bound to a service [{0} -> {1}]", xid, xidToServiceId.get(xid));
 			
 			desc = new ServiceDescriptor(manifest);
-			logger.info("[private:{}, public:{}, background:{}, job(DEP):{}, userOptions:{}]", desc.hasPrivateService(), desc.hasPublicService(), desc.hasBackgroundService(), desc.hasJobService(), desc.hasUserOptionsService());
+			logger.info("[private:{}, public:{}, background:{}, userOptions:{}]", desc.hasPrivateService(), desc.hasPublicService(), desc.hasBackgroundService(), desc.hasUserOptionsService());
 			
 			// Register dataSources
 			try {
@@ -1619,100 +1488,6 @@ public class ServiceManager {
 			logger.error("Error loading post db-scripts", ex);
 		}
 		return scripts;
-	}
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	private void postponeJobsInitialization() {
-		Thread engine = new Thread(new Runnable() {
-			@Override
-			public void run() {
-				try {
-					Thread.sleep(2000);
-					synchronized(jobServices) {
-						for(Entry<String, BaseJobService> entry : jobServices.entrySet()) {
-							initializeJobService(entry.getValue());
-						}
-					}	
-				} catch (InterruptedException ex) { /* Do nothing... */	}
-			}
-		});
-		engine.start();		
-	}
-	
-	private JobDetail createJobTask(String serviceId, BaseJobService service, TaskDefinition taskDef) {
-		String classBaseName = taskDef.clazz.getSimpleName();
-		String group = "dep:" + serviceId;
-		
-		JobDataMap data = (taskDef.data != null) ? taskDef.data : new JobDataMap();
-		data.put("jobService", service);
-		JobBuilder jb = JobBuilder.newJob(taskDef.clazz)
-				.usingJobData(data)
-				.withIdentity(classBaseName, group);
-		if (!StringUtils.isEmpty(taskDef.description)) jb.withDescription(taskDef.description);
-		return jb.build();
-	}
-	
-	private Trigger createJobTaskTrigger(String serviceId, TaskDefinition taskDef) {
-		String classBaseName = taskDef.clazz.getSimpleName();
-		String group = "dep:" + serviceId;
-		
-		TriggerBuilder tb = taskDef.trigger.getTriggerBuilder()
-				.withIdentity(classBaseName, group)
-				.startNow();
-		return tb.build();
-	}
-	
-	private void scheduleJobServiceTasks(String serviceId, BaseJobService service) {
-		List<TaskDefinition> taskDefs = null;
-		
-		// Gets task definitions from base service definition
-		try {
-			LoggerUtils.setContextDC(serviceId);
-			taskDefs = service.returnTasks();
-		} catch(Throwable t) {
-			logger.error("JobService method returns errors [returnTask()]", t);
-		} finally {
-			LoggerUtils.clearContextServiceDC();
-		}
-		
-		unscheduleJobServiceTasks(serviceId);
-		
-		if (taskDefs != null) {
-			// Schedule job defining its trigger and details
-			for(TaskDefinition taskDef : taskDefs) {
-				JobDetail jobDetail = createJobTask(serviceId, service, taskDef);
-				Trigger trigger = createJobTaskTrigger(serviceId, taskDef);
-				try {
-					scheduler.scheduleJob(jobDetail, trigger);
-					logger.debug("Task scheduled [{}]", jobDetail.getKey().toString());
-					
-				} catch(SchedulerException ex) {
-					logger.error("Error scheduling task [{}]", jobDetail.getKey().toString(), ex);
-				}
-			}
-		}
-	}
-	
-	private boolean unscheduleJobServiceTasks(String serviceId) {
-		String group = "dep:" + serviceId;
-		
-		try {	
-			Set<JobKey> keys = scheduler.getJobKeys(GroupMatcher.jobGroupEquals(group));
-			scheduler.deleteJobs(new ArrayList<>(keys));
-			logger.debug("Deleted tasks for group [{}]", group);
-			return true;
-			
-		} catch(SchedulerException ex) {
-			logger.error("Error deleting tasks for group [{}]", group, ex);
-			return false;
-		}
 	}
 	
 	public static class ProfileVersionEvaluationResult {

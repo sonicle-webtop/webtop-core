@@ -568,7 +568,6 @@ public final class WebTopApp {
 			}
 			dsMgr.initialize();
 			
-			svcMgr.initializeJobServices();
 			svcMgr.initializeBackgroundServices();
 			if (isLatest()) {
 				// Sleep a little bit for avoid concurrency with other webapp checks
@@ -576,8 +575,6 @@ public final class WebTopApp {
 				Thread.sleep(60000);
 				if (isLatest()) {
 					try {
-						logger.info("Scheduling JobServices tasks...");
-						svcMgr.scheduleAllJobServicesTasks();
 						logger.info("Scheduling BackgroundServices tasks...");
 						svcMgr.scheduleAllBackgroundServicesTasks();
 						if (!scheduler.isStarted()) logger.warn("Tasks succesfully scheduled but scheduler is not running");
@@ -720,7 +717,7 @@ public final class WebTopApp {
 		webappIsTheLatest = checkIfIsTheLastest(webappName);
 		if (webappIsTheLatest && !oldLatest) {
 			logger.info("App instance [{}] is the latest", webappName);
-			svcMgr.scheduleAllJobServicesTasks();
+			svcMgr.scheduleAllBackgroundServicesTasks();
 		} else if (!webappIsTheLatest && oldLatest) {
 			logger.info("App instance [{}] is NO more the latest", webappName);
 		} else {

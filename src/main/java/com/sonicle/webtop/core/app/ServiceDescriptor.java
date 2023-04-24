@@ -40,7 +40,6 @@ import com.sonicle.webtop.core.sdk.BaseController;
 import com.sonicle.webtop.core.sdk.BasePublicService;
 import com.sonicle.webtop.core.sdk.BaseService;
 import com.sonicle.webtop.core.sdk.ServiceManifest;
-import com.sonicle.webtop.core.sdk.BaseJobService;
 import com.sonicle.webtop.core.sdk.BaseManager;
 import com.sonicle.webtop.core.sdk.BaseUserOptionsService;
 import com.sonicle.webtop.core.sdk.ServiceVersion;
@@ -78,7 +77,6 @@ public class ServiceDescriptor {
 	private Class managerClass = null;
 	private Class privateServiceClass = null;
 	private Class publicServiceClass = null;
-	private Class jobServiceClass = null;
 	private Class backgroundServiceClass = null;
 	private Class userOptionsServiceClass = null;
 	private final List<OpenApiDefinition> openApiDefinitions = new ArrayList<>();
@@ -92,7 +90,6 @@ public class ServiceDescriptor {
 		managerClass = ClassHelper.loadClass(true, manifest.getManagerClassName(), BaseManager.class, "Manager");
 		privateServiceClass = ClassHelper.loadClass(true, manifest.getPrivateServiceClassName(), BaseService.class, "Service");
 		publicServiceClass = ClassHelper.loadClass(true, manifest.getPublicServiceClassName(), BasePublicService.class, "PublicService");
-		jobServiceClass = ClassHelper.loadClass(true, manifest.getJobServiceClassName(), BaseJobService.class, "JobService");
 		backgroundServiceClass = ClassHelper.loadClass(true, manifest.getBackgroundServiceClassName(), BaseBackgroundService.class, "BackgroundService");
 		userOptionsServiceClass = ClassHelper.loadClass(true, manifest.getUserOptionsServiceClassName(), BaseUserOptionsService.class, "UserOptionsService");
 		
@@ -149,14 +146,6 @@ public class ServiceDescriptor {
 
 	public Class getPublicServiceClass() {
 		return publicServiceClass;
-	}
-
-	public boolean hasJobService() {
-		return (jobServiceClass != null);
-	}
-
-	public Class getJobServiceClass() {
-		return jobServiceClass;
 	}
 	
 	public boolean hasBackgroundService() {

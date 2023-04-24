@@ -22,7 +22,7 @@
 			<viewJsClassName>view.UserOptions</viewJsClassName>
 			<modelJsClassName>model.UserOptions</modelJsClassName>
 		</userOptions>
-		<jobService className=".JobService" />
+		<backgroundService className=".BackgroundService" />
 		
 		<restApis>
 			<restApi oasFile="openapi-v1.json" />

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Sonicle S.r.l.
+ * Copyright (C) 2023 Sonicle S.r.l.
  *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by
@@ -28,20 +28,20 @@
  * version 3, these Appropriate Legal Notices must retain the display of the
  * Sonicle logo and Sonicle copyright notice. If the display of the logo is not
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
- * display the words "Copyright (C) 2018 Sonicle S.r.l.".
+ * display the words "Copyright (C) 2023 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core.job;
+package com.sonicle.webtop.core.bg;
 
-import com.sonicle.commons.time.DateTimeUtils;
-import com.sonicle.webtop.core.JobService;
+import com.sonicle.webtop.core.BackgroundService;
+import com.sonicle.webtop.core.CoreManager;
 import com.sonicle.webtop.core.app.ServiceManager;
 import com.sonicle.webtop.core.app.WT;
+import com.sonicle.webtop.core.app.sdk.interfaces.IControllerRemindersHooks;
 import com.sonicle.webtop.core.bol.OSnoozedReminder;
 import com.sonicle.webtop.core.bol.js.JsReminderInApp;
 import com.sonicle.webtop.core.bol.model.ReminderMessage;
+import com.sonicle.webtop.core.sdk.BaseBackgroundServiceTask;
 import com.sonicle.webtop.core.sdk.BaseController;
-import com.sonicle.webtop.core.sdk.BaseJobService;
-import com.sonicle.webtop.core.sdk.BaseJobServiceTask;
 import com.sonicle.webtop.core.sdk.BaseReminder;
 import com.sonicle.webtop.core.sdk.ReminderEmail;
 import com.sonicle.webtop.core.sdk.ReminderInApp;
@@ -49,62 +49,49 @@ import com.sonicle.webtop.core.sdk.ServiceMessage;
 import com.sonicle.webtop.core.sdk.UserProfile;
 import com.sonicle.webtop.core.sdk.UserProfileId;
 import com.sonicle.webtop.core.sdk.WTException;
+import jakarta.mail.internet.InternetAddress;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicBoolean;
-import jakarta.mail.internet.InternetAddress;
-import org.joda.time.DateTime;
+import org.quartz.JobExecutionContext;
 import org.slf4j.Logger;
-import com.sonicle.webtop.core.app.sdk.interfaces.IControllerRemindersHooks;
+import org.slf4j.LoggerFactory;
 
 /**
  *
  * @author malbinola
  */
-public class ReminderJob extends BaseJobServiceTask {
-	private static final Logger logger = WT.getLogger(ReminderJob.class);
-	private static final AtomicBoolean running = new AtomicBoolean(false);
-	private JobService jobService = null;
+public class ReminderTask extends BaseBackgroundServiceTask {
+	private static final Logger LOGGER = (Logger)LoggerFactory.getLogger(ReminderTask.class);
 	
 	@Override
-	public void setJobService(BaseJobService jobService) {
-		this.jobService = (JobService)jobService;
-	}
-
-	@Override
-	public void executeWork() {
-		if (running.compareAndSet(false, true)) {
-			DateTime now = DateTimeUtils.now();
-			try {
-				logger.debug("ReminderJob START [{}]", now);
-				internalExecuteWork(now);
-			} finally {
-				logger.debug("ReminderJob END", now);
-				running.set(false);
-			}
-		}
+	public Logger getLogger() {
+		return LOGGER;
 	}
 	
-	private void internalExecuteWork(DateTime now) {
+	@Override
+	public void executeWork(JobExecutionContext jec, BaseBackgroundServiceTask.TaskContext context) throws Exception {
+		BackgroundService bs = ((BackgroundService)getBackgroundService(jec));
+		CoreManager coreMgr = WT.getCoreManager();
 		HashMap<UserProfileId, ArrayList<ServiceMessage>> byProfile = new HashMap<>();
 		
 		try {
 			ArrayList<BaseReminder> alerts = new ArrayList<>();
 			
-			logger.debug("Collecting reminders...");
-			ServiceManager svcMgr = jobService.getCoreManager().getServiceManager();
-			for (String sid : jobService.getServiceIdsHandlingReminders()) {
+			LOGGER.debug("Collecting reminders...");
+			ServiceManager svcMgr = coreMgr.getServiceManager();
+			for (String sid : bs.getServiceIdsHandlingReminders()) {
+				if (shouldStop()) break; // Speed-up shutdown process!
 				final BaseController instance = svcMgr.getController(sid);
 				final IControllerRemindersHooks controller = (IControllerRemindersHooks)instance;
-				final List<BaseReminder> svcAlerts = controller.returnReminders(now);
-				logger.debug("{} -> {}", sid, svcAlerts.size());
+				final List<BaseReminder> svcAlerts = controller.returnReminders(context.getExecuteInstant());
+				LOGGER.debug("{} -> {}", sid, svcAlerts.size());
 				alerts.addAll(svcAlerts);
 			}
-			logger.debug("Collected {} reminders", alerts.size());
+			LOGGER.debug("Collected {} reminders", alerts.size());
 
 			if (!alerts.isEmpty()) {
-				logger.debug("Preparing reminders...");
+				LOGGER.debug("Preparing reminders...");
 				for (BaseReminder alert : alerts) {
 					if (alert instanceof ReminderEmail) {
 						sendEmail((ReminderEmail)alert);
@@ -119,13 +106,15 @@ public class ReminderJob extends BaseJobServiceTask {
 				}
 			}
 
-		} catch(RuntimeException ex) {
-			logger.error("Error processing reminders", ex);
+		} catch (Exception ex) {
+			LOGGER.error("Error processing reminders", ex);
 		}
 		
+		if (shouldStop()) return; // Speed-up shutdown process!
+		
 		try {
-			logger.debug("Collecting snoozed reminders...");
-			List<OSnoozedReminder> prems = jobService.getCoreManager().listExpiredSnoozedReminders(now);
+			LOGGER.debug("Collecting snoozed reminders...");
+			List<OSnoozedReminder> prems = coreMgr.listExpiredSnoozedReminders(context.getExecuteInstant());
 			for (OSnoozedReminder prem : prems) {
 				UserProfileId pid = new UserProfileId(prem.getDomainId(), prem.getUserId());
 				ReminderMessage msg = new ReminderMessage(new JsReminderInApp(prem));
@@ -135,12 +124,13 @@ public class ReminderJob extends BaseJobServiceTask {
 				byProfile.get(pid).add(msg);
 			}
 
-		} catch(WTException ex) {
-			logger.error("Error processing snoozed reminders", ex);
+		} catch (WTException ex) {
+			LOGGER.error("Error processing snoozed reminders", ex);
 		}
 
 		// Process messages...
 		for (UserProfileId pid : byProfile.keySet()) {
+			if (shouldStop()) break; // Speed-up shutdown process!
 			WT.notify(pid, byProfile.get(pid), true);
 		}
 	}
@@ -154,8 +144,8 @@ public class ReminderJob extends BaseJobServiceTask {
 			if (to == null) throw new WTException("Error building destination address");
 			WT.sendEmail(WT.getGlobalMailSession(reminder.getProfileId()), reminder.getRich(), from, to, reminder.getSubject(), reminder.getBody());
 
-		} catch(Exception ex) {
-			logger.error("Unable to send email", ex);
+		} catch (Exception ex) {
+			LOGGER.error("Unable to send email", ex);
 		}
 	}
 }
