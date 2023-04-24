@@ -281,15 +281,15 @@
 .wt-ftype-video { background-image: url('ftypes/video_16.svg') !important; background-size: contain; }
 
 .wt-menuitem-dock-none-checked .x-menu-item-icon-default.x-menu-item-checkbox { background-image: url('dock-none_16.svg') !important; background-size: contain; }
-.wt-menuitem-dock-none-unchecked .x-menu-item-icon-default.x-menu-item-checkbox { background-image: url('dock-none-gray_16.svg') !important; background-size: contain; }
+.wt-menuitem-dock-none-unchecked .x-menu-item-icon-default.x-menu-item-checkbox { background-image: url('dock-none-grayed_16.svg') !important; background-size: contain; }
 .wt-menuitem-dock-top-checked .x-menu-item-icon-default.x-menu-item-checkbox { background-image: url('dock-top_16.svg') !important; background-size: contain; }
-.wt-menuitem-dock-top-unchecked .x-menu-item-icon-default.x-menu-item-checkbox { background-image: url('dock-top-gray_16.svg') !important; background-size: contain; }
+.wt-menuitem-dock-top-unchecked .x-menu-item-icon-default.x-menu-item-checkbox { background-image: url('dock-top-grayed_16.svg') !important; background-size: contain; }
 .wt-menuitem-dock-left-checked .x-menu-item-icon-default.x-menu-item-checkbox { background-image: url('dock-left_16.svg') !important; background-size: contain; }
-.wt-menuitem-dock-left-unchecked .x-menu-item-icon-default.x-menu-item-checkbox { background-image: url('dock-left-gray_16.svg') !important; background-size: contain; }
+.wt-menuitem-dock-left-unchecked .x-menu-item-icon-default.x-menu-item-checkbox { background-image: url('dock-left-grayed_16.svg') !important; background-size: contain; }
 .wt-menuitem-dock-right-checked .x-menu-item-icon-default.x-menu-item-checkbox { background-image: url('dock-right_16.svg') !important; background-size: contain; }
-.wt-menuitem-dock-right-unchecked .x-menu-item-icon-default.x-menu-item-checkbox { background-image: url('dock-right-gray_16.svg') !important; background-size: contain; }
+.wt-menuitem-dock-right-unchecked .x-menu-item-icon-default.x-menu-item-checkbox { background-image: url('dock-right-grayed_16.svg') !important; background-size: contain; }
 .wt-menuitem-dock-bottom-checked .x-menu-item-icon-default.x-menu-item-checkbox { background-image: url('dock-bottom_16.svg') !important; background-size: contain; }
-.wt-menuitem-dock-bottom-unchecked .x-menu-item-icon-default.x-menu-item-checkbox { background-image: url('dock-bottom-gray_16.svg') !important; background-size: contain; }
+.wt-menuitem-dock-bottom-unchecked .x-menu-item-icon-default.x-menu-item-checkbox { background-image: url('dock-bottom-grayed_16.svg') !important; background-size: contain; }
 
 .wt-grid-header-icon {
 	background-repeat: no-repeat;
