@@ -114,9 +114,9 @@ public final class SettingsManager implements IServiceSettingReader, IServiceSet
 		wta = null;
 		cacheSettings = false;
 		cacheUserSettings = false;
-		settingsCache.cleanUp();
-		domainSettingsCache.cleanUp();
-		userSettingsCache.cleanUp();
+		settingsCache.invalidateAll();
+		domainSettingsCache.invalidateAll();
+		userSettingsCache.invalidateAll();
 		LOGGER.info("Cleaned up");
 	}
 	
@@ -125,7 +125,7 @@ public final class SettingsManager implements IServiceSettingReader, IServiceSet
 	 */
 	public void clearSettingsCache() {
 		LOGGER.trace("[SettingsCache] Cleaning-up...");
-		settingsCache.cleanUp();
+		settingsCache.invalidateAll();
 		LOGGER.trace("[SettingsCache] Clean-up done");
 	}
 	
@@ -143,7 +143,7 @@ public final class SettingsManager implements IServiceSettingReader, IServiceSet
 	public void clearDomainSettingsCache(String domainId) {
 		if (domainId == null) {
 			LOGGER.trace("[DomainSettingsCache] Cleaning-up... [*]");
-			domainSettingsCache.cleanUp();
+			domainSettingsCache.invalidateAll();
 			LOGGER.trace("[DomainSettingsCache] Clean-up done");
 			
 		} else {
@@ -173,7 +173,7 @@ public final class SettingsManager implements IServiceSettingReader, IServiceSet
 	public void clearUserSettingsCache(String domainId, String userId) {
 		if (domainId == null && userId == null) {
 			LOGGER.trace("[UserSettingsCache] Cleaning-up... [*]");
-			userSettingsCache.cleanUp();
+			userSettingsCache.invalidateAll();
 			LOGGER.trace("[UserSettingsCache] Clean-up done [*]");
 			
 		} else if (domainId != null) {
