@@ -63,7 +63,6 @@ Ext.define('Sonicle.webtop.core.app.util.FoldersTree2', {
 						val += (opts.defaultText || 'default');
 						val += ')</span>';
 					} else {
-						//var ir = !node.newRights ? WTA.util.FoldersTree2.toRightsObj(node.getItemsRights()) : node.getItemsRights2();
 						var ir = node.getItemsRights();
 						if (!ir.CREATE && !ir.UPDATE && !ir.DELETE) meta.tdCls += ' wt-theme-text-lighter2';
 					}
@@ -107,7 +106,6 @@ Ext.define('Sonicle.webtop.core.app.util.FoldersTree2', {
 					
 				} else if (node.isFolder()) {
 					if (!isPers) {
-						//var ir = !node.newRights ? WTA.util.FoldersTree2.toRightsObj(node.getItemsRights()) : node.getItemsRights2();
 						var ir = node.getItemsRights();
 						if (!ir.CREATE && !ir.UPDATE && !ir.DELETE) meta.tdCls += ' wt-theme-text-lighter2';
 					}
@@ -246,13 +244,17 @@ Ext.define('Sonicle.webtop.core.app.util.FoldersTree2', {
 	 * Returns the folder Node which is marked as built-in folder.
 	 * NB: Node {@link Ext.data.NodeInterface model} must provide `isBuiltInFolder()` method.
 	 * @param {Ext.tree.Panel} tree Tree component on which operate.
+	 * @param {Ext.Function} fn Custom evaluator fn to use. Defaults to isBuiltInFolder check.
 	 * @returns {Ext.data.NodeInterface}
 	 */
-	getBuiltInFolder: function(tree) {
+	getBuiltInFolder: function(tree, fn) {
+		if (!Ext.isFunction(fn)) {
+			fn = function(n) {
+				return (n.isBuiltInFolder() === true);
+			};
+		}
 		var folderRootNode = this.getMyOrigin(tree);
-		return folderRootNode.findChildBy(function(n) {
-			return (n.isBuiltInFolder() === true);
-		});
+		return folderRootNode ? folderRootNode.findChildBy(fn) : undefined;
 	},
 	
 	/**
@@ -283,7 +285,6 @@ Ext.define('Sonicle.webtop.core.app.util.FoldersTree2', {
 			node = me.getDefaultOrBuiltInFolder(tree);
 		}
 		if (node) {
-			//ir = !node.newRights ? WTA.util.FoldersTree2.toRightsObj(node.getItemsRights()) : node.getItemsRights2();
 			ir = node.getItemsRights();
 			if (ir.CREATE) return node;
 		}
