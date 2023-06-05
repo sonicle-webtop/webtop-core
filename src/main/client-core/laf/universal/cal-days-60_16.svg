@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" width="16px" height="16px" viewBox="0 0 16 16" enable-background="new 0 0 16 16" xml:space="preserve">
+  <g id="icon">
+    <path d="M0.5,4.5v10h15V4.5H0.5z" fill="#FFFFFF" opacity="0.4"/>
+    <path d="M16,15H0V4h16V15zM1,14h14V5H1V14z" fill="#6D6E71"/>
+    <path d="M13,3h-1V0h1V3zM4,3H3V0h1V3z" fill="#6D6E71"/>
+    <path d="M14,13H2V8h4V6h8V13zM11,12h2v-1h-2V12zM7,12h3v-1H7V12zM3,12h3v-1H3V12zM11,10h2V9h-2V10zM7,10h3V9H7V10zM3,10h3V9H3V10zM11,8h2V7h-2V8zM7,8h3V7H7V8z" fill="#C8C6C4"/>
+    <polygon points="14,1 14,3 11,3 11,1 5,1 5,3 2,3 2,1 0,1 0,5 16,5 16,1" fill="#9070B1" stroke-linejoin="miter"/>
+	<text x="3" y="13" font-family="Arial, Helvetica, sans-serif" font-weight="bold" font-size="9" fill="#CC4B31">60</text>
+  </g>
+</svg>

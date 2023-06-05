@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" width="16px" height="16px" viewBox="0 0 16 16" enable-background="new 0 0 16 16" xml:space="preserve">
+  <g id="main">
+    <g id="icon">
+      <path d="M0.5,13.5L5.8,13.5L5.8,11.2L5.8,8.8L5.8,6.8L13.5,6.8L13.5,3.5L0.5,3.5zz" fill="#FFFFFF" opacity="0.5"/>
+      <path d="M0,14L5.8,14L5.8,13L1,13L1,4L13,4L13,6.8L14,6.8L14,3L0,3zz" fill="#6E6F72"/>
+      <path d="M0.5,3.5L13.5,3.5L13.5,0.5L0.5,0.5zz" fill="#FFFFFF"/>
+      <path d="M0,4L14,4L14,0L0,0zz" fill="#EEAD56"/>
+    </g>
+    <g id="overlay">
+      <path d="M15,15H8v-5h7V15z" fill="#FFFFFF" opacity="0.4"/>
+      <path d="M16,10H7V8h9V10z" fill="#6485C3"/>
+      <polygon points="15,10 15,15 8,15 8,10 7,10 7,16 16,16 16,10" fill="#6D6E71" stroke-linejoin="miter"/>
+    </g>
+  </g>
+</svg>
