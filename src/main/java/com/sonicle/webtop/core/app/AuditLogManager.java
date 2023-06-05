@@ -112,17 +112,18 @@ public class AuditLogManager extends AbstractAppManager<AuditLogManager> {
 	}
 	
 	public static void logAuth(LogbackHelper.Level level, String clientIp, String sessionId, UserProfileId profileId, String action) {
-		final String pattern = "[{}][webtop:core] {}: client={} profile={} action={}";
+		final String pattern = "[{}][webtop:core] {}: client={} profile={} action={}{}";
+		final String impersonated = RunContext.isImpersonated() ? " impersonated=true" : "";
 		if (LogbackHelper.Level.TRACE.equals(level)) {
-			AUTH_LOGGER.trace(pattern, WebTopApp.getWebappName(), sessionId, clientIp, profileId, action);
+			AUTH_LOGGER.trace(pattern, WebTopApp.getWebappName(), sessionId, clientIp, profileId, action, impersonated);
 		} else if (LogbackHelper.Level.DEBUG.equals(level)) {
-			AUTH_LOGGER.debug(pattern, WebTopApp.getWebappName(), sessionId, clientIp, profileId, action);
+			AUTH_LOGGER.debug(pattern, WebTopApp.getWebappName(), sessionId, clientIp, profileId, action, impersonated);
 		} else if (LogbackHelper.Level.INFO.equals(level)) {
-			AUTH_LOGGER.info(pattern, WebTopApp.getWebappName(), sessionId, clientIp, profileId, action);
+			AUTH_LOGGER.info(pattern, WebTopApp.getWebappName(), sessionId, clientIp, profileId, action, impersonated);
 		} else if (LogbackHelper.Level.WARN.equals(level)) {
-			AUTH_LOGGER.warn(pattern, WebTopApp.getWebappName(), sessionId, clientIp, profileId, action);
+			AUTH_LOGGER.warn(pattern, WebTopApp.getWebappName(), sessionId, clientIp, profileId, action, impersonated);
 		} else if (LogbackHelper.Level.ERROR.equals(level)) {
-			AUTH_LOGGER.error(pattern, WebTopApp.getWebappName(), sessionId, clientIp, profileId, action);
+			AUTH_LOGGER.error(pattern, WebTopApp.getWebappName(), sessionId, clientIp, profileId, action, impersonated);
 		}
 	}
 	
