@@ -40,16 +40,18 @@ import com.sonicle.security.auth.DirectoryManager;
 import com.sonicle.security.auth.directory.AbstractDirectory;
 import com.sonicle.security.auth.directory.AbstractDirectory.AuthUser;
 import com.sonicle.security.auth.directory.DirectoryOptions;
+import com.sonicle.webtop.core.CoreServiceSettings;
 import com.sonicle.webtop.core.app.CoreManifest;
 import com.sonicle.webtop.core.app.WebTopManager;
 import com.sonicle.webtop.core.app.WebTopApp;
 import com.sonicle.webtop.core.app.WebTopProps;
+import com.sonicle.webtop.core.app.model.Domain;
+import com.sonicle.webtop.core.app.model.DomainGetOption;
 import com.sonicle.webtop.core.app.model.User;
 import com.sonicle.webtop.core.app.model.UserBase;
 import com.sonicle.webtop.core.app.model.UserGetOption;
 import com.sonicle.webtop.core.app.model.UserUpdateOption;
 import com.sonicle.webtop.core.app.sdk.Result;
-import com.sonicle.webtop.core.bol.ODomain;
 import com.sonicle.webtop.core.bol.ORolePermission;
 import com.sonicle.webtop.core.model.ServicePermission;
 import com.sonicle.webtop.core.bol.model.RoleWithSource;
@@ -185,50 +187,85 @@ public class WTRealm extends AuthorizingRealm {
 		}
         return principals;
     }
-
-	private Principal authenticateUser(String domainId, String internetDomain, String username, char[] password) throws AuthenticationException {
+	
+	private Principal authenticateUser(String authDomainId, String authInternetDomain, String username, char[] password) throws AuthenticationException {
 		WebTopApp wta = WebTopApp.getInstance();
 		WebTopManager wtMgr = wta.getWebTopManager();
 		AuthenticationDomain authAd = null, priAd = null;
 		boolean autoCreate = false, impersonate = false;
 		
 		try {
-			DirectoryManager dirManager = DirectoryManager.getManager();
-			
-			// Defines authentication domains for the auth phase and for 
-			// building the right principal
-			logger.debug("Building the authentication domain");
-			if (isSysAdmin(internetDomain, username)) {
+			// Create the right authenticationDomain according to the 
+			// authenticating user, this is needed for building the Principal
+			logger.debug("Creating the authentication domain...");
+			if (isSysAdmin(authInternetDomain, username)) {
+				// Do NOT check for maintenance here: SysAdmins are always allowed to access!
 				impersonate = false;
 				authAd = priAd = wtMgr.createSysAdminAuthenticationDomain();
+				logger.debug("AuthenticationDomain for SysAdmin created");
 				
 			} else {
-				if (wta.isInMaintenance()) throw new MaintenanceException("Maintenance is active. Only sys-admin can login.");
-				ODomain domain = null;
-				if (!StringUtils.isBlank(internetDomain)) {
-					List<ODomain> domains = wtMgr.listByInternetDomain(internetDomain);
-					if (domains.isEmpty()) throw new WTException("No enabled domains match specified internet domain [{}]", internetDomain);
-					if (domains.size() != 1) throw new WTException("Multiple domains match specified internet domain [{}]", internetDomain);
-					domain = domains.get(0);
-				} else {
-					domain = wtMgr.OLD_getDomain(domainId);
-					if ((domain == null) || !domain.getEnabled()) throw new WTException("Domain not found [{}]", domainId);
+				if (wta.isInMaintenance()) { // Stop users if system in under maintenance!
+					logger.debug("Maintenance is active, stopping authentication process...");
+					throw new MaintenanceException("Maintenance is active. Only sys-admin can login.");
 				}
 				
+				String userDomainId = null;
+				if (!StringUtils.isBlank(authInternetDomain)) {
+					userDomainId = wtMgr.authDomainNameToDomainId(authInternetDomain);
+					if (userDomainId == null) {
+						logger.debug("Unable to lookup domain ID for '{}': maybe not configured or disabled", authInternetDomain);
+						throw new AuthenticationException("Match for internet-name not found or Domain is not enabled");
+					}
+					
+				} else if (!StringUtils.isBlank(authDomainId)) {
+					if (!wtMgr.isDomainIdEnabled(authDomainId)) {
+						logger.debug("Required domain ID '{}' is disabled", authDomainId);
+						throw new AuthenticationException("Domain is not enabled");
+					}
+					userDomainId = authDomainId;
+					
+				} else {
+					// Both authDomainId and authInternetDomain are empty: this 
+					// can occur when no domain suffix (@domainname) is provided 
+					// in username field and there are no enabled domains, thus 
+					// authDomainId has not a default value.
+					logger.debug("No domain for authentication ('authInternetDomain' and 'authDomainId' are both empty)", authDomainId);
+					throw new AuthenticationException("No enabled Domains");
+				}
+				
+				Domain userDomain = null;
 				if (isSysAdminImpersonate(username)) {
+					if (!isImpersonateEnabled(userDomainId)) {
+						logger.debug("Impersonating '{}' failed: impersonate is disabled!", sanitizeImpersonateUsername(username));
+						throw new AuthenticationException("Impersonation disabled");
+					}
 					impersonate = true;
+					userDomain = lookupAuthenticatingDomain(wtMgr, userDomainId);
 					authAd = wtMgr.createSysAdminAuthenticationDomain();
-					priAd = wtMgr.createAuthenticationDomain(domain);
+					priAd = wtMgr.createAuthenticationDomain(userDomain);
+					logger.debug("AuthenticationDomain for User (with SysAdmin impersonate) created");
+					
 				} else if (isDomainAdminImpersonate(username)) {
+					if (!isImpersonateEnabled(userDomainId)) {
+						logger.debug("Impersonating '{}' failed: impersonate is disabled!", sanitizeImpersonateUsername(username));
+						throw new AuthenticationException("Impersonation disabled");
+					}
 					impersonate = true;
-					authAd = priAd = wtMgr.createAuthenticationDomain(domain);
+					userDomain = lookupAuthenticatingDomain(wtMgr, userDomainId);
+					authAd = priAd = wtMgr.createAuthenticationDomain(userDomain);
+					logger.debug("AuthenticationDomain for User (with DomainAdmin impersonate) created");
+					
 				} else {
 					impersonate = false;
-					authAd = priAd = wtMgr.createAuthenticationDomain(domain);
+					userDomain = lookupAuthenticatingDomain(wtMgr, userDomainId);
+					authAd = priAd = wtMgr.createAuthenticationDomain(userDomain);
+					logger.debug("AuthenticationDomain for User created");
 				}
-				autoCreate = domain.getUserAutoCreation();
+				autoCreate = userDomain.getUserAutoCreation();
 			}
 			
+			DirectoryManager dirManager = DirectoryManager.getManager();
 			DirectoryOptions opts = wta.createDirectoryOptions(authAd);
 			AbstractDirectory directory = dirManager.getDirectory(authAd.getDirUri().getScheme());
 			if (directory == null) throw new WTException("Directory not supported [{}]", authAd.getDirUri().getScheme());
@@ -269,11 +306,31 @@ public class WTRealm extends AuthorizingRealm {
 			
 			if (autoCreate) principal.pushDirectoryEntry(authUser);
 			return principal;
-		
-		} catch (URISyntaxException | WTException ex) {
-			logger.error("Authentication error", ex);
+			
+		} catch (URISyntaxException ex) {
+			logger.error("Error dealing with authentication URI", ex);
 			throw new AuthenticationException(ex);
-		}	
+		} catch (WTException ex) {
+			logger.error("Error performing authentication", ex);
+			throw new AuthenticationException(ex);
+		}
+	}
+	
+	private Domain lookupAuthenticatingDomain(WebTopManager wtMgr, String domainId) throws WTException {
+		BitFlags<DomainGetOption> options = BitFlags.with(
+			DomainGetOption.DIRECTORY_DATA
+		);
+		Domain domain = wtMgr.getDomain(domainId, options);
+		if (domain == null) {
+			logger.debug("Unable to lookup Domain for '{}'", domainId);
+			throw new AuthenticationException("Domain not found");
+		}
+		return domain;
+	}
+	
+	private boolean isImpersonateEnabled(String domainId) {
+		CoreServiceSettings css = new CoreServiceSettings(CoreManifest.ID, domainId);
+		return css.isImpersonateEnabled();
 	}
 	
 	public void checkUser(Principal principal) throws WTException {

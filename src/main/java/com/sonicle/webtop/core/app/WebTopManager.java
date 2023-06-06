@@ -560,6 +560,10 @@ public final class WebTopManager {
 		return domainCache.exists(domainId);
 	}
 	
+	public Boolean isDomainIdEnabled(final String domainId) {
+		return domainCache.enabled(domainId);
+	}
+	
 	public String domainIdToDomainPublicId(final String domainId) {
 		return AlgoUtils.adler32Hex(domainId);
 	}
@@ -583,6 +587,7 @@ public final class WebTopManager {
 	
 	/**
 	 * Lookup a domain ID from its authentication domain-name.
+	 * Only enabled domains will return a lookup.
 	 * @param authDomainName The authentication domain-name to find the corresponding domain ID.
 	 * @return 
 	 */
@@ -4644,13 +4649,15 @@ public final class WebTopManager {
 			public final String authDomainName;
 			public final String domainName;
 			public final String publicFqdn;
+			public final boolean enabled;
 			
-			public Data(String domainId, String publicId, String authDomainName, String domainName, String publicFqdn) {
+			public Data(String domainId, String publicId, String authDomainName, String domainName, String publicFqdn, boolean enabled) {
 				this.domainId = domainId;
 				this.publicId = publicId;
 				this.authDomainName = authDomainName;
 				this.domainName = domainName;
 				this.publicFqdn = publicFqdn;
+				this.enabled = enabled;
 			}
 		}
 		
@@ -4690,7 +4697,8 @@ public final class WebTopManager {
 						domainIdToDomainPublicId(odomain.getDomainId()),
 						odomain.getAuthDomainName(),
 						odomain.getDomainName(),
-						publicInternetName
+						publicInternetName,
+						enabled
 					);
 					
 					LOGGER.trace("[DomainInfoCache] Working on '{}'", data.domainId);
@@ -4765,6 +4773,17 @@ public final class WebTopManager {
 			}
 		}
 		
+		public Boolean enabled(final String domainId) {
+			this.internalCheckBeforeGetDoNotLockThis();
+			long stamp = this.readLock();
+			try {
+				final Data data = this.byDomainId.get(domainId);
+				return data != null ? data.enabled : null;
+			} finally {
+				this.unlockRead(stamp);
+			}
+		}
+		
 		public String publicIdToDomainId(final String publicId) {
 			this.internalCheckBeforeGetDoNotLockThis();
 			long stamp = this.readLock();
@@ -4787,6 +4806,11 @@ public final class WebTopManager {
 			}
 		}
 		
+		/**
+		 * Only enabled domains will return a lookup.
+		 * @param authDomainName
+		 * @return 
+		 */
 		public String authDomainNameToDomainIdIfOnlyOne(final String authDomainName) {
 			this.internalCheckBeforeGetDoNotLockThis();
 			long stamp = this.readLock();
@@ -4802,6 +4826,11 @@ public final class WebTopManager {
 			}
 		}
 		
+		/**
+		 * Only enabled domains will return a lookup.
+		 * @param authDomainName
+		 * @return 
+		 */
 		public String authDomainNameToDomainId(final String authDomainName) {
 			this.internalCheckBeforeGetDoNotLockThis();
 			long stamp = this.readLock();
@@ -4824,6 +4853,11 @@ public final class WebTopManager {
 			}
 		}
 		
+		/**
+		 * Only enabled domains will return a lookup.
+		 * @param domainName
+		 * @return 
+		 */
 		public String domainNameToDomainId(final String domainName) {
 			this.internalCheckBeforeGetDoNotLockThis();
 			long stamp = this.readLock();
@@ -4835,6 +4869,11 @@ public final class WebTopManager {
 			}
 		}
 		
+		/**
+		 * Only enabled domains will return a lookup.
+		 * @param publicFqdn
+		 * @return 
+		 */
 		public String publicFqdnToDomainId(String publicFqdn) {
 			this.internalCheckBeforeGetDoNotLockThis();
 			long stamp = this.readLock();

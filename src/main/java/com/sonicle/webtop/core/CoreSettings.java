@@ -269,6 +269,13 @@ public class CoreSettings {
 	/**
 	 * [domain+system]
 	 * [boolean]
+	 * Specifies whether impersonation is active.
+	 */
+	public static final String IMPERSONATE_ENABLED = "impersonate.enabled";
+	
+	/**
+	 * [domain+system]
+	 * [boolean]
 	 * Specifies whether to enable auditing for activities coming from an 
 	 * impersonated session. If 'false' no entries will be produced during 
 	 * impersonation of a user.

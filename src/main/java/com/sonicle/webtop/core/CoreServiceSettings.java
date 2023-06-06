@@ -225,6 +225,10 @@ public class CoreServiceSettings extends BaseServiceSettings {
 		return getBoolean(LOGIN_HIDE_WEBAPPNAME, false);
 	}
 	
+	public Boolean isImpersonateEnabled() {
+		return getBoolean(IMPERSONATE_ENABLED, true);
+	}
+	
 	public boolean isAuditLogImpersonated() {
 		return getBoolean(AUDIT_LOGIMPERSONATED, false);
 	}
