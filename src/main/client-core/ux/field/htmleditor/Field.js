@@ -70,6 +70,14 @@ Ext.define('Sonicle.webtop.core.ux.field.htmleditor.Field', {
 		cfg.pluginAdvCodeEditor = !!WT.getVar('wtEditorPP');
 		cfg.pluginCaseChange = !!WT.getVar('wtEditorPP');
 		cfg.pluginAutoCorrect = !!WT.getVar('wtEditorPP');
+		// Shutdown any console error due to built-in (automatic) request to 
+		// autoCorrectServiceUrl also when autocorrect is disabled!
+		// This simply mocks an empty reply!
+		cfg.autoCorrectServiceUrl = WTF.requestBaseUrl({
+			service: WT.ID,
+			action: 'MockResponse',
+			json: '{"corrections":{}}'
+		}) + '&ignore=';
 		cfg.pasteWordMode = cfg.pasteHtmlMode = WT.getVar('wtEditorPasteMode');
 		
 		cfg.toolTexts = Ext.merge({

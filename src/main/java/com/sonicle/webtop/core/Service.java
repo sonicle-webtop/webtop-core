@@ -446,6 +446,23 @@ public class Service extends BaseService implements EventListener {
 		}
 	}
 	
+	public void processMockResponse(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
+		// Useful endpoint to mock a desired response:
+		// this simply returns the whole String content received as 
+		// query-string parameter ("json") as response body.
+		// This always returns a successful 200 response.
+		
+		try {
+			String json = ServletUtils.getStringParameter(request, "json", "");
+			response.setContentLength(json.getBytes().length);
+			out.println(json);
+			
+		} catch (Exception ex) {
+			logger.error("Error in MockResponse", ex);
+			new JsonResult(ex).printTo(out);
+		}
+	}
+	
 	public void processLookupLanguages(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
 		LinkedHashMap<String, JsSimple> items = new LinkedHashMap<>();
 		Locale locale = getEnv().getSession().getLocale();
