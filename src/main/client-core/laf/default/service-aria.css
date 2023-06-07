@@ -61,3 +61,30 @@
 .wt-tree-colorsquare-default.x-tree-checkbox-checked:after {
     left: 2px;
 }
+/*
+ * Flatten viewport toolbars
+ */
+.wt-vieport-dock .x-btn-default-toolbar-large {
+    border-color: #3a3e4f !important;
+    background-color: #3a3e4f !important;
+    background-image: none !important;
+}
+.wt-vieport-dock .x-btn-default-toolbar-large.x-btn-over {
+	background-color: #da7b19 !important;
+}
+.wt-vieport-dock .x-btn-default-toolbar-medium {
+    border-color: #3a3e4f !important;
+    background-color: #3a3e4f !important;
+    background-image: none !important;
+}
+.wt-vieport-dock .x-btn-default-toolbar-medium.x-btn-over {
+	background-color: #da7b19 !important;
+}
+.wt-vieport-dock .x-btn-default-toolbar-small {
+    border-color: #3a3e4f !important;
+    background-color: #3a3e4f !important;
+    background-image: none !important;
+}
+.wt-vieport-dock .x-btn-default-toolbar-small.x-btn-over {
+	background-color: #da7b19 !important;
+}

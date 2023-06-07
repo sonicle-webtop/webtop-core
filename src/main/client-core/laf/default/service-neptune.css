@@ -67,3 +67,30 @@
 .wt-tree-colorsquare-default.x-tree-checkbox-checked:after {
     top: -1px;
 }
+/*
+ * Flatten viewport toolbars
+ */
+.wt-vieport-dock .x-btn-default-toolbar-large {
+    border-color: #dfeaf2 !important;
+    background-color: #dfeaf2 !important;
+    background-image: none !important;
+}
+.wt-vieport-dock .x-btn-default-toolbar-large.x-btn-over {
+	background-color: #cedfeb !important;
+}
+.wt-vieport-dock .x-btn-default-toolbar-medium {
+    border-color: #dfeaf2 !important;
+    background-color: #dfeaf2 !important;
+    background-image: none !important;
+}
+.wt-vieport-dock .x-btn-default-toolbar-medium.x-btn-over {
+	background-color: #cedfeb !important;
+}
+.wt-vieport-dock .x-btn-default-toolbar-small {
+    border-color: #dfeaf2 !important;
+    background-color: #dfeaf2 !important;
+    background-image: none !important;
+}
+.wt-vieport-dock .x-btn-default-toolbar-small.x-btn-over {
+	background-color: #cedfeb !important;
+}

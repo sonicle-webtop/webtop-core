@@ -67,3 +67,27 @@
 .wt-tree-colorsquare-default.x-tree-checkbox-checked:after {
     top: -1px;
 }
+/*
+ * Flatten viewport toolbars
+ */
+.wt-vieport-dock .x-btn-default-toolbar-large {
+    border-color: #fafafa !important;
+    background-color: #fafafa !important;
+}
+.wt-vieport-dock .x-btn-default-toolbar-large.x-btn-over {
+	background-color: #ededed !important;
+}
+.wt-vieport-dock .x-btn-default-toolbar-medium {
+    border-color: #fafafa !important;
+    background-color: #fafafa !important;
+}
+.wt-vieport-dock .x-btn-default-toolbar-medium.x-btn-over {
+	background-color: #ededed !important;
+}
+.wt-vieport-dock .x-btn-default-toolbar-small {
+    border-color: #fafafa !important;
+    background-color: #fafafa !important;
+}
+.wt-vieport-dock .x-btn-default-toolbar-small.x-btn-over {
+	background-color: #ededed !important;
+}
