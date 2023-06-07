@@ -229,6 +229,8 @@
 .wt-icon-htmled-pre { background-image: url('htmleditor/pre_16.svg') !important; background-size: contain; }
 .wt-icon-htmled-indent { background-image: url('htmleditor/indent_16.svg') !important; background-size: contain; }
 .wt-icon-htmled-outdent { background-image: url('htmleditor/outdent_16.svg') !important; background-size: contain; }
+.wt-icon-htmled-lowercase { background-image: url('htmleditor/character-case_16.svg') !important; background-size: contain; }
+.wt-icon-htmled-uppercase { background-image: url('htmleditor/character-case_16.svg') !important; background-size: contain; }
 .wt-icon-htmled-clearformat { background-image: url('htmleditor/clearformat_16.svg') !important; background-size: contain; }
 .wt-icon-htmled-alignCenter { background-image: url('htmleditor/align-center_16.svg') !important; background-size: contain; }
 .wt-icon-htmled-alignJustify { background-image: url('htmleditor/align-justify_16.svg') !important; background-size: contain; }
