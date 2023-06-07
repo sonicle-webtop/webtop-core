@@ -372,6 +372,7 @@ public class CoreManager extends BaseManager {
 		
 		// Add built-in LAFs
 		lafs.put("default", new UILookAndFeel("default", WT.getPlatformName()));
+		lafs.put("webtop2023", new UILookAndFeel("webtop2023", "WebTop 2023"));
 		lafs.put("office2019", new UILookAndFeel("office2019", "Office 2019"));
 		
 		// Then load extra ones...
