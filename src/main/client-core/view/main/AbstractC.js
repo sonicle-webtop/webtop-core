@@ -34,6 +34,9 @@
 Ext.define('Sonicle.webtop.core.view.main.AbstractC', {
 	alternateClassName: 'WTA.view.main.AbstractC',
 	extend: 'Ext.app.ViewController',
+	requires: [
+		'Sonicle.Utils'
+	],
 	
 	svctbmap: null,
 	toolmap: null,
@@ -301,7 +304,7 @@ Ext.define('Sonicle.webtop.core.view.main.AbstractC', {
 	},
 	
 	onTaskBarButtonContextMenu: function(s, btn, e) {
-		WT.showContextMenu(e, this.getView().getRef('cxmTaskBar'), {winId: btn.getItemId()});
+		Sonicle.Utils.showContextMenu(e, this.getView().getRef('cxmTaskBar'), {winId: btn.getItemId()});
 	},
 	
 	onTaskBarButtonContextClick: function(s,e) {
