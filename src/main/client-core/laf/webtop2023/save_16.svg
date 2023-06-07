@@ -2,7 +2,9 @@
 <!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
 <svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" width="16px" height="16px" viewBox="0 0 16 16" enable-background="new 0 0 16 16" xml:space="preserve">
   <g id="icon">
-    <polygon points="7.55,0.7011 1.5,5.3628 1.5,15.5 5.5,15.5 5.5,11.5 9.5,11.5 9.5,15.5 13.5,15.5 13.5,5.3662" fill="#FFFFFF" stroke-linejoin="miter" opacity="0.5"/>
-    <path d="M14,16H9v-4H6v4H1V5.1068l6.5526,-5.024L14,5.1129V16zM10,15h3V5.6195L7.5474,1.3193L2,5.6187V15h3v-4h5V15z" fill="#6485C3"/>
+    <path d="M2.5,0h11v8.5H2.5V0zM13,10H4v5h9V10z" fill="#FFFFFF" opacity="0.5"/>
+    <path d="M12,2H4v1h8V2zM12,4H4v1h8V4z" fill="#CB525D"/>
+    <rect x="5" y="11" width="2" height="3" fill="#6D6E71"/>
+    <path d="M13,0v1v7H3V1V0H0v12.9913L3.0598,16H4h8h4V0H13zM2,3H1V2h1V3zM13,15H4v-5h9V15z" fill="#9171B2"/>
   </g>
 </svg>

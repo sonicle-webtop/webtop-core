@@ -5,9 +5,9 @@
     <path d="M1.8,5h7.6l-0.1,5.8H1.7L1.8,5zM9,12H3v3h6V12z" fill="#FFFFFF" opacity="0.5"/>
     <path d="M8,6H3v1h5V6zM8,8H3v1h5V8z" fill="#CB525D"/>
     <rect x="3.5" y="12.5" width="1.5" height="2" fill="#6D6E71"/>
-    <path d="M9,5v0.6875V11H2V5.6875V5H0v8.9315L2.1036,16H2.75h5.5H11V5H9zM1.4,7H0.7V6h0.7V7zM9,15H3v-3h6V15z" fill="#6D6E71"/>
+    <path d="M9,5v0.6875V11H2V5.6875V5H0v8.9315L2.1036,16H2.75h5.5H11V5H9zM1.4,7H0.7V6h0.7V7zM9,15H3v-3h6V15z" fill="#9171B2"/>
     <path d="M12,7h2v3h-2V7zM6.8,0l-0.069,4H12v1.8h2.3l0.1,-5.8H6.8z" fill="#FFFFFF" opacity="0.5"/>
     <path d="M8,3h5v1h-1H8V3zM8,1v1h5V1H8z" fill="#CB525D"/>
-    <path d="M7,4V0.6875V0H5v4H7zM5.7,1h0.7v1h-0.7V1zM16,0v11h-3.75H12v-1h2V7h-2V6h2V0.6875V0H16z" fill="#6D6E71"/>
+    <path d="M7,4V0.6875V0H5v4H7zM5.7,1h0.7v1h-0.7V1zM16,0v11h-3.75H12v-1h2V7h-2V6h2V0.6875V0H16z" fill="#9171B2"/>
   </g>
 </svg>
