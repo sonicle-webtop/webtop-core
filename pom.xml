@@ -1346,7 +1346,6 @@
 										<argument>-l</argument>
 										<argument>${webtop.service.i18n.tx.push.languages}</argument>
 										<argument>-f</argument>
-										<argument>--no-interactive</argument>
 									</arguments>
 								</configuration>
 							</execution>
