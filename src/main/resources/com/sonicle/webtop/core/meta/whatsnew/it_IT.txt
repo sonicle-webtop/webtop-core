@@ -1,3 +1,15 @@
+$	5.17.0
+	%	Versione 5.17.0
+	*	<h1>Nuove icone moderne per WebTop</h1>
+		<p>Prova il Look & Feel 'WebTop 2023' in <b>Impostazioni > Generale</b></p>
+		<img src="5.17.0_laf-wt2023.png"/>
+	*	<h1>Nuove icone in stile Office 2019</h1>
+		<p>Prova il Look & Feel 'Office 2019' in <b>Impostazioni > Generale</b></p>
+		<img src="5.17.0_laf-office2019.png"/>
+	*	<h1>Ricerche: salvataggio preferite e gestione cronologia</h1>
+		<p>Ora è possibile salvare una ricerca frequente come preferita oppure recuperare velocemente le ultime ricerche eseguite.</p>
+		<img src="5.17.0_search-save.png"/>
+		<img src="5.17.0_search-lookup.png"/>
 $	5.16.0
 	%	Versione 5.16.0
 	*	<h1>Gestione risorse</h1>
