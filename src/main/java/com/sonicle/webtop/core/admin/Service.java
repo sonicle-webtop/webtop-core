@@ -1058,6 +1058,10 @@ public class Service extends BaseService {
 				JsGridDomainLicense pl0 = pl.data.get(0);
 				admMgr.updateLicenseAutoLease(new ProductId(pl0.id).getProductCode(), pl0.autoLease);
 				new JsonResult().printTo(out);
+			
+			} else if (Crud.DELETE.equals(crud)) {
+				// Do NOT do anything on delete, simply here due to autoSync Store for update operation above!
+				new JsonResult().printTo(out);
 				
 			} else if ("cleanup".equals(crud)) {
 				admMgr.cleanupLicenseCache();

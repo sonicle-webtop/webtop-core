@@ -610,8 +610,6 @@ public class LicenseManager {
 	public void changeLicense(final String domainId, final String productCode, final String newString, final String activatedString, final boolean force) throws WTException {
 		Check.notEmpty(domainId, "domainId");
 		Check.notEmpty(productCode, "productCode");
-		Check.notEmpty(newString, "newString");
-		Check.notEmpty(activatedString, "activatedString");
 		
 		BaseServiceProduct product = ProductRegistry.getInstance().getServiceProductOrThrow(productCode, domainId);
 		changeLicense(product, newString, activatedString, force);
@@ -620,7 +618,6 @@ public class LicenseManager {
 	public void changeLicense(final BaseServiceProduct product, final String newString, final String activatedString, final boolean force) throws WTException {
 		Check.notNull(product, "product");
 		Check.notEmpty(newString, "newString");
-		Check.notEmpty(activatedString, "activatedString");
 		
 		ProductLicense productLicense = getProductLicenseOrThrow(product);
 		boolean ret = internalChangeLicense(product.getDomainId(), product.SERVICE_ID, product.getProductCode(), productLicense, newString, activatedString, force);
@@ -630,8 +627,6 @@ public class LicenseManager {
 	public void modifyLicense(final String domainId, final String productCode, final String modificationKey, final String modifiedLicenseString) throws WTException {
 		Check.notEmpty(domainId, "domainId");
 		Check.notEmpty(productCode, "productCode");
-		Check.notEmpty(modificationKey, "modificationKey");
-		Check.notEmpty(modifiedLicenseString, "modifiedLicenseString");
 		
 		BaseServiceProduct product = ProductRegistry.getInstance().getServiceProductOrThrow(productCode, domainId);
 		modifyLicense(product, modificationKey, modifiedLicenseString);
@@ -640,8 +635,8 @@ public class LicenseManager {
 	public void modifyLicense(final BaseServiceProduct product, final String modificationKey, final String modifiedLicenseString) throws WTException {
 		Check.notNull(product, "product");
 		Check.notEmpty(modificationKey, "modificationKey");
-		Check.notEmpty(modifiedLicenseString, "modifiedLicenseString");
 		
+		//FIXME: is modifiedLicenseString an activated string?
 		//TODO: not supported yet! Verify implementation!
 		ProductLicense productLicense = getProductLicenseOrThrow(product);
 		boolean ret = internalModifyLicense(product.getDomainId(), product.SERVICE_ID, product.getProductCode(), productLicense, modificationKey, modifiedLicenseString);
