@@ -43,7 +43,7 @@ Ext.define('Sonicle.webtop.core.view.main.Default', {
 		this.leftDockCmp().add({
 			xclass: 'WTA.ux.app.launcher.ServiceButton',
 			sid: desc.getId(),
-			scale: 'large',
+			scale: 'medium',
 			handler: 'onLauncherButtonClick'
 		});
 	},
@@ -52,7 +52,7 @@ Ext.define('Sonicle.webtop.core.view.main.Default', {
 
 		this.leftDockCmp().add({
 			xclass: 'WTA.ux.app.launcher.LinkButton',
-			scale: 'large',
+			scale: 'medium',
 			iconCls: 'left-dock-icons',
 			icon: link.icon,
 			tooltip: link.text,
@@ -69,7 +69,7 @@ Ext.define('Sonicle.webtop.core.view.main.Default', {
 			enableOverflow: true,
 			overflowHandler: 'scroller',
 			items: [
-				this.createPortalButton({scale: 'large'})
+				this.createPortalButton({scale: 'medium'})
 			]
 		};
 	}

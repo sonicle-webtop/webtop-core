@@ -91,8 +91,8 @@ Ext.define('Sonicle.webtop.core.ux.app.launcher.ServiceButton', {
 	
 	privates: {
 		getIconSize: function(scale) {
-			if (scale === 'large') return 'm';
-			if (scale === 'medium') return 's';
+			if (scale === 'large') return (WT.getLaf() === 'webtop2023') ? 's' : 'm';
+			if (scale === 'medium') return (WT.getLaf() === 'office2019') ? 'l' : 's';
 			return 'xs';
 		}
 	}
