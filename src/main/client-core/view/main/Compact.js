@@ -35,7 +35,8 @@ Ext.define('Sonicle.webtop.core.view.main.Compact', {
 	extend: 'WTA.view.main.Abstract',
 	
 	getTaskBar: function() {
-		return this.bottomDockCmp().getComponent(1);
+		var bdock=this.bottomDockCmp();
+		return bdock?bdock.getComponent(1):null;
 	},
 	
 	getPortalButton: function() {
