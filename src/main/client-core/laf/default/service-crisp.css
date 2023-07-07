@@ -91,3 +91,17 @@
 .wt-vieport-dock .x-btn-default-toolbar-small.x-btn-over {
 	background-color: #ededed !important;
 }
+.x-btn-default-toolbar-small {
+	background-color: transparent;
+	border-color: transparent;
+}
+
+.x-btn-default-toolbar-small.x-btn-over {
+	background-color: #ededed !important;
+	border-color: transparent;
+}
+
+.x-btn-default-toolbar-small.x-btn-pressed {
+	border-color: transparent !important;
+	background-color: #c7c7c7 !important;
+}
