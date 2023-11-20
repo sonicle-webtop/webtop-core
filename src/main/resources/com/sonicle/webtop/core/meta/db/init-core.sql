@@ -86,10 +86,7 @@ CREATE TABLE "core"."activities" (
 "description" varchar(255) NOT NULL,
 "read_only" bool DEFAULT false NOT NULL,
 "external_id" varchar(100)
-)
-WITH (OIDS=FALSE)
-
-;
+);
 
 -- ----------------------------
 -- Table structure for autosave
@@ -103,10 +100,7 @@ CREATE TABLE "core"."autosave" (
 "context" varchar(50) NOT NULL,
 "key" varchar(100) NOT NULL,
 "value" text
-)
-WITH (OIDS=FALSE)
-
-;
+);
 
 -- ----------------------------
 -- Table structure for causals
@@ -121,10 +115,7 @@ CREATE TABLE "core"."causals" (
 "description" varchar(255) NOT NULL,
 "read_only" bool DEFAULT false NOT NULL,
 "external_id" varchar(100)
-)
-WITH (OIDS=FALSE)
-
-;
+);
 
 -- ----------------------------
 -- Table structure for domain_settings
@@ -135,10 +126,7 @@ CREATE TABLE "core"."domain_settings" (
 "service_id" varchar(255) NOT NULL,
 "key" varchar(255) NOT NULL,
 "value" text
-)
-WITH (OIDS=FALSE)
-
-;
+);
 
 -- ----------------------------
 -- Table structure for domains
@@ -157,10 +145,7 @@ CREATE TABLE "core"."domains" (
 "dir_case_sensitive" bool NOT NULL,
 "dir_password_policy" bool NOT NULL,
 "dir_parameters" text
-)
-WITH (OIDS=FALSE)
-
-;
+);
 
 -- ----------------------------
 -- Table structure for file_types
@@ -170,10 +155,7 @@ CREATE TABLE "core"."file_types" (
 "extension" varchar(255) NOT NULL,
 "type" varchar(255) NOT NULL,
 "subtype" varchar(255) NOT NULL
-)
-WITH (OIDS=FALSE)
-
-;
+);
 
 -- ----------------------------
 -- Table structure for im_chats
@@ -191,10 +173,7 @@ CREATE TABLE "core"."im_chats" (
 "is_group_chat" bool NOT NULL,
 "last_seen_activity" timestamptz(6),
 "with_jid" varchar(255)
-)
-WITH (OIDS=FALSE)
-
-;
+);
 
 -- ----------------------------
 -- Table structure for im_messages
@@ -214,10 +193,7 @@ CREATE TABLE "core"."im_messages" (
 "data" text,
 "message_uid" varchar(255) NOT NULL,
 "stanza_id" varchar(255)
-)
-WITH (OIDS=FALSE)
-
-;
+);
 
 -- ----------------------------
 -- Table structure for languages
@@ -225,10 +201,7 @@ WITH (OIDS=FALSE)
 DROP TABLE IF EXISTS "core"."languages";
 CREATE TABLE "core"."languages" (
 "language_tag" varchar(5) NOT NULL
-)
-WITH (OIDS=FALSE)
-
-;
+);
 
 -- ----------------------------
 -- Table structure for local_vault
@@ -239,10 +212,7 @@ CREATE TABLE "core"."local_vault" (
 "user_id" varchar(100) NOT NULL,
 "password_type" varchar(15) NOT NULL,
 "password" varchar(128)
-)
-WITH (OIDS=FALSE)
-
-;
+);
 
 -- ----------------------------
 -- Table structure for master_data
@@ -270,10 +240,7 @@ CREATE TABLE "core"."master_data" (
 "email" varchar(320),
 "notes" varchar(2000),
 "distance" int4
-)
-WITH (OIDS=FALSE)
-
-;
+);
 
 -- ----------------------------
 -- Table structure for media_types
@@ -282,10 +249,7 @@ DROP TABLE IF EXISTS "core"."media_types";
 CREATE TABLE "core"."media_types" (
 "extension" varchar(255) NOT NULL,
 "media_type" varchar(255) NOT NULL
-)
-WITH (OIDS=FALSE)
-
-;
+);
 
 -- ----------------------------
 -- Table structure for messages_queue
@@ -299,10 +263,7 @@ CREATE TABLE "core"."messages_queue" (
 "message_raw" text NOT NULL,
 "queued_on" timestamptz(6) NOT NULL,
 "pid" varchar(36)
-)
-WITH (OIDS=FALSE)
-
-;
+);
 
 -- ----------------------------
 -- Table structure for roles
@@ -313,10 +274,7 @@ CREATE TABLE "core"."roles" (
 "domain_id" varchar(20),
 "name" varchar(50),
 "description" varchar(100)
-)
-WITH (OIDS=FALSE)
-
-;
+);
 
 -- ----------------------------
 -- Table structure for roles_associations
@@ -326,10 +284,7 @@ CREATE TABLE "core"."roles_associations" (
 "role_association_id" int4 DEFAULT nextval('"core".seq_roles_associations'::regclass) NOT NULL,
 "user_uid" varchar(36) NOT NULL,
 "role_uid" varchar(36) NOT NULL
-)
-WITH (OIDS=FALSE)
-
-;
+);
 
 -- ----------------------------
 -- Table structure for roles_permissions
@@ -342,10 +297,7 @@ CREATE TABLE "core"."roles_permissions" (
 "key" varchar(255) NOT NULL,
 "action" varchar(255) NOT NULL,
 "instance" varchar(255) NOT NULL
-)
-WITH (OIDS=FALSE)
-
-;
+);
 
 -- ----------------------------
 -- Table structure for servicestore_entries
@@ -360,10 +312,7 @@ CREATE TABLE "core"."servicestore_entries" (
 "value" varchar(1024) NOT NULL,
 "frequency" int4 NOT NULL,
 "last_update" timestamptz(6) NOT NULL
-)
-WITH (OIDS=FALSE)
-
-;
+);
 
 -- ----------------------------
 -- Table structure for settings
@@ -373,10 +322,7 @@ CREATE TABLE "core"."settings" (
 "service_id" varchar(255) NOT NULL,
 "key" varchar(255) NOT NULL,
 "value" text
-)
-WITH (OIDS=FALSE)
-
-;
+);
 
 -- ----------------------------
 -- Table structure for settings_db
@@ -391,10 +337,7 @@ CREATE TABLE "core"."settings_db" (
 "hidden" bool DEFAULT false NOT NULL,
 "type" varchar(20) NOT NULL,
 "help" text
-)
-WITH (OIDS=FALSE)
-
-;
+);
 
 -- ----------------------------
 -- Table structure for shares
@@ -406,10 +349,7 @@ CREATE TABLE "core"."shares" (
 "service_id" varchar(255) NOT NULL,
 "key" varchar(255) NOT NULL,
 "instance" varchar(255) NOT NULL
-)
-WITH (OIDS=FALSE)
-
-;
+);
 
 -- ----------------------------
 -- Table structure for shares_data
@@ -419,10 +359,7 @@ CREATE TABLE "core"."shares_data" (
 "share_id" int4 NOT NULL,
 "user_uid" varchar(36) NOT NULL,
 "value" text
-)
-WITH (OIDS=FALSE)
-
-;
+);
 
 -- ----------------------------
 -- Table structure for snoozed_reminders
@@ -439,10 +376,7 @@ CREATE TABLE "core"."snoozed_reminders" (
 "title" varchar(100),
 "date" timestamptz(6),
 "timezone" varchar(50)
-)
-WITH (OIDS=FALSE)
-
-;
+);
 
 -- ----------------------------
 -- Table structure for syslog
@@ -460,10 +394,7 @@ CREATE TABLE "core"."syslog" (
 "user_agent" varchar(512),
 "session_id" varchar(255),
 "data" varchar(255)
-)
-WITH (OIDS=FALSE)
-
-;
+);
 
 -- ----------------------------
 -- Table structure for upgrade_statements
@@ -481,10 +412,7 @@ CREATE TABLE "core"."upgrade_statements" (
 "run_status" varchar(255),
 "run_timestamp" timestamp(6),
 "run_message" text
-)
-WITH (OIDS=FALSE)
-
-;
+);
 
 -- ----------------------------
 -- Table structure for user_settings
@@ -496,10 +424,7 @@ CREATE TABLE "core"."user_settings" (
 "service_id" varchar(255) NOT NULL,
 "key" varchar(255) NOT NULL,
 "value" text
-)
-WITH (OIDS=FALSE)
-
-;
+);
 
 -- ----------------------------
 -- Table structure for users
@@ -513,10 +438,7 @@ CREATE TABLE "core"."users" (
 "user_uid" varchar(36) NOT NULL,
 "display_name" varchar(100),
 "secret" varchar(16)
-)
-WITH (OIDS=FALSE)
-
-;
+);
 
 -- ----------------------------
 -- Table structure for users_associations
@@ -526,10 +448,7 @@ CREATE TABLE "core"."users_associations" (
 "user_association_id" int4 DEFAULT nextval('"core".seq_users_associations'::regclass) NOT NULL,
 "user_uid" varchar(36) NOT NULL,
 "group_uid" varchar(36) NOT NULL
-)
-WITH (OIDS=FALSE)
-
-;
+);
 
 -- ----------------------------
 -- Table structure for users_info
@@ -559,10 +478,7 @@ CREATE TABLE "core"."users_info" (
 "custom1" varchar(255),
 "custom2" varchar(255),
 "custom3" varchar(255)
-)
-WITH (OIDS=FALSE)
-
-;
+);
 
 -- ----------------------------
 -- Alter Sequences Owned By 

@@ -69,10 +69,7 @@ CREATE TABLE "core"."master_data" (
 "email" varchar(320),
 "notes" varchar(2000),
 "distance" int4
-)
-WITH (OIDS=FALSE)
-
-;
+);
 
 -- ----------------------------
 -- Indexes structure for table master_data

@@ -28,10 +28,7 @@ CREATE TABLE "core"."im_chats" (
 "is_group_chat" bool NOT NULL,
 "last_seen_activity" timestamptz(6),
 "with_jid" varchar(255)
-)
-WITH (OIDS=FALSE)
-
-;
+);
 
 -- ----------------------------
 -- Table structure for im_messages
@@ -50,10 +47,7 @@ CREATE TABLE "core"."im_messages" (
 "text" varchar(255),
 "message_uid" varchar(255) NOT NULL,
 "stanza_id" varchar(255)
-)
-WITH (OIDS=FALSE)
-
-;
+);
 
 -- ----------------------------
 -- Indexes structure for table im_chats

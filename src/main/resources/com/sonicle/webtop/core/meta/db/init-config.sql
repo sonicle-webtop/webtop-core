@@ -28,10 +28,7 @@ CREATE TABLE "config"."pecbridge_fetchers" (
 "username" varchar(255),
 "password" varchar(255),
 "webtop_profile_id" varchar(150)
-)
-WITH (OIDS=FALSE)
-
-;
+);
 
 -- ----------------------------
 -- Table structure for pecbridge_relays
@@ -48,10 +45,7 @@ CREATE TABLE "config"."pecbridge_relays" (
 "password" varchar(255),
 "debug" bool,
 "webtop_profile_id" varchar(150)
-)
-WITH (OIDS=FALSE)
-
-;
+);
 
 -- ----------------------------
 -- Alter Sequences Owned By 

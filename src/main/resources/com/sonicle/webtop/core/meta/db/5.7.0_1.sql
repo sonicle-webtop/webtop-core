@@ -5,10 +5,7 @@
 -- ----------------------------
 CREATE TABLE "core"."languages" (
 "language_tag" varchar(5) NOT NULL
-)
-WITH (OIDS=FALSE)
-
-;
+);
 
 ALTER TABLE "core"."languages" ADD PRIMARY KEY ("language_tag");
 
