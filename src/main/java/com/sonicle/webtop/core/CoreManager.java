@@ -160,6 +160,9 @@ import com.sonicle.webtop.core.app.model.ShareOrigin;
 import com.sonicle.webtop.core.app.model.SubjectGetOption;
 import com.sonicle.webtop.core.app.model.User;
 import com.sonicle.webtop.core.app.model.UserGetOption;
+import com.sonicle.webtop.core.config.bol.OPecBridgeRelay;
+import com.sonicle.webtop.core.config.dal.PecBridgeFetcherDAO;
+import com.sonicle.webtop.core.config.dal.PecBridgeRelayDAO;
 import com.sonicle.webtop.core.model.Tag;
 import com.sonicle.webtop.core.model.UILayout;
 import com.sonicle.webtop.core.model.UITheme;
@@ -4408,6 +4411,55 @@ public class CoreManager extends BaseManager {
 		return mes;
 	}
 	
+	public void updatePecBridgeRelayPassword(String webtopProfileId, String password) throws WTException {
+		PecBridgeRelayDAO dao = PecBridgeRelayDAO.getInstance();
+		Connection con = null;
+		
+		if (!RunContext.isPermitted(true, SERVICE_ID, "PEC_PASSWORD", "CHANGE"))
+			throw new WTException("Operation not permitted");
+		
+		
+		try {
+			con = WT.getConnection(SERVICE_ID, false);
+			dao.updatePasswordByWebtopProfileId(con, webtopProfileId, password);
+			
+			DbUtils.commitQuietly(con);
+		
+		} catch(SQLException | DAOException ex) {
+			DbUtils.rollbackQuietly(con);
+			throw new WTException(ex, "DB error");
+		} catch(Exception ex) {
+			DbUtils.rollbackQuietly(con);
+			throw ex;
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
+	public void updatePecBridgeFetcherPassword(String webtopProfileId, String password) throws WTException {
+		PecBridgeFetcherDAO dao = PecBridgeFetcherDAO.getInstance();
+		Connection con = null;
+		
+		if (!RunContext.isPermitted(true, SERVICE_ID, "PEC_PASSWORD", "CHANGE"))
+			throw new WTException("Operation not permitted");
+		
+		try {
+			con = WT.getConnection(SERVICE_ID, false);
+			dao.updatePasswordByWebtopProfileId(con, webtopProfileId, password);
+			
+			DbUtils.commitQuietly(con);
+		
+		} catch(SQLException | DAOException ex) {
+			DbUtils.rollbackQuietly(con);
+			throw new WTException(ex, "DB error");
+		} catch(Exception ex) {
+			DbUtils.rollbackQuietly(con);
+			throw ex;
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}	
+
 	private DateTime createRevisionTimestamp() {
 		return DateTime.now(DateTimeZone.UTC);
 	}
