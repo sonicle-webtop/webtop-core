@@ -46,6 +46,7 @@ public class JsGridPecBridgeRelay {
 	public String pecAddress;
 	public String host;
 	public Boolean enabled;
+	public String authState;
 	
 	public JsGridPecBridgeRelay() {}
 	
@@ -55,6 +56,7 @@ public class JsGridPecBridgeRelay {
 		pecAddress = o.getMatcher();
 		host = o.getHost();
 		enabled = o.getEnabled();
+		authState = o.getAuthState();
 	}
 	
 	public static class List extends ArrayList<JsGridPecBridgeRelay> {

@@ -39,6 +39,7 @@ Ext.define('Sonicle.webtop.core.admin.model.GridPecBridgeFetcher', {
 		WTF.field('fetcherId', 'string', false),
 		WTF.roField('forwardProfile', 'string'),
 		WTF.roField('forwardAddress', 'string'),
-		WTF.roField('host', 'string')
+		WTF.roField('host', 'string'),
+		WTF.roField('authState', 'string')
 	]
 });

@@ -46,6 +46,9 @@
 .wtadm-icon-virtualDomain { background-image: url('virtualDomain_16.svg') !important; background-size: contain; }
 .wtadm-icon-virtualEmail { background-image: url('virtualEmail_16.svg') !important; background-size: contain; }
 .wtadm-icon-pecBridge { background-image: url('pecBridge_16.svg') !important; background-size: contain; }
+.wtadm-icon-pecBridge-authState-OK { background-image: url('pecBridge-authState-ok_16.svg') !important; background-size: contain; }
+.wtadm-icon-pecBridge-authState-ER { background-image: url('pecBridge-authState-error_16.svg') !important; background-size: contain; }
+.wtadm-icon-pecBridge-authState-UN { background-image: url('pecBridge-authState-unknown_16.svg') !important; background-size: contain; }
 .wtadm-icon-fetchmail { background-image: url('fetchmail_16.svg') !important; background-size: contain; }
 .wtadm-icon-stmtStatus-ok { background-image: url('stmtStatus-ok_16.svg') !important; background-size: contain; }
 .wtadm-icon-stmtStatus-error { background-image: url('stmtStatus-error_16.svg') !important; background-size: contain; }

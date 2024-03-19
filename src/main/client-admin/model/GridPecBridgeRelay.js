@@ -39,6 +39,7 @@ Ext.define('Sonicle.webtop.core.admin.model.GridPecBridgeRelay', {
 		WTF.field('relayId', 'string', false),
 		WTF.roField('pecProfile', 'string'),
 		WTF.roField('pecAddress', 'string'),
-		WTF.roField('host', 'string')
+		WTF.roField('host', 'string'),
+		WTF.roField('authState', 'string')
 	]
 });

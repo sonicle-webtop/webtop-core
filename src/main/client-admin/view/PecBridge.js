@@ -129,6 +129,17 @@ Ext.define('Sonicle.webtop.core.admin.view.PecBridge', {
 					dataIndex: 'host',
 					header: me.mys.res('pecBridge.gpfetchers.host.lbl'),
 					flex: 1
+				},{
+					xtype: 'soiconcolumn',
+					dataIndex: 'authState',
+					getIconCls: function(v,rec) {
+						return 'wtadm-icon-pecBridge-authState-'+v;
+					},
+					getTip: function(v) {
+						return me.mys.res('pecBridge.authState.tip.'+v);
+					},
+					iconSize: WTU.imgSizeToPx('xs'),
+					width: 40
 				}],
 				tbar: [
 					me.addAct('addFetcher', {
@@ -210,6 +221,17 @@ Ext.define('Sonicle.webtop.core.admin.view.PecBridge', {
 					dataIndex: 'host',
 					header: me.mys.res('pecBridge.gprelays.host.lbl'),
 					flex: 1
+				},{
+					xtype: 'soiconcolumn',
+					dataIndex: 'authState',
+					getIconCls: function(v,rec) {
+						return 'wtadm-icon-pecBridge-authState-'+v;
+					},
+					getTip: function(v) {
+						return me.mys.res('pecBridge.authState.tip.'+v);
+					},
+					iconSize: WTU.imgSizeToPx('xs'),
+					width: 40
 				}],
 				tbar: [
 					me.addAct('addRelay', {

@@ -46,6 +46,7 @@ public class JsGridPecBridgeFetcher {
 	public String forwardAddress;
 	public String host;
 	public Boolean enabled;
+	public String authState;
 	
 	public JsGridPecBridgeFetcher() {}
 	
@@ -55,6 +56,7 @@ public class JsGridPecBridgeFetcher {
 		forwardAddress = o.getForwardAddress();
 		host = o.getHost();
 		enabled = o.getEnabled();
+		authState = o.getAuthState();
 	}
 	
 	public static class List extends ArrayList<JsGridPecBridgeFetcher> {

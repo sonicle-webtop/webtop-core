@@ -1576,7 +1576,10 @@ public class Service extends BaseService {
 				
 			} else if(crud.equals(Crud.UPDATE)) {
 				Payload<MapItem, JsPecBridgeFetcher> pl = ServletUtils.getPayload(request, JsPecBridgeFetcher.class);
-				coreadm.updatePecBridgeFetcher(JsPecBridgeFetcher.buildFetcher(pl.data));
+				OPecBridgeFetcher fetcher = JsPecBridgeFetcher.buildFetcher(pl.data);
+				//on update reset auth state to unknown
+				fetcher.setAuthState("UN");
+				coreadm.updatePecBridgeFetcher(fetcher);
 				new JsonResult().printTo(out);
 			}
 			
@@ -1630,7 +1633,10 @@ public class Service extends BaseService {
 				
 			} else if(crud.equals(Crud.UPDATE)) {
 				Payload<MapItem, JsPecBridgeRelay> pl = ServletUtils.getPayload(request, JsPecBridgeRelay.class);
-				coreadm.updatePecBridgeRelay(JsPecBridgeRelay.buildRelay(pl.data));
+				OPecBridgeRelay relay = JsPecBridgeRelay.buildRelay(pl.data);
+				//on update reset auth state to unknown
+				relay.setAuthState("UN");
+				coreadm.updatePecBridgeRelay(relay);
 				new JsonResult().printTo(out);
 			}
 			
