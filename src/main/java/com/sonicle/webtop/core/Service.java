@@ -385,6 +385,11 @@ public class Service extends BaseService implements EventListener {
 			vars.put("smsProvider",coreMgr.smsGetProvider().getName());
 		}
 		
+		if (RunContext.isPermitted(true, SERVICE_ID, "PEC_PASSWORD", "CHANGE")) {
+			vars.put("pecPasswordChange", true);
+		}
+			
+		
 		vars.put("auditUi", WT.isLicensed(coreMgr.AUDIT_PRODUCT, profile.getUserId()) > 0);
 		//TODO: manage licensing
 		vars.put("hasAudit",coreMgr.isAuditEnabled()&&(RunContext.isImpersonated()||RunContext.isPermitted(true, CoreManifest.ID, "AUDIT")));
