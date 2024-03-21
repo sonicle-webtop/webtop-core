@@ -96,6 +96,11 @@
 			- ACCESS ability to use audit interface
 			-->
 			<permission group="AUDIT" actions="ACCESS" />
+			<!--
+			PEC_PASSWORD - allow pec password administration
+			- CHANGE ability to change pec password
+			-->
+			<permission group="PEC_PASSWORD" actions="CHANGE" />
 		</permissions>
 		
 		<products>
