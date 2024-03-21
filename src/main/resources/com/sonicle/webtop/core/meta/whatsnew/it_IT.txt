@@ -1,3 +1,12 @@
+$	5.18.0
+	%	Versione 5.18.0
+	*	<h1>Amministrazione PEC e stati di autenticazione</h1>
+		<p>L'interfaccia di amministrazione delle PEC ora dialoga con il PEC Bridge
+		mostrando lo stato delle autenticazioni sia per le PEC in ingresso che
+		per quelle in uscita, consentendo di vedere a colpo d'occhio quelle dove
+		l'autenticazione è fallita oppure dove è tutto ok. Il PEC Bridge ora utilizzerà
+		questi stati per evitare di provare continuamente ad accedere a PEC per cui
+		c'è stato un errore, finchè non verrà cambiata la password.</p>
 $	5.17.0
 	%	Versione 5.17.0
 	*	<h1>Nuove icone moderne per WebTop</h1>

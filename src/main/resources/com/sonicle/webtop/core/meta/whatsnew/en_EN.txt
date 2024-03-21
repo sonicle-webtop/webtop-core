@@ -1,3 +1,11 @@
+$	5.18.0
+	%	Version 5.18.0
+	*	<h1>PEC Administration and authentication sates</h1>
+		<p>The PEC administration interface now is conntected with PEC Bridge
+		activities, showing authentication states both for incoming and outging ones,
+		allowing to easily see which ones are failing and which ones are fine.
+		The PEC Bridge will use these states to skip accessing already failed accounts,
+		until the password will be changed.</p>
 $	5.17.0
 	%	Version 5.17.0
 	*	<h1>New WebTop's modern icons</h1>
