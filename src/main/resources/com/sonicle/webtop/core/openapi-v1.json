@@ -2665,6 +2665,264 @@
         "description": "Assigns a lease of a license to each specified users.",
         "x-codegen-request-body-name": "body"
       }
+    },
+    "/mail-bridge/relays": {
+      "get": {
+        "summary": "List MailBridge Relays for a Domain",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Relay"
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "operationId": "mailBridgeListRelays",
+        "description": "Lists Domain's MailBridge Relays.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/domainId"
+          }
+        ],
+        "x-codegen-request-body-name": "body",
+        "tags": [
+          "mail-bridge-relays"
+        ]
+      },
+      "parameters": []
+    },
+    "/mail-bridge/relays/{webtop_profile_id}/auth-state": {
+      "parameters": [
+        {
+          "schema": {
+            "type": "string"
+          },
+          "name": "webtop_profile_id",
+          "in": "path",
+          "required": true
+        }
+      ],
+      "post": {
+        "summary": "Update auth state of relay",
+        "operationId": "mailBridgeUpdateRelayAuthState",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "query",
+            "name": "state",
+            "description": "auth state value (UN,OK,ER)"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "string",
+                "description": "Activated string, result of manual (offline) activation."
+              }
+            }
+          },
+          "description": ""
+        },
+        "description": "Updates auth state of relay.",
+        "x-codegen-request-body-name": "body",
+        "tags": [
+          "mail-bridge-relays"
+        ]
+      }
+    },
+    "/mail-bridge/fetchers": {
+      "get": {
+        "summary": "List MailBridge Fetchers for a Domain",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Fetcher"
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "operationId": "mailBridgeListFetchers",
+        "description": "Lists Domain's MailBridge Fetchers.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/domainId"
+          }
+        ],
+        "x-codegen-request-body-name": "body",
+        "tags": [
+          "mail-bridge-fetchers"
+        ]
+      },
+      "parameters": []
+    },
+    "/mail-bridge/fetchers/{webtop_profile_id}/auth-state": {
+      "parameters": [
+        {
+          "schema": {
+            "type": "string"
+          },
+          "name": "webtop_profile_id",
+          "in": "path",
+          "required": true
+        }
+      ],
+      "post": {
+        "summary": "Update auth state of fetcher",
+        "operationId": "mailBridgeUpdateFetcherAuthState",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "query",
+            "name": "state",
+            "description": "auth state value (UN,OK,ER)"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "string",
+                "description": "Activated string, result of manual (offline) activation."
+              }
+            }
+          },
+          "description": ""
+        },
+        "description": "Updates auth state of fetcher.",
+        "x-codegen-request-body-name": "body",
+        "tags": [
+          "mail-bridge-fetchers"
+        ]
+      }
     }
   },
   "components": {
@@ -2685,8 +2943,7 @@
             "example": "Bad query parameter [$size]: Invalid integer value [abc]"
           }
         },
-        "description": "This general detailed error structure is used throughout this API.",
-        "example": "{\n  \"code\": 400,\n  \"description\": \"Bad query parameter [$size]: Invalid integer value [abc]\"\n}"
+        "description": "This general detailed error structure is used throughout this API."
       },
       "PrincipalInfo": {
         "required": [
@@ -3628,6 +3885,80 @@
           "origin"
         ],
         "description": "The lease active on a user."
+      },
+      "Relay": {
+        "title": "Relay",
+        "type": "object",
+        "description": "mailbridge relay",
+        "properties": {
+          "webtopProfileId": {
+            "type": "string"
+          },
+          "debug": {
+            "type": "boolean"
+          },
+          "host": {
+            "type": "string"
+          },
+          "port": {
+            "type": "integer"
+          },
+          "protocol": {
+            "type": "string"
+          },
+          "username": {
+            "type": "string"
+          },
+          "password": {
+            "type": "string"
+          },
+          "matcher": {
+            "type": "string"
+          },
+          "ssl": {
+            "type": "boolean"
+          },
+          "starttls": {
+            "type": "boolean"
+          },
+          "authState": {
+            "type": "string"
+          }
+        }
+      },
+      "Fetcher": {
+        "title": "Fetcher",
+        "type": "object",
+        "description": "mailbridge fetcher",
+        "properties": {
+          "webtopProfileId": {
+            "type": "string"
+          },
+          "deleteOnForward": {
+            "type": "boolean"
+          },
+          "forwardAddress": {
+            "type": "string"
+          },
+          "host": {
+            "type": "string"
+          },
+          "port": {
+            "type": "integer"
+          },
+          "protocol": {
+            "type": "string"
+          },
+          "username": {
+            "type": "string"
+          },
+          "password": {
+            "type": "string"
+          },
+          "authState": {
+            "type": "string"
+          }
+        }
       }
     },
     "securitySchemes": {

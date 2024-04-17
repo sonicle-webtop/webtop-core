@@ -754,14 +754,19 @@ public class CoreAdminManager extends BaseManager {
 	}
 	
 	public ServiceLicense getLicense(final String productCode) throws WTException {
-		Check.notNull(productCode, "productCode");
-		LicenseManager licMgr = wta.getLicenseManager();
 		String domainId = getTargetProfileId().getDomainId();
+		return getLicense(domainId, productCode);
+	}
+	
+	public ServiceLicense getLicense(final String domainId, final String productCode) throws WTException {
+		Check.notNull(productCode, "productCode");
+		Check.notNull(domainId, "domainId");
+		LicenseManager licMgr = wta.getLicenseManager();
 
 		RunContext.ensureIsWebTopDomainAdmin(domainId);
 		return licMgr.getLicense(domainId, productCode);
 	}
-	
+
 	public String computeLicenseActivationHardwareID() {
 		LicenseManager licMgr = wta.getLicenseManager();
 		return licMgr.computeActivationHardwareID();
@@ -1156,6 +1161,29 @@ public class CoreAdminManager extends BaseManager {
 		}
 	}
 	
+	public void updatePecBridgeFetcherAuthState(String webtopProfileId, String state) throws WTException {
+		PecBridgeFetcherDAO dao = PecBridgeFetcherDAO.getInstance();
+		Connection con = null;
+		
+		RunContext.ensureIsWebTopAdmin();
+		
+		try {
+			con = WT.getConnection(SERVICE_ID, false);
+			dao.updateAuthStateByWebtopProfileId(con, webtopProfileId, state);
+			
+			DbUtils.commitQuietly(con);
+		
+		} catch(SQLException | DAOException ex) {
+			DbUtils.rollbackQuietly(con);
+			throw new WTException(ex, "DB error");
+		} catch(Exception ex) {
+			DbUtils.rollbackQuietly(con);
+			throw ex;
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+
 	/**
 	 * Lists configured PecBridge relays for the specified domain.
 	 * @param domainId The domain ID.
@@ -1306,6 +1334,29 @@ public class CoreAdminManager extends BaseManager {
 		}
 	}
 	
+	public void updatePecBridgeRelayAuthState(String webtopProfileId, String state) throws WTException {
+		PecBridgeRelayDAO dao = PecBridgeRelayDAO.getInstance();
+		Connection con = null;
+		
+		RunContext.ensureIsWebTopAdmin();
+		
+		try {
+			con = WT.getConnection(SERVICE_ID, false);
+			dao.updateAuthStateByWebtopProfileId(con, webtopProfileId, state);
+			
+			DbUtils.commitQuietly(con);
+		
+		} catch(SQLException | DAOException ex) {
+			DbUtils.rollbackQuietly(con);
+			throw new WTException(ex, "DB error");
+		} catch(Exception ex) {
+			DbUtils.rollbackQuietly(con);
+			throw ex;
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+
 	public InputStream getLogFileContent(final long from, final long count) throws WTException, IOException {
 		RunContext.ensureIsSysAdmin();
 		

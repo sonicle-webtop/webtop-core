@@ -107,6 +107,7 @@
 			<product className=".products.TMCEPremiumProduct" />
 			<product className=".products.AuditProduct" />
 			<product className=".products.CustomFieldsProduct" />
+			<product className=".products.MailBridgeProduct" />
 		</products>
 	</service>
 	<service>
