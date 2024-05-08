@@ -406,7 +406,7 @@ Ext.define('Sonicle.webtop.core.sdk.ModelView', {
 				s = model.getId();
 			}
 		}
-		return Ext.String.format(this.fieldTitleFormat, s || '');
+		return Ext.String.format(this.fieldTitleFormat, Sonicle.String.htmlEncode(s || ''));
 	},
 	
 	formatModeTitle: function(mode) {
