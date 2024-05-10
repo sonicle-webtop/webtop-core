@@ -75,7 +75,6 @@ Ext.define('Sonicle.webtop.core.ux.field.RecipientSuggestCombo', {
 	publishes: ['idValue'],
 	twoWayBindable: ['idValue'],
 	
-	escapeDisplayed: true,
 	typeAhead: false,
 	minChars: 2,
 	autoSelect: false,
@@ -98,6 +97,7 @@ Ext.define('Sonicle.webtop.core.ux.field.RecipientSuggestCombo', {
 	
 	doApplyConfig: function() {
 		var me = this;
+		me.defaultListConfig.escapeDisplay = true;
 		Ext.apply(me, {
 			store: {
 				autoLoad: true,

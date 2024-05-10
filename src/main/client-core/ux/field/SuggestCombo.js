@@ -86,6 +86,7 @@ Ext.define('Sonicle.webtop.core.ux.field.SuggestCombo', {
 	
 	doApplyConfig: function() {
 		var me = this;
+		me.defaultListConfig.escapeDisplay = true;
 		Ext.apply(me, {
 			store: {
 				autoLoad: true,
