@@ -1290,6 +1290,8 @@ public final class WebTopManager {
 		
 		// Fire events
 		EventBus.PostResult postResult = fireEvent(new UserUpdateEvent(UserUpdateEvent.Type.UPDATE, userPid), true, true);
+		// Clear any cached data
+		clearProfileCache(userPid);
 		
 		return new ResultVoid(postResult.getHandlerErrorsCauses());
 	}
