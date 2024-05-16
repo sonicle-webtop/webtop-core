@@ -52,7 +52,7 @@ Ext.define('Sonicle.webtop.core.app.FileTypes', {
 	 * @returns {String} The fileType
 	 */
 	getFileType: function(ext) {
-		var ftype = this.extToFileType[ext];
+		var ftype = this.extToFileType[ext?ext.toLowerCase():ext];
 		return ftype || 'file';
 	}
 });
