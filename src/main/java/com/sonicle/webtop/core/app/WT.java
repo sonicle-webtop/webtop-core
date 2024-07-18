@@ -41,6 +41,7 @@ import com.sonicle.mail.PropsBuilder;
 import com.sonicle.mail.email.EmailMessage;
 import com.sonicle.webtop.core.CoreManager;
 import com.sonicle.webtop.core.admin.CoreAdminManager;
+import com.sonicle.webtop.core.app.model.EnabledCond;
 import com.sonicle.webtop.core.app.sdk.AuditReferenceDataEntry;
 import com.sonicle.webtop.core.app.sdk.WTEmailSendException;
 import com.sonicle.webtop.core.io.output.AbstractReport;
@@ -87,6 +88,7 @@ import jakarta.mail.internet.InternetAddress;
 import jakarta.mail.internet.MimeBodyPart;
 import jakarta.mail.internet.MimeMessage;
 import jakarta.mail.internet.MimeMultipart;
+import java.util.Set;
 import javax.sql.DataSource;
 import net.sf.jasperreports.engine.JRException;
 import net.sf.qualitycheck.Check;
@@ -253,11 +255,20 @@ public class WT {
 	}
 	
 	public static InternetAddress getNoReplyAddress(String domainId) {
+		String sender = "webtop-noreply";
 		if (WebTopManager.SYSADMIN_DOMAINID.equals(domainId)) {
-			//TODO: analyze wether to add setting to real internetNamr for sysAdmin domain *
-			return InternetAddressUtils.toInternetAddress("webtop-noreply", null);
+			String domain = null;
+			try {
+				Set<String> domainIds = getWTA().getWebTopManager().listDomainIds(EnabledCond.ENABLED_ONLY);
+				if (domainIds!=null && !domainIds.isEmpty()) {
+					String id = domainIds.iterator().next();
+					domain = WT.getPrimaryDomainName(id);
+				}
+			} catch(WTException exc) { }
+			if (domain != null) sender += "@"+domain;
+			return InternetAddressUtils.toInternetAddress(sender, null);
 		} else {
-			return buildDomainInternetAddress(domainId, "webtop-noreply", null);
+			return buildDomainInternetAddress(domainId, sender, null);
 		}
 	}
 	
