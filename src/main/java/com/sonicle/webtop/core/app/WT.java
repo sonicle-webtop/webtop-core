@@ -258,6 +258,13 @@ public class WT {
 		String sender = "webtop-noreply";
 		if (WebTopManager.SYSADMIN_DOMAINID.equals(domainId)) {
 			String domain = null;
+			try {
+				Set<String> domainIds = getWTA().getWebTopManager().listDomainIds(EnabledCond.ENABLED_ONLY);
+				if (domainIds!=null && !domainIds.isEmpty()) {
+					String id = domainIds.iterator().next();
+					domain = WT.getPrimaryDomainName(id);
+				}
+			} catch(WTException exc) { }
 			if (domain != null) sender += "@"+domain;
 			return InternetAddressUtils.toInternetAddress(sender, null);
 		} else {
