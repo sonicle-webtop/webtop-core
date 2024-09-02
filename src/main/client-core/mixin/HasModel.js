@@ -65,6 +65,7 @@ Ext.define('Sonicle.webtop.core.mixin.HasModel', {
 	/**
 	 * @cfg {Function} returnModelExtraParams
 	 * Function that returns extra-params that will be set as Model's extra-params.
+	 * Make sure that target model uses WTA.mixin.ModelUtil mixin.
 	 */
 	returnModelExtraParams: undefined,
 	

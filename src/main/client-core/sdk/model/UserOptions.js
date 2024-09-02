@@ -33,7 +33,7 @@
  */
 Ext.define('Sonicle.webtop.core.sdk.model.UserOptions', {
 	alternateClassName: 'WTA.sdk.model.UserOptions',
-	extend: 'Ext.data.Model',
+	extend: 'WTA.ux.data.BaseModel',
 	
 	idProperty: 'id',
 	fields: [
