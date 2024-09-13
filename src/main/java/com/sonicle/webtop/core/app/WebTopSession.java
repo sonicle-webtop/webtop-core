@@ -871,6 +871,7 @@ public class WebTopSession {
 			boolean trymeMode = false; // Candidate tryme mode
 			Map<String, UIPreset> validPresets = wta.getWebTopManager().listUIPresets();
 			UIPreset candidate = validPresets.get(WebTopProps.getUIPresetForced(wta.getProperties()));
+			// Evaluates tryme preset, if enabled. This has the highest priority!
 			if (candidate == null && trymeEnabled && !trymeDisarmed) {
 				UIPreset trymePreset = validPresets.get(WebTopProps.getUIPresetTryMe(wta.getProperties()));
 				if (trymePreset != null) {
@@ -878,7 +879,9 @@ public class WebTopSession {
 					candidate = trymePreset;
 				}
 			}
+			// Look for a matching preset against initial values
 			if (candidate == null) candidate = findMatchingUIPreset(validPresets.values(), initialTheme, initialLookAndFeel);
+			// As fallback, return the first valid-preset in list
 			if (candidate == null) candidate = validPresets.entrySet().iterator().next().getValue();
 			if (candidate != null) {
 				if (!trymeMode || (trymeMode && !trymeDisarmed)) {
