@@ -858,16 +858,20 @@ public class WebTopSession {
 		return initialLayout;
 	}
 	
-	public UIPreset applyRuntimeUIPreset(final CoreUserSettings userSettings) {
+	public UIPreset applyRuntimeUIPreset(final CoreServiceSettings settings, final CoreUserSettings userSettings) {
+		String trymeUIPreset = WebTopProps.getUIPresetTryMe(wta.getProperties());
+		boolean trymeEnabled = !StringUtils.isAllBlank(trymeUIPreset);
+		String defaultTheme = settings.getDefaultUITheme();
+		String defaultLookAndFeel = settings.getDefaultUILaf();
 		String initialTheme = userSettings.getUITheme();
 		String initialLookAndFeel = userSettings.getUILookAndFeel();
 		boolean trymeDisarmed = userSettings.getUITryMeDisarmed();
 		
 		try {
-			boolean trymeMode = false;
+			boolean trymeMode = false; // Candidate tryme mode
 			Map<String, UIPreset> validPresets = wta.getWebTopManager().listUIPresets();
 			UIPreset candidate = validPresets.get(WebTopProps.getUIPresetForced(wta.getProperties()));
-			if (candidate == null && !trymeDisarmed) {
+			if (candidate == null && trymeEnabled && !trymeDisarmed) {
 				UIPreset trymePreset = validPresets.get(WebTopProps.getUIPresetTryMe(wta.getProperties()));
 				if (trymePreset != null) {
 					trymeMode = true;
@@ -875,6 +879,7 @@ public class WebTopSession {
 				}
 			}
 			if (candidate == null) candidate = findMatchingUIPreset(validPresets.values(), initialTheme, initialLookAndFeel);
+			if (candidate == null) candidate = validPresets.entrySet().iterator().next().getValue();
 			if (candidate != null) {
 				if (!trymeMode || (trymeMode && !trymeDisarmed)) {
 					boolean overridden = false;
@@ -895,7 +900,7 @@ public class WebTopSession {
 			}
 			
 		} catch (Exception ex) { /* Do nothing */ }
-		return new UIPreset("null", "null", initialTheme, initialLookAndFeel);
+		return new UIPreset("null", "null", defaultTheme, defaultLookAndFeel);
 	}
 	
 	private UIPreset findMatchingUIPreset(final Collection<UIPreset> presets, final String theme, final String lookAndFeel) {
@@ -914,7 +919,7 @@ public class WebTopSession {
 		ServiceManifest coreManifest = svcm.getManifest(CoreManifest.ID);
 		CoreUserSettings cus = new CoreUserSettings(CoreManifest.ID, profile.getId());
 		String layout = applyRuntimeUILayout(cus);
-		UIPreset preset = applyRuntimeUIPreset(cus);
+		UIPreset preset = applyRuntimeUIPreset(new CoreServiceSettings(CoreManifest.ID, profile.getDomainId()), cus);
 		String theme = preset.getTheme(), lookAndFeel = preset.getLookAndFeel();
 		
 		CoreSettings.TryMeBanner tmb = cus.getUITryMeBanner();
