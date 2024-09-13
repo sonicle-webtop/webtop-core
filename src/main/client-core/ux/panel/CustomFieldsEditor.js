@@ -35,9 +35,7 @@ Ext.define('Sonicle.webtop.core.ux.panel.CustomFieldsEditor', {
 	extend: 'Sonicle.webtop.core.ux.panel.CustomFieldsBase',
 	alias: 'widget.wtcfieldseditorpanel',
 	requires: [
-		'Sonicle.String',
-		'Sonicle.plugin.FieldTooltip',
-		'Sonicle.form.field.Tag'
+		'Sonicle.plugin.FieldTooltip'
 	],
 	
 	constructor: function(cfg) {

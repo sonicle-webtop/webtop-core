@@ -9,19 +9,22 @@
         
         <title>${title}</title>
         <#if baseUrl??><base href="${baseUrl}" target="_blank"></#if>
-        <link rel="shortcut icon" type="image/x-icon" href="resources/com.sonicle.webtop.core/${coreVersion.toString()}/resources/images/wt.ico" />
+        <link rel="icon" type="image/svg+xml" href="${coreResourcesImagesUrl}/favicon.svg">
+        <link rel="icon" type="image/png" href="${coreResourcesImagesUrl}/favicon.png">
+        <!-- Fallback favicon in case a browser does not support the SVG version -->
+        <link rel="alternate icon" type="image/x-icon" href="${coreResourcesImagesUrl}/favicon.ico">
         
         <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
         <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
         <!--[if lt IE 9]>
-            <script src="resources/com.sonicle.webtop.core/0.0.0/resources/vendor/html5shiv/3.7.3/html5shiv.min.js"></script>
-            <script src="resources/com.sonicle.webtop.core/0.0.0/resources/vendor/respond/1.4.2/respond.min.js"></script>
+            <script src="${coreResourcesVendorUrl}/html5shiv/3.7.3/html5shiv.min.js"></script>
+            <script src="${coreResourcesVendorUrl}/respond/1.4.2/respond.min.js"></script>
         <![endif]-->
         
         <!-- Bootstrap -->
-        <link rel="stylesheet" property="stylesheet" type="text/css" href="resources/com.sonicle.webtop.core/0.0.0/resources/vendor/bootstrap/3.3.7/css/bootstrap.min.css" />
-        <link rel="stylesheet" property="stylesheet" type="text/css" href="resources/com.sonicle.webtop.core/${coreVersion.toString()}/resources/css/login.css" />
-        <script src="resources/com.sonicle.webtop.core/0.0.0/resources/vendor/jquery/3.3.1/jquery.min.js"></script>
+        <link rel="stylesheet" property="stylesheet" type="text/css" href="${coreResourcesVendorUrl}/bootstrap/3.3.7/css/bootstrap.min.css" />
+        <link rel="stylesheet" property="stylesheet" type="text/css" href="${coreResourcesCssUrl}/login.css" />
+        <script src="${coreResourcesVendorUrl}/jquery/3.3.1/jquery.min.js"></script>
         
         <script type="text/javascript">
             $(function () {
@@ -41,7 +44,7 @@
             <div id="login" class="container">
                 <div class="row">
                     <div class="col-xs-12 col-sm-10 col-sm-offset-1 col-md-10 col-md-offset-1 col-lg-8 col-lg-offset-2">
-                        <img class="logo img-responsive" src="resources/com.sonicle.webtop.core/${coreVersion.toString()}/resources/images/login.png">
+                        <img class="logo img-responsive" src="${coreResourcesImagesUrl}/login.png">
                         <#if showMaintenance>
                         <div class="alert alert-warning text-center" role="alert">
                             <span class="glyphicon glyphicon-info-sign"></span>&nbsp;
@@ -91,7 +94,7 @@
                 </div>
                 <div class="row">
                     <div class="col-xs-12 col-sm-10 col-sm-offset-1 col-md-10 col-md-offset-1 col-lg-8 col-lg-offset-2">
-                        <img class="powered img-responsive" src="resources/com.sonicle.webtop.core/${coreVersion.toString()}/resources/images/poweredby.png">
+                        <img class="powered img-responsive" src="${coreResourcesImagesUrl}/poweredby.png">
                         <h5 class="powered text-center"><small>${versionString}</small></h5>
                         <#if serverInfo??>
                         <h6 class="serverinfo text-center"><small>${serverInfo}</small></h6>

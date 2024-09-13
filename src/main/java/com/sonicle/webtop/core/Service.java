@@ -134,9 +134,10 @@ import com.sonicle.webtop.core.model.Meeting;
 import com.sonicle.webtop.core.model.PublicImage;
 import com.sonicle.webtop.core.model.RecipientFieldType;
 import com.sonicle.webtop.core.model.Tag;
-import com.sonicle.webtop.core.model.UILayout;
-import com.sonicle.webtop.core.model.UILookAndFeel;
-import com.sonicle.webtop.core.model.UITheme;
+import com.sonicle.webtop.core.app.model.UILayout;
+import com.sonicle.webtop.core.app.model.UILookAndFeel;
+import com.sonicle.webtop.core.app.model.UIPreset;
+import com.sonicle.webtop.core.app.model.UITheme;
 import com.sonicle.webtop.core.products.TMCEPremiumProduct;
 import com.sonicle.webtop.core.util.AppLocale;
 import com.sonicle.webtop.core.sdk.BaseService;
@@ -355,9 +356,11 @@ public class Service extends BaseService implements EventListener {
 		vars.put("domainId", profile.getDomainId());
 		vars.put("userId", profile.getUserId());
 		vars.put("userDisplayName", profile.getDisplayName());
-		vars.put("theme", us.getTheme());
-		vars.put("laf", us.getLookAndFeel());
-		vars.put("layout", us.getLayout());
+		vars.put("userProfileEmail", profile.getProfileEmailAddress());
+		vars.put("userPersonalEmail", profile.getPersonalEmailAddress());
+		vars.put("theme", us.getUITheme());
+		vars.put("laf", us.getUILookAndFeel());
+		vars.put("layout", us.getUILayout());
 		vars.put("viewportHeaderScale", EnumUtils.toSerializedName(us.getViewportHeaderScale()));
 		vars.put("startupService", us.getStartupService());
 		vars.put("desktopNotification", us.getDesktopNotification());
@@ -468,6 +471,18 @@ public class Service extends BaseService implements EventListener {
 		}
 	}
 	
+	public void processDisableUITryMeBanner(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
+		
+		try {
+			us.setUITryMeBanner(null);
+			new JsonResult().printTo(out);
+			
+		} catch (Exception ex) {
+			logger.error("Error in DisableUITryMeBanner", ex);
+			new JsonResult(ex).printTo(out);
+		}
+	}
+	
 	public void processLookupLanguages(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
 		LinkedHashMap<String, JsSimple> items = new LinkedHashMap<>();
 		Locale locale = getEnv().getSession().getLocale();
@@ -507,21 +522,6 @@ public class Service extends BaseService implements EventListener {
 		}
 	}
 	
-	public void processLookupThemes(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
-		
-		try {
-			List<JsSimple> items = new ArrayList<>();
-			for (UITheme theme : coreMgr.listUIThemes().values()) {
-				items.add(new JsSimple(theme.getId(), theme.getName()));
-			}
-			new JsonResult("themes", items, items.size()).printTo(out);
-
-		} catch (Throwable t) {
-			logger.error("Error in LookupThemes", t);
-			new JsonResult(t).printTo(out);
-		}
-	}
-	
 	public void processGeolocateIP(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
 		try {
 			ArrayList<String> ips = ServletUtils.getStringParameters(request, "ips");
@@ -539,17 +539,47 @@ public class Service extends BaseService implements EventListener {
 		}
 	}
 	
+	public void processLookupUIPresets(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
+		
+		try {
+			List<JsSimple> items = new ArrayList<>();
+			for (UIPreset ui : coreMgr.listUIPresets().values()) {
+				items.add(new JsSimple(ui.getId(), ui.getName()));
+			}
+			new JsonResult(items, items.size()).printTo(out);
+
+		} catch (Throwable t) {
+			logger.error("Error in LookupUIPresets", t);
+			new JsonResult(t).printTo(out);
+		}
+	}
+	
 	public void processLookupLayouts(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
 		
 		try {
 			List<JsSimple> items = new ArrayList<>();
-			for (UILayout lay : coreMgr.listUILayouts()) {
+			for (UILayout lay : coreMgr.listUILayouts().values()) {
 				items.add(new JsSimple(lay.getId(), lay.getName()));
 			}
 			new JsonResult("layouts", items, items.size()).printTo(out);
 
 		} catch (Throwable t) {
 			logger.error("Error in LookupLayouts", t);
+			new JsonResult(t).printTo(out);
+		}
+	}
+	
+	public void processLookupThemes(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
+		
+		try {
+			List<JsSimple> items = new ArrayList<>();
+			for (UITheme theme : coreMgr.listUIThemes().values()) {
+				items.add(new JsSimple(theme.getId(), theme.getName()));
+			}
+			new JsonResult("themes", items, items.size()).printTo(out);
+
+		} catch (Throwable t) {
+			logger.error("Error in LookupThemes", t);
 			new JsonResult(t).printTo(out);
 		}
 	}

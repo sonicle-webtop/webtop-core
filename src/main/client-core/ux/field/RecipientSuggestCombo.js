@@ -33,44 +33,48 @@
  */
 Ext.define('Sonicle.webtop.core.ux.field.RecipientSuggestCombo', {
 	alternateClassName: 'WTA.ux.field.RecipientSuggestCombo',
-	extend: 'Sonicle.form.field.SourceComboBox',
+	extend: 'Sonicle.form.field.ComboBox',
 	alias: ['widget.wtrcptsuggestcombo', 'widget.wtrcptsuggestcombobox'],
-	
 	requires: [
+		'Sonicle.String',
 		'WTA.model.InternetRecipient'
 	],
-	plugins: [
-		'soenterkeyplugin',
-		'sofieldtooltip'
-	],
+	
+	/**
+	 * @cfg {String[]} [sources]
+	 * List of explicit sources in which search for recipients, leave empty for any source.
+	 */
+	sources: [],
+	
+	/**
+	 * @cfg {Integer} [limit]
+	 * Limit the results.
+	 */
+	limit: 100,
+	
+	/**
+	 * @cfg {telephone|telephone2|fax|mobile|pager|email|list|im} [targetRecipientFieldType=email]
+	 * The desired recipient's field to return during lookups.
+	 */
+	targetRecipientFieldType: 'email',
+	
+	/**
+	 * @cfg {Boolean} [automaticRecipientAtEnd=false]
+	 * Set to `true` to put automatic suggested contacts last in list.
+	 */
+	automaticRecipientAtEnd: false,
 	
 	config: {
-		/**
-		 * @cfg {String[]} sources
-		 * contacts sources, or null for anything.
-		 */
-		sources: [],
-
-		/**
-		 * @cfg {int} limit
-		 * limit records number.
-		 */
-		limit: 100,
-		
-		/**
-		 * @rftype {String} recipient field type for lookup
-		 * email|fax|telephone...see RecipientFieldType.
-		 * defaults to email
-		 */
-		rftype: "email",
-		
-		/**
-		 * @autoLast {Boolean} automatic contacts suggested last in list
-		 */
-		autoLast: false,
-		
 		idValue: null
 	},
+	
+	/**
+     * @event enterkeypress
+	 * Fires when the user presses the ENTER key.
+	 * Return false to stop subsequent query operations.
+	 * @param {Sonicle.webtop.core.ux.field.Recipients} this
+	 * @param {Object} event The event object
+     */
 	
 	publishes: ['idValue'],
 	twoWayBindable: ['idValue'],
@@ -78,26 +82,109 @@ Ext.define('Sonicle.webtop.core.ux.field.RecipientSuggestCombo', {
 	typeAhead: false,
 	minChars: 2,
 	autoSelect: false,
+	autoSelectLast: false,
+	autoSelectMatches: false,
 	queryMode: 'remote',
 	triggerAction: 'all',
+	valueField: 'description',
+	displayField: 'description',
+	createNewOnEnter: true,
+	createNewOnBlur: false,
 	forceSelection: false,
+	filterPickList: true,
+	triggerOnClick: false,
+	collapseOnSelect: true,
+	forceInputCleaning: true,
+	
+	escapeDisplayed: true,
 	selectOnFocus: true,
 	editable: true,
 	hideTrigger: true,
-	valueField: 'description',
-	displayField: 'description',
-	sourceField: 'sourceLabel',
 	
 	initComponent: function() {
 		var me = this;
-		me.doApplyConfig();
+		Ext.apply(me, {
+			store: {
+				autoLoad: false,
+				
+				//trick to force isLoaded = true when doQuery is called
+				//this is a bug of Ext solved on version 7.5.1
+				//this will be removed when Ext us upgraded
+				loadCount: 1,
+				
+				model: 'WTA.model.InternetRecipient',
+				proxy: WTF.apiProxy(WT.ID, 'ManageInternetRecipients', 'recipients', {
+					extraParams: {
+						sources: me.sources,
+						limit: me.limit,
+						rftype: me.rftype || me.targetRecipientFieldType,
+						autoLast: Ext.isBoolean(me.autoLast) ? me.autoLast : me.automaticRecipientAtEnd
+					}
+				})
+			},
+			labelTpl: new Ext.XTemplate([
+				'{[this.computeValue(values)]}',
+				{
+					computeValue: function(values) {
+						var SoS = Sonicle.String;
+						return SoS.removeQuotes(SoS.coalesce(values['personal'], values['address'], values['description']));
+					}
+				}
+			]),
+			tipTpl: new Ext.XTemplate([
+				'{[this.computeValue(values)]}',
+				{
+					computeValue: function(values) {
+						var SoS = Sonicle.String;
+						return SoS.htmlAttributeEncode(SoS.removeQuotes(values['description']));
+					}
+				}
+			])
+		});
 		me.callParent(arguments);
-		me.on('specialkey', me.onSpecialKey);
+	},
+	
+	initEvents: function() {
+		var me = this;
+		me.callParent();
+		// Borrowed from Sonicle.form.field.search.Field, NOT useful here!
+		/*
+		me.altArrowKeyNav.map.addBinding({
+			key: /^.$/,
+			handler: me.onInputKey,
+			scope: me
+		});
+		*/
+		// ----------
+		me.altArrowKeyNav.map.addBinding({
+			key: Ext.event.Event.ENTER,
+			handler: me.onInputKeyEnter,
+			scope: me
+		});
+	},
+	
+	initListConfig: function() {
+		var me = this;
+		return Ext.apply(me.callParent() || {}, {
+			sourceField: 'sourceLabel',
+			disableFocusSaving: true,
+			enableButton: true,
+			escapeDisplay: true,
+			getButtonTooltip: function() {
+				return WT.res('wtrecipientsfield.entry.button.tip');
+			},
+			shouldShowButton: function(values) {
+				return 'auto' === values.source;
+			},
+			buttonHandler: function(s, e, rec) {
+				rec.drop();
+				rec.store.sync();
+			}
+		});
 	},
 	
 	doApplyConfig: function() {
 		var me = this;
-		me.defaultListConfig.escapeDisplay = true;
 		Ext.apply(me, {
 			store: {
 				autoLoad: true,
@@ -120,21 +207,6 @@ Ext.define('Sonicle.webtop.core.ux.field.RecipientSuggestCombo', {
 			WTU.applyExtraParams(me.store, {
 				context: nv
 			});
-		}
-	},
-	
-	onSpecialKey: function(s, e) {
-		// Add support to SHIFT+CANC for deleting items when expanded
-		if (s.isExpanded) {
-			if (e.shiftKey && (e.getKey() === e.DELETE)) {
-				var pick = s.getPicker(),
-						nav = pick.getNavigationModel(),
-						rec = nav.getRecord();
-				if (rec && this.self.SOURCE_AUTO === rec.get('source')) {
-					rec.drop();
-					s.getStore().sync();
-				}
-			}
 		}
 	},
 	
@@ -164,7 +236,38 @@ Ext.define('Sonicle.webtop.core.ux.field.RecipientSuggestCombo', {
 		me.callParent(arguments);
 	},
 	
-	statics: {
-		SOURCE_AUTO: 'auto'
+	privates: {
+		// Borrowed from Sonicle.form.field.search.Field, NOT useful here!
+		/*
+		onInputKey: function(keyCode, e) {
+			// Disarm list-opening on any input!
+			this.disarmListDelayedOpening();
+			return true;
+		}, 
+		*/
+		// ----------
+		
+		onInputKeyEnter: function(keyCode, e) {
+			var me = this,
+				picker = me.getPicker(),
+				value = me.getValue();
+			
+			// Borrowed from Sonicle.form.field.search.Field, NOT useful here!
+			//me.disarmListDelayedOpening();
+			// ----------
+			
+			// Enter key should be handled here only when the combo's picker is 
+			// not activated (expanded): there is a side-effect of the original 
+			// impl. where after typing with no results, the picker is visually 
+			// hidden but expanded flag is still set to true. We can track this 
+			// situation checking picker's highlightedItem!
+			if (!me.isExpanded || (picker && !picker.highlightedItem)) {
+				e.stopEvent();
+				me.fireEvent('enterkeypress', me, e, value);
+				return false;
+			} else {
+				return true;
+			}
+		}
 	}
 });

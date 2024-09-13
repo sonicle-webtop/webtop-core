@@ -190,35 +190,10 @@ Ext.define('Sonicle.webtop.core.view.WizardView', {
 			],
 			bbar: [
 				'->',
-				{
-					reference: 'btnback',
+				/*{
 					xtype: 'button',
-					text: WT.res('wizard.btn-back.lbl'),
-					handler: function() {
-						me.navigate(-1);
-					},
-					disabled: true
-				}, {
-					reference: 'btnforw',
-					xtype: 'button',
-					text: WT.res('wizard.btn-forw.lbl'),
-					handler: function() {
-						me.navigate(1);
-					},
-					disabled: true
-				}, ' ', {
-					reference: 'btndo',
-					xtype: 'button',
-					text: me.resDoButtonText(),
-					handler: function(s) {
-						s.setDisabled(true); // Avoids multi-runs!
-						me.onDoClick();
-					},
-					hidden: !me.getShowDoButton(),
-					disabled: true
-				}, {
 					reference: 'btncancel',
-					xtype: 'button',
+					ui: '{secondary}',
 					text: WT.res('wizard.btn-cancel.lbl'),
 					handler: function() {
 						if(!me.isPathSelection() && !me.hasNext(1)) {
@@ -226,7 +201,57 @@ Ext.define('Sonicle.webtop.core.view.WizardView', {
 						}
 						me.closeView();
 					}
+				}, {
+					xtype: 'button',
+					reference: 'btnback',
+					ui: '{secondary}',
+					text: WT.res('wizard.btn-back.lbl'),
+					handler: function() {
+						me.navigate(-1);
+					},
+					disabled: true
+				}, {
+					xtype: 'button',
+					reference: 'btnforw',
+					ui: '{primary}',
+					text: WT.res('wizard.btn-forw.lbl'),
+					handler: function() {
+						me.navigate(1);
+					},
+					disabled: true
+				},
+				*/
+				me.createCancelButtonCfg({
+					reference: 'btncancel'
+				}),
+				me.createBackButtonCfg({
+					reference: 'btnback',
+					disabled: true
+				}),
+				me.createForwButtonCfg({
+					reference: 'btnforw',
+					disabled: true
+				}),
+				' ',
+				me.createDoButtonCfg({
+					reference: 'btndo',
+					hidden: !me.getShowDoButton(),
+					disabled: true
+				})
+				/*
+				{
+					xtype: 'button',
+					reference: 'btndo',
+					ui: '{primary}',
+					text: me.resDoButtonText(),
+					handler: function(s) {
+						s.setDisabled(true); // Avoids multi-runs!
+						me.onDoClick();
+					},
+					hidden: !me.getShowDoButton(),
+					disabled: true
 				}
+				*/
 			]
 		});
 		me.callParent(arguments);
@@ -248,7 +273,7 @@ Ext.define('Sonicle.webtop.core.view.WizardView', {
 	
 	getPages: function() {
 		var me = this;
-		if(me.isMultiPath) {
+		if (me.isMultiPath) {
 			return me.pages[me.getVM().get('path')];
 		} else {
 			return me.pages;
@@ -501,6 +526,58 @@ Ext.define('Sonicle.webtop.core.view.WizardView', {
 	},
 	
 	privates: {
+		createCancelButtonCfg: function(cfg) {
+			var me = this;
+			return Ext.apply({
+				xtype: 'button',
+				ui: '{secondary}',
+				text: WT.res('wizard.btn-cancel.lbl'),
+				handler: function() {
+					if(!me.isPathSelection() && !me.hasNext(1)) {
+						me.fireEvent('wizardcompleted', me);
+					}
+					me.closeView();
+				}
+			}, cfg);
+		},
+		
+		createBackButtonCfg: function(cfg) {
+			var me = this;
+			return Ext.apply({
+				xtype: 'button',
+				ui: '{secondary}',
+				text: WT.res('wizard.btn-back.lbl'),
+				handler: function() {
+					me.navigate(-1);
+				}
+			}, cfg);
+		},
+		
+		createForwButtonCfg: function(cfg) {
+			var me = this;
+			return Ext.apply({
+				xtype: 'button',
+				ui: '{primary}',
+				text: WT.res('wizard.btn-forw.lbl'),
+				handler: function() {
+					me.navigate(1);
+				}
+			}, cfg);
+		},
+		
+		createDoButtonCfg: function(cfg) {
+			var me = this;
+			return Ext.apply({
+				xtype: 'button',
+				ui: '{primary}',
+				text: me.resDoButtonText(),
+				handler: function(s) {
+					s.setDisabled(true); // Avoids multi-runs!
+					me.onDoClick();
+				}
+			}, cfg);
+		},
+		
 		opParams: function(params) {
 			return Ext.apply(params || {}, {
 				oid: this.getUId()

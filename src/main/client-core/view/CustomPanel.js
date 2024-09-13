@@ -38,7 +38,7 @@ Ext.define('Sonicle.webtop.core.view.CustomPanel', {
 		'Sonicle.Object',
 		'Sonicle.String',
 		'Sonicle.Utils',
-		'Sonicle.form.field.Tag',
+		'Sonicle.form.field.LabelTag',
 		'Sonicle.grid.column.Action',
 		'Sonicle.grid.column.Icon',
 		'Sonicle.grid.feature.RowLookup',
@@ -89,7 +89,7 @@ Ext.define('Sonicle.webtop.core.view.CustomPanel', {
 		
 		WTU.applyFormulas(me.getVM(), {
 			foMainTitle: WTF.foRecordTwoWay('record', 'titleI18n', 'txt', WT.getLanguage()),
-			foTags: WTF.foTwoWay('record', 'tags', function(v) {
+			foTags: WTF.foFieldTwoWay('record', 'tags', function(v) {
 					return Sonicle.String.split(v, '|');
 				}, function(v) {
 					return Sonicle.String.join('|', v);
@@ -115,7 +115,7 @@ Ext.define('Sonicle.webtop.core.view.CustomPanel', {
 				me.addAct('tags', {
 					text: null,
 					tooltip: me.mys.res('act-manageTags.lbl'),
-					iconCls: 'wt-icon-tag',
+					iconCls: 'wt-icon-tags',
 					disabled: !WT.isPermitted(me.mys.ID, 'TAGS', 'MANAGE'),
 					handler: function() {
 						me.showManageTagsUI();
@@ -173,7 +173,7 @@ Ext.define('Sonicle.webtop.core.view.CustomPanel', {
 							},
 							items: [
 								{
-									xtype: 'sotagfield',
+									xtype: 'solabeltagfield',
 									bind: '{foTags}',
 									store: me.getTagsStore(),
 									valueField: 'id',

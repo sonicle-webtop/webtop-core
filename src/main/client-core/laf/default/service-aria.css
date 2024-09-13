@@ -52,15 +52,7 @@
 .wt-menu-bgroup.x-btn-group {
     box-shadow: none;
 }
-/*
- * Adjust colorsquare tick centering
- */
-.wt-tree-colorsquare-framed.x-tree-checkbox-checked:after {
-    left: 3px;
-}
-.wt-tree-colorsquare-default.x-tree-checkbox-checked:after {
-    left: 2px;
-}
+
 /*
  * Flatten viewport toolbars
  */

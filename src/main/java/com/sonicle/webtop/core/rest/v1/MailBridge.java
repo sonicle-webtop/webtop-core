@@ -32,29 +32,23 @@
  */
 package com.sonicle.webtop.core.rest.v1;
 
-import com.sonicle.webtop.core.CoreManager;
 import com.sonicle.webtop.core.admin.CoreAdminManager;
 import com.sonicle.webtop.core.app.RunContext;
 import com.sonicle.webtop.core.app.WT;
-import com.sonicle.webtop.core.app.model.EnabledCond;
-import com.sonicle.webtop.core.app.model.GenericSubject;
-import com.sonicle.webtop.core.bol.OUser;
+import com.sonicle.webtop.core.app.WebTopApp;
+import com.sonicle.webtop.core.app.WebTopProps;
 import com.sonicle.webtop.core.config.bol.OPecBridgeFetcher;
 import com.sonicle.webtop.core.config.bol.OPecBridgeRelay;
 import com.sonicle.webtop.core.model.ServiceLicense;
 import com.sonicle.webtop.core.products.MailBridgeProduct;
-import com.sonicle.webtop.core.sdk.UserProfile;
 import com.sonicle.webtop.core.sdk.UserProfileId;
 import com.sonicle.webtop.core.sdk.WTException;
 import com.sonicle.webtop.core.swagger.v1.api.MailBridgeApi;
-import com.sonicle.webtop.core.swagger.v1.api.UsersApi;
 import com.sonicle.webtop.core.swagger.v1.model.ApiError;
 import com.sonicle.webtop.core.swagger.v1.model.ApiFetcher;
-import com.sonicle.webtop.core.swagger.v1.model.ApiLegacyUser;
 import com.sonicle.webtop.core.swagger.v1.model.ApiRelay;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import javax.ws.rs.core.Response;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
@@ -76,8 +70,15 @@ public class MailBridge extends MailBridgeApi {
 			ServiceLicense license = adminMgr.getLicense(domainId, MailBridgeProduct.PRODUCT_ID);
 			List<ApiFetcher> items = new ArrayList<>();
 			if (license != null && license.getActivationHwId() != null) {
+				Integer qta = null; //no api mode, no license management, no qta limit
+				boolean isSoftTW = false;
+				if (WebTopProps.isMailBridgeModeApi(WebTopApp.getInstanceProperties())) {
+					qta = ServiceLicense.computeLicenseQuantity(license);
+					isSoftTW = ServiceLicense.isInsideSoftTimeWindow(license);
+				}
 				for (OPecBridgeFetcher fetcher : adminMgr.listPecBridgeFetchers(domainId)) {
-					items.add(createApiFetcher(fetcher));
+					//Add only until we have licensed items or if inside soft time window or not api mode
+					if (isSoftTW || qta == null || items.size() < qta) items.add(createApiFetcher(fetcher));
 				}
 			}
 			return respOk(items);
@@ -97,8 +98,15 @@ public class MailBridge extends MailBridgeApi {
 			ServiceLicense license = adminMgr.getLicense(domainId, MailBridgeProduct.PRODUCT_ID);
 			List<ApiRelay> items = new ArrayList<>();
 			if (license != null && license.getActivationHwId() != null) {
+				Integer qta = null; //no api mode, no license management, no qta limit
+				boolean isSoftTW = false;
+				if (WebTopProps.isMailBridgeModeApi(WebTopApp.getInstanceProperties())) {
+					qta = ServiceLicense.computeLicenseQuantity(license);
+					isSoftTW = ServiceLicense.isInsideSoftTimeWindow(license);
+				}
 				for (OPecBridgeRelay relay : adminMgr.listPecBridgeRelays(domainId)) {
-					items.add(createApiRelay(relay));
+					//Add only until we have licensed items or if inside soft time window or not api mode
+					if (isSoftTW || qta == null || items.size() < qta) items.add(createApiRelay(relay));
 				}
 			}
 			return respOk(items);

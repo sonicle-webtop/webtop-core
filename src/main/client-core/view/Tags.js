@@ -66,7 +66,7 @@ Ext.define('Sonicle.webtop.core.view.Tags', {
 	
 	dockableConfig: {
 		title: '{tags.tit}',
-		iconCls: 'wt-icon-tag',
+		iconCls: 'wt-icon-tags',
 		width: 320,
 		height: 350,
 		modal: true

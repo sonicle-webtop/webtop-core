@@ -36,6 +36,7 @@ Ext.define('Sonicle.webtop.core.sdk.UIView', {
 	requires: [
 		'Sonicle.Data',
 		'Sonicle.String',
+		'Sonicle.Utils',
 		'Sonicle.VMUtils'
 	],
 	
@@ -53,19 +54,42 @@ Ext.define('Sonicle.webtop.core.sdk.UIView', {
 			 */
 			
 			/**
-			 * @cfg {Boolean} constrainToService
+			 * @cfg {Boolean} [modal]
+			 */
+			modal: false,
+			
+			/**
+			 * @cfg {Boolean} [constrainToService]
 			 */
 			constrainToService: false,
 			
 			/**
-			 * @cfg {Boolean} modal
+			 * @cfg {center|side} [dockPosition]
 			 */
-			modal: false
+			dockPosition: undefined,
 			
 			/**
 			 * @cfg {Object[]/Ext.panel.Tool[]} tools
 			 * An array of {@link Ext.panel.Tool} configs/instances to be added to the tool area of the container.
 			 */
+		
+			/**
+			 * @cfg {Number} width
+			 * The width of this view.
+			 * NB: The real applied value is affected by viewport's scaling.
+			 */
+			
+			/**
+			 * @cfg {Number} height
+			 * The width of this view.
+			 * NB: The real applied value is affected by viewport's scaling.
+			 */
+		
+			 /**
+			 * @cfg {Boolean} [autoScale]
+			 * Set to `false` to disable with/height auto-scaling.
+			 */
+			autoScale: true
 		},
 		
 		/**
@@ -77,20 +101,39 @@ Ext.define('Sonicle.webtop.core.sdk.UIView', {
 		promptConfirm: true,
 		
 		/**
-		 * @cfg {'ync'/'yn'} [confirm='ync']
+		 * @cfg {ync|oc} [confirm=ync]
 		 * Controls confirm message buttons' appearance.
 		 * Two values are allowed:
 		 * - 'ync' - Yes+No+Cancel
-		 * - 'yn' - Yes+No
+		 * - 'oc' - OK+Cancel
 		 */
-		confirm: 'ync',
-		
-		/**
-		 * @cfg {String} confirmMsg
-		 * Custom confirm message to use.
-		 */
-		confirmMsg: null
+		confirm: 'ync'
 	},
+	
+	/**
+	 * @cfg {String} [confirmTitle]
+	 * Custom confirm title to use.
+	 */
+	
+	/**
+	 * @cfg {String} [confirmMsg]
+	 * Custom confirm message to use.
+	 */
+	
+	/**
+	 * @cfg {String} [confirmYesText]
+	 * Custom label to set to confirm's YES button.
+	 */
+	
+	/**
+	 * @cfg {String} [confirmNoText]
+	 * Custom label to set to confirm's NO button.
+	 */
+	
+	/**
+	 * @cfg {String} [confirmOkText]
+	 * Custom label to set to confirm's OK button.
+	 */
 	
 	/**
 	 * @cfg {String} focusField
@@ -406,23 +449,33 @@ Ext.define('Sonicle.webtop.core.sdk.UIView', {
 	 * Shows the confirm message.
 	 */
 	showConfirm: function() {
-		var me = this, msg;
+		var me = this,
+			confirmTitle = me.confirmTitle,
+			confirmMsg = me.confirmMsg,
+			msg;
 		
 		if (me.confirm === 'ync') {
-			msg = me.confirmMsg || WT.res('confirm.save');
+			msg = confirmMsg || WT.res('confirm.savechanges');
 			WT.confirmYNC(msg, function(bid) {
 				if (bid === 'yes') {
 					me.onConfirmView();
-				} else if(bid === 'no') {
+				} else if (bid === 'no') {
 					me.onDiscardView();
 				}
+			}, me, {
+				title: confirmTitle || WT.res('confirm.savechanges.tit'),
+				yesText: me.confirmYesText || WT.res('confirm.savechanges.yes'),
+				noText: me.confirmNoText || WT.res('confirm.savechanges.no')
 			});
 		} else {
-			msg = me.confirmMsg || WT.res('confirm.areyousure');
-			WT.confirm(msg, function(bid) {
-				if (bid === 'yes') {
+			msg = confirmMsg || WT.res('confirm.discardchanges');
+			WT.confirmOk(msg, function(bid) {
+				if (bid === 'ok') {
 					me.onDiscardView();
 				}
+			}, me, {
+				title: confirmTitle || WT.res('confirm.discardchanges.tit'),
+				okText: me.confirmOkText || WT.res('confirm.discardchanges.ok')
 			});
 		}
 	},
@@ -486,6 +539,16 @@ Ext.define('Sonicle.webtop.core.sdk.UIView', {
 			 */
 			var el = document.activeElement;
 			if (el) el.blur();
+		}
+	},
+	
+	statics: {
+		overrideDockableConfig: function(constructorCfg, dockableConfig) {
+			var icfg = Sonicle.Utils.getConstructorConfigs(this, constructorCfg, [
+				{dockableConfig: true}
+			]);
+			constructorCfg.dockableConfig = Ext.merge(icfg.dockableConfig || {}, dockableConfig || {});
+			return constructorCfg;
 		}
 	}
 });

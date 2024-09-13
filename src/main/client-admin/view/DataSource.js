@@ -68,16 +68,12 @@ Ext.define('Sonicle.webtop.core.admin.view.DataSource', {
 				}
 			}
 		});
-		me.getVM().onRecordCreateWithId = function(record, id) {
-			record.setExtraParams({
-				domainId: me.domainId
-			});
+	},
+	
+	returnModelExtraParams: function() {
+		return {
+			domainId: this.domainId
 		};
-		me.on('beforemodelsave', function(s, record) {
-			record.setExtraParams({
-				domainId: me.domainId
-			});
-		});
 	},
 	
 	initComponent: function() {
@@ -87,6 +83,9 @@ Ext.define('Sonicle.webtop.core.admin.view.DataSource', {
 		me.add({
 			region: 'center',
 			xtype: 'wtfieldspanel',
+			paddingTop: true,
+			paddingSides: true,
+			scrollable: true,
 			modelValidation: true,
 			defaults: {
 				labelWidth: 100

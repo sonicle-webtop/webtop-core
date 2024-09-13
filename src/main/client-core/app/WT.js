@@ -317,28 +317,49 @@ Ext.define('Sonicle.webtop.core.app.WT', {
 	 * @param {String} [id] The service ID.
 	 * @param {String} key The resource key.
 	 * @param {Mixed...} [values] The values to use within {@link Ext.String#format} method.
+	 * @param {Object} [opts] An object containing configuration.
+	 * 
+	 * This object may contain any of the following properties:
+	 * 
+	 * @param {Number|Boolean} opts.ellipsis The maximum length before truncating, or set `true` to default it to 50 chars.
+	 * @param {Boolean} opts.htmlEncode Set to `true` to apply HTML encoding to resulting output.
 	 * @returns {String} The localized (optionally formatted) resource value or '${key}' if not found.
 	 */
 	res: function(id, key) {
-		if(arguments.length === 1) {
+		if (arguments.length === 1) {
 			key = id;
 			id = WT.ID;
 		}
-		var ExArr = Ext.Array,
-				loc = WT.getApp().getLocale(id),
-				str;
+		var loc = WT.getApp().getLocale(id),
+			hasOpts = false,
+			str, ret;
 		
 		// Returns the key itself whether locale or string are not defined
 		if (!loc) return key;
 		str = loc.strings[key];
-		if (str === undefined) return '${'+key+'}';
+		if (!Ext.isString(str) || Ext.isEmpty(str)) return '${'+key+'}';
 		
-		if (arguments.length > 2) {
-			var args = [str].concat(ExArr.slice(arguments, 2));
-			return Ext.isDefined(str) ? Ext.String.format.apply(this, args) : loc.strings[key];
-		} else {
-			return str;
+		var largs = arguments.length,
+			opts, fmtargs;
+		if (largs > 2 && Ext.isObject(arguments[largs-1])) {
+			hasOpts = true;
+			opts = arguments[largs-1];
 		}
+		opts = opts || {};
+		
+		if ((!hasOpts && largs > 2) || (hasOpts && largs > 3)) {
+			fmtargs = [str].concat(Ext.Array.slice(arguments, 2, hasOpts ? largs-1 : largs));
+			ret = Ext.String.format.apply(this, fmtargs);
+		} else {
+			ret = str;
+		}
+		
+		// Apply output options
+		if (Ext.isBoolean(opts.ellipsis) && opts.ellipsis === true) ret = Ext.String.ellipsis(ret, 40);
+		else if (Ext.isNumber(opts.ellipsis)) ret = Ext.String.ellipsis(ret, opts.ellipsis);
+		if (opts.htmlEncode) ret = Ext.String.htmlEncode(ret);
+		
+		return ret;
 	},
 	
 	/**
@@ -599,6 +620,8 @@ Ext.define('Sonicle.webtop.core.app.WT', {
 	 * This object may contain any of the following properties:
 	 * 
 	 * @param {String} opts.title A custom title.
+	 * @param {String} [opts.okText] A custom label for Ok button.
+	 * @param {String} [opts.cancelText] A custom label for Cancel button.
 	 * @param {Function} [opts.fn] A callback function which is called after a choice.
 	 * @param {String} opts.fn.buttonId The ID of the button pressed.
 	 * @param {String} opts.fn.value Value of the input field if either `prompt` or `multiline` is true.
@@ -617,20 +640,24 @@ Ext.define('Sonicle.webtop.core.app.WT', {
 	prompt: function(msg, opts) {
 		opts = opts || {};
 		var hasXclass = Ext.isString(opts.instClass),
-				xclass = hasXclass ? opts.instClass : 'Ext.window.MessageBox',
-				exists = Ext.isString(opts.itemId) ? (Ext.ComponentQuery.query('messagebox#'+opts.itemId).length > 0) : false,
-				// Component is destroyed only if X button is pressed, so define a sequenced function in order to properly clear the MessageBox!
-				autoDestroyFn = function() { this.destroy(); },
-				obj, mbox;
+			xclass = hasXclass ? opts.instClass : 'Ext.window.MessageBox',
+			exists = Ext.isString(opts.itemId) ? (Ext.ComponentQuery.query('messagebox#'+opts.itemId).length > 0) : false,
+			// Component is destroyed only if X button is pressed, so define a sequenced function in order to properly clear the MessageBox!
+			autoDestroyFn = function() { this.destroy(); },
+			buttonText = {},
+			obj, mbox;
 		
 		if (exists) {
 			return null;
 		} else {
+			if (Ext.isString(opts.okText)) buttonText['ok'] = opts.okText;
+			if (Ext.isString(opts.cancelText)) buttonText['cancel'] = opts.cancelText;
 			mbox = Ext.create(xclass, Ext.apply({itemId: opts.itemId, closeAction: 'destroy'}, opts.instConfig || {}));
 			obj = {
 				title: opts.title || WT.res('prompt'),
 				message: msg,
 				buttons: Ext.Msg.OKCANCEL,
+				buttonText: buttonText,
 				callback: Ext.isFunction(opts.fn) ? Ext.Function.createSequence(opts.fn, autoDestroyFn, mbox) : Ext.Function.bind(autoDestroyFn, mbox),
 				scope: opts.scope,
 				value: opts.value
@@ -682,6 +709,9 @@ Ext.define('Sonicle.webtop.core.app.WT', {
 	 * 
 	 * @param {String} [opts.title] A custom title.
 	 * @param {Number} [opts.buttons] A custom bitwise button specifier.
+	 * @param {String} [opts.okText] A custom label for Ok button.
+	 * @param {String} [opts.yesText] A custom label for Yes button.
+	 * @param {String} [opts.noText] A custom label for No button.
 	 * @param {Boolean} [opts.keepLineBreaks] True to disable line-breaks to HTML conversion.
 	 * @param {Object} [opts.config] A custom {@link Ext.MessageBox#show} config.
 	 * @param {String} [opts.instClass] The full classname of the type of instance to create. Defaults to `Ext.window.MessageBox`.
@@ -692,29 +722,43 @@ Ext.define('Sonicle.webtop.core.app.WT', {
 	confirm: function(msg, fn, scope, opts) {
 		opts = opts || {};
 		var xclass = Ext.isString(opts.instClass) ? opts.instClass : 'Ext.window.MessageBox',
-				exists = Ext.isString(opts.itemId) ? (Ext.ComponentQuery.query('messagebox#'+opts.itemId).length > 0) : false,
-				// Component is destroyed only if X button is pressed, so define a sequenced function in order to properly clear the MessageBox!
-				autoDestroyFn = function() { this.destroy(); },
-				callbackFn = function(bid, value, cfg) { Ext.callback(fn, scope, [bid, value, cfg]); },
-				mbox;
+			exists = Ext.isString(opts.itemId) ? (Ext.ComponentQuery.query('messagebox#'+opts.itemId).length > 0) : false,
+			// Component is destroyed only if X button is pressed, so define a sequenced function in order to properly clear the MessageBox!
+			autoDestroyFn = function() { this.destroy(); },
+			callbackFn = function(bid, value, cfg) { Ext.callback(fn, scope, [bid, value, cfg]); },
+			buttonText = {}, mbox;
 		
 		if (exists) {
 			return null;
 		} else {
+			if (Ext.isString(opts.okText)) buttonText['ok'] = opts.okText;
+			if (Ext.isString(opts.yesText)) buttonText['yes'] = opts.yesText;
+			if (Ext.isString(opts.noText)) buttonText['no'] = opts.noText;
 			mbox = Ext.create(xclass, Ext.apply({itemId: opts.itemId, closeAction: 'destroy'}, opts.instConfig || {}));
-			return mbox.show(Ext.apply({
+			return mbox.show(Ext.merge({
 				title: opts.title || WT.res('confirm'),
 				message: (opts.keepLineBreaks === true) ? msg : Sonicle.String.htmlLineBreaks(msg),
 				buttons: opts.buttons || Ext.Msg.YESNO,
+				buttonText: buttonText,
 				icon: opts.icon || Ext.Msg.QUESTION,
 				fn: Ext.Function.createSequence(callbackFn, autoDestroyFn, mbox)
-				/*
-				fn: function(bid, value, cfg) {
-					Ext.callback(cb, scope, [bid, value, cfg]);
-				}
-				*/
 			}, opts.config || {}));
 		}
+	},
+	
+	/**
+	 * Displays a confirm message using OK+CANCEL buttons.
+	 * @param {String} msg The message to display.
+	 * @param {Function} cb A callback function which is called after a choice.
+	 * @param {String} cb.buttonId The ID of the button pressed.
+	 * @param {Object} scope The scope (`this` reference) in which the function will be executed.
+	 * @param {Object} [opts] Config options. See {@link #confirm} above for more info.
+	 * @returns {Ext.window.MessageBox} The newly created message box instance.
+	 */
+	confirmOk: function(msg, cb, scope, opts) {
+		return this.confirm(msg, cb, scope, Ext.apply(opts || {}, {
+			buttons: Ext.Msg.OKCANCEL
+		}));
 	},
 	
 	/**
@@ -723,22 +767,47 @@ Ext.define('Sonicle.webtop.core.app.WT', {
 	 * @param {Function} cb A callback function which is called after a choice.
 	 * @param {String} cb.buttonId The ID of the button pressed.
 	 * @param {Object} scope The scope (`this` reference) in which the function will be executed.
-	 * @param {Object} [opts] Config options.
-	 * 
-	 * This object may contain any of the following properties:
-	 * 
-	 * @param {String} [opts.title] A custom title.
-	 * @param {Number} [opts.buttons] A custom bitwise button specifier.
-	 * @param {Boolean} [opts.keepLineBreaks] True to disable line-breaks to HTML conversion
-	 * @param {Object} [opts.config] A custom {@link Ext.MessageBox#show} config.
-	 * @param {Object} [opts.instConfig] A custom {@link Ext.window.MessageBox} instance config.
-	 * 
+	 * @param {Object} [opts] Config options. See {@link #confirm} above for more info.
 	 * @returns {Ext.window.MessageBox} The newly created message box instance.
 	 */
 	confirmYNC: function(msg, cb, scope, opts) {
-		return this.confirm(msg, cb, scope, Ext.apply({
+		return this.confirm(msg, cb, scope, Ext.apply(opts || {}, {
 			buttons: Ext.Msg.YESNOCANCEL
-		}, opts));
+		}));
+	},
+	
+	/**
+	 * Displays a UX friendly confirm message suitable for delete operations: 
+	 * CANCEL for leaving the action and OK button, with 'delete' label, to confirm.
+	 * @param {String} msg The message to display.
+	 * @param {Function} cb A callback function which is called after a choice.
+	 * @param {String} cb.buttonId The ID of the button pressed.
+	 * @param {Object} scope The scope (`this` reference) in which the function will be executed.
+	 * @param {Object} [opts] Config options. See {@link #confirm} above for more info.
+	 * @returns {Ext.window.MessageBox} The newly created message box instance.
+	 */
+	confirmDelete: function(msg, cb, scope, opts) {
+		return this.confirmOk(msg, cb, scope, Ext.apply({
+			title: WT.res('confirm.delete.tit'),
+			okText: WT.res('confirm.delete.ok')
+		}, opts || {}));
+	},
+	
+	/**
+	 * Displays a UX friendly confirm message suitable for remove operations: 
+	 * CANCEL for leaving the action and OK button, with 'remove' label, to confirm.
+	 * @param {String} msg The message to display.
+	 * @param {Function} cb A callback function which is called after a choice.
+	 * @param {String} cb.buttonId The ID of the button pressed.
+	 * @param {Object} scope The scope (`this` reference) in which the function will be executed.
+	 * @param {Object} [opts] Config options. See {@link #confirm} above for more info.
+	 * @returns {Ext.window.MessageBox} The newly created message box instance.
+	 */
+	confirmRemove: function(msg, cb, scope, opts) {
+		return this.confirmOk(msg, cb, scope, Ext.apply({
+			title: WT.res('confirm.remove.tit'),
+			okText: WT.res('confirm.remove.ok')
+		}, opts || {}));
 	},
 	
 	rawMessage: function(rawValue, opts) {
@@ -1190,6 +1259,78 @@ Ext.define('Sonicle.webtop.core.app.WT', {
 					if (bid === 'yes') doClearState();
 				});
 			}
+		}
+	},
+	
+	privates: {
+		initNLPRRule: function(dateFmt) {
+			return {
+				language: {
+					dayNames: [
+						WT.res('rrule.nlp.days.sunday'),
+						WT.res('rrule.nlp.days.monday'),
+						WT.res('rrule.nlp.days.tuesday'),
+						WT.res('rrule.nlp.days.wednesday'),
+						WT.res('rrule.nlp.days.thursday'),
+						WT.res('rrule.nlp.days.friday'),
+						WT.res('rrule.nlp.days.saturday')
+					],
+					monthNames: [
+						WT.res('rrule.nlp.months.januray'),
+						WT.res('rrule.nlp.months.february'),
+						WT.res('rrule.nlp.months.march'),
+						WT.res('rrule.nlp.months.april'),
+						WT.res('rrule.nlp.months.may'),
+						WT.res('rrule.nlp.months.june'),
+						WT.res('rrule.nlp.months.july'),
+						WT.res('rrule.nlp.months.august'),
+						WT.res('rrule.nlp.months.september'),
+						WT.res('rrule.nlp.months.october'),
+						WT.res('rrule.nlp.months.november'),
+						WT.res('rrule.nlp.months.december')
+					]
+				},
+				strings: {
+					'every': WT.res('rrule.nlp.strings.every'),
+					'until': WT.res('rrule.nlp.strings.until'),
+					'day': WT.res('rrule.nlp.strings.day'),
+					'days': WT.res('rrule.nlp.strings.days'),
+					'week': WT.res('rrule.nlp.strings.week'),
+					'weeks': WT.res('rrule.nlp.strings.weeks'),
+					'on': WT.res('rrule.nlp.strings.on'),
+					'in': WT.res('rrule.nlp.strings.in'),
+					'on the': WT.res('rrule.nlp.strings.onthe'),
+					'for': WT.res('rrule.nlp.strings.for'),
+					'and': WT.res('rrule.nlp.strings.and'),
+					'or': WT.res('rrule.nlp.strings.or'),
+					'at': WT.res('rrule.nlp.strings.at'),
+					'last': WT.res('rrule.nlp.strings.last'),
+					'(~ approximate)': WT.res('rrule.nlp.strings.approximate'),
+					'times': WT.res('rrule.nlp.strings.times'),
+					'time': WT.res('rrule.nlp.strings.time'),
+					'minutes': WT.res('rrule.nlp.strings.minutes'),
+					'hours': WT.res('rrule.nlp.strings.hours'),
+					'weekdays': WT.res('rrule.nlp.strings.weekdays'),
+					'weekday': WT.res('rrule.nlp.strings.weekday'),
+					'months': WT.res('rrule.nlp.strings.months'),
+					'month': WT.res('rrule.nlp.strings.month'),
+					'years': WT.res('rrule.nlp.strings.years'),
+					'year': WT.res('rrule.nlp.strings.year'),
+					'st': WT.res('rrule.nlp.strings.st'),
+					'nd': WT.res('rrule.nlp.strings.nd'),
+					'rd': WT.res('rrule.nlp.strings.rd'),
+					'th': WT.res('rrule.nlp.strings.th')
+				},
+				getText: function(id) {
+					return WT._nlpRRule.strings[id];
+				},
+				dateFormat: function(y, month, d) {
+					var XD = Ext.Date,
+						zlpad = function(s, size) { return Ext.String.leftPad(s, size, '0'); },
+						m = WT._nlpRRule.language.monthNames.indexOf(month) +1;
+					return XD.format(XD.parse(zlpad(y, 4)+''+zlpad(m, 2)+''+zlpad(d, 2), 'Y-m-d'), dateFmt);
+				}
+			};
 		}
 	}
 });

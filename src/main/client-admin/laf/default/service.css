@@ -1,18 +1,32 @@
-.wtadm-icon-service-xs { background-image: url('service_16.png') !important; }
-.wtadm-icon-service-s { background-image: url('service_24.png') !important; }
-.wtadm-icon-service-m { background-image: url('service_32.png') !important; }
-.wtadm-icon-service-l { background-image: url('service_48.png') !important; }
-
+/* Service Icons */
+.wtadm-icon-service,
+.wtadm-icon-service-sm { background-image: url('service@sm.svg') !important; background-size: contain; }
+.wtadm-icon-service-off-sm { background-image: url('service@sm.svg') !important; background-size: contain; }
+.wtadm-icon-service-md { background-image: url('service@md.svg') !important; background-size: contain; }
+.wtadm-icon-service-off-md { background-image: url('service@md.svg') !important; background-size: contain; }
+.wtadm-icon-service-lg { background-image: url('service@lg.svg') !important; background-size: contain; }
+.wtadm-icon-service-off-lg { background-image: url('service@lg.svg') !important; background-size: contain; }
+/* ---------- Icons (actions) */
 .wtadm-icon-addDomain { background-image: url('domain-add_16.svg') !important; background-size: contain; }
 .wtadm-icon-editDomain { background-image: url('domain-edit_16.svg') !important; background-size: contain; }
 .wtadm-icon-deleteDomain { background-image: url('domain-delete_16.svg') !important; background-size: contain; }
 .wtadm-icon-initCheckDomain { background-image: url('domain-initcheck_16.svg') !important; background-size: contain; }
+.wtadm-icon-addGroup { background-image: url('add_16.svg') !important; background-size: contain; }
+.wtadm-icon-addUser { background-image: url('add_16.svg') !important; background-size: contain; }
+.wtadm-icon-addRole { background-image: url('add_16.svg') !important; background-size: contain; }
+.wtadm-icon-addResource { background-image: url('add_16.svg') !important; background-size: contain; }
+.wtadm-icon-addLauncherLink { background-image: url('add_16.svg') !important; background-size: contain; }
 .wtadm-icon-selectStmt { background-image: url('stmtSelect_16.svg') !important; background-size: contain; }
 .wtadm-icon-play1Stmt { background-image: url('stmtPlay1_16.svg') !important; background-size: contain; }
 .wtadm-icon-playStmt { background-image: url('stmtPlay_16.svg') !important; background-size: contain; }
 .wtadm-icon-skipStmt { background-image: url('stmtSkip_16.svg') !important; background-size: contain; }
 .wtadm-icon-testConnection { background-image: url('testConnection_16.svg') !important; background-size: contain; }
-
+/* ---------- Icons (glyphs) */
+.wtadm-glyph-user-add:before { content: '\f234'; font: var(--fa-font-solid); }
+.wtadm-glyph-licence-activate:before { content: '\f00c'; font: var(--fa-font-solid); }
+.wtadm-glyph-licence-deactivate:before { content: '\f09c'; font: var(--fa-font-solid); }
+.wtadm-glyph-licence-autolease:before { content: '\f085'; font: var(--fa-font-solid); }
+/* Other Icons */
 .wtadm-icon-maintenance-on { background-image: url('maintenance-on_16.svg') !important; background-size: contain; }
 .wtadm-icon-maintenance-off { background-image: url('maintenance-off_16.svg') !important; background-size: contain; }
 .wtadm-icon-settings { background-image: url('settings_16.svg') !important; background-size: contain; }
@@ -21,7 +35,6 @@
 .wtadm-icon-logViewer { background-image: url('logViewer_16.svg') !important; background-size: contain; }
 .wtadm-icon-accesslog { background-image: url('accessLog_16.svg') !important; background-size: contain; }
 .wtadm-icon-audit { background-image: url('audit_16.svg') !important; background-size: contain; }
-
 .wtadm-icon-dbUpgrader { background-image: url('dbUpgrader_16.svg') !important; background-size: contain; }
 .wtadm-icon-domains { background-image: url('domains_16.svg') !important; background-size: contain; }
 .wtadm-icon-domain { background-image: url('domain_16.svg') !important; background-size: contain; }

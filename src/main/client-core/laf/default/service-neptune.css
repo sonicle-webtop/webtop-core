@@ -1,8 +1,55 @@
 @import url("xtheme-override.css");
+@import url("xtheme-neptune-override.css");
+@import url("wtheme-neptune-override.css");
 
-.wt-viewport-body { border-color: #3892d4; }
-.wt-vieport-dock { background-color: #dfeaf2; }
-.wt-portal-body { background-color: #fafafa; }
+:root {
+    --wt-theme-color-surface-ct: #fafafa;
+    --wt-theme-color-surface: #ffffff; /* White */
+    --wt-theme-color-1: #3892d4;
+    --wt-theme-color-1-on: #f9fafb; /* Gray/50 */
+    
+    --wt-theme-color-ok: #4da07d;
+    --wt-theme-color-ok-on: #ffffff; /* White */
+    
+    --wt-theme-color-warn: #e9b665;
+    --wt-theme-color-warn-on: #ffffff; /* White */
+    
+    --wt-theme-color-error: #cc4b31;
+    --wt-theme-color-error-on: #fef2f2; /* Gray/50 */
+    
+    --wt-theme-color-navbar: #f0f5f9;
+    --wt-theme-color-topbar: #f0f5f9;
+    --wt-theme-color-taskbar: #e0ebf3;
+    --wt-theme-color-dialog: #ffffff; /* White */
+    --wt-theme-color-scrollbar: #e0e0e0;
+    
+    --wt-theme-fontsize-xs: 13px;
+    --wt-theme-fontsize-sm: 13px;
+    --wt-theme-fontsize-base: 13px;
+    --wt-theme-fontsize-lg: 13px;
+    --wt-theme-fontsize-xl: 13px;
+    --wt-theme-lineheight-xs: 15px;
+    --wt-theme-lineheight-sm: 15px;
+    --wt-theme-lineheight-base: 15px;
+    --wt-theme-lineheight-lg: 15px;
+    --wt-theme-lineheight-xl: 15px;
+    --wt-theme-fontweight-regular: 300;
+    --wt-theme-fontweight-medium: 300;
+    --wt-theme-fontweight-bold: 700;
+}
+
+.wt-theme-color-off { color: #808080; }
+.wt-form-body-info { color: #4d4d4d; }
+
+/* topbar: border */
+/*.wt-viewport-topbar-watermark-bottom { background-color: #157fcc; height: 1px; }*/
+/* navbar: border */
+.wt-viewport-navbar-watermark-right { background-color: #157fcc; width: 1px; }
+/* navbar: tweak main L/R padding */
+.wt-viewport-navbar.x-toolbar-vertical { padding-left: 10px; padding-right: 10px; }
+/* accountmenu: pad user-info */
+.wt-accountmenu-label1 { padding-top: 5px; }
+.wt-accountmenu-label2 { padding-bottom: 5px; }
 
 /*
  * Background colors
@@ -27,6 +74,7 @@
 .wt-theme-text-header1 { color: #157fcc; }
 .wt-theme-text-subtitle { color: #888888; }
 .wt-theme-text-hyperlink { color: #0078d7; }
+
 
 /*
  * Background color for header (regular, lighten/darken, alternative)
@@ -58,55 +106,3 @@
 .x-action-col-icon:hover {
 	color: #666666;
 }
-/*
- * Adjust colorsquare tick centering
- */
-.wt-tree-colorsquare-framed.x-tree-checkbox-checked:after {
-    top: 0px;
-}
-.wt-tree-colorsquare-default.x-tree-checkbox-checked:after {
-    top: -1px;
-}
-/*
- * Flatten viewport toolbars
- */
-.wt-vieport-dock .x-btn-default-toolbar-large {
-    border-color: #dfeaf2 !important;
-    background-color: #dfeaf2 !important;
-    background-image: none !important;
-}
-.wt-vieport-dock .x-btn-default-toolbar-large.x-btn-over {
-	background-color: #cedfeb !important;
-}
-.wt-vieport-dock .x-btn-default-toolbar-medium {
-    border-color: #dfeaf2 !important;
-    background-color: #dfeaf2 !important;
-    background-image: none !important;
-}
-.wt-vieport-dock .x-btn-default-toolbar-medium.x-btn-over {
-	background-color: #cedfeb !important;
-}
-.wt-vieport-dock .x-btn-default-toolbar-small {
-    border-color: #dfeaf2 !important;
-    background-color: #dfeaf2 !important;
-    background-image: none !important;
-}
-.wt-vieport-dock .x-btn-default-toolbar-small.x-btn-over {
-	background-color: #cedfeb !important;
-}
-
-.x-btn-default-toolbar-small {
-	background-color: transparent;
-	border-color: transparent;
-	background-image: none;
-}
-
-.x-btn-default-toolbar-small.x-btn-over {
-	background-color: #cedfeb !important;
-	border-color: transparent;
-}
-
-/*.x-btn-default-toolbar-small.x-btn-pressed {
-	border-color: transparent !important;
-	background-color: #cfcfcf !important;
-}*/

@@ -97,7 +97,7 @@ Ext.define('Sonicle.webtop.core.ux.NotificationButton', {
 					html += '<span style="font-size:0.9em;color:grey;">' + Ext.Date.format(new Date(), WT.getShortTimeFmt()) + '</span>';
 					return html; 
 				},
-				tdCls: 'wt-v-middle',
+				tdCls: 'wt-valign-middle',
 				flex: 1
 			}, {
 				xtype: 'actioncolumn',
@@ -108,7 +108,7 @@ Ext.define('Sonicle.webtop.core.ux.NotificationButton', {
 						me.removeGridRecord(s, s.getStore().getAt(rindx));
 					}
 				}],
-				tdCls: 'wt-v-middle',
+				tdCls: 'wt-valign-middle',
 				width: 30
 			}],
 			bbar: ['->', {

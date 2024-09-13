@@ -92,7 +92,7 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainResources', {
 			},
 			viewConfig: {
 				getRowClass: function(rec) {
-					return rec.get('available') === false ? 'wt-text-striked wt-theme-text-error' : '';
+					return rec.get('available') === false ? 'wt-text-striked wt-theme-color-error' : '';
 				}
 			},
 			columns: [
@@ -126,17 +126,15 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainResources', {
 					xtype: 'soactioncolumn',
 					items: [
 						{
-							iconCls: 'far fa-edit',
+							iconCls: 'wt-glyph-edit',
 							tooltip: WT.res('act-edit.lbl'),
-							handler: function(g, ridx) {
-								var rec = g.getStore().getAt(ridx);
+							handler: function(view, ridx, cidx, itm, e, rec) {
 								me.editResourceUI(rec);
 							}
 						}, {
-							iconCls: 'far fa-trash-alt',
+							iconCls: 'wt-glyph-delete',
 							tooltip: WT.res('act-remove.lbl'),
-							handler: function(g, ridx) {
-								var rec = g.getStore().getAt(ridx);
+							handler: function(view, ridx, cidx, itm, e, rec) {
 								me.deleteResourceUI(rec);
 							}
 						}
@@ -146,7 +144,7 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainResources', {
 			tbar: [
 				me.addAct('add', {
 					tooltip: null,
-					iconCls: null,
+					iconCls: 'wt-icon-add',
 					handler: function() {
 						me.addResourceUI();
 					}
@@ -254,8 +252,8 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainResources', {
 
 		deleteResourceUI: function(rec) {
 			var me = this;
-			WT.confirm(me.res('resource.confirm.delete', rec.get('name')), function(bid) {
-				if (bid === 'yes') {
+			WT.confirmDelete(me.res('resource.confirm.delete', rec.get('name')), function(bid) {
+				if (bid === 'ok') {
 					me.wait();
 					me.deleteResource(me.domainId, rec.getId(), {
 						callback: function(success, data, json) {

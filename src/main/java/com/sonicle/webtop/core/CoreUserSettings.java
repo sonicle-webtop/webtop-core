@@ -35,12 +35,14 @@ package com.sonicle.webtop.core;
 
 import com.sonicle.commons.EnumUtils;
 import com.sonicle.commons.LangUtils;
+import com.sonicle.commons.web.json.JsonResult;
 import static com.sonicle.webtop.core.CoreSettings.*;
 import com.sonicle.webtop.core.app.CoreManifest;
 import com.sonicle.webtop.core.app.SettingsManager;
 import com.sonicle.webtop.core.sdk.BaseUserSettings;
 import com.sonicle.webtop.core.sdk.UserProfileId;
 import com.sonicle.webtop.core.xmpp.PresenceStatus;
+import java.util.ArrayList;
 import org.joda.time.DateTime;
 
 /**
@@ -65,34 +67,54 @@ public class CoreUserSettings extends BaseUserSettings {
 		ss = new CoreServiceSettings(CoreManifest.ID, profileId.getDomainId());
 	}
 	
-	public String getTheme() {
-		String value = getString(THEME, null);
-		if (value != null) return value;
-		return ss.getDefaultTheme();
-	}
-	
-	public boolean setTheme(String value) {
-		return setString(THEME, value);
-	}
-	
-	public String getLayout() {
+	public String getUILayout() {
 		String value = getString(LAYOUT, null);
 		if (value != null) return value;
-		return ss.getDefaultLayout();
+		return ss.getDefaultUILayout();
 	}
 	
-	public boolean setLayout(String value) {
+	public boolean setUILayout(String value) {
 		return setString(LAYOUT, value);
 	}
 	
-	public String getLookAndFeel() {
-		String value = getString(LAF, null);
+	public String getUITheme() {
+		String value = getString(THEME, null);
 		if (value != null) return value;
-		return ss.getDefaultLaf();
+		return ss.getDefaultUITheme();
 	}
 	
-	public boolean setLookAndFeel(String value) {
+	public boolean setUITheme(String value) {
+		return setString(THEME, value);
+	}
+	
+	public String getUILookAndFeel() {
+		String value = getString(LAF, null);
+		if (value != null) return value;
+		return ss.getDefaultUILaf();
+	}
+	
+	public boolean setUILookAndFeel(String value) {
 		return setString(LAF, value);
+	}
+	
+	public boolean getUITryMeDisarmed() {
+		return getBoolean(UI_TRYME_DISARMED, false);
+	}
+	
+	public boolean setUITryMeDisarmed(boolean value) {
+		return setBoolean(UI_TRYME_DISARMED, value);
+	}
+	
+	public TryMeBanner getUITryMeBanner() {
+		return getObject(UI_TRYME_BANNER, null, TryMeBanner.class);
+	}
+	
+	public boolean setUITryMeBanner(TryMeBanner value) {
+		if (value == null) {
+			return clear(UI_TRYME_BANNER);
+		} else {
+			return setObject(UI_TRYME_BANNER, value, TryMeBanner.class);
+		}
 	}
 	
 	public boolean getRightToLeft() {

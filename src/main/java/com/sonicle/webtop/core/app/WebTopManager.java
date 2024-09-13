@@ -62,11 +62,8 @@ import com.sonicle.security.auth.directory.AbstractDirectory;
 import com.sonicle.security.auth.directory.AbstractDirectory.AuthUser;
 import com.sonicle.security.auth.directory.DirectoryCapability;
 import com.sonicle.security.auth.directory.DirectoryOptions;
-import com.sonicle.security.auth.directory.ImapDirectory;
 import com.sonicle.security.auth.directory.LdapDirectory;
 import com.sonicle.security.auth.directory.LdapNethDirectory;
-import com.sonicle.security.auth.directory.SftpDirectory;
-import com.sonicle.security.auth.directory.SmbDirectory;
 import com.sonicle.webtop.core.CoreServiceSettings;
 import com.sonicle.webtop.core.CoreUserSettings;
 import com.sonicle.webtop.core.app.auth.LdapWebTopDirectory;
@@ -77,7 +74,6 @@ import com.sonicle.webtop.core.app.events.ResourceAvailabilityChangeEvent;
 import com.sonicle.webtop.core.app.events.ResourceUpdateEvent;
 import com.sonicle.webtop.core.app.events.UserAvailabilityChangeEvent;
 import com.sonicle.webtop.core.app.events.UserUpdateEvent;
-import com.sonicle.webtop.core.app.model.AclSubjectGetOption;
 import com.sonicle.webtop.core.app.model.DirectoryUser;
 import com.sonicle.webtop.core.app.model.Domain;
 import com.sonicle.webtop.core.app.model.DomainBase;
@@ -95,17 +91,13 @@ import com.sonicle.webtop.core.bol.ODomain;
 import com.sonicle.webtop.core.bol.OGroup;
 import com.sonicle.webtop.core.bol.OResource;
 import com.sonicle.webtop.core.bol.ORole;
-import com.sonicle.webtop.core.bol.ORoleAssociation;
 import com.sonicle.webtop.core.bol.ORolePermission;
 import com.sonicle.webtop.core.bol.OShare;
 import com.sonicle.webtop.core.bol.OUser;
-import com.sonicle.webtop.core.bol.OUserAssociation;
 import com.sonicle.webtop.core.bol.OUserInfo;
 import com.sonicle.webtop.core.bol.ProfileIdentifier;
 import com.sonicle.webtop.core.bol.VResource;
 import com.sonicle.webtop.core.bol.VUserData;
-import com.sonicle.webtop.core.model.DomainEntity;
-import com.sonicle.webtop.core.model.ParamsLdapDirectory;
 import com.sonicle.webtop.core.bol.model.RoleWithSource;
 import com.sonicle.webtop.core.dal.ActivityDAO;
 import com.sonicle.webtop.core.dal.AutosaveDAO;
@@ -154,6 +146,10 @@ import com.sonicle.webtop.core.app.model.ServicePermissionString;
 import com.sonicle.webtop.core.app.model.ShareOrigin;
 import com.sonicle.webtop.core.app.model.Sharing;
 import com.sonicle.webtop.core.app.model.SubjectGetOption;
+import com.sonicle.webtop.core.app.model.UILayout;
+import com.sonicle.webtop.core.app.model.UILookAndFeel;
+import com.sonicle.webtop.core.app.model.UIPreset;
+import com.sonicle.webtop.core.app.model.UITheme;
 import com.sonicle.webtop.core.app.model.User;
 import com.sonicle.webtop.core.app.model.UserBase;
 import com.sonicle.webtop.core.app.model.UserGetOption;
@@ -193,6 +189,7 @@ import jakarta.mail.internet.InternetAddress;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashMap;
+import java.util.Locale;
 import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.stream.Stream;
@@ -206,25 +203,9 @@ import org.slf4j.Logger;
  *
  * @author malbinola
  */
-public final class WebTopManager {
+public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 	private static final Logger LOGGER = WT.getLogger(WebTopManager.class);
-	private static boolean initialized = false;
 	
-	/**
-	 * Initialization method. This method should be called once.
-	 * 
-	 * @param wta WebTopApp instance.
-	 * @return The instance.
-	 */
-	static synchronized WebTopManager initialize(WebTopApp wta) {
-		if(initialized) throw new RuntimeException("Initialization already done");
-		WebTopManager instance = new WebTopManager(wta);
-		initialized = true;
-		LOGGER.info("Initialized");
-		return instance;
-	}
-	
-	private WebTopApp wta = null;
 	public static final String INTERNETNAME_LOCAL = "local";
 	public static final String SYSADMIN_ROLESID = "__SYSADMIN__"; // NB: Reflect any update to client-side too (see WTPrivate.js) !!!
 	public static final String WTADMIN_ROLESID = "__WTADMIN__"; // NB: Reflect any update to client-side too (see WTPrivate.js) !!!
@@ -242,12 +223,37 @@ public final class WebTopManager {
 	public static final Set<String> BUILT_IN_ROLES = Stream.of(DOMAINADMIN_ROLEID, PECACCOUNT_ROLEID).collect(Collectors.toSet());
 	public static final Set<String> BUILT_IN_GROUPS = Stream.of(GROUPID_USERS, GROUPID_PEC_ACCOUNTS).collect(Collectors.toSet());
 	
-	private final CacheDomainInfo domainCache = new CacheDomainInfo();
+	private final CacheDomainInfo domainCache;
 	private final KeyedReentrantLocks<String> lockSecretGet = new KeyedReentrantLocks<>();
-	private final SubjectSidCache subjectSidCache = new SubjectSidCache();
+	private final SubjectSidCache subjectSidCache;
 	private final LoadingCache<UserProfileId, UserProfile.PersonalInfo> profileToPersonalInfoCache = Caffeine.newBuilder().build(new ProfilePersonalInfoCacheLoader());
 	private final LoadingCache<UserProfileId, UserProfile.Data> profileToDataCache = Caffeine.newBuilder().build(new ProfileDataCacheLoader());
 	private final Object foldersLock = new Object();
+	
+	WebTopManager(WebTopApp wta) {
+		super(wta, true);
+		this.domainCache = new CacheDomainInfo();
+		this.subjectSidCache = new SubjectSidCache();
+		initialize();
+	}
+	
+	@Override
+	protected Logger doGetLogger() {
+		return LOGGER;
+	}
+	
+	@Override
+	protected void doAppManagerInitialize() {
+		domainCache.init();
+		subjectSidCache.init();
+	}
+	
+	@Override
+	protected void doAppManagerCleanup() {
+		subjectSidCache.cleanup();
+		cleanupProfileCache();
+		domainCache.clear();
+	}
 	
 	/**
 	 * Used transitively by aliseoweb, vfs
@@ -259,7 +265,7 @@ public final class WebTopManager {
 		Connection con = null;
 		
 		try {
-			con = wta.getConnectionManager().getConnection();
+			con = getConnection(true);
 			if(enabledOnly) {
 				return dao.selectEnabled(con);
 			} else {
@@ -283,7 +289,7 @@ public final class WebTopManager {
 		Connection con = null;
 		
 		try {
-			con = wta.getConnectionManager().getConnection();
+			con = getConnection(true);
 			return domDao.selectById(con, domainId);
 			
 		} catch(SQLException ex) {
@@ -302,7 +308,7 @@ public final class WebTopManager {
 		Connection con = null;
 		
 		try {
-			con = wta.getConnectionManager().getConnection();
+			con = getConnection(true);
 			if(enabledOnly) {
 				return dao.selectEnabledByDomain(con, domainId);
 			} else {
@@ -322,7 +328,7 @@ public final class WebTopManager {
 		Connection con = null;
 		
 		try {
-			con = wta.getConnectionManager().getConnection();
+			con = getConnection(true);
 			
 			List<ProfileIdentifier> uids = uidao.viewByEmail(con, emailAddress);
 			ArrayList<UserProfileId> items = new ArrayList<>();
@@ -345,7 +351,7 @@ public final class WebTopManager {
 		Connection con = null;
 		
 		try {
-			con = wta.getConnectionManager().getConnection();
+			con = getConnection(true);
 			return dao.selectByDomainUser(con, pid.getDomainId(), pid.getUserId());
 			
 		} catch(SQLException | DAOException ex) {
@@ -366,7 +372,7 @@ public final class WebTopManager {
 		Connection con = null;
 		
 		try {
-			con = wta.getConnectionManager().getConnection();
+			con = getConnection(true);
 			OUser o = dao.selectByDomainUser(con, domainId, userId);
 			return new CheckUserResult(o != null, o != null ? o.getEnabled() : false);
 			
@@ -383,7 +389,7 @@ public final class WebTopManager {
 		Connection con = null;
 		
 		try {
-			con = wta.getConnectionManager().getConnection();
+			con = getConnection(true);
 			return dao.updateDisplayNameByProfile(con, pid.getDomainId(), pid.getUserId(), displayName) == 1;
 			
 		} catch(SQLException | DAOException ex) {
@@ -399,7 +405,7 @@ public final class WebTopManager {
 		Connection con = null;
 		
 		try {
-			con = wta.getConnectionManager().getConnection();
+			con = getConnection(true);
 			OUserInfo oui = createUserInfo(userPersonalInfo);
 			oui.setDomainId(pid.getDomainId());
 			oui.setUserId(pid.getUserId());
@@ -409,6 +415,142 @@ public final class WebTopManager {
 			throw new WTException(ex, "DB error");
 		} finally {
 			DbUtils.closeQuietly(con);
+		}
+	}
+	
+	public Set<String> listUILayoutIds() throws WTException {
+		return listUILayouts(Locale.ENGLISH).keySet();
+	}
+	
+	public Map<String, UILayout> listUILayouts(final Locale locale) throws WTException {
+		LinkedHashMap<String, UILayout> layouts = new LinkedHashMap<>();
+		
+		// Layout are strictly defined in client-side implementation and you cannot add new ones!
+		// With overrides you can only restrics returned results.
+		Set<String> layoutsOverride = WebTopProps.getUILayouts(getWebTopApp().getProperties());
+		if (!layoutsOverride.isEmpty()) { // Override layouts completely!
+			for (String layoutId : layoutsOverride) {
+				if (!layouts.containsKey(layoutId) && !StringUtils.isBlank(layoutId) && StringUtils.containsAny(layoutId, "default", "compact")) {
+					final String layoutName = getWebTopApp().lookupResource(locale, "layout."+layoutId);
+					layouts.put(layoutId, new UILayout(layoutId, layoutName));
+				} else {
+					LOGGER.debug("Ignoring Layout: invalid ID or already in use [{}]", layoutId);
+				}
+			}
+			
+		} else {
+			// Add built-in layouts
+			layouts.put("default", new UILayout("default", getWebTopApp().lookupResource(locale, "layout.default")));
+			layouts.put("compact", new UILayout("compact", getWebTopApp().lookupResource(locale, "layout.compact")));
+		}
+		
+		return layouts;
+	}
+	
+	private UIPreset findMatchingUIPreset(final Collection<UIPreset> presets, final String theme, final String lookAndFeel) {
+		for (UIPreset preset : presets) {
+			if (StringUtils.equals(theme, preset.getTheme()) && StringUtils.equals(lookAndFeel, preset.getLookAndFeel())) {
+				return preset;
+			}
+		}
+		return null;
+	}
+	
+	public Map<String, UIPreset> listUIPresets() throws WTException {
+		LinkedHashMap<String, UIPreset> uis = new LinkedHashMap<>();
+		
+		Map<String, String> uiOverride = WebTopProps.getUIPresets(getWebTopApp().getProperties());
+		if (!uiOverride.isEmpty()) { // Override UI-Presets completely!
+			internalPutUIPresets(uis, uiOverride);
+			
+		} else {
+			// Add built-in UI-Presets
+			uis.put("crisp", new UIPreset("crisp", "Crisp", "crisp", "office2019"));
+			uis.put("classicb", new UIPreset("classicb", "Classic Blue", "classic", "office2019"));
+			uis.put("classicg", new UIPreset("classicg", "Classic Gray", "gray", "office2019"));
+			
+			// Then load extra ones from props...
+			internalPutUIPresets(uis, WebTopProps.getUIPresetsExtra(getWebTopApp().getProperties()));
+		}
+		return uis;
+	}
+	
+	private void internalPutUIPresets(Map<String, UIPreset> dstMap, Map<String, String> srcMap) {
+		for (Map.Entry<String, String> entry : srcMap.entrySet()) {
+			final String uiId = entry.getKey();
+			if (!dstMap.containsKey(uiId) && !StringUtils.isBlank(uiId)) {
+				final String[] vtokens = StringUtils.split(entry.getValue(), "|", 3);
+				if (vtokens.length == 3) {
+					final String uiName = StringUtils.defaultIfBlank(vtokens[0], uiId);
+					final String theme = vtokens[1];
+					final String laf = vtokens[2];
+					dstMap.put(uiId, new UIPreset(uiId, uiName, theme, laf));
+				} else {
+					LOGGER.debug("Ignoring UI-Preset: unparseable value part [{}]", entry.getValue());
+				}
+			} else {
+				LOGGER.debug("Ignoring UI-Preset: invalid ID or already in use [{}]", uiId);
+			}
+		}
+	}
+	
+	public Map<String, UITheme> listUIThemes(final CoreServiceSettings coreSettings) throws WTException {
+		LinkedHashMap<String, UITheme> themes = new LinkedHashMap<>();
+		
+		//TODO: maybe improve this of dynamic discovery using such sort of file descriptor
+		// Add built-in themes
+		themes.put("crisp", new UITheme("crisp", "Crisp", true));
+		//themes.put("triton", new UITheme("triton", "Triton", false));
+		//themes.put("neptune", new UITheme("neptune", "Neptune", true));
+		//themes.put("aria", new UITheme("aria", "Aria", false));
+		//themes.put("graphite", new UITheme("graphite", "Graphite", false));
+		//themes.put("material", new UITheme("material", "Material", false));
+		themes.put("classic", new UITheme("classic", "Classic", false));
+		themes.put("gray", new UITheme("gray", "Gray", false));
+
+		// Then load extra ones from settings...
+		internalPutThemes(themes, coreSettings.getThemesExtra());
+		
+		return themes;
+	}
+	
+	private void internalPutThemes(Map<String, UITheme> dstMap, Map<String, String> srcMap) {
+		for (Map.Entry<String, String> entry : srcMap.entrySet()) {
+			final String themeId = entry.getKey();
+			if (!dstMap.containsKey(themeId) && !StringUtils.isBlank(themeId)) {
+				final String themeName = StringUtils.defaultIfBlank(entry.getValue(), themeId);
+				dstMap.put(themeId, new UITheme(themeId, themeName, false));
+			} else {
+				LOGGER.debug("Ignoring Theme: invalid ID or already in use [{}]", themeId);
+			}
+		}
+	}
+	
+	public Map<String, UILookAndFeel> listUILookAndFeels(final CoreServiceSettings coreSettings) throws WTException {
+		LinkedHashMap<String, UILookAndFeel> lafs = new LinkedHashMap<>();
+		
+		//TODO: maybe improve this of dynamic discovery using such sort of file descriptor
+		// Add built-in LAFs
+		lafs.put("default", new UILookAndFeel("default", WT.getPlatformName()));
+		lafs.put("webtop2023", new UILookAndFeel("webtop2023", "WebTop 2023"));
+		lafs.put("office2019", new UILookAndFeel("office2019", "Office 2019"));
+
+		// Then load extra ones...
+		//TODO: maybe improve this of dynamic discovery using such sort of file descriptor
+		internalPutLAFs(lafs, coreSettings.getLAFsExtra());
+		
+		return lafs;
+	}
+	
+	private void internalPutLAFs(Map<String, UILookAndFeel> dstMap, Map<String, String> srcMap) {
+		for (Map.Entry<String, String> entry : srcMap.entrySet()) {
+			final String lafId = entry.getKey();
+			if (!dstMap.containsKey(lafId) && !StringUtils.isBlank(lafId)) {
+				final String lafName = StringUtils.defaultIfBlank(entry.getValue(), lafId);
+				dstMap.put(lafId, new UILookAndFeel(lafId, lafName));
+			} else {
+				LOGGER.debug("Ignoring LAF: invalid ID or already in use [{}]", lafId);
+			}
 		}
 	}
 	
@@ -427,28 +569,6 @@ public final class WebTopManager {
 	 */
 	public static boolean isSysAdmin(UserProfileId profileId) {
 		return SYSADMIN_DOMAINID.equals(profileId.getDomainId()) && SYSADMIN_USERID.equals(profileId.getUserId());
-	}
-	
-	/**
-	 * Private constructor.
-	 * Instances of this class must be created using static initialize method.
-	 * @param wta WebTopApp instance.
-	 */
-	private WebTopManager(WebTopApp wta) {
-		this.wta = wta;
-		domainCache.init();
-		subjectSidCache.init();
-	}
-	
-	/**
-	 * Performs cleanup process.
-	 */
-	void cleanup() {
-		subjectSidCache.cleanup();
-		cleanupProfileCache();
-		domainCache.clear();
-		wta = null;
-		LOGGER.info("Cleaned up");
 	}
 	
 	public AbstractDirectory getAuthDirectory(String authUri) throws WTException {
@@ -704,7 +824,7 @@ public final class WebTopManager {
 		
 		try {
 			AuthenticationDomain authAd = createSysAdminAuthenticationDomain();
-			DirectoryOptions opts = wta.createDirectoryOptions(authAd);
+				DirectoryOptions opts = getWebTopApp().createDirectoryOptions(authAd);
 			AbstractDirectory directory = dirManager.getDirectory(authAd.getDirUri().getScheme());
 			if (directory == null) throw new WTException("Directory not supported [{}]", authAd.getDirUri().getScheme());
 			if (!directory.hasCapability(DirectoryCapability.PASSWORD_WRITE)) throw new WTException("Password update not supported [{}]", authAd.getDirUri().getScheme());
@@ -757,7 +877,7 @@ public final class WebTopManager {
 		Connection con = null;
 		
 		try {
-			con = wta.getConnectionManager().getConnection();
+			con = getConnection(true);
 			return domDao.selectIdsByEnabled(con, enabled);
 			
 		} catch (Exception ex) {
@@ -775,7 +895,7 @@ public final class WebTopManager {
 		// This only fill basic domain info: NO directory data will be present!
 		
 		try {
-			con = wta.getConnectionManager().getConnection();
+			con = getConnection(true);
 			List<ODomain> odomains = domDao.selectBasicByEnabled(con, enabled);
 			Map<String, Domain> items = new LinkedHashMap<>(odomains.size());
 			for (ODomain odomain : odomains) {
@@ -796,7 +916,7 @@ public final class WebTopManager {
 		Connection con = null;
 		
 		try {
-			con = wta.getConnectionManager().getConnection();
+			con = getConnection(true);
 			return domDao.idIsAvailable(con, domainIdToCheck);
 			
 		} catch (Exception ex) {
@@ -812,7 +932,7 @@ public final class WebTopManager {
 		Connection con = null;
 		
 		try {
-			con = wta.getConnectionManager().getConnection();
+			con = getConnection(true);
 			return doDomainGet(con, domainId, DomainProcessOpt.fromDomainGetOptions(options));
 			
 		} catch (Exception ex) {
@@ -832,7 +952,7 @@ public final class WebTopManager {
 				return new DomainBase.PasswordPolicies(null, null, null, null, null, null, null);
 				
 			} else {
-				con = wta.getConnectionManager().getConnection();
+				con = getConnection(true);
 				ODomain odomain = domDao.selectPasswordPoliciesById(con, domainId);
 				return AppManagerUtils.createDomainPasswordPolicies2(odomain);
 			}	
@@ -851,7 +971,7 @@ public final class WebTopManager {
 		
 		Domain newDomain = null;
 		try {
-			con = wta.getConnectionManager().getConnection(false);
+			con = getConnection(false);
 			doDomainInsert(con, domainId, domain);
 			doDomainInitHomeFolder(domainId);
 			DbUtils.commitQuietly(con);
@@ -884,7 +1004,7 @@ public final class WebTopManager {
 		
 		ODomain odomain = null;
 		try {
-			con = wta.getConnectionManager().getConnection();
+			con = getConnection(true);
 			odomain = domDao.selectBasicById(con, domainId);
 			
 		} catch (Exception ex) {
@@ -909,7 +1029,7 @@ public final class WebTopManager {
 		Boolean newEnabled = null;
 		Domain updatedDomain = null;
 		try {
-			con = wta.getConnectionManager().getConnection(false);
+			con = getConnection(false);
 			before = domDao.selectBasicById(con, domainId);
 			DomainUpdateResult res = doDomainUpdate(con, domainId, domain, options.has(DomainUpdateOption.DIRECTORY_PASSWORD), DomainProcessOpt.fromDomainUpdateOptions(options));
 			DbUtils.commitQuietly(con);
@@ -943,7 +1063,7 @@ public final class WebTopManager {
 		Set<String> oldUserIds = null;
 		Set<String> oldResourcesIds = null;
 		try {
-			con = wta.getConnectionManager().getConnection(false);
+			con = getConnection(false);
 			oldDomain = doDomainGet(con, domainId, BitFlags.with(DomainProcessOpt.PROCESS_DIRECTORY));
 			if (oldDomain == null) throw new WTNotFoundException("Domain not found [{}]", domainId);
 			oldUserIds = useDao.selectIdsByDomainEnabled(con, domainId, EnabledCond.ANY_STATE);
@@ -968,7 +1088,7 @@ public final class WebTopManager {
 				try {
 					AuthenticationDomain ad = createAuthenticationDomain(oldDomain);
 					AbstractDirectory directory = getAuthDirectory(ad.getDirUri());
-					DirectoryOptions opts = wta.createDirectoryOptions(ad);
+					DirectoryOptions opts = getWebTopApp().createDirectoryOptions(ad);
 					if (directory.hasCapability(DirectoryCapability.USERS_WRITE)) {
 						Set<String> notFounds = new LinkedHashSet<>();
 						for (String userId : oldUserIds) {
@@ -1026,14 +1146,14 @@ public final class WebTopManager {
 		Connection con = null;
 		
 		try {
-			con = wta.getConnectionManager().getConnection();
+			con = getConnection(true);
 			
 			Domain domain = doDomainGet(con, domainId, BitFlags.allOf(DomainProcessOpt.class));
 			if (domain == null) throw new WTNotFoundException("Domain not found [{}]", domainId);
 			
 			AuthenticationDomain ad = createAuthenticationDomain(domain);
 			AbstractDirectory directory = getAuthDirectory(ad.getDirUri());
-			DirectoryOptions opts = wta.createDirectoryOptions(ad);
+			DirectoryOptions opts = getWebTopApp().createDirectoryOptions(ad);
 			
 			Map<String, VUser> vusers = useDao.selectByDomainEnabled(con, domain.getDomainId(), EnabledCond.ANY_STATE);
 			ArrayList<DirectoryUser> items = new ArrayList<>();
@@ -1062,7 +1182,7 @@ public final class WebTopManager {
 		Connection con = null;
 		
 		try {
-			con = wta.getConnectionManager().getConnection();
+			con = getConnection(true);
 			return useDao.selectIdsByDomainEnabled(con, domainId, enabled);
 			
 		} catch (Exception ex) {
@@ -1081,7 +1201,7 @@ public final class WebTopManager {
 		// This only fill basic user info: NO assignations and permissions related info will be returned!
 		
 		try {
-			con = wta.getConnectionManager().getConnection();
+			con = getConnection(true);
 			Collection<VUser> vusers = useDao.selectByDomainEnabled(con, domainId, enabled).values();
 			Map<String, User> items = new LinkedHashMap<>(vusers.size());
 			for (VUser vuser : vusers) {
@@ -1103,7 +1223,7 @@ public final class WebTopManager {
 		Connection con = null;
 		
 		try {
-			con = wta.getConnectionManager().getConnection();
+			con = getConnection(true);
 			return useDao.idIsAvailableByDomain(con, domainId, userIdToCheck);
 			
 		} catch (Exception ex) {
@@ -1120,7 +1240,7 @@ public final class WebTopManager {
 		Connection con = null;
 		
 		try {
-			con = wta.getConnectionManager().getConnection();
+			con = getConnection(true);
 			return doUserGet(con, domainId, userId, UserProcessOpt.fromUserGetOptions(options));
 			
 		} catch (Exception ex) {
@@ -1141,7 +1261,7 @@ public final class WebTopManager {
 			Connection con = null;
 			
 			try {
-				con = wta.getConnectionManager().getConnection();
+				con = getConnection(true);
 				OUser ouser = useDao.selectSecretByProfile(con, domainId, userId);
 				if (ouser == null) throw new WTNotFoundException("User not found [{}]", userPid);
 
@@ -1191,7 +1311,7 @@ public final class WebTopManager {
 		
 		User newUser = null;
 		try {
-			con = wta.getConnectionManager().getConnection(false);
+			con = getConnection(false);
 			
 			Domain domain = doDomainGet(con, userPid.getDomainId(), BitFlags.allOf(DomainProcessOpt.class));
 			if (domain == null) throw new WTException("Domain not found [{}]", userPid.getDomainId());
@@ -1201,7 +1321,7 @@ public final class WebTopManager {
 			UserInsertResult result = null;
 			if (updateDirectory) {
 				AbstractDirectory directory = getAuthDirectory(ad.getDirUri());
-				DirectoryOptions opts = wta.createDirectoryOptions(ad);
+				DirectoryOptions opts = getWebTopApp().createDirectoryOptions(ad);
 				
 				if (directory.hasCapability(DirectoryCapability.USERS_WRITE)) {
 					if (!directory.validateUsername(opts, userPid.getUserId())) {
@@ -1210,7 +1330,7 @@ public final class WebTopManager {
 				}
 				char[] appliedPassword = null;
 				if (setPassword && directory.hasCapability(DirectoryCapability.PASSWORD_WRITE)) {
-					wta.setDirectoryOptionsPasswordPolicies(ad, opts, domain.getPasswordPolicies());
+					getWebTopApp().setDirectoryOptionsPasswordPolicies(ad, opts, domain.getPasswordPolicies());
 					if (password == null) {
 						appliedPassword = directory.generatePassword(opts);
 					} else {
@@ -1237,7 +1357,7 @@ public final class WebTopManager {
 				if (setPassword && directory.hasCapability(DirectoryCapability.PASSWORD_WRITE)) {
 					LOGGER.debug("Setting user password");
 					directory.updateUserPassword(opts, userPid.getDomainId(), userPid.getUserId(), appliedPassword);
-					new CoreUserSettings(wta.getSettingsManager(), userPid).setPasswordLastChange(DateTimeUtils.now());
+					new CoreUserSettings(getWebTopApp().getSettingsManager(), userPid).setPasswordLastChange(DateTimeUtils.now());
 				}
 				
 			} else {
@@ -1261,7 +1381,7 @@ public final class WebTopManager {
 		//TODO: fire UserAvailabilityChangeEvent based on enabled change
 		// @Deprecated
 		// -> START Backward compatibility section: performs legacy actions
-		List<Throwable> errors = wta.getServiceManager().invokeOnUserAdded(userPid);
+		List<Throwable> errors = getWebTopApp().getServiceManager().invokeOnUserAdded(userPid);
 		if (!errors.isEmpty()) throw new WTMultiCauseWarnException(errors, "Errors in user related listeners");
 		// <- END Backward compatibility section
 		
@@ -1276,7 +1396,7 @@ public final class WebTopManager {
 		Connection con = null;
 		
 		try {
-			con = wta.getConnectionManager().getConnection(false);
+			con = getConnection(false);
 			
 			doUserUpdate(con, userPid.getDomainId(), userPid.getUserId(), user, UserProcessOpt.fromUserUpdateOptions(options));
 			DbUtils.commitQuietly(con);
@@ -1304,7 +1424,7 @@ public final class WebTopManager {
 		Connection con = null;
 		
 		try {
-			con = wta.getConnectionManager().getConnection();
+			con = getConnection(true);
 			boolean ret = useDao.updateEnabledByProfile(con, domainId, userId, enabled) == 1;
 			if (!ret) throw new WTNotFoundException("User not found [{}]", userPid);
 			
@@ -1331,9 +1451,9 @@ public final class WebTopManager {
 				throw new WTException("Directory has no write capability");
 			}
 			
-			DirectoryOptions opts = wta.createDirectoryOptions(ad);
+			DirectoryOptions opts = getWebTopApp().createDirectoryOptions(ad);
 			DomainBase.PasswordPolicies pwdPolicies = getDomainPasswordPolicies(userPid.getDomainId());
-			wta.setDirectoryOptionsPasswordPolicies(ad, opts, pwdPolicies);
+			getWebTopApp().setDirectoryOptionsPasswordPolicies(ad, opts, pwdPolicies);
 			int ret = directory.validatePasswordPolicy(opts, userPid.getUserId(), newPassword);
 			if (ret == 0 && oldPassword != null && pwdPolicies.getAvoidOldSimilarity()) {
 				int similarityThres = 5;
@@ -1376,7 +1496,7 @@ public final class WebTopManager {
 		lookupProfileData(userPid, false);
 		
 		try {
-			con = wta.getConnectionManager().getConnection(false);
+			con = getConnection(false);
 			LOGGER.debug("Deleting user '{}'", userId);
 			doUserDelete(con, userPid.getDomainId(), userPid.getUserId());
 			
@@ -1385,7 +1505,7 @@ public final class WebTopManager {
 				if (odomain == null) throw new WTException("Domain not found [{}]", userPid.getDomainId());
 				AuthenticationDomain ad = createAuthenticationDomain(odomain);
 				AbstractDirectory directory = getAuthDirectory(ad.getDirUri());
-				DirectoryOptions opts = wta.createDirectoryOptions(ad);
+				DirectoryOptions opts = getWebTopApp().createDirectoryOptions(ad);
 				
 				if (directory.hasCapability(DirectoryCapability.USERS_WRITE)) {
 					directory.deleteUser(opts, userPid.getDomainId(), userPid.getUserId());
@@ -1408,15 +1528,15 @@ public final class WebTopManager {
 			DbUtils.closeQuietly(con);
 		}
 		
-		wta.getLicenseManager().revokeLicenseLease(userPid);
+		getWebTopApp().getLicenseManager().revokeLicenseLease(userPid);
 		
 		// Fire events
 		EventBus.PostResult postResult = fireEvent(new UserUpdateEvent(UserUpdateEvent.Type.DELETE, userPid), true, true);
 		// -> START Backward compatibility section: performs legacy actions
-		wta.getServiceManager().invokeOnUserRemoved(userPid);
+		getWebTopApp().getServiceManager().invokeOnUserRemoved(userPid);
 		// <- END Backward compatibility section
 		// Clear settings
-		wta.getSettingsManager().deleteUserSettings(userPid);
+		getWebTopApp().getSettingsManager().deleteUserSettings(userPid);
 		// Clear any cached data
 		subjectSidCache.remove(userPid, GenericSubject.Type.USER);
 		clearProfileCache(userPid);
@@ -1437,8 +1557,8 @@ public final class WebTopManager {
 		DomainBase.PasswordPolicies pwdPolicies = getDomainPasswordPolicies(userPid.getDomainId());
 		if (pwdPolicies.getVerifyAtLogin() || pwdPolicies.getExpiration() != null) {
 			if (pwdPolicies.getVerifyAtLogin()) {
-				DirectoryOptions opts = wta.createDirectoryOptions(ad);
-				wta.setDirectoryOptionsPasswordPolicies(ad, opts, pwdPolicies);
+				DirectoryOptions opts = getWebTopApp().createDirectoryOptions(ad);
+				getWebTopApp().setDirectoryOptionsPasswordPolicies(ad, opts, pwdPolicies);
 				int ret = directory.validatePasswordPolicy(opts, userPid.getUserId(), password);
 				if (ret != 0) return true;
 			}
@@ -1465,7 +1585,7 @@ public final class WebTopManager {
 		int ret = -1;
 		try {
 			if (userIds.isEmpty()) return -1;
-			con = wta.getConnectionManager().getConnection(false);
+			con = getConnection(false);
 			
 			String newEmailDomain = "@" + StringUtils.removeStart(newPersonalEmailDomain, "@");
 			ret = uiDao.updateEmailDomainByProfiles(con, domainId, userIds, newEmailDomain);
@@ -1491,7 +1611,7 @@ public final class WebTopManager {
 		Connection con = null;
 		
 		try {
-			con = wta.getConnectionManager().getConnection();
+			con = getConnection(true);
 			return resDao.selectIdsByDomainEnabled(con, domainId, enabled);
 			
 		} catch (Exception ex) {
@@ -1510,7 +1630,7 @@ public final class WebTopManager {
 		// This only fill basic user info: NO assignations and permissions related info will be returned!
 		
 		try {
-			con = wta.getConnectionManager().getConnection();
+			con = getConnection(true);
 			List<VResource> vres = resDao.selectByDomainEnabled(con, domainId, enabled);
 			Map<String, Resource> items = new LinkedHashMap<>(vres.size());
 			for (VResource vre : vres) {
@@ -1532,7 +1652,7 @@ public final class WebTopManager {
 		Connection con = null;
 		
 		try {
-			con = wta.getConnectionManager().getConnection();
+			con = getConnection(true);
 			return resDao.idIsAvailableByDomain(con, domainId, resourceIdToCheck);
 			
 		} catch (Exception ex) {
@@ -1548,7 +1668,7 @@ public final class WebTopManager {
 		Connection con = null;
 		
 		try {
-			con = wta.getConnectionManager().getConnection();
+			con = getConnection(true);
 			return doResourceGet(con, domainId, resourceId, ResourceProcessOpt.fromResourceGetOptions(options));
 			
 		} catch (Exception ex) {
@@ -1565,7 +1685,7 @@ public final class WebTopManager {
 		Connection con = null;
 		
 		try {
-			con = wta.getConnectionManager().getConnection();
+			con = getConnection(true);
 			Boolean enabled = resDao.selectEnabledByProfile(con, domainId, resourceId);
 			if (enabled == null) throw new WTNotFoundException("Resource not found [{}@{}]", resourceId, domainId);
 			return enabled;
@@ -1583,7 +1703,7 @@ public final class WebTopManager {
 		Connection con = null;
 		
 		try {
-			con = wta.getConnectionManager().getConnection();
+			con = getConnection(true);
 			return doResourcePermissionsGet(con, domainId, resourceId, subjectsAsSID);
 			
 		} catch (Exception ex) {
@@ -1602,7 +1722,7 @@ public final class WebTopManager {
 		
 		Resource newResource = null;
 		try {
-			con = wta.getConnectionManager().getConnection(false);
+			con = getConnection(false);
 			String resourceSid = null; // Internally auto-generated
 			ResourceUpdateResult res = doResourceInsert(con, resourcePid.getDomainId(), resourcePid.getUserId(), resourceSid, resource, ResourceProcessOpt.fromResourceUpdateOptions(options));
 			DbUtils.commitQuietly(con);
@@ -1633,7 +1753,7 @@ public final class WebTopManager {
 		VUserData before = null;
 		Boolean newEnabled = null;
 		try {
-			con = wta.getConnectionManager().getConnection(false);
+			con = getConnection(false);
 			before = resDao.viewDataByProfile(con, domainId, resourceId);
 			ResourceUpdateResult res = doResourceUpdate(con, resourcePid.getDomainId(), resourcePid.getUserId(), resource, ResourceProcessOpt.fromResourceUpdateOptions(options));
 			DbUtils.commitQuietly(con);
@@ -1665,7 +1785,7 @@ public final class WebTopManager {
 		VUserData before = null;
 		Boolean newEnabled = null;
 		try {
-			con = wta.getConnectionManager().getConnection();
+			con = getConnection(true);
 			before = resDao.viewDataByProfile(con, domainId, resourceId);
 			boolean ret = resDao.updateEnabledByProfile(con, domainId, resourceId, enabled) == 1;
 			if (!ret) throw new WTNotFoundException("Resource not found [{}]", resourcePid);
@@ -1693,7 +1813,7 @@ public final class WebTopManager {
 		lookupProfileData(resourcePid, false);
 		
 		try {
-			con = wta.getConnectionManager().getConnection(false);
+			con = getConnection(false);
 			doResourceDelete(con, resourcePid.getDomainId(), resourcePid.getUserId());
 			
 			DbUtils.commitQuietly(con);
@@ -1718,7 +1838,7 @@ public final class WebTopManager {
 		Connection con = null;
 		
 		try {
-			con = wta.getConnectionManager().getConnection();
+			con = getConnection(true);
 			return grpDao.selectIdsByDomain(con, domainId);
 			
 		} catch (Exception ex) {
@@ -1736,7 +1856,7 @@ public final class WebTopManager {
 		// This only fill basic user info: NO assignations and permissions related info will be returned!
 		
 		try {
-			con = wta.getConnectionManager().getConnection();
+			con = getConnection(true);
 			List<OGroup> ogroups = grpDao.selectByDomain(con, domainId);
 			Map<String, Group> items = new LinkedHashMap<>(ogroups.size());
 			for (OGroup ogroup : ogroups) {
@@ -1758,7 +1878,7 @@ public final class WebTopManager {
 		Connection con = null;
 		
 		try {
-			con = wta.getConnectionManager().getConnection();
+			con = getConnection(true);
 			return grpDao.idIsAvailableByDomain(con, domainId, groupIdToCheck);
 			
 		} catch (Exception ex) {
@@ -1775,7 +1895,7 @@ public final class WebTopManager {
 		Connection con = null;
 		
 		try {
-			con = wta.getConnectionManager().getConnection();
+			con = getConnection(true);
 			return doGroupGet(con, domainId, groupId, GroupProcessOpt.fromGroupGetOptions(options));
 			
 		} catch (Exception ex) {
@@ -1795,7 +1915,7 @@ public final class WebTopManager {
 		
 		Group newGroup = null;
 		try {
-			con = wta.getConnectionManager().getConnection(false);
+			con = getConnection(false);
 			
 			String groupSid = null; // Internally auto-generated
 			GroupInsertResult result = doGroupInsert(con, groupPid.getDomainId(), groupPid.getUserId(), groupSid, group, GroupProcessOpt.fromGroupUpdateOptions(options));
@@ -1827,7 +1947,7 @@ public final class WebTopManager {
 		Connection con = null;
 		
 		try {
-			con = wta.getConnectionManager().getConnection(false);
+			con = getConnection(false);
 			doGroupUpdate(con, groupPid.getDomainId(), groupPid.getUserId(), group, GroupProcessOpt.fromGroupUpdateOptions(options));
 			DbUtils.commitQuietly(con);
 			
@@ -1852,7 +1972,7 @@ public final class WebTopManager {
 		
 		try {
 			if (BUILT_IN_GROUPS.contains(groupId)) throw new WTException("Built-in group cannot be removed");
-			con = wta.getConnectionManager().getConnection(false);
+			con = getConnection(false);
 			LOGGER.debug("Deleting group '{}'", groupPid.getUserId());
 			doGroupDelete(con, groupPid.getDomainId(), groupPid.getUserId());
 			
@@ -1879,7 +1999,7 @@ public final class WebTopManager {
 		// This only fill basic user info: NO assignations and permissions related info will be returned!
 		
 		try {
-			con = wta.getConnectionManager().getConnection();
+			con = getConnection(true);
 			List<ORole> oroles = rolDao.selectByDomain(con, domainId);
 			Map<String, Role> items = new LinkedHashMap<>(oroles.size());
 			for (ORole orole : oroles) {
@@ -1901,7 +2021,7 @@ public final class WebTopManager {
 		Connection con = null;
 		
 		try {
-			con = wta.getConnectionManager().getConnection();
+			con = getConnection(true);
 			return rolDao.idIsAvailableByDomain(con, domainId, roleIdToCheck);
 			
 		} catch (Exception ex) {
@@ -1917,7 +2037,7 @@ public final class WebTopManager {
 		Connection con = null;
 		
 		try {
-			con = wta.getConnectionManager().getConnection();
+			con = getConnection(true);
 			return doRoleGet(con, domainId, roleSid, RoleProcessOpt.fromRoleGetOptions(options));
 			
 		} catch (Exception ex) {
@@ -1936,7 +2056,7 @@ public final class WebTopManager {
 		
 		Role newRole = null;
 		try {
-			con = wta.getConnectionManager().getConnection(false);
+			con = getConnection(false);
 			
 			String roleSid = null; // Internally auto-generated
 			RoleInsertResult result = doRoleInsert(con, rolePid.getDomainId(), rolePid.getUserId(), roleSid, role, RoleProcessOpt.fromRoleUpdateOptions(options));
@@ -1963,7 +2083,7 @@ public final class WebTopManager {
 		Connection con = null;
 		
 		try {
-			con = wta.getConnectionManager().getConnection(false);
+			con = getConnection(false);
 			doRoleUpdate(con, domainId, roleSid, role, RoleProcessOpt.fromRoleUpdateOptions(options));
 			DbUtils.commitQuietly(con);
 			
@@ -1983,7 +2103,7 @@ public final class WebTopManager {
 		Connection con = null;
 		
 		try {
-			con = wta.getConnectionManager().getConnection(false);
+			con = getConnection(false);
 			LOGGER.debug("Deleting role '{}'", roleSid);
 			doRoleDelete(con, domainId, roleSid);
 			
@@ -2029,7 +2149,7 @@ public final class WebTopManager {
 		Connection con = null;
 		
 		try {
-			con = wta.getConnectionManager().getConnection();
+			con = getConnection(true);
 			return dao.selectEnabledByInternetName(con, internetDomain);
 			
 		} catch(SQLException | DAOException ex) {
@@ -2042,7 +2162,7 @@ public final class WebTopManager {
 	
 	
 	public List<PublicImage> listDomainPublicImages(String domainId) throws WTException {
-		String path = wta.getFileSystem().getImagesPath(domainId);
+		String path = getWebTopApp().getFileSystem().getImagesPath(domainId);
 		String baseUrl = WT.getPublicImagesUrl(domainId);
 		File dir = new File(path);
 		ArrayList<PublicImage> items = new ArrayList<>();
@@ -2083,7 +2203,7 @@ public final class WebTopManager {
 		Connection con = null;
 
 		try {
-			con = wta.getConnectionManager().getConnection();
+			con = getConnection(true);
 			
 			Set<UserProfileId> items = new LinkedHashSet<>();
 			for (String subject : subjects) {
@@ -2136,7 +2256,7 @@ public final class WebTopManager {
 		
 		try {
 			boolean sidsAsKeys = !options.has(SubjectGetOption.PID_AS_KEY);
-			con = wta.getConnectionManager().getConnection();
+			con = getConnection(true);
 			
 			LinkedHashMap<String, GenericSubject> items = new LinkedHashMap<>();
 			if (options.has(SubjectGetOption.USERS)) {
@@ -2178,7 +2298,7 @@ public final class WebTopManager {
 	}
 	
 	public Set<RoleWithSource> getComputedRolesByUser(UserProfileId pid, boolean self, boolean transitive) throws WTException {
-		WebTopManager usrm = wta.getWebTopManager();
+		WebTopManager usrm = getWebTopApp().getWebTopManager();
 		Connection con = null;
 		HashSet<String> roleMap = new HashSet<>();
 		LinkedHashSet<RoleWithSource> roles = new LinkedHashSet<>();
@@ -2279,7 +2399,7 @@ public final class WebTopManager {
 		Connection con = null;
 		
 		try {
-			con = wta.getConnectionManager().getConnection();
+			con = getConnection(true);
 			List<ProfileIdentifier> pids = uiDao.viewByEmail(con, personalAddress);
 			if (pids.isEmpty()) return null;
 			
@@ -2300,7 +2420,7 @@ public final class WebTopManager {
 		Connection con = null;
 		
 		try {
-			con = wta.getConnectionManager().getConnection();
+			con = getConnection(true);
 			
 			List<ProfileIdentifier> pids = uiDao.viewByEmail(con, personalAddress);
 			return pids.stream()
@@ -3120,7 +3240,7 @@ public final class WebTopManager {
 		Result<User> domainAdminResult = null;
 		
 		try {
-			con = wta.getConnectionManager().getConnection();
+			con = getConnection(true);
 		
 			// Prepare built-in roles
 			LOGGER.debug("[{}] Checking built-in roles...", domainId);
@@ -3229,18 +3349,18 @@ public final class WebTopManager {
 	private void doDomainInitHomeFolder(final String domainId) throws SecurityException {
 		synchronized(foldersLock) {
 			// Main folder (/domains/{domainId})
-			File domainDir = new File(wta.getFileSystem().getHomePath(domainId));
+			File domainDir = new File(getWebTopApp().getFileSystem().getHomePath(domainId));
 			if (!domainDir.exists()) domainDir.mkdir();
 			
 			// Internal folders...
-			File tempDir = new File(wta.getFileSystem().getTempPath(domainId));
+			File tempDir = new File(getWebTopApp().getFileSystem().getTempPath(domainId));
 			if (!tempDir.exists()) tempDir.mkdir();
 			
-			File imagesDir = new File(wta.getFileSystem().getImagesPath(domainId));
+			File imagesDir = new File(getWebTopApp().getFileSystem().getImagesPath(domainId));
 			if (!imagesDir.exists()) imagesDir.mkdir();
 			
-			for (String sid : wta.getServiceManager().listRegisteredServices()) {
-				File svcDir = new File(wta.getFileSystem().getServiceHomePath(domainId, sid));
+			for (String sid : getWebTopApp().getServiceManager().listRegisteredServices()) {
+				File svcDir = new File(getWebTopApp().getFileSystem().getServiceHomePath(domainId, sid));
 				if (!svcDir.exists()) svcDir.mkdir();
 			}
 		}	
@@ -3250,10 +3370,10 @@ public final class WebTopManager {
 		synchronized(foldersLock) {
 			// Deletes logically domain folder by simply historycizing it...
 			// Main folder (/domains/{domainId})
-			File domainDir = new File(wta.getFileSystem().getHomePath(domainId));
+			File domainDir = new File(getWebTopApp().getFileSystem().getHomePath(domainId));
 			if (domainDir.exists()) {
 				String nowSuffix = DateTimeUtils.print(DateTimeUtils.createFormatter("yyyyMMddHHmmssSSS", DateTimeZone.UTC), DateTimeUtils.now(true));
-				String deletedDomainDirString = wta.getFileSystem().getHomePath(domainId + "." + nowSuffix);
+				String deletedDomainDirString = getWebTopApp().getFileSystem().getHomePath(domainId + "." + nowSuffix);
 				File deletedDomainDir = new File(deletedDomainDirString);
 				if (!deletedDomainDir.exists()) {
 					domainDir.renameTo(deletedDomainDir);
@@ -4501,7 +4621,7 @@ public final class WebTopManager {
 		Connection con = null;
 		
 		try {
-			con = wta.getConnectionManager().getConnection();
+			con = getConnection(true);
 			OUserInfo oui = dao.selectByDomainUser(con, profileId.getDomainId(), profileId.getUserId());
 			return (oui == null) ? null : new UserProfile.PersonalInfo(oui);
 			
@@ -4519,7 +4639,7 @@ public final class WebTopManager {
 		
 		VUserData vuser = null;
 		try {
-			con = wta.getConnectionManager().getConnection();
+			con = getConnection(true);
 			vuser = useDao.viewDataByProfile(con, profileId.getDomainId(), profileId.getUserId());
 			if (vuser == null) vuser = resDao.viewDataByProfile(con, profileId.getDomainId(), profileId.getUserId());
 			
@@ -4569,26 +4689,6 @@ public final class WebTopManager {
 		oui.setCustom2(upi.getCustom02());
 		oui.setCustom3(upi.getCustom03());
 		return oui;
-	}
-	
-	private EventBus.PostResult fireEvent(EventBase event) {
-		return fireEvent(event, false, false);
-	}
-	
-	private EventBus.PostResult fireEvent(EventBase event, boolean trackHandlerErrors, boolean logTrackedErrors) {
-		EventBus.PostResult result = wta.getEventBus().postNow(event, trackHandlerErrors);
-		if (logTrackedErrors) logEventBusHandlerErrors(result);
-		return result;
-	}
-	
-	private void logEventBusHandlerErrors(EventBus.PostResult result) {
-		if (result.hasHandlerErrors()) {
-			for (EventBus.HandlerError error : result.getHandlerErrors()) {
-				Class clazz = error.getHandlerMethodDeclaringClass();
-				String serviceId = WT.findServiceId(clazz);
-				LOGGER.error("[{}] {} -> {}", serviceId, ClassUtils.getSimpleClassName(clazz), error.getHandlerMethodName(), error.getDeepestCause());
-			}
-		}	
 	}
 	
 	private String decDirPassword(String ep) {
@@ -4682,11 +4782,11 @@ public final class WebTopManager {
 				HashMap<String, Data> _byDomainName = new HashMap<>();
 				HashMap<String, Data> _byPublicFqdn = new HashMap<>();
 				
-				con = wta.getConnectionManager().getConnection();
+				con = getConnection(true);
 				for (ODomain odomain : domDao.selectInfo(con)) {
 					final Boolean enabled = odomain.getEnabled();
 					final String publicInternetName;
-					CoreServiceSettings dss = new CoreServiceSettings(wta.getSettingsManager(), CoreManifest.ID, odomain.getDomainId());
+					CoreServiceSettings dss = new CoreServiceSettings(getWebTopApp().getSettingsManager(), CoreManifest.ID, odomain.getDomainId());
 					URI publicUri = URIUtils.createURIQuietly(dss.getPublicBaseUrl());
 					if (publicUri != null && !StringUtils.isBlank(publicUri.getHost())) {
 						publicInternetName = publicUri.getHost();
@@ -4914,7 +5014,7 @@ public final class WebTopManager {
 			
 			try {
 				LOGGER.debug("[DomainInfoCache] Building cache...");
-				con = wta.getConnectionManager().getConnection();
+				con = getConnection(true);
 				HashMap<String, String> hmPublicNameToDomainId = new HashMap<>();
 				HashMap<String, String> hmDomainIdToAuthDomainName = new HashMap<>();
 				HashMap<String, String> hmAuthDomainNameToDomainId = new HashMap<>();
@@ -4955,7 +5055,7 @@ public final class WebTopManager {
 					}
 					
 					// Public FQDN (host.domain.tld)
-					CoreServiceSettings dss = new CoreServiceSettings(wta.getSettingsManager(), CoreManifest.ID, domainId);
+					CoreServiceSettings dss = new CoreServiceSettings(getWebTopApp().getSettingsManager(), CoreManifest.ID, domainId);
 					URI publicUri = URIUtils.createURIQuietly(dss.getPublicBaseUrl());
 					if (publicUri != null && !StringUtils.isBlank(publicUri.getHost())) {
 						String pubInternetName = publicUri.getHost();
@@ -4989,7 +5089,7 @@ public final class WebTopManager {
 				//	LOGGER.trace("[DomainInfoCache] {} -> {}", domainId, internetName);
 				//	
 				//	String pubInternetName = entry.getValue();
-				//	CoreServiceSettings dss = new CoreServiceSettings(wta.getSettingsManager(), CoreManifest.ID, domainId);
+				//	CoreServiceSettings dss = new CoreServiceSettings(getWebTopApp().getSettingsManager(), CoreManifest.ID, domainId);
 				//	URI publicUri = URIUtils.createURIQuietly(dss.getPublicBaseUrl());
 				//	if (publicUri != null && !StringUtils.isBlank(publicUri.getHost())) {
 				//		pubInternetName = publicUri.getHost();
@@ -5105,11 +5205,11 @@ public final class WebTopManager {
 	
 	/*
     private void createCyrusUser(String login,String domainId) throws WTCyrusException {
-		String host=wta.getSettingsManager().getServiceSetting(domainId, "com.sonicle.webtop.mail", BaseServiceSettings.DEFAULT_PREFIX+"host");
-		int port=Integer.parseInt(wta.getSettingsManager().getServiceSetting(domainId, "com.sonicle.webtop.mail", BaseServiceSettings.DEFAULT_PREFIX+"port"));
-		String protocol=wta.getSettingsManager().getServiceSetting(domainId, "com.sonicle.webtop.mail", BaseServiceSettings.DEFAULT_PREFIX+"protocol");
-		String adminuser=wta.getSettingsManager().getServiceSetting(domainId, "com.sonicle.webtop.mail", "admin.user");
-		String adminpass=wta.getSettingsManager().getServiceSetting(domainId, "com.sonicle.webtop.mail", "admin.password");
+		String host=getWebTopApp().getSettingsManager().getServiceSetting(domainId, "com.sonicle.webtop.mail", BaseServiceSettings.DEFAULT_PREFIX+"host");
+		int port=Integer.parseInt(getWebTopApp().getSettingsManager().getServiceSetting(domainId, "com.sonicle.webtop.mail", BaseServiceSettings.DEFAULT_PREFIX+"port"));
+		String protocol=getWebTopApp().getSettingsManager().getServiceSetting(domainId, "com.sonicle.webtop.mail", BaseServiceSettings.DEFAULT_PREFIX+"protocol");
+		String adminuser=getWebTopApp().getSettingsManager().getServiceSetting(domainId, "com.sonicle.webtop.mail", "admin.user");
+		String adminpass=getWebTopApp().getSettingsManager().getServiceSetting(domainId, "com.sonicle.webtop.mail", "admin.password");
 		Store s=getCyrusStore(host,port,protocol,adminuser,adminpass);
 		createCyrusMailbox(login, s);
 		setCyrusAcl(login, login, s);
@@ -5118,7 +5218,7 @@ public final class WebTopManager {
     }
     
     private Store getCyrusStore(String host,int port,String protocol,String user,String psw) throws WTCyrusException {
-        Properties props = new Properties(wta.getProperties());
+        Properties props = new Properties(getWebTopApp().getProperties());
 		props.setProperty("mail.store.protocol", protocol);
 		props.setProperty("mail.store.port", ""+port);
         Session session = Session.getInstance(props, null);
@@ -5203,7 +5303,7 @@ public final class WebTopManager {
 
 			try {
 				LOGGER.trace("[Subject Sid <-> Pid Cache] Loading all...");
-				con = wta.getConnectionManager().getConnection(CoreManifest.ID);
+				con = getConnection(true);
 				// Load data from users/resocurces/groups
 				List<OUser> ousers = useDao.selectAllAsSubjects(con);
 				for (OUser ouser : ousers) {
@@ -5368,7 +5468,7 @@ public final class WebTopManager {
 					SubjectSid value = null;
 
 					UserProfileId pid = new UserProfileId(k);
-					con = wta.getConnectionManager().getConnection(CoreManifest.ID);
+					con = getConnection(true);
 					// Load data from users/resocurces/groups
 					OUser ouser = useDao.selectAsSubjectByDomainId(con, pid.getDomainId(), pid.getUserId());
 					if (ouser != null) value = new SubjectSid(ouser);
@@ -5399,7 +5499,7 @@ public final class WebTopManager {
 					LOGGER.trace("[SubjectSidToPidCache] Loading... [{}]", k);
 					SubjectPid value = null;
 
-					con = wta.getConnectionManager().getConnection(CoreManifest.ID);
+					con = getConnection(true);
 					// Load data from users/resocurces/groups
 					OUser ouser = useDao.selectAsSubjectBySidEnabled(con, k, EnabledCond.ANY_STATE);
 					if (ouser != null) value = new SubjectPid(ouser);

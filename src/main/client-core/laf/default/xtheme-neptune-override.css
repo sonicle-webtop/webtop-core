@@ -1,0 +1,16 @@
+/**************************************/
+/* Fixes/Tweaks for specific original theme
+/* (should not include theme dependent styles, colors, ecc)
+/**************************************/
+
+/* Panel: disable theme's rbl border that causes ugly borders */
+.x-panel-default-outer-border-rbl {
+    border-right-width: 0 !important;
+    border-bottom-width: 0 !important;
+    border-left-width: 0 !important;
+}
+.x-grid:not(.x-grid-header-hidden) .x-panel-default-outer-border-rbl {
+    border-right-width: 1px !important;
+    border-bottom-width: 1px !important;
+    border-left-width: 1px !important;
+}

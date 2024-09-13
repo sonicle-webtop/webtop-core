@@ -54,6 +54,7 @@ Ext.define('Sonicle.webtop.core.admin.view.Loggers', {
 			region: 'center',
 			xtype: 'grid',
 			reference: 'gp',
+			border: false,
 			store: {
 				autoLoad: true,
 				model: 'Sonicle.webtop.core.admin.model.GridLogger',

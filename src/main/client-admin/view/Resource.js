@@ -105,10 +105,12 @@ Ext.define('Sonicle.webtop.core.admin.view.Resource', {
 				{
 					region: 'north',
 					xtype: 'wtfieldspanel',
+					paddingTop: true,
+					paddingSides: true,
+					modelValidation: true,
 					defaults: {
 						labelWidth: 100
 					},
-					modelValidation: true,
 					items: [
 						{
 							xtype: 'textfield',
@@ -186,6 +188,8 @@ Ext.define('Sonicle.webtop.core.admin.view.Resource', {
 						{
 							region: 'north',
 							xtype: 'wtfieldspanel',
+							paddingTop: true,
+							paddingSides: true,
 							items: [
 								{
 									xtype: 'sotext',
@@ -213,10 +217,12 @@ Ext.define('Sonicle.webtop.core.admin.view.Resource', {
 				}, {
 					region: 'south',
 					xtype: 'wtfieldspanel',
+					paddingTop: true,
+					paddingSides: true,
+					modelValidation: true,
 					defaults: {
 						labelWidth: 100
 					},
-					modelValidation: true,
 					items: [
 						WTF.localCombo('id', 'name', {
 							xtype: 'socombo',

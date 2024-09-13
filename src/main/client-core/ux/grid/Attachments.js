@@ -36,11 +36,12 @@ Ext.define('Sonicle.webtop.core.ux.grid.Attachments', {
 	alias: 'widget.wtattachmentsgrid',
 	requires: [
 		'Sonicle.String',
-		'Sonicle.plugin.FileDrop',
+		'Sonicle.Utils',
+		'Sonicle.plugin.DropMask',
 		'Sonicle.grid.column.Bytes',
 		'Sonicle.grid.column.Icon',
 		'Sonicle.grid.column.Link',
-		'WTA.ux.grid.column.Action'
+		'Sonicle.grid.column.Action'
 	],
 	
 	cls: 'wt-attachmentsgrid',
@@ -150,11 +151,16 @@ Ext.define('Sonicle.webtop.core.ux.grid.Attachments', {
 		me.fileDropText = me.fileDropText || WT.res('sofiledrop.text');
 		
 		if (me.highlightDrop === true) {
-			me.plugins = me.plugins || [];
-			me.plugins.push({
-				ptype: 'sofiledrop',
-				text: me.fileDropText
-			});
+			me.plugins = Sonicle.Utils.mergePlugins(me.plugins, [
+				{
+					ptype: 'sodropmask',
+					text: me.fileDropText,
+					monitorExtDrag: false,
+					shouldSkipMasking: function(dragOp) {
+						return !Sonicle.plugin.DropMask.isBrowserFileDrag(dragOp);
+					}
+				}
+			]);
 		}
 		me.columns = me.createColumns();
 		me.bbar = me.createBBar();
@@ -193,7 +199,7 @@ Ext.define('Sonicle.webtop.core.ux.grid.Attachments', {
 			header: me.sizeText,
 			flex: 1
 		}, {
-			xtype: 'wtactioncolumn',
+			xtype: 'soactioncolumn',
 			items: [{
 				iconCls: 'fas fa-cloud-download-alt',
 				tooltip: WT.res('act-download.lbl'),

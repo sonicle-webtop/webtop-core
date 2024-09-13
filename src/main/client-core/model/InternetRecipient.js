@@ -42,13 +42,11 @@ Ext.define('Sonicle.webtop.core.model.InternetRecipient', {
 		'personal',
 		'address',
 		'recipientId',
-		WTF.calcField('description', 'string', ['personal', 'address'], function(v, rec) {
-			var p = rec.get("personal"),
-					a = rec.get("address");
-			return Ext.isEmpty(p) ? a : (p + " <" + a + ">");
+		WTF.calcField('description', 'string', ['personal', 'address'], function(v, rec, personal, address) {
+			return Ext.isEmpty(personal) ? address : (personal + ' <' + address + '>');
 		}),
-		WTF.calcField('sourceLabel', 'string', 'sourceName', function(v,rec) {
-			return '['+rec.get('sourceName')+']';
+		WTF.calcField('sourceLabel', 'string', 'sourceName', function(v, rec, source) {
+			return '[' + source + ']';
 		})
 	]
 });

@@ -68,6 +68,8 @@ Ext.define('Sonicle.webtop.core.admin.view.PecBridgeRelay', {
 			region: 'center',
 			xtype: 'wtfieldspanel',
 			reference: 'pnlmain',
+			paddingTop: true,
+			paddingSides: true,
 			modelValidation: true,
 			defaults: {
 				labelWidth: 120

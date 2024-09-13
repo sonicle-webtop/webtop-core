@@ -41,6 +41,7 @@ Ext.define('Sonicle.webtop.core.sdk.UserOptionsView', {
 		'WTA.mixin.HasModel'
 	],
 	requires: [
+		'Sonicle.form.Feedback',
 		'Sonicle.form.Spacer',
 		'Sonicle.form.field.Bytes',
 		'Sonicle.form.field.Icon',
@@ -62,6 +63,8 @@ Ext.define('Sonicle.webtop.core.sdk.UserOptionsView', {
 	
 	modelIdProperty: 'id',
 	viewModel: {},
+	
+	cls: 'wt-useroptionsview',
 
 	/**
 	 * @property {String} ID
@@ -149,5 +152,20 @@ Ext.define('Sonicle.webtop.core.sdk.UserOptionsView', {
 	_extrField: function(bind) {
 		var valBind = Ext.isString(bind) ? bind : bind.value;
 		return valBind.substring(1, valBind.length-1).replace(this.getModelProperty()+'.', '');
+	},
+	
+	privates: {
+		createGridCfg: function(cfg) {
+			return cfg;
+		},
+		
+		createPermissionFeedbackCfg: function(cfg) {
+			return Ext.apply({
+				xtype: 'soformfeedback',
+				title: WT.res('opts.warn.permission.tit'),
+				text: WT.res('opts.warn.permission.txt'),
+				width: '100%'
+			}, cfg);
+		}
 	}
 });

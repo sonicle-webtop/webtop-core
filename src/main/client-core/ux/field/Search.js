@@ -43,7 +43,8 @@ Ext.define('Sonicle.webtop.core.ux.field.Search', {
 		'Sonicle.webtop.core.ux.panel.CustomFieldsBase'
 	],
 	
-	width: 400,
+	width: 600,
+	cls: 'wt-searchfield',
 	
 	/**
 	 * @cfg {String[]} highlightKeywords
@@ -124,20 +125,6 @@ Ext.define('Sonicle.webtop.core.ux.field.Search', {
 		
 		if (suggest) {
 			Ext.apply(me, {
-				listConfig: Ext.apply(me.listConfig || {}, {
-					displayField: 'label',
-					getInnerTpl: function(displayField) {
-						return '{label}&nbsp;<span class="wt-text-smaller-20 wt-opacity-50">{preview}</span>';
-					},
-					enableButton: true,
-					getButtonTooltip: function() {
-						return WT.res('wtsearchfield.suggestion.entry.button.tip');
-					},
-					buttonHandler: function(s, e, rec) {
-						rec.drop();
-						rec.store.sync();
-					}
-				}),
 				store: {
 					autoLoad: true,
 					model: 'Sonicle.form.field.search.data.SuggestionModel',
@@ -168,7 +155,7 @@ Ext.define('Sonicle.webtop.core.ux.field.Search', {
 		});
 		
 		me.callParent(arguments);
-		me.listConfig.disableFocusSaving = true;
+		//me.listConfig.disableFocusSaving = true;
 		if (save) {
 			me.on('save', me.onSaveQuery, me);
 		}
@@ -180,6 +167,29 @@ Ext.define('Sonicle.webtop.core.ux.field.Search', {
 			me.un('save', me.onSaveQuery, me);
 		}
 		me.callParent();
+	},
+	
+	/**
+	 * Overrides original {@link Sonicle.form.field.Combo#initListConfig}:
+	 *  - override all listConfigs
+	 */
+	initListConfig: function() {
+		var me = this;
+		return Ext.apply(me.callParent() || {}, {
+			displayField: 'label',
+			getInnerTpl: function(displayField) {
+				return '{label}&nbsp;<span class="wt-text-smaller-20 wt-opacity-50">{preview}</span>';
+			},
+			enableButton: true,
+			disableFocusSaving: true,
+			getButtonTooltip: function() {
+				return WT.res('wtsearchfield.suggestion.entry.button.tip');
+			},
+			buttonHandler: function(s, e, rec) {
+				rec.drop();
+				rec.store.sync();
+			}
+		});
 	},
 	
 	/**

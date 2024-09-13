@@ -155,11 +155,19 @@ public class CoreServiceSettings extends BaseServiceSettings {
 	public String getSMTPHost() {
         return getString(SMTP_HOST, "localhost");
     }
+	
+	public boolean setSMTPHost(String host) {
+		return setString(SMTP_HOST, host);
+	}
     
     public int getSMTPPort() {
         return getInteger(SMTP_PORT, 25);
     }
 	
+	public boolean setSMTPPort(int port) {
+		return setInteger(SMTP_PORT, port);
+	}
+    
 	public boolean isSMTPStartTLS() {
 		return getBoolean(SMTP_STARTTLS, false);
 	}
@@ -168,6 +176,10 @@ public class CoreServiceSettings extends BaseServiceSettings {
 		return getBoolean(SMTP_AUTH, false);
 	}
 	
+	public boolean setSMTPAuthentication(boolean auth) {
+		return setBoolean(SMTP_AUTH, auth);
+	}
+    
 	public List<WebRTCIceServer> getWebRTCIceServers() {
 		return getObject(WEBRTC_ICE_SERVERS, new WebRTCIceServer.List(), WebRTCIceServer.List.class);
 	}
@@ -513,15 +525,15 @@ public class CoreServiceSettings extends BaseServiceSettings {
 		return value;
 	}
 	
-	public String getDefaultTheme() {
-		return getString(DEFAULT_PREFIX + THEME, "crisp");
-	}
-	
-	public String getDefaultLayout() {
+	public String getDefaultUILayout() {
 		return getString(DEFAULT_PREFIX + LAYOUT, "default");
 	}
 	
-	public String getDefaultLaf() {
+	public String getDefaultUITheme() {
+		return getString(DEFAULT_PREFIX + THEME, "crisp");
+	}
+	
+	public String getDefaultUILaf() {
 		return getString(DEFAULT_PREFIX + LAF, "default");
 	}
 	

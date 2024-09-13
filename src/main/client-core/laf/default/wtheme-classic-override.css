@@ -1,0 +1,17 @@
+/**************************************/
+/* Tweaks WebTop's components for specific theme (both classic and gray)
+/**************************************/
+
+/* Top-Right menu: adjust buttongroup items centering */
+.wt-menu-bgroup-body > .x-table-layout {
+	margin: auto;
+}
+
+/* ---------- WT Tool-Header wrap */
+.wt-tool-hd-wrap { padding: 4px; }
+
+/* ---------- TreePanel: treecolumn colorswatch */
+.wt-tree-colorswatch.x-tree-icon {
+    margin-top: -1px;
+    margin-right: 3px;
+}

@@ -1,0 +1,81 @@
+/**************************************/
+/* Tweaks WebTop's components for specific theme
+/**************************************/
+
+/* ---------- WT Navbar */
+/* flatten buttons */
+.wt-viewport-navbar .x-btn-default-toolbar-large {
+    border-color: #f0f5f9 !important;
+    background-color: #f0f5f9 !important;
+    background-image: none !important;
+}
+.wt-viewport-navbar .x-btn-default-toolbar-large.x-btn-over {
+	background-color: #e0ebf3 !important;
+}
+.wt-viewport-navbar .x-btn-default-toolbar-medium {
+    border-color: #f0f5f9 !important;
+    background-color: #f0f5f9 !important;
+    background-image: none !important;
+}
+.wt-viewport-navbar .x-btn-default-toolbar-medium.x-btn-over {
+	background-color: #e0ebf3 !important;
+}
+.wt-viewport-navbar .x-btn-default-toolbar-small {
+    border-color: #f0f5f9 !important;
+    background-color: #f0f5f9 !important;
+    background-image: none !important;
+}
+.wt-viewport-navbar .x-btn-default-toolbar-small.x-btn-over {
+	background-color: #e0ebf3 !important;
+}
+
+/* ---------- WT Tool-Header wrap */
+.wt-tool-hd-wrap { padding: 4px; }
+
+/* ---------- Toolbars (all) */
+/* flatten buttons */
+.x-btn-default-toolbar-small {
+	background-color: transparent;
+	border-color: transparent;
+	background-image: none;
+}
+.x-btn-default-toolbar-small.x-btn-over {
+	background-color: #e0ebf3 !important;
+	border-color: transparent;
+}
+/*.x-btn-default-toolbar-small.x-btn-pressed {
+	border-color: transparent !important;
+	background-color: #cfcfcf !important;
+}*/
+.x-btn-default-toolbar-medium {
+	background-color: transparent;
+	border-color: transparent;
+	background-image: none;
+}
+.x-btn-default-toolbar-medium.x-btn-over {
+	background-color: #e0ebf3 !important;
+	border-color: transparent;
+}
+/*.x-btn-default-toolbar-medium.x-btn-pressed {
+	border-color: transparent !important;
+	background-color: #cfcfcf !important;
+}*/
+.x-btn-default-toolbar-large {
+	background-color: transparent;
+	border-color: transparent;
+	background-image: none;
+}
+.x-btn-default-toolbar-large.x-btn-over {
+	background-color: #e0ebf3 !important;
+	border-color: transparent;
+}
+/*.x-btn-default-toolbar-large.x-btn-pressed {
+	border-color: transparent !important;
+	background-color: #cfcfcf !important;
+}*/
+
+/* ---------- TreePanel: treecolumn colorswatch */
+.wt-tree-colorswatch.x-tree-icon {
+    margin-top: -1px;
+    margin-right: 4px;
+}

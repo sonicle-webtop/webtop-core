@@ -33,7 +33,7 @@
  */
 package com.sonicle.webtop.core.app;
 
-import com.sonicle.commons.LangUtils;
+import com.sonicle.commons.web.json.MapItem;
 import com.sonicle.webtop.core.sdk.ServiceVersion;
 import com.sonicle.webtop.core.util.LoggerUtils;
 import java.io.IOException;
@@ -98,6 +98,10 @@ public abstract class AbstractServlet extends HttpServlet {
 		vars.put("serverInfo", StringUtils.defaultIfBlank(serverInfo, null));
 	}
 	
+	public static void fillCustomVars(MapItem vars, Map<String, String> propVars) {
+		vars.put("custom", propVars);
+	}
+	
 	public static void fillPageVars(Map vars, Locale locale, String baseUrl) {
 		fillPageVars(vars, locale, null, baseUrl);
 	}
@@ -110,6 +114,10 @@ public abstract class AbstractServlet extends HttpServlet {
 		vars.put("coreVersion", version);		
 		vars.put("versionString", buildVersion(version));
 		vars.put("baseUrl", baseUrl);
+		vars.put("coreResourcesCssUrl", "resources/com.sonicle.webtop.core/" + version.toString() + "/resources/css");
+		vars.put("coreResourcesFontsUrl", "resources/com.sonicle.webtop.core/" + version.toString() + "/resources/fonts");
+		vars.put("coreResourcesImagesUrl", "resources/com.sonicle.webtop.core/" + version.toString() + "/resources/images");
+		vars.put("coreResourcesVendorUrl", "resources/com.sonicle.webtop.core/0.0.0/resources/vendor");
 	}
 	
 	private static String buildVersion(ServiceVersion coreVersion) {

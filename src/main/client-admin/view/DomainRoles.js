@@ -69,6 +69,7 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainRoles', {
 			region: 'center',
 			xtype: 'grid',
 			reference: 'gp',
+			border: false,
 			store: {
 				autoLoad: true,
 				model: 'Sonicle.webtop.core.admin.model.GridRole',
@@ -103,17 +104,15 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainRoles', {
 					xtype: 'soactioncolumn',
 					items: [
 						{
-							iconCls: 'far fa-edit',
+							iconCls: 'wt-glyph-edit',
 							tooltip: WT.res('act-edit.lbl'),
-							handler: function(g, ridx) {
-								var rec = g.getStore().getAt(ridx);
+							handler: function(view, ridx, cidx, itm, e, rec) {
 								me.editRoleUI(rec);
 							}
 						}, {
-							iconCls: 'far fa-trash-alt',
+							iconCls: 'wt-glyph-delete',
 							tooltip: WT.res('act-remove.lbl'),
-							handler: function(g, ridx) {
-								var rec = g.getStore().getAt(ridx);
+							handler: function(view, ridx, cidx, itm, e, rec) {
 								me.deleteRoleUI(rec);
 							}
 						}
@@ -123,7 +122,7 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainRoles', {
 			tbar: [
 				me.addAct('add', {
 					tooltip: null,
-					iconCls: null,
+					iconCls: 'wt-icon-add',
 					handler: function() {
 						me.addRoleUI();
 					}
@@ -229,8 +228,8 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainRoles', {
 
 		deleteRoleUI: function(rec) {
 			var me = this;
-			WT.confirm(me.res('domainRoles.confirm.delete', rec.get('roleId')), function(bid) {
-				if (bid === 'yes') {
+			WT.confirmDelete(me.res('domainRoles.confirm.delete', rec.get('roleId')), function(bid) {
+				if (bid === 'ok') {
 					me.wait();
 					me.deleteRole(me.domainId, rec.getId(), {
 						callback: function(success, data, json) {

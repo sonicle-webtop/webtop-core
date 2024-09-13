@@ -45,10 +45,12 @@ Ext.define('Sonicle.webtop.core.view.ChangePassword', {
 		title: '{changePassword.tit@com.sonicle.webtop.core}',
 		iconCls: 'wt-icon-changePassword',
 		width: 340,
-		height: 165,
+		height: 300,
 		modal: true,
 		minimizable: false
 	},
+	labelAlign: 'top',
+	labelStyle: 'font-weight: 500',
 	promptConfirm: false,
 	
 	showOldPassword: false,
@@ -61,12 +63,14 @@ Ext.define('Sonicle.webtop.core.view.ChangePassword', {
 		Ext.apply(me, {
 			buttons: [
 				{
-					text: WT.res('act-ok.lbl'),
-					handler: me.onOkClick,
+					text: WT.res('act-cancel.lbl'),
+					ui: '{tertiary}',
+					handler: me.onCancelClick,
 					scope: me
 				}, {
-					text: WT.res('act-cancel.lbl'),
-					handler: me.onCancelClick,
+					text: WT.res('act-save.lbl'),
+					ui: '{primary}',
+					handler: me.onSaveClick,
 					scope: me
 				}
 			]
@@ -75,11 +79,14 @@ Ext.define('Sonicle.webtop.core.view.ChangePassword', {
 		
 		me.add({
 			region: 'center',
-			xtype: 'wtform',
+			xtype: 'wtfieldspanel',
 			defaults: {
 				labelWidth: 120,
-				labelAlign: 'right'
+				labelAlign: me.labelAlign,
+				labelStyle: me.labelStyle
 			},
+			paddingTop: true,
+			paddingSides: true,
 			items: [
 				{
 					xtype: 'sopasswordfield',
@@ -110,7 +117,7 @@ Ext.define('Sonicle.webtop.core.view.ChangePassword', {
 					plugins: 'sonoautocomplete',
 					eye: false,
 					hideEmptyLabel: false,
-					emptyText: WT.res('changePassword.fld-newPassword2.emp'),
+					fieldLabel: WT.res('changePassword.fld-newPassword2.lbl'),
 					anchor: '100%',
 					validator: function(v) {
 						return me.lref('fldnewpassword').getValue() === v ? true : WT.res('changePassword.error.confirmNoMatch');
@@ -130,7 +137,7 @@ Ext.define('Sonicle.webtop.core.view.ChangePassword', {
 		}
 	},
 	
-	onOkClick: function() {
+	onSaveClick: function() {
 		var me = this,
 				op = me.lref('fldoldpassword'),
 				np = me.lref('fldnewpassword');

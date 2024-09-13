@@ -65,6 +65,8 @@ public class JsGridDomainLicense {
 	public Boolean autoLease;
 	public Integer maxLease;
 	public Integer leasesCount;
+	public Boolean quantityTypeUsers;
+	public String quantityType;
 	public ArrayList<Lease> leases;
 	
 	public JsGridDomainLicense(String domainId, ServiceLicense license, DateTimeZone profileTz) {
@@ -73,6 +75,7 @@ public class JsGridDomainLicense {
 		serviceId = license.getOwningServiceId();
 		productCode = license.getProductCode();
 		productName = license.getProductCode();
+		BaseServiceProduct bsp = ProductRegistry.getInstance().getServiceProduct(productCode, domainId);
 		ProductRegistry.ProductEntry pe = ProductRegistry.getInstance().getProduct(productCode);
 		if (pe != null) productName = pe.getName();
 		
@@ -88,6 +91,8 @@ public class JsGridDomainLicense {
 		
 		LocalDate expiryDate = license.getExpirationDate();
 		if (expiryDate != null) expiry = DateTimeUtils.createYmdFormatter(profileTz).print(expiryDate);
+		quantityTypeUsers = bsp.isLicenseQuantityTypeUsers();
+		quantityType = bsp.getLicenseQuantityType();
 		if (license.getQuantity() != null) maxLease = license.getQuantity();
 		
 		autoLease = license.getAutoLease();

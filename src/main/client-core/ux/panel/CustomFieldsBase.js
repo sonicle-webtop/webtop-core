@@ -33,6 +33,9 @@
 Ext.define('Sonicle.webtop.core.ux.panel.CustomFieldsBase', {
 	extend: 'WTA.ux.panel.Panel',
 	requires: [
+		'Sonicle.Object',
+		'Sonicle.String',
+		'Sonicle.form.field.Tag',
 		'Sonicle.webtop.core.ux.data.CustomFieldValueModel'
 	],
 	uses: [
@@ -175,6 +178,10 @@ Ext.define('Sonicle.webtop.core.ux.panel.CustomFieldsBase', {
 		*/
 	},
 	
+	/**
+	 * Gets the container component.
+	 * @return {Ext.Component}
+	 */
 	getFieldsContainer: function() {
 		return this.getComponent(0);
 	},

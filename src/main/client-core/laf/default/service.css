@@ -1,4 +1,5 @@
-@import url("service-utils.css");
+@import url("wtheme-base.css");
+@import url("wtheme-macros.css");
 
 /*
 	The purpose of this CSS file is to contain all platform 
@@ -10,30 +11,36 @@
 	crisp.css or override-crisp-touch.css).
 */
 
-/* SERVICE ICONS */
-.wt-icon-service-xs { background-image: url('service_16.png') !important; }
-.wt-icon-service-s { background-image: url('service_24.png') !important; }
-.wt-icon-service-m { background-image: url('service_32.png') !important; }
-.wt-icon-service-l { background-image: url('service_48.png') !important; }
-.wt-icon-portal-xs { background-image: url('home_16.svg') !important; background-size: contain; }
-.wt-icon-portal-s { background-image: url('home_16.svg') !important; background-size: contain; }
-.wt-icon-portal-m { background-image: url('home_32.svg') !important; background-size: contain; }
-.wt-icon-portal-l { background-image: url('home_32.svg') !important; background-size: contain; }
-
-/*
-.wt-icon-empty { background-image: url('empty.png') !important;}
-.wt-icon-empty-xs { width: 16px; height: 16px; background-image: url('empty.png') !important;}
-.wt-icon-empty-s { width: 24px; height: 24px; background-image: url('empty.png') !important;}
-.wt-icon-empty-m { width: 32px; height: 32px; background-image: url('empty.png') !important;}
-.wt-icon-empty-l { width: 48px; height: 48px; background-image: url('empty.png') !important;}
-*/
-
+/* ---------- Icons (service) */
+.wt-icon-service,
+.wt-icon-service-sm { background-image: url('service@sm.svg') !important; background-size: contain; }
+.wt-icon-service-off-sm { background-image: url('service@sm.svg') !important; background-size: contain; }
+.wt-icon-service-md { background-image: url('service@md.svg') !important; background-size: contain; }
+.wt-icon-service-off-md { background-image: url('service@md.svg') !important; background-size: contain; }
+.wt-icon-service-lg { background-image: url('service@lg.svg') !important; background-size: contain; }
+.wt-icon-service-off-lg { background-image: url('service@lg.svg') !important; background-size: contain; }
+.wt-icon-portal,
+.wt-icon-portal-sm { background-image: url('portal@sm.svg') !important; background-size: contain; }
+.wt-icon-portal-off-sm { background-image: url('portal@sm.svg') !important; background-size: contain; }
+.wt-icon-portal-md { background-image: url('portal@md.svg') !important; background-size: contain; }
+.wt-icon-portal-off-md { background-image: url('portal@md.svg') !important; background-size: contain; }
+.wt-icon-portal-lg { background-image: url('portal@lg.svg') !important; background-size: contain; }
+.wt-icon-portal-off-lg { background-image: url('portal@lg.svg') !important; background-size: contain; }
+.wt-icon-navMoreLinks,
+.wt-icon-navMoreLinks-sm { background-image: url('navMoreLinks@sm.svg') !important; background-size: contain; }
+.wt-icon-navMoreLinks-off-sm { background-image: url('navMoreLinks@sm.svg') !important; background-size: contain; }
+.wt-icon-navMoreLinks-md { background-image: url('navMoreLinks@md.svg') !important; background-size: contain; }
+.wt-icon-navMoreLinks-off-md { background-image: url('navMoreLinks@md.svg') !important; background-size: contain; }
+.wt-icon-navMoreLinks-lg { background-image: url('navMoreLinks@lg.svg') !important; background-size: contain; }
+.wt-icon-navMoreLinks-off-lg { background-image: url('navMoreLinks@lg.svg') !important; background-size: contain; }
+/* ---------- Icons (others) */
 .wt-icon-feedback { background-image: url('feedback_16.svg') !important; background-size: contain; }
 .wt-icon-whatsnew { background-image: url('whatsnew_16.svg') !important; background-size: contain; }
 .wt-icon-addons { background-image: url('addons_16.svg') !important; background-size: contain; }
 .wt-icon-changePassword { background-image: url('password_16.svg') !important; background-size: contain; }
 .wt-icon-options { background-image: url('options_16.svg') !important; background-size: contain; }
 .wt-icon-reminder { background-image: url('reminder_16.svg') !important; background-size: contain; }
+.wt-icon-reminder-ignore { background-image: none !important; background-size: contain; }
 .wt-icon-activity { background-image: url('activity_16.svg') !important; background-size: contain; }
 .wt-icon-causal { background-image: url('causal_16.svg') !important; background-size: contain; }
 .wt-icon-sharing { background-image: url('sharing_16.svg') !important; background-size: contain; }
@@ -55,10 +62,6 @@
 .wt-icon-im-pstatus-offline { background-image: url('im-pstatus-offline_16.svg') !important; background-size: contain; }
 .wt-icon-audio-call { background-image: url('audio-call_16.svg') !important; background-size: contain; }
 .wt-icon-video-call { background-image: url('video-call_16.svg') !important; background-size: contain; }
-.wt-icon-sort { background-image: url('sort_16.svg') !important; background-size: contain; }
-.wt-icon-tag { background-image: url('tag_16.svg') !important; background-size: contain; }
-.wt-icon-addTag { background-image: url('tag-add_16.svg') !important; background-size: contain; }
-
 .wt-icon-customPanel { background-image: url('custompanel_16.svg') !important; background-size: contain; }
 .wt-icon-customField { background-image: url('customfield_16.svg') !important; background-size: contain; }
 .wt-icon-customField-text { background-image: url('customfield-text_16.svg') !important; background-size: contain; }
@@ -77,48 +80,37 @@
 .wt-icon-customField-contactpicker-add { background-image: url('customfield-contactpicker-add_16.svg') !important; background-size: contain; }
 .wt-icon-sqlQueryEditor { background-image: url('sqlQueryEditor_16.svg') !important; background-size: contain; }
 .wt-icon-meeting { background-image: url('meeting_16.svg') !important; background-size: contain; }
-.wt-icon-newMeeting { background-image: url('meeting-new_16.svg') !important; background-size: contain; }
-
 .wt-icon-aclSubject-user { background-image: url('user_16.svg') !important; background-size: contain; }
 .wt-icon-aclSubject-resource { background-image: url('resource_16.svg') !important; background-size: contain; }
 .wt-icon-aclSubject-group { background-image: url('group_16.svg') !important; background-size: contain; }
 .wt-icon-aclSubject-role { background-image: url('role_16.svg') !important; background-size: contain; }
-
 .wt-icon-resources { background-image: url('resource_16.svg') !important; background-size: contain; }
 .wt-icon-resource { background-image: url('resource_16.svg') !important; background-size: contain; }
 .wt-icon-resource-room { background-image: url('resource-room_16.svg') !important; background-size: contain; }
 .wt-icon-resource-equipment { background-image: url('resource-room_16.svg') !important; background-size: contain; }
-
-.wt-menu-userdetails-main {
-	padding: 5px 0 0 5px;
-	font-weight: bold;
-	white-space: nowrap;
-	overflow: hidden;
-	text-overflow: ellipsis;
-}
-.wt-menu-userdetails-sub {
-	padding: 0 0 0 10px;
-	color: #bdbdbd;
-	font-size: 90%;
-	white-space: nowrap;
-	overflow: hidden;
-	text-overflow: ellipsis;
-}
-.wt-menu-bgroup-body .x-table-layout {}
-.wt-menu-feedback { background-image: url('feedback_16.svg') !important; background-size: contain; width: 32px; }
-.wt-menu-whatsnew { background-image: url('whatsnew_16.svg') !important; background-size: contain; width: 32px; }
-.wt-menu-options { background-image: url('options_16.svg') !important; background-size: contain; width: 32px; }
-.wt-menu-addons { background-image: url('addons_16.svg') !important; background-size: contain; width: 32px; }
-.wt-menu-help { background-image: url('help_16.svg') !important; background-size: contain; width: 32px; }
-.wt-menu-tools { background-image: url('toolbox_16.svg') !important; background-size: contain; width: 32px; }
-.x-btn-over .wt-menu-logout { color: #ba000d; }
-
-/* Icons: actions */
+.wt-icon-tags { background-image: url('tags_16.svg') !important; background-size: contain; }
+.wt-icon-tag { background-image: url('tag_16.svg') !important; background-size: contain; }
+/* ---------- Icons (glyphs) */
+.wt-glyph-add:before { content: '\f055'; font: var(--fa-font-solid); }
+.wt-glyph-edit:before { content: '\f044'; font: var(--fa-font-solid); }
+.wt-glyph-delete:before { content: '\f1f8'; font: var(--fa-font-solid); }
+.wt-glyph-settings:before { content: '\f013'; font: var(--fa-font-solid); }
+.wt-glyph-earth:before { content: '\f57d'; font: var(--fa-font-solid); }
+.wt-glyph-clipboard-copy:before { content: '\f24d'; font: var(--fa-font-solid); }
+.wt-glyph-copy:before { content: '\f0c5'; font: var(--fa-font-solid); }
+.wt-glyph-paste:before { content: '\f0ea'; font: var(--fa-font-solid); }
+.wt-glyph-clone:before { content: '\f24d'; font: var(--fa-font-solid); }
+.wt-glyph-password:before { content: '\f084'; font: var(--fa-font-solid); }
+/* ---------- Icons (actions) */
 .wt-icon-add { background-image: url('act-add_16.svg') !important; background-size: contain; }
+.wt-icon-open { background-image: url('act-open_16.svg') !important; background-size: contain; }
 .wt-icon-edit { background-image: url('act-edit_16.svg') !important; background-size: contain; }
+.wt-icon-cancel { background-image: url('act-cancel_16.svg') !important; background-size: contain; }
 .wt-icon-trash { background-image: url('act-trash_16.svg') !important; background-size: contain; }
 .wt-icon-remove { background-image: url('act-remove_16.svg') !important; background-size: contain; }
 .wt-icon-delete { background-image: url('act-delete_16.svg') !important; background-size: contain; }
+.wt-icon-copy { background-image: url('act-copy_16.svg') !important; background-size: contain; }
+.wt-icon-move { background-image: url('act-move_16.svg') !important; background-size: contain; }
 .wt-icon-restore { background-image: url('act-restore_16.svg') !important; background-size: contain; }
 .wt-icon-refresh { background-image: url('act-refresh_16.svg') !important; background-size: contain; }
 .wt-icon-cleanup { background-image: url('act-cleanup_16.svg') !important; background-size: contain; }
@@ -146,17 +138,29 @@
 .wt-icon-item-disabled { background-image: url('item-disabled_16.svg') !important; background-size: contain; }
 .wt-icon-file-download { background-image: url('file-download_16.svg') !important; background-size: contain; }
 .wt-icon-file-upload { background-image: url('file-upload_16.svg') !important; background-size: contain; }
-
-/* Icons: statuses */
+.wt-icon-sort { background-image: url('sort_16.svg') !important; background-size: contain; }
+.wt-icon-customize { background-image: url('customize_16.svg') !important; background-size: contain; }
+.wt-icon-addTag { background-image: url('tag-add_16.svg') !important; background-size: contain; }
+.wt-icon-newMeeting { background-image: url('meeting-new_16.svg') !important; background-size: contain; }
+/* ---------- Icons (statuses) */
 .wt-icon-ok { background-image: url('ok_16.svg') !important; background-size: contain; }
 .wt-icon-okwarn { background-image: url('okwarn_16.svg') !important; background-size: contain; }
 .wt-icon-ok-yellow { background-image: url('ok-yellow_16.svg') !important; background-size: contain; }
-.wt-icon-cancel { background-image: url('cancel_16.svg') !important; background-size: contain; }
 .wt-icon-warn { background-image: url('warn_16.svg') !important; background-size: contain; }
 .wt-icon-warn-red { background-image: url('warn-red_16.svg') !important; background-size: contain; }
 .wt-icon-critical { background-image: url('critical_16.svg') !important; background-size: contain; }
-
-/* Icons: base items */
+.wt-icon-status-up-green { background-image: url('status-up-green_16.svg') !important; background-size: contain; }
+.wt-icon-status-up-blue { background-image: url('status-up-blue_16.svg') !important; background-size: contain; }
+.wt-icon-status-down-red { background-image: url('status-down-red_16.svg') !important; background-size: contain; }
+.wt-icon-status-down-gray { background-image: url('status-down-gray_16.svg') !important; background-size: contain; }
+.wt-icon-priority3-low { background-image: url('priority3-low_16.svg') !important; background-size: contain; }
+.wt-icon-priority3-normal { background-image: url('priority3-normal_16.svg') !important; background-size: contain; }
+.wt-icon-priority3-high { background-image: url('priority3-high_16.svg') !important; background-size: contain; }
+.wt-icon-priority4-low { background-image: url('priority4-low_16.svg') !important; background-size: contain; }
+.wt-icon-priority4-medium { background-image: url('priority4-medium_16.svg') !important; background-size: contain; }
+.wt-icon-priority4-high { background-image: url('priority4-high_16.svg') !important; background-size: contain; }
+.wt-icon-priority4-critical { background-image: url('priority4-critical_16.svg') !important; background-size: contain; }
+/* ---------- Icons (base items) */
 .wt-icon-platform-win { background-image: url('platform-win_16.svg') !important; background-size: contain; }
 .wt-icon-platform-mac { background-image: url('platform-mac_16.svg') !important; background-size: contain; }
 .wt-icon-search-adv { background-image: url('search-adv_16.svg') !important; background-size: contain; }
@@ -194,26 +198,12 @@
 .wt-icon-propView-sorted-gray { background-image: url('propview-sorted-grayed_16.svg') !important; background-size: contain; }
 .wt-icon-propView-hier { background-image: url('propview-hier_16.svg') !important; background-size: contain; }
 .wt-icon-propView-hier-gray { background-image: url('propview-hier-grayed_16.svg') !important; background-size: contain; }
-.wt-icon-status-up-green { background-image: url('status-up-green_16.svg') !important; background-size: contain; }
-.wt-icon-status-up-blue { background-image: url('status-up-blue_16.svg') !important; background-size: contain; }
-.wt-icon-status-down-red { background-image: url('status-down-red_16.svg') !important; background-size: contain; }
-.wt-icon-status-down-gray { background-image: url('status-down-gray_16.svg') !important; background-size: contain; }
-
 .wt-icon-browser-checkPermission { background-image: url('browser-checkperms_16.svg') !important; background-size: contain; }
 .wt-icon-emoji { background-image: url('emoji_16.svg') !important; background-size: contain; }
 .wt-icon-clipboard-paste { background-image: url('clipboard-paste_16.svg') !important; background-size: contain; }
 .wt-icon-viewOptions { background-image: url('viewOptions_16.svg') !important; background-size: contain; }
 .wt-icon-clearState { background-image: url('clear-state_16.svg') !important; background-size: contain; }
-
-.wt-icon-priority3-low { background-image: url('priority3-low_16.svg') !important; background-size: contain; }
-.wt-icon-priority3-normal { background-image: url('priority3-normal_16.svg') !important; background-size: contain; }
-.wt-icon-priority3-high { background-image: url('priority3-high_16.svg') !important; background-size: contain; }
-.wt-icon-priority4-low { background-image: url('priority4-low_16.svg') !important; background-size: contain; }
-.wt-icon-priority4-medium { background-image: url('priority4-medium_16.svg') !important; background-size: contain; }
-.wt-icon-priority4-high { background-image: url('priority4-high_16.svg') !important; background-size: contain; }
-.wt-icon-priority4-critical { background-image: url('priority4-critical_16.svg') !important; background-size: contain; }
-
-/* Icons: HTMLEditor */
+/* ---------- Icons (HTMLEditor) */
 .wt-icon-htmled-forecolor { background-image: url('htmleditor/color-fore_16.svg') !important; background-position: center top; background-size: auto; }
 .wt-icon-htmled-backcolor { background-image: url('htmleditor/color-back_16.svg') !important; background-position: center top; background-size: auto; }
 .wt-icon-htmled-removeColor { background-image: url('htmleditor/color-remove_16.svg') !important; background-size: contain; }
@@ -256,8 +246,7 @@
 .wt-icon-htmled-uppercase { background-image: url('htmleditor/character-case_16.svg') !important; background-size: contain; }
 .wt-icon-htmled-sentencecase { background-image: url('htmleditor/character-case_16.svg') !important; background-size: contain; }
 .wt-icon-htmled-titlecase { background-image: url('htmleditor/character-case_16.svg') !important; background-size: contain; }
-
-/* Icons: file types */
+/* ---------- Icons (file types) */
 .wt-ftype-application { background-image: url('ftypes/application_16.svg') !important; background-size: contain; }
 .wt-ftype-application-script { background-image: url('ftypes/application-script_16.svg') !important; background-size: contain; }
 .wt-ftype-archive { background-image: url('ftypes/archive_16.svg') !important; background-size: contain; }
@@ -281,6 +270,23 @@
 .wt-ftype-text-html { background-image: url('ftypes/text-html_16.svg') !important; background-size: contain; }
 .wt-ftype-text-xml { background-image: url('ftypes/text-xml_16.svg') !important; background-size: contain; }
 .wt-ftype-video { background-image: url('ftypes/video_16.svg') !important; background-size: contain; }
+
+
+.wt-menu-userdetails-main {
+	padding: 5px 0 0 5px;
+	font-weight: bold;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+.wt-menu-userdetails-sub {
+	padding: 0 0 0 10px;
+	color: #bdbdbd;
+	font-size: 90%;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
 
 .wt-menuitem-dock-none-checked .x-menu-item-icon-default.x-menu-item-checkbox { background-image: url('dock-none_16.svg') !important; background-size: contain; }
 .wt-menuitem-dock-none-unchecked .x-menu-item-icon-default.x-menu-item-checkbox { background-image: url('dock-none-grayed_16.svg') !important; background-size: contain; }
@@ -340,64 +346,6 @@
 .wt-source {
 	font-size: 0.8em;
 	opacity: 0.4;
-}
-
-/* ----- ExtJs: treecolumn toggle checkbox ----- */
-.wt-tree-toggle {
-    background-image: none !important;
-	font-family: 'Font Awesome 5 Free' !important;
-	font-weight: 900 !important;
-	cursor: pointer;
-}
-.wt-tree-toggle.x-tree-checkbox:before {
-	content: '\f204';
-	color: #B4B4B5;
-}
-.wt-tree-toggle.x-tree-checkbox-checked:before {
-	content: '\f205';
-	color: #4EA17E;
-}
-/* ----- ExtJs: treecolumn colorsquare ----- */
-.wt-tree-colorsquare.x-tree-checkbox {
-    border: 2px solid;
-	border-radius: 2px;
-	background-image: none !important;
-	background-repeat: no-repeat;
-	background-size: 11px auto;
-	background-position: center;
-	background-color: #FFFFFF;
-	color: #FFFFFF;
-    cursor: pointer;
-}
-.wt-tree-colorsquare.wt-tree-colorsquare-framed {
-    border: 1px solid #A8A8A8;
-}
-.wt-tree-colorsquare-framed.x-tree-checkbox-checked:after {
-    top: 1px;
-    left: 1px;
-}
-.wt-tree-colorsquare-default.x-tree-checkbox-checked:after {
-    top: 0px;
-    left: 0px;
-}
-.wt-tree-colorsquare.x-tree-checkbox:before {
-    content: '';
-}
-.wt-tree-colorsquare.x-tree-checkbox-checked {
-    font-family: 'Font Awesome 5 Free' !important;
-    font-weight: 900 !important;
-}
-.wt-tree-colorsquare-lightmark.x-tree-checkbox-checked:after {
-    content: '\f00c';
-	position: absolute;
-	color: #F6F7FB;
-	font-size: 0.8em;
-}
-.wt-tree-colorsquare-darkmark.x-tree-checkbox-checked:after {
-    content: '\f00c';
-	position: absolute;
-	color: #616161;
-	font-size: 0.8em;
 }
 
 .wt-header { /* Override this in service-{theme}.css file */ }
@@ -477,18 +425,6 @@ div.wt-wnlist {
 	border-width: 0px !important;
 }
 
-/* --- UX grid.TileList --- */
-.wt-tilelist .x-grid-cell-first {
-	cursor: pointer;
-	padding: 5px 0 5px 0px;
-}
-.wt-tilelist .x-grid-cell-last {
-	vertical-align: middle;
-}
-.wt-tilelist .wt-cell-caption {
-	font-size: 0.9em;
-}
-/* ------------------------ */
 
 /* UX grid.column.ChatMessage */
 .wt-chatmsgcol-sysmsg {
@@ -682,4 +618,68 @@ div.wt-wnlist {
 
 .left-dock-icons {    
 	background-size: contain;
+}
+
+/* ---------- Ext.tree.Panel */
+/* Support toggle checkbox style */
+.wt-tree-toggle {
+    background-image: none !important;
+	font-family: 'Font Awesome 6 Free' !important;
+	font-weight: 900 !important;
+	cursor: pointer;
+}
+.wt-tree-toggle.x-tree-checkbox:before {
+	content: '\f204';
+	color: #B4B4B5;
+}
+.wt-tree-toggle.x-tree-checkbox-checked:before {
+	content: '\f205';
+	color: #4EA17E;
+}
+/* Support treecolumn colorswatch style */
+.wt-tree-colorswatch {
+    border-width: 2px;
+    border-style: solid;
+    background-image: none !important;
+	background-repeat: no-repeat;
+	background-size: 11px auto;
+	background-position: center;
+    width: 16px;
+    height: 16px;
+}
+.wt-tree-colorswatch.x-tree-checkbox {
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-content: center;
+    justify-content: center;
+    cursor: pointer;
+}
+.wt-tree-colorswatch.x-tree-checkbox:before {
+    content: '';
+}
+.wt-tree-colorswatch.x-tree-checkbox-checked {
+    font-family: 'Font Awesome 6 Free' !important;
+    font-weight: 900 !important;
+}
+.wt-tree-colorswatch.x-tree-icon:before {
+    content: '';
+}
+.wt-tree-colorswatch.x-tree-checkbox-checked:after {
+    content: '\f00c';
+}
+
+.so-fullcalendar-panel-toolbar-month span:nth-child(1) {
+    font-weight: var(--wt-theme-fontweight-medium);
+    font-size: var(--wt-theme-fontsize-xl);
+    line-height: var(--wt-theme-lineheight-xl);
+}
+.so-fullcalendar-panel-toolbar-month span:nth-child(2) {
+    font-weight: var(--wt-theme-fontweight-regular);
+    font-size: var(--wt-theme-fontsize-xl);
+    line-height: var(--wt-theme-lineheight-xl);
+}
+
+.wt-fieldspanel-body-padding-lr {
+	padding-left: 16px;
+    padding-right: 16px;
 }

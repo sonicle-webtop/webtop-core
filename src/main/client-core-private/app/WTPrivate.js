@@ -77,7 +77,7 @@ Ext.define('Sonicle.webtop.core.app.WTPrivate', {
 	],
 	*/
 	
-	paletteDefault: [ // 11 columns (from material colors 100 -> 900)
+	paletteDefault_oldmaterial: [ // 11 columns (from material colors 100 -> 900)
 		// Red | Pink | Purple | Indigo | Blue | Green | Light Green| Yellow | Orange | Brown | Grey (+ white)
 		// (each column dark->light bottom-up)
 		'FFCDD2', 'F8BBD0', 'E1BEE7', 'C5CAE9', 'BBDEFB', 'C8E6C9', 'DCEDC8', 'FFF9C4', 'FFE0B2', 'D7CCC8', 'FFFFFF'/*'F5F5F5'*/,
@@ -89,6 +89,20 @@ Ext.define('Sonicle.webtop.core.app.WTPrivate', {
 		'D32F2F', 'C2185B', '7B1FA2', '303F9F', '1976D2', '388E3C', '689F38', 'FBC02D', 'F57C00', '5D4037', '616161',
 		'C62828', 'AD1457', '6A1B9A', '283593', '1565C0', '2E7D32', '558B2F', 'F9A825', 'EF6C00', '4E342E', '424242',
 		'B71C1C', '880E4F', '4A148C', '1A237E', '0D47A1', '1B5E20', '33691E', 'F57F17', 'E65100', '3E2723', '212121'
+	],
+	
+	paletteDefault: [ // 11 columns (from tailwind colors 100 -> 900)
+		// Red | Pink | Purple | Blue | Cyan | Emerald | Lime| Yellow | Orange | Stone | Gray
+		// (each column dark->light bottom-up)
+		'FEE2E2', 'FCE7F3', 'F3E8FF', 'DBEAFE', 'CFFAFE', 'D1FAE5', 'ECFCCB', 'FEF3C7', 'FFEDD5', 'F5F5F4', 'F3F4F6',
+		'FECACA', 'FBCFE8', 'E9D5FF', 'BFDBFE', 'A5F3FC', 'A7F3D0', 'D9F99D', 'FDE68A', 'FED7AA', 'E5E7EB', 'E5E7EB',
+		'FCA5A5', 'F9A8D4', 'D8B4FE', '93C5FD', '67E8F9', '6EE7B7', 'BEF264', 'FCD34D', 'FDBA74', 'D6D3D1', 'D1D5DB',
+		'F87171', 'F472B6', 'C084FC', '60A5FA', '22D3EE', '34D399', 'A3E635', 'FBBF24', 'FB923C', 'A8A29E', '9CA3AF',
+		'EF4444', 'EC4899', 'A855F7', '3B82F6', '06B6D4', '10B981', '84CC16', 'F59E0B', 'F97316', '78716C', '6B7280',
+		'DC2626', 'DB2777', '9333EA', '2563EB', '0891B2', '059669', '65A30D', 'D97706', 'EA580C', '57534E', '4B5563',
+		'B91C1C', 'BE185D', '7E22CE', '1D4ED8', '0E7490', '047857', '4D7C0F', 'B45309', 'C2410C', '44403C', '374151',
+		'991B1B', '9D174D', '6B21A8', '1E40AF', '155E75', '065F46', '3F6212', '92400E', '9A3412', '292524', '1F2937',
+		'7F1D1D', '831843', '581C87', '1E3A8A', '164E63', '064E3B', '365314', '78350F', '7C2D12', '1C1917', '111827'
 	],
 	
 	paletteLight: [ // 11 columns (from material colors 50, 100, 200)
@@ -137,6 +151,14 @@ Ext.define('Sonicle.webtop.core.app.WTPrivate', {
 		window.location = 'logout';
 	},
 	
+	/**
+	 * Retrieves some useful properties/metrics of current layout.
+	 * @returns {Object}
+	 */
+	getViewportProperties: function() {
+		return this.getApp().viewport.getProperties();
+	},
+
 	/**
 	 * Activates (switch focus) the specified service.
 	 * @param {String} sid The service ID.
@@ -277,7 +299,7 @@ Ext.define('Sonicle.webtop.core.app.WTPrivate', {
 	createView: function(sid, name, opts) {
 		opts = opts || {};
 		var app = this.getApp(),
-				desc = app.getDescriptor(sid);
+			desc = app.getDescriptor(sid);
 		if (!desc) Ext.Error.raise('Service descriptor not found ['+sid+']');
 		return app.getViewportController().createServiceView(desc, name, opts);
 	},
@@ -290,9 +312,27 @@ Ext.define('Sonicle.webtop.core.app.WTPrivate', {
 	 */
 	getView: function(sid, tag) {
 		var app = this.getApp(),
-				desc = app.getDescriptor(sid);
+			desc = app.getDescriptor(sid);
 		if (!desc) Ext.Error.raise('Service descriptor not found ['+sid+']');
 		return app.getViewportController().getServiceView(desc, tag);
+	},
+	
+	/**
+	 * Calculates view's width scaling it according to configured scale factor.
+	 * @param {Number} width
+	 * @returns {Integer} The scaled width value
+	 */
+	calcViewWidth: function(width) {
+		return this.getApp().getViewportController().calcServiceViewWidth(width);
+	},
+	
+	/**
+	 * Calculates view's height scaling it according to configured scale factor.
+	 * @param {Number} height
+	 * @returns {Integer} The scaled height value
+	 */
+	calcViewHeight: function(height) {
+		return this.getApp().getViewportController().calcServiceViewHeight(height);
 	},
 	
 	/**
@@ -366,10 +406,9 @@ Ext.define('Sonicle.webtop.core.app.WTPrivate', {
 				};
 			}
 			
-			//ico = Ext.isIE ? 'wt.ico' : 'wt_32.png';
 			return DeskNotifMgr.notify(notification.title, {
 				tag: !Ext.isEmpty(notification.tag) ? notification.tag : Sonicle.UUID.v1(),
-				icon: WTF.globalImageUrl('wt.ico'),
+				icon: WTF.globalImageUrl('favicon.ico'),
 				body: notification.body || svc.getName(),
 				data: notification.data,
 				autoClose: opts.autoClose || 5000,
@@ -413,7 +452,7 @@ Ext.define('Sonicle.webtop.core.app.WTPrivate', {
 		return this.getApp().viewport.getController().showBadgeNotification(svc, {
 			tag: notification.tag,
 			serviceId: sid,
-			iconCls: Ext.isEmpty(notification.iconCls) ? svc.cssIconCls('service', 'm') : notification.iconCls,
+			iconCls: Ext.isEmpty(notification.iconCls) ? svc.cssIconCls('service', 'md') : notification.iconCls,
 			title: notification.title,
 			body: notification.body,
 			bodyIconCls: notification.bodyIconCls,
@@ -607,6 +646,25 @@ Ext.define('Sonicle.webtop.core.app.WTPrivate', {
 	},
 	
 	/**
+	 * 
+	 * @param {String} rruleText An RRule text with 
+	 * @returns {String}
+	 */
+	toHumanReadableRRule: function(rruleText) {
+		var s = '', rrule;
+		if (!Ext.isEmpty(rruleText)) {
+			if (!WT._nlpRRule) this._nlpRRule = this.initNLPRRule(WT.getLongDateFmt());
+			rrule = RRule.fromString(rruleText);
+			return WT.res(WT.ID, 'rrule.nlp.strings.repeats', Ext.Date.format(rrule.options.dtstart, WT.getShortDateFmt()), rrule.toText(
+				WT._nlpRRule.getText,
+				WT._nlpRRule.language,
+				WT._nlpRRule.dateFormat
+			));
+		}
+		return s;
+	},
+	
+	/**
 	 * Convenience function to start a new message using mail service, if present.
 	 * At the moment, WT will search for the mail service and start a new email.
 	 * @param {String/String[]} recipients A single or a list of recipients.
@@ -625,7 +683,7 @@ Ext.define('Sonicle.webtop.core.app.WTPrivate', {
 				rcpts.push({rtype: 'to', email: rcpt});
 			}
 		});
-		opts.recipients = rcpts;
+		opts.torecipients = rcpts;
 		if (!Ext.isEmpty(subject)) opts.subject = decodeURIComponent(subject);
 		if (!Ext.isEmpty(body)) {
 			opts.content = decodeURIComponent(body);

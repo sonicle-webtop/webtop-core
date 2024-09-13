@@ -50,6 +50,8 @@ Ext.define('Sonicle.webtop.core.admin.model.GridDomainLicenses', {
 		WTF.roField('hwId', 'string'),
 		WTF.roField('regTo', 'string'),
 		WTF.field('autoLease', 'boolean', false),
+		WTF.roField('quantityType', 'string'),
+		WTF.field('quantityTypeUsers', 'boolean', false),
 		WTF.field('leasesCount', 'int', false, {persist: false})
 	],
 	

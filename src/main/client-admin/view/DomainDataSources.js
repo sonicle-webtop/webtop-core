@@ -87,6 +87,7 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainDataSources', {
 			region: 'center',
 			xtype: 'grid',
 			reference: 'gp',
+			border: false,
 			store: {
 				autoLoad: true,
 				autoSync: true,
@@ -166,14 +167,14 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainDataSources', {
 								me.testDataSourceUI(rec);
 							}
 						}, {
-							iconCls: 'far fa-edit',
+							iconCls: 'fas fa-edit',
 							tooltip: WT.res('act-edit.lbl'),
 							handler: function(g, ridx) {
 								var rec = g.getStore().getAt(ridx);
 								me.editDataSourceUI(rec);
 							}
 						}, {
-							iconCls: 'far fa-trash-alt',
+							iconCls: 'fas fa-trash',
 							tooltip: WT.res('act-remove.lbl'),
 							handler: function(g, ridx) {
 								var rec = g.getStore().getAt(ridx);
@@ -213,17 +214,15 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainDataSources', {
 								xtype: 'soactioncolumn',
 								items: [
 									{
-										iconCls: 'far fa-edit',
+										iconCls: 'wt-glyph-edit',
 										tooltip: WT.res('act-edit.lbl'),
-										handler: function(g, ridx) {
-											var rec = g.getStore().getAt(ridx);
+										handler: function(view, ridx, cidx, itm, e, rec) {
 											me.editQueryUI(rec);
 										}
 									}, {
-										iconCls: 'far fa-trash-alt',
+										iconCls: 'wt-glyph-delete',
 										tooltip: WT.res('act-remove.lbl'),
-										handler: function(g, ridx) {
-											var rec = g.getStore().getAt(ridx);
+										handler: function(view, ridx, cidx, itm, e, rec) {
 											me.deleteQueryUI(rec);
 										}
 									}
@@ -241,7 +240,7 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainDataSources', {
 			tbar: [
 				me.addAct('addDataSource', {
 					tooltip: null,
-					iconCls: null,
+					iconCls: 'wt-icon-add',
 					handler: function() {
 						me.addDataSourceUI();
 					}
@@ -421,8 +420,8 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainDataSources', {
 		deleteDataSourceUI: function(rec) {
 			var me = this,
 				key = rec.areQueriesInUse() ? 'dataSource.confirm.delete.inuse' : 'dataSource.confirm.delete';
-			WT.confirm(me.res(key, rec.get('name')), function(bid) {
-				if (bid === 'yes') {
+			WT.confirmDelete(me.res(key, rec.get('name')), function(bid) {
+				if (bid === 'ok') {
 					me.lref('gp').getStore().remove(rec);
 				}
 			}, me);
@@ -471,8 +470,8 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainDataSources', {
 		deleteQueryUI: function(rec) {
 			var me = this,
 				key = rec.isInUse() ? 'dataSourceQuery.confirm.delete.inuse' : 'dataSourceQuery.confirm.delete';
-			WT.confirm(me.res(key, rec.get('name')), function(bid) {
-				if (bid === 'yes') {
+			WT.confirmDelete(me.res(key, rec.get('name')), function(bid) {
+				if (bid === 'ok') {
 					me.wait();
 					me.deleteDataSourceQuery(me.domainId, rec.getId(), {
 						callback: function(success, data, json) {

@@ -32,9 +32,6 @@
  */
 Ext.define('Sonicle.webtop.core.admin.view.LogViewer', {
 	extend: 'WTA.sdk.DockableView',
-	requires: [
-		'Sonicle.form.field.TextArea'
-	],
 	
 	dockableConfig: {
 		title: '{logViewer.tit}',
@@ -48,6 +45,7 @@ Ext.define('Sonicle.webtop.core.admin.view.LogViewer', {
 			tbar: [
 				me.addAct('download', {
 					text: me.mys.res('logViewer.act-download.lbl'),
+					tooltip: null,
 					iconCls: 'wt-icon-file-download',
 					handler: function() {
 						me.getLogContentUI(true);
@@ -110,7 +108,7 @@ Ext.define('Sonicle.webtop.core.admin.view.LogViewer', {
 			layout: 'fit',
 			items: [
 				{
-					xtype: 'sotextarea',
+					xtype: 'textarea',
 					reference: 'fldcontent',
 					editable: false,
 					fieldStyle: {

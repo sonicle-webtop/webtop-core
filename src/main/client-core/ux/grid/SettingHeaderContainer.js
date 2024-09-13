@@ -44,40 +44,55 @@ Ext.define('Sonicle.webtop.core.ux.grid.SettingHeaderContainer', {
 		me.store = sto;
 		me.callParent([{
 			isRootHeader: true,
-			items: [{
-				itemId: gp.groupField,
-				header: gp.groupText,
-				dataIndex: gp.groupField,
-				scope: me,
-				sortable: false,
-				menuDisabled: true,
-				flex: 1
-			}, {
-				itemId: gp.keyField,
-				header: gp.keyText,
-				dataIndex: gp.keyField,
-				editor: {
-					xtype: 'textfield',
-					selectOnFocus: true,
-					allowBlank: false
-				},
-				scope: me,
-				menuDisabled: true,
-				flex: 1
-			}, {
-				itemId: gp.valueField,
-				header: gp.valueText,
-				dataIndex: gp.valueField,
-				renderer: me.cellRenderer,
-				editor: {
-					xtype: 'textfield',
-					selectOnFocus: true
-				},
-				getEditor: me.getCellEditor.bind(me),
-				scope: me,
-				menuDisabled: true,
-				flex: 2
-			}]
+			items: [
+				{
+					itemId: gp.groupField,
+					header: gp.groupText,
+					dataIndex: gp.groupField,
+					scope: me,
+					sortable: false,
+					menuDisabled: true,
+					flex: 1
+				}, {
+					itemId: gp.keyField,
+					header: gp.keyText,
+					dataIndex: gp.keyField,
+					editor: {
+						xtype: 'textfield',
+						selectOnFocus: true,
+						allowBlank: false
+					},
+					scope: me,
+					menuDisabled: true,
+					flex: 1
+				}, {
+					itemId: gp.valueField,
+					header: gp.valueText,
+					dataIndex: gp.valueField,
+					renderer: me.cellRenderer,
+					editor: {
+						xtype: 'textfield',
+						selectOnFocus: true
+					},
+					getEditor: me.getCellEditor.bind(me),
+					scope: me,
+					menuDisabled: true,
+					flex: 2
+				}, {
+					xtype: 'soactioncolumn',
+					items: [
+						{
+							iconCls: 'wt-glyph-delete',
+							tooltip: gp.removeText,
+							handler: function(view, ridx, cidx, itm, e, rec) {
+								WT.confirmRemove(Ext.String.format(gp.confirmRemoveText, rec.get(gp.keyField)), function(bid) {
+									if (bid === 'ok') view.getStore().remove(rec);
+								}, me);
+							}
+						}
+					]
+				}
+			]
 		}]);
 		me.grid.keyColumn = me.items.getAt(1);
 		me.grid.valueColumn = me.items.getAt(2);
@@ -89,9 +104,9 @@ Ext.define('Sonicle.webtop.core.ux.grid.SettingHeaderContainer', {
 	
 	cellRenderer: function(val, meta, rec) {
 		var me = this,
-				grid = me.grid,
-				type = rec.get(grid.typeField),
-				result = val;
+			grid = me.grid,
+			type = rec.get(grid.typeField),
+			result = val;
 		
 		if(type === 'boolean') {
 			result = me.booleanRenderer(val);

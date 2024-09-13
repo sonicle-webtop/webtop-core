@@ -100,7 +100,7 @@ public abstract class BasePublicService extends AbstractEnvironmentService<Publi
 		ServletUtils.setHtmlContentType(response);
 		ServletUtils.setCacheControlPrivate(response);
 		
-		Template tpl = WT.loadTemplate(CoreManifest.ID, "tpl/page/public.html");
+		Template tpl = WT.loadTemplate(CoreManifest.ID, "page/public.html");
 		tpl.process(vars, response.getWriter());
 	}
 	

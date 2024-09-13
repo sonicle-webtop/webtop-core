@@ -57,6 +57,15 @@ Ext.define('Sonicle.webtop.core.mixin.ModelUtil', {
 	},
 	
 	/**
+	 * Checks if field's value is empty or not.
+	 * @param {String} field The name of the field to check
+	 * @returns {Boolean}
+	 */
+	isFieldEmpty: function(field) {
+		return Ext.isEmpty(this.get(field));
+	},
+	
+	/**
 	 * Sets the date part only into the specified field.
 	 * If null, the field will be initialized using the current date value, properly rounded if necessary.
 	 * Passed field name must refer to a date field.
@@ -64,15 +73,15 @@ Ext.define('Sonicle.webtop.core.mixin.ModelUtil', {
 	 * @param {Date} date The value from which copy the date part.
 	 * @param {Integer} [roundMinutes] Minutes interval to round to.
 	 * @param {String} [roundMethod=nearest] Round method.
+	 * @param {Object} [options] Options of {@link Ext.data.Model#set set method}
 	 * @returns {Date} The value set
 	 */
-	setDatePart: function(field, date, roundMinutes, roundMethod) {
+	setDatePart: function(field, date, roundMinutes, roundMethod, options) {
 		var me = this,
-				SoD = Sonicle.Date,
-				v = me.get(field) || new Date(), dt;
-				//v = me.get(field) || SoD.roundTime(new Date(), roundMinutes, roundMethod), dt;
+			SoD = Sonicle.Date,
+			v = me.get(field) || SoD.roundTime(new Date(), roundMinutes, roundMethod), dt;
 		dt = !Ext.isDate(date) ? null : SoD.copyDate(date, v);
-		me.set(field, dt);
+		me.set(field, dt, options);
 		return dt;
 	},
 	
@@ -82,13 +91,14 @@ Ext.define('Sonicle.webtop.core.mixin.ModelUtil', {
 	 * Passed field name must refer to a date field.
 	 * @param {String} field The name of the field to update
 	 * @param {Date} date The value from which copy the time part
+	 * @param {Object} [options] Options of {@link Ext.data.Model#set set method}
 	 * @returns {Date} The value set
 	 */
-	setTimePart: function(field, date) {
+	setTimePart: function(field, date, options) {
 		var me = this,
-				v = me.get(field) || new Date(), dt;
+			v = me.get(field) || new Date(), dt;
 		dt = !Ext.isDate(date) ? null : Sonicle.Date.copyTime(date, v);
-		me.set(field, dt);
+		me.set(field, dt, options);
 		return dt;
 	}
 });

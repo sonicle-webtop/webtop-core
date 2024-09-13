@@ -36,6 +36,48 @@ Ext.define('Sonicle.webtop.core.ux.panel.Fields', {
 	extend: 'WTA.ux.panel.Panel',
 	alias: ['widget.wtfieldspanel'],
 	
+	componentCls: 'wt-'+'fieldspanel',
 	layout: 'anchor',
-	bodyPadding: 5
+	
+	/**
+	 * @cfg {Boolean} paddingTop
+	 * Set to `true` to add top-padding CSS class to panel's body
+	 */
+	paddingTop: true, //FIXME: set to false when base themes consolidation is done (see override in neth-laf project)!
+	
+	/**
+	 * @cfg {Boolean} paddingBottom
+	 * Set to `true` to add bottom-padding CSS class to panel's body
+	 */
+	paddingBottom: true, //FIXME: set to false when base themes consolidation is done (see override in neth-laf project)!
+	
+	/**
+	 * @cfg {Boolean} paddingLR
+	 * Set to `true` to add left/right-padding CSS class to panel's body
+	 */
+	paddingSides: true, //FIXME: set to false when base themes consolidation is done (see override in neth-laf project)!
+	
+	autoPadding: 'trbl', //FIXME: set to false when base themes consolidation is done (see override in neth-laf project)!
+	
+	paddingTopCls: 'wt-'+'fieldspanel-body-padding-t',
+	paddingBottomCls: 'wt-'+'fieldspanel-body-padding-b',
+	paddingSidesCls: 'wt-'+'fieldspanel-body-padding-lr',
+	
+	initComponent: function() {
+		var me = this,
+			autoPadding = me.autoPadding,
+			ap;
+		
+		if (me.autoPadding === true) {
+			ap = 'trbl';
+		} else if (me.autoPadding === false) {
+			ap = '';
+		} else {
+			ap = Sonicle.String.deflt(autoPadding, '');
+		}
+		if (me.paddingTop === true) me.addBodyCls(me.paddingTopCls);
+		if (me.paddingBottom === true) me.addBodyCls(me.paddingBottomCls);
+		if (me.paddingSides === true) me.addBodyCls(me.paddingSidesCls);
+		me.callParent(arguments);
+	}
 });

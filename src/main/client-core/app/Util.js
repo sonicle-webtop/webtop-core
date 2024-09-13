@@ -246,25 +246,24 @@ Ext.define('Sonicle.webtop.core.app.Util', {
 	},
 	
 	/**
-	 * Applies provided formula definition to passed ViewModel.
-	 * @param {Ext.app.ViewModel} vm ViewModel instance.
-	 * @param {Object} formulas Formulas configuration
+	 * @deprecated use Sonicle.VMUtils.applyFormulas() instead
 	 */
 	applyFormulas: function(vm, formulas) {
-		vm.setFormulas(Ext.apply(vm.getFormulas() || {}, formulas));
+		Ext.log.warn('"WTU.applyFormulas" is deprecated. Use "Sonicle.VMUtils.applyFormulas" instead.');
+		Sonicle.VMUtils.applyFormulas(vm, formulas);
 	},
 	
+	/**
+	 * @deprecated use Sonicle.VMUtils.applyStores() instead
+	 */
 	applyStores: function(vm, stores) {
-		vm.setStores(Ext.apply(vm.getStores() || {}, stores));
+		Ext.log.warn('"WTU.applyStores" is deprecated. Use "Sonicle.VMUtils.applyStores" instead.');
+		Sonicle.VMUtils.applyStores(vm, stores);
 	},
 	
 	removeHeader: function(cmp) {
-		if(!cmp.isPanel) return;
-		if(cmp.header && cmp.header.isHeader) {
-			cmp.header.destroy();
-		}
-		cmp.header = false;
-		cmp.updateHeader();
+		Ext.log.warn('"WTU.removeHeader" is deprecated. Use "Sonicle.Utils.removePanelHeader" instead.');
+		Sonicle.Utils.removePanelHeader(cmp);
 	},
 	
 	removeItems: function(cmp, startIndex) {
@@ -278,6 +277,9 @@ Ext.define('Sonicle.webtop.core.app.Util', {
 		});
 	},
 	
+	/**
+	 * @deprecated
+	 */
 	applyTbItems: function(obj, dock, items, append) {
 		if(append === undefined) append = true;
 		var me = this,
@@ -412,6 +414,9 @@ Ext.define('Sonicle.webtop.core.app.Util', {
 		if(fld) fld.focus();
 	},
 	
+	/**
+	 * @deprecated
+	 */
 	_dockToProp: function(dock) {
 		if(dock === 'top') return 'tbar';
 		if(dock === 'bottom') return 'fbar';

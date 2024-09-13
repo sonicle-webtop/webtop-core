@@ -45,7 +45,7 @@ Ext.define('Sonicle.webtop.core.app.AppPrivate', {
 		'Sonicle.webtop.core.sdk.Service'
 	],
 	views: [
-		Ext.String.format('WTA.view.main.{0}', WTS.layoutClassName)
+		Ext.String.format('WTA.viewport.private.{0}', WTS.layoutClassName)
 	],
 	refs: {
 		viewport: 'viewport'
@@ -137,6 +137,9 @@ Ext.define('Sonicle.webtop.core.app.AppPrivate', {
 				if (!me.miniMode) {
 					var svc = desc.getInstance();
 					vpc.addServiceButton(desc);
+					//TODO: [new UI] evaluate to add service here to avoid lookupReference unconsistencies (components were actually added only at activation time)
+					//FIXME: [new UI] enabling this will cause mail-service error on layout...why?
+					vpc.addService(desc.getInstance());
 					// Collect newActions (if any)
 					if (svc.hasNewActions()) XArr.push(newActs, svc.getNewActions());
 					//if (svc.hasNewActions()) vpc.addNewActions(svc.getNewActions());

@@ -147,6 +147,33 @@ Ext.define('Sonicle.webtop.core.Service', {
 			}
 		});
 		
+		me.onPushMessage('showUITryMeBanner', function(msg) {
+			var pl = msg.payload;
+			Sonicle.Announcement.urge({
+				type: 'info',
+				message: me.res('info.uitryme'),
+				buttons: Sonicle.AnnouncementBar.YESNO,
+				buttonText: {
+					yes: me.res('info.uitryme.yes'),
+					no: me.res('info.uitryme.no')
+				},
+				callback: function(bid) {
+					if (bid === 'yes' || bid === 'no') {
+						WT.ajaxReq(me.ID, "DisableUITryMeBanner", {
+							callback: function(success, json) {
+								if (success) {
+									if (bid === 'no') {
+										me.getVPController().showOptions();
+									}
+								}
+								WT.handleError(success, json);
+							}
+						});
+					}	
+				}
+			});
+		});
+		
 		me.onPushMessage('tagChanged', function(msg) {
 			//var pl = msg.payload;
 			me.tagsStore.reload();
@@ -300,7 +327,7 @@ Ext.define('Sonicle.webtop.core.Service', {
 			me.addAct('toolbox', 'manageTags', {
 				text: WT.res('act-manageTags.lbl'),
 				tooltip: WT.res('act-manageTags.tip'),
-				iconCls: 'wt-icon-tag',
+				iconCls: 'wt-icon-tags',
 				handler: function() {
 					me.showManageTagsUI();
 				}

@@ -1,0 +1,45 @@
+
+.wt-opacity-100 { opacity: 1 !important; }
+.wt-opacity-70 { opacity: 0.7 !important; }
+.wt-opacity-60 { opacity: 0.6 !important; }
+.wt-opacity-50 { opacity: 0.5 !important; }
+.wt-opacity-40 { opacity: 0.4 !important; }
+.wt-valign-middle { vertical-align: middle; }
+.wt-hidden { display: none; }
+.wt-pointer-default { cursor: default !important; }
+.wt-pointer-link { cursor: pointer !important; }
+.wt-selectable {
+    -webkit-user-select: text;
+    -moz-user-select: text;
+    -ms-user-select: text;
+    user-select: text;
+}
+.wt-text-italic, .wt-italic { font-style: italic; }
+.wt-text-underlined, .wt-underlined { text-decoration: underline; }
+.wt-text-striked, .wt-striked { text-decoration: line-through; }
+.wt-text-centered, .wt-centered { text-align: center; }
+.wt-text-smaller-10 { font-size: 0.9em; }
+.wt-text-smaller-20 { font-size: 0.8em; }
+.wt-text-bigger-10 { font-size: 1.1em; }
+.wt-text-bigger-20 { font-size: 1.2em; }
+.wt-text-ellipsis { text-overflow: ellipsis; overflow: hidden; white-space: nowrap; }
+.wt-text-regular { font-weight: var(--wt-theme-fontweight-regular, normal); }
+.wt-text-medium { font-weight: var(--wt-theme-fontweight-medium, medium); }
+.wt-text-bold, .wt-bold { font-weight: var(--wt-theme-fontweight-bold, bold); }
+.wt-text-base { font-size: var(--wt-theme-fontsize-base, inherit); line-height: var(--wt-theme-lineheight-base, inherit); }
+.wt-text-xs { font-size: var(--wt-theme-fontsize-xs, x-small); line-height: var(--wt-theme-lineheight-xs, inherit); }
+.wt-text-sm { font-size: var(--wt-theme-fontsize-sm, small); line-height: var(--wt-theme-lineheight-sm, inherit); }
+.wt-text-lg { font-size: var(--wt-theme-fontsize-lg, large); line-height: var(--wt-theme-lineheight-lg, inherit); }
+.wt-text-xl { font-size: var(--wt-theme-fontsize-xl, x-large); line-height: var(--wt-theme-lineheight-xl, inherit); }
+.wt-text-base-regular { font-size: var(--wt-theme-fontsize-base, inherit); line-height: var(--wt-theme-lineheight-base, inherit); font-weight: var(--wt-theme-fontweight-regular, normal); }
+.wt-text-xs-regular { font-size: var(--wt-theme-fontsize-xs, x-small); line-height: var(--wt-theme-lineheight-xs, inherit); font-weight: var(--wt-theme-fontweight-regular, normal); }
+.wt-text-sm-medium { font-size: var(--wt-theme-fontsize-sm, small); line-height: var(--wt-theme-lineheight-sm, inherit); font-weight: var(--wt-theme-fontweight-medium, medium); }
+
+/*
+ * By convention, FontAwesome CSS classes used as iconCls in objects are styled 
+ * as glyphs (lighter colored), like using ExtJS's glyph config. This is done in 
+ * ad-hoc override in "xtheme-override.css" that applies a new opacity for all 
+ * FontAwesome classes (fas, far).
+ * With this class we provide a way to reset opacity to its initial value.
+ */
+.wt-theme-glyph-reset { opacity: initial !important; }

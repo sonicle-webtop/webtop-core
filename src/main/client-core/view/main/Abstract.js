@@ -31,6 +31,9 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
+/**
+ * @deprecated see WTA.viewport.private package
+ */
 Ext.define('Sonicle.webtop.core.view.main.Abstract', {
 	alternateClassName: 'WTA.view.main.Abstract',
 	extend: 'Ext.container.Viewport',
@@ -211,7 +214,16 @@ Ext.define('Sonicle.webtop.core.view.main.Abstract', {
 	
 	getPortalButton: Ext.emptyFn,
 	
+	/**
+	 * @param {Sonicle.webtop.core.app.DescriptorBase} desc The service descriptor.
+	 * 
+	 */
 	addServiceButton: Ext.emptyFn,
+	
+	/**
+	 * @param {String} serviceId The service ID.
+	 */
+	getServiceButton: Ext.emptyFn,
 	
 	addLinkButton: Ext.emptyFn,
 	
@@ -264,7 +276,7 @@ Ext.define('Sonicle.webtop.core.view.main.Abstract', {
 				xtype: 'button',
 				reference: 'meetingbtn',
 				iconCls: 'wt-icon-meeting',
-				tooltip: WT.res('act-newMeeting.lbl'),
+				tooltip: WT.res('act-addNewMeeting.lbl'),
 				handler: function() {
 					var svc = WT.getApp().getService(WT.ID);
 					svc.showNewMeetingUI();
@@ -569,6 +581,8 @@ Ext.define('Sonicle.webtop.core.view.main.Abstract', {
 				stateId: WT.buildStateId('pnltool'),
 				border: false,
 				split: true,
+				hideCollapseTool: true,
+				header: false,
 				collapsible: true,
 				collapsed: WT.plTags.desktop ? false : true,
 				layout: 'card',
@@ -589,6 +603,7 @@ Ext.define('Sonicle.webtop.core.view.main.Abstract', {
 		return Ext.apply({
 			xclass: 'WTA.ux.app.launcher.PortalButton',
 			sid: WT.ID,
+			toggleGroup: this.launcherToggleGroup(),
 			handler: 'onPortalButtonClick'
 		}, cfg || {});
 	},
@@ -621,6 +636,10 @@ Ext.define('Sonicle.webtop.core.view.main.Abstract', {
 	},
 	
 	privates: {
+		launcherToggleGroup: function() {
+			return this.getId() + '-launcher';
+		},
+		
 		getToolbarHeight: function(scale) {
 			switch(scale) {
 				case 'large':

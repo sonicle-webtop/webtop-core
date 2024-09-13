@@ -88,6 +88,7 @@ Ext.define('Sonicle.webtop.core.admin.view.PecBridge', {
 				xtype: 'grid',
 				reference: 'gpfetchers',
 				title: me.mys.res('pecBridge.gpfetchers.tit'),
+				border: false,
 				store: {
 					autoLoad: true,
 					autoSync: true,
@@ -102,45 +103,64 @@ Ext.define('Sonicle.webtop.core.admin.view.PecBridge', {
 					}),
 					listeners: {
 						remove: function(s, recs) {
-							// Fix for updating selection
-							me.lref('gpfetchers').getSelectionModel().deselect(recs);
+							//resync message in meta data
+							s.load();
+						},
+						load: function(s, recs) {
+							var meta = s.getProxy().getReader().metaData;
+							if (meta && Ext.isDefined(meta.message)) me.fetchersMessageLabel.setText(meta.message);
 						}
 					}
 				},
 				viewConfig: {
 					getRowClass: function(rec) {
-						return rec.get('enabled') === false ? 'wt-text-striked wt-theme-text-error' : '';
+						var cls = rec.get('licensed') === false ? 'wt-text-italic wt-text-striked wt-theme-color-error' :
+							rec.get('enabled') === false ? 'wt-text-striked wt-theme-text-off' : '';
+						return cls;
 					}
 				},
-				columns: [{
-					xtype: 'rownumberer'
-				}, {
-					xtype: 'solookupcolumn',
-					dataIndex: 'forwardProfile',
-					store: me.lookupStore,
-					displayField: 'labelNameWithDN',
-					header: me.mys.res('pecBridge.gpfetchers.forwardProfile.lbl'),
-					flex: 1
-				}, {
-					dataIndex: 'forwardAddress',
-					header: me.mys.res('pecBridge.gpfetchers.forwardAddress.lbl'),
-					flex: 1
-				}, {
-					dataIndex: 'host',
-					header: me.mys.res('pecBridge.gpfetchers.host.lbl'),
-					flex: 1
-				},{
-					xtype: 'soiconcolumn',
-					dataIndex: 'authState',
-					getIconCls: function(v,rec) {
-						return 'wtadm-icon-pecBridge-authState-'+v;
-					},
-					getTip: function(v) {
-						return me.mys.res('pecBridge.authState.tip.'+v);
-					},
-					iconSize: WTU.imgSizeToPx('xs'),
-					width: 40
-				}],
+				columns: [
+					{
+						xtype: 'rownumberer'
+					}, {
+						xtype: 'solookupcolumn',
+						dataIndex: 'forwardProfile',
+						store: me.lookupStore,
+						displayField: 'labelNameWithDN',
+						header: me.mys.res('pecBridge.gpfetchers.forwardProfile.lbl'),
+						flex: 1
+					}, {
+						dataIndex: 'forwardAddress',
+						header: me.mys.res('pecBridge.gpfetchers.forwardAddress.lbl'),
+						flex: 1
+					}, {
+						dataIndex: 'host',
+						header: me.mys.res('pecBridge.gpfetchers.host.lbl'),
+						flex: 1
+					},{
+						xtype: 'soiconcolumn',
+						dataIndex: 'authState',
+						getIconCls: function(v,rec) {
+							return 'wtadm-icon-pecBridge-authState-'+v;
+						},
+						getTip: function(v) {
+							return me.mys.res('pecBridge.authState.tip.'+v);
+						},
+						iconSize: WTU.imgSizeToPx('xs'),
+						width: 40
+					}, {
+						xtype: 'soactioncolumn',
+						items: [
+							{
+								iconCls: 'wt-glyph-delete',
+								tooltip: WT.res('act-remove.lbl'),
+								handler: function(view, ridx, cidx, itm, e, rec) {
+									me.deleteFetcherUI(rec);
+								}
+							}
+						]
+					}
+				],
 				tbar: [
 					me.addAct('addFetcher', {
 						text: WT.res('act-add.lbl'),
@@ -150,15 +170,11 @@ Ext.define('Sonicle.webtop.core.admin.view.PecBridge', {
 							me.addFetcherUI();
 						}
 					}),
-					me.addAct('removeFetcher', {
-						text: WT.res('act-remove.lbl'),
-						tooltip: null,
-						iconCls: 'wt-icon-remove',
-						disabled: true,
-						handler: function() {
-							var rec = me.lref('gpfetchers').getSelection()[0];
-							if(rec) me.deleteFetcherUI(rec);
-						}
+					'->',
+					me.fetchersMessageLabel = Ext.create({
+						xtype: 'label',
+						text: '',
+						cls: 'wt-theme-color-error'
 					}),
 					'->',
 					me.addAct('refreshFetchers', {
@@ -180,6 +196,7 @@ Ext.define('Sonicle.webtop.core.admin.view.PecBridge', {
 				xtype: 'grid',
 				reference: 'gprelays',
 				title: me.mys.res('pecBridge.gprelays.tit'),
+				border: false,
 				store: {
 					autoLoad: true,
 					autoSync: true,
@@ -194,45 +211,64 @@ Ext.define('Sonicle.webtop.core.admin.view.PecBridge', {
 					}),
 					listeners: {
 						remove: function(s, recs) {
-							// Fix for updating selection
-							me.lref('gprelays').getSelectionModel().deselect(recs);
+							//resync message in meta data
+							s.load();
+						},
+						load: function(s, recs) {
+							var meta = s.getProxy().getReader().metaData;
+							if (meta && Ext.isDefined(meta.message)) me.relaysMessageLabel.setText(meta.message);
 						}
 					}
 				},
 				viewConfig: {
 					getRowClass: function(rec) {
-						return rec.get('enabled') === false ? 'wt-text-striked wt-theme-text-error' : '';
+						var cls = rec.get('licensed') === false ? 'wt-text-italic wt-text-striked wt-theme-color-error' :
+							rec.get('enabled') === false ? 'wt-text-striked wt-theme-text-off' : '';
+						return cls;
 					}
 				},
-				columns: [{
-					xtype: 'rownumberer'
-				}, {
-					xtype: 'solookupcolumn',
-					dataIndex: 'pecProfile',
-					store: me.lookupStore,
-					displayField: 'labelNameWithDN',
-					header: me.mys.res('pecBridge.gprelays.pecProfile.lbl'),
-					flex: 1
-				}, {
-					dataIndex: 'pecAddress',
-					header: me.mys.res('pecBridge.gprelays.pecAddress.lbl'),
-					flex: 1
-				}, {
-					dataIndex: 'host',
-					header: me.mys.res('pecBridge.gprelays.host.lbl'),
-					flex: 1
-				},{
-					xtype: 'soiconcolumn',
-					dataIndex: 'authState',
-					getIconCls: function(v,rec) {
-						return 'wtadm-icon-pecBridge-authState-'+v;
-					},
-					getTip: function(v) {
-						return me.mys.res('pecBridge.authState.tip.'+v);
-					},
-					iconSize: WTU.imgSizeToPx('xs'),
-					width: 40
-				}],
+				columns: [
+					{
+						xtype: 'rownumberer'
+					}, {
+						xtype: 'solookupcolumn',
+						dataIndex: 'pecProfile',
+						store: me.lookupStore,
+						displayField: 'labelNameWithDN',
+						header: me.mys.res('pecBridge.gprelays.pecProfile.lbl'),
+						flex: 1
+					}, {
+						dataIndex: 'pecAddress',
+						header: me.mys.res('pecBridge.gprelays.pecAddress.lbl'),
+						flex: 1
+					}, {
+						dataIndex: 'host',
+						header: me.mys.res('pecBridge.gprelays.host.lbl'),
+						flex: 1
+					},{
+						xtype: 'soiconcolumn',
+						dataIndex: 'authState',
+						getIconCls: function(v,rec) {
+							return 'wtadm-icon-pecBridge-authState-'+v;
+						},
+						getTip: function(v) {
+							return me.mys.res('pecBridge.authState.tip.'+v);
+						},
+						iconSize: WTU.imgSizeToPx('xs'),
+						width: 40
+					}, {
+						xtype: 'soactioncolumn',
+						items: [
+							{
+								iconCls: 'wt-glyph-delete',
+								tooltip: WT.res('act-remove.lbl'),
+								handler: function(view, ridx, cidx, itm, e, rec) {
+									me.deleteRelayUI(rec);
+								}
+							}
+						]
+					}
+				],
 				tbar: [
 					me.addAct('addRelay', {
 						text: WT.res('act-add.lbl'),
@@ -242,15 +278,11 @@ Ext.define('Sonicle.webtop.core.admin.view.PecBridge', {
 							me.addRelayUI();
 						}
 					}),
-					me.addAct('removeRelay', {
-						text: WT.res('act-remove.lbl'),
-						tooltip: null,
-						iconCls: 'wt-icon-remove',
-						disabled: true,
-						handler: function() {
-							var rec = me.lref('gprelays').getSelection()[0];
-							if(rec) me.deleteRelayUI(rec);
-						}
+					'->',
+					me.relaysMessageLabel = Ext.create({
+						xtype: 'label',
+						text: '',
+						cls: 'wt-theme-color-error'
 					}),
 					'->',
 					me.addAct('refreshRelays', {
@@ -269,17 +301,6 @@ Ext.define('Sonicle.webtop.core.admin.view.PecBridge', {
 				},
 				flex: 1
 			}]
-		});
-		
-		me.getViewModel().bind({
-			bindTo: '{gpfetchers.selection}'
-		}, function(sel) {
-			me.getAct('removeFetcher').setDisabled((sel) ? false : true);
-		});
-		me.getViewModel().bind({
-			bindTo: '{gprelays.selection}'
-		}, function(sel) {
-			me.getAct('removeRelay').setDisabled((sel) ? false : true);
 		});
 	},
 	

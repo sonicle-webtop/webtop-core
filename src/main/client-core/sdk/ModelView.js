@@ -37,6 +37,9 @@ Ext.define('Sonicle.webtop.core.sdk.ModelView', {
 	mixins: [
 		'WTA.mixin.HasModel'
 	],
+	uses: [
+		'Sonicle.form.Separator'
+	],
 	
 	session: false,
 	
@@ -148,6 +151,9 @@ Ext.define('Sonicle.webtop.core.sdk.ModelView', {
 	 * @param {String} om The previous mode
 	 */
 	
+	topToolbarCls: 'wt-modelview-toolbar',
+	topToolbar1Cls: 'wt-modelview-toolbar wt-modelview-toolbar-first',
+	
 	viewModel: {
 		data: {
 			_fieldTitle: '',
@@ -181,48 +187,19 @@ Ext.define('Sonicle.webtop.core.sdk.ModelView', {
 	
 	initComponent: function() {
 		var me = this;
-		if(me.autoToolbar) me.initTBar();
+		if (me.autoToolbar) me.initTBar();
 		me.callParent(arguments);
 		//me.on('modelsave', me.onModelSave);
 		//me.on('modelload', me.onModelLoad);
 	},
 	
 	initTBar: function() {
-		var me = this, items = [];
+		var me = this,
+			SoU = Sonicle.Utils;
 		
-		me.addAct('saveClose', {
-			text: WT.res('act-saveClose.lbl'),
-			tooltip: null,
-			iconCls: 'wt-icon-saveClose',
-			handler: function() {
-				me.saveView(true);
-			}
-		});
-		
-		if(!me.showSave) {
-			items.push(me.getAct('saveClose'));
-		} else {
-			items.push({
-				xtype: 'splitbutton',
-				text: WT.res('act-saveClose.lbl'),
-				iconCls: 'wt-icon-saveClose',
-				menu: [
-					me.addAct('save', {
-						text: WT.res('act-save.lbl'),
-						tooltip: null,
-						iconCls: 'wt-icon-save',
-						handler: function() {
-							me.saveView(false);
-						}
-					}),
-					me.getAct('saveClose')
-				],
-				handler: function() {
-					me.getAct('saveClose').execute();
-				}
-			});
-		}
-		WTA.Util.applyTbItems(me, 'top', items, false);
+		me.dockedItems = SoU.mergeDockedItems(me.dockedItems, 'top', [
+			me.createTopToolbar1Cfg()
+		]);
 	},
 	
 	/**
@@ -441,6 +418,110 @@ Ext.define('Sonicle.webtop.core.sdk.ModelView', {
 				if (me.isMode(me.MODE_NEW)) doFocusIf(focusField, me.MODE_NEW);
 				if (me.isMode(me.MODE_EDIT)) doFocusIf(focusField, me.MODE_EDIT);
 			}
+		},
+		
+		onSaveCloseHandler: function(s, e) {
+			this.saveView(true);
+		},
+		
+		onSaveHandler: function(s, e) {
+			this.saveView(false);
+		},
+		
+		/**
+		 * Builds a suitable top-toolbar specifying a positioning type.
+		 */
+		createTopToolbarXCfg: function(items, type, cfg) {
+			var me = this,
+				cls = me.topToolbarCls,
+				tb;
+			
+			if (Ext.isArray(items) && !Ext.isEmpty(items)) {
+				if ('first' === type) cls += ' '+me.topToolbarCls+'-first';
+				if ('last' === type) cls += ' '+me.topToolbarCls+'-last';
+				tb = Ext.apply({
+					xtype: 'toolbar',
+					cls: cls,
+					items: items
+				}, cfg);
+			}
+			return tb;
+		},
+		
+		/**
+		 * Builds a suitable divider for top-toolbar.
+		 */
+		createTopToolbarsDividerCfg: function(cfg) {
+			return Ext.apply({
+				xtype: 'soformseparator',
+				cls: this.topToolbarCls+'-divider'
+			}, cfg);
+		},
+		
+		createTopToolbar1Cfg: function(moreItems) {
+			var me = this,
+				pbtnPos = WT.getViewportProperties().viewPrimaryButtonPosition,
+				pbtn = me.initPrimaryButton(),
+				items;
+
+			items = moreItems || [];
+			if (pbtnPos === 'tr') {
+				Ext.Array.push(items, ['->', pbtn]);
+			} else {
+				Ext.Array.insert(items, 0, [pbtn, '-']);
+			}
+			return me.createTopToolbarXCfg(items, 'first');
+		},
+		
+		initPrimaryButton: function() {
+			var me = this;
+			if (!me.showSave) {
+				return me.addAct('saveClose', me.createSaveCloseActionCfg());
+			} else {
+				return me.createPrimarySplitButtonCfg({
+					menu: [
+						me.addAct('save', me.createSaveActionCfg()),
+						me.addAct('saveClose', me.createSaveCloseActionCfg(true))
+					]
+				});
+			}
+		},
+		
+		createPrimarySplitButtonCfg: function(cfg) {
+			var me = this;
+			return Ext.apply({
+				xtype: 'splitbutton',
+				ui: '{primary}',
+				text: WT.res('act-save.lbl'),
+				tooltip: WT.res('act-saveClose.lbl'),
+				iconCls: 'wt-icon-saveClose',
+				handler: function() {
+					me.getAct('saveClose').execute();
+				}
+			}, cfg);
+		},
+		
+		createSaveCloseActionCfg: function(insideSplit, cfg) {
+			var me = this;
+			return Ext.apply({
+				ui: insideSplit ? '{fallback}' : '{primary}',
+				text: WT.res(insideSplit ? 'act-saveClose.lbl' : 'act-save.lbl'),
+				tooltip: insideSplit ? undefined : WT.res('act-saveClose.lbl'),
+				iconCls: 'wt-icon-saveClose',
+				handler: me.onSaveCloseHandler,
+				scope: me
+			}, cfg);
+		},
+		
+		createSaveActionCfg: function(cfg) {
+			var me = this;
+			return Ext.apply({
+				text: WT.res('act-save.lbl'),
+				tooltip: null,
+				iconCls: 'wt-icon-save',
+				handler: me.onSaveHandler,
+				scope: me
+			}, cfg);
 		}
 	}
 });

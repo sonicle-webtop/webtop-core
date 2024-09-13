@@ -41,6 +41,7 @@ Ext.define('Sonicle.webtop.core.ux.field.MeetingUrl', {
 		'Sonicle.URLMgr'
 	],
 	
+	componentCls: 'wt-'+'meetingurl-field',
 	hideEmptyLabel: false,
 	
 	linkText: 'This contains a meeting link.',

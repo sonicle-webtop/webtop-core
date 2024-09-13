@@ -41,6 +41,7 @@ Ext.define('Sonicle.webtop.core.sdk.Service', {
 		TOOLBAR_REF_NAME: 'tbcmp',
 		TOOL_REF_NAME: 'toolcmp',
 		MAIN_REF_NAME: 'maincmp',
+		REF_TOOLBOX_ITEMS: 'toolboxitems',
 		ACTION_GROUP_NEW: 'new',
 		ACTION_GROUP_TOOLBOX: 'toolbox',
 		PUSHMSG_PREFIX: 'pmsg-'
@@ -110,6 +111,27 @@ Ext.define('Sonicle.webtop.core.sdk.Service', {
 		return (r) ? (r[action] === true) : false;
 	},
 	
+	createServiceToolbar: Ext.emptyFn,
+	createServiceToolHeaderItems: Ext.emptyFn,
+	createServiceTool: Ext.emptyFn,
+	createServiceMain: Ext.emptyFn,
+	
+	getServiceToolbar: function() {
+		return this.getRef(WTA.sdk.Service.TOOLBAR_REF_NAME);
+	},
+	
+	getServiceTool: function() {
+		return this.getRef(WTA.sdk.Service.TOOL_REF_NAME);
+	},
+	
+	getServiceToolHeaderItem: function(itemId) {
+		console.log('getServiceToolHeaderItem');
+	},
+	
+	getServiceMain: function() {
+		return this.getRef(WTA.sdk.Service.MAIN_REF_NAME);
+	},
+	
 	/**
 	 * Returns the toolbar component associated to this service.
 	 * @return {Ext.Toolbar}
@@ -164,7 +186,7 @@ Ext.define('Sonicle.webtop.core.sdk.Service', {
 	 * Adds an action into 'new' group.
 	 * @param {String} name The action name.
 	 * @param {Object/Ext.Action} obj Action instance or config.
-	 * @return {WTA.ux.Action} The Action that were added.
+	 * @return {Ext.Action} The Action that were added.
 	 */
 	addNewAction: function(name, obj) {
 		return this.addAct(WTA.sdk.Service.ACTION_GROUP_NEW, name, obj);
@@ -186,6 +208,11 @@ Ext.define('Sonicle.webtop.core.sdk.Service', {
 	getNewActions: function() {
 		var acts = this.getActs(WTA.sdk.Service.ACTION_GROUP_NEW);
 		return (acts) ? Ext.Object.getValues(acts) : [];
+	},
+	
+	getToolboxItems: function() {
+		var items = this.get
+		
 	},
 	
 	/**

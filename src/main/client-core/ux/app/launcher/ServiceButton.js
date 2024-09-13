@@ -33,7 +33,7 @@
  */
 Ext.define('Sonicle.webtop.core.ux.app.launcher.ServiceButton', {
 	alternateClassName: 'WTA.ux.app.launcher.ServiceButton',
-	extend: 'Ext.button.Button',
+	extend: 'Sonicle.button.Toggle',
 	/*
 	requires: [
 		'Sonicle.plugin.BadgeText'
@@ -44,6 +44,7 @@ Ext.define('Sonicle.webtop.core.ux.app.launcher.ServiceButton', {
 	}],
 	*/
 	
+	componentCls: 'wt-launcher-servicebutton',
 	textAlign: 'left',
 	
 	config: {
@@ -56,22 +57,23 @@ Ext.define('Sonicle.webtop.core.ux.app.launcher.ServiceButton', {
 	 */
 	
 	constructor: function(cfg) {
-		var me = this, desc;
+		var me = this,
+			icfg = Sonicle.Utils.getConstructorConfigs(this, cfg, ['scale', 'iconName']),
+			desc;
 		if (Ext.isEmpty(cfg.sid)) Ext.raise('`sid` is mandatory');
 		desc = WT.getApp().getDescriptor(cfg.sid);
-		Ext.apply(cfg, me.buildButtonCfg(cfg, desc));
+		Ext.apply(cfg, me.buildButtonCfg(WT.getApp().getDescriptor(cfg.sid), icfg.scale, icfg.iconName));
 		me.callParent([cfg]);
 	},
 	
-	buildButtonCfg: function(cfg, desc) {
-		var me = this,
-				iconName = me.getInitialConfig('iconName'),
-				scale = cfg.scale || me.scale;
+	buildButtonCfg: function(desc, scale, iconName) {
+		var me = this;
 		return {
 			itemId: desc.getId(),
 			overflowText: desc.getName(),
 			tooltip: me.buildTooltip(desc),
-			iconCls: WTF.cssIconCls(desc.getXid(), iconName, me.getIconSize(scale))
+			onIconCls: WTF.cssIconCls(desc.getXid(), iconName, me.toIconSize(scale)),
+			offIconCls: WTF.cssIconCls(desc.getXid(), iconName + '-off', me.toIconSize(scale))
 		};
 	},
 	
@@ -90,10 +92,11 @@ Ext.define('Sonicle.webtop.core.ux.app.launcher.ServiceButton', {
 	},
 	
 	privates: {
-		getIconSize: function(scale) {
-			if (scale === 'large') return (WT.getLaf() === 'webtop2023') ? 's' : 'm';
-			if (scale === 'medium') return (WT.getLaf() === 'office2019') ? 'l' : 's';
-			return 'xs';
+		toIconSize: function(scale) {
+			var s = 'sm';
+			if (scale === 'medium') return 'md';
+			if (scale === 'large') return 'lg';
+			return s;
 		}
 	}
 });

@@ -9,20 +9,23 @@
         
         <title>${title}</title>
         <#if baseUrl??><base href="${baseUrl}" target="_blank"></#if>
-		<link rel="shortcut icon" type="image/x-icon" href="resources/com.sonicle.webtop.core/${coreVersion.toString()}/resources/images/wt.ico" />
+		<link rel="icon" type="image/svg+xml" href="${coreResourcesImagesUrl}/favicon.svg">
+        <link rel="icon" type="image/png" href="${coreResourcesImagesUrl}/favicon.png">
+        <!-- Fallback favicon in case a browser does not support the SVG version -->
+        <link rel="alternate icon" type="image/x-icon" href="${coreResourcesImagesUrl}/favicon.ico">
         
         <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
         <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
         <!--[if lt IE 9]>
-            <script src="resources/com.sonicle.webtop.core/0.0.0/resources/vendor/html5shiv/3.7.3/html5shiv.min.js"></script>
-            <script src="resources/com.sonicle.webtop.core/0.0.0/resources/vendor/respond/1.4.2/respond.min.js"></script>
+            <script src="${coreResourcesVendorUrl}/html5shiv/3.7.3/html5shiv.min.js"></script>
+            <script src="${coreResourcesVendorUrl}/respond/1.4.2/respond.min.js"></script>
         <![endif]-->
         
         <!--
-        <link rel="stylesheet" property="stylesheet" type="text/css" href="resources/com.sonicle.webtop.core/0.0.0/resources/vendor/fontawesome/5.6.3/css/regular.min.css" />
-        <link rel="stylesheet" property="stylesheet" type="text/css" href="resources/com.sonicle.webtop.core/0.0.0/resources/vendor/fontawesome/5.6.3/css/solid.min.css" />
-        <link rel="stylesheet" property="stylesheet" type="text/css" href="resources/com.sonicle.webtop.core/0.0.0/resources/vendor/fontawesome/5.6.3/css/brands.min.css" />
-        <link rel="stylesheet" property="stylesheet" type="text/css" href="resources/com.sonicle.webtop.core/0.0.0/resources/vendor/fontawesome/5.6.3/css/v4-shims.min.css" />
+        <link rel="stylesheet" property="stylesheet" type="text/css" href="${coreResourcesVendorUrl}/fontawesome/5.6.3/css/regular.min.css" />
+        <link rel="stylesheet" property="stylesheet" type="text/css" href="${coreResourcesVendorUrl}/fontawesome/5.6.3/css/solid.min.css" />
+        <link rel="stylesheet" property="stylesheet" type="text/css" href="${coreResourcesVendorUrl}/fontawesome/5.6.3/css/brands.min.css" />
+        <link rel="stylesheet" property="stylesheet" type="text/css" href="${coreResourcesVendorUrl}/fontawesome/5.6.3/css/v4-shims.min.css" />
         -->
     </head>
     <body>

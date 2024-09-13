@@ -1,3 +1,20 @@
+/**************************************/
+/* Fixes/Tweaks for specific original theme (both classic and gray)
+/* (should not include theme dependent styles, colors, ecc)
+/**************************************/
+
+/* Action column: set lighter base color and set darker color on hover */
+.x-action-col-icon {
+    color: #bababa; /* #666666 with alpha 0.45 */
+}
+.x-action-col-icon:hover {
+	color: #666666;
+}
+
+/* Button: set button glyph color ()missing in original css definitions) */
+.x-btn-icon-el {
+	color: #666666;
+}
 
 /* Tree: avoid icon fall to left side, due to missing left padding */
 .x-grid-cell-inner-treecolumn {

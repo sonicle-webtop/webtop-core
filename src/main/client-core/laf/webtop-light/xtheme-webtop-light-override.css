@@ -1,0 +1,64 @@
+/**************************************/
+/* Fixes/Tweaks for specific original theme
+/* (should not include theme dependent styles, colors, ecc)
+/**************************************/
+
+/* ---------- Font: import full Poppins family from Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900');
+
+/* ---------- Mask */
+body > .x-mask {
+    background-color: rgba(107, 114, 128, 0.75) /* Gray/500 @75% */
+}
+
+/* ---------- Ext.button.Button */
+/* Add default icon family to FA free */
+.x-btn-icon-el:empty { font-family: var(--fa-style-family-classic); }
+/* Fix arrow color not customizable via SenchaThemer */
+.x-btn-button-secondary-small .x-btn-arrow-right:after,
+.x-btn-button-secondary-medium .x-btn-arrow-right:after,
+.x-btn-button-secondary-large .x-btn-arrow-right:after {
+    color: var(--wt-theme-color-1);
+}
+
+/* ---------- Ext.button.Segmented */
+/* Customize segmented UI */
+.x-btn-button-segmented-small.x-btn-pressed .x-btn-inner,
+.x-btn-button-segmented-medium.x-btn-pressed .x-btn-inner,
+.x-btn-button-segmented-large.x-btn-pressed .x-btn-inner {
+    color: var(--wt-theme-color-1);
+}
+
+/* ---------- Ext.button.Split */
+/* Force icon color */
+.x-btn-wrap-button-secondary-small.x-btn-split:after,
+.x-btn-wrap-button-tertiary-small.x-btn-split:after { color: var(--wt-theme-color-1); }
+.x-btn-wrap-button-secondary-medium.x-btn-split:after,
+.x-btn-wrap-button-tertiary-medium.x-btn-split:after { color: var(--wt-theme-color-1); }
+.x-btn-wrap-button-secondary-large.x-btn-split:after,
+.x-btn-wrap-button-tertiary-large.x-btn-split:after { color: var(--wt-theme-color-1); }
+/* Fix separator color and height (default was a top-bottom line) */
+.x-btn-wrap-default-small.x-btn-split-right > .x-btn-button:after,
+.x-btn-wrap-default-medium.x-btn-split-right > .x-btn-button:after,
+.x-btn-wrap-default-large.x-btn-split-right > .x-btn-button:after {
+    height: 100%;
+    /*top: -5%; for original lineheight */
+    top: 0%;
+    border-color: var(--wt-theme-color-1-on);
+}
+.x-btn-wrap-button-secondary-small.x-btn-split-right > .x-btn-button:after,
+.x-btn-wrap-button-secondary-medium.x-btn-split-right > .x-btn-button:after,
+.x-btn-wrap-button-secondary-large.x-btn-split-right > .x-btn-button:after {
+    height: 100%;
+    /*top: -5%; for original lineheight */
+    top: 0%;
+    border-color: var(--wt-theme-color-1);
+}
+.x-btn-wrap-button-tertiary-small.x-btn-split-right > .x-btn-button:after,
+.x-btn-wrap-button-tertiary-medium.x-btn-split-right > .x-btn-button:after,
+.x-btn-wrap-button-tertiary-large.x-btn-split-right > .x-btn-button:after {
+    height: 100%;
+    /*top: -5%; for original lineheight */
+    top: 0%;
+    border-color: var(--wt-theme-color-1);
+}

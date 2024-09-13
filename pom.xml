@@ -703,6 +703,21 @@
 						</configuration>
 					</execution>
 					<execution>
+						<id>client-copy</id>
+						<phase>none</phase>
+						<goals>
+							<goal>copy-resources</goal>
+						</goals>
+						<configuration>
+							<outputDirectory>${project.build.outputDirectory}/client</outputDirectory>
+							<resources>
+								<resource>
+									<directory>src/main/client</directory>
+								</resource>
+							</resources>
+						</configuration>
+					</execution>
+					<execution>
 						<id>client-copy-resources</id>
 						<phase>none</phase>
 						<goals>
@@ -724,6 +739,23 @@
 				<artifactId>minify-maven-plugin</artifactId>
 				<version>${minify-maven-plugin.version}</version>
 				<executions>
+					<execution>
+						<id>client-minify-extjs</id>
+						<phase>none</phase>
+						<goals>
+							<goal>minify</goal>
+						</goals>
+						<configuration>
+							<jsEngine>YUI</jsEngine>
+							<suffix>-debug</suffix>
+							<skipMerge>true</skipMerge>
+							<jsSourceDir>client/extjs</jsSourceDir>
+							<jsTargetDir>client/extjs</jsTargetDir>
+							<jsSourceIncludes>
+								<jsSourceInclude>**/*.js</jsSourceInclude>
+							</jsSourceIncludes>
+						</configuration>
+					</execution>
 					<execution>
 						<id>client-minify-boot</id>
 						<phase>none</phase>
@@ -998,6 +1030,10 @@
 								<phase>process-resources</phase>
 							</execution>
 							<execution>
+								<id>client-copy</id>
+								<phase>process-resources</phase>
+							</execution>
+							<execution>
 								<id>client-copy-resources</id>
 								<phase>process-resources</phase>
 							</execution>
@@ -1008,6 +1044,10 @@
 						<artifactId>minify-maven-plugin</artifactId>
 						<version>${minify-maven-plugin.version}</version>
 						<executions>
+							<execution>
+								<id>client-minify-extjs</id>
+								<phase>process-resources</phase>
+							</execution>
 							<execution>
 								<id>client-minify-boot</id>
 								<phase>process-resources</phase>
@@ -1120,6 +1160,10 @@
 							</execution>
 							<execution>
 								<id>client-copy-admin-locale</id>
+								<phase>process-resources</phase>
+							</execution>
+							<execution>
+								<id>client-copy</id>
 								<phase>process-resources</phase>
 							</execution>
 							<execution>

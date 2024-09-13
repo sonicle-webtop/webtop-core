@@ -56,6 +56,11 @@ public final class MailBridgeProduct extends BaseServiceProduct {
 	}
 	
 	@Override
+	public String getLicenseQuantityType() {
+		return "accounts";
+	}
+	
+	@Override
 	public String getProductCode() {
 		return PRODUCT_ID;
 	}

@@ -54,7 +54,7 @@ Ext.define('Sonicle.webtop.core.sdk.BaseService', {
 	XID: null,
 	
 	/**
-	 * @property {WTA.sdk.model.ServiceVars} options
+	 * @property {WTA.sdk.model.ServiceVars} vars
 	 * A model representing service's options pushed at startup time.
 	 */
 	vars: null,

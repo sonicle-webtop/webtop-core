@@ -165,8 +165,20 @@ public final class UserProfile {
 		return WT.getUserData(getId()).getDisplayName();
 	}
 	
+	public String getProfileEmailAddress() {
+		return WT.getUserData(getId()).getProfileEmailAddress();
+	}
+	
+	/**
+	 * @deprecated use getPersonalEmailAddress instead
+	 */
+	@Deprecated
 	public String getEmailAddress() {
-		return WT.getUserData(getId()).getEmailAddress();
+		return this.getPersonalEmailAddress();
+	}
+	
+	public String getPersonalEmailAddress() {
+		return WT.getUserData(getId()).getPersonalEmailAddress();
 	}
 	
 	public String getFullEmailAddress() {

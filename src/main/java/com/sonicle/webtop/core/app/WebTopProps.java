@@ -32,6 +32,7 @@
  */
 package com.sonicle.webtop.core.app;
 
+import com.sonicle.commons.LangUtils;
 import com.sonicle.commons.PathUtils;
 import com.sonicle.commons.PropUtils;
 import com.sonicle.commons.web.ContextUtils;
@@ -39,7 +40,9 @@ import com.sonicle.security.PasswordUtils;
 import com.sonicle.webtop.core.app.util.LogbackHelper;
 import com.sonicle.webtop.core.util.ICalendarUtils;
 import java.io.File;
+import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 import org.apache.commons.lang3.StringUtils;
 
 /**
@@ -73,6 +76,23 @@ public class WebTopProps {
 	public static final String PROP_SESSION_FORCESECURECOOKIE = "webtop.session.forcesecurecookie";
 	public static final String PROP_PROVISIONING_API_TOKEN = "webtop.provisioning.api.token";
 	public static final String PROP_OPENAPI_SPEC_DISABLERESOURCE = "webtop.openapi.spec.disableresource";
+	public static final String PROP_LOGIN_TEMPLATE_VARS = "webtop.login.template.vars";
+	public static final String PROP_ADMIN_MODE_SINGLEDOMAIN = "webtop.admin.mode.singledomain";
+	public static final String PROP_ADMIN_LOGVIEWER_ENABLED = "webtop.admin.logviewer.enabled";
+	public static final String PROP_UI_LAYOUTS = "webtop.ui.layouts";
+	public static final String PROP_UI_LAYOUT_FORCED = "webtop.ui.layout.forced";
+	public static final String PROP_UI_PRESETS = "webtop.ui.presets";
+	public static final String PROP_UI_PRESETS_EXTRA = "webtop.ui.presets.extra";
+	public static final String PROP_UI_PRESET_FORCED = "webtop.ui.preset.forced";
+	public static final String PROP_UI_PRESET_TRYME = "webtop.ui.preset.tryme";
+	//public static final String PROP_UI_THEMES = "webtop.ui.themes";
+	//public static final String PROP_UI_LAFS = "webtop.ui.lafs";
+	public static final String PROP_MAILBRIDGE_SMTP_HOST = "webtop.mailbridge.smtp.host";
+	public static final String PROP_MAILBRIDGE_SMTP_PORT = "webtop.mailbridge.smtp.port";
+	public static final String PROP_MAILBRIDGE_SMTP_AUTH = "webtop.mailbridge.smtp.auth";
+	
+	public static final String PROP_MAILBRIDGE_MODE = "webtop.mailbridge.mode";
+	public static final String PROP_MAILBRIDGE_MODE_API = "api";
 	
 	public static void init() {
 		Properties systemProps = System.getProperties();
@@ -149,6 +169,16 @@ public class WebTopProps {
 		WebTopApp.logger.info("{} = {} [{}]", PROP_HOME, properties.getProperty(PROP_HOME), getHome(emptyProperties));
 		WebTopApp.logger.info("{} = {} [{}]", PROP_PROVISIONING_API_TOKEN, PasswordUtils.printRedacted(properties.getProperty(PROP_PROVISIONING_API_TOKEN)), PasswordUtils.printRedacted(getProvisioningApiToken(emptyProperties)));
 		WebTopApp.logger.info("{} = {} [{}]", PROP_OPENAPI_SPEC_DISABLERESOURCE, properties.getProperty(PROP_OPENAPI_SPEC_DISABLERESOURCE), getOpenApiSpecDisableResource(emptyProperties));
+		WebTopApp.logger.info("{} = {} [{}]", PROP_ADMIN_MODE_SINGLEDOMAIN, properties.getProperty(PROP_ADMIN_MODE_SINGLEDOMAIN), getAdminModeSingleDomain(emptyProperties));
+		WebTopApp.logger.info("{} = {} [{}]", PROP_ADMIN_LOGVIEWER_ENABLED, properties.getProperty(PROP_ADMIN_LOGVIEWER_ENABLED), getAdminLogViewerEnabled(emptyProperties));
+		WebTopApp.logger.info("{} = {} [{}]", PROP_UI_LAYOUTS, properties.getProperty(PROP_UI_LAYOUTS), null);
+		WebTopApp.logger.info("{} = {} [{}]", PROP_UI_LAYOUT_FORCED, properties.getProperty(PROP_UI_LAYOUT_FORCED), getUILayoutForced(emptyProperties));
+		WebTopApp.logger.info("{} = {} [{}]", PROP_UI_PRESETS, properties.getProperty(PROP_UI_PRESETS), null);
+		WebTopApp.logger.info("{} = {} [{}]", PROP_UI_PRESETS_EXTRA, properties.getProperty(PROP_UI_PRESETS_EXTRA), null);
+		WebTopApp.logger.info("{} = {} [{}]", PROP_UI_PRESET_FORCED, properties.getProperty(PROP_UI_PRESET_FORCED), getUIPresetForced(emptyProperties));
+		WebTopApp.logger.info("{} = {} [{}]", PROP_UI_PRESET_TRYME, properties.getProperty(PROP_UI_PRESET_TRYME), getUIPresetTryMe(emptyProperties));
+		//WebTopApp.logger.info("{} = {} [{}]", PROP_UI_THEMES, properties.getProperty(PROP_UI_THEMES), null);
+		//WebTopApp.logger.info("{} = {} [{}]", PROP_UI_LAFS, properties.getProperty(PROP_UI_LAFS), null);
 	}
 	
 	public static void checkOldPropsUsage(Properties properties) {
@@ -303,6 +333,72 @@ public class WebTopProps {
 	public static boolean getOpenApiSpecDisableResource(Properties props) {
 		return PropUtils.getBooleanProperty(props, PROP_OPENAPI_SPEC_DISABLERESOURCE, false);
 	}
+	
+	public static Map<String, String> getLoginTemplateCustomVars(Properties props) {
+		return LangUtils.parseStringAsKeyValueMap(PropUtils.getStringProperty(props, PROP_LOGIN_TEMPLATE_VARS, null), ":");
+	}
+	
+	public static boolean getAdminModeSingleDomain(Properties props) {
+		return PropUtils.getBooleanProperty(props, PROP_ADMIN_MODE_SINGLEDOMAIN, false);
+	}
+	
+	public static boolean getAdminLogViewerEnabled(Properties props) {
+		return PropUtils.getBooleanProperty(props, PROP_ADMIN_LOGVIEWER_ENABLED, true);
+	}
+	
+	public static Set<String> getUILayouts(Properties props) {
+		return LangUtils.parseStringAsSet(PropUtils.getStringProperty(props, PROP_UI_LAYOUTS, null));
+	}
+	
+	public static String getUILayoutForced(Properties props) {
+		return PropUtils.getStringProperty(props, PROP_UI_LAYOUT_FORCED, null);
+	}
+	
+	public static Map<String, String> getUIPresets(Properties props) {
+		return LangUtils.parseStringAsKeyValueMap(PropUtils.getStringProperty(props, PROP_UI_PRESETS, null), ":");
+	}
+	
+	public static Map<String, String> getUIPresetsExtra(Properties props) {
+		return LangUtils.parseStringAsKeyValueMap(PropUtils.getStringProperty(props, PROP_UI_PRESETS_EXTRA, null), ":");
+	}
+	
+	public static String getUIPresetForced(Properties props) {
+		return PropUtils.getStringProperty(props, PROP_UI_PRESET_FORCED, null);
+	}
+	
+	public static String getUIPresetTryMe(Properties props) {
+		return PropUtils.getStringProperty(props, PROP_UI_PRESET_TRYME, null);
+	}
+	
+	public static String getMailBridgeSMTPHost(Properties props) {
+		return PropUtils.getStringProperty(props, PROP_MAILBRIDGE_SMTP_HOST, null);
+	}
+	
+	public static int getMailBridgeSMTPPort(Properties props) {
+		return PropUtils.getIntProperty(props, PROP_MAILBRIDGE_SMTP_PORT, 25);
+	}
+
+	public static boolean getMailBridgeSMTPAuth(Properties props) {
+		return PropUtils.getBooleanProperty(props, PROP_MAILBRIDGE_SMTP_AUTH, false);
+	}
+
+	public static String getMailBridgeMode(Properties props) {
+		return PropUtils.getStringProperty(props, PROP_MAILBRIDGE_MODE, null);
+	}
+
+	public static boolean isMailBridgeModeApi(Properties props) {
+		return StringUtils.equals(PROP_MAILBRIDGE_MODE_API, getMailBridgeMode(props));
+	}
+	
+	/*
+	public static Map<String, String> getUIThemes(Properties props) {
+		return LangUtils.parseStringAsKeyValueMap(PropUtils.getStringProperty(props, PROP_UI_THEMES, null), ":");
+	}
+	
+	public static Map<String, String> getUILAFs(Properties props) {
+		return LangUtils.parseStringAsKeyValueMap(PropUtils.getStringProperty(props, PROP_UI_LAFS, null), ":");
+	}
+	*/
 	
 	private static void copyOldProp(Properties props, String oldKey, String newKey) {
 		PropUtils.copy(props, oldKey, props, newKey);

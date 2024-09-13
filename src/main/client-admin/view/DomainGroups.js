@@ -72,6 +72,7 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainGroups', {
 			region: 'center',
 			xtype: 'grid',
 			reference: 'gp',
+			border: false,
 			store: {
 				autoLoad: true,
 				model: 'Sonicle.webtop.core.admin.model.GridGroup',
@@ -106,14 +107,14 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainGroups', {
 					xtype: 'soactioncolumn',
 					items: [
 						{
-							iconCls: 'far fa-edit',
+							iconCls: 'wt-glyph-edit',
 							tooltip: WT.res('act-edit.lbl'),
 							handler: function(g, ridx) {
 								var rec = g.getStore().getAt(ridx);
 								me.editGroupUI(rec);
 							}
 						}, {
-							iconCls: 'far fa-trash-alt',
+							iconCls: 'wt-glyph-delete',
 							tooltip: WT.res('act-remove.lbl'),
 							handler: function(g, ridx) {
 								var rec = g.getStore().getAt(ridx);
@@ -126,7 +127,7 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainGroups', {
 			tbar: [
 				me.addAct('add', {
 					tooltip: null,
-					iconCls: null,
+					iconCls: 'wt-icon-add',
 					handler: function() {
 						me.addGroupUI();
 					}
@@ -232,8 +233,8 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainGroups', {
 
 		deleteGroupUI: function(rec) {
 			var me = this;
-			WT.confirm(me.res('domainGroups.confirm.delete', rec.get('groupId')), function(bid) {
-				if (bid === 'yes') {
+			WT.confirmDelete(me.res('domainGroups.confirm.delete', rec.get('groupId')), function(bid) {
+				if (bid === 'ok') {
 					me.wait();
 					me.deleteGroup(me.domainId, rec.getId(), {
 						callback: function(success, data, json) {

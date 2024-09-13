@@ -35,7 +35,7 @@ Ext.define('Sonicle.webtop.core.ux.IMBaseChat', {
 	extend: 'Ext.panel.Panel',
 	requires: [
 		'Sonicle.picker.Emoji',
-		'Sonicle.plugin.FileDrop',
+		'Sonicle.plugin.DropMask',
 		'Sonicle.upload.Button',
 		'WTA.ux.UploadBar',
 		'WTA.ux.grid.column.ChatMessage'
@@ -177,10 +177,16 @@ Ext.define('Sonicle.webtop.core.ux.IMBaseChat', {
 				dateFormat: WT.getShortDateFmt(),
 				flex: 1
 			}],
-			plugins: [{
-				ptype: 'sofiledrop',
-				text: WT.res('sofiledrop.text')
-			}]
+			plugins: [
+				{
+					ptype: 'sodropmask',
+					text: WT.res('sofiledrop.text'),
+					monitorExtDrag: false,
+					shouldSkipMasking: function(dragOp) {
+						return !Sonicle.plugin.DropMask.isBrowserFileDrag(dragOp);
+					}
+				}
+			]
 		};
 	},
 	
@@ -262,7 +268,7 @@ Ext.define('Sonicle.webtop.core.ux.IMBaseChat', {
 			xtype: 'button',
 			disabled: Ext.isEmpty(WT.getMeetingProvider()) || !WT.isPermitted(WT.ID, 'MEETING', 'CREATE'),
 			iconCls: 'wt-icon-newMeeting',
-			tooltip: WT.res('act-newMeeting.lbl'),
+			tooltip: WT.res('act-addNewMeeting.lbl'),
 			handler: function() {
 				me.wait();
 				me.getMeetingLink({

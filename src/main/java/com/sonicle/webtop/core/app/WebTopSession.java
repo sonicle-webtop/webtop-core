@@ -43,8 +43,11 @@ import com.sonicle.security.Principal;
 import com.sonicle.webtop.core.CoreLocaleKey;
 import com.sonicle.webtop.core.CoreManager;
 import com.sonicle.webtop.core.CoreServiceSettings;
+import com.sonicle.webtop.core.CoreSettings;
 import com.sonicle.webtop.core.CoreUserSettings;
 import com.sonicle.webtop.core.admin.CoreAdminManager;
+import com.sonicle.webtop.core.app.model.UIPreset;
+import com.sonicle.webtop.core.app.sdk.msg.UITryMeBannerSM;
 import com.sonicle.webtop.core.app.servlet.UIPrivate;
 import com.sonicle.webtop.core.bol.OAutosave;
 import com.sonicle.webtop.core.bol.js.JsWTS;
@@ -82,6 +85,7 @@ import java.util.Set;
 import jakarta.mail.Authenticator;
 import jakarta.mail.PasswordAuthentication;
 import java.io.IOException;
+import java.util.Collection;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 import net.sf.uadetector.ReadableDeviceCategory;
@@ -784,13 +788,139 @@ public class WebTopSession {
 		}
 	}
 	
+	/*
+	private class UIParams {
+		private final String theme;
+		private final String layout;
+		private final String lookAndFeel;
+		
+		public UIParams(final CoreUserSettings cus, final ReadableUserAgent readableUa) {
+			String stheme = cus.getTheme(), slayout = cus.getLayout(), slookAndFeel = cus.getLookAndFeel();
+			ReadableDeviceCategory.Category deviceCategory = ReadableDeviceCategory.Category.UNKNOWN;
+			if (readableUa != null) deviceCategory = readableUa.getDeviceCategory().getCategory();
+			
+			if (ReadableDeviceCategory.Category.SMARTPHONE.equals(deviceCategory) || ReadableDeviceCategory.Category.TABLET.equals(deviceCategory)) {
+				if (stheme.equals("crisp") || stheme.equals("neptune")) {
+					stheme += "-touch";
+				} else {
+					stheme = "crisp-touch";
+				}
+			}
+			
+			theme = stheme;
+			layout = slayout;
+			lookAndFeel = slookAndFeel;
+		}
+		
+		public String getTheme() {
+			return theme;
+		}
+		
+		public String getLayout() {
+			return layout;
+		}
+		
+		public String getLayoutClassName() {
+			return StringUtils.capitalize(layout);
+		}
+		
+		public String getLookAndFeel() {
+			return lookAndFeel;
+		}
+	}
+	*/
+	
+	/**
+	 * Computes UI Layout to be applied to a User session.
+	 * 1 - Gets saved layout in user-settings and any "forced" from props
+	 * 2 - Defines a candidate layout where the "forced" one take precedence against the saved one
+	 * 3 - Evaluates the obtained candidate against a list of valid layouts: if no-match found the first wins
+	 * 4 - Saves back to user-settings any layout value different from the initial one
+	 * 5 - return the result
+	 * @param userSettings
+	 * @return 
+	 */
+	public String applyRuntimeUILayout(final CoreUserSettings userSettings) {
+		String initialLayout = userSettings.getUILayout();
+		
+		try {
+			Set<String> validLayouts = wta.getWebTopManager().listUILayoutIds();
+			String candidate = StringUtils.defaultIfBlank(WebTopProps.getUILayoutForced(wta.getProperties()), initialLayout);
+			if (!validLayouts.isEmpty()) {
+				if (!validLayouts.contains(candidate)) candidate = validLayouts.iterator().next();
+			}
+			if (!StringUtils.equals(candidate, initialLayout)) {
+				userSettings.setUILayout(candidate);
+			}
+			return candidate;
+			
+		} catch (Exception ex) { /* Do nothing */ }
+		return initialLayout;
+	}
+	
+	public UIPreset applyRuntimeUIPreset(final CoreUserSettings userSettings) {
+		String initialTheme = userSettings.getUITheme();
+		String initialLookAndFeel = userSettings.getUILookAndFeel();
+		boolean trymeDisarmed = userSettings.getUITryMeDisarmed();
+		
+		try {
+			boolean trymeMode = false;
+			Map<String, UIPreset> validPresets = wta.getWebTopManager().listUIPresets();
+			UIPreset candidate = validPresets.get(WebTopProps.getUIPresetForced(wta.getProperties()));
+			if (candidate == null && !trymeDisarmed) {
+				UIPreset trymePreset = validPresets.get(WebTopProps.getUIPresetTryMe(wta.getProperties()));
+				if (trymePreset != null) {
+					trymeMode = true;
+					candidate = trymePreset;
+				}
+			}
+			if (candidate == null) candidate = findMatchingUIPreset(validPresets.values(), initialTheme, initialLookAndFeel);
+			if (candidate != null) {
+				if (!trymeMode || (trymeMode && !trymeDisarmed)) {
+					boolean overridden = false;
+					if (!StringUtils.equals(candidate.getTheme(), initialTheme)) {
+						overridden = true;
+						userSettings.setUITheme(candidate.getTheme());
+					}
+					if (!StringUtils.equals(candidate.getLookAndFeel(), initialLookAndFeel)) {
+						overridden = true;
+						userSettings.setUILookAndFeel(candidate.getLookAndFeel());
+					}
+					if (trymeMode && overridden) {
+						userSettings.setUITryMeDisarmed(true);
+						userSettings.setUITryMeBanner(new CoreSettings.TryMeBanner(candidate.getId(), candidate.getName(), candidate.getLookAndFeel(), initialTheme, initialLookAndFeel));
+					}
+				}
+				return candidate;
+			}
+			
+		} catch (Exception ex) { /* Do nothing */ }
+		return new UIPreset("null", "null", initialTheme, initialLookAndFeel);
+	}
+	
+	private UIPreset findMatchingUIPreset(final Collection<UIPreset> presets, final String theme, final String lookAndFeel) {
+		for (UIPreset preset : presets) {
+			if (StringUtils.equals(theme, preset.getTheme()) && StringUtils.equals(lookAndFeel, preset.getLookAndFeel())) {
+				return preset;
+			}
+		}
+		return null;
+	}
+	
 	public void fillStartup(JsWTSPrivate js) {
 		if(!isReady()) return;
 		
 		ServiceManager svcm = wta.getServiceManager();
 		ServiceManifest coreManifest = svcm.getManifest(CoreManifest.ID);
 		CoreUserSettings cus = new CoreUserSettings(CoreManifest.ID, profile.getId());
-		String theme = cus.getTheme(), layout = cus.getLayout(), lookAndFeel = cus.getLookAndFeel();
+		String layout = applyRuntimeUILayout(cus);
+		UIPreset preset = applyRuntimeUIPreset(cus);
+		String theme = preset.getTheme(), lookAndFeel = preset.getLookAndFeel();
+		
+		CoreSettings.TryMeBanner tmb = cus.getUITryMeBanner();
+		if (tmb != null) {
+			notify(new UITryMeBannerSM(tmb.uiPreset, tmb.newTheme, tmb.newLookAndFeel, tmb.oldTheme, tmb.oldLookAndFeel));
+		}
 		
 		ReadableUserAgent readableUa = WebTopApp.getUserAgentInfo(getClientPlainUserAgent());
 		ReadableDeviceCategory.Category deviceCategory = ReadableDeviceCategory.Category.UNKNOWN;
@@ -1028,7 +1158,8 @@ public class WebTopSession {
 		js.appManifest.addJs(VENDOR_PATH + "/jsxc/3.4.0/" + "jsxc.dep.js");
 		js.appManifest.addJs(VENDOR_PATH + "/tinymce/6.3.1/" + "tinymce.min.js");
 		js.appManifest.addJs(VENDOR_PATH + "/plupload/2.3.6/" + "plupload.full.min.js"); // Remember to update paths in Factory.js
-		js.appManifest.addJs(VENDOR_PATH + "/rrule/2.1.0/" + "rrule.min.js");
+		//js.appManifest.addJs(VENDOR_PATH + "/rrule/2.1.0/" + "rrule.min.js");
+		js.appManifest.addJs(VENDOR_PATH + "/rrule/2.7.1/" + "rrule.min.js");
 		js.appManifest.addJs(VENDOR_PATH + "/markjs/8.11.1/" + "mark.min.js");
 		js.appManifest.addJs(VENDOR_PATH + "/search-string/3.1.0/" + "search-string.min.js");
 		js.appManifest.addJs(VENDOR_PATH + "/jsdifflib/1.1.0/" + "jsdifflib.min.js");
@@ -1040,6 +1171,8 @@ public class WebTopSession {
 		js.appManifest.addJs(VENDOR_PATH + "/codemirror/5.65.2/mode/sql/" + "sql.min.js");
 		js.appManifest.addCss(VENDOR_PATH + "/codemirror/5.65.2/" + "codemirror.min.css");
 		js.appManifest.addJs(VENDOR_PATH + "/jexl/2.3.0/" + "jexl.min.js");
+		js.appManifest.addJs(VENDOR_PATH + "/fullcalendar/6.1.11/" + "index.global.min.js");
+		js.appManifest.addJs(VENDOR_PATH + "/fullcalendar/6.1.11/locales/" + locale.getLanguage() + ".global.min.js");
 		
 		// Uncomment these lines to load debug versions of the libraries ----->
 		//js.appManifest.addJs(VENDOR_PATH + "/jsxc/3.4.0/" + "jsxc.dep.js");
@@ -1057,7 +1190,7 @@ public class WebTopSession {
 		String extRtl = rtl ? "-rtl" : "";
 		String extDebug = WebTopProps.getExtJsDebug(wta.getProperties()) ? "-debug" : "";
 		String extTheme = theme;
-		String extThemeName = StringUtils.removeEnd(theme, "-touch");
+		String extThemeName = UIBoot.sanitizeExtJSTheme(theme);
 		String extBaseTheme = UIBoot.getBaseExtJSTheme(extThemeName);
 		String extLang = "-" + locale.getLanguage();
 		
@@ -1066,6 +1199,7 @@ public class WebTopSession {
 		js.appManifest.addJs(EXTJS_PATH + js.appManifest.toolkit + "/locale/" + "locale" + extLang + extDebug + ".js");
 		// Themes: library (overrides) + styles
 		js.appManifest.addJs(EXTJS_PATH + js.appManifest.toolkit + "/" + "theme-" + extTheme + "/" + "theme-" + extTheme + extDebug + ".js");
+		//js.appManifest.addJs(EXTJS_PATH + js.appManifest.toolkit + "/" + "theme-" + extTheme + "/" + "theme-" + extTheme + "-override" + extDebug + ".js");
 		js.appManifest.addCss(EXTJS_PATH + js.appManifest.toolkit + "/" + "theme-" + extTheme + "/resources/" + "theme-" + extTheme + "-all" + extRtl + extDebug + ".css");
 		// Charts: library + styles
 		js.appManifest.addJs(EXTJS_PATH + "packages/charts/" + js.appManifest.toolkit + "/" + "charts" + extDebug + ".js");
@@ -1075,6 +1209,11 @@ public class WebTopSession {
 		js.appManifest.addCss(EXTJS_PATH + "packages/ux/" + js.appManifest.toolkit + "/" + extBaseTheme + "/resources/" + "ux-all" + extRtl + extDebug + ".css");
 		// Fonts: styles
 		js.appManifest.addCss(EXTJS_PATH + "packages/font-awesome/resources/" + "font-awesome-all" + extRtl + extDebug + ".css");
+		js.appManifest.addCss(EXTJS_PATH + "packages/font-awesome/resources/vendor/6.4.2/css/fontawesome.min.css");
+		js.appManifest.addCss(EXTJS_PATH + "packages/font-awesome/resources/vendor/6.4.2/css/solid.min.css");
+		js.appManifest.addCss(EXTJS_PATH + "packages/font-awesome/resources/vendor/6.4.2/css/regular.min.css");
+		js.appManifest.addCss(EXTJS_PATH + "packages/font-awesome/resources/vendor/6.4.2/css/brands.min.css");
+		js.appManifest.addCss(EXTJS_PATH + "packages/font-awesome/resources/vendor/6.4.2/css/v5-font-face.min.css");
 		js.appManifest.addCss(EXTJS_PATH + "packages/font-ext/resources/" + "font-ext-all" + extRtl + extDebug + ".css");
 		js.appManifest.addCss(EXTJS_PATH + "packages/font-pictos/resources/" + "font-pictos-all" + extRtl + extDebug + ".css");
 		// Sonicle ExtJs Extensions
@@ -1083,8 +1222,8 @@ public class WebTopSession {
 		} else {
 			js.appManifest.addJs(EXTJS_PATH + "packages/sonicle-extensions/" + "sonicle-extensions" + extDebug + ".js");
 		}
+		js.appManifest.addCss(EXTJS_PATH + "packages/sonicle-extensions/base/resources/" + "sonicle-extensions-all" + extRtl + extDebug + ".css");
 		js.appManifest.addCss(EXTJS_PATH + "packages/sonicle-extensions/" + extThemeName + "/resources/" + "sonicle-extensions-all" + extRtl + extDebug + ".css");
-		
 		// Override default Ext error handling in order to avoid application hang.
 		// NB: This is only necessary when using ExtJs debug file!
 		if (WebTopProps.getExtJsDebug(wta.getProperties()))
@@ -1093,6 +1232,7 @@ public class WebTopSession {
 	
 	private void fillCoreServiceJsReferences(boolean devMode, String target, JsWTS js, ServiceManifest manifest, Locale locale) {
 		String targetSuffix = "-" + target;
+		String extThemeName = UIBoot.sanitizeExtJSTheme(js.themeName);
 		if (devMode) {
 			String jsFileName = (js instanceof JsWTSPublic) ? manifest.getPrivateServiceJsFileName() : manifest.getPrivateServiceJsFileName();
 			js.appManifest.addJs(manifest.getPackageSrcUrl() + "/app/WT.js");
@@ -1100,12 +1240,14 @@ public class WebTopSession {
 			js.appManifest.addJs(manifest.getPackageSrcUrl() + "/app/Util.js");
 			js.appManifest.addJs(manifest.getPackageBaseUrl() + "/src/app" + targetSuffix + ".js"); // App file (private or public)
 			js.appManifest.addJs(manifest.getPackageSrcUrl() + "/" + jsFileName); // Service js class
+			js.appManifest.addJs(manifest.getPackageBaseUrl() + "/laf/" + extThemeName + "/override.js");
 			js.appManifest.addJs(manifest.getPackageBaseUrl() + "/" + manifest.getLocaleJsFileName(locale)); // Service's locale js class
 			js.appManifest.paths.put(manifest.getJsPackageName(), manifest.getPackageSrcUrl()); // Namespace -> url path mapping
 			js.appManifest.paths.put("WTA", manifest.getPackageSrcUrl()); // Short namespace (WTA) -> url path mapping
 			
 		} else {
 			js.appManifest.addJs(manifest.getPackageBaseUrl() + "/" + manifest.getId() + targetSuffix + ".js"); // Service concatenated js
+			js.appManifest.addJs(manifest.getPackageBaseUrl() + "/laf/" + extThemeName + "/override.js");
 			js.appManifest.addJs(manifest.getPackageBaseUrl() + "/" + manifest.getLocaleJsFileName(locale)); // Service's locale js class
 		}
 		js.locales.add(new JsWTS.XLocale(manifest.getId(), manifest.getLocaleJsClassName(locale, true)));
@@ -1148,13 +1290,16 @@ public class WebTopSession {
 	}
 	
 	private void fillServiceJsReferences(boolean devMode, JsWTS js, ServiceManifest manifest, Locale locale) {
+		String extThemeName = UIBoot.sanitizeExtJSTheme(js.themeName);
 		if (devMode) {
 			String jsFileName = (js instanceof JsWTSPublic) ? manifest.getPrivateServiceJsFileName() : manifest.getPrivateServiceJsFileName();
 			js.appManifest.paths.put(manifest.getJsPackageName(), manifest.getPackageSrcUrl()); // Namespace -> url path mapping
 			js.appManifest.addJs(manifest.getPackageSrcUrl() + "/" + jsFileName); // Service js class
+			js.appManifest.addJs(manifest.getPackageBaseUrl() + "/laf/" + extThemeName + "/override.js");
 			js.appManifest.addJs(manifest.getPackageBaseUrl() + "/" + manifest.getLocaleJsFileName(locale)); // Service's locale js class
 		} else {
 			js.appManifest.addJs(manifest.getPackageBaseUrl() + "/" + manifest.getBundleJsFileName()); // Service concatenated js
+			js.appManifest.addJs(manifest.getPackageBaseUrl() + "/laf/" + extThemeName + "/override.js");
 			js.appManifest.addJs(manifest.getPackageBaseUrl() + "/" + manifest.getLocaleJsFileName(locale)); // Service's locale js class
 		}
 		js.locales.add(new JsWTS.XLocale(manifest.getId(), manifest.getLocaleJsClassName(locale, true)));

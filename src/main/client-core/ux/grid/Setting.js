@@ -59,6 +59,8 @@ Ext.define('Sonicle.webtop.core.ux.grid.Setting', {
 	keyText: null,
 	valueText: null,
 	typeText: null,
+	removeText: null,
+	confirmRemoveText: null,
 	
 	clicksToEdit: 2,
 	
@@ -71,6 +73,8 @@ Ext.define('Sonicle.webtop.core.ux.grid.Setting', {
 		me.keyText = me.keyText || WT.res('wtsettinggrid.key.lbl');
 		me.valueText = me.valueText || WT.res('wtsettinggrid.value.lbl');
 		me.typeText = me.typeText || WT.res('wtsettinggrid.type.lbl');
+		me.removeText = me.removeText || WT.res('act-remove.lbl');
+		me.confirmRemoveText = me.confirmRemoveText || WT.res('wtsettinggrid.confirm.remove');
 		
 		me.addCls(me.gridCls);
 		

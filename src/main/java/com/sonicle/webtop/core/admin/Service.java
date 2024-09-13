@@ -151,8 +151,10 @@ import com.sonicle.webtop.core.app.model.UserUpdateOption;
 import com.sonicle.webtop.core.bol.js.JsDomainPwdPolicies;
 import com.sonicle.webtop.core.bol.js.JsSubjectLkp;
 import com.sonicle.webtop.core.bol.model.RoleWithSource;
+import com.sonicle.webtop.core.model.DataSourceQuery;
 import com.sonicle.webtop.core.model.ServiceLicense;
 import com.sonicle.webtop.core.model.SettingEntry;
+import com.sonicle.webtop.core.products.MailBridgeProduct;
 import com.sonicle.webtop.core.sdk.BaseService;
 import com.sonicle.webtop.core.sdk.ServiceManifest;
 import com.sonicle.webtop.core.sdk.ServiceManifest.Product;
@@ -166,6 +168,7 @@ import jakarta.mail.internet.InternetAddress;
 import java.io.InputStream;
 import java.io.PrintWriter;
 import java.sql.SQLException;
+import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -183,6 +186,7 @@ import org.jivesoftware.smack.util.FileUtils;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.Days;
+import org.joda.time.LocalDate;
 import org.slf4j.Logger;
 
 /**
@@ -205,6 +209,15 @@ public class Service extends BaseService {
 	@Override
 	public void cleanup() throws Exception {
 		core = null;
+	}
+
+	@Override
+	public ServiceVars returnServiceVars() {
+		ServiceVars vars = new ServiceVars();
+		
+		vars.put("modeSingleDomain", WebTopProps.getAdminModeSingleDomain(WT.getProperties()));
+		
+		return vars;
 	}
 	
 	private WebTopApp getWta() {
@@ -368,7 +381,10 @@ public class Service extends BaseService {
 					if (sysAdmin) children.add(createTreeNode(NID_SETTINGS, "settings", null, true, "wtadm-icon-settings"));
 					children.add(createTreeNode(NID_DOMAINS, "domains", null, false, "wtadm-icon-domains"));
 					if (sysAdmin) children.add(createTreeNode(NID_DBUPGRADER, "dbupgrader", null, true, "wtadm-icon-dbUpgrader"));
-					if (sysAdmin) children.add(createTreeNode(NID_LOGS, "logging", null, false, "wtadm-icon-logging"));
+					if (sysAdmin) {
+						boolean hasLogViewer = WebTopProps.getAdminLogViewerEnabled(WT.getProperties());
+						children.add(createTreeNode(NID_LOGS, "logging", null, !hasLogViewer, "wtadm-icon-logging"));
+					}
 					
 				} else {
 					CId cid = new CId(nodeId);
@@ -1531,6 +1547,36 @@ public class Service extends BaseService {
 			new JsonResult(ex).printTo(out);
 		}
 	}
+
+	public void addPecBridgeMessageMetaData(JsonResult jsr, ServiceLicense sl, int accounts) {
+		String message = "";
+		if (sl == null) message = lookupResource(CoreAdminLocaleKey.LICENSE_INVALID);
+		else if (sl.getActivationHwId() == null) message = lookupResource(CoreAdminLocaleKey.LICENSE_INACTIVE);
+		else {
+			LocalDate expd = sl.getExpirationDate();
+			LocalDate today = LocalDate.now();
+			Integer qta = sl.getQuantity();
+			if (expd != null && today.isAfter(expd)) {
+				message = lookupResource(CoreAdminLocaleKey.LICENSE_EXPIRED);
+			}
+			else if (qta != null && qta < accounts) {
+				int softTWDays = ServiceLicense.computeSoftTimeWindowDays(sl);
+				if (softTWDays > 0) {
+					if (softTWDays == 1) message = LangUtils.formatMessage(lookupResource(CoreAdminLocaleKey.LICENSE_SOFTTIMEWINDOW_0), accounts, qta);
+					else message = LangUtils.formatMessage(lookupResource(CoreAdminLocaleKey.LICENSE_SOFTTIMEWINDOW_N), accounts, qta, softTWDays);
+				}
+				else message = LangUtils.formatMessage(lookupResource(CoreAdminLocaleKey.LICENSE_OVERFLOW), accounts, qta);
+			}
+			else if (expd != null) {
+				int days = Days.daysBetween(today, expd).getDays();
+				if (days == 0) message = lookupResource(CoreAdminLocaleKey.LICENSE_EXPIRING_0);
+				else if (days == 1) message = lookupResource(CoreAdminLocaleKey.LICENSE_EXPIRING_1);
+				else if (days == 2) message = lookupResource(CoreAdminLocaleKey.LICENSE_EXPIRING_2);
+				else message = LangUtils.formatMessage(lookupResource(CoreAdminLocaleKey.LICENSE_EXPIRING_N), days);
+			}
+		}
+		jsr.setMetaData(new ResultMeta().set("message", message));
+	}
 	
 	public void processManagePecBridgeFetchers(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
 		
@@ -1538,12 +1584,23 @@ public class Service extends BaseService {
 			String crud = ServletUtils.getStringParameter(request, "crud", true);
 			if(crud.equals(Crud.READ)) {
 				String domainId = ServletUtils.getStringParameter(request, "domainId", true);
+				ServiceLicense sl = null;
+				Integer qta = null; //no api mode, no license management, no qta limit
+				boolean isApiMode = WebTopProps.isMailBridgeModeApi(WebTopApp.getInstanceProperties());
+				if (isApiMode) {
+					sl = WebTopApp.getInstance().getLicenseManager().getLicense(domainId, MailBridgeProduct.PRODUCT_ID);
+					qta = ServiceLicense.computeLicenseQuantity(sl);
+				}
 				
 				List<JsGridPecBridgeFetcher> items = new ArrayList<>();
 				for(OPecBridgeFetcher fetcher : coreadm.listPecBridgeFetchers(domainId)) {
-					items.add(new JsGridPecBridgeFetcher(fetcher));
+					JsGridPecBridgeFetcher jsgpbf = new JsGridPecBridgeFetcher(fetcher);
+					items.add(jsgpbf);
+					if (isApiMode && qta != null && items.size() > qta && ServiceLicense.computeSoftTimeWindowDays(sl) <= 0) jsgpbf.setLicensed(false);
 				}
-				new JsonResult("fetchers", items, items.size()).printTo(out);
+				JsonResult jsr = new JsonResult("fetchers", items, items.size());
+				if (isApiMode) addPecBridgeMessageMetaData(jsr, sl, items.size());
+				jsr.printTo(out);
 				
 			} else if(crud.equals(Crud.DELETE)) {
 				String domainId = ServletUtils.getStringParameter(request, "domainId", true);
@@ -1595,12 +1652,23 @@ public class Service extends BaseService {
 			String crud = ServletUtils.getStringParameter(request, "crud", true);
 			if(crud.equals(Crud.READ)) {
 				String domainId = ServletUtils.getStringParameter(request, "domainId", true);
+				ServiceLicense sl = null;
+				Integer qta = null; //no api mode, no license management, no qta limit
+				boolean isApiMode = WebTopProps.isMailBridgeModeApi(WebTopApp.getInstanceProperties());
+				if (isApiMode) {
+					sl = WebTopApp.getInstance().getLicenseManager().getLicense(domainId, MailBridgeProduct.PRODUCT_ID);
+					qta = ServiceLicense.computeLicenseQuantity(sl);
+				}
 				
 				List<JsGridPecBridgeRelay> items = new ArrayList<>();
 				for(OPecBridgeRelay relay : coreadm.listPecBridgeRelays(domainId)) {
-					items.add(new JsGridPecBridgeRelay(relay));
+					JsGridPecBridgeRelay jsgpbr = new JsGridPecBridgeRelay(relay);
+					items.add(jsgpbr);
+					if (isApiMode && qta != null && items.size() > qta && ServiceLicense.computeSoftTimeWindowDays(sl) <= 0) jsgpbr.setLicensed(false);
 				}
-				new JsonResult("relays", items, items.size()).printTo(out);
+				JsonResult jsr = new JsonResult("relays", items, items.size());
+				if (isApiMode) addPecBridgeMessageMetaData(jsr, sl, items.size());
+				jsr.printTo(out);
 				
 			} else if(crud.equals(Crud.DELETE)) {
 				String domainId = ServletUtils.getStringParameter(request, "domainId", true);

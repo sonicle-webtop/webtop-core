@@ -30,6 +30,9 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2018 Sonicle S.r.l.".
  */
+/**
+ * @deprecated see WTA.viewport.private package
+ */
 Ext.define('Sonicle.webtop.core.view.main.Compact', {
 	alternateClassName: 'WTA.view.main.Compact',
 	extend: 'WTA.view.main.Abstract',
@@ -47,6 +50,7 @@ Ext.define('Sonicle.webtop.core.view.main.Compact', {
 		this.launcherCmp().add({
 			xclass: 'WTA.ux.app.launcher.ServiceButton',
 			sid: desc.getId(),
+			toggleGroup: this.launcherToggleGroup(),
 			scale: 'medium',
 			ui: 'default-toolbar',
 			handler: 'onLauncherButtonClick'

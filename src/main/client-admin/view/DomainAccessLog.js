@@ -69,6 +69,7 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainAccessLog', {
 			region: 'center',
 			xtype: 'grid',
 			reference: 'gp',
+			border: false,
 			store: {
 				type: 'buffered',
 				autoLoad: false,
@@ -237,7 +238,7 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainAccessLog', {
 								xtype: 'soactioncolumn',
 								items: [
 									{
-										iconCls: 'fas fa-globe',
+										iconCls: 'wt-glyph-earth',
 										tooltip: me.mys.res('domainAccessLog.gp.act-geolocateIp.tip'),
 										handler: function(g, ridx) {
 											var sto = g.getStore(),
@@ -261,7 +262,7 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainAccessLog', {
 											return !rec.get('isAddressPublic');
 										}
 									}, {
-										iconCls: 'far fa-clipboard',
+										iconCls: 'wt-glyph-clipboard-copy',
 										tooltip: me.mys.res('domainAccessLog.gp.act-copy.tip'),
 										handler: function(g, ridx) {
 											var rec = g.getStore().getAt(ridx);
@@ -277,40 +278,51 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainAccessLog', {
 			],
 			tbar: [
 				{
-					xtype: 'button',
-					tooltip: {title: me.res('domainAccessLog.viewOptions.today.tip.tit'), text: me.res('domainAccessLog.viewOptions.today.tip.txt')},
-					iconCls: 'wt-icon-calDays-1',
-					handler: function() {
-						me.prepareSearchDates(0);
-					}
-				}, {
-					xtype: 'button',
-					tooltip: {title: me.res('domainAccessLog.viewOptions.prev7.tip.tit'), text: me.res('domainAccessLog.viewOptions.prev7.tip.txt')},
-					iconCls: 'wt-icon-calDays-7',
-					handler: function() {
-						me.prepareSearchDates(7);
-					}
-				}, {
-					xtype: 'button',
-					tooltip: {title: me.res('domainAccessLog.viewOptions.prev14.tip.tit'), text: me.res('domainAccessLog.viewOptions.prev14.tip.txt')},
-					iconCls: 'wt-icon-calDays-14',
-					handler: function() {
-						me.prepareSearchDates(14);
-					}
-				}, {
-					xtype: 'button',
-					tooltip: {title: me.res('domainAccessLog.viewOptions.prev30.tip.tit'), text: me.res('domainAccessLog.viewOptions.prev30.tip.txt')},
-					iconCls: 'wt-icon-calDays-30',
-					handler: function() {
-						me.prepareSearchDates(30);
-					}
-				}, {
-					xtype: 'button',
-					tooltip: {title: me.res('domainAccessLog.viewOptions.prev90.tip.tit'), text: me.res('domainAccessLog.viewOptions.prev90.tip.txt')},
-					iconCls: 'wt-icon-calDays-90',
-					handler: function() {
-						me.prepareSearchDates(90);
-					}
+					xtype: 'sofieldhgroup',
+					items: [
+						{
+							xtype: 'socombobutton',
+							ui: 'default-toolbar',
+							tooltip: me.res('domainAccessLog.viewOptions.tip'),
+							showText: true,
+							menu: {
+								items: [
+									{
+										itemId: 'today',
+										text: me.res('domainAccessLog.viewOptions.today.tip.tit'),
+										tooltip: me.res('domainAccessLog.viewOptions.today.tip.txt'),
+										checked: true
+									}, {
+										itemId: 'prev7',
+										text: me.res('domainAccessLog.viewOptions.prev7.tip.tit'),
+										tooltip: me.res('domainAccessLog.viewOptions.prev7.tip.txt')
+									}, {
+										itemId: 'prev14',
+										text: me.res('domainAccessLog.viewOptions.prev14.tip.tit'),
+										tooltip: me.res('domainAccessLog.viewOptions.prev14.tip.txt')
+									}, {
+										itemId: 'prev30',
+										text: me.res('domainAccessLog.viewOptions.prev30.tip.tit'),
+										tooltip: me.res('domainAccessLog.viewOptions.prev30.tip.txt')
+									}, {
+										itemId: 'prev90',
+										text: me.res('domainAccessLog.viewOptions.prev90.tip.tit'),
+										tooltip: me.res('domainAccessLog.viewOptions.prev90.tip.txt')
+									}
+								]
+							},
+							changeHandler: function(s, menuItem) {
+								var itemId = menuItem.getItemId(), offset;
+								if (itemId === 'prev7') offset = 7;
+								else if (itemId === 'prev14') offset = 14;
+								else if (itemId === 'prev30') offset = 30;
+								else if (itemId === 'prev90') offset = 90;
+								else offset = 0;
+								me.prepareSearchDates(offset);
+							}
+						}
+					],
+					width: 180
 				},
 				'->',
 				{

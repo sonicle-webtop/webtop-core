@@ -66,16 +66,18 @@ Ext.define('Sonicle.webtop.core.view.Reminder', {
 						type: 'wtsnooze',
 						autoLoad: true
 					},
-					fieldLabel: me.mys.res('reminder.cbo-snooze.lbl'),
-					labelWidth: 70,
-					width: 190,
+					//fieldLabel: me.mys.res('reminder.cbo-snooze.lbl'),
+					//labelWidth: 70,
+					hideEmptyLabel: true,
+					width: 110,
 					value: 5
 				}),
 				' ',
 				{
 					xtype: 'button',
+					ui: '{secondary}',
 					text: WT.res('reminder.btn-snooze.lbl'),
-					iconCls: 'wt-icon-snooze',
+					tooltip: WT.res('reminder.btn-snooze.tip'),
 					bind: {
 						disabled: '{!gpreminders.selection}'
 					},
@@ -86,7 +88,10 @@ Ext.define('Sonicle.webtop.core.view.Reminder', {
 				'->',
 				{
 					xtype: 'button',
+					ui: '{primary}',
 					text: WT.res('reminder.btn-ignore.lbl'),
+					tooltip: WT.res('reminder.btn-ignore.tip'),
+					iconCls: 'wt-icon-reminder-ignore',
 					bind: {
 						disabled: '{!gpreminders.selection}'
 					},
@@ -147,9 +152,9 @@ Ext.define('Sonicle.webtop.core.view.Reminder', {
 	addReminder: function(data) {
 		if (!Ext.isArray(data)) data = [data];
 		var me = this,
-				gp = me.lref('gpreminders'),
-				sto = me.getViewModel().getStore('reminders'),
-				rec;
+			gp = me.lref('gpreminders'),
+			sto = me.getViewModel().getStore('reminders'),
+			rec;
 		
 		Ext.iterate(data, function(obj) {
 			rec = sto.add(sto.createModel(obj));
@@ -201,7 +206,7 @@ Ext.define('Sonicle.webtop.core.view.Reminder', {
 
 		ignoreReminder: function(recs) {
 			var me = this,
-					sto = me.getViewModel().getStore('reminders');
+				sto = me.getViewModel().getStore('reminders');
 			if (Ext.isArray(recs) && recs.length > 0) {
 				sto.remove(recs);
 			}

@@ -50,6 +50,8 @@ Ext.define('Sonicle.webtop.core.view.Options', {
 	
 	profileId: null,
 	
+	cls: 'wt-view-options',
+	
 	initComponent: function() {
 		var me = this;
 		me.callParent(arguments);
@@ -124,7 +126,7 @@ Ext.define('Sonicle.webtop.core.view.Options', {
 				Ext.Array.push(data, Ext.apply(uo, {
 					id: desc.getId(),
 					xid: desc.getXid(),
-					name: desc.getName()
+					name: desc.getXid()=='wt' ? WT.res("word.system") : desc.getName()
 				}));
 			}
 		});
@@ -147,7 +149,7 @@ Ext.define('Sonicle.webtop.core.view.Options', {
 				tab = Ext.create(itm.viewClassName, {
 					itemId: itm.id,
 					title: itm.name,
-					iconCls: WTF.cssIconCls(itm.xid, 'service', 'xs'),
+					//iconCls: WTF.cssIconCls(itm.xid, 'service', 'sm'),
 					ID: itm.id,
 					XID: itm.xid,
 					profileId: me.profileId,

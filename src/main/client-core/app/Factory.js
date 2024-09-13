@@ -852,41 +852,43 @@ Ext.define('Sonicle.webtop.core.app.Factory', {
 	 * @param {Object} cfg Custom configuration object.
 	 * @param {Function} [cfg.shouldCustomize] A function which returns `true` in correspondence of nodes that needs the colored box.
 	 * @param {String} [cfg.colorField] Specifies the field from which getting color value.
+	 * @param {rounded|square|circle} [cfg.geometry] Specifies the geometry of the swatch that displays the color.
 	 * @param {Function} [cfg.getColor] A function which returns a calculated color.
 	 * @param {Function} [cfg.renderer] Specifies a function in order to chain into the rendering process.
 	 * @returns {Function} The renderer function
 	 */
 	coloredBoxTreeRenderer: function(cfg) {
 		cfg = cfg || {};
-		var evalValueFn = function(getFn, field, value, rec, fallback) {
-			if (Ext.isFunction(getFn)) {
-				return getFn(value, rec);
-			} else if(rec && !Ext.isEmpty(field)) {
-				return rec.get(field);
-			} else {
-				return (fallback === undefined) ? value : fallback;
-			}
-		};
 		
 		return function(val, meta, rec, ridx, cidx, sto, view) {
-			var iconStyle;
-			if (evalValueFn(cfg.shouldCustomize, null, val, rec, false) === true) {
-				var co = evalValueFn(cfg.getColor, cfg.colorField, val, rec, null),
-						obj = {};
-				meta.iconCls = 'wt-tree-colorsquare x-tree-checkbox';
-				if (co === '#FFFFFF') {
-					meta.iconCls += ' wt-tree-colorsquare-framed';
+			var SoU = Sonicle.Utils,
+				SoCU = Sonicle.ColorUtils,
+				cls = '',
+				styles;
+			
+			if (SoU.rendererEvalValue(val, rec, null, cfg.shouldCustomize, false)) {
+				cls += 'wt-tree-colorswatch';
+				var color = SoU.rendererEvalValue(val, rec, cfg.colorField, cfg.getColor, null),
+					swatch = SoCU.generateColorSwatch('swatch', color),
+					obj = {};
+				
+				// Geometry
+				if ('square' === cfg.geometry) {
+					cls += ' so-colorswatch-square';
+				} else if ('circle' === cfg.geometry) {
+					cls += ' so-colorswatch-circle';
 				} else {
-					meta.iconCls += ' wt-tree-colorsquare-default';
-					obj = {
-						borderColor: co,
-						backgroundColor: co
-					};
+					cls += ' so-colorswatch-rounded';
 				}
-				iconStyle = Ext.DomHelper.generateStyles(obj);
-				//meta.tdCls = 'wt-grid-cell-treecolumn-colored';
+				
+				// Borders/Background
+				if (swatch.swatchStyle) Ext.apply(obj, swatch.swatchStyle);
+				if (swatch.swatchCls) cls += ' ' + swatch.swatchCls;
+				
+				styles = Ext.DomHelper.generateStyles(obj);
 			}
-			meta.iconStyle = iconStyle;
+			meta.iconCls = cls;
+			meta.iconStyle = styles;
 			if (Ext.isFunction(cfg.renderer)) {
 				return cfg.renderer(val, meta, rec, ridx, cidx, sto, view);
 			} else {
@@ -906,37 +908,47 @@ Ext.define('Sonicle.webtop.core.app.Factory', {
 	 */
 	coloredCheckboxTreeRenderer: function(cfg) {
 		cfg = cfg || {};
-		var evalValueFn = function(getFn, field, value, rec, fallback) {
-			if (Ext.isFunction(getFn)) {
-				return getFn(value, rec);
-			} else if(rec && !Ext.isEmpty(field)) {
-				return rec.get(field);
-			} else {
-				return (fallback === undefined) ? value : fallback;
-			}
-		};
 		
 		return function(val, meta, rec, ridx, cidx, sto, view) {
-			var cbxCls = 'wt-tree-colorsquare', cbxStyle;
-			if (evalValueFn(cfg.shouldCustomize, null, val, rec, false) === true) {
-				var co = evalValueFn(cfg.getColor, cfg.colorField, val, rec, null),
-						cofore = Sonicle.ColorUtils.bestForeColor(co, 0.64),
-						obj = {};
+			var SoU = Sonicle.Utils,
+				SoCU = Sonicle.ColorUtils,
+				cls = '',
+				styles;
+			
+			if (SoU.rendererEvalValue(val, rec, null, cfg.shouldCustomize, false)) {
+				cls += 'wt-tree-colorswatch';
+				var color = SoU.rendererEvalValue(val, rec, cfg.colorField, cfg.getColor, null),
+					swatch = SoCU.generateColorSwatch('swatch', color),
+					bestColor = SoCU.bestForeColor(color, 'fixed'),
+					obj = {};
 				
-				if (co === '#FFFFFF') {
-					cbxCls += ' wt-tree-colorsquare-framed';
+				// Geometry
+				if ('square' === cfg.geometry) {
+					cls += ' so-colorswatch-square';
+				} else if ('circle' === cfg.geometry) {
+					cls += ' so-colorswatch-circle';
 				} else {
-					cbxCls += ' wt-tree-colorsquare-default';
-					obj = {	borderColor: co	};
+					cls += ' so-colorswatch-rounded';
 				}
-				cbxCls += (cofore === '#000000' ? ' wt-tree-colorsquare-darkmark' : ' wt-tree-colorsquare-lightmark');
-				if (rec.get('checked')) obj.backgroundColor = co;
-				cbxStyle = Ext.DomHelper.generateStyles(obj);
+				
+				// Borders/Background
+				if (swatch.swatchStyle) Ext.apply(obj, swatch.swatchStyle);
+				if (swatch.swatchCls) cls += ' ' + swatch.swatchCls;
+				
+				// Mark (no matter of color, here #000000 means simply dark)
+				if (bestColor === '#000000') {
+					cls += ' so-colorswatch-darkmark';
+				} else {
+					cls += ' so-colorswatch-lightmark';
+				}
+				
+				if (!rec.get('checked')) delete obj.backgroundColor;
+				styles = Ext.DomHelper.generateStyles(obj);
 				meta.iconCls = 'wt-hidden';
-				//meta.tdCls = 'wt-grid-cell-treecolumn-colored';
 			}
-			meta.customCheckboxCls = cbxCls;
-			meta.checkboxStyle = cbxStyle;
+			
+			meta.customCheckboxCls = cls;
+			meta.checkboxStyle = styles;
 			if (Ext.isFunction(cfg.renderer)) {
 				return cfg.renderer(val, meta, rec, ridx, cidx, sto, view);
 			} else {
@@ -1058,25 +1070,68 @@ Ext.define('Sonicle.webtop.core.app.Factory', {
 	
 	/**
 	 * Helper method for defining a {@link Ext.app.bind.Formula} that is able   
-	 * to perform a two-way binding between form-field and a model's field.
-	 * @param {String} modelProp ViewModel's property in which the model is stored.
+	 * to perform a two-way binding within a ViewModel's property.
+	 * @param {String} pathPrefix ViewModel's property prefix.
 	 * Specify as empty string if you're working directly with viewModel.
-	 * @param {String} fieldName Model's field name.
+	 * @param {String} propName Property name to bind.
 	 * @param {Function} getFn Function that calculate and return the value to get.
 	 * @param {Function} setFn Function that calculate and return the value to set.
+	 * @param {Object} [opts] An object containing configuration.
+	 * @param {Function} [opts.noset] Set to `true` to NOT set the returned value in set method.
 	 * @returns {Object} Formula configuration object
 	 */
-	foTwoWay: function(modelProp, fieldName, getFn, setFn) {
+	foPropTwoWay: function(pathPrefix, propName, getFn, setFn, opts) {
+		opts = opts || {};
+		var path = Sonicle.String.join('.', pathPrefix, propName);
 		return {
-			bind: {bindTo: '{'+Sonicle.String.join('.', modelProp, fieldName)+'}'},
+			bind: {bindTo: '{'+path+'}'},
 			get: function(val) {
 				return Ext.callback(getFn, this, [val]);
 			},
 			set: function(val) {
-				var o = modelProp ? this.get(modelProp) : this;
-				if (val !== undefined) o.set(fieldName, Ext.callback(setFn, this, [val]));
+				var ret = Ext.callback(setFn, this, [val, path]);
+				if (!opts.noset) this.set(path, ret);
 			}
 		};
+	},
+	
+	/**
+	 * Helper method for defining a {@link Ext.app.bind.Formula} that is able   
+	 * to perform a two-way binding between form-field and a model's field.
+	 * @param {String} modelProp ViewModel's property in which the model is stored.
+	 * @param {String} fieldName Model's field name.
+	 * @param {Function} getFn Function that calculate and return the value to get.
+	 * @param {Mixed} getFn.value The candidate value to return (current field's value).
+	 * @param {Ext.data.Model} getFn.record The model that owns the field.
+	 * @param {String} getFn.fieldName Model's field name passed above.
+	 * @param {Function} setFn Function that calculate and return the value to set.
+	 * @param {Mixed} setFn.value The candidate value to set.
+	 * @param {Ext.data.Model} setFn.record The models that owns the field.
+	 * @param {String} setFn.fieldName Model's field name passed above.
+	 * @param {Object} [opts] An object containing configuration.
+	 * @param {Function} [opts.modelProp] Override dafault property ('record') in which the model is stored.
+	 * @returns {Object} Formula configuration object
+	 */
+	foFieldTwoWay: function(modelProp, fieldName, getFn, setFn, opts) {
+		opts = opts || {};
+		var path = Sonicle.String.join('.', modelProp, fieldName);
+		return {
+			bind: {bindTo: '{'+path+'}'},
+			get: function(val) {
+				return Ext.callback(getFn, this, [val, this.get(modelProp), fieldName]);
+			},
+			set: function(val) {
+				var mo = this.get(modelProp);
+				if (val !== undefined) mo.set(fieldName, Ext.callback(setFn, this, [val, mo, fieldName]));
+			}
+		};
+	},
+	
+	/**
+	 * @deprecated use foFieldTwoWay instead
+	 */
+	foTwoWay: function(modelProp, fieldName, getFn, setFn) {
+		return this.foFieldTwoWay(modelProp, fieldName, getFn, setFn);
 	},
 	
 	foRecordTwoWay: function(modelProp, fieldName, valueField, targetRecId) {
@@ -1149,7 +1204,7 @@ Ext.define('Sonicle.webtop.core.app.Factory', {
 	
 	/**
 	 * Helper method for defining a {@link Ext.app.bind.Formula} that checks 
-	 * equality between a model's field and passed value.
+	 * if specified field name is empty or not.
 	 * @param {String} modelProp ViewModel's property in which the model is stored
 	 * @param {String} fieldName Model's field name
 	 * @param {Boolean} [not=false] True to apply NOT operator
@@ -1160,7 +1215,65 @@ Ext.define('Sonicle.webtop.core.app.Factory', {
 		return {
 			bind: {bindTo: '{'+Sonicle.String.join('.', modelProp, fieldName)+'}'},
 			get: function(val) {
-				return (not === true) ? !Ext.isEmpty(val) : Ext.isEmpty(val);
+				var ret = Ext.isEmpty(val);
+				return (not === true) ? !ret : ret;
+			}
+		};
+	},
+	
+	/**
+	 * Helper method for defining a {@link Ext.app.bind.Formula} that checks 
+	 * if specified has-many association is empty or not.
+	 * @param {String} modelProp ViewModel's property in which the model is stored
+	 * @param {String} associationName Model's association name
+	 * @param {Boolean} [not=false] True to apply NOT operator
+	 * @returns {Object} Formula configuration object
+	 */
+	foAssociationIsEmpty: function(modelProp, associationName, not) {
+		if (arguments.length === 2) not = false;
+		return {
+			bind: {bindTo: '{'+Sonicle.String.join('.', modelProp, associationName, 'data')+'}', deep: true},
+			get: function(data) {
+				if (!data) return true;
+				var ret = data.length <= 0;
+				return (not === true) ? !ret : ret;
+			}
+		};
+	},
+	
+	/**
+	 * Helper method for defining a {@link Ext.app.bind.Formula} that looks into 
+	 * an internal association and returns items' count.
+	 * @param {String} modelProp ViewModel's property in which the model is stored
+	 * @param {String} associationName Model's association name
+	 * @returns {Object} Formula configuration object
+	 */
+	foAssociationCount: function(modelProp, associationName) {
+		return {
+			bind: {bindTo: '{'+Sonicle.String.join('.', modelProp, associationName, 'data')+'}', deep: true},
+			get: function(data) {
+				return (!data) ? 0 : data.length;
+			}
+		};
+	},
+	
+	/**
+	 * Helper method for defining a {@link Ext.app.bind.Formula} that returns a 
+	 * value from an internal association computed by a customized function 
+	 * passed as parameter.
+	 * @param {String} modelProp ViewModel's property in which the model is stored
+	 * @param {String} associationName Model's association name
+	 * @param {Function} getFn A function to produce the desired value.
+	 * @param {Mixed...} [args] The arguments to append to getFn (after value argument, the 1st one).
+	 * @returns {Object} Formula configuration object
+	 */
+	foAssociationGetFn: function(modelProp, associationName, getFn) {
+		if (!Ext.isFunction(getFn)) getFn = function(v) {return v;};
+		var moreArgs = arguments.length > 3 ? Ext.Array.slice(arguments, 3) : [];
+		return {
+			bind: {bindTo: '{'+Sonicle.String.join('.', modelProp, associationName, 'data')+'}', deep: true},
+			get: function(data) {
+				return getFn.apply(this, [data].concat(moreArgs));
 			}
 		};
 	},
@@ -1183,7 +1296,7 @@ Ext.define('Sonicle.webtop.core.app.Factory', {
 	},
 	
 	/**
-	 * Defines a{@link Ext.app.bind.Formula} that returns a value computed by
+	 * Defines a {@link Ext.app.bind.Formula} that returns a value computed by
 	 * a customized function passed as parameter.
 	 * @param {String} modelProp ViewModel's property in which the model is stored.
 	 * @param {String} fieldName Model's field name.
@@ -1198,7 +1311,35 @@ Ext.define('Sonicle.webtop.core.app.Factory', {
 			bind: {bindTo: '{'+Sonicle.String.join('.', modelProp, fieldName)+'}'},
 			get: function(val) {
 				return getFn.apply(this, [val].concat(moreArgs));
-				//return getFn(val);
+			}
+		};
+	},
+	
+	/**
+	 * Defines a {@link Ext.app.bind.Formula} that returns a value computed by
+	 * a customized function passed as parameter that tracks multiple props.
+	 * @param {String} pathPrefix The path prefix of propNames in viewModel.
+	 * @param {String[]|String} propNames An array of property/field names to track.
+	 * @param {Function} getFn A function to produce the desired value.
+	 * @param {Mixed...} [args] The arguments to append to getFn (after value argument, the 1st one).
+	 * @returns {Mixed} A value computed by the function.
+	 */
+	foMultiGetFn: function(pathPrefix, propNames, getFn) {
+		if (arguments.length < 3) {
+			getFn = propNames;
+			propNames = pathPrefix;
+			pathPrefix = undefined;
+		}
+		if (!Ext.isFunction(getFn)) getFn = function(v) {return v;};
+		var moreArgs = arguments.length > 2 ? Ext.Array.slice(arguments, 2) : [],
+			bind = {};
+		Ext.iterate(Ext.Array.from(propNames), function(name) {
+			bind[name] = '{'+Sonicle.String.join('.', pathPrefix, name)+'}';
+		});
+		return {
+			bind: bind,
+			get: function(val) {
+				return getFn.apply(this, [val].concat(moreArgs));
 			}
 		};
 	},

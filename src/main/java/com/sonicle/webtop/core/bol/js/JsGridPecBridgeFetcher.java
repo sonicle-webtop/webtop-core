@@ -47,6 +47,7 @@ public class JsGridPecBridgeFetcher {
 	public String host;
 	public Boolean enabled;
 	public String authState;
+	public Boolean licensed = true;
 	
 	public JsGridPecBridgeFetcher() {}
 	
@@ -57,6 +58,10 @@ public class JsGridPecBridgeFetcher {
 		host = o.getHost();
 		enabled = o.getEnabled();
 		authState = o.getAuthState();
+	}
+	
+	public void setLicensed(boolean b) {
+		licensed = b;
 	}
 	
 	public static class List extends ArrayList<JsGridPecBridgeFetcher> {

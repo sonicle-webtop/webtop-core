@@ -90,6 +90,10 @@ import com.sonicle.webtop.core.sdk.WTRuntimeException;
 import com.sonicle.webtop.core.app.shiro.WTRealm;
 import com.sonicle.webtop.core.sdk.AuthException;
 import com.sonicle.webtop.core.util.LoggerUtils;
+import freemarker.cache.ClassTemplateLoader;
+import freemarker.cache.FileTemplateLoader;
+import freemarker.cache.MultiTemplateLoader;
+import freemarker.cache.TemplateLoader;
 import freemarker.template.Configuration;
 import freemarker.template.DefaultObjectWrapper;
 import freemarker.template.Template;
@@ -250,6 +254,7 @@ public final class WebTopApp {
 	private MediaTypes mediaTypes = null;
 	private FileTypes fileTypes = null;
 	private Configuration freemarkerCfg = null;
+	private boolean freemarkerHasOverrideSource = false;
 	
 	private EventBus eventBus;
 	private I18nManager i18nMgr = null;
@@ -412,9 +417,29 @@ public final class WebTopApp {
 		checkSecretKey();
 		
 		// Template Engine
-		logger.info("Initializing template engine");
+		logger.info("[TemplateEngine] Initializing...");
 		this.freemarkerCfg = new Configuration();
-		this.freemarkerCfg.setClassForTemplateLoading(this.getClass(), "/");
+		
+		TemplateLoader[] templateLoaders = null;
+		File templatesDir = new File(this.fileSystem.getTemplatesPath());
+		if (templatesDir.canRead()) {
+			logger.info("[TemplateEngine] Using '{}' folder as external template source", templatesDir.getAbsolutePath());
+			try {
+				templateLoaders = new TemplateLoader[] {
+					new FileTemplateLoader(templatesDir),
+					new ClassTemplateLoader(this.getClass(), "/")
+				};
+				freemarkerHasOverrideSource = true;
+			} catch (IOException ex) {
+				logger.warn("[TemplateEngine] Unable to configure '{}' folder as template source", ex, templatesDir.getAbsolutePath());
+			}
+		}
+		if (templateLoaders == null){
+			templateLoaders = new TemplateLoader[] {
+				new ClassTemplateLoader(this.getClass(), "/")
+			};
+		}
+		this.freemarkerCfg.setTemplateLoader(new MultiTemplateLoader(templateLoaders));
 		this.freemarkerCfg.setObjectWrapper(new DefaultObjectWrapper());
 		this.freemarkerCfg.setDefaultEncoding(getSystemCharset().name());
 		
@@ -440,8 +465,8 @@ public final class WebTopApp {
 		}
 		
 		//comm = ComponentsManager.initialize(this); // Components Manager
-		this.licMgr = LicenseManager.initialize(this, this.scheduler);
-		this.wtMgr = WebTopManager.initialize(this);
+		this.licMgr = new LicenseManager(this, this.scheduler);
+		this.wtMgr = new WebTopManager(this);
 		
 		this.systemLocale = CoreServiceSettings.getSystemLocale(setMgr); // System locale
 		this.otpMgr = OTPManager.initialize(this);
@@ -492,10 +517,8 @@ public final class WebTopApp {
 		//autm = null;
 		// User Manager
 		dsMgr = dsMgr.cleanup(); // DataSources Manager
-		wtMgr.cleanup();
-		wtMgr = null;
-		licMgr.cleanup();
-		licMgr = null;
+		wtMgr = wtMgr.cleanup();
+		licMgr = licMgr.cleanup();
 		// Connection Manager
 		conMgr.cleanup();
 		conMgr = null;
@@ -933,6 +956,45 @@ public final class WebTopApp {
 	}
 	*/
 	
+	public Template loadTemplate(final String serviceId, final String relativePath) throws IOException {
+		return loadTemplate(serviceId, relativePath, null);
+	}
+	
+	public Template loadTemplate(final String serviceId, final String relativePath, final String encoding) throws IOException {
+		// Starting with the introduction of external templates folder, we need 
+		// to ensure that relativePath does NOT include 'tpl/' at start; 
+		// path MUST be relative to that 'tpl/' folder. This allow that same 
+		// resource can be tergeted also in external folder, this means that 
+		// 'service/classpath/pachage/tpl/' is the folder in sources dedicated 
+		// to templates.
+		String sanitizedRelativePath = StringUtils.removeStart(relativePath, "tpl/");
+		String path;
+		
+		// If templating library was started up adding an external folder for 
+		// looking up templates (see fileSystem.getTemplatesPath()), try to get 
+		// required template into that folder, organized by services, where the 
+		// relativa path of the template is the same as can be found in dedicated 
+		// folder in sources ('com/sonicle/webtop/core/tpl/{relative-path}', see below).
+		// -> '/path/to/webtop/home/templates/{service-id}/{relative-path}'
+		if (this.freemarkerHasOverrideSource) {
+			path = LangUtils.joinPaths(serviceId, sanitizedRelativePath);
+			try {
+				return internalGetTemplate(path, encoding);
+			} catch (IOException ex) { /* Do nothing... */ }
+		}
+		
+		// Dedicated source folder embedded in sources is named 'tpl': define it 
+		// translating package (the service ID) into sub-folders name.
+		// -> 'com/sonicle/webtop/core/tpl/{relative-path}'
+		path = LangUtils.joinPaths(LangUtils.packageToPath(serviceId), "tpl", sanitizedRelativePath);
+		return internalGetTemplate(path, encoding);
+	}
+	
+	private Template internalGetTemplate(final String path, final String encoding) throws IOException {
+		return (encoding != null) ? freemarkerCfg.getTemplate(path, encoding) : freemarkerCfg.getTemplate(path);
+	}
+	
+	/*
 	public Template loadTemplate(String path) throws IOException {
 		return freemarkerCfg.getTemplate(path, getSystemCharset().name());
 	}
@@ -940,6 +1002,7 @@ public final class WebTopApp {
 	public Template loadTemplate(String path, String encoding) throws IOException {
 		return freemarkerCfg.getTemplate(path, encoding);
 	}
+	*/
 	
 	private String findHomePath() {
 		String home = PathUtils.ensureTrailingSeparator(WebTopProps.getHome(properties));
@@ -1652,6 +1715,8 @@ public final class WebTopApp {
 		public static final String DBSCRIPTS_POST_FOLDER = "post";
 		public static final String TEMP_DOMAIN_FOLDER = "temp";
 		public static final String IMAGES_DOMAIN_FOLDER = "images";
+		public static final String TEMPLATES_FOLDER = "templates";
+		//public static final String OVERRIDES_FOLDER = "overrides";
 		public static final String SYSADMIN_DOMAIN_FOLDER = "_";
 		private final String homePath;
 		
@@ -1673,8 +1738,16 @@ public final class WebTopApp {
 			return homePath;
 		}
 		
+		private String getDomainsPath() {
+			return getHomePath() + DOMAINS_FOLDER + "/";
+		}
+		
 		public String getDbScriptsPath() {
 			return getHomePath() + DBSCRIPTS_FOLDER + "/";
+		}
+		
+		public String getTemplatesPath() {
+			return getHomePath() + TEMPLATES_FOLDER + "/";
 		}
 		
 		/**
@@ -1695,10 +1768,6 @@ public final class WebTopApp {
 		 */
 		public String getDbScriptsPostPath(final String serviceId) {
 			return getDbScriptsHomePath(serviceId) + DBSCRIPTS_POST_FOLDER + "/";
-		}
-		
-		private String getDomainsPath() {
-			return getHomePath() + DOMAINS_FOLDER + "/";
 		}
 		
 		/**

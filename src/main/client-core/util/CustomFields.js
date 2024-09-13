@@ -41,24 +41,29 @@ Ext.define('Sonicle.webtop.core.app.util.CustomFields', {
 	/**
 	 * 
 	 * @param {String[]|String} tags Array or pipe-separated list of WebTop's tag IDs.
-	 * @param {Boolean} cfInitialData
+	 * @param {Object/Boolean} cfInitialData Initial Custom Fields values or `false` if not provided.
 	 * @param {Object} opts An object containing configuration.
 	 * @param {String} opts.serviceId The service ID to perform request against to.
 	 * @param {String} [opts.actionName] The action name to call. Defaults to 'GetCustomFieldsDefsData'.
 	 * @param {String} [opts.idParam] The entity ID param name. Defaults to 'id'.
 	 * @param {String} [opts.idField] The entity ID field name to get the ID value above. Defaults to Model's ID field.
+	 * @param {Function} [opts.callback] The callback function to call.
+	 * @param {Boolean} opts.callback.success
+	 * @param {Object} opts.callback.json
+	 * @param {Object} [opts.scope] The scope (this) for the supplied callback.
 	 * @param {Ext.data.Model} opts.model The main data-model.
 	 * @param {Sonicle.webtop.core.ux.panel.CustomFieldsBase} opts.cfPanel The Custom Fields panel.
 	 */
 	reloadCustomFields: function(tags, cfInitialData, opts) {
 		opts = opts || {};
-		var SoO = Sonicle.Object,
+		var me = this,
+			SoO = Sonicle.Object,
 			cfpnl = opts.cfPanel,
 			mo = opts.model,
 			entityId = mo.phantom ? null : (Ext.isString(opts.idField) ? mo.get(opts.idField) : mo.getId());
 		
 		cfpnl.wait();
-		this.getCustomFieldsDefsData(tags, entityId, {
+		me.getCustomFieldsDefsData(tags, entityId, {
 			serviceId: opts.serviceId,
 			idParam: opts.idParam,
 			callback: function(success, json) {
@@ -84,6 +89,7 @@ Ext.define('Sonicle.webtop.core.app.util.CustomFields', {
 					cfpnl.setStore(mo.cvalues());
 				}
 				cfpnl.unwait();
+				Ext.callback(opts.callback, opts.scope || me, [success, json]);
 			}
 		});
 	},
@@ -96,6 +102,11 @@ Ext.define('Sonicle.webtop.core.app.util.CustomFields', {
 	 * @param {String} opts.serviceId The service ID to perform request against to.
 	 * @param {String} [opts.actionName] The action name to call. Defaults to 'GetCustomFieldsDefsData'.
 	 * @param {String} [opts.idParam] The entity ID param name. Defaults to 'id'.
+	 * @param {Function} [opts.callback] The callback function to call.
+	 * @param {Boolean} opts.callback.success
+	 * @param {Object} opts.callback.json
+	 * @param {Object} [opts.scope] The scope (this) for the supplied callback.
+	 * 
 	 */
 	getCustomFieldsDefsData: function(tags, entityId, opts) {
 		opts = opts || {};

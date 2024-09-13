@@ -160,7 +160,6 @@ Ext.define('Sonicle.webtop.core.mixin.HasModel', {
 	
 	getModelStatus: function() {
 		return this.getViewModel().get('status');
-		//return this.getVMData().status;
 	},
 	
 	clearModel: function() {

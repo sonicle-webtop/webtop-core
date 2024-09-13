@@ -58,7 +58,7 @@ Ext.define('Sonicle.webtop.core.admin.Service', {
 	
 	init: function() {
 		var me = this,
-				maint = WT.getApp().getDescriptor(WT.ID).getMaintenance();
+			maint = WT.getApp().getDescriptor(WT.ID).getMaintenance();
 		
 		me.initActions();
 		me.initCxm();
@@ -67,23 +67,22 @@ Ext.define('Sonicle.webtop.core.admin.Service', {
 			xtype: 'toolbar',
 			referenceHolder: true,
 			iconCls: '',
-			items: [{
-				xtype: 'button',
-				reference: 'btnmaintenance',
-				text: me.res(maint ? 'btn-maintenance.on.lbl' : 'btn-maintenance.off.lbl'),
-				enableToggle: true,
-				pressed: maint,
-				iconCls: maint ? 'wtadm-icon-maintenance-on' : 'wtadm-icon-maintenance-off',
-				toggleHandler: function(s,state) {
-					me.setMaintenanceFlag(state);
-				},
-				listeners: {
-					toggle: function(s, pressed) {
-						s.setText(me.res(pressed ? 'btn-maintenance.on.lbl' : 'btn-maintenance.off.lbl'));
-						s.setIconCls(pressed ? 'wtadm-icon-maintenance-on' : 'wtadm-icon-maintenance-off');
+			items: [
+				{
+					xtype: 'sotogglebutton',
+					reference: 'btnmaintenance',
+					offIconCls: 'wtadm-icon-maintenance-off',
+					onIconCls: 'wtadm-icon-maintenance-on',
+					onText: me.res('btn-maintenance.on.lbl'),
+					offText: me.res('btn-maintenance.off.lbl'),
+					onTooltip: me.res('btn-maintenance.tip'),
+					offTooltip: me.res('btn-maintenance.tip'),
+					pressed: maint,
+					toggleHandler: function(s, pressed) {
+						me.setMaintenanceFlagUI(pressed);
 					}
 				}
-			}]
+			]
 		}));
 		
 		me.setToolComponent(Ext.create({
@@ -284,20 +283,43 @@ Ext.define('Sonicle.webtop.core.admin.Service', {
 		return sel.length > 0 ? sel[0] : null;
 	},
 	
-	setMaintenanceFlag: function(active) {
+	setMaintenanceFlagUI: function(status) {
+		var me = this,
+			s = status ? 'on' : 'off',
+			reset = function(state) {
+				me.btnMaintenance().toggle(state, true);
+			};
+		
+		WT.confirmOk(me.res('btn-maintenance.confirm.'+s), function(bid) {
+			if (bid === 'ok') {
+				me.setMaintenanceFlag(status, {
+					callback: function(success, json) {
+						WT.handleMessage(success, json);
+						if (success) {
+							WT.toast(me.res('btn-maintenance.info.'+s));
+						} else {
+							reset(!status);
+						}
+					}
+				});
+			} else {
+				reset(!status);
+			}
+		}, me, {
+			title: me.res('btn-maintenance.confirm.tit'),
+			okText: me.res('btn-maintenance.confirm.'+s+'.ok')
+		});
+	},
+	
+	setMaintenanceFlag: function(status, opts) {
+		opts = opts || {};
 		var me = this;
-		//me.wait();
 		WT.ajaxReq(me.ID, 'SetMaintenanceFlag', {
-			params: {value: active},
-			callback: function(success, o) {
-				//me.unwait();
-				if(success) {
-					me.btnMaintenance().toggle(active);
-					WT.info(me.res(active ? 'btn-maintenance.info.on' : 'btn-maintenance.info.off'));
-				} else {
-					me.btnMaintenance().toggle(!active, true);
-					WT.error(o.message);
-				}
+			params: {
+				value: status
+			},
+			callback: function(success, json) {
+				Ext.callback(opts.callback, opts.scope || me, [success, json]);
 			}
 		});
 	},
@@ -325,7 +347,7 @@ Ext.define('Sonicle.webtop.core.admin.Service', {
 	editDomain: function(domainId, opts) {
 		opts = opts || {};
 		var me = this,
-				vct = WT.createView(me.ID, 'view.Domain');
+			vct = WT.createView(me.ID, 'view.Domain');
 		
 		vct.getView().on('viewsave', function(s, success, model, op) {
 			Ext.callback(opts.callback, opts.scope || me, [success, model, op]);
@@ -1029,8 +1051,8 @@ Ext.define('Sonicle.webtop.core.admin.Service', {
 		
 		initCheckDomainUI: function(node) {
 			var me = this;
-			WT.confirm(me.res('domain.confirm.init.check', Ext.String.ellipsis(node.get('text'), 40)), function(bid) {
-				if (bid === 'yes') {
+			WT.confirmOk(me.res('domain.confirm.init.check', Ext.String.ellipsis(node.get('text'), 40)), function(bid) {
+				if (bid === 'ok') {
 					//me.wait();
 					me.initDomain(node.get('_domainId'), {
 						callback: function(success, data, json) {
@@ -1044,6 +1066,9 @@ Ext.define('Sonicle.webtop.core.admin.Service', {
 						}
 					});
 				}
+			}, me, {
+				title: me.res('domain.tit'),
+				okText: me.res('domain.confirm.init.check.ok')
 			});
 		},
 		
@@ -1073,6 +1098,8 @@ Ext.define('Sonicle.webtop.core.admin.Service', {
 								fn: function() {
 									WT.confirm(me.res('domain.confirm.init.anyway'), function(bid) {
 										if (bid === 'yes') doInitFn(domainId);
+									}, me, {
+										yesText: me.res('domain.confirm.init.anyway.yes')
 									});
 								}
 							});
@@ -1110,17 +1137,21 @@ Ext.define('Sonicle.webtop.core.admin.Service', {
 						}
 					});
 				};
-			WT.confirm(me.res('domain.confirm.delete', Ext.String.ellipsis(node.get('text'), 40)), function(bid) {
-				if (bid === 'yes') {
+			
+			WT.confirmDelete(me.res('domain.confirm.delete', Ext.String.ellipsis(node.get('text'), 40)), function(bid) {
+				if (bid === 'ok') {
 					if (node.get('_dirCapUsersWrite') === true) {
 						WT.confirmYNC(me.res('domain.confirm.delete.deep'), function(bid2) {
 							if (Sonicle.String.isIn(bid2, ['yes', 'no'])) doFn(bid2 === 'yes');
+						}, me, {
+							yesText: me.res('domain.confirm.delete.deep.yes'),
+							noText: me.res('domain.confirm.delete.deep.no')
 						});
 					} else {
 						doFn(false);
 					}
 				}
-			});
+			}, me);
 		},
 		
 		showTab: function(itemId, createFn) {
@@ -1164,11 +1195,12 @@ Ext.define('Sonicle.webtop.core.admin.Service', {
 			case 'editDomain':
 				sel = me.getCurrentDomainNode();
 				return sel ? false : true;
+			case 'initCheckDomain':
 			case 'deleteDomain':
 				sel = me.getCurrentDomainNode();
-				return sel ? false : true;
+				return sel ? me.getVar('modeSingleDomain') : true;
 			case 'addDomain':
-				return false;
+				return me.getVar('modeSingleDomain');
 				//if(!me.isPermitted('STORE_OTHER', 'CREATE')) return true;
 		}
 	}

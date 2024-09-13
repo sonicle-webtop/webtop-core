@@ -79,6 +79,12 @@ Ext.define('Sonicle.webtop.core.ux.UploadBar', {
 	buttonIconCls: 'wt-icon-file-upload',
 	
 	/**
+	 * @cfg {String} buttonUI
+	 * Button UI to use for upload button.
+	 */
+	buttonUI: 'default',
+	
+	/**
 	 * @cfg {String} dropElement
 	 * The ID of DOM element to be used as the dropzone for the files.
 	 */
@@ -94,9 +100,9 @@ Ext.define('Sonicle.webtop.core.ux.UploadBar', {
 	
 	initComponent: function() {
 		var me = this,
-				SoByt = Sonicle.Bytes,
-				mfs = me.getMaxFileSize(),
-				de = me.dropElement;
+			SoByt = Sonicle.Bytes,
+			mfs = me.getMaxFileSize(),
+			de = me.dropElement;
 		
 		if (Ext.isString(mfs)) mfs = SoByt.parse(mfs);
 		me.callParent(arguments);
@@ -106,6 +112,7 @@ Ext.define('Sonicle.webtop.core.ux.UploadBar', {
 			text: WT.res('wtuploadbar.btn-upload.lbl'),
 			tooltip: WT.res('wtuploadbar.btn-upload.tip'),
 			iconCls: me.buttonIconCls,
+			ui: me.buttonUI,
 			uploaderConfig: WTF.uploader(me.sid, me.uploadContext, {
 				autoStart: me.autoStart,
 				extraParams: {

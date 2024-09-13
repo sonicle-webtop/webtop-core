@@ -70,17 +70,12 @@ Ext.define('Sonicle.webtop.core.admin.view.DataSourceQuery', {
 		WTU.applyFormulas(me.getVM(), {
 			forcePagination: WTF.checkboxBind('record', 'forcePagination')
 		});
-		
-		me.getVM().onRecordCreateWithId = function(record, id) {
-			record.setExtraParams({
-				domainId: me.domainId
-			});
+	},
+	
+	returnModelExtraParams: function() {
+		return {
+			domainId: this.domainId
 		};
-		me.on('beforemodelsave', function(s, record) {
-			record.setExtraParams({
-				domainId: me.domainId
-			});
-		});
 	},
 	
 	initComponent: function() {
@@ -97,6 +92,8 @@ Ext.define('Sonicle.webtop.core.admin.view.DataSourceQuery', {
 			items: [
 				{
 					xtype: 'wtfieldspanel',
+					paddingTop: true,
+					paddingSides: true,
 					modelValidation: true,
 					defaults: {
 						labelWidth: 100
@@ -122,6 +119,8 @@ Ext.define('Sonicle.webtop.core.admin.view.DataSourceQuery', {
 					]
 				}, {
 					xtype: 'wtfieldspanel',
+					paddingSides: true,
+					paddingBottom: true,
 					modelValidation: true,
 					layout: {
 						type: 'vbox',

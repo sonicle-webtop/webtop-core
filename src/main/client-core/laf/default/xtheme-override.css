@@ -1,44 +1,10 @@
-/* Pretty folder icons */
-.x-grid-item .x-grid-cell-inner-treecolumn .x-tree-icon { background-image: url(folder_16.svg); background-size: contain; }
-.x-grid-item .x-grid-cell-inner-treecolumn .x-tree-icon-parent { background-image: url(folder_16.svg); background-size: contain; }
-.x-grid-item .x-grid-cell-inner-treecolumn .x-tree-icon-leaf { background-image: url(folder_16.svg); background-size: contain; }
-.x-grid-item .x-grid-tree-node-expanded .x-tree-icon { background-image: url(folder-open_16.svg); background-size: contain; }
+/**************************************/
+/* Fixes/Tweaks for all original themes
+/* (should not include theme dependent styles, colors, ecc)
+/**************************************/
 
-/* Avoids annoying focus border on focused cells */
-.x-grid-item-focused .x-grid-cell-inner:before { display: none; }
-
-/* ActionColumn: adds some extra spacing between action column icons */
-.x-action-col-icon {
-	margin-left: 4px;
-}
-
-/* Fieldset: provide better disabled style */
-.x-fieldset.x-item-disabled {
-	opacity: 0.3
-}
-
-/* Toolbar: provide better margins */
-.x-toolbar .x-toolbar-item {
-    margin-right: 2px;
-}
-.x-toolbar .x-toolbar-separator-horizontal {
-	margin-left: 2px !important;
-    margin-right: 4px !important;
-	padding-right: 2px !important;
-}
-
-/* Trigger: fixes */
-.x-form-trigger {
-	line-height: inherit; /* Fix icon vertical alignment a little in FF */
-    display: table-cell; /* Fix inputEl crushing due to FontAwesome5 icon in Chrome */
-}
-
-/* Grid: center empty text */
-.x-grid-empty {
-	text-align: center;
-}
-
-/* Icons: force glyph behaviour (light opacity) when using FontAwesome classes as icons */
+/* ---------- Icons */
+/* Gorce glyph behaviour (light opacity) when using FontAwesome classes as icons */
 .x-btn-icon-el.fas {
     opacity: 0.6;
 }
@@ -63,3 +29,69 @@
 .x-form-trigger.far {
     opacity: 0.4;
 }
+
+/* ---------- Ext.menu.MenuItem */
+/* Force 16px icon size */
+/* (useful only with direct url icons) */
+.x-menu-item-icon {
+    background-size: 16px;
+}
+
+/* ---------- Ext.form.FieldSet */
+/* Provide better disabled style */
+.x-fieldset.x-item-disabled {
+	opacity: 0.3
+}
+
+/* ---------- Ext.form.field.Text */
+.x-form-trigger {
+	/*line-height: inherit;*/ /* Fix icon vertical alignment a little in FF */
+    display: table-cell; /* Fix inputEl crushing (or icon falling) due to FontAwesome5 icon in Chrome */
+}
+
+/* ---------- Ext.form.field.TextArea */
+/* Provide SW (south-west) handle for customized smart resizing */
+.x-form-textarea-resizable-smart {
+    position: relative;
+	background: #fff url("data:image/svg+xml,%3Csvg%20width%3D%2213%22%20height%3D%2213%22%20viewBox%3D%220%200%2013%2013%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Cpath%20d%3D%22M10.2773%2011.7773L12.2773%209.77734M12.2773%206.77734L7.27734%2011.7773M12.2773%203.77734L4.27734%2011.7773M12.2773%200.777344L1.27734%2011.7773%22%20stroke%3D%22%239CA3AF%22%2F%3E%3C%2Fsvg%3E") 100% 100% no-repeat;
+	bottom: 1px;
+	right: 2px;
+}
+
+/* ---------- Ext.grid.Panel */
+/* Center empty text */
+.x-grid-empty { text-align: center; }
+/* Support newly defined x-grid-cell-empty class like x-grid-empty */
+.x-grid-cell-empty { color: grey; }
+/* Avoids annoying focus border on focused cells */
+.x-grid-item-focused .x-grid-cell-inner:before { display: none; }
+
+/* ---------- Ext.grid.column.Action */
+/* Adds some extra spacing between action column icons */
+.x-action-col-icon {
+	margin-left: 4px;
+}
+
+/* ---------- Ext.grid.column.Check */
+/* Adds right pointer */
+.x-grid-checkcolumn {
+    cursor: pointer;
+}
+
+/* ---------- Ext.toolbar.Toolbar */
+/* Provide better margins */
+.x-toolbar .x-toolbar-item {
+    margin-right: 2px;
+}   
+.x-toolbar .x-toolbar-separator-horizontal {
+	margin-left: 2px !important;
+    margin-right: 4px !important;
+	padding-right: 2px !important;
+}
+
+/* ---------- Ext.tree.Panel */
+/* Prettify folder icons */
+.x-grid-item .x-grid-cell-inner-treecolumn .x-tree-icon { background-image: url(folder_16.svg); background-size: contain; }
+.x-grid-item .x-grid-cell-inner-treecolumn .x-tree-icon-parent { background-image: url(folder_16.svg); background-size: contain; }
+.x-grid-item .x-grid-cell-inner-treecolumn .x-tree-icon-leaf { background-image: url(folder_16.svg); background-size: contain; }
+.x-grid-item .x-grid-tree-node-expanded .x-tree-icon { background-image: url(folder-open_16.svg); background-size: contain; }

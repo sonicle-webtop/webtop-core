@@ -35,7 +35,7 @@ Ext.define('Sonicle.webtop.core.ux.plugin.TabPermStatus', {
 	extend: 'Ext.plugin.Abstract',
 	alias: 'plugin.wttabpermstatus',
 	
-	iconCls: 'wt-icon-permission-{0}',
+	//iconCls: 'wt-icon-permission-{0}',
 	adminIconCls: 'wt-icon-permission-{0}-gray',
 	
 	enabled: true,

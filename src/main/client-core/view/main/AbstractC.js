@@ -31,6 +31,9 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
+/**
+ * @deprecated see WTA.viewport.private package
+ */
 Ext.define('Sonicle.webtop.core.view.main.AbstractC', {
 	alternateClassName: 'WTA.view.main.AbstractC',
 	extend: 'Ext.app.ViewController',
@@ -159,12 +162,15 @@ Ext.define('Sonicle.webtop.core.view.main.AbstractC', {
 	 */
 	activateService: function(svc) {
 		var me = this,
-				id = svc.ID;
+			id = svc.ID,
+			btn;
 		
 		if (me.active === id) return false;
 		me.isActivating = true;
 		
 		// Activate components
+		btn = me.getView().getServiceButton(id);
+		if (btn) btn.setPressed(true);
 		me.setActiveToolbar(svc);
 		if (svc.hasNewActions()) me.setActiveNewActions(svc);
 		me.setActiveToolboxAction(svc);

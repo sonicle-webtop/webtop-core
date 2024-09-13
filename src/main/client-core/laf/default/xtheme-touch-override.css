@@ -1,3 +1,7 @@
+/**************************************/
+/* Fixes/Tweaks for specific original theme
+/* (should not include theme dependent styles, colors, ecc)
+/**************************************/
 
 /* ActionColumn: adds some extra spacing between action column icons */
 .x-action-col-icon {

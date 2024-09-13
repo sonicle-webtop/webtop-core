@@ -31,6 +31,9 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
+/**
+ * @deprecated see WTA.viewport.private package
+ */
 Ext.define('Sonicle.webtop.core.view.main.Default', {
 	alternateClassName: 'WTA.view.main.Default',
 	extend: 'WTA.view.main.Abstract',
@@ -43,13 +46,17 @@ Ext.define('Sonicle.webtop.core.view.main.Default', {
 		this.leftDockCmp().add({
 			xclass: 'WTA.ux.app.launcher.ServiceButton',
 			sid: desc.getId(),
+			toggleGroup: this.launcherToggleGroup(),
 			scale: 'medium',
 			handler: 'onLauncherButtonClick'
 		});
 	},
 	
+	getServiceButton: function(serviceId) {
+		return this.leftDockCmp().getComponent(serviceId);
+	},
+	
 	addLinkButton: function(link) {
-
 		this.leftDockCmp().add({
 			xclass: 'WTA.ux.app.launcher.LinkButton',
 			scale: 'medium',
@@ -65,7 +72,7 @@ Ext.define('Sonicle.webtop.core.view.main.Default', {
 			xtype: 'toolbar',
 			vertical: true,
 			border: false,
-			cls: 'wt-vieport-dock',
+			cls: 'wt-navbar',
 			enableOverflow: true,
 			overflowHandler: 'scroller',
 			items: [

@@ -37,32 +37,86 @@ Ext.define('Sonicle.webtop.core.ux.Window', {
 	alias: ['widget.wtwindow'],
 	
 	/**
+	 * @cfg {Object/String} maximizeInsets
+	 * An object or a string (in TRBL order) specifying insets from the configured
+	 * maximizing parent region.
+	 */
+	
+	/**
 	 * @event beforeminimize
 	 * Fires before minimizing the window, usually because the user has clicked the minimize tool.
 	 * Return false from any listener to stop the minimizing process being completed.
 	 * @param {Ext.window.Window} this
 	 */
 	
-	canRestore: function() {
-		return this.hidden;
+	isMinimizable: function() {
+		return this.minimizable && !this.isHidden();
 	},
 	
-	canMaximize: function() {
-		return this.maximize && !this.hidden;
+	isMaximizable: function() {
+		return this.maximizable && !this.maximized && !this.isHidden();
 	},
 	
-	canMinimize: function() {
-		return !this.hidden;
+	isRestorable: function() {
+		return this.isHidden() || this.maximized;
 	},
 	
 	minimize: function() {
 		var me = this;
-		if (me.canMinimize()) {
+		if (me.isMinimizable()) {
 			if (me.fireEvent('beforeminimize', me) !== false) {
 				me.hide();
 				return me.callParent();
 			}
 		}
 		return me;
+	},
+	
+	maximize: function(animate, initial) {
+		var me = this,
+			maximizeInsets = me.maximizeInsets,
+			maximizeDone = !me.maximized && !me.maximizing,
+			animateDone = animate || !!me.animateTarget,
+			ret = me.callParent(arguments);
+		
+		if (maximizeDone && !animateDone && maximizeInsets) {
+			me.enforceMaximizeInsets(maximizeInsets);
+		}
+		return ret;
+	},
+	
+	onShow: function() {
+		// Called when window size is restored!
+		var me = this,
+			maximizeInsets = me.maximizeInsets,
+			wasMaximized = me.maximized;
+		me.callParent(arguments);
+		if (wasMaximized && maximizeInsets) {
+			me.enforceMaximizeInsets(maximizeInsets);
+		}
+	},
+	
+	fitContainer: function(animate) {
+		// Called when browser window is resized!
+		var me = this,
+			maximizeInsets = me.maximizeInsets;
+		if (me.maximized && maximizeInsets) {
+			me.enforceMaximizeInsets(maximizeInsets, animate);
+		} else {
+			me.callParent(arguments);
+		}
+	},
+	
+	privates: {
+		enforceMaximizeInsets: function(insets, animate) {
+			insets = Ext.isObject(insets) ? insets : Ext.Element.parseBox(insets);
+			var me = this,
+				region = me.getConstrainRegion();
+			
+			region.adjust(insets.top, insets.right, insets.bottom, insets.left);
+			me.setBox(region, animate);
+			//me.restorePos = [region.x, region.y];
+			//me.restoreSize = {width: region.width, height: region.height};
+		}
 	}
 });

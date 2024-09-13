@@ -1,3 +1,7 @@
+/**************************************/
+/* Fixes/Tweaks for specific original theme
+/* (should not include theme dependent styles, colors, ecc)
+/**************************************/
 
 /* Panels: reduce default margin between items lowering bottom-margin */
 .x-autocontainer-form-item,

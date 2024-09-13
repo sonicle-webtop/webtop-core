@@ -35,6 +35,7 @@ Ext.define('Sonicle.webtop.core.ux.grid.Recipients', {
 	alias: ['widget.wtrecipientsgridnew'],
 	extend: 'Ext.grid.Panel',
 	requires: [
+		'Sonicle.grid.column.Icon',
 		'Sonicle.grid.column.Action',
 		'WTA.ux.grid.RecipientCellEditor',
 		'WTA.ux.grid.plugin.RecipientCellEditing',
@@ -113,6 +114,18 @@ Ext.define('Sonicle.webtop.core.ux.grid.Recipients', {
 	recipientValueHdText: '',
 	
 	/**
+	 * @cfg {String} recipientValueEmptyText
+	 * The default text to place into an empty value field.
+	 */
+	recipientValueEmptyText: '',
+	
+	/**
+	 * @cfg {String} recipientLinkIconTooltip
+	 * The default tooltip to set to link icon.
+	 */
+	recipientLinkIconTooltip: '',
+	
+	/**
 	 * @event rcpteditblur
 	 * Fired by the editing plugin when the editing session of a recipients blurs out.
 	 * Typically in these case we can manually move focus away.
@@ -137,12 +150,10 @@ Ext.define('Sonicle.webtop.core.ux.grid.Recipients', {
 			if (me.fields.email) me.recipientValueField = me.fields.email;
 		}
 		
-		Ext.apply(me, {
-			selModel: 'cellmodel',
-			viewConfig: {
-				scrollable: true,
-				markDirty: false
-			}	
+		me.selModel = 'cellmodel';
+		me.viewConfig = Ext.merge(me.viewConfig || {}, {
+			scrollable: true,
+			markDirty: false
 		});
 		me.plugins = Sonicle.Utils.mergePlugins(me.plugins, [
 			{
@@ -178,7 +189,7 @@ Ext.define('Sonicle.webtop.core.ux.grid.Recipients', {
 					editable: false,
 					typeAhead: false,
 					forceSelection: true,
-					triggerAction: 'all',					
+					triggerAction: 'all',	
 					store: {
 						xclass: 'WTA.store.RcptType',
 						autoLoad: true
@@ -192,7 +203,7 @@ Ext.define('Sonicle.webtop.core.ux.grid.Recipients', {
 					key: 'store.rcptType',
 					keepcase: true
 				}),
-				width: 70
+				width: 80
 			}, {
 				dataIndex: me.recipientValueField,
 				header: me.recipientValueHdText,
@@ -201,23 +212,28 @@ Ext.define('Sonicle.webtop.core.ux.grid.Recipients', {
 				editor: {
 					xtype: 'wtrcptsuggestcombo',
 					rftype: me.targetRecipientFieldType,
-					autoLast: me.automaticRecipientAtEnd
+					autoLast: me.automaticRecipientAtEnd,
+					emptyText: me.recipientValueEmptyText
 				},
-				renderer: Ext.util.Format.htmlEncode,
+				emptyCellText: me.recipientValueEmptyText,
 				flex: 1
 			}
 		];
 		
 		if (me.showRecipientLink) {
 			me.columns.push({
+				xtype: 'soiconcolumn',
 				dataIndex: me.recipientLinkField,
 				header: WTF.headerWithGlyphIcon('fa fa-link'),
 				draggable: false,
 				hideable: false,
 				menuDisabled: true,
 				stopSelection: true,
-				renderer: function(value) {
-					return Ext.isEmpty(value) ? '' : WTF.headerWithGlyphIcon('fa fa-link');
+				getIconCls: function(value) {
+					return Ext.isEmpty(value) ? '' : 'fa fa-link';
+				},
+				getTooltip: function(value) {
+					return Ext.isEmpty(value) ? '' : me.recipientLinkIconTooltip;
 				},
 				width: 40
 			});

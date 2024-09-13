@@ -49,6 +49,7 @@ import com.sonicle.webtop.core.app.RunContext;
 import com.sonicle.webtop.core.app.CoreManifest;
 import com.sonicle.webtop.core.app.OTPManager;
 import com.sonicle.webtop.core.app.WT;
+import com.sonicle.webtop.core.app.WebTopApp;
 import com.sonicle.webtop.core.app.WebTopProps;
 import com.sonicle.webtop.core.app.model.User;
 import com.sonicle.webtop.core.app.model.UserGetOption;
@@ -62,6 +63,7 @@ import com.sonicle.webtop.core.bol.js.JsUserOptions;
 import com.sonicle.webtop.core.bol.js.TrustedDeviceCookie;
 import com.sonicle.webtop.core.bol.model.SyncDevice;
 import com.sonicle.webtop.core.model.ServicePermission;
+import com.sonicle.webtop.core.app.model.UIPreset;
 import com.sonicle.webtop.core.sdk.BaseService;
 import com.sonicle.webtop.core.sdk.BaseUserOptionsService;
 import com.sonicle.webtop.core.sdk.UserProfile;
@@ -122,9 +124,10 @@ public class UserOptionsService extends BaseUserOptionsService {
 				
 				// main
 				jso.displayName = user.getDisplayName();
-				jso.theme = us.getTheme();
-				jso.layout = us.getLayout();
-				jso.laf = us.getLookAndFeel();
+				jso.layout = us.getUILayout();
+				jso.ui = getUserUIPreset(us);
+				//jso.theme = us.getTheme();
+				//jso.laf = us.getLookAndFeel();
 				jso.headerScale = EnumUtils.toSerializedName(us.getViewportHeaderScale());
 				jso.passwordForceChange = us.getPasswordForceChange();
 				jso.startupService = sanitizeStartupService(coreMgr, us.getStartupService());
@@ -210,9 +213,10 @@ public class UserOptionsService extends BaseUserOptionsService {
 					upCacheNeedsUpdate = true;
 					coreMgr.updateUserDisplayName(pl.data.displayName);
 				}
-				if (pl.map.has("theme")) us.setTheme(pl.data.theme);
-				if (pl.map.has("layout")) us.setLayout(pl.data.layout);
-				if (pl.map.has("laf")) us.setLookAndFeel(pl.data.laf);
+				if (pl.map.has("layout")) us.setUILayout(pl.data.layout);
+				if (pl.map.has("ui")) setUserUIPreset(us, pl.data.ui);
+				//if (pl.map.has("theme")) us.setTheme(pl.data.theme);
+				//if (pl.map.has("laf")) us.setLookAndFeel(pl.data.laf);
 				if (pl.map.has("headerScale")) us.setViewportHeaderScale(pl.data.headerScale);
 				if (pl.map.has("passwordForceChange")) us.setPasswordForceChange(pl.data.passwordForceChange);
 				if (pl.map.has("startupService")) us.setStartupService(pl.data.startupService);
@@ -287,6 +291,27 @@ public class UserOptionsService extends BaseUserOptionsService {
 			new JsonResult(false, "Error").printTo(out);
 		} finally {
 			DbUtils.closeQuietly(con);
+		}
+	}
+	
+	private String getUserUIPreset(CoreUserSettings us) throws WTException {
+		CoreManager core = WT.getCoreManager(getTargetProfileId());
+		String theme = us.getUITheme();
+		String laf = us.getUILookAndFeel();
+		for (UIPreset preset : core.listUIPresets().values()) {
+			if (StringUtils.equals(preset.getTheme(), theme) && StringUtils.equals(preset.getLookAndFeel(), laf)) {
+				return preset.getId();
+			}
+		}
+		return null;
+	}
+	
+	private void setUserUIPreset(CoreUserSettings us, String ui) throws WTException {
+		CoreManager core = WT.getCoreManager(getTargetProfileId());
+		UIPreset preset = core.listUIPresets().get(ui);
+		if (preset != null) {
+			us.setUITheme(preset.getTheme());
+			us.setUILookAndFeel(preset.getLookAndFeel());
 		}
 	}
 	

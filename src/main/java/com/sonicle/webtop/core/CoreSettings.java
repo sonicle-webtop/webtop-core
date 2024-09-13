@@ -571,13 +571,6 @@ public class CoreSettings {
 	/**
 	 * [user][default]
 	 * [string]
-	 * Theme name
-	 */
-	public static final String THEME = "theme";
-	
-	/**
-	 * [user][default]
-	 * [string]
 	 * Sets the UI's layout.
 	 */
 	public static final String LAYOUT = "layout";
@@ -585,9 +578,39 @@ public class CoreSettings {
 	/**
 	 * [user][default]
 	 * [string]
+	 * Theme name
+	 */
+	public static final String THEME = "theme";
+	
+	/**
+	 * [user][default]
+	 * [string]
 	 * Sets the UI's look&feel.
 	 */
 	public static final String LAF = "laf";
+	
+	/**
+	 * [user]
+	 * [boolean]
+	 * Forces to display the tryme banner after proposing a new UI.
+	 */
+	public static final String UI_TRYME_DISARMED = "ui.tryme.disarmed";
+	
+	
+	/**
+	 * [user]
+	 * [object]
+	 * Defines UI try-me banner data:
+	 * 
+	 * {
+	 *   'uiPreset': 'crisp',
+	 *   'newTheme': 'crisp',
+	 *   'newLookAndFeel': 'office2019',
+	 *   'oldTheme': 'classic',
+	 *   'oldLookAndFeel': 'default'
+	 * }
+	 */
+	public static final String UI_TRYME_BANNER = "ui.tryme.banner";
 	
 	/**
 	 * [user][default]
@@ -1038,6 +1061,30 @@ public class CoreSettings {
 			public static String toJson(WebRTCIceServer.List value) {
 				return JsonResult.gson().toJson(value, WebRTCIceServer.List.class);
 			}
+		}
+	}
+	
+	public static class TryMeBanner {
+		public String uiPreset;
+		public String newTheme;
+		public String newLookAndFeel;
+		public String oldTheme;
+		public String oldLookAndFeel;
+
+		public TryMeBanner(String uiPreset, String newTheme, String newLookAndFeel, String oldTheme, String oldLookAndFeel) {
+			this.uiPreset = uiPreset;
+			this.newTheme = newTheme;
+			this.newLookAndFeel = newLookAndFeel;
+			this.oldTheme = oldTheme;
+			this.oldLookAndFeel = oldLookAndFeel;
+		}
+		
+		public static TryMeBanner fromJson(String value) {
+			return JsonResult.gson().fromJson(value, TryMeBanner.class);
+		}
+
+		public static String toJson(TryMeBanner value) {
+			return JsonResult.gson().toJson(value, TryMeBanner.class);
 		}
 	}
 }

@@ -48,8 +48,9 @@ public class JsUserOptions extends JsUserOptionsBase {
 	public String dirPasswordPolicies; // Read-only
 	
 	public String displayName;
-	public String theme;
 	public String layout;
+	public String ui;
+	public String theme;
 	public String laf;
 	public String headerScale;
 	public Boolean passwordForceChange;

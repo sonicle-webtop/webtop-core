@@ -578,8 +578,7 @@ public class WT {
 	}
 	
 	public static Template loadTemplate(String serviceId, String relativePath) throws IOException {
-		String path = LangUtils.joinPaths(LangUtils.packageToPath(serviceId), relativePath);
-		return getWTA().loadTemplate(path);
+		return getWTA().loadTemplate(serviceId, relativePath);
 	}
 	
 	public static String buildTemplate(String template, Map data) throws IOException, TemplateException {

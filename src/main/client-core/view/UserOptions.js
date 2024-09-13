@@ -48,6 +48,17 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 		'WTA.store.TimeFmtShort',
 		'WTA.store.TimeFmtLong'
 	],
+	uses: [
+		'Sonicle.webtop.core.view.ChangePassword'
+	],
+	
+	//overridable properties to influence UI
+	mainDesktopNotificationsLayout: 'vbox',
+	mainPasswordButtonPack: 'center',
+	upiNicknameHidden: false,
+	upiGenderHidden: false,
+	upiFaxHidden: false,
+	upiPagerHidden: false,
 	
 	viewModel: {
 		formulas: {
@@ -113,24 +124,7 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 				xtype: 'sospacer'
 			}, {
 				xtype: 'formseparator'
-			}, 
-			WTF.lookupCombo('id', 'desc', {
-				bind: '{record.theme}',
-				store: {
-					autoLoad: true,
-					model: 'WTA.model.Simple',
-					proxy: WTF.proxy(me.ID, 'LookupThemes', 'themes')
-				},
-				fieldLabel: WT.res('opts.main.fld-theme.lbl'),
-				width: 140+150,
-				listeners: {
-					blur: {
-						fn: me.onBlurAutoSave,
-						scope: me
-					}
-				},
-				needReload: true
-			}), 
+			},
 			WTF.lookupCombo('id', 'desc', {
 				bind: '{record.layout}',
 				store: {
@@ -139,24 +133,7 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 					proxy: WTF.proxy(me.ID, 'LookupLayouts', 'layouts')
 				},
 				fieldLabel: WT.res('opts.main.fld-layout.lbl'),
-				width: 140+150,
-				listeners: {
-					blur: {
-						fn: me.onBlurAutoSave,
-						scope: me
-					}
-				},
-				needReload: true
-			}), 
-			WTF.lookupCombo('id', 'desc', {
-				bind: '{record.laf}',
-				store: {
-					autoLoad: true,
-					model: 'WTA.model.Simple',
-					proxy: WTF.proxy(me.ID, 'LookupLAFs', 'lafs')
-				},
-				fieldLabel: WT.res('opts.main.fld-laf.lbl'),
-				width: 140+150,
+				width: 380,
 				listeners: {
 					blur: {
 						fn: me.onBlurAutoSave,
@@ -166,12 +143,66 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 				needReload: true
 			}),
 			WTF.lookupCombo('id', 'desc', {
+				bind: '{record.ui}',
+				store: {
+					autoLoad: true,
+					model: 'WTA.model.Simple',
+					proxy: WTF.proxy(me.ID, 'LookupUIPresets', 'data')
+				},
+				listeners: {
+					blur: {
+						fn: me.onBlurAutoSave,
+						scope: me
+					}
+				},
+				fieldLabel: WT.res('opts.main.fld-ui.lbl'),
+				emptyText: WT.res('opts.main.fld-ui.emp'),
+				width: 380,
+				needReload: true
+			}),
+			/*
+			WTF.lookupCombo('id', 'desc', {
+				bind: '{record.theme}',
+				store: {
+					autoLoad: true,
+					model: 'WTA.model.Simple',
+					proxy: WTF.proxy(me.ID, 'LookupThemes', 'themes')
+				},
+				listeners: {
+					blur: {
+						fn: me.onBlurAutoSave,
+						scope: me
+					}
+				},
+				fieldLabel: WT.res('opts.main.fld-theme.lbl'),
+				width: 140+150,
+				needReload: true
+			}), 
+			WTF.lookupCombo('id', 'desc', {
+				bind: '{record.laf}',
+				store: {
+					autoLoad: true,
+					model: 'WTA.model.Simple',
+					proxy: WTF.proxy(me.ID, 'LookupLAFs', 'lafs')
+				},
+				listeners: {
+					blur: {
+						fn: me.onBlurAutoSave,
+						scope: me
+					}
+				},
+				fieldLabel: WT.res('opts.main.fld-laf.lbl'),
+				width: 140+150,
+				needReload: true
+			}),
+			*/
+			WTF.lookupCombo('id', 'desc', {
 				bind: '{record.headerScale}',
 				store: Ext.create('WTA.store.HeaderScale', {
 					autoLoad: true
 				}),
 				fieldLabel: WT.res('opts.main.fld-headerScale.lbl'),
-				width: 140+150,
+				width: 380,
 				listeners: {
 					blur: {
 						fn: me.onBlurAutoSave,
@@ -196,7 +227,7 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 				},
 				fieldLabel: WT.res('opts.main.fld-startupService.lbl'),
 				emptyText: WT.res('opts.main.fld-startupService.emp'),
-				width: 330,
+				width: 380,
 				listeners: {
 					blur: {
 						fn: me.onBlurAutoSave,
@@ -210,9 +241,9 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 			}, {
 				xtype: 'fieldcontainer',
 				fieldLabel: WT.res('opts.main.fld-desktopNotification.lbl'),
-				layout: 'hbox',
+				layout: me.mainDesktopNotificationsLayout,
 				defaults: {
-					margin: '0 10 0 0'
+					margin: '0 10 20 0'
 				},
 				items: [
 					WTF.lookupCombo('id', 'desc', {
@@ -235,8 +266,10 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 						}
 					}), {
 						xtype: 'button',
-						tooltip: WT.res('opts.main.btn-desktopNotificationCheck.tip'),
-						iconCls: 'wt-icon-browser-checkPermission',
+						ui: '{tertiary|toolbar}',
+						text: WT.res('opts.main.btn-desktopNotificationCheck.tip'),
+						//tooltip: WT.res('opts.main.btn-desktopNotificationCheck.tip'),
+						//iconCls: 'wt-icon-browser-checkPermission',
 						handler: function() {
 							var plevel = NtfMgr.permissionLevel();
 							if (plevel === NtfMgr.PERM_DENIED) {
@@ -249,19 +282,20 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 						}
 					}
 				]
-			}, {
+			}, /*{
 				xtype: 'sospacer'
 			}, {
 				xtype: 'sospacer'
-			}, {
+			}, */{
 				xtype: 'container',
 				layout: {
 					type: 'hbox',
-					pack: 'center',
+					pack: me.mainPasswordButtonPack,
 					align: 'middle'
 				},
 				items: [{
 					xtype: 'button',
+					ui: '{secondary|toolbar}',
 					bind: {
 						disabled: '{!foCanManagePassword}'
 					},
@@ -285,7 +319,7 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 					proxy: WTF.proxy(me.ID, 'LookupLanguages', 'languages')
 				},
 				fieldLabel: WT.res('opts.i18n.fld-language.lbl'),
-				width: 340,
+				width: 400,
 				listeners: {
 					blur: {
 						fn: me.onBlurAutoSave,
@@ -300,7 +334,7 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 					autoLoad: true
 				}),
 				fieldLabel: WT.res('opts.i18n.fld-timezone.lbl'),
-				width: 450,
+				width: 400,
 				listeners: {
 					blur: {
 						fn: me.onBlurAutoSave,
@@ -319,7 +353,7 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 					autoLoad: true
 				}),
 				fieldLabel: WT.res('opts.i18n.fld-startDay.lbl'),
-				width: 280,
+				width: 400,
 				listeners: {
 					blur: {
 						fn: me.onBlurAutoSave,
@@ -334,7 +368,7 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 					autoLoad: true
 				}),
 				fieldLabel: WT.res('opts.i18n.fld-shortDateFormat.lbl'),
-				width: 280,
+				width: 400,
 				listeners: {
 					blur: {
 						fn: me.onBlurAutoSave,
@@ -349,7 +383,7 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 					autoLoad: true
 				}),
 				fieldLabel: WT.res('opts.i18n.fld-longDateFormat.lbl'),
-				width: 280,
+				width: 400,
 				listeners: {
 					blur: {
 						fn: me.onBlurAutoSave,
@@ -364,7 +398,7 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 					autoLoad: true
 				}),
 				fieldLabel: WT.res('opts.i18n.fld-shortTimeFormat.lbl'),
-				width: 280,
+				width: 400,
 				listeners: {
 					blur: {
 						fn: me.onBlurAutoSave,
@@ -379,7 +413,7 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 					autoLoad: true
 				}),
 				fieldLabel: WT.res('opts.i18n.fld-longTimeFormat.lbl'),
-				width: 280,
+				width: 400,
 				listeners: {
 					blur: {
 						fn: me.onBlurAutoSave,
@@ -407,7 +441,7 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 					disabled: '{!foCanManageUpi}'
 				},
 				fieldLabel: WT.res('opts.upi.fld-title.lbl'),
-				width: 250,
+				width: 400,
 				needReload: true,
 				listeners: {
 					blur: {
@@ -422,7 +456,7 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 					disabled: '{!foCanManageUpi}'
 				},
 				fieldLabel: WT.res('opts.upi.fld-firstName.lbl'),
-				width: 300,
+				width: 400,
 				needReload: true,
 				listeners: {
 					blur: {
@@ -436,7 +470,7 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 					value: '{record.upiLastName}',
 					disabled: '{!foCanManageUpi}'
 				},
-				width: 300,
+				width: 400,
 				fieldLabel: WT.res('opts.upi.fld-lastName.lbl'),
 				needReload: true,
 				listeners: {
@@ -452,8 +486,9 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 					disabled: '{!foCanManageUpi}'
 				},
 				fieldLabel: WT.res('opts.upi.fld-nickname.lbl'),
-				width: 300,
+				width: 400,
 				needReload: true,
+				hidden: me.upiNicknameHidden,
 				listeners: {
 					blur: {
 						fn: me.onBlurAutoSave,
@@ -466,13 +501,14 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 					value: '{record.upiGender}',
 					disabled: '{!foCanManageUpi}'
 				},
+				hidden: me.upiGenderHidden,
 				autoLoadOnValue: true,
 				store: Ext.create('Sonicle.webtop.core.store.Gender'),
 				triggers: {
 					clear: WTF.clearTrigger()
 				},
 				fieldLabel: WT.res('opts.upi.fld-gender.lbl'),
-				width: 250,
+				width: 400,
 				needReload: true,
 				listeners: {
 					blur: {
@@ -502,7 +538,7 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 					disabled: '{!foCanManageUpi}'
 				},
 				fieldLabel: WT.res('opts.upi.fld-mobile.lbl'),
-				width: 300,
+				width: 400,
 				needReload: true,
 				listeners: {
 					blur: {
@@ -517,7 +553,7 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 					disabled: '{!foCanManageUpi}'
 				},
 				fieldLabel: WT.res('opts.upi.fld-telephone.lbl'),
-				width: 300,
+				width: 400,
 				needReload: true,
 				listeners: {
 					blur: {
@@ -532,8 +568,9 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 					disabled: '{!foCanManageUpi}'
 				},
 				fieldLabel: WT.res('opts.upi.fld-fax.lbl'),
-				width: 300,
+				width: 400,
 				needReload: true,
+				hidden: me.upiFaxHidden,
 				listeners: {
 					blur: {
 						fn: me.onBlurAutoSave,
@@ -547,8 +584,9 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 					disabled: '{!foCanManageUpi}'
 				},
 				fieldLabel: WT.res('opts.upi.fld-pager.lbl'),
-				width: 300,
+				width: 400,
 				needReload: true,
+				hidden: me.upiPagerHidden,
 				listeners: {
 					blur: {
 						fn: me.onBlurAutoSave,
@@ -592,7 +630,7 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 					disabled: '{!foCanManageUpi}'
 				},
 				fieldLabel: WT.res('opts.upi.fld-postalCode.lbl'),
-				width: 300,
+				width: 400,
 				needReload: true,
 				listeners: {
 					blur: {
@@ -607,7 +645,7 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 					disabled: '{!foCanManageUpi}'
 				},
 				fieldLabel: WT.res('opts.upi.fld-state.lbl'),
-				width: 300,
+				width: 400,
 				needReload: true,
 				listeners: {
 					blur: {
@@ -622,7 +660,7 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 					disabled: '{!foCanManageUpi}'
 				},
 				fieldLabel: WT.res('opts.upi.fld-country.lbl'),
-				width: 300,
+				width: 400,
 				needReload: true,
 				listeners: {
 					blur: {
@@ -731,6 +769,7 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 						vertical: false
 					}, {
 						xtype: 'button',
+						ui: '{secondary|toolbar}',
 						bind: {
 							hidden: '{record.otpEnabled}'
 						},
@@ -752,6 +791,7 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 						}]
 					}, {
 						xtype: 'button',
+						ui: '{secondary|toolbar}',
 						bind: {
 							hidden: '{!record.otpEnabled}'
 						},
@@ -812,6 +852,7 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 							xtype: 'sospacer'
 						}, {
 							xtype: 'button',
+							ui: '{secondary|toolbar}',
 							bind: {
 								disabled: '{!foIsMyProfile}'
 							},
@@ -847,6 +888,7 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 						xtype: 'sospacer'
 					}, {
 						xtype: 'button',
+						ui: '{secondary|toolbar}',
 						bind: {
 							disabled: '{!foIsMyProfile}'
 						},
@@ -871,121 +913,68 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 				isAdmin: WT.isAdmin() || me.isAdminOnBehalf(),
 				info: 'DEVICES_SYNC:ACCESS'
 			}],
-			layout: 'fit',
-			items: [{
-				xtype: 'wtpanel',
-				layout: 'border',
-				items: [{
-					region: 'north',
-					xtype: 'wtfieldspanel',
-					bodyPadding: 0,
-					height: 40,
-					items: [{
-						xtype: 'fieldcontainer',
-						layout: 'hbox',
-						defaults: {
-							margin: '0 10 0 0'
-						},
-						items: [{
-							xtype: 'checkbox',
-							reference: 'fldsyncalertenabled', // Publishes field into viewmodel...
-							bind: '{syncAlertEnabled}',
-							margin: '0 20 0 0',
-							hideEmptyLabel: true,
-							boxLabel: WT.res('opts.sync.fld-syncAlertEnabled.lbl'),
-							listeners: {
-								change: {
-									fn: function(s) {
-										//TODO: workaround...il modello veniva salvato prima dell'aggionamento
-										Ext.defer(function() {
-											me.onBlurAutoSave(s);
-										}, 200);
-									},
-									scope: me
-								}
-							}
-						}, {
-							xtype: 'numberfield',
-							bind: {
-								value: '{record.syncAlertTolerance}',
-								disabled: '{!fldsyncalertenabled.checked}'
-							},
-							minValue: 1,
-							maxValue: 30,
-							fieldLabel: WT.res('opts.sync.fld-syncAlertTolerance.lbl'),
-							labelWidth: 80,
-							width: 140,
-							listeners: {
-								blur: {
-									fn: me.onBlurAutoSave,
-									scope: me
-								}
-							}
-						}]
-					}]
+			layout: 'vbox',
+			items: [
+				{
+					xtype: 'soformseparator',
+					title:  WT.res('opts.sync.eas.tit')
+					//xtype: 'sotext',
+					//text:  WT.res('opts.sync.eas.tit'),
+					//cls: 'wt-form-body-title'
 				}, {
-					region: 'center',
-					xtype: 'gridpanel',
-					reference: 'gpsync',
-					store: {
-						autoSync: true,
-						model: 'WTA.ux.data.EmptyModel',
-						proxy: WTF.apiProxy(me.ID, 'ManageSyncDevices', 'data', {
-							extraParams: {
-								optionsProfile: me.profileId
-							}
-						})
-					},
-					columns: [{
-						dataIndex: 'device',
-						header: WT.res('opts.sync.gp-sync.device.lbl'),
-						flex: 1
-					}, {
-						dataIndex: 'lastSync',
-						xtype: 'datecolumn',
-						format: WT.getShortDateFmt() + ' ' + WT.getShortTimeFmt(),
-						header: WT.res('opts.sync.gp-sync.lastSync.lbl'),
-						flex: 1
-					}],
-					tbar: [
-						me.addAct('showSyncDeviceInfo', {
-							text: WT.res('opts.sync.details.tit'),
-							tooltip: null,
-							iconCls: 'fas fa-info-circle',
-							handler: function() {
-								var sm = me.lref('gpsync').getSelectionModel();
-								me.showSyncDeviceInfo(sm.getSelection()[0]);
-							},
-							disabled: true
-						}),
-						me.addAct('deleteSyncDevice', {
-							text: WT.res('act-delete.lbl'),
-							tooltip: null,
-							iconCls: 'wt-icon-delete',
-							handler: function() {
-								var sm = me.lref('gpsync').getSelectionModel();
-								me.deleteSyncDevice(sm.getSelection());
-							},
-							disabled: true
-						}),
-						'->',
-						me.addAct('refreshSyncDevices', {
-							text: null,
-							tooltip: WT.res('act-refresh.lbl'),
-							iconCls: 'wt-icon-refresh',
-							handler: function() {
-								me.refreshSyncDevices();
-							}
-						})
-					],
-					listeners: {
-						selectionchange: function(s,recs) {
-							me.getAct('showSyncDeviceInfo').setDisabled(!recs.length);
-							me.getAct('deleteSyncDevice').setDisabled(!recs.length);
+					xtype: 'wtfieldspanel',
+					items: [
+						{
+							xtype: 'sofieldhgroup',
+							items: [
+								{
+									xtype: 'checkbox',
+									reference: 'fldsyncalertenabled', // Publishes field into viewmodel...
+									bind: '{syncAlertEnabled}',
+									boxLabel: WT.res('opts.sync.fld-syncAlertEnabled.lbl'),
+									hideEmptyLabel: true,
+									listeners: {
+										change: {
+											fn: function(s) {
+												//TODO: workaround...il modello veniva salvato prima dell'aggionamento
+												Ext.defer(function() {
+													me.onBlurAutoSave(s);
+												}, 200);
+											},
+											scope: me
+										}
+									}
+								}, {
+									xtype: 'sohspacer'
+								}, {
+									xtype: 'numberfield',
+									bind: {
+										value: '{record.syncAlertTolerance}',
+										disabled: '{!fldsyncalertenabled.checked}'
+									},
+									minValue: 1,
+									maxValue: 30,
+									fieldLabel: WT.res('opts.sync.fld-syncAlertTolerance.lbl'),
+									labelWidth: 120,
+									labelAlign: 'right',
+									width: 180,
+									listeners: {
+										blur: {
+											fn: me.onBlurAutoSave,
+											scope: me
+										}
+									}
+								}
+							]
 						}
-					}
-				}]
-			}],
+					]
+				},
+				me.createSyncGridCfg({
+					reference: 'gpsync',
+					flex: 1,
+					width: '100%'
+				})
+			],
 			listeners: {
 				activate: {
 					fn: function() {
@@ -1103,7 +1092,12 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 			items: [
 				{
 					xtype: 'soformseparator',
-					title: WT.getVar("pbxConfigured")?WT.res('opts.pbx.nethvoice.tit'):WT.res('opts.pbx.unconfigured.tit')
+					title: WT.res('opts.pbx.service.tit')
+				}, {
+					xtype: 'label',
+					text: WT.getVar("pbxConfigured")?WT.res('opts.pbx.nethvoice.tit'):WT.res('opts.pbx.unconfigured.tit')
+				}, {
+					xtype: 'sospacer'
 				}, {
 					xtype: 'textfield',
 					bind: {
@@ -1134,7 +1128,12 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 					mult: 2
 				}, {
 					xtype: 'soformseparator',
-					title: WT.getVar("smsConfigured")?WT.res('opts.sms.'+WT.getVar("smsProvider")+'.tit'):WT.res('opts.sms.unconfigured.tit')
+					title: WT.res('opts.sms.service.tit')
+				}, {
+					xtype: 'label',
+					text: WT.getVar("smsConfigured")?WT.res('opts.sms.'+WT.getVar("smsProvider")+'.tit'):WT.res('opts.sms.unconfigured.tit')
+				}, {
+					xtype: 'sospacer'
 				}, {
 					xtype: 'textfield',
 					bind: {
@@ -1171,7 +1170,8 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 			layout: 'fit',
 			items: [
 				{
-					xtype: 'somarkdownpanel'
+					xtype: 'somarkdownpanel',
+					border: false
 				}
 			],
 			listeners: {
@@ -1316,5 +1316,73 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 				sto.remove(recs[0]);
 			}
 		}, me);
+	},
+	
+	privates: {
+		createSyncGridCfg: function(cfg) {
+			var me = this;
+			return Ext.merge({
+				xtype: 'gridpanel',
+				border: true,
+				store: {
+					autoSync: true,
+					model: 'WTA.ux.data.EmptyModel',
+					proxy: WTF.apiProxy(me.ID, 'ManageSyncDevices', 'data', {
+						extraParams: {
+							optionsProfile: me.profileId
+						}
+					})
+				},
+				viewConfig: {
+					deferEmptyText: false,
+					emptyText: WT.res('opts.sync.gp-sync.emp')
+				},
+				columns: [
+					{
+						dataIndex: 'device',
+						header: WT.res('opts.sync.gp-sync.device.lbl'),
+						flex: 1
+					}, {
+						dataIndex: 'lastSync',
+						xtype: 'datecolumn',
+						format: WT.getShortDateFmt() + ' ' + WT.getShortTimeFmt(),
+						header: WT.res('opts.sync.gp-sync.lastSync.lbl'),
+						flex: 1
+					}, {
+						xtype: 'soactioncolumn',
+						items: [
+							{
+								iconCls: 'fas fa-info-circle',
+								tooltip: WT.res('opts.sync.btn-showDeviceInfo.tip'),
+								handler: function(view, ridx, cidx, itm, e, rec) {
+									me.showSyncDeviceInfo(rec);
+								}
+							}, {
+								iconCls: 'fas fa-trash',
+								tooltip: WT.res('act-delete.lbl'),
+								handler: function(view, ridx, cidx, itm, e, rec) {
+									me.deleteSyncDevice(rec);
+								}
+							}
+						]
+					}
+				],
+				tbar: {
+					border: false,
+					items: [
+						'->',
+						me.addAct('refreshSyncDevices', {
+							ui: '{secondary|default}',
+							text: null,
+							tooltip: WT.res('act-refresh.lbl'),
+							iconCls: 'wt-icon-refresh',
+							handler: function() {
+								me.refreshSyncDevices();
+							}
+						})
+					]
+				}
+			}, cfg);
+		}
 	}
 });

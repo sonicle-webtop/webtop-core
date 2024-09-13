@@ -62,13 +62,7 @@ Ext.define('Sonicle.webtop.core.admin.view.Settings', {
 						allowSingle: false // Always wraps records into an array
 					}
 				}),
-				groupField: 'serviceId',
-				listeners: {
-					remove: function(s, recs) {
-						// Fix for updating selection
-						me.lref('gp').getSelectionModel().deselect(recs);
-					}
-				}
+				groupField: 'serviceId'
 			},
 			tbar: [
 				{
@@ -93,27 +87,17 @@ Ext.define('Sonicle.webtop.core.admin.view.Settings', {
 						}
 					}
 				},
-				me.addAct('remove', {
-					text: WT.res('act-remove.lbl'),
-					tooltip: null,
-					iconCls: 'wt-icon-remove',
-					disabled: true,
-					handler: function() {
-						var rec = me.lref('gp').getSelection()[0];
-						if(rec) me.deleteSettingUI(rec);
-					}
-				}),
 				'->',
 				me.addAct('cleanup', {
 					text: null,
-					tooltip: {title: me.mys.res('act-cleanupCache.lbl'), text: me.mys.res('settings.cleanupCache.tip')},
+					tooltip: {title: me.mys.res('settings.act-cleanupCache.lbl'), text: me.mys.res('settings.act-cleanupCache.tip')},
 					iconCls: 'wt-icon-cleanup',
 					handler: function() {
 						me.wait();
 						me.cleanupCache({
 							callback: function(success) {
 								me.unwait();
-								if (success) WT.toast(me.res('toast.info.cacheCleared'));
+								if (success) WT.toast(me.res('settings.info.cacheCleared'));
 							}
 						});
 					}
@@ -128,20 +112,14 @@ Ext.define('Sonicle.webtop.core.admin.view.Settings', {
 				})
 			]
 		});
-		
-		me.getViewModel().bind({
-			bindTo: '{gp.selection}'
-		}, function(sel) {
-			me.getAct('remove').setDisabled((sel) ? false : true);
-		});
 	},
 	
 	addSettingUI: function(serviceId) {
 		var gp = this.lref('gp'),
-				ed = gp.findPlugin('cellediting'),
-				sto = gp.getStore(),
-				indx = sto.findExact('serviceId', serviceId),
-				rec;
+			ed = gp.findPlugin('cellediting'),
+			sto = gp.getStore(),
+			indx = sto.findExact('serviceId', serviceId),
+			rec;
 		if (indx < 0) indx = 0;
 		ed.cancelEdit();
 		rec = sto.insert(indx, sto.createModel({
@@ -150,15 +128,6 @@ Ext.define('Sonicle.webtop.core.admin.view.Settings', {
 			value: null
 		}))[0];
 		ed.startEditByPosition({row: sto.indexOf(rec), column: gp.keyColumn.getIndex()});
-	},
-	
-	deleteSettingUI: function(rec) {
-		var me = this,
-				sto = me.lref('gp').getStore();
-		
-		WT.confirm(WT.res('confirm.delete'), function(bid) {
-			if (bid === 'yes') sto.remove(rec);
-		}, me);
 	},
 	
 	cleanupCache: function(opts) {

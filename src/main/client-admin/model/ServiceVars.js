@@ -35,6 +35,6 @@ Ext.define('Sonicle.webtop.core.admin.model.ServiceVars', {
 	extend: 'Ext.data.Model',
 	
 	fields: [
-		
+		WTF.roField('modeSingleDomain', 'boolean')
 	]
 });

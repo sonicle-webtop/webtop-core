@@ -213,7 +213,7 @@ public class Otp extends AbstractServlet {
 		ServletUtils.setCacheControlPrivate(response);
 		
 		// Load and build template
-		Template tpl = WT.loadTemplate(CoreManifest.ID, "tpl/page/otp.html");
+		Template tpl = WT.loadTemplate(CoreManifest.ID, "page/otp.html");
 		tpl.process(tplMap, response.getWriter());
 	}
 	

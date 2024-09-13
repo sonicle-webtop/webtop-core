@@ -37,5 +37,13 @@ Ext.define('Sonicle.webtop.core.ux.panel.Panel', {
 	alias: 'widget.wtpanel',
 	mixins: ['WTA.mixin.PanelUtil'],
 	
-	border: false
+	border: false,
+	
+	noBorderCls: Ext.baseCSSPrefix + 'noborder-trbl',
+	
+	initComponent: function() {
+		var me = this;
+		me.callParent(arguments);
+		if (me.border === false) me.addBodyCls(me.noBorderCls);
+	}
 });

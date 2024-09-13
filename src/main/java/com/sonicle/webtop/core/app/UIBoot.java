@@ -32,11 +32,17 @@
  */
 package com.sonicle.webtop.core.app;
 
+import org.apache.commons.lang3.StringUtils;
+
 /**
  *
  * @author malbinola
  */
 public class UIBoot {
+	
+	public static String sanitizeExtJSTheme(String theme) {
+		return StringUtils.removeEnd(theme, "-touch");
+	}
 	
 	public static String getBaseExtJSTheme(String theme) {
 		// Each theme in ExtJS has a reference theme that be considered as "base" 

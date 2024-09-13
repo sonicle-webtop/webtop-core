@@ -33,8 +33,18 @@
  */
 package com.sonicle.webtop.core.admin;
 
+import com.sonicle.webtop.core.CoreServiceSettings;
+import com.sonicle.webtop.core.CoreSettings;
+import com.sonicle.webtop.core.app.CoreManifest;
+import com.sonicle.webtop.core.app.SettingsManager;
 import com.sonicle.webtop.core.app.WT;
+import com.sonicle.webtop.core.app.WebTopApp;
+import com.sonicle.webtop.core.app.WebTopProps;
+import com.sonicle.webtop.core.app.events.LicenseUpdateEvent;
+import com.sonicle.webtop.core.products.MailBridgeProduct;
 import com.sonicle.webtop.core.sdk.BaseController;
+import java.util.Properties;
+import net.engio.mbassy.listener.Handler;
 import org.slf4j.Logger;
 
 /**
@@ -47,4 +57,35 @@ public class CoreAdminController extends BaseController {
 	public CoreAdminController() {
 		super();
 	}
+	
+	@Handler
+	public void onLicenseUpdateEvent(LicenseUpdateEvent event) {
+		if (event.getProduct() instanceof MailBridgeProduct) {
+			String domainId = event.getDomainId();
+			String host = null;
+			int port = 25;
+			boolean auth = false;
+			if (LicenseUpdateEvent.Type.ACTIVATE.equals(event.getType())) {
+				Properties props = WebTopApp.getInstanceProperties();
+				host = WebTopProps.getMailBridgeSMTPHost(props);
+				port = WebTopProps.getMailBridgeSMTPPort(props);
+				auth = WebTopProps.getMailBridgeSMTPAuth(props);
+				SettingsManager sm = WebTopApp.getInstance().getSettingsManager();
+				sm.setServiceSetting(domainId, CoreManifest.ID, CoreSettings.SMTP_HOST, host);
+				sm.setServiceSetting(domainId, CoreManifest.ID, CoreSettings.SMTP_PORT, new Integer(port));
+				sm.setServiceSetting(domainId, CoreManifest.ID, CoreSettings.SMTP_AUTH, new Boolean(auth));
+				sm.clearDomainSettingsCache();
+			}
+			else if (LicenseUpdateEvent.Type.DEACTIVATE.equals(event.getType())) {
+				SettingsManager sm = WebTopApp.getInstance().getSettingsManager();
+				sm.deleteServiceSetting(domainId, CoreManifest.ID, CoreSettings.SMTP_HOST);
+				sm.deleteServiceSetting(domainId, CoreManifest.ID, CoreSettings.SMTP_PORT);
+				sm.deleteServiceSetting(domainId, CoreManifest.ID, CoreSettings.SMTP_AUTH);
+				sm.clearDomainSettingsCache();
+			}
+			if (host!=null) {
+			}
+		}			
+	}
+	
 }

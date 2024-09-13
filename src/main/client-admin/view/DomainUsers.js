@@ -87,6 +87,7 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainUsers', {
 			region: 'center',
 			xtype: 'grid',
 			reference: 'gp',
+			border: false,
 			store: {
 				autoLoad: true,
 				model: 'Sonicle.webtop.core.admin.model.GridUser',
@@ -109,7 +110,7 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainUsers', {
 			viewConfig: {
 				getRowClass: function(rec) {
 					if (rec.get('exist') === false) return 'wt-theme-text-lighter2';
-					if (rec.get('enabled') === false) return 'wt-text-striked wt-theme-text-error';
+					if (rec.get('enabled') === false) return 'wt-text-striked wt-theme-color-error';
 					return '';
 				}
 			},
@@ -178,7 +179,7 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainUsers', {
 								me.addUserUI(rec);
 							}
 						}, {
-							iconCls: 'far fa-edit',
+							iconCls: 'wt-glyph-edit',
 							tooltip: WT.res('act-edit.lbl'),
 							isActionHidden: function(s, ridx, cidx, itm, rec) {
 								return !rec.get('exist');
@@ -201,7 +202,7 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainUsers', {
 								me.editOptionsUI(rec);
 							}
 						}, {
-							iconCls: 'far fa-trash-alt',
+							iconCls: 'wt-glyph-delete',
 							tooltip: WT.res('act-remove.lbl'),
 							isActionDisabled: function(s, ridx, cidx, itm, rec) {
 								return !rec.get('exist');
@@ -218,7 +219,7 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainUsers', {
 				me.addAct('add', {
 					text: WT.res('act-add.lbl'),
 					tooltip: null,
-					iconCls: null,
+					iconCls: 'wt-icon-add',
 					menu: [
 						me.addAct('addEmpty', {
 							tooltip: null,
@@ -612,8 +613,8 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainUsers', {
 			var me = this,
 				doFn = function(deep) {
 					var key = deep ? 'domainUsers.confirm.delete.deep' : 'domainUsers.confirm.delete';
-					WT.confirm(me.res(key), function(bid) {
-						if (bid === 'yes') {
+					WT.confirmOk(me.res(key), function(bid) {
+						if (bid === 'ok') {
 							me.wait();
 							me.deleteUser(me.domainId, rec.getId(), {
 								deep: deep,
@@ -631,7 +632,7 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainUsers', {
 								}
 							});
 						}
-					}, me);
+					}, me, {title: WT.res('confirm.delete.tit'), okText: me.res('domainUsers.confirm.delete.ok')});
 				};
 			
 			if (!me.dirCapUsersWrite) {

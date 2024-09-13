@@ -71,6 +71,7 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainLauncherLinks', {
 			region: 'center',
 			xtype: 'grid',
 			reference: 'gp',
+			border: false,
 			store: {
 				autoLoad: true,
 				autoSync: true,
@@ -139,10 +140,9 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainLauncherLinks', {
 					xtype: 'soactioncolumn',
 					items: [
 						{
-							iconCls: 'far fa-trash-alt',
+							iconCls: 'wt-glyph-delete',
 							tooltip: WT.res('act-remove.lbl'),
-							handler: function(g, ridx) {
-								var rec = g.getStore().getAt(ridx);
+							handler: function(view, ridx, cidx, itm, e, rec) {
 								me.deleteLauncherLinkUI(rec);
 							}
 						}
@@ -153,7 +153,7 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainLauncherLinks', {
 				me.addAct('add', {
 					text: WT.res('act-add.lbl'),
 					tooltip: null,
-					iconCls: null,
+					iconCls: 'wt-icon-add',
 					handler: function() {
 						me.addLauncherLinkUI();
 					}

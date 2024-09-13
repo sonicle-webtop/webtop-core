@@ -89,6 +89,7 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainLicenses', {
 			region: 'center',
 			xtype: 'grid',
 			reference: 'gp',
+			border: false,
 			store: {
 				autoLoad: true,
 				autoSync: true,
@@ -185,8 +186,8 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainLicenses', {
 					//emptyCellText: '\u221e',
 					usingDefaultRenderer: true, // Necessary for renderer usage below
 					renderer : function(v, meta, rec) {
-						if (rec.isExpired()) meta.tdCls = 'wt-theme-text-error';
-						//if (rec.get('expired')) meta.tdCls = 'wt-theme-text-error';
+						if (rec.isExpired()) meta.tdCls = 'wt-theme-color-error';
+						//if (rec.get('expired')) meta.tdCls = 'wt-theme-color-error';
 						return Ext.isEmpty(v) ? '<span style="font-size:larger;">&#8734;</span>' : this.defaultRenderer(v);
 					},
 					align: 'center',
@@ -195,9 +196,10 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainLicenses', {
 					dataIndex: 'leasesCount',
 					header: me.res('domainLicenses.gp.lease.lbl'),
 					renderer : function(v, meta, rec) {
+						if (!rec.get('quantityTypeUsers')) return '';
 						var max = rec.get('maxLease');
 						if (max > -1) {
-							if (v >= max) meta.tdCls = 'wt-theme-text-error';
+							if (v >= max) meta.tdCls = 'wt-theme-color-error';
 							return v + ' / ' + max;
 						} else {
 							return '<span style="font-size:larger;">&#8734;</span>';
@@ -208,13 +210,13 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainLicenses', {
 				}, {
 					xtype: 'soiconcolumn',
 					dataIndex: 'autoLease',
-					header: WTF.headerWithGlyphIcon('fas fa-cog'),
+					header: WTF.headerWithGlyphIcon('wtadm-glyph-licence-autolease'),
 					getIconCls: function(v, rec) {
-						if (rec.isLeaseUnbounded()) return 'wt-pointer-default';
+						if (rec.isLeaseUnbounded()||!rec.get('quantityTypeUsers')) return 'wt-pointer-default';
 						return v ? 'wtadm-icon-licenseAutoLease-on' : 'wtadm-icon-licenseAutoLease-off';
 					},
 					getTip: function(v, rec) {
-						if (rec.isLeaseUnbounded()) return '';
+						if (rec.isLeaseUnbounded()||!rec.get('quantityTypeUsers')) return '';
 						return {title: me.res('domainLicenses.gp.autoLease.'+v+'.tip.tit'), text: me.res('domainLicenses.gp.autoLease.'+v+'.tip.txt')};
 						//return Sonicle.String.htmlEncodeLineBreaks(me.res('domainLicenses.gp.autoLease.'+v+'.tip'));
 					},
@@ -248,7 +250,7 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainLicenses', {
 									}
 									if (values['maxLease'] > -1) {
 										if (s.length !== 0) s += ' | ';
-										s += Ext.String.format(me.res('domainLicenses.gp.details.users'), values['maxLease']);
+										s += Ext.String.format(me.res('domainLicenses.gp.details.'+values['quantityType']), values['maxLease']);
 									}
 									if (!Ext.isEmpty(values['regTo'])) {
 										if (s.length !== 0) s += ' | ';
@@ -264,24 +266,23 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainLicenses', {
 					xtype: 'soactioncolumn',
 					items: [
 						{
-							iconCls: 'fas fa-user-plus',
+							iconCls: 'wtadm-glyph-user-add',
 							tooltip: me.mys.res('act-assignLicenseLease.lbl'),
-							handler: function(g, ridx) {
-								var rec = g.getStore().getAt(ridx);
+							handler: function(view, ridx, cidx, itm, e, rec) {
 								me.assignLicenseLeaseUI(rec);
 							},
 							isActionDisabled: function(s, ridx, cidx, itm, rec) {
 								if (rec.isBuiltIn()) return true;
+								if (!rec.get('quantityTypeUsers')) return true;
 								if (!rec.isLeaseUnbounded()) {
 									return rec.get('leasesCount') >= rec.get('maxLease');
 								}
 								return true;
 							}
 						}, {
-							iconCls: 'fas fa-check',
+							iconCls: 'wtadm-glyph-licence-activate',
 							tooltip: me.mys.res('act-activateLicense.lbl'),
-							handler: function(g, ridx) {
-								var rec = g.getStore().getAt(ridx);
+							handler: function(view, ridx, cidx, itm, e, rec) {
 								me.activateLicenseUI(rec);
 							},
 							isActionDisabled: function(s, ridx, cidx, itm, rec) {
@@ -289,15 +290,14 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainLicenses', {
 								return rec.isActivated();
 							},
 							getClass: function(v, meta, rec) {
-								var cls = 'fas fa-check ';
+								var cls = 'wtadm-glyph-licence-activate ';
 								if (rec.isActivated()) cls += (Ext.baseCSSPrefix + 'hidden-display');
 								return cls;
 							}
 						}, {
-							iconCls: 'fas fa-unlock',
+							iconCls: 'wtadm-glyph-licence-deactivate',
 							tooltip: me.mys.res('act-deactivateLicense.lbl'),
-							handler: function(g, ridx) {
-								var rec = g.getStore().getAt(ridx);
+							handler: function(view, ridx, cidx, itm, e, rec) {
 								me.deactivateLicenseUI(rec);
 							},
 							isActionDisabled: function(s, ridx, cidx, itm, rec) {
@@ -305,25 +305,23 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainLicenses', {
 								return !rec.isActivated();
 							},
 							getClass: function(v, meta, rec) {
-								var cls = 'fas fa-unlock ';
+								var cls = 'wtadm-glyph-licence-deactivate ';
 								if (!rec.isActivated()) cls += (Ext.baseCSSPrefix + 'hidden-display');
 								return cls;
 							}
 						}, {
-							iconCls: 'far fa-edit',
+							iconCls: 'wt-glyph-edit',
 							tooltip: me.mys.res('act-changeLicense.lbl'),
-							handler: function(g, ridx) {
-								var rec = g.getStore().getAt(ridx);
+							handler: function(view, ridx, cidx, itm, e, rec) {
 								me.changeLicenseUI(rec);
 							},
 							isActionDisabled: function(s, ridx, cidx, itm, rec) {
 								return rec.isBuiltIn();
 							}
 						}, {
-							iconCls: 'far fa-trash-alt',
+							iconCls: 'wt-glyph-delete',
 							tooltip: WT.res('act-remove.lbl'),
-							handler: function(g, ridx) {
-								var rec = g.getStore().getAt(ridx);
+							handler: function(view, ridx, cidx, itm, e, rec) {
 								me.deleteLicenseUI(rec);
 							},
 							isActionDisabled: function(s, ridx, cidx, itm, rec) {
@@ -336,6 +334,9 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainLicenses', {
 			plugins: [
 				{
 					ptype: 'rowwidget',
+					isRowExpanderHidden: function(record, rowIndex, colIndex, store, view) {
+						return !record.get("quantityTypeUsers");
+					},
 					widget: {
 						xtype: 'grid',
 						autoLoad: true,
@@ -374,7 +375,7 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainLicenses', {
 			tbar: [
 				me.addAct('add', {
 					tooltip: null,
-					iconCls: null,
+					iconCls: 'wt-icon-add',
 					handler: function() {
 						me.addLicenseUI();
 					}
@@ -382,13 +383,14 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainLicenses', {
 				'->',
 				me.addAct('cleanup', {
 					text: null,
-					tooltip: {title: me.mys.res('act-cleanupCache.lbl'), text: me.mys.res('domainLicenses.cleanupCache.tip')},
+					tooltip: {title: me.mys.res('domainLicenses.act-cleanupCache.lbl'), text: me.mys.res('domainLicenses.act-cleanupCache.tip')},
 					iconCls: 'wt-icon-cleanup',
 					handler: function() {
 						me.wait();
 						me.cleanupCache({
 							callback: function(success) {
 								me.unwait();
+								if (success) WT.toast(me.res('domainLicenses.info.cacheCleared'));
 							}
 						});
 					}
@@ -467,17 +469,14 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainLicenses', {
 			var me = this;
 			
 			if (rec.isActivated()) {
-				WT.warn(me.mys.res('domainLicenses.warn.activeondelete'));
+				WT.warn(me.res('domainLicenses.warn.activeondelete'));
 			} else {
-				WT.confirm(me.mys.res('domainLicenses.confirm.delete'), function(bid) {
-					if (bid === 'yes') {
+				WT.confirmDelete(me.res('domainLicenses.confirm.delete', rec.get('productCode')), function(bid) {
+					if (bid === 'ok') {
 						me.mys.deleteLicense(me.domainId, rec.get('id'), {
 							callback: function(success, data, json) {
-								if (success) {
-									me.lref('gp').getStore().remove(rec);
-								} else {
-									WT.error(json.message);
-								}
+								if (success) me.lref('gp').getStore().remove(rec);
+								WT.handleError(success, json);
 							}
 						});
 					}
@@ -578,8 +577,8 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainLicenses', {
 					prec = rec.store.getAssociatedEntity(),
 					wasExp = prw.recordsExpanded[prec.internalId];
 
-			WT.confirm(me.mys.res('domainLicenses.confirm.revoke', rec.get('userId')), function(bid) {
-				if (bid === 'yes') {
+			WT.confirmDelete(me.res('domainLicenses.confirm.revoke', rec.get('userId')), function(bid) {
+				if (bid === 'ok') {
 					me.wait();
 					me.mys.revokeLicenseLease(me.domainId, prec.get('id'), [rec.get('userId')], {
 						callback: function(success, data, json) {
@@ -597,9 +596,8 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainLicenses', {
 								});
 								//rec.store.remove(rec);
 								//prec.updateLeaseCount();
-							} else {
-								WT.error(json.message);
 							}
+							WT.handleError(success, json);
 						}
 					});
 				}

@@ -34,6 +34,7 @@
 package com.sonicle.webtop.core.app.servlet;
 
 import com.sonicle.commons.web.ServletUtils;
+import com.sonicle.commons.web.json.MapItem;
 import com.sonicle.webtop.core.CoreLocaleKey;
 import com.sonicle.webtop.core.app.CoreManifest;
 import com.sonicle.webtop.core.CoreServiceSettings;
@@ -43,18 +44,16 @@ import com.sonicle.webtop.core.app.SessionContext;
 import com.sonicle.webtop.core.app.WT;
 import com.sonicle.webtop.core.app.WebTopManager;
 import com.sonicle.webtop.core.app.WebTopApp;
+import com.sonicle.webtop.core.app.WebTopProps;
 import com.sonicle.webtop.core.app.WebTopSession;
 import com.sonicle.webtop.core.app.model.Domain;
 import com.sonicle.webtop.core.app.model.EnabledCond;
-import freemarker.template.Template;
 import freemarker.template.TemplateException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -167,26 +166,27 @@ public class Login extends AbstractServlet {
 	private void writePage(WebTopApp wta, CoreServiceSettings css, Locale locale, List<HtmlSelect> domains, String maintenanceMessage, String failureMessage, HttpServletResponse response) throws IOException, TemplateException {
 		boolean showDomain = (css.getHideLoginDomains()) ? false : (domains.size() > 1);
 		
-		Map tplMap = new HashMap();
-		AbstractServlet.fillPageVars(tplMap, locale, null);
-		AbstractServlet.fillSystemVars(tplMap, wta, locale, !css.getHideLoginSystemInfo(), !css.getHideLoginWebappName());
-		tplMap.put("showMaintenance", !StringUtils.isBlank(maintenanceMessage));
-		tplMap.put("maintenanceMessage", maintenanceMessage);
-		tplMap.put("showFailure", !StringUtils.isBlank(failureMessage));
-		tplMap.put("failureMessage", failureMessage);
-		tplMap.put("usernamePlaceholder", wta.lookupResource(locale, CoreLocaleKey.TPL_LOGIN_USERNAME_PLACEHOLDER, true));
-		tplMap.put("passwordPlaceholder", wta.lookupResource(locale, CoreLocaleKey.TPL_LOGIN_PASSWORD_PLACEHOLDER, true));
-		tplMap.put("domainLabel", wta.lookupResource(locale, CoreLocaleKey.TPL_LOGIN_DOMAIN_LABEL, true));
-		tplMap.put("submitLabel", wta.lookupResource(locale, CoreLocaleKey.TPL_LOGIN_SUBMIT_LABEL, true));
-		tplMap.put("showDomain", showDomain);
-		tplMap.put("domains", domains);
+		MapItem vars = new MapItem();
+		AbstractServlet.fillPageVars(vars, locale, null);
+		AbstractServlet.fillSystemVars(vars, wta, locale, !css.getHideLoginSystemInfo(), !css.getHideLoginWebappName());
+		AbstractServlet.fillCustomVars(vars, WebTopProps.getLoginTemplateCustomVars(WT.getProperties()));
+		
+		vars.put("showMaintenance", !StringUtils.isBlank(maintenanceMessage));
+		vars.put("maintenanceMessage", maintenanceMessage);
+		vars.put("showFailure", !StringUtils.isBlank(failureMessage));
+		vars.put("failureMessage", failureMessage);
+		vars.put("usernamePlaceholder", wta.lookupResource(locale, CoreLocaleKey.TPL_LOGIN_USERNAME_PLACEHOLDER, true));
+		vars.put("passwordPlaceholder", wta.lookupResource(locale, CoreLocaleKey.TPL_LOGIN_PASSWORD_PLACEHOLDER, true));
+		vars.put("domainLabel", wta.lookupResource(locale, CoreLocaleKey.TPL_LOGIN_DOMAIN_LABEL, true));
+		vars.put("submitLabel", wta.lookupResource(locale, CoreLocaleKey.TPL_LOGIN_SUBMIT_LABEL, true));
+		vars.put("showDomain", showDomain);
+		vars.put("domains", domains);
 		
 		ServletUtils.setHtmlContentType(response);
 		ServletUtils.setCacheControlPrivate(response);
 		
 		// Load and build template
-		Template tpl = WT.loadTemplate(CoreManifest.ID, "tpl/page/login.html");
-		tpl.process(tplMap, response.getWriter());
+		WT.loadTemplate(CoreManifest.ID, "page/login.html").process(vars, response.getWriter());
 	}
 	
 	public static class HtmlSelect {

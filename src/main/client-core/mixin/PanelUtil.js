@@ -93,9 +93,44 @@ Ext.define('Sonicle.webtop.core.mixin.PanelUtil', {
 	
 	/**
 	 * Convenience method that returns {@link Ext.app.ViewModel#data viewModel data}.
+	 * NB: the returned object is the full data object available for bindings that 
+	 * may contains: linked models, custom data, component references, etc.
 	 * @returns {Object}
 	 */
-	getVMData: function() {
-		return this.getVM().data;
+	getVMBindData: function() {
+		return this.getVM().getData();
+	},
+	
+	/**
+	 * Convenience method to get a value from the dedicated property ("data") 
+	 * defined in {@link Ext.app.ViewModel viewModel's binding data}.
+	 * If you do not provide a name, the whole data object will be returned.
+	 * @param {String} [name] The property name to get.
+	 * @returns {Object/Mixed}
+	 */
+	getVMData: function(name) {
+		var vm = this.getVM(),
+			path = 'data';
+		if (Ext.isString(name)) path += '.' + name;
+		return vm.get(path);
+	},
+	
+	/**
+	 * Convenience method to set a value into the dedicated property ("data") 
+	 * defined in {@link Ext.app.ViewModel viewModel's binding data}.
+	 * If you do not provide a name, the whole data object will be returned.
+	 * @param {String/Object} name The property name of the value to set, or an object literal to set into "data" property.
+	 * @param {Object} [value] The data to set at the value.
+	 */
+	setVMData: function(name, value) {
+		var vm = this.getVM(),
+			path = 'data.';
+		if (arguments.length === 2 && Ext.isString(name)) {
+			vm.set(path + name, value);
+		} else if (Ext.isObject(name)) {
+			Ext.iterate(name, function(k, v) {
+				vm.set(path + k, v);
+			});
+		}
 	}
 });	

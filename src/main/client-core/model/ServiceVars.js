@@ -54,6 +54,8 @@ Ext.define('Sonicle.webtop.core.model.ServiceVars', {
 		WTF.roField('domainId', 'string'),
 		WTF.roField('userId', 'string'),
 		WTF.field('userDisplayName', 'string'),
+		WTF.field('userPersonalEmail', 'string'),
+		WTF.field('userProfileEmail', 'string'),
 		
 		WTF.field('theme', 'string'), // Also a user-option
 		WTF.field('layout', 'string'), // Also a user-option

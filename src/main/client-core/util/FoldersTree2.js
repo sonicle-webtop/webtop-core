@@ -53,7 +53,7 @@ Ext.define('Sonicle.webtop.core.app.util.FoldersTree2', {
 			},
 			renderer: function(val, meta, node) {
 				var isPers = node.isPersonalNode();
-				meta.customElbowCls = 'wt-hidden';
+				meta.customElbowCls = (opts.showElbow === true) ? '' : 'wt-hidden';
 				if (node.isOrigin() || node.isGrouper()) {
 					meta.tdCls += ' wt-bold';
 					return '<span style="opacity:0.7;">' + (Ext.isFunction(opts.getNodeText) ? opts.getNodeText.apply(this, [node, val]) : val) + '</span>';
@@ -92,7 +92,7 @@ Ext.define('Sonicle.webtop.core.app.util.FoldersTree2', {
 							return '';
 						}
 					};
-				meta.customElbowCls = 'wt-hidden';
+				meta.customElbowCls = (opts.showElbow === true) ? '' : 'wt-hidden';
 				if (Ext.isFunction(opts.getNodeTdCls)) {
 					meta.tdCls = Sonicle.String.join(' ', meta.tdCls, opts.getNodeTdCls.apply(this, [node, val]));
 					//meta.tdCls += ' ' + opts.getNodeTdCls.apply(this, [node, val]);
@@ -135,6 +135,41 @@ Ext.define('Sonicle.webtop.core.app.util.FoldersTree2', {
 			folderRootNode = me.getMyOrigin(tree),
 			node = me.findDefaultFolder(folderRootNode);
 		return node ? node : me.getBuiltInFolder(folderRootNode);
+	},
+	
+	filterFolder: function(tree, value, textFn, scope) {
+		var filters = tree.getStore().getFilters(),
+			fid = 'folders-filter',
+			fi = filters.getByKey(fid),
+			doGetText;
+		
+		if (Ext.isFunction(textFn)) {
+			doGetText = function(node) {
+				return Ext.callback(textFn, scope, [node, node.get('text')]);
+			};
+		} else {
+			doGetText = function(node) {
+				return node.get('text');
+			};
+		}
+
+		filters.beginUpdate();
+		if (fi) filters.remove(fi);
+		if (!Ext.isEmpty(value)) {
+			filters.add(new Ext.util.Filter({
+				id: fid,
+				filterFn: function(node) {
+					var s = '';
+					Sonicle.tree.Utils.upTraverseEach(node, function(node) {
+						if (node.parentNode) {
+							s += doGetText(node);
+						}
+					});
+					return Sonicle.String.contains(s, value, true);
+				}
+			}));
+		}	
+		filters.endUpdate();
 	},
 	
 	findDefaultFolder: function(folderRootNode) {

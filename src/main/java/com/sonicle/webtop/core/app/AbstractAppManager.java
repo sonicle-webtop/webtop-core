@@ -32,6 +32,8 @@
  */
 package com.sonicle.webtop.core.app;
 
+import com.sonicle.commons.ClassUtils;
+import com.sonicle.webtop.core.app.sdk.EventBase;
 import com.sonicle.webtop.core.sdk.WTException;
 import com.sonicle.webtop.core.sdk.WTRuntimeException;
 import java.sql.Connection;
@@ -60,11 +62,35 @@ public abstract class AbstractAppManager<T> {
 	}
 	
 	protected abstract Logger doGetLogger();
-	protected abstract void doAppManagerCleanup();
 	protected void doAppManagerInitialize() {}
+	protected abstract void doAppManagerCleanup();
 	
 	protected WebTopApp getWebTopApp() {
 		return wta;
+	}
+	
+	protected EventBus.PostResult fireEvent(EventBase event) {
+		return fireEvent(event, false, false);
+	}
+	
+	protected EventBus.PostResult fireEvent(EventBase event, boolean trackHandlerErrors, boolean logTrackedErrors) {
+		EventBus.PostResult result = wta.getEventBus().postNow(event, trackHandlerErrors);
+		if (logTrackedErrors) logEventBusHandlerErrors(result);
+		return result;
+	}
+	
+	protected void logEventBusHandlerErrors(EventBus.PostResult result) {
+		if (result.hasHandlerErrors()) {
+			for (EventBus.HandlerError error : result.getHandlerErrors()) {
+				Class clazz = error.getHandlerMethodDeclaringClass();
+				String serviceId = WT.findServiceId(clazz);
+				doGetLogger().error("[{}] {} -> {}", serviceId, ClassUtils.getSimpleClassName(clazz), error.getHandlerMethodName(), error.getDeepestCause());
+			}
+		}	
+	}
+	
+	protected Connection getConnection(final boolean autoCommit) throws SQLException {
+		return getWebTopApp().getConnectionManager().getConnection(autoCommit);
 	}
 	
 	protected Connection getConnection(final String namespace) throws SQLException {

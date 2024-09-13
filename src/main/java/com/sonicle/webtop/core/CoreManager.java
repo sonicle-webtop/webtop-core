@@ -60,6 +60,7 @@ import com.sonicle.webtop.core.app.SettingsManager;
 import com.sonicle.webtop.core.app.WebTopManager;
 import com.sonicle.webtop.core.app.WT;
 import com.sonicle.webtop.core.app.WebTopApp;
+import com.sonicle.webtop.core.app.WebTopProps;
 import com.sonicle.webtop.core.app.io.dbutils.FilterInfo;
 import com.sonicle.webtop.core.app.io.dbutils.FilterableArrayListHandler;
 import com.sonicle.webtop.core.app.io.dbutils.RowsAndCols;
@@ -145,7 +146,6 @@ import com.sonicle.webtop.core.app.model.FolderShareOriginFolders;
 import com.sonicle.webtop.core.model.IMChat;
 import com.sonicle.webtop.core.model.IMMessage;
 import com.sonicle.webtop.core.model.ListTagsOpt;
-import com.sonicle.webtop.core.model.UILookAndFeel;
 import com.sonicle.webtop.core.model.MasterData;
 import com.sonicle.webtop.core.model.MasterDataLookup;
 import com.sonicle.webtop.core.model.Meeting;
@@ -164,8 +164,10 @@ import com.sonicle.webtop.core.config.bol.OPecBridgeRelay;
 import com.sonicle.webtop.core.config.dal.PecBridgeFetcherDAO;
 import com.sonicle.webtop.core.config.dal.PecBridgeRelayDAO;
 import com.sonicle.webtop.core.model.Tag;
-import com.sonicle.webtop.core.model.UILayout;
-import com.sonicle.webtop.core.model.UITheme;
+import com.sonicle.webtop.core.app.model.UIPreset;
+import com.sonicle.webtop.core.app.model.UILayout;
+import com.sonicle.webtop.core.app.model.UILookAndFeel;
+import com.sonicle.webtop.core.app.model.UITheme;
 import com.sonicle.webtop.core.products.CustomFieldsProduct;
 import com.sonicle.webtop.core.sdk.BaseManager;
 import com.sonicle.webtop.core.sdk.EventManager;
@@ -335,63 +337,22 @@ public class CoreManager extends BaseManager {
 		return wta.getAuditLogManager().getIPGeolocationData(getTargetProfileId().getDomainId(), ipAddress);
 	}
 	
-	public Map<String, UITheme> listUIThemes() throws WTException {
-		LinkedHashMap<String, UITheme> themes = new LinkedHashMap<>();
-		
-		// Add built-in themes
-		themes.put("crisp", new UITheme("crisp", "Crisp", true));
-		themes.put("triton", new UITheme("triton", "Triton", false));
-		themes.put("neptune", new UITheme("neptune", "Neptune", true));
-		themes.put("aria", new UITheme("aria", "Aria", false));
-		//themes.put("graphite", new UITheme("graphite", "Graphite", false));
-		//themes.put("material", new UITheme("material", "Material", false));
-		themes.put("classic", new UITheme("classic", "Classic", false));
-		themes.put("gray", new UITheme("gray", "Gray", false));
-		
-		// Then load extra ones...
-		//TODO: maybe improve this of dynamic discovery using such sort of file descriptor
-		CoreServiceSettings css = new CoreServiceSettings(CoreManifest.ID, getTargetProfileId().getDomainId());
-		for (Map.Entry<String, String> entry : css.getThemesExtra().entrySet()) {
-			final String themeId = entry.getKey();
-			if (!themes.containsKey(themeId) && !StringUtils.isBlank(themeId)) {
-				final String themeName = StringUtils.defaultIfBlank(entry.getValue(), themeId);
-				themes.put(themeId, new UITheme(themeId, themeName, false));
-			} else {
-				logger.debug("Ignoring extra-theme: invalid ID or already in use [{}]", themeId);
-			}
-		}
-		return themes;
+	public Map<String, UILayout> listUILayouts() throws WTException {
+		return wta.getWebTopManager().listUILayouts(getLocale());
 	}
 	
-	public List<UILayout> listUILayouts() throws WTException {
-		return Arrays.asList(
-			new UILayout("default", lookupResource(getLocale(), "layout.default")),
-			new UILayout("compact", lookupResource(getLocale(), "layout.compact"))
-		);
+	public Map<String, UIPreset> listUIPresets() throws WTException {
+		return wta.getWebTopManager().listUIPresets();
+	}
+	
+	public Map<String, UITheme> listUIThemes() throws WTException {
+		CoreServiceSettings css = new CoreServiceSettings(CoreManifest.ID, getTargetProfileId().getDomainId());
+		return wta.getWebTopManager().listUIThemes(css);
 	}
 	
 	public Map<String, UILookAndFeel> listUILookAndFeels() throws WTException {
-		LinkedHashMap<String, UILookAndFeel> lafs = new LinkedHashMap<>();
-		
-		// Add built-in LAFs
-		lafs.put("default", new UILookAndFeel("default", WT.getPlatformName()));
-		lafs.put("webtop2023", new UILookAndFeel("webtop2023", "WebTop 2023"));
-		lafs.put("office2019", new UILookAndFeel("office2019", "Office 2019"));
-		
-		// Then load extra ones...
-		//TODO: maybe improve this of dynamic discovery using such sort of file descriptor
 		CoreServiceSettings css = new CoreServiceSettings(CoreManifest.ID, getTargetProfileId().getDomainId());
-		for (Map.Entry<String, String> entry : css.getLAFsExtra().entrySet()) {
-			final String lafId = entry.getKey();
-			if (!lafs.containsKey(lafId) && !StringUtils.isBlank(lafId)) {
-				final String lafName = StringUtils.defaultIfBlank(entry.getValue(), lafId);
-				lafs.put(lafId, new UILookAndFeel(lafId, lafName));
-			} else {
-				logger.debug("Ignoring extra-laf: invalid ID or already in use [{}]", lafId);
-			}
-		}
-		
-		return lafs;
+		return wta.getWebTopManager().listUILookAndFeels(css);
 	}
 	
 	/**

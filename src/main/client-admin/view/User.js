@@ -119,6 +119,8 @@ Ext.define('Sonicle.webtop.core.admin.view.User', {
 				{
 					xtype: 'wtfieldspanel',
 					reference: 'pnlmain',
+					paddingTop: true,
+					paddingSides: true,
 					modelValidation: true,
 					defaults: {
 						labelWidth: 120

@@ -1,8 +1,73 @@
 @import url("xtheme-override.css");
+@import url("xtheme-crisp-override.css");
+@import url("wtheme-crisp-override.css");
 
-.wt-viewport-body {}
-.wt-vieport-dock { background-color: #fafafa; }
-.wt-portal-body { background-color: #e0ebf3; }
+:root {
+    --wt-theme-color-surface: #ffffff; /* White */
+    /*--wt-theme-color-surface-on*/
+    /*--wt-theme-color-surface-on-low*/
+    --wt-theme-color-surface-ct: #e0ebf3;
+    /*--wt-theme-color-surface-ct-high*/
+    
+    /*--wt-theme-color-1*/
+    /*--wt-theme-color-1-on*/
+    /*--wt-theme-color-1-ct*/
+    /*--wt-theme-color-1-ct-on*/
+    /*--wt-theme-color-2*/
+    /*--wt-theme-color-2-on*/
+    /*--wt-theme-color-ct-2*/
+    /*--wt-theme-color-ct-2-on*/
+    
+    --wt-theme-color-ok: #388E3C; /* Green/700 (https://materialui.co/colors/) */
+    --wt-theme-color-ok-on: #ffffff; /* White (https://materialui.co/colors/) */
+    --wt-theme-color-ok-ct: #E8F5E9; /* Green/50 (https://materialui.co/colors/) */
+    --wt-theme-color-ok-ct-on: #43A047; /* Green/600 (https://materialui.co/colors/) */
+    --wt-theme-color-warn: #FFA000; /* Amber/700 (https://materialui.co/colors/) */
+    --wt-theme-color-warn-on: #ffffff; /* White */
+    --wt-theme-color-warn-ct: #FFF8E1; /* Amber/50 (https://materialui.co/colors/) */
+    --wt-theme-color-warn-ct-on: #FFCA28; /* Amber/400 (https://materialui.co/colors/) */
+    --wt-theme-color-error: #D32F2F; /* Red/700 (https://materialui.co/colors/) */
+    --wt-theme-color-error-on: #FAFAFA; /* Grey/50 (https://materialui.co/colors/) */
+    --wt-theme-color-error-ct: #FFEBEE; /* Red/50 (https://materialui.co/colors/) */
+    --wt-theme-color-error-ct-on: #C62828; /* Red/800 (https://materialui.co/colors/) */
+    --wt-theme-color-info: #0276C9;
+    --wt-theme-color-info-on: #E3F2FD; /* Blue/50 (https://materialui.co/colors/) */
+    --wt-theme-color-info-ct: #BBDEFB; /* Blue/100 (https://materialui.co/colors/) */
+    --wt-theme-color-info-ct-on: #3892D4;
+    
+    --wt-theme-color-topbar: #fafafa;
+    --wt-theme-color-navbar: #fafafa;
+    --wt-theme-color-taskbar: #fafafa;
+    --wt-theme-color-scrollbar: #e0e0e0;
+    --wt-theme-color-dialog: #ffffff; /* White ????????????????? */
+    
+    --wt-theme-fontsize-xs: 9px;
+    --wt-theme-fontsize-sm: 11px;
+    --wt-theme-fontsize-base: 13px;
+    --wt-theme-fontsize-lg: 15px;
+    --wt-theme-fontsize-xl: 17px;
+    --wt-theme-lineheight-xs: 11px;
+    --wt-theme-lineheight-sm: 13px;
+    --wt-theme-lineheight-base: 15px;
+    --wt-theme-lineheight-lg: 17px;
+    --wt-theme-lineheight-xl: 19px;
+    --wt-theme-fontweight-regular: 500;
+    --wt-theme-fontweight-medium: 700;
+    --wt-theme-fontweight-bold: 700;
+}
+
+.wt-theme-color-off { opacity: 0.8; }
+.wt-form-body-info { color: #4d4d4d; }
+
+/* topbar: border */
+.wt-viewport-topbar-watermark-bottom { background-color: #cfcfcf; height: 1px; }
+/* navbar: border */
+.wt-viewport-navbar-watermark-right { background-color: #cfcfcf; width: 1px; }
+/* navbar: tweak main L/R padding */
+.wt-viewport-navbar.x-toolbar-vertical { padding-left: 10px; padding-right: 10px; }
+/* accountmenu: pad user-info */
+.wt-accountmenu-label1 { padding-top: 5px; }
+.wt-accountmenu-label2 { padding-bottom: 5px; }
 
 /*
  * Background colors
@@ -41,15 +106,6 @@
 .wt-theme-header-text { color: #157fcc; } /* regular */
 
 /*
- * By convention, FontAwesome CSS classes used as iconCls in objects are styled 
- * as glyphs (lighter colored), like using ExtJS's glyph config. This is done in 
- * ad-hoc override in "xtheme-override.css" that applies a new opacity for all 
- * FontAwesome classes (fas, far).
- * With this class we provide a way to reset opacity to its initial value.
- */
-.wt-theme-glyph-reset { opacity: initial !important; }
-
-/*
  * Adjust action colors: base color is too light and add hover color
  */
 .x-action-col-icon {
@@ -58,50 +114,7 @@
 .x-action-col-icon:hover {
 	color: #666666;
 }
-/*
- * Adjust colorsquare tick centering
- */
-.wt-tree-colorsquare-framed.x-tree-checkbox-checked:after {
-    top: 0px;
-}
-.wt-tree-colorsquare-default.x-tree-checkbox-checked:after {
-    top: -1px;
-}
-/*
- * Flatten viewport toolbars
- */
-.wt-vieport-dock .x-btn-default-toolbar-large {
-    border-color: #fafafa !important;
-    background-color: #fafafa !important;
-}
-.wt-vieport-dock .x-btn-default-toolbar-large.x-btn-over {
-	background-color: #ededed !important;
-}
-.wt-vieport-dock .x-btn-default-toolbar-medium {
-    border-color: #fafafa !important;
-    background-color: #fafafa !important;
-}
-.wt-vieport-dock .x-btn-default-toolbar-medium.x-btn-over {
-	background-color: #ededed !important;
-}
-.wt-vieport-dock .x-btn-default-toolbar-small {
-    border-color: #fafafa !important;
-    background-color: #fafafa !important;
-}
-.wt-vieport-dock .x-btn-default-toolbar-small.x-btn-over {
-	background-color: #ededed !important;
-}
-.x-btn-default-toolbar-small {
-	background-color: transparent;
-	border-color: transparent;
-}
 
-.x-btn-default-toolbar-small.x-btn-over {
-	background-color: #ededed !important;
-	border-color: transparent;
-}
+.x-toolbar-default {padding-left: 6px;}
 
-.x-btn-default-toolbar-small.x-btn-pressed {
-	border-color: transparent !important;
-	background-color: #c7c7c7 !important;
-}
+.wt-modelview-toolbar { padding-right: 6px; }
