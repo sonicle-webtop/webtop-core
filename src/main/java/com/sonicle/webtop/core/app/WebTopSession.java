@@ -860,7 +860,7 @@ public class WebTopSession {
 	
 	public UIPreset applyRuntimeUIPreset(final CoreServiceSettings settings, final CoreUserSettings userSettings) {
 		String trymeUIPreset = WebTopProps.getUIPresetTryMe(wta.getProperties());
-		boolean trymeEnabled = !StringUtils.isAllBlank(trymeUIPreset);
+		boolean trymeEnabled = !StringUtils.isBlank(trymeUIPreset);
 		String defaultTheme = settings.getDefaultUITheme();
 		String defaultLookAndFeel = settings.getDefaultUILaf();
 		String initialTheme = userSettings.getUITheme();
