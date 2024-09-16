@@ -519,7 +519,7 @@ Ext.define('Sonicle.webtop.core.viewport.private.BaseAbstract', {
 			return {
 				xtype: 'container',
 				cls: 'wt-tool-hd-wrap wt-tool-bg',
-				hidden: true,
+				hidden: false,
 				layout: {
 					type: 'vbox',
 					align: 'stretch'
