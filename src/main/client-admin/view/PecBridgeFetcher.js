@@ -45,7 +45,7 @@ Ext.define('Sonicle.webtop.core.admin.view.PecBridgeFetcher', {
 		title: '{pecBridgeFetcher.tit}',
 		iconCls: 'wtadm-icon-pecBridge',
 		width: 400,
-		height: 300
+		height: 440
 	},
 	fieldTitle: 'userId',
 	modelName: 'Sonicle.webtop.core.admin.model.PecBridgeFetcher',
@@ -72,7 +72,8 @@ Ext.define('Sonicle.webtop.core.admin.view.PecBridgeFetcher', {
 			paddingSides: true,
 			modelValidation: true,
 			defaults: {
-				labelWidth: 120
+				labelWidth: 120,
+				labelAlign: 'top'
 			},
 			items: [
 				WTF.localCombo('id', 'labelNameWithDN', {

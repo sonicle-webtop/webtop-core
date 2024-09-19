@@ -45,7 +45,7 @@ Ext.define('Sonicle.webtop.core.admin.view.PecBridgeRelay', {
 		title: '{pecBridgeRelay.tit}',
 		iconCls: 'wtadm-icon-pecBridge',
 		width: 400,
-		height: 340
+		height: 460
 	},
 	fieldTitle: 'userId',
 	modelName: 'Sonicle.webtop.core.admin.model.PecBridgeRelay',
@@ -72,7 +72,8 @@ Ext.define('Sonicle.webtop.core.admin.view.PecBridgeRelay', {
 			paddingSides: true,
 			modelValidation: true,
 			defaults: {
-				labelWidth: 120
+				labelWidth: 120,
+				labelAlign: 'top'
 			},
 			items: [
 				WTF.localCombo('id', 'labelNameWithDN', {
