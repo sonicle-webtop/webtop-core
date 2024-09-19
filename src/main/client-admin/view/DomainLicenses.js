@@ -242,7 +242,7 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainLicenses', {
 							buildDetails: function(values) {
 								var s = '';
 								if (values['builtIn'] === true) {
-									s += '<span class="wt-theme-text-lighter2" style="font-size:0.8em;">' + me.res('domainLicenses.gp.details.builtin') + '</span>' ;
+									s += '<span class="wt-text-off wt-theme-text-color-off">' + me.res('domainLicenses.gp.details.builtin') + '</span>' ;
 								} else {
 									if (!Ext.isEmpty(values['hwId'])) {
 										if (s.length !== 0) s += ' | ';

@@ -105,16 +105,18 @@
 
 .wt-theme-bg-surface-1 { background-color: var(--wt-theme-color-surface-ct); }
 .wt-theme-bg-surface-2 { background-color: var(--wt-theme-color-surface); }
+.wt-theme-bg-window { background-color: var(--wt-theme-color-surface); }
+.wt-theme-bg-dialog { background-color: var(--wt-theme-color-surface); }
 .wt-theme-1 { background-color: var(--wt-theme-color-1); color: var(--wt-theme-color-1-on); }
 .wt-theme-color-ok { color: var(--wt-theme-color-ok); }
 .wt-theme-color-warn { color: var(--wt-theme-color-warn); }
 .wt-theme-color-error { color: var(--wt-theme-color-error); }
 .wt-theme-color-info { color: var(--wt-theme-color-info); }
-
-.wt-theme-text-color-off { /* Hey, define me! */ } /* Styles for off texts (typically relative smaller and with a ligther coloring) */
+.wt-theme-text-color-off { /* Hey, define me! */ } /* Color styles for off texts (typically a ligther coloring) */
 .wt-theme-text-color-title { /* Hey, define me! */ } /* Color styles for header texts (typically like --wt-theme-color-info) */
 .wt-theme-text-color-subtitle { /* Hey, define me! */ } /* Color styles for sub-header texts */
 .wt-theme-text-color-hyperlink { /* Hey, define me! */ } /* Color styles for hyperlinks texts */
+.wt-theme-text-color-info { /* Hey, define me! */ } /* Color styles for info texts */
 
 .wt-pane-body-title { /* Hey, define me! */ } /* Font styles for titles in panel bodys (should not include colors) */
 .wt-pane-body-subtitle { /* Hey, define me! */ } /* Font styles for sub-titles in panel bodys (should not include colors) */
