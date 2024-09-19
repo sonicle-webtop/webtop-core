@@ -42,9 +42,6 @@ Ext.define('Sonicle.webtop.core.ux.app.taskbar.Bar', {
 	layout: {
 		overflowHandler: 'Scroller'
 	},
-	defaults: {
-		width: 180
-	},
 	
 	/**
 	 * @readonly
