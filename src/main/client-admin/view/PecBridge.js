@@ -115,7 +115,7 @@ Ext.define('Sonicle.webtop.core.admin.view.PecBridge', {
 				viewConfig: {
 					getRowClass: function(rec) {
 						var cls = rec.get('licensed') === false ? 'wt-text-italic wt-text-striked wt-theme-color-error' :
-							rec.get('enabled') === false ? 'wt-text-striked wt-theme-text-off' : '';
+							rec.get('enabled') === false ? 'wt-text-striked wt-text-off wt-theme-text-color-off' : '';
 						return cls;
 					}
 				},
@@ -223,7 +223,7 @@ Ext.define('Sonicle.webtop.core.admin.view.PecBridge', {
 				viewConfig: {
 					getRowClass: function(rec) {
 						var cls = rec.get('licensed') === false ? 'wt-text-italic wt-text-striked wt-theme-color-error' :
-							rec.get('enabled') === false ? 'wt-text-striked wt-theme-text-off' : '';
+							rec.get('enabled') === false ? 'wt-text-striked wt-text-off wt-theme-text-color-off' : '';
 						return cls;
 					}
 				},

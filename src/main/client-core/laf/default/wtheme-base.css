@@ -106,21 +106,21 @@
 .wt-theme-bg-surface-1 { background-color: var(--wt-theme-color-surface-ct); }
 .wt-theme-bg-surface-2 { background-color: var(--wt-theme-color-surface); }
 .wt-theme-1 { background-color: var(--wt-theme-color-1); color: var(--wt-theme-color-1-on); }
-
 .wt-theme-color-ok { color: var(--wt-theme-color-ok); }
 .wt-theme-color-warn { color: var(--wt-theme-color-warn); }
 .wt-theme-color-error { color: var(--wt-theme-color-error); }
 .wt-theme-color-info { color: var(--wt-theme-color-info); }
 
-.wt-theme-text-off { /* Hey, define me! */ }
-.wt-theme-text-info { /* Hey, define me! */ }
-.wt-theme-text-hyperlink { /* Hey, define me! */ }
-.wt-theme-text-title { /* Hey, define me! */ }
-.wt-theme-text-subtitle { /* Hey, define me! */ }
+.wt-theme-text-color-off { /* Hey, define me! */ } /* Styles for off texts (typically relative smaller and with a ligther coloring) */
+.wt-theme-text-color-title { /* Hey, define me! */ } /* Color styles for header texts (typically like --wt-theme-color-info) */
+.wt-theme-text-color-subtitle { /* Hey, define me! */ } /* Color styles for sub-header texts */
+.wt-theme-text-color-hyperlink { /* Hey, define me! */ } /* Color styles for hyperlinks texts */
 
-.wt-form-body-title { /* Hey, define me! */ }
-.wt-form-body-subtitle { /* Hey, define me! */ }
-.wt-form-toolbar-title { /* Hey, define me! */ }
+.wt-pane-body-title { /* Hey, define me! */ } /* Font styles for titles in panel bodys (should not include colors) */
+.wt-pane-body-subtitle { /* Hey, define me! */ } /* Font styles for sub-titles in panel bodys (should not include colors) */
+.wt-form-body-title { /* Hey, define me! */ } /* Font styles for titles in form (panel with fields) bodys (should not include colors) */
+.wt-form-body-subtitle { /* Hey, define me! */ } /* Font styles for sub-titles in form (panel with fields) bodys (should not include colors) */
+.wt-form-toolbar-title { /* Hey, define me! */ } /* Font styles for titles in form toolbars (should not include colors) */
 
 .wt-viewport-navbar { background-color: var(--wt-theme-color-navbar); }
 .wt-viewport-topbar { background-color: var(--wt-theme-color-topbar); }
@@ -128,6 +128,9 @@
 .wt-portal-body { background-color: var(--wt-theme-color-surface-ct); }
 .wt-accountmenu-label1 { font-size: var(--wt-theme-fontsize-sm); line-height: var(--wt-theme-lineheight-sm); font-weight: bold; }
 .wt-accountmenu-label2 { font-size: var(--wt-theme-fontsize-xs); line-height: var(--wt-theme-lineheight-xs); }
+
+/* ---------- Tool HD/Body */
+.wt-tool-hd-title { font-size: var(--wt-theme-fontsize-lg); font-weight: 500; }
 
 /* ---------- MoreLinksButton */
 /* Customize BoundList's iconSize */

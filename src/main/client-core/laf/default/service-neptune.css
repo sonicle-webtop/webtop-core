@@ -23,8 +23,8 @@
     --wt-theme-color-dialog: #ffffff; /* White */
     --wt-theme-color-scrollbar: #e0e0e0;
     
-    --wt-theme-fontsize-xs: 13px;
-    --wt-theme-fontsize-sm: 13px;
+    --wt-theme-fontsize-xs: 10px;
+    --wt-theme-fontsize-sm: 12px;
     --wt-theme-fontsize-base: 13px;
     --wt-theme-fontsize-lg: 13px;
     --wt-theme-fontsize-xl: 13px;
@@ -39,6 +39,8 @@
 }
 
 .wt-theme-color-off { color: #808080; }
+.wt-theme-text-color-title { color: #157fcc; }
+.wt-theme-text-color-hyperlink { color: #0078d7; }
 .wt-form-body-info { color: #4d4d4d; }
 
 /* topbar: border */
@@ -71,9 +73,6 @@
 .wt-theme-text-error { color: #cc4b31; } /* Conventionally red */
 .wt-theme-text-off { color: #b4b4b4; } /* Conventionally grey */
 .wt-theme-text-alt { color: #529fbe; } /* Conventionally cyan/blue */
-.wt-theme-text-header1 { color: #157fcc; }
-.wt-theme-text-subtitle { color: #888888; }
-.wt-theme-text-hyperlink { color: #0078d7; }
 
 
 /*

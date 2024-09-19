@@ -98,18 +98,10 @@ color-ct-ok-1 -> Green/700
     --kanban-column-border-radius: 8px;
 }
 
-.wt-theme-text-off {
-    opacity: 0.8;
-}
-.wt-theme-text-title {
-    font-weight: var(--wt-theme-fontweight-medium);
-    font-size: var(--wt-theme-fontsize-sm);
-    line-height: var(--wt-theme-lineheight-sm);
-    color: var(--wt-theme-color-info-ct-on);
-}
-.wt-theme-text-subtitle {
-    color: var(--wt-theme-color-2-on);
-}
+.wt-theme-text-color-off {}
+.wt-theme-text-color-title { color: var(--wt-theme-color-info); }
+.wt-theme-text-color-subtitle {}
+.wt-theme-text-color-hyperlink { color: var(--wt-theme-color-1); }
 
 .wt-form-body-title {
     font-size: var(--wt-theme-fontsize-base);

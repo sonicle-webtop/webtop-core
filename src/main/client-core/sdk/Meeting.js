@@ -92,13 +92,11 @@ Ext.define('Sonicle.webtop.core.sdk.Meeting', {
 						{
 							xtype: 'sotext',
 							text: me.mys.res('meeting.info.tit'),
-							cls: 'wt-theme-text-header1',
-							style: 'font-size:1.2em'
+							cls: 'wt-form-body-title wt-theme-text-color-title'
 						}, {
 							xtype: 'sotext',
 							text: me.mys.res('meeting.info.txt'),
-							cls: 'wt-theme-text-subtitle',
-							style: 'font-size:0.9em'
+							cls: 'wt-form-body-subtitle wt-theme-text-color-subtitle'
 						}, {
 							xtype: 'sospacer'
 						}, {
