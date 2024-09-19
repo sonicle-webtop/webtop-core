@@ -186,7 +186,7 @@ Ext.define('Sonicle.webtop.core.ux.grid.Attachments', {
 			dataIndex: me.filenameField,
 			hideable: false,
 			header: me.filenameText,
-			tdCls: 'wt-theme-text-hyperlink',
+			tdCls: 'wt-theme-text-color-hyperlink',
 			flex: 3,
 			listeners: {
 				linkclick: function(s, ridx, rec) {

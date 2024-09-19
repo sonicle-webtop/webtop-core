@@ -92,7 +92,6 @@
  * avaiable CSS classes:
  * 
  * wt-viewport-content
- * wt-theme-text-header1 (to be reviewed)
  */
 Ext.define('Sonicle.webtop.core.viewport.private.Abstract', {
 	alternateClassName: 'WTA.viewport.private.Abstract',
@@ -262,8 +261,7 @@ Ext.define('Sonicle.webtop.core.viewport.private.Abstract', {
 					{
 						xtype: 'label',
 						text: WT.res('viewport.minimode.message'),
-						cls: 'wt-theme-text-header1',
-						style: 'font-size:1.2em'
+						cls: 'wt-pane-body-title wt-theme-text-color-title'
 					}
 				]
 			};

@@ -265,13 +265,11 @@ Ext.define('Sonicle.webtop.core.ux.panel.CustomFieldsBase', {
 				items: [{
 					xtype: 'label',
 					text: this.emptyItemTitle,
-					cls: 'wt-theme-text-header1',
-					style: 'font-size:1.2em'
+					cls: 'wt-form-body-title wt-theme-text-color-title'
 				}, {
 					xtype: 'label',
 					text: this.emptyItemText,
-					cls: 'wt-theme-text-subtitle',
-					style: 'font-size:0.9em'
+					cls: 'wt-form-body-subtitle wt-theme-text-color-subtitle'
 				}]
 			};
 		},

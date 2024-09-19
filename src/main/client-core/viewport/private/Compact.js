@@ -34,7 +34,6 @@
  * avaiable CSS classes:
  * 
  * wt-viewport-content
- * wt-theme-text-header1 (to be reviewed)
  * -
  * wt-viewport-topbar
  * wt-viewport-topbar-watermark-bottom

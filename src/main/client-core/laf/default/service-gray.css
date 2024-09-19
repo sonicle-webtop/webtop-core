@@ -41,8 +41,8 @@
     --wt-theme-color-scrollbar: #e0e0e0;
     --wt-theme-color-dialog: #f1f1f1; /*??????????????????????*/
     
-    --wt-theme-fontsize-xs: 7px;
-    --wt-theme-fontsize-sm: 9px;
+    --wt-theme-fontsize-xs: 8px;
+    --wt-theme-fontsize-sm: 10px;
     --wt-theme-fontsize-base: 11px;
     --wt-theme-fontsize-lg: 13px;
     --wt-theme-fontsize-xl: 15px;
@@ -56,7 +56,11 @@
     --wt-theme-fontweight-bold: 600;
 }
 
-.wt-theme-color-off { color: #808080; }
+.wt-theme-text-color-off {}
+/*.wt-theme-text-color-off { color: #808080; }*/
+.wt-theme-text-color-title { color: var(--wt-theme-color-info); }
+.wt-theme-text-color-subtitle { color: #888888; }
+.wt-theme-text-color-hyperlink { color: var(--wt-theme-color-1); }
 .wt-form-body-info { color: #4d4d4d; }
 
 /* viewport toolbars: disable gradient */

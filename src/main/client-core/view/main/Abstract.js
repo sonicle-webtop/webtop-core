@@ -187,8 +187,7 @@ Ext.define('Sonicle.webtop.core.view.main.Abstract', {
 				items: [{
 					xtype: 'label',
 					text: WT.res('viewport.minimode.message'),
-					cls: 'wt-theme-text-header1',
-					style: 'font-size:1.2em'
+					cls: 'wt-pane-body-title wt-theme-text-color-title'
 				}]
 			},
 			'center' );

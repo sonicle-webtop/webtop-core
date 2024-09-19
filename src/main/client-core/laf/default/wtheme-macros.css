@@ -18,6 +18,7 @@
 .wt-text-underlined, .wt-underlined { text-decoration: underline; }
 .wt-text-striked, .wt-striked { text-decoration: line-through; }
 .wt-text-centered, .wt-centered { text-align: center; }
+.wt-text-off { font-size: 0.8em; opacity: 0.8; }
 .wt-text-smaller-10 { font-size: 0.9em; }
 .wt-text-smaller-20 { font-size: 0.8em; }
 .wt-text-bigger-10 { font-size: 1.1em; }

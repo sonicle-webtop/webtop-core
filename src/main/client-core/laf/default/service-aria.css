@@ -24,9 +24,6 @@
 .wt-theme-text-error { color: #cc4b31; } /* Conventionally red */
 .wt-theme-text-off { color: #b4b4b4; } /* Conventionally grey */
 .wt-theme-text-alt { color: #529fbe; } /* Conventionally cyan/blue */
-.wt-theme-text-header1 { color: #ffffff; }
-.wt-theme-text-subtitle { color: #888888; }
-.wt-theme-text-hyperlink { color: #ed9200; }
 
 /*
  * Background color for header (regular, lighten/darken, alternative)
