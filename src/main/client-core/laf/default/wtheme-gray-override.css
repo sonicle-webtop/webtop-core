@@ -1,5 +1,5 @@
 /**************************************/
-/* Tweaks WebTop's components for specific theme (both classic and gray)
+/* Tweaks WebTop's components for specific theme
 /**************************************/
 
 :root {
@@ -7,7 +7,7 @@
     /*--wt-theme-color-surface-on*/
     /*--wt-theme-color-surface-on-low*/
     --wt-theme-color-surface-ct: #ffffff; /* White */
-    --wt-theme-color-surface-ct-high: #ced9e7;
+    /*--wt-theme-color-surface-ct-high*/
     
     --wt-theme-color-1: #567CAE;
     --wt-theme-color-1-on: #f9fafb; /* Gray/50 */
@@ -30,16 +30,16 @@
     --wt-theme-color-error-on: #FAFAFA; /* Grey/50 (https://materialui.co/colors/) */
     --wt-theme-color-error-ct: #FFEBEE; /* Red/50 (https://materialui.co/colors/) */
     --wt-theme-color-error-ct-on: #C62828; /* Red/800 (https://materialui.co/colors/) */
-    --wt-theme-color-info: #355378;
-    --wt-theme-color-info-on: #E3F2FD;
-    --wt-theme-color-info-ct: #DCE7F5;
-    --wt-theme-color-info-ct-on: #416DA3;
+    --wt-theme-color-info: #707070;
+    --wt-theme-color-info-on: #F6F6F6;
+    --wt-theme-color-info-ct: #F6F6F6;
+    --wt-theme-color-info-ct-on: #707070;
     
-    --wt-theme-color-topbar: #dfe9f6;
-    --wt-theme-color-navbar: #dfe9f6;
-    --wt-theme-color-taskbar: #dfe9f6;
+    --wt-theme-color-topbar: #e6e6e6;
+    --wt-theme-color-navbar: #e6e6e6;
+    --wt-theme-color-taskbar: #e6e6e6;
     --wt-theme-color-scrollbar: #e0e0e0;
-    --wt-theme-color-dialog: #ced9e7; /*??????????????????????*/
+    --wt-theme-color-dialog: #f1f1f1; /*??????????????????????*/
     
     --wt-theme-fontsize-xs: 8px;
     --wt-theme-fontsize-sm: 10px;
@@ -55,8 +55,9 @@
     --wt-theme-fontweight-medium: 600;
     --wt-theme-fontweight-bold: 600;
 }
+
 /* ---------- Base styling */
-.wt-theme-bg-dialog { background-color: #ced9e7; }
+.wt-theme-bg-dialog { background-color: #e8e8e8; }
 .wt-theme-text-color-off { color: #808080; }
 .wt-theme-text-color-title { color: var(--wt-theme-color-info); }
 .wt-theme-text-color-subtitle { color: #888888; }
@@ -68,7 +69,7 @@
 .wt-viewport-topbar .x-toolbar-default { background-image: none; }
 .wt-viewport-taskbar .x-toolbar-default { background-image: none; }
 /* navbar: background */
-.wt-viewport-navbar-watermark-right { background-color: #99bce8; width: 1px; }
+.wt-viewport-navbar-watermark-right { background-color: #c5c5c5; width: 1px; }
 /* navbar: tweak main L/R padding */
 .wt-viewport-navbar.x-toolbar-vertical { padding-left: 5px; padding-right: 5px; }
 /* accountmenu: pad user-info */

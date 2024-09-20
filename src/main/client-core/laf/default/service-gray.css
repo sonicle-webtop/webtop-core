@@ -1,80 +1,8 @@
 @import url("xtheme-override.css");
 @import url("xtheme-classic-override.css");
-@import url("wtheme-classic-override.css");
+@import url("wtheme-gray-override.css");
 
-:root {
-    --wt-theme-color-surface: #ffffff; /* White */
-    /*--wt-theme-color-surface-on*/
-    /*--wt-theme-color-surface-on-low*/
-    --wt-theme-color-surface-ct: #ffffff; /* White */
-    /*--wt-theme-color-surface-ct-high*/
-    
-    --wt-theme-color-1: #567CAE;
-    --wt-theme-color-1-on: #f9fafb; /* Gray/50 */
-    /*--wt-theme-color-1-ct*/
-    /*--wt-theme-color-1-ct-on*/
-    /*--wt-theme-color-2*/
-    /*--wt-theme-color-2-on*/
-    /*--wt-theme-color-ct-2*/
-    /*--wt-theme-color-ct-2-on*/
-    
-    --wt-theme-color-ok: #388E3C; /* Green/700 (https://materialui.co/colors/) */
-    --wt-theme-color-ok-on: #ffffff; /* White (https://materialui.co/colors/) */
-    --wt-theme-color-ok-ct: #E8F5E9; /* Green/50 (https://materialui.co/colors/) */
-    --wt-theme-color-ok-ct-on: #43A047; /* Green/600 (https://materialui.co/colors/) */
-    --wt-theme-color-warn: #FFA000; /* Amber/700 (https://materialui.co/colors/) */
-    --wt-theme-color-warn-on: #ffffff; /* White */
-    --wt-theme-color-warn-ct: #FFF8E1; /* Amber/50 (https://materialui.co/colors/) */
-    --wt-theme-color-warn-ct-on: #FFCA28; /* Amber/400 (https://materialui.co/colors/) */
-    --wt-theme-color-error: #D32F2F; /* Red/700 (https://materialui.co/colors/) */
-    --wt-theme-color-error-on: #FAFAFA; /* Grey/50 (https://materialui.co/colors/) */
-    --wt-theme-color-error-ct: #FFEBEE; /* Red/50 (https://materialui.co/colors/) */
-    --wt-theme-color-error-ct-on: #C62828; /* Red/800 (https://materialui.co/colors/) */
-    --wt-theme-color-info: #707070;
-    --wt-theme-color-info-on: #F6F6F6;
-    --wt-theme-color-info-ct: #F6F6F6;
-    --wt-theme-color-info-ct-on: #707070;
-    
-    --wt-theme-color-topbar: #e6e6e6;
-    --wt-theme-color-navbar: #e6e6e6;
-    --wt-theme-color-taskbar: #e6e6e6;
-    --wt-theme-color-scrollbar: #e0e0e0;
-    --wt-theme-color-dialog: #f1f1f1; /*??????????????????????*/
-    
-    --wt-theme-fontsize-xs: 8px;
-    --wt-theme-fontsize-sm: 10px;
-    --wt-theme-fontsize-base: 11px;
-    --wt-theme-fontsize-lg: 13px;
-    --wt-theme-fontsize-xl: 15px;
-    --wt-theme-lineheight-xs: 9px;
-    --wt-theme-lineheight-sm: 11px;
-    --wt-theme-lineheight-base: 13px;
-    --wt-theme-lineheight-lg: 15px;
-    --wt-theme-lineheight-xl: 17px;
-    --wt-theme-fontweight-regular: 500;
-    --wt-theme-fontweight-medium: 600;
-    --wt-theme-fontweight-bold: 600;
-}
-
-.wt-theme-text-color-off {}
-/*.wt-theme-text-color-off { color: #808080; }*/
-.wt-theme-text-color-title { color: var(--wt-theme-color-info); }
-.wt-theme-text-color-subtitle { color: #888888; }
-.wt-theme-text-color-hyperlink { color: var(--wt-theme-color-1); }
-.wt-form-body-info { color: #4d4d4d; }
-
-/* viewport toolbars: disable gradient */
-.wt-viewport-navbar .x-toolbar-default { background-image: none; }
-.wt-viewport-topbar .x-toolbar-default { background-image: none; }
-.wt-viewport-taskbar .x-toolbar-default { background-image: none; }
-/* navbar: background */
-.wt-viewport-navbar-watermark-right { background-color: #c5c5c5; width: 1px; }
-/* navbar: tweak main L/R padding */
-.wt-viewport-navbar.x-toolbar-vertical { padding-left: 5px; padding-right: 5px; }
-/* accountmenu: pad user-info */
-.wt-accountmenu-label1 { padding-top: 5px; }
-.wt-accountmenu-label2 { padding-bottom: 5px; }
-
+/* ---------- WT Tool-Header wrap */
 .wt-tool-hd-wrap {
 	background-image: -webkit-linear-gradient(top, #e6e6e6, #efefef);
 }

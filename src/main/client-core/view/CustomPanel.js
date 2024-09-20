@@ -562,7 +562,7 @@ Ext.define('Sonicle.webtop.core.view.CustomPanel', {
 			var me = this;
 			return function(v) {
 				if (Ext.isEmpty(v)) {
-					return '<span class="wt-theme-text-lighter2" style="font-size:0.9em;">' + Ext.htmlEncode(me.res(key)) + '</span>';
+					return '<span class="wt-text-off wt-theme-text-color-off">' + Ext.htmlEncode(me.res(key)) + '</span>';
 				} else {
 					return v;
 				}

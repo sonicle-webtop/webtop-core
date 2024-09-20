@@ -3,7 +3,8 @@
 /* (should not include theme dependent styles, colors, ecc)
 /**************************************/
 
-/* Action column: set lighter base color and set darker color on hover */
+/* ---------- Ext.grid.column.Action */
+/* Set lighter base color and set darker color on hover */
 .x-action-col-icon {
     color: #bababa; /* #666666 with alpha 0.45 */
 }
@@ -11,17 +12,20 @@
 	color: #666666;
 }
 
-/* Button: set button glyph color ()missing in original css definitions) */
+/* ---------- Button */
+/* Set button glyph color ()missing in original css definitions) */
 .x-btn-icon-el {
 	color: #666666;
 }
 
-/* Tree: avoid icon fall to left side, due to missing left padding */
+/* ---------- Tree */
+/* Avoid icon fall to left side, due to missing left padding */
 .x-grid-cell-inner-treecolumn {
 	padding-left: 3px;
 }
 
-/* Trigger: fix left-border when displayed on the right (thanks to Sonicle.overrides.form.field.Text) */
+/* ---------- Trigger */
+/* Fix left-border when displayed on the right (thanks to Sonicle.overrides.form.field.Text) */
 .x-form-trigger-wrap > .x-form-trigger:first-child {
 	border-left: 1px solid #b5b8c8;
 }

@@ -53,7 +53,6 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 	],
 	
 	//overridable properties to influence UI
-	mainDesktopNotificationsLayout: 'vbox',
 	mainPasswordButtonPack: 'center',
 	upiNicknameHidden: false,
 	upiGenderHidden: false,
@@ -241,7 +240,7 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 			}, {
 				xtype: 'fieldcontainer',
 				fieldLabel: WT.res('opts.main.fld-desktopNotification.lbl'),
-				layout: me.mainDesktopNotificationsLayout,
+				layout: 'hbox',
 				defaults: {
 					margin: '0 10 20 0'
 				},
@@ -266,9 +265,9 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 						}
 					}), {
 						xtype: 'button',
-						ui: '{tertiary|toolbar}',
-						text: WT.res('opts.main.btn-desktopNotificationCheck.tip'),
-						//tooltip: WT.res('opts.main.btn-desktopNotificationCheck.tip'),
+						ui: '{tertiary|default}',
+						text: WT.res('opts.main.btn-desktopNotificationCheck.lbl'),
+						tooltip: WT.res('opts.main.btn-desktopNotificationCheck.tip'),
 						//iconCls: 'wt-icon-browser-checkPermission',
 						handler: function() {
 							var plevel = NtfMgr.permissionLevel();
@@ -295,7 +294,7 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 				},
 				items: [{
 					xtype: 'button',
-					ui: '{secondary|toolbar}',
+					ui: '{secondary|default}',
 					bind: {
 						disabled: '{!foCanManagePassword}'
 					},

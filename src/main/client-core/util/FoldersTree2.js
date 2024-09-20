@@ -56,15 +56,15 @@ Ext.define('Sonicle.webtop.core.app.util.FoldersTree2', {
 				meta.customElbowCls = (opts.showElbow === true) ? '' : 'wt-hidden';
 				if (node.isOrigin() || node.isGrouper()) {
 					meta.tdCls += ' wt-bold';
-					return '<span style="opacity:0.7;">' + (Ext.isFunction(opts.getNodeText) ? opts.getNodeText.apply(this, [node, val]) : val) + '</span>';
+					return '<span>' + Ext.String.htmlEncode(Ext.isFunction(opts.getNodeText) ? opts.getNodeText.apply(this, [node, val]) : val) + '</span>';
 				} else if (node.isFolder()) {
 					if (isPers && node.isDefaultFolder()) {
-						val += '<span style="font-size:0.8em;opacity:0.4;">&nbsp;(';
+						val += '<span class="wt-text-off wt-theme-text-color-off">&nbsp;(';
 						val += (opts.defaultText || 'default');
 						val += ')</span>';
 					} else {
 						var ir = node.getItemsRights();
-						if (!ir.CREATE && !ir.UPDATE && !ir.DELETE) meta.tdCls += ' wt-theme-text-lighter2';
+						if (!ir.CREATE && !ir.UPDATE && !ir.DELETE) meta.tdCls += ' wt-theme-text-color-off';
 					}
 					return val;
 				}
@@ -85,7 +85,7 @@ Ext.define('Sonicle.webtop.core.app.util.FoldersTree2', {
 				var isPers = node.isPersonalNode(),
 					countHtml = function(count) {
 						if (Ext.isNumber(count) && count > 0) {
-							return '<span style="font-size:0.8em;opacity:0.4;"'
+							return '<span class="wt-text-off wt-theme-text-color-off"'
 								+ Sonicle.Utils.generateTooltipAttrs(opts.countTooltip ? Ext.String.format(opts.countTooltip, count) : null)
 								+ '>&nbsp;+' + count + '</span>';
 						} else {
@@ -102,15 +102,15 @@ Ext.define('Sonicle.webtop.core.app.util.FoldersTree2', {
 					meta.iconCls = 'wt-hidden';
 					meta.customCheckboxCls = 'wt-tree-toggle ';
 					meta.customCheckboxCls += node.isChecked() ? 'wt-tree-toggle-on' : 'wt-tree-toggle-off';
-					return '<span style="opacity:0.7;">' + (Ext.isFunction(opts.getNodeText) ? opts.getNodeText.apply(this, [node, val]) : val) + '</span>' + (opts.countField ? countHtml(node.get(opts.countField)) : '');
+					return '<span>' + Ext.String.htmlEncode(Ext.isFunction(opts.getNodeText) ? opts.getNodeText.apply(this, [node, val]) : val) + '</span>' + (opts.countField ? countHtml(node.get(opts.countField)) : '');
 					
 				} else if (node.isFolder()) {
 					if (!isPers) {
 						var ir = node.getItemsRights();
-						if (!ir.CREATE && !ir.UPDATE && !ir.DELETE) meta.tdCls += ' wt-theme-text-lighter2';
+						if (!ir.CREATE && !ir.UPDATE && !ir.DELETE) meta.tdCls += ' wt-theme-text-color-off';
 					}
 					if (node.isDefaultFolder()) {
-						val += '<span style="font-size:0.8em;opacity:0.4;">&nbsp;(';
+						val += '<span class="wt-text-off wt-theme-text-color-off">&nbsp;(';
 						val += (opts.defaultText || 'default');
 						val += ')</span>';
 					}

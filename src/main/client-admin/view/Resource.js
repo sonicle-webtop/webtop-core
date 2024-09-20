@@ -193,7 +193,7 @@ Ext.define('Sonicle.webtop.core.admin.view.Resource', {
 							items: [
 								{
 									xtype: 'sotext',
-									cls: 'wt-theme-text-lighter1',
+									cls: 'wt-theme-text-color-off',
 									text: me.res('resource.permissions.info')
 								}
 							]

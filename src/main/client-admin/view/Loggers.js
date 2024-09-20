@@ -84,7 +84,7 @@ Ext.define('Sonicle.webtop.core.admin.view.Loggers', {
 							ret = me.mys.res('loggers.gp.name.root');
 						}
 						if (rec.isPending()) {
-							ret += '<span class="wt-theme-text-lighter2" style="font-size:0.8em;">&nbsp;&nbsp;' + me.mys.res('loggers.gp.name.pending') + '</span>' ;
+							ret += '<span class="wt-text-off wt-theme-text-color-off">&nbsp;&nbsp;' + me.mys.res('loggers.gp.name.pending') + '</span>' ;
 						}
 						return ret;
 					},

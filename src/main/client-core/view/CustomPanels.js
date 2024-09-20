@@ -127,7 +127,7 @@ Ext.define('Sonicle.webtop.core.view.CustomPanels', {
 						header: me.res('customPanels.gp.tags.lbl'),
 						tagsStore: me.getTagsStore(),
 						emptyText: WT.res(me.serviceId, 'customPanels.gp.tags.emp'),
-						emptyCls: 'wt-theme-text-lighter2',
+						emptyCls: 'wt-theme-text-color-off',
 						flex: 1
 					}, {
 						dataIndex: 'fieldsCount',

@@ -5,39 +5,6 @@
 .wt-portal-body {}
 
 /*
- * Background colors
- */
-.wt-theme-bg1 { background-color: #232d38; } /* Background 1 */
-.wt-theme-bg2 { background-color: #34383f; } /* Background 2 */
-.wt-theme-bg-alt { background-color: #560027; } /* Alternative background (typically with more contrast) #3a3e4f */
-.wt-theme-dialog-bg { background-color: #1f2833; } /* Dialog background */
-.wt-theme-field-bg { background-color: #34383f; } /* Text fields background */
-
-/*
- * Text color for body (regular, title/header)
- */
-.wt-theme-text { color: #ffffff; }
-.wt-theme-text-lighter1 { color: #808080; } /* Conventionally dark grey */
-.wt-theme-text-lighter2 { color: #4d4d4d; } /* Conventionally light grey */
-.wt-theme-text-ok { color: #4da07d; } /* Conventionally green */
-.wt-theme-text-warn { color: #e9b665; } /* Conventionally yellow */
-.wt-theme-text-error { color: #cc4b31; } /* Conventionally red */
-.wt-theme-text-off { color: #b4b4b4; } /* Conventionally grey */
-.wt-theme-text-alt { color: #529fbe; } /* Conventionally cyan/blue */
-
-/*
- * Background color for header (regular, lighten/darken, alternative)
- */
-.wt-theme-header-bg { background-color: #fafafa; }
-/*.wt-theme-header-bg-more { background-color: #e6e6e6; }*/
-/*.wt-theme-header-bg-alt { background-color: #3892d4; }*/
-
-/*
- * Text color for header (regular, alternative)
- */
-.wt-theme-header-text { color: #157fcc; } /* regular */
-
-/*
  * Style pressed glyphs
  */
 .wt-theme-btn-pressed .x-btn-glyph {

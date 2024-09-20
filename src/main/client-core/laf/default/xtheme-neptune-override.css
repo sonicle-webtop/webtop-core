@@ -3,7 +3,8 @@
 /* (should not include theme dependent styles, colors, ecc)
 /**************************************/
 
-/* Panel: disable theme's rbl border that causes ugly borders */
+/* ---------- Ext.panel.Panel */
+/* Disable theme's rbl border that causes ugly borders */
 .x-panel-default-outer-border-rbl {
     border-right-width: 0 !important;
     border-bottom-width: 0 !important;

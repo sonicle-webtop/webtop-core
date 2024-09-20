@@ -60,7 +60,7 @@ Ext.define('Sonicle.webtop.core.ux.MeetingBox', {
 		var me = this;
 		return {
 			xtype: 'wtfieldspanel',
-			bodyCls: 'wt-theme-dialog-bg',
+			bodyCls: 'wt-theme-bg-dialog',
 			referenceHolder: true,
 			defaults: {
 				labelAlign: 'top'

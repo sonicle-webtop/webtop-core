@@ -120,8 +120,9 @@ Ext.define('Sonicle.webtop.core.viewport.private.BaseAbstract', {
 	addNewActions: function(actions) {
 		var newbtns = this.getNewButtons();
 		Ext.each(newbtns, function(newbtn) {
-			if (actions.length==0) newbtn.setHidden(true);
-			else {
+			if (Ext.isEmpty(actions)) {
+				newbtn.setHidden(true);
+			} else {
 				Ext.each(actions, function(action) {
 					newbtn.getMenu().add(action);
 				});
@@ -268,6 +269,9 @@ Ext.define('Sonicle.webtop.core.viewport.private.BaseAbstract', {
 	},
 	*/
 	
+	// Set to emptyfn for now, it seems causes window stuck at maximize
+	getViewMaximizeInsets: Ext.emptyFn,
+	/*
 	getViewMaximizeInsets: function() {
 		var centerRegion = this.centerContentCmp().getRegion();
 		return {
@@ -277,6 +281,7 @@ Ext.define('Sonicle.webtop.core.viewport.private.BaseAbstract', {
 			right: 0
 		};
 	},
+	*/
 	
 	privates: {
 		navbarItemsScale: function() {
@@ -292,7 +297,7 @@ Ext.define('Sonicle.webtop.core.viewport.private.BaseAbstract', {
 		},
 
 		topbarItemsScale: function() {
-			return 'medium';
+			return 'small';
 		},
 		
 		toolHeaderHeight: function() {
@@ -441,7 +446,7 @@ Ext.define('Sonicle.webtop.core.viewport.private.BaseAbstract', {
 					cls: 'wt-viewport-topbar',
 					border: false,
 					defaults: {
-						scale: 'medium'
+						scale: this.topbarItemsScale()
 					},			
 					style: {
 						paddingTop: 0,
@@ -483,7 +488,8 @@ Ext.define('Sonicle.webtop.core.viewport.private.BaseAbstract', {
 		createAvatarButtonCfg: function() {
 			return {
 				xtype: 'soavatarbutton',
-				scale: this.topbarItemsScale()
+				scale: 'medium'
+				//scale: this.topbarItemsScale()
 			};
 		},
 		

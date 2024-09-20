@@ -79,7 +79,7 @@ Ext.define('Sonicle.webtop.core.ux.picker.CustomFieldExpr', {
 					xtype: 'sotext',
 					hidden: !me.multiline,
 					iconType: 'info',
-					cls: 'wt-theme-text-lighter1',
+					cls: 'wt-theme-text-color-off',
 					margin: '0 0 5 0',
 					text: WT.res(WT.ID, 'customFieldExpr.hint.multiline', '\';\'+')
 				}, {
