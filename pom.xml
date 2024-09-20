@@ -6,7 +6,7 @@
 	<version>5.20.0</version>
 	<packaging>jar</packaging>
 	<name>webtop-core</name>
-	
+	 
 	<parent>
 		<groupId>com.sonicle.webtop</groupId>
 		<artifactId>webtop-superpom-core</artifactId>
