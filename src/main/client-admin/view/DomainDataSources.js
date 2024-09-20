@@ -241,6 +241,7 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainDataSources', {
 				me.addAct('addDataSource', {
 					tooltip: null,
 					iconCls: 'wt-icon-add',
+					ui: '{tertiary|toolbar}',
 					handler: function() {
 						me.addDataSourceUI();
 					}

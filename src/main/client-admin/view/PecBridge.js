@@ -166,6 +166,7 @@ Ext.define('Sonicle.webtop.core.admin.view.PecBridge', {
 						text: WT.res('act-add.lbl'),
 						tooltip: null,
 						iconCls: 'wt-icon-add',
+						ui: '{tertiary|toolbar}',
 						handler: function() {
 							me.addFetcherUI();
 						}
@@ -274,6 +275,7 @@ Ext.define('Sonicle.webtop.core.admin.view.PecBridge', {
 						text: WT.res('act-add.lbl'),
 						tooltip: null,
 						iconCls: 'wt-icon-add',
+						ui: '{tertiary|toolbar}',
 						handler: function() {
 							me.addRelayUI();
 						}

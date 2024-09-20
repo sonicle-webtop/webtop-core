@@ -376,6 +376,7 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainLicenses', {
 				me.addAct('add', {
 					tooltip: null,
 					iconCls: 'wt-icon-add',
+					ui: '{tertiary|toolbar}',
 					handler: function() {
 						me.addLicenseUI();
 					}

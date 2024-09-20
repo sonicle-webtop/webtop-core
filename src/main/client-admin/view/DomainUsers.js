@@ -220,6 +220,7 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainUsers', {
 					text: WT.res('act-add.lbl'),
 					tooltip: null,
 					iconCls: 'wt-icon-add',
+					ui: '{tertiary|toolbar}',
 					menu: [
 						me.addAct('addEmpty', {
 							tooltip: null,
