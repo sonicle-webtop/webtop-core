@@ -38,6 +38,7 @@ import com.sonicle.commons.db.DbUtils;
 import com.sonicle.commons.db.StatementUtils;
 import com.sonicle.commons.time.DateTimeUtils;
 import com.sonicle.webtop.core.CoreManager;
+import com.sonicle.webtop.core.CoreServiceSettings;
 import com.sonicle.webtop.core.CoreSettings;
 import com.sonicle.webtop.core.CoreUserSettings;
 import com.sonicle.webtop.core.admin.CoreAdminManager;
@@ -683,6 +684,9 @@ public class ServiceManager {
 	 */
 	public boolean needWhatsnew(String serviceId, UserProfile profile) {
 		ServiceDescriptor desc = getDescriptor(serviceId);
+		
+		CoreServiceSettings css = new CoreServiceSettings(CoreManifest.ID, profile.getDomainId());
+		if (!css.getWhatsnewEnabled()) return false;
 		
 		// Gets current service's version info and last version for this user
 		ProfileVersionEvaluationResult res = evaluateProfileVersion(desc.getManifest(), profile.getId());
