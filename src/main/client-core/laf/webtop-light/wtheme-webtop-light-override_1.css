@@ -1,0 +1,530 @@
+/**************************************/
+/* Tweaks WebTop's components for specific theme
+/**************************************/
+
+/*
+color-surface-primary -> Gray/50
+color-surface-secondary -> White
+color-primary-0 -> Orange/700
+color-primary-1 -> Gray/50
+color-ct-primary-0 -> Orange/100
+color-ct-primary-1 -> Gray/900
+color-secondary-0 -> Gray/300
+color-error-0 -> Red/700
+color-error-1 -> Gray/50
+color-ct-error-0 -> Red/50
+color-ct-error-1 -> Red/800
+color-warn-0 -> Yellow/700
+color-warn-1 -> White
+color-ct-warn-0 -> Yellow/50
+color-ct-warn-1 -> Yellow/700
+color-ok-0 -> Green/700
+color-ok-1 -> White
+color-ct-ok-0 -> Green/50
+color-ct-ok-1 -> Green/700
+*/
+
+:root {
+    --wt-theme-color-surface: #ffffff; /* White */
+    --wt-theme-color-surface-on: #171717; /* Neutral/900 */
+    --wt-theme-color-surface-on-low: #404040; /* Neutral/700 */
+    --wt-theme-color-surface-ct: #fafafa; /* Neutral/50 */
+    --wt-theme-color-surface-ct-high: #f5f5f5; /* Neutral/100 */
+    
+    --wt-theme-color-1: #0369a1; /* Sky/700 */
+    --wt-theme-color-1-on: #fafafa; /* Neutral/50 */
+    --wt-theme-color-1-ct: #e0f2fe; /* Sky/100 */
+    --wt-theme-color-1-ct-on: #171717; /* Neutral/900 */
+    
+    --wt-theme-color-2: #e5e7eb; /* Neutral/200 */
+    --wt-theme-color-2-on: #171717; /* Neutral/900 */
+    --wt-theme-color-ct-2: #ffffff; /* White */
+    --wt-theme-color-ct-2-on: #e5e5e5; /* Neutral/500 */
+    
+    --wt-theme-color-ok: #047857; /* Emerald/700 */
+    --wt-theme-color-ok-on: #ffffff; /* White */
+    --wt-theme-color-ok-ct: #ecfdf5; /* Emerald/50 */
+    --wt-theme-color-ok-ct-on: #059669; /* Emerald/600 */
+    --wt-theme-color-warn: #eab308; /* Yellow/500 */
+    --wt-theme-color-warn-on: #ffffff; /* White */
+    --wt-theme-color-warn-ct: #fefce8; /* Yellow/50 */
+    --wt-theme-color-warn-ct-on: #eab308; /* Yellow/500 */
+    --wt-theme-color-error: #b91c1c; /* Red/700 */
+    --wt-theme-color-error-on: #fafafa; /* Neutral/50 */
+    --wt-theme-color-error-ct: #fef2f2; /* Red/50 */
+    --wt-theme-color-error-ct-on: #991b1b; /* Red/800 */
+    --wt-theme-color-info: #155e75; /* Cyan/800 */
+    --wt-theme-color-info-on: #ecfeff; /* Cyan/50 */
+    --wt-theme-color-info-ct: #cffafe; /* Cyan/100 */
+    --wt-theme-color-info-ct-on: #0e7490; /* Cyan/700 */
+    --wt-theme-color-off: #a3a3a3; /* Neutral/400 */
+    
+    --wt-theme-color-topbar: #ffffff; /* White */
+    --wt-theme-color-navbar: #ffffff; /* White */
+    --wt-theme-color-taskbar: #f5f5f5; /* Neutral/100 */
+    --wt-theme-color-dialog: #ffffff; /* White */
+    --wt-theme-color-scrollbar: #d4d4d4; /* Neutral/300 */
+    
+    --wt-theme-fontsize-xs: 12px;
+    --wt-theme-fontsize-sm: 14px;
+    --wt-theme-fontsize-base: 16px;
+    --wt-theme-fontsize-lg: 18px;
+    --wt-theme-fontsize-xl: 20px;
+    --wt-theme-fontsize-2xl: 24px;
+    --wt-theme-fontsize-3xl: 30px;
+    --wt-theme-fontsize-4xl: 36px;
+    --wt-theme-fontsize-5xl: 48px;
+    --wt-theme-fontsize-6xl: 64px;
+    --wt-theme-lineheight-xs: 18px;
+    --wt-theme-lineheight-sm: 21px;
+    --wt-theme-lineheight-base: 24px;
+    --wt-theme-lineheight-lg: 27px;
+    --wt-theme-lineheight-xl: 30px;
+    --wt-theme-lineheight-2xl: 36px;
+    --wt-theme-lineheight-3xl: 45px;
+    --wt-theme-lineheight-4xl: 54px;
+    --wt-theme-lineheight-5xl: 72px;
+    --wt-theme-lineheight-6xl: 96px;
+    --wt-theme-fontweight-regular: 400;
+    --wt-theme-fontweight-medium: 500;
+    --wt-theme-fontweight-bold: 500; /* Do NOT use it keep at 500 */
+    
+    --fc-border-color: #E5E7EB !Important; /* Gray/200 */
+    --fc-now-indicator-color: var(--wt-theme-color-1) !Important; /* Orange/700 */
+    --fc-neutral-bg-color: #f9fafb !Important; /* Gray/50 */
+    --fc-non-business-color: rgba(229,231,235,.3) !Important; /* Gray/200 */
+    --fc-today-bg-color: #fff7ed !Important; /* Orange/50 */
+    
+    --kanban-column-border-radius: 8px;
+}
+
+.wt-theme-text-color-off {}
+.wt-theme-text-color-title { color: var(--wt-theme-color-info); }
+.wt-theme-text-color-subtitle {}
+.wt-theme-text-color-hyperlink { color: var(--wt-theme-color-1); }
+.wt-theme-text-color-info {}
+
+.wt-form-body-title {
+    font-size: var(--wt-theme-fontsize-base);
+	font-weight: var(--wt-theme-fontweight-medium);
+}
+.wt-form-body-subtitle {
+    font-size: var(--wt-theme-fontsize-sm);
+	font-weight: var(--wt-theme-fontweight-base);
+}
+.wt-form-toolbar-title {
+    font-size: var(--wt-theme-fontsize-base, inherit);
+    font-weight: var(--wt-theme-fontweight-medium, normal);
+    color: var(--wt-theme-color-surface-on) !important;
+}
+
+/* Navbar: background */
+.wt-viewport-navbar-watermark-right {
+    background-color: #e5e7eb; /* Gray/200 */
+    width: 1px;
+}
+/* Navbar: tweak main L/R padding */
+.wt-viewport-navbar.x-toolbar-vertical { padding-left: 15px; padding-right: 15px; }
+/* Navbar: force specific gap (8px) between button items */
+.wt-viewport-navbar.x-toolbar-vertical .x-toolbar-item { margin-bottom: 8px; }
+/* Navbar: force button sizes */
+.wt-viewport-navbar .x-btn .x-btn-button { min-height: 24px; }
+.wt-viewport-navbar .x-btn .x-btn-icon-el { width: 24px; }
+/* Navbar: tweak button internal padding to make button square */
+.wt-viewport-navbar .x-btn.x-toolbar-item { padding: 12px; }
+/* Navbar: hide the focus outline/shadow */
+.wt-viewport-navbar .x-btn.x-btn-focus { box-shadow: none !important; }
+/* Navbar: set specific color to nav buttons */
+.wt-viewport-navbar .x-btn.x-btn-pressed, .wt-viewport-navbar .x-btn.x-btn-over {
+    background-color: #f3f4f6; /* Gray/100 */
+}
+/* Navbar: add colored right watermark on pressed button */
+.wt-viewport-navbar .wt-launcher-servicebutton.x-btn.x-btn-pressed::before {
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    margin: auto 0;
+    width: 4px;
+    height: 36px;
+    border-radius: 0px 6px 6px 0px;
+    background: var(--primary-light-700, #C2410C); /* Orange/700 */
+    content: '';
+}
+/* Navbar: define 50x50 logo image */
+.wt-viewport-navbar-logo.so-tbimage { padding: 0px; }
+.wt-viewport-navbar-logo.so-tbimage .so-tbimage-image { background-image: url('logo.svg'); background-repeat: round; width: 50px !important; height: 50px !important; }
+
+/* Topbar customization */
+.wt-viewport-topbar .x-toolbar-separator {
+    border-left-color: #D1D5DB; /* Gray/300 */
+}
+
+/* MoreLinksButton: customize BoundList's iconSize */
+.wt-launcher-morelinksbutton-list .x-list-plain {
+    margin-top: 4px;
+    margin-bottom: 4px;
+}
+.wt-launcher-morelinksbutton-list .x-boundlist-item {
+    line-height: 74px;
+    padding: 0 16px;
+}
+.wt-launcher-morelinksbutton-list .so-boundlist-icon {
+    width: 50px;
+    height: 50px;
+}
+.wt-launcher-morelinksbutton-list .so-boundlist-display {
+    padding-left: 66px;
+}
+
+/* ---------- Tool HD/Body */
+/* Hide ugly border when docking top */
+.wt-tool .x-panel-body { border-top: 0px; }
+/* Customize HD style */
+.wt-tool .wt-tool-bg { background-color: var(--wt-theme-color-surface-ct); }
+.wt-tool-hd-wrap { background-color: var(--wt-theme-color-surface-ct); padding-top: 10px; padding-left: 6px; }
+.wt-tool-hd-title { font-size: var(--wt-theme-fontsize-lg); font-weight: 500; }
+.wt-tool-hd-separator { border-top-color: #e5e7eb !important; } /* Gray/200 FIXME: evaluate to change directly fieldset color in theme */
+.wt-tool-foo { padding-top: 10px; padding-bottom: 15px; }
+
+/* ---------- AccountMenu */
+/* Pad user-info */
+.wt-accountmenu-label1 { padding-top: 12px; }
+.wt-accountmenu-label2 { padding-bottom: 12px; }
+
+/* ---------- ContextMenu */
+/* Highlight owner */
+.x-grid-view .so-contextmenu-owner,
+.x-tree-view .so-contextmenu-owner {
+    background-color: #d1d5db !important; /* Gray/300 */
+}
+
+/* ---------- WTA.sdk.ModelView */
+/* Customize toolbars */
+.wt-modelview-toolbar {
+	padding-left: 24px;
+	padding-right: 24px;
+    border-top: none;
+}
+.wt-modelview-toolbar-first {
+	padding-top: 24px;
+}
+.wt-modelview-toolbar-last {}
+
+/* ---------- WTA.ux.field.Attachments */
+/* Hide tagfield borders */
+.wt-attachmentsfield .x-form-trigger-wrap {
+	border: none;
+}
+
+/* ---------- WTA.ux.field.Search */
+/* Customize trigger-icon */
+.wt-searchfield .x-form-arrow-trigger-default { background: url(search-sliders.svg) no-repeat left !important; }
+.wt-searchfield .x-form-arrow-trigger-default:before { content: ''; }
+
+/* ---------- KanbanColumn */
+/* Change collapse/expand icons and header color */
+.x-panel.so-kanban-column .x-tool-expand-bottom:before {
+    content: '\f424'
+}
+.x-panel.so-kanban-column .x-tool-collapse-top:before {
+    content: '\f422'
+}
+.x-panel.so-kanban-column .x-panel-header {
+    background-color: #ffffff;
+}
+
+/* ---------- WTA.ux.field.Recipients */
+/* Adjust gap between items */
+.wt-recipients-field .x-tagfield-list {
+    column-gap: 16px;
+}
+
+/* ---------- WTA.ux.panel.Fields */
+.wt-fieldspanel-body-padding-t {
+	padding-top: 24px;
+}
+.wt-fieldspanel-body-padding-b {
+	padding-bottom: 24px;
+}
+.wt-fieldspanel-body-padding-lr {
+	padding-left: 24px;
+	padding-right: 24px;
+}
+
+/* ---------- Sonicle.form.FieldSection */
+.so-fieldsection .so-label-icon-el {
+    margin-right: 0;
+    font-size: 15px;
+}
+.so-fieldsection .so-item-label-iconed .x-form-item-label-inner {
+    margin-top: 30px;
+}
+
+/* ---------- Sonicle.form.Separator */
+.so-form-separator .x-fieldset-header-text {
+	font-size: var(--wt-theme-fontsize-base);
+    font-weight: var(--wt-theme-fontweight-medium);
+	color: var(--wt-theme-color-info-ct-on);
+}
+
+/* ---------- Sonicle.form.field.Display */
+.so-displayfield-clickable {
+    color: #C2410C; /* Orange/700 */
+}
+.so-displayfield-clickable:hover {
+    color: #7c2d12;
+}
+
+/* ---------- Sonicle.grid.column.Color */
+.so-grid-cell-inner-colorcolumn .so-colorcolumn-text {
+    margin-left: 8px;
+}
+
+/* ---------- Sonicle.grid.column.Icon */
+.so-grid-cell-inner-iconcolumn .so-iconcolumn-text {
+    margin-left: 8px;
+}
+
+/* ---------- Sonicle.grid.column.Nest */
+.so-nestcolumn-hierarchysymbol {
+    color: var(--wt-theme-color-surface-on-low);
+}
+.so-nestcolumn-wrap-root > span:nth-of-type(1), .so-nestcolumn-wrap-root > i:nth-of-type(1) {
+	margin-right: 8px;
+}
+.so-nestcolumn-wrap-child > span:nth-of-type(1), .so-nestcolumn-wrap-child > i:nth-of-type(1) {
+	margin-right: 8px;
+}
+
+/* ---------- Sonicle.grid.TileList */
+.so-tilelist-caption {
+    font-weight: var(--wt-theme-fontweight-medium);
+    font-size: var(--wt-theme-fontsize-xs);
+    line-height: var(--wt-theme-lineheight-xs);
+}
+.so-tilelist-value {
+    font-weight: var(--wt-theme-fontweight-regular);
+    font-size: var(--wt-theme-fontsize-xs);
+    line-height: var(--wt-theme-lineheight-xs);
+}
+
+/* ---------- Sonicle.fullcalendar.Panel */
+.so-fullcalendar > .fc {
+	/*zoom: 1.1;*/
+}
+.so-fullcalendar-panel {
+    background-color: var(--wt-theme-color-surface);
+}
+.so-fullcalendar-panel-toolbar-month {
+    gap: 16px;
+    width: 260px; /* Keep nav-buttons equally spaced! */
+}
+.so-fullcalendar .fc-daygrid-week-number {
+    background-color: #FFEDD5; /* Orange/100 */
+}
+.so-fullcalendar-panel-toolbar {
+    margin-bottom: 16px;
+}
+.so-fullcalendar-panel-toolbar-month span:nth-child(1) {
+    font-weight: var(--wt-theme-fontweight-medium);
+    font-size: var(--wt-theme-fontsize-3xl);
+    line-height: var(--wt-theme-lineheight-3xl);
+}
+.so-fullcalendar-panel-toolbar-month span:nth-child(2) {
+    font-weight: var(--wt-theme-fontweight-regular);
+    font-size: var(--wt-theme-fontsize-3xl);
+    line-height: var(--wt-theme-lineheight-3xl);
+}
+/* Hide old-style borders */
+.so-fullcalendar .fc-theme-standard table.fc-scrollgrid {
+    border: transparent; /* Hide external (top/right) border */
+}
+.so-fullcalendar .fc-theme-standard div.fc-timegrid table.fc-scrollgrid td:nth-child(1),
+.so-fullcalendar .fc-theme-standard th {
+    border-right: transparent; /* Hide R-borders in dayviews TD[1] and THs */
+}
+.so-fullcalendar .fc-theme-standard div.fc-daygrid table.fc-scrollgrid td:nth-child(1) {
+    border-left: 1px solid var(--fc-border-color); /* Restore L-borders in timeviews TD[1] */
+}
+.so-fullcalendar .fc-theme-standard .fc-col-header th {
+    border-left-width: 0px;
+    border-right-width: 0px;
+}
+.so-fullcalendar .fc-more-link {
+    /*font-size: var(--wt-theme-fontsize-sm) !important;*/
+    /*font-weight: var(--wt-theme-fontweight-medium) !important;*/
+    /*line-height: var(--wt-theme-lineheight-sm) !important;*/
+    color: var(--wt-theme-color-1) !important;
+}
+.so-fullcalendar .fc-col-header-cell.fc-day-today .fc-col-header-cell-cushion {
+    color: var(--wt-theme-color-1) !important;
+}
+.so-fullcalendar .fc-daygrid-day.fc-day-today .fc-daygrid-day-number {
+    color: var(--wt-theme-color-1) !important;
+}
+.so-fullcalendar .fc-daygrid-event,
+.so-fullcalendar .fc-timegrid-event {
+    border-radius: 6px;
+}
+.so-fullcalendar .fc-timegrid-slot-minor {
+    border-top-style: solid; /* Do not use dotted style */
+    border-top-color: #F3F4F6; /* Gray/100 */
+}
+/* Add padding in event content */
+.so-fullcalendar .fc-timegrid .fc-event-main {
+    padding: 2px;
+}
+.so-fullcalendar .fc-daygrid .fc-event-main {
+    padding-right: 2px;
+    padding-left: 2px;
+}
+.so-fullcalendar .so-cal-appo-icons {
+    left: 4px;
+    bottom: 1px;
+}
+.so-fullcalendar .so-cal-appo-bottomline {
+    flex-basis: 10px;
+}
+.so-fullcalendar .fc-timegrid-event, .so-fullcalendar .fc-daygrid-event {
+    font-size: 11px;
+}
+
+/* ---------- Ext.menu.Item */
+/* Use the following selector for Ext.button.Button: ".wt-dangerzone .x-btn-inner, .wt-dangerzone .x-btn-icon-el" */
+/* Customize text and icon color */
+.wt-dangerzone .x-menu-item-text, .wt-dangerzone .x-menu-item-icon {
+    color: #BE123C; /* Rose/700 */
+}
+
+/* ---------- Ext.panel.Tree */
+/* Toggle checkbox */
+.wt-tree-toggle.x-tree-checkbox-checked:before {
+	color: #C2410C; /* Orange/700 */
+}
+
+/* ---------- Ext.panel.Tree (treecolumn colorswatch) */
+.wt-tree-colorswatch.x-tree-icon {
+    margin-top: 4px;
+}
+.x-tree-view .x-tree-checkbox.wt-tree-colorswatch {
+    top: 10px;
+}
+.x-tree-view .x-tree-icon.wt-tree-colorswatch {
+   height: 16px;
+}
+
+/* ---------- Ext.menu.Menu */
+/* Set separator color */
+.x-menu-item-separator {
+    border-top-color: #e5e7eb !important; /* Gray/200 */
+}
+
+/* ---------- Ext.grid.Panel */
+/* Fix hide top border when x-grid-no-border (custom class) is explict */
+.x-grid .x-grid-body.x-grid-no-border {
+	border-top: 0px;
+}
+/* Fix top-border size and apply radius only for no-header grids */
+.x-grid.x-grid-header-hidden .x-grid-body:not(.x-grid-no-border) {
+    border-top-width: 1px;
+    border-radius: 4px;
+}
+
+/* ---------- Ext.tab.Panel */
+/* Add bottom-line to selected tab */
+.x-tab-active:before {
+    content: '';
+    position: absolute;
+    bottom: 0px;
+    left: 5px;
+    right: 5px;
+    border-bottom: 2px solid #C2410C; /* Orange/700 */
+}
+
+/* ---------- Ext.window.MessageBox */
+/* Tweak styling */
+.x-window.x-message-box .x-header { background-color: #ffffff; }
+.x-window.x-message-box .x-toolbar-footer { background-color: #ffffff; }
+.x-window.x-message-box .x-window-header { padding-left: 18px; padding-right: 8px; }
+.x-window.x-message-box .x-window-text {
+    font-size: var(--wt-theme-fontsize-sm);
+    color: #374151; /* Gray/700 */
+}
+.x-message-box-info { color: #4338CA !important; } /* Indigo/700 */
+.x-window.x-message-box .x-title-icon.x-message-box-info {
+	border-radius: 24px;
+    background-color: #e0e7ff; /* Indigo/100 */
+    -moz-box-shadow: 0px 0px 8px 0px #e0e7ff;
+    -webkit-box-shadow: 0px 0px 8px 0px #e0e7ff;
+    box-shadow: 0px 0px 0px 8px #e0e7ff;
+}
+.x-message-box-warning { color: #ca8a04 !important; } /* Yellow/600 */
+.x-window.x-message-box .x-title-icon.x-message-box-warning {
+	border-radius: 24px;
+    background-color: #fef9c3; /* Yellow/100 */
+    -moz-box-shadow: 1px 0px 8px 0px #fef9c3;
+    -webkit-box-shadow: 1px 0px 8px 0px #fef9c3;
+    box-shadow: 1px 0px 0px 8px #fef9c3;
+}
+.x-message-box-question { color: #4338CA !important; } /* Indigo/700 */
+.x-window.x-message-box .x-title-icon.x-message-box-question {
+	border-radius: 24px;
+    background-color: #e0e7ff; /* Indigo/100 */
+    -moz-box-shadow: 0px 0px 8px 0px #e0e7ff;
+    -webkit-box-shadow: 0px 0px 8px 0px #e0e7ff;
+    box-shadow: 0px 0px 0px 8px #e0e7ff;
+}
+.x-message-box-error { color: #b91c1c !important; } /* Red/700 */
+.x-window.x-message-box .x-title-icon.x-message-box-error {
+	border-radius: 24px;
+    background-color: #fee2e2; /* Red/100 */
+    -moz-box-shadow: 0px 0px 8px 0px #fee2e2;
+    -webkit-box-shadow: 0px 0px 8px 0px #fee2e2;
+    box-shadow: 0px 0px 0px 8px #fee2e2;
+}
+
+
+/* ---------- Sonicle.webtop.core.view.Options */
+/* left pad the entire options view */
+.wt-view-options {
+	padding-left: 10px
+}
+/* remove gray background from the tabs */
+.wt-view-options > .x-panel-bodyWrap > .x-panel-body {
+	background-color: transparent;
+}
+/* remove border from the tab view */
+.wt-view-options > .x-panel-bodyWrap > .x-panel-body > .x-panel > .x-panel-bodyWrap > .x-panel-body {
+	border: 0px;
+}
+
+/* ---------- Sonicle.webtop.core.sdk.UserOptionsView */
+/* add pad to the upper side of the options view */
+.wt-useroptionsview {
+	padding-top: 24px;
+}
+/* position left tabs as from mockup */
+.wt-useroptionsview * .x-tab-bar-body {
+    padding: 16px 24px 16px 14px;
+}
+/* style left tabs as from mockup */
+.wt-useroptionsview * .x-tab-active:before {
+	border-bottom: 0px !important;
+    border-left: 2px solid var(--wt-theme-color-1) !important;
+    border-radius: 4px;
+    top: 2px;
+    bottom: 2px;
+    left: 0px;
+    background-color: var(--wt-theme-color-surface-ct-high);
+}
+
+/* ---------- Sonicle.form.Separator */
+/* remove line after title */
+.so-form-separator.x-fieldset {
+    border-top: 0px !important;
+}
+/* align left */
+.so-form-separator .x-fieldset-header {
+	padding-left: 0px;
+}
