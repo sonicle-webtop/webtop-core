@@ -42,6 +42,7 @@ import java.util.ArrayList;
  */
 public class JsGridDomainDataSource {
 	public String id;
+	public String friendlyId;
 	public String name;
 	public String description;
 	public String type;
@@ -54,6 +55,7 @@ public class JsGridDomainDataSource {
 	
 	public JsGridDomainDataSource(DataSourcePooled dataSource) {
 		this.id = dataSource.getDataSourceId();
+		this.friendlyId = dataSource.getFriendlyId();
 		this.name = dataSource.getName();
 		this.description = dataSource.getDescription();
 		this.type = dataSource.getType();

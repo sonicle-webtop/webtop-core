@@ -94,6 +94,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import net.sf.qualitycheck.Check;
+import org.apache.commons.collections4.BidiMap;
+import org.apache.commons.collections4.bidimap.DualHashBidiMap;
 import org.apache.commons.dbutils.QueryRunner;
 import org.apache.commons.dbutils.ResultSetHandler;
 import org.apache.commons.dbutils.StatementConfiguration;
@@ -112,6 +114,7 @@ public class DataSourcesManager extends AbstractAppManager<DataSourcesManager> {
 	private static final HashMap<String, DataSourceType> WELLKNOWN_TYPES = new HashMap<>();
 	private final LinkedHashSet<String> loadedDrivers = new LinkedHashSet<>();
 	private final HashMap<String, HikariDataSource> pools = new HashMap<>();
+	private final BidiMap<String, String> dsFriendlyIdMapping = new DualHashBidiMap<>();
 	private final KeyedReentrantLocks<String> poolLocks = new KeyedReentrantLocks();
 	private final ExecutorService dataSourceConnectionCheckers = Executors.newCachedThreadPool();
 	
@@ -151,6 +154,7 @@ public class DataSourcesManager extends AbstractAppManager<DataSourcesManager> {
 		dataSourceConnectionCheckers.shutdownNow();
 		LOGGER.debug("Clearing pools...");
 		clearPools();
+		dsFriendlyIdMapping.clear();
 		LOGGER.debug("Unloading drivers...");
 		unloadLoadedDrivers();
 	}
@@ -168,6 +172,8 @@ public class DataSourcesManager extends AbstractAppManager<DataSourcesManager> {
 				try {
 					final String poolName = toPoolName(dataSource.getDomainId(), dataSource.getDataSourceId());
 					doAddPool(poolName, createHikariConfig(dataSource));
+					doUpdateFriendlyIdCache(dataSource.getDomainId(), dataSource.getDataSourceId(), dataSource.getFriendlyId());
+					
 				} catch (Exception ex1) {
 					LOGGER.error("Unable to initialize pool for data-source '{}:{}'", dataSource.getDataSourceId(), dataSource.getType(), ex1);
 				}
@@ -252,6 +258,18 @@ public class DataSourcesManager extends AbstractAppManager<DataSourcesManager> {
 		}
 	}
 	
+	public boolean checkDataSourceFriendlyIdAvailability(final String domainId, final String dataSourceFriendlyId) throws WTException {
+		Check.notNull(domainId, "domainId");
+		Check.notNull(dataSourceFriendlyId, "dataSourceFriendlyId");
+		
+		long stamp = readyLock();
+		try {
+			return doLookupDataSourceIdByFriendlyId(domainId, dataSourceFriendlyId) == null;
+		} finally {
+			readyUnlock(stamp);
+		}
+	}
+	
 	public DataSource getDataSource(final String domainId, final String dataSourceId) throws WTException {
 		Check.notNull(domainId, "domainId");
 		Check.notNull(dataSourceId, "dataSourceId");
@@ -262,6 +280,57 @@ public class DataSourcesManager extends AbstractAppManager<DataSourcesManager> {
 			try {
 				con = getConnection(CoreManifest.ID);
 				return doDataSourceGet(con, domainId, dataSourceId);
+				
+			} catch (Exception ex) {
+				throw ExceptionUtils.wrapThrowable(ex);
+			} finally {
+				DbUtils.closeQuietly(con);
+			}
+		} finally {
+			readyUnlock(stamp);
+		}
+	}
+	
+	public DataSourcePooled.PoolStatus getDataSourcePoolStatus(final String domainId, final String dataSourceId) throws WTException {
+		Check.notNull(domainId, "domainId");
+		Check.notNull(dataSourceId, "dataSourceId");
+		Connection con = null;
+		
+		long stamp = readyLock();
+		try {
+			try {
+				final String poolName = toPoolName(domainId, dataSourceId);
+				try {
+					poolLocks.lockInterruptibly(poolName);
+					return createPoolStatus(poolName);
+				} finally {
+					poolLocks.unlock(poolName);
+				}
+				
+			} catch (Exception ex) {
+				throw ExceptionUtils.wrapThrowable(ex);
+			} finally {
+				DbUtils.closeQuietly(con);
+			}
+			
+		} finally {
+			readyUnlock(stamp);
+		}
+	}
+	
+	public DataSource getDataSourceByAltId(final String domainId, final String dataSourceFriendlyId) throws WTException {
+		Check.notNull(domainId, "domainId");
+		Check.notNull(dataSourceFriendlyId, "dataSourceFriendlyId");
+		Connection con = null;
+		
+		long stamp = readyLock();
+		try {
+			try {
+				con = getConnection(CoreManifest.ID);
+				String dataSourceId = doLookupDataSourceIdByFriendlyId(domainId, dataSourceFriendlyId);
+				if (dataSourceId == null) throw new WTNotFoundException("DataSource not found using friendly-ID [{}, {}]", domainId, dataSourceFriendlyId);
+				return doDataSourceGet(con, domainId, dataSourceId);
+				//return doDataSourceGet(con, domainId, externalId, true);
 				
 			} catch (Exception ex) {
 				throw ExceptionUtils.wrapThrowable(ex);
@@ -300,6 +369,7 @@ public class DataSourcesManager extends AbstractAppManager<DataSourcesManager> {
 				
 				// Setup a pool for newly created dataSource
 				lockedSetupPool(domainId, created, SetupPoolMode.ADD);
+				doUpdateFriendlyIdCache(domainId, created.getDataSourceId(), dataSource.getFriendlyId());
 				
 				return created;
 
@@ -335,6 +405,7 @@ public class DataSourcesManager extends AbstractAppManager<DataSourcesManager> {
 				
 				// Update the pool associated to the dataSource
 				lockedSetupPool(domainId, updated, SetupPoolMode.UPDATE);
+				doUpdateFriendlyIdCache(domainId, updated.getDataSourceId(), dataSource.getFriendlyId());
 
 			} catch (Exception ex) {
 				throw ExceptionUtils.wrapThrowable(ex);
@@ -367,6 +438,7 @@ public class DataSourcesManager extends AbstractAppManager<DataSourcesManager> {
 			}
 			
 			// Remove the pool associated to the dataSource
+			doUpdateFriendlyIdCache(domainId, dataSourceId, null);
 			final String poolName = toPoolName(domainId, dataSourceId);
 			try {
 				poolLocks.lockInterruptibly(poolName);
@@ -414,11 +486,47 @@ public class DataSourcesManager extends AbstractAppManager<DataSourcesManager> {
 	}
 	
 	public void checkDataSourceConnection(final String domainId, final String dataSourceType, final String serverName, final Integer serverPort, final String databaseName, final String username, final String password, final Map<String, String> props) throws WTConnectionException, WTException {
+		Check.notNull(domainId, "domainId");
+		Check.notNull(dataSourceType, "dataSourceType");
+		Check.notNull(serverName, "serverName");
+		
 		long stamp = readyLock();
 		try {
 			DataSourceType dsType = doDataSourceTypeGet(domainId, dataSourceType);
 			if (dsType == null) throw new WTException("Unsupported dataSource type [{}]", dataSourceType);
 			doCheckDataSourceConnection(createJdbcConfig(dsType, serverName, serverPort, databaseName, username, password, props));
+		} finally {
+			readyUnlock(stamp);
+		}
+	}
+	
+	public Connection borrowDataSourceConnection(final String domainId, final String dataSourceId) throws WTException {
+		Check.notNull(domainId, "domainId");
+		Check.notNull(dataSourceId, "dataSourceId");
+		
+		long stamp = readyLock();
+		try {
+			final String poolName = toPoolName(domainId, dataSourceId);
+			LOGGER.debug("Getting connection from '{}'", poolName);
+			return doBorrowDataSourceConnection(poolName);
+			
+		} finally {
+			readyUnlock(stamp);
+		}
+	}
+	
+	public Connection borrowDataSourceConnectionByFriendlyId(final String domainId, final String dataSourceFriendlyId) throws WTException {
+		Check.notNull(domainId, "domainId");
+		Check.notNull(dataSourceFriendlyId, "dataSourceFriendlyId");
+		
+		long stamp = readyLock();
+		try {
+			String dataSourceId = doLookupDataSourceIdByFriendlyId(domainId, dataSourceFriendlyId);
+			if (dataSourceId == null) throw new WTNotFoundException("DataSource not found using friendly-ID [{}, {}]", domainId, dataSourceFriendlyId);
+			final String poolName = toPoolName(domainId, dataSourceId);
+			LOGGER.debug("Getting connection from '{}'", poolName);
+			return doBorrowDataSourceConnection(poolName);
+			
 		} finally {
 			readyUnlock(stamp);
 		}
@@ -685,6 +793,25 @@ public class DataSourcesManager extends AbstractAppManager<DataSourcesManager> {
 			
 		} finally {
 			readyUnlock(stamp);
+		}
+	}
+	
+	private Connection doBorrowDataSourceConnection(final String poolName) throws WTException {
+		try {
+			poolLocks.lockInterruptibly(poolName);
+			Connection pcon = null;
+			try {
+				pcon = doGetPoolConnection(poolName);
+				if (pcon == null) throw new DataSourceBase.WTPoolException("Pool not available [{}]", poolName);
+				return pcon;
+
+			} catch (SQLException ex) {
+				throw ExceptionUtils.wrapThrowable(ex);
+			}
+		} catch (InterruptedException ex) {
+			throw new WTException(ex, "Unable to acquire pool '{}'", poolName);
+		} finally {
+			poolLocks.unlock(poolName);
 		}
 	}
 	
@@ -1027,10 +1154,14 @@ public class DataSourcesManager extends AbstractAppManager<DataSourcesManager> {
 		}
 	}
 	
-	private DataSource doDataSourceGet(final Connection con, final String domainId, final String dataSourceId) throws WTException {
+	private DataSource doDataSourceGet(final Connection con, final String domainId, final String id) throws WTException {
+		return doDataSourceGet(con, domainId, id, false);
+	}
+	
+	private DataSource doDataSourceGet(final Connection con, final String domainId, final String id, final boolean useExternalId) throws WTException {
 		DataSourceDAO dsDao = DataSourceDAO.getInstance();
 		
-		ODataSource ods = dsDao.selectByIdDomain(con, dataSourceId, domainId);
+		ODataSource ods = dsDao.selectByIdDomain(con, id, domainId, useExternalId);
 		if (ods == null) return null;
 		DataSourceType dsType = doDataSourceTypeGet(domainId, ods.getType());
 		
@@ -1156,6 +1287,27 @@ public class DataSourcesManager extends AbstractAppManager<DataSourcesManager> {
 		}
 	}
 	
+	private String toFriendlyIdKey(final String domainId, final String friendlyId) {
+		return friendlyId + "@" + domainId;
+	}
+	
+	private void doUpdateFriendlyIdCache(final String domainId, final String dataSourceId, final String friendlyId) {
+		Check.notEmpty(domainId, "domainId");
+		Check.notEmpty(dataSourceId, "dataSourceId");
+		dsFriendlyIdMapping.remove(dataSourceId);
+		if (!StringUtils.isBlank(friendlyId)) {
+			final String fidKey = toFriendlyIdKey(domainId, friendlyId);
+			dsFriendlyIdMapping.put(dataSourceId, fidKey);
+		}
+	}
+	
+	private String doLookupDataSourceIdByFriendlyId(final String domainId, final String friendlyId) {
+		Check.notEmpty(domainId, "domainId");
+		Check.notEmpty(friendlyId, "friendlyId");
+		final String fidKey = toFriendlyIdKey(domainId, friendlyId);
+		return dsFriendlyIdMapping.inverseBidiMap().getOrDefault(fidKey, null);
+	}
+	
 	private static ODataSource fillODataSourceDefaultsForInsert(ODataSource tgt, DateTime defaultTimestamp) {
 		if (tgt != null) {
 			if (tgt.getRevisionTimestamp()== null) tgt.setRevisionTimestamp(defaultTimestamp);
@@ -1165,6 +1317,7 @@ public class DataSourcesManager extends AbstractAppManager<DataSourcesManager> {
 	
 	private static ODataSource fillODataSource(ODataSource tgt, DataSourceBase src) {
 		if ((tgt != null) && (src != null)) {
+			tgt.setFriendlyId(src.getFriendlyId());
 			tgt.setRevisionTimestamp(src.getRevisionTimestamp());
 			tgt.setName(src.getName());
 			tgt.setDescription(src.getDescription());
@@ -1191,6 +1344,7 @@ public class DataSourcesManager extends AbstractAppManager<DataSourcesManager> {
 	
 	private static <T extends DataSourceBase> T fillDataSource(T tgt, ODataSource src) {
 		if ((tgt != null) && (src != null)) {
+			tgt.setFriendlyId(src.getFriendlyId());
 			tgt.setRevisionTimestamp(src.getRevisionTimestamp());
 			tgt.setName(src.getName());
 			tgt.setDescription(src.getDescription());

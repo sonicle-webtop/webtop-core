@@ -1411,6 +1411,12 @@ public class Service extends BaseService {
 						throw ex1;
 					}
 				}
+			} else if ("check".equals(crud)) {
+				String friendlyId = ServletUtils.getStringParameter(request, "friendlyId", false);
+				
+				boolean available = admMgr.checkDataSourceFriendlyIdAvailability(friendlyId);
+				new JsonResult(available).printTo(out);
+				
 			} else {
 				throw new WTException("Unsupported operation [{}]", crud);
 			}

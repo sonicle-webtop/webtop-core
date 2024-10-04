@@ -903,12 +903,28 @@ public class CoreAdminManager extends BaseManager {
 		return dsMgr.listDataSources(getTargetProfileId().getDomainId());
 	}
 	
+	public boolean checkDataSourceFriendlyIdAvailability(final String friendlyIdToCheck)throws WTException {
+		DataSourcesManager dsMgr = wta.getDataSourcesManager();
+		String domainId = getTargetProfileId().getDomainId();
+
+		RunContext.ensureIsWebTopDomainAdmin(domainId);
+		return dsMgr.checkDataSourceFriendlyIdAvailability(domainId, friendlyIdToCheck);
+	}
+	
 	public DataSource getDataSource(final String dataSourceId) throws WTException {
 		DataSourcesManager dsMgr = wta.getDataSourcesManager();
 		String domainId = getTargetProfileId().getDomainId();
 
 		RunContext.ensureIsWebTopDomainAdmin(domainId);
 		return dsMgr.getDataSource(getTargetProfileId().getDomainId(), dataSourceId);
+	}
+	
+	public DataSourcePooled.PoolStatus getDataSourcePoolStatus(final String dataSourceId) throws WTException {
+		DataSourcesManager dsMgr = wta.getDataSourcesManager();
+		String domainId = getTargetProfileId().getDomainId();
+
+		RunContext.ensureIsWebTopDomainAdmin(domainId);
+		return dsMgr.getDataSourcePoolStatus(getTargetProfileId().getDomainId(), dataSourceId);
 	}
 	
 	public DataSource addDataSource(final DataSourceBase dataSource) throws WTException {

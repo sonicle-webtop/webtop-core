@@ -2287,6 +2287,48 @@ public class CoreManager extends BaseManager {
 		}
 	}
 	
+	/**
+	 * Borrows a connection from DataSource's pool.
+	 * @param dataSourceId DataSource's ID.
+	 * @return A Connection object.
+	 * @throws WTException 
+	 */
+	public Connection borrowDataSourceConnection(final String dataSourceId) throws WTException {
+		Check.notEmpty(dataSourceId, "dataSourceId");
+		
+		try {
+			String targetDomainId = getTargetProfileId().getDomainId();
+			ensureProfileDomain(targetDomainId);
+			
+			DataSourcesManager dsMgr = wta.getDataSourcesManager();
+			return dsMgr.borrowDataSourceConnection(targetDomainId, dataSourceId);
+			
+		} catch (Throwable t) {
+			throw ExceptionUtils.wrapThrowable(t);
+		}
+	}
+	
+	/**
+	 * Borrows a connection from DataSource's pool using assigned friendly-ID.
+	 * @param dataSourceFriendlyId DataSource's assigned friendly-ID.
+	 * @return A Connection object.
+	 * @throws WTException 
+	 */
+	public Connection borrowDataSourceConnectionByFriendlyId(final String dataSourceFriendlyId) throws WTException {
+		Check.notEmpty(dataSourceFriendlyId, "dataSourceFriendlyId");
+		
+		try {
+			String targetDomainId = getTargetProfileId().getDomainId();
+			ensureProfileDomain(targetDomainId);
+			
+			DataSourcesManager dsMgr = wta.getDataSourcesManager();
+			return dsMgr.borrowDataSourceConnectionByFriendlyId(targetDomainId, dataSourceFriendlyId);
+			
+		} catch (Throwable t) {
+			throw ExceptionUtils.wrapThrowable(t);
+		}
+	}
+	
 	public Meeting createMeeting(final String roomName) throws WTException {
 		return createMeeting(roomName, null);
 	}

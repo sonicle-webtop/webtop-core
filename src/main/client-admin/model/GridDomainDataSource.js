@@ -39,6 +39,7 @@ Ext.define('Sonicle.webtop.core.admin.model.GridDomainDataSource', {
 	idProperty: 'id',
 	fields: [
 		WTF.field('id', 'string', false),
+		WTF.roField('friendlyId', 'string'),
 		WTF.roField('name', 'string'),
 		WTF.roField('description', 'string'),
 		WTF.roField('type', 'string'),

@@ -46,6 +46,7 @@ Ext.define('Sonicle.webtop.core.admin.model.DataSource', {
 	idProperty: 'id',
 	fields: [
 		WTF.field('id', 'string', false),
+		WTF.field('friendlyId', 'string', true),
 		WTF.field('name', 'string', false),
 		WTF.field('description', 'string', true),
 		WTF.field('type', 'string', false),

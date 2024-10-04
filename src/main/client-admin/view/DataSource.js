@@ -98,6 +98,37 @@ Ext.define('Sonicle.webtop.core.admin.view.DataSource', {
 					fieldLabel: me.res('dataSource.fld-name.lbl'),
 					anchor: '100%'
 				}, {
+					xtype: 'textfield',
+					bind: '{record.friendlyId}',
+					maskRe: Sonicle.data.validator.Username.maskRe,
+					fieldLabel: me.res('dataSource.fld-friendlyId.lbl'),
+					plugins: [
+						{
+							ptype: 'sofieldavailabilitycheck',
+							baseIconCls: 'wt-opacity-50',
+							availableTooltipText: WT.res('sofieldavailabilitycheck.availableTooltipText'),
+							unavailableTooltipText: WT.res('sofieldavailabilitycheck.unavailableTooltipText'),
+							checkAvailability: function(value, done) {
+								if (Ext.isEmpty(value)) return false;
+								if (me.getModel().getModified('friendlyId') === undefined) return false;
+								WT.ajaxReq(me.mys.ID, 'ManageDomainDataSource', {
+									params: {
+										crud: 'check',
+										domainId: me.domainId,
+										friendlyId: value
+									},
+									callback: function(success, json) {
+										done(success ? json.data : json.message);
+									}
+								});
+								
+								
+								//WT.ajaxReq('com.sonicle.webtop.core.admin', 'ManageDomainDataSource', {params: {crud: 'borrow', domainId: 'sonicleldap', friendlyId: 'ciao'}});
+							}
+						}
+					],
+					anchor: '100%'
+				}, {
 					xtype: 'textareafield',
 					bind: '{record.description}',
 					fieldLabel: me.res('dataSource.fld-description.lbl'),

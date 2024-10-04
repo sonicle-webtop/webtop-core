@@ -127,11 +127,13 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainDataSources', {
 				}, {
 					dataIndex: 'server',
 					header: me.res('domainDataSources.gp.server.lbl'),
-					width: 150
+					maxWidth: 150,
+					flex: 1
 				}, {
 					dataIndex: 'username',
 					header: me.res('domainDataSources.gp.username.lbl'),
-					width: 200
+					maxWidth: 200,
+					flex: 1
 				}, {
 					xtype: 'soiconcolumn',
 					dataIndex: 'poolStatus',

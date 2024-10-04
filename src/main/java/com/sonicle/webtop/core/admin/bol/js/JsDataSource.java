@@ -44,6 +44,7 @@ import org.apache.commons.lang.StringUtils;
  */
 public class JsDataSource {
 	public String id;
+	public String friendlyId;
 	public String name;
 	public String description;
 	public String type;
@@ -59,6 +60,7 @@ public class JsDataSource {
 	
 	public JsDataSource(DataSource dataSource) {
 		this.id = dataSource.getDataSourceId();
+		this.friendlyId = dataSource.getFriendlyId();
 		this.name = dataSource.getName();
 		this.description = dataSource.getDescription();
 		this.type = dataSource.getType();
@@ -76,6 +78,7 @@ public class JsDataSource {
 	
 	public static DataSourceBase createDataSourceForAdd(JsDataSource js) {
 		DataSourceBase item = new DataSourceBase();
+		item.setFriendlyId(js.friendlyId);
 		item.setName(js.name);
 		item.setDescription(js.description);
 		item.setType(js.type);
@@ -91,6 +94,7 @@ public class JsDataSource {
 	
 	public static DataSourceBase createDataSourceForUpdate(JsDataSource js, UpdateReturn ret) {
 		DataSourceBase item = new DataSourceBase();
+		item.setFriendlyId(js.friendlyId);
 		item.setName(js.name);
 		item.setDescription(js.description);
 		item.setType(js.type);
