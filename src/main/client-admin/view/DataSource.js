@@ -121,9 +121,6 @@ Ext.define('Sonicle.webtop.core.admin.view.DataSource', {
 										done(success ? json.data : json.message);
 									}
 								});
-								
-								
-								//WT.ajaxReq('com.sonicle.webtop.core.admin', 'ManageDomainDataSource', {params: {crud: 'borrow', domainId: 'sonicleldap', friendlyId: 'ciao'}});
 							}
 						}
 					],

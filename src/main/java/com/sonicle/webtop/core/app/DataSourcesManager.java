@@ -359,7 +359,8 @@ public class DataSourcesManager extends AbstractAppManager<DataSourcesManager> {
 				ODataSource ods = fillODataSource(new ODataSource(), dataSource);
 				ods.setDataSourceId(newDataSourceId);
 				ods.setDomainId(domainId);
-				fillODataSourceDefaultsForInsert(ods, BaseDAO.createRevisionTimestamp());
+				ODataSource.fillDefaultsForInsert(ods);
+				ODataSource.validate(ods);
 
 				con = getConnection(CoreManifest.ID);
 				boolean ret = dsDao.insert(con, ods) == 1;
@@ -396,6 +397,7 @@ public class DataSourcesManager extends AbstractAppManager<DataSourcesManager> {
 				ODataSource ods = fillODataSource(new ODataSource(), dataSource);
 				ods.setDataSourceId(dataSourceId);
 				ods.setDomainId(domainId);
+				ODataSource.validate(ods);
 
 				con = getConnection(CoreManifest.ID);
 				boolean ret = dsDao.update(con, ods, setPassword, BaseDAO.createRevisionTimestamp()) == 1;
@@ -1306,13 +1308,6 @@ public class DataSourcesManager extends AbstractAppManager<DataSourcesManager> {
 		Check.notEmpty(friendlyId, "friendlyId");
 		final String fidKey = toFriendlyIdKey(domainId, friendlyId);
 		return dsFriendlyIdMapping.inverseBidiMap().getOrDefault(fidKey, null);
-	}
-	
-	private static ODataSource fillODataSourceDefaultsForInsert(ODataSource tgt, DateTime defaultTimestamp) {
-		if (tgt != null) {
-			if (tgt.getRevisionTimestamp()== null) tgt.setRevisionTimestamp(defaultTimestamp);
-		}
-		return tgt;
 	}
 	
 	private static ODataSource fillODataSource(ODataSource tgt, DataSourceBase src) {
