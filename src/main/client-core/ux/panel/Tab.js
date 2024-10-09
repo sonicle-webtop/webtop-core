@@ -36,5 +36,35 @@ Ext.define('Sonicle.webtop.core.ux.panel.Tab', {
 	extend: 'Ext.tab.Panel',
 	alias: 'widget.wttabpanel',
 	
-	border: false
+	componentCls: 'wt-'+'tabpanel',
+	
+	/**
+	 * @cfg {String|Boolean} autoMargin
+	 * Set as String to specify whith margin to set: `t` for Top, `b` for Bottom
+	 * and `s` for Sides. Set boolean `true` to activates all margins or `false` 
+	 * to disable the functionality.
+	 */
+	autoMargin: false,
+	
+	border: false,
+	
+	marginTopCls: 'wt-'+'tabpanel-margin-t',
+	marginBottomCls: 'wt-'+'tabpanel-margin-b',
+	marginSidesCls: 'wt-'+'tabpanel-margin-lr',
+	
+	initComponent: function() {
+		var me = this,
+			autoMargin = me.autoMargin,
+			am = Sonicle.String.deflt(autoMargin, '');
+		
+		if (autoMargin === true) {
+			am = 'tbs';
+		} else if (autoMargin === false) {
+			am = '';
+		}
+		if (am.indexOf('t') !== -1) me.addCls(me.marginTopCls);
+		if (am.indexOf('b') !== -1) me.addCls(me.marginBottomCls);
+		if (am.indexOf('s') !== -1) me.addCls(me.marginSidesCls);
+		me.callParent(arguments);
+	}
 });

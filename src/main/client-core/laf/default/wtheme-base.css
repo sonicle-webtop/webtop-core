@@ -169,14 +169,26 @@
 
 /* ---------- WTA.ux.panel.Fields */
 .wt-fieldspanel-body-padding-t {
-	padding-top: 5px;
+	padding-top: 8px;
 }
 .wt-fieldspanel-body-padding-lr {
-	padding-left: 5px;
-	padding-right: 5px;
+	padding-left: 8px;
+	padding-right: 8px;
 }
 .wt-fieldspanel-body-padding-b {
-	padding-bottom: 5px;
+	padding-bottom: 8px;
+}
+
+/* ---------- WTA.ux.panel.Tab */
+.wt-tabpanel-margin-t {
+	margin-top: 8px;
+}
+.wt-tabpanel-margin-lr {
+	margin-left: 8px;
+	margin-right: 8px;
+}
+.wt-tabpanel-margin-b {
+	margin-bottom: 8px;
 }
 
 /* ---------- Browser */

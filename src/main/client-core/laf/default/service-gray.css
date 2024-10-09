@@ -7,7 +7,7 @@
 	background-image: -webkit-linear-gradient(top, #e6e6e6, #efefef);
 }
 
-.wt-fieldspanel .x-panel-bodyWrap .x-panel-body {
+.wt-fieldspanel .x-panel-bodyWrap .x-panel-body:first-child {
 	background: none;
 }
 

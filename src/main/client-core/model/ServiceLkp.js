@@ -36,7 +36,7 @@ Ext.define('Sonicle.webtop.core.model.ServiceLkp', {
 	
 	fields: [
 		WTF.calcField('label', 'string', ['id', 'desc'], function(v, rec) {
-			return rec.get('id') + ' (' + rec.get('desc') + ')';
+			return rec.get('desc') + ' (' + rec.get('id') + ')';
 		})
 	]
 });

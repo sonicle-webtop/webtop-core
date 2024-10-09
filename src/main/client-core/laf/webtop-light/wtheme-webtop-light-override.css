@@ -131,3 +131,27 @@ color-ct-ok-1 -> Green/700
 .x-message-box-warning { color: #eab308 !important; } /* Yellow/600 */
 .x-message-box-question { color: #4338ca !important; } /* Indigo/700 */
 .x-message-box-error { color: #b91c1c !important; } /* Red/700 */
+
+/* ---------- WTA.ux.panel.Fields */
+.wt-fieldspanel-body-padding-t {
+	padding-top: 16px;
+}
+.wt-fieldspanel-body-padding-b {
+	padding-bottom: 16px;
+}
+.wt-fieldspanel-body-padding-lr {
+	padding-left: 16px;
+	padding-right: 16px;
+}
+
+/* ---------- WTA.ux.panel.Tab */
+.wt-tabpanel-margin-t {
+	margin-top: 16px;
+}
+.wt-tabpanel-margin-lr {
+	margin-left: 16px;
+	margin-right: 16px;
+}
+.wt-tabpanel-margin-b {
+	margin-bottom: 16px;
+}

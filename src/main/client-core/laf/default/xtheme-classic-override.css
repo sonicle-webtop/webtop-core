@@ -12,20 +12,40 @@
 	color: #666666;
 }
 
-/* ---------- Button */
+/* ---------- Ext.button.Button */
 /* Set button glyph color ()missing in original css definitions) */
 .x-btn-icon-el {
 	color: #666666;
 }
 
-/* ---------- Tree */
+/* ---------- Ext.tree.Panel */
 /* Avoid icon fall to left side, due to missing left padding */
 .x-grid-cell-inner-treecolumn {
 	padding-left: 3px;
 }
 
-/* ---------- Trigger */
+/* ---------- Ext.form.field.Trigger */
+.x-form-trigger {
+    /* Classic theme fields has triggers outside field, so reset back tweaked opacity (see xtheme-override.css) */
+    opacity: 1 !important;
+}
+/* Hide ugly bottom border only for icon-triggers (eg. not for combo's arrow) */
+.x-form-trigger:not(.x-form-arrow-trigger) {
+    border-bottom: none;
+}
 /* Fix left-border when displayed on the right (thanks to Sonicle.overrides.form.field.Text) */
 .x-form-trigger-wrap > .x-form-trigger:first-child {
 	border-left: 1px solid #b5b8c8;
+}
+
+/* ---------- Sonicle.form.Separator */
+/* Give extra spacing from above objects */
+.x-fieldset.so-form-separator {
+    margin-top: 20px;
+}
+
+/* ---------- Sonicle.plugin.FieldIcon */
+/* Do NOT apply table related autosizing on icon-wrapper element */
+.x-field:has(.so-fieldicon-wrap) {
+    table-layout: auto;
 }

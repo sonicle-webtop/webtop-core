@@ -57,7 +57,13 @@ Ext.define('Sonicle.webtop.core.ux.panel.Fields', {
 	 */
 	paddingSides: true, //FIXME: set to false when base themes consolidation is done (see override in neth-laf project)!
 	
-	autoPadding: 'trbl', //FIXME: set to false when base themes consolidation is done (see override in neth-laf project)!
+	/**
+	 * @cfg {String|Boolean} [autoPadding]
+	 * Set as String to specify which body-padding to set: `t` for Top, 
+	 * `b` for Bottom and `s` for Sides. Set boolean `true` to activates all 
+	 * paddings or `false` to disable the functionality.
+	 */
+	autoPadding: 'tbs', //FIXME: set to false when base themes consolidation is done (see override in neth-laf project)!
 	
 	paddingTopCls: 'wt-'+'fieldspanel-body-padding-t',
 	paddingBottomCls: 'wt-'+'fieldspanel-body-padding-b',
@@ -69,15 +75,15 @@ Ext.define('Sonicle.webtop.core.ux.panel.Fields', {
 			ap;
 		
 		if (me.autoPadding === true) {
-			ap = 'trbl';
+			ap = 'tbs';
 		} else if (me.autoPadding === false) {
 			ap = '';
 		} else {
 			ap = Sonicle.String.deflt(autoPadding, '');
 		}
-		if (me.paddingTop === true) me.addBodyCls(me.paddingTopCls);
-		if (me.paddingBottom === true) me.addBodyCls(me.paddingBottomCls);
-		if (me.paddingSides === true) me.addBodyCls(me.paddingSidesCls);
+		if (ap.indexOf('t') !== -1 || me.paddingTop === true) me.addBodyCls(me.paddingTopCls);
+		if (ap.indexOf('b') !== -1 || me.paddingBottom === true) me.addBodyCls(me.paddingBottomCls);
+		if (ap.indexOf('s') !== -1 || me.paddingSides === true) me.addBodyCls(me.paddingSidesCls);
 		me.callParent(arguments);
 	}
 });

@@ -15,3 +15,9 @@
     border-bottom-width: 1px !important;
     border-left-width: 1px !important;
 }
+
+/* ---------- Sonicle.form.Separator */
+/* Give extra spacing from above objects */
+.x-fieldset.so-form-separator {
+    margin-top: 20px;
+}

@@ -85,8 +85,7 @@ Ext.define('Sonicle.webtop.core.view.ChangePassword', {
 				labelAlign: me.labelAlign,
 				labelStyle: me.labelStyle
 			},
-			paddingTop: true,
-			paddingSides: true,
+			autoPadding: 'ts',
 			items: [
 				{
 					xtype: 'sopasswordfield',

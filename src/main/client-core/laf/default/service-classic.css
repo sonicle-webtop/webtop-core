@@ -15,7 +15,7 @@
 	background-image: -webkit-linear-gradient(top, #dfe9f5, #d3e1f1);
 }
 
-.wt-fieldspanel .x-panel-bodyWrap .x-panel-body {
+.wt-fieldspanel .x-panel-bodyWrap .x-panel-body:first-child {
 	background: none;
 }
 

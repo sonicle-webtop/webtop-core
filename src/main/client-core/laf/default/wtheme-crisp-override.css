@@ -169,6 +169,18 @@
     margin-right: 4px;
 }
 
+/* ---------- WTA.ux.panel.Fields */
+.wt-fieldspanel-body-padding-lr {
+	padding-left: 16px;
+    padding-right: 16px;
+}
+
+/* ---------- WTA.ux.panel.Tab */
+.wt-tabpanel-margin-lr {
+	margin-left: 16px;
+	margin-right: 16px;
+}
+
 /* ---------- Ext.picker.Date */
 /* Style highlight and full dates */
 .x-datepicker-cell.so-datepicker-highlighted {

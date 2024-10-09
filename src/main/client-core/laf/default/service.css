@@ -678,8 +678,3 @@ div.wt-wnlist {
     font-size: var(--wt-theme-fontsize-xl);
     line-height: var(--wt-theme-lineheight-xl);
 }
-
-.wt-fieldspanel-body-padding-lr {
-	padding-left: 16px;
-    padding-right: 16px;
-}
