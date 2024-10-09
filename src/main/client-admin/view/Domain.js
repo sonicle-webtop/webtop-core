@@ -86,8 +86,7 @@ Ext.define('Sonicle.webtop.core.admin.view.Domain', {
 			items: [{
 				xtype: 'wtfieldspanel',
 				reference: 'pnlmain',
-				paddingTop: true,
-				paddingSides: true,
+				autoPadding: 'ts',
 				modelValidation: true,
 				defaults: {
 					labelWidth: 150
@@ -189,9 +188,8 @@ Ext.define('Sonicle.webtop.core.admin.view.Domain', {
 						{
 							xtype: 'wtfieldspanel',
 							title: me.res('domain.server.tit'),
-							paddingTop: true,
-							paddingSides: true,
 							scrollable: true,
+							autoPadding: 'ts',
 							modelValidation: true,
 							defaults: {
 								labelWidth: 120
@@ -207,9 +205,8 @@ Ext.define('Sonicle.webtop.core.admin.view.Domain', {
 						}, {
 							title: me.res('domain.pwdPolicies.tit'),
 							xtype: 'wtfieldspanel',
-							paddingTop: true,
-							paddingSides: true,
 							scrollable: true,
+							autoPadding: 'ts',
 							defaults: {
 								labelWidth: 120
 							},
@@ -285,9 +282,8 @@ Ext.define('Sonicle.webtop.core.admin.view.Domain', {
 						{
 							title: me.res('domain.server.tit'),
 							xtype: 'wtfieldspanel',
-							paddingTop: true,
-							paddingSides: true,
 							scrollable: true,
+							autoPadding: 'ts',
 							defaults: {
 								labelWidth: 120
 							},
@@ -346,9 +342,8 @@ Ext.define('Sonicle.webtop.core.admin.view.Domain', {
 						}, {
 							title: me.res('domain.pwdPolicies.tit'),
 							xtype: 'wtfieldspanel',
-							paddingTop: true,
-							paddingSides: true,
 							scrollable: true,
+							autoPadding: 'ts',
 							defaults: {
 								labelWidth: 120
 							},
@@ -424,9 +419,8 @@ Ext.define('Sonicle.webtop.core.admin.view.Domain', {
 						{
 							title: me.res('domain.server.tit'),
 							xtype: 'wtfieldspanel',
-							paddingTop: true,
-							paddingSides: true,
 							scrollable: true,
+							autoPadding: 'ts',
 							defaults: {
 								labelWidth: 120
 							},
@@ -485,9 +479,8 @@ Ext.define('Sonicle.webtop.core.admin.view.Domain', {
 						}, {
 							title: me.res('domain.ldap.login.tit'),
 							xtype: 'wtfieldspanel',
-							paddingTop: true,
-							paddingSides: true,
 							scrollable: true,
+							autoPadding: 'ts',
 							defaults: {
 								labelWidth: 120
 							},
@@ -507,9 +500,8 @@ Ext.define('Sonicle.webtop.core.admin.view.Domain', {
 						}, {
 							title: me.res('domain.ldap.users.tit'),
 							xtype: 'wtfieldspanel',
-							paddingTop: true,
-							paddingSides: true,
 							scrollable: true,
+							autoPadding: 'ts',
 							defaults: {
 								labelWidth: 120
 							},
@@ -553,9 +545,8 @@ Ext.define('Sonicle.webtop.core.admin.view.Domain', {
 						}, {
 							title: me.res('domain.pwdPolicies.tit'),
 							xtype: 'wtfieldspanel',
-							paddingTop: true,
-							paddingSides: true,
 							scrollable: true,
+							autoPadding: 'ts',
 							defaults: {
 								labelWidth: 120
 							},
@@ -630,9 +621,8 @@ Ext.define('Sonicle.webtop.core.admin.view.Domain', {
 					items: [{
 						title: me.res('domain.server.tit'),
 						xtype: 'wtfieldspanel',
-						paddingTop: true,
-						paddingSides: true,
 						scrollable: true,
+						autoPadding: 'ts',
 						defaults: {
 							labelWidth: 120
 						},
@@ -688,9 +678,8 @@ Ext.define('Sonicle.webtop.core.admin.view.Domain', {
 					}, {
 						title: me.res('domain.ldap.login.tit'),
 						xtype: 'wtfieldspanel',
-						paddingTop: true,
-						paddingSides: true,
 						scrollable: true,
+						autoPadding: 'ts',
 						defaults: {
 							labelWidth: 120
 						},
@@ -708,9 +697,8 @@ Ext.define('Sonicle.webtop.core.admin.view.Domain', {
 					}, {
 						title: me.res('domain.ldap.users.tit'),
 						xtype: 'wtfieldspanel',
-						paddingTop: true,
-						paddingSides: true,
 						scrollable: true,
+						autoPadding: 'ts',
 						defaults: {
 							labelWidth: 120
 						},
@@ -757,9 +745,8 @@ Ext.define('Sonicle.webtop.core.admin.view.Domain', {
 					items: [{
 						title: me.res('domain.server.tit'),
 						xtype: 'wtfieldspanel',
-						paddingTop: true,
-						paddingSides: true,
 						scrollable: true,
+						autoPadding: 'ts',
 						defaults: {
 							labelWidth: 120
 						},
@@ -815,9 +802,8 @@ Ext.define('Sonicle.webtop.core.admin.view.Domain', {
 					}, {
 						title: me.res('domain.ldap.login.tit'),
 						xtype: 'wtfieldspanel',
-						paddingTop: true,
-						paddingSides: true,
 						scrollable: true,
+						autoPadding: 'ts',
 						defaults: {
 							labelWidth: 120
 						},
@@ -836,9 +822,8 @@ Ext.define('Sonicle.webtop.core.admin.view.Domain', {
 					}, {
 						title: me.res('domain.ldap.users.tit'),
 						xtype: 'wtfieldspanel',
-						paddingTop: true,
-						paddingSides: true,
 						scrollable: true,
+						autoPadding: 'ts',
 						defaults: {
 							labelWidth: 120
 						},

@@ -33,6 +33,7 @@
 Ext.define('Sonicle.webtop.core.admin.view.DataSource', {
 	extend: 'WTA.sdk.ModelView',
 	requires: [
+		'Sonicle.VMUtils',
 		'Sonicle.form.Separator',
 		'Sonicle.webtop.core.admin.model.DataSourceTypeLkp'
 	],
@@ -40,12 +41,18 @@ Ext.define('Sonicle.webtop.core.admin.view.DataSource', {
 	dockableConfig: {
 		title: '{dataSource.tit}',
 		iconCls: 'wtadm-icon-dataSource',
-		width: 400,
+		width: 450,
 		height: 480
 	},
 	
 	fieldTitle: 'name',
 	modelName: 'Sonicle.webtop.core.admin.model.DataSource',
+	returnModelExtraParams: function() {
+		return {
+			domainId: this.domainId
+		};
+	},
+	focusField: {'new': 'fldname', 'edit': 'fldname'},
 	actionsResPrefix: 'dataSource',
 	
 	/**
@@ -59,7 +66,7 @@ Ext.define('Sonicle.webtop.core.admin.view.DataSource', {
 		if (!cfg.domainId) Ext.raise('domainId is mandatory');
 		me.callParent([cfg]);
 		
-		WTU.applyFormulas(me.getVM(), {
+		Sonicle.VMUtils.applyFormulas(me.getVM(), {
 			foTestEnabled: {
 				bind: {bindTo: '{record}', deep: true},
 				get: function(mo) {
@@ -70,12 +77,6 @@ Ext.define('Sonicle.webtop.core.admin.view.DataSource', {
 		});
 	},
 	
-	returnModelExtraParams: function() {
-		return {
-			domainId: this.domainId
-		};
-	},
-	
 	initComponent: function() {
 		var me = this;
 		me.callParent(arguments);
@@ -83,12 +84,12 @@ Ext.define('Sonicle.webtop.core.admin.view.DataSource', {
 		me.add({
 			region: 'center',
 			xtype: 'wtfieldspanel',
-			paddingTop: true,
-			paddingSides: true,
 			scrollable: true,
+			autoPadding: 'ts',
 			modelValidation: true,
 			defaults: {
-				labelWidth: 100
+				labelAlign: 'top',
+				labelSeparator: ''
 			},
 			items: [
 				{
@@ -131,7 +132,8 @@ Ext.define('Sonicle.webtop.core.admin.view.DataSource', {
 					fieldLabel: me.res('dataSource.fld-description.lbl'),
 					anchor: '100%'
 				}, {
-					xtype: 'soformseparator'
+					xtype: 'soformseparator',
+					title: me.res('dataSource.dbserver.tit')
 				},
 				WTF.lookupCombo('id', 'label', {
 					bind: '{record.type}',
@@ -145,21 +147,19 @@ Ext.define('Sonicle.webtop.core.admin.view.DataSource', {
 							}
 						})
 					},
+					emptyText: me.res('dataSource.fld-type.emp'),
 					fieldLabel: me.res('dataSource.fld-type.lbl'),
 					anchor: '100%'
 				}),
 				{
-					xtype: 'fieldcontainer',
-					layout: {
-						type: 'hbox',
-						padding: '0 0 1 0' // fixes classic-theme bottom border issue
-					},
+					xtype: 'sofieldhgroup',
 					items: [
 						{
 							xtype: 'textfield',
 							bind: '{record.serverName}',
 							inputType: 'url',
 							emptyText: me.res('dataSource.fld-serverName.emp'),
+							fieldLabel: me.res('dataSource.fld-server.lbl'),
 							flex: 1
 						}, {
 							xtype: 'displayfield',
@@ -171,7 +171,6 @@ Ext.define('Sonicle.webtop.core.admin.view.DataSource', {
 							width: 80
 						}
 					],
-					fieldLabel: me.res('dataSource.fld-server.lbl'),
 					anchor: '100%'
 				}, {
 					xtype: 'textfield',
@@ -184,18 +183,32 @@ Ext.define('Sonicle.webtop.core.admin.view.DataSource', {
 					xtype: 'sofakeinput', // Disable Chrome autofill
 					type: 'password'
 				}, {
-					xtype: 'textfield',
-					bind: '{record.username}',
-					plugins: 'sonoautocomplete',
-					fieldLabel: me.res('dataSource.fld-username.lbl'),
-					width: 280
-				}, {
-					xtype: 'textfield',
-					bind: '{record.password}',
-					inputType: 'password',
-					plugins: 'sonoautocomplete',
-					fieldLabel: me.res('dataSource.fld-password.lbl'),
-					width: 280
+					xtype: 'sofieldhgroup',
+					items: [
+						{
+							xtype: 'sofakeinput' // Disable Chrome autofill
+						}, {
+							xtype: 'textfield',
+							bind: '{record.username}',
+							plugins: 'sonoautocomplete',
+							fieldLabel: me.res('dataSource.fld-username.lbl'),
+							flex: 1
+						}, {
+							xtype: 'sohspacer',
+							ui: 'small'
+						}, {
+							xtype: 'sofakeinput', // Disable Chrome autofill
+							type: 'password'
+						}, {
+							xtype: 'textfield',
+							bind: '{record.password}',
+							inputType: 'password',
+							plugins: 'sonoautocomplete',
+							fieldLabel: me.res('dataSource.fld-password.lbl'),
+							flex: 1
+						}
+					],
+					anchor: '100%'
 				}, {
 					xtype: 'soformseparator',
 					title: me.res('dataSource.rawProps.tit')
@@ -211,40 +224,38 @@ Ext.define('Sonicle.webtop.core.admin.view.DataSource', {
 					fieldLabel: me.res('dataSource.fld-poolProps.lbl'),
 					emptyText: me.res('dataSource.fld-poolProps.emp'),
 					anchor: '100%'
-				}, {
-					xtype: 'sospacer'
-				}, {
-					xtype: 'fieldcontainer',
-					hideEmptyLabel: false,
-					items: [
-						{
-							xtype: 'button',
-							ui: 'default-toolbar',
-							bind: {
-								disabled: '{!foTestEnabled}'
-							},
-							text: me.res('dataSource.act-testConnection.lbl'),
-							handler: function() {
-								me.testConnectionUI();
-							}
-						}
-					]
 				}
 			]
 		});
-		me.on('viewload', me.onViewLoad);
+	},
+	
+	initTBar: function() {
+		var me = this;
+		me.dockedItems = Sonicle.Utils.mergeDockedItems(me.dockedItems, 'top', [
+			me.createTopToolbar1Cfg(me.prepareTopToolbarItems())
+		]);
 	},
 	
 	privates: {
-		onViewLoad: function(s, success) {
-			if (!success) return;
+		prepareTopToolbarItems: function() {
 			var me = this;
-			me.lref('fldname').focus(true);
+			return [
+				{
+					xtype: 'button',
+					bind: {
+						disabled: '{!foTestEnabled}'
+					},
+					text: me.res('dataSource.act-testConnection.lbl'),
+					handler: function() {
+						me.testConnectionUI();
+					}
+				}
+			];
 		},
 		
 		testConnectionUI: function() {
 			var me = this,
-					mo = me.getModel();
+				mo = me.getModel();
 			
 			me.wait();
 			WT.ajaxReq(me.mys.ID, 'ManageDomainDataSource', {

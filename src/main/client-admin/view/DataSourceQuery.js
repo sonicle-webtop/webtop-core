@@ -33,6 +33,7 @@
 Ext.define('Sonicle.webtop.core.admin.view.DataSourceQuery', {
 	extend: 'WTA.sdk.ModelView',
 	requires: [
+		'Sonicle.VMUtils',
 		'Sonicle.form.Separator',
 		'Sonicle.form.field.CodeEditor'
 	],
@@ -43,12 +44,18 @@ Ext.define('Sonicle.webtop.core.admin.view.DataSourceQuery', {
 	dockableConfig: {
 		title: '{dataSourceQuery.tit}',
 		iconCls: 'wtadm-icon-dataSourceQuery',
-		width: 400,
+		width: 450,
 		height: 480
 	},
 	
 	fieldTitle: 'name',
 	modelName: 'Sonicle.webtop.core.admin.model.DataSourceQuery',
+	returnModelExtraParams: function() {
+		return {
+			domainId: this.domainId
+		};
+	},
+	focusField: {'new': 'fldname', 'edit': 'fldname'},
 	actionsResPrefix: 'dataSourceQuery',
 	
 	/**
@@ -67,15 +74,9 @@ Ext.define('Sonicle.webtop.core.admin.view.DataSourceQuery', {
 		if (!cfg.domainId) Ext.raise('domainId is mandatory');
 		me.callParent([cfg]);
 		
-		WTU.applyFormulas(me.getVM(), {
+		Sonicle.VMUtils.applyFormulas(me.getVM(), {
 			forcePagination: WTF.checkboxBind('record', 'forcePagination')
 		});
-	},
-	
-	returnModelExtraParams: function() {
-		return {
-			domainId: this.domainId
-		};
 	},
 	
 	initComponent: function() {
@@ -92,11 +93,11 @@ Ext.define('Sonicle.webtop.core.admin.view.DataSourceQuery', {
 			items: [
 				{
 					xtype: 'wtfieldspanel',
-					paddingTop: true,
-					paddingSides: true,
+					autoPadding: 'ts',
 					modelValidation: true,
 					defaults: {
-						labelWidth: 100
+						labelAlign: 'top',
+						labelSeparator: ''
 					},
 					items: [
 						{
@@ -119,19 +120,21 @@ Ext.define('Sonicle.webtop.core.admin.view.DataSourceQuery', {
 					]
 				}, {
 					xtype: 'wtfieldspanel',
-					paddingSides: true,
-					paddingBottom: true,
+					autoPadding: 'bs',
 					modelValidation: true,
 					layout: {
 						type: 'vbox',
 						align: 'stretch'
+					},
+					defaults: {
+						labelAlign: 'top',
+						labelSeparator: ''
 					},
 					items: [
 						{
 							xtype: 'socodeditor',
 							bind: '{record.rawSql}',
 							fieldLabel: me.res('dataSourceQuery.fld-rawSql.lbl'),
-							labelAlign: 'top',
 							flex: 1
 						}, {
 							xtype: 'button',
@@ -146,7 +149,6 @@ Ext.define('Sonicle.webtop.core.admin.view.DataSourceQuery', {
 				}
 			]
 		});
-		me.on('viewload', me.onViewLoad);
 	},
 	
 	editRawSql: function(dataSourceId, pagination, rawSql, opts) {
@@ -176,12 +178,6 @@ Ext.define('Sonicle.webtop.core.admin.view.DataSourceQuery', {
 	},
 	
 	privates: {
-		onViewLoad: function(s, success) {
-			if (!success) return;
-			var me = this;
-			me.lref('fldname').focus(true);
-		},
-		
 		openSqlEditorUI: function() {
 			var me = this,
 				mo = me.getModel();

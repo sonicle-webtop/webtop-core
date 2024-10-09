@@ -33,6 +33,7 @@
 Ext.define('Sonicle.webtop.core.admin.view.Resource', {
 	extend: 'WTA.sdk.ModelView',
 	requires: [
+		'Sonicle.VMUtils',
 		'Sonicle.data.validator.Username',
 		'Sonicle.form.trigger.Clear',
 		'Sonicle.form.field.ComboBox',
@@ -75,7 +76,7 @@ Ext.define('Sonicle.webtop.core.admin.view.Resource', {
 		if (!cfg.domainId) Ext.raise('domainId is mandatory');
 		me.callParent([cfg]);
 		
-		WTU.applyFormulas(me.getVM(), {
+		Sonicle.VMUtils.applyFormulas(me.getVM(), {
 			foIsNew: WTF.foIsEqual('_mode', null, me.MODE_NEW),
 			foAvailable: WTF.checkboxBind('record', 'available')
 		});
@@ -99,146 +100,112 @@ Ext.define('Sonicle.webtop.core.admin.view.Resource', {
 		
 		me.add({
 			region: 'center',
-			xtype: 'container',
-			layout: 'border',
+			xtype: 'wtfieldspanel',
+			scrollable: true,
+			autoPadding: 'ts',
+			modelValidation: true,
+			defaults: {
+				labelAlign: 'top',
+				labelSeparator: ''
+			},
 			items: [
 				{
-					region: 'north',
-					xtype: 'wtfieldspanel',
-					paddingTop: true,
-					paddingSides: true,
-					modelValidation: true,
-					defaults: {
-						labelWidth: 100
+					xtype: 'textfield',
+					reference: 'fldname',
+					bind: {
+						value: '{record.name}',
+						disabled: '{!foIsNew}'
 					},
-					items: [
+					disabled: true,
+					maskRe: Sonicle.data.validator.Username.maskRe,
+					fieldLabel: me.res('resource.fld-name.lbl'),
+					plugins: [
 						{
-							xtype: 'textfield',
-							reference: 'fldname',
-							bind: {
-								value: '{record.name}',
-								disabled: '{!foIsNew}'
-							},
-							disabled: true,
-							maskRe: Sonicle.data.validator.Username.maskRe,
-							fieldLabel: me.res('resource.fld-name.lbl'),
-							plugins: [
-								{
-									ptype: 'sofieldavailabilitycheck',
-									baseIconCls: 'wt-opacity-50',
-									availableTooltipText: WT.res('sofieldavailabilitycheck.availableTooltipText'),
-									unavailableTooltipText: WT.res('sofieldavailabilitycheck.unavailableTooltipText'),
-									checkAvailability: function(value, done) {
-										if (me.getModel().getModified('name') === undefined) return false;
-										WT.ajaxReq(me.mys.ID, 'ManageDomainResource', {
-											params: {
-												crud: 'check',
-												domainId: me.domainId,
-												resource: value
-											},
-											callback: function(success, json) {
-												done(success ? json.data : json.message);
-											}
-										});
-									}
-								}
-							],
-							anchor: '100%'
-						}, {
-							xtype: 'textfield',
-							reference: 'flddname',
-							bind: '{record.displayName}',
-							fieldLabel: me.res('resource.fld-displayName.lbl'),
-							anchor: '100%'
-						},
-						WTF.lookupCombo('id', 'desc', {
-							bind: {
-								value: '{record.type}',
-								disabled: '{!foIsNew}'
-							},
-							store: {
-								xclass: 'Sonicle.webtop.core.store.ResourceType',
-								autoLoad: true
-							},
-							fieldLabel: me.res('resource.fld-type.lbl'),
-							emptyText: me.res('resource.fld-type.emp'),
-							anchor: '100%'
-						}),
-						{
-							xtype: 'checkbox',
-							bind: '{foAvailable}',
-							hideEmptyLabel: false,
-							boxLabel: me.res('resource.fld-available.lbl')
-						}, {
-							xtype: 'textfield',
-							bind: {
-								value: '{record.email}',
-								emptyText: '{record.name}' + '@' + me.domainName
-							},
-							fieldLabel: me.res('resource.fld-email.lbl'),
-							anchor: '100%'
-						}
-					]
-				}, {
-					region: 'center',
-					xtype: 'wtpanelct',
-					title: me.res('resource.permissions.tit'),
-					layout: 'border',
-					items: [
-						{
-							region: 'north',
-							xtype: 'wtfieldspanel',
-							paddingTop: true,
-							paddingSides: true,
-							items: [
-								{
-									xtype: 'sotext',
-									cls: 'wt-theme-text-color-off',
-									text: me.res('resource.permissions.info')
-								}
-							]
-						}, {
-							region: 'center',
-							xtype: 'wtpanelct',
-							bodyPadding: '0 5 0 5',
-							items: [
-								{
-									xtype: 'wtadmaclsubjectgrid',
-									bind: '{record.allowedSids}',
-									lookupStore: me.aclSubjectStore,
-									recordCreatorFn: function(value) {
-										return {sid: value};
+							ptype: 'sofieldavailabilitycheck',
+							baseIconCls: 'wt-opacity-50',
+							availableTooltipText: WT.res('sofieldavailabilitycheck.availableTooltipText'),
+							unavailableTooltipText: WT.res('sofieldavailabilitycheck.unavailableTooltipText'),
+							checkAvailability: function(value, done) {
+								if (me.getModel().getModified('name') === undefined) return false;
+								WT.ajaxReq(me.mys.ID, 'ManageDomainResource', {
+									params: {
+										crud: 'check',
+										domainId: me.domainId,
+										resource: value
 									},
-									border: true
-								}
-							]
+									callback: function(success, json) {
+										done(success ? json.data : json.message);
+									}
+								});
+							}
 						}
-					]
+					],
+					anchor: '100%'
 				}, {
-					region: 'south',
-					xtype: 'wtfieldspanel',
-					paddingTop: true,
-					paddingSides: true,
-					modelValidation: true,
-					defaults: {
-						labelWidth: 100
+					xtype: 'textfield',
+					reference: 'flddname',
+					bind: '{record.displayName}',
+					fieldLabel: me.res('resource.fld-displayName.lbl'),
+					anchor: '100%'
+				},
+				WTF.lookupCombo('id', 'desc', {
+					bind: {
+						value: '{record.type}',
+						disabled: '{!foIsNew}'
 					},
-					items: [
-						WTF.localCombo('id', 'name', {
-							xtype: 'socombo',
-							bind: '{record.managerSid}',
-							store: me.aclSubjectStore,
-							//sourceField: 'name',
-							iconField: 'icon',
-							triggers: {
-								clear: WTF.clearTrigger()
-							},
-							emptyText: me.res('resource.fld-managerRole.emp'),
-							fieldLabel: me.res('resource.fld-managerRole.lbl'),
-							anchor: '100%'
-						})
-					]
-				}
+					store: {
+						xclass: 'Sonicle.webtop.core.store.ResourceType',
+						autoLoad: true
+					},
+					fieldLabel: me.res('resource.fld-type.lbl'),
+					emptyText: me.res('resource.fld-type.emp'),
+					anchor: '100%'
+				}),
+				{
+					xtype: 'checkbox',
+					bind: '{foAvailable}',
+					hideEmptyLabel: false,
+					boxLabel: me.res('resource.fld-available.lbl')
+				}, {
+					xtype: 'textfield',
+					bind: {
+						value: '{record.email}',
+						emptyText: '{record.name}' + '@' + me.domainName
+					},
+					fieldLabel: me.res('resource.fld-email.lbl'),
+					anchor: '100%'
+				}, {
+					xtype: 'soformseparator',
+					title: me.res('resource.permissions.tit')
+				}, {
+					xtype: 'sotext',
+					cls: 'wt-theme-text-color-off',
+					text: me.res('resource.permissions.info')
+				}, {
+					xtype: 'wtadmaclsubjectgrid',
+					bind: '{record.allowedSids}',
+					lookupStore: me.aclSubjectStore,
+					recordCreatorFn: function(value) {
+						return {sid: value};
+					},
+					border: true,
+					height: 160
+				}, {
+					xtype: 'sovspacer'
+				},
+				WTF.localCombo('id', 'name', {
+					xtype: 'socombo',
+					bind: '{record.managerSid}',
+					store: me.aclSubjectStore,
+					//sourceField: 'name',
+					iconField: 'icon',
+					triggers: {
+						clear: WTF.clearTrigger()
+					},
+					emptyText: me.res('resource.fld-managerRole.emp'),
+					fieldLabel: me.res('resource.fld-managerRole.lbl'),
+					anchor: '100%'
+				})
 			]
 		});
 		me.on('viewload', me.onViewLoad);

@@ -34,8 +34,10 @@
 Ext.define('Sonicle.webtop.core.admin.view.Role', {
 	extend: 'WTA.sdk.ModelView',
 	requires: [
+		'Sonicle.VMUtils',
 		'Sonicle.data.validator.Username',
 		'Sonicle.plugin.FieldAvailabilityCheck',
+		'WTA.ux.panel.Tab',
 		'Sonicle.webtop.core.admin.ux.SubjectServiceGrid',
 		'Sonicle.webtop.core.admin.ux.SubjectPermissionGrid'
 	],
@@ -43,8 +45,8 @@ Ext.define('Sonicle.webtop.core.admin.view.Role', {
 	dockableConfig: {
 		title: '{role.tit}',
 		iconCls: 'wtadm-icon-role',
-		width: 550,
-		height: 400
+		width: 480,
+		height: 480
 	},
 	fieldTitle: 'name',
 	modelName: 'Sonicle.webtop.core.admin.model.Role',
@@ -66,7 +68,7 @@ Ext.define('Sonicle.webtop.core.admin.view.Role', {
 		if (!cfg.domainId) Ext.raise('domainId is mandatory');
 		me.callParent([cfg]);
 		
-		WTU.applyFormulas(me.getVM(), {
+		Sonicle.VMUtils.applyFormulas(me.getVM(), {
 			foIsNew: WTF.foIsEqual('_mode', null, me.MODE_NEW)
 		});
 	},
@@ -86,11 +88,12 @@ Ext.define('Sonicle.webtop.core.admin.view.Role', {
 				{
 					xtype: 'wtfieldspanel',
 					reference: 'pnlmain',
-					paddingTop: true,
-					paddingSides: true,
+					scrollable: true,
+					autoPadding: 'ts',
 					modelValidation: true,
 					defaults: {
-						labelWidth: 120
+						labelAlign: 'top',
+						labelSeparator: ''
 					},
 					items: [
 						{
@@ -135,31 +138,33 @@ Ext.define('Sonicle.webtop.core.admin.view.Role', {
 						}
 					]
 				}, {
-					xtype: 'tabpanel',
+					xtype: 'wttabpanel',
+					autoMargin: 'bs',
+					border: true,
 					flex: 1,
 					activeTab: 0,
 					items: [
 						{
 							xtype: 'wtadmsubjectservicegrid',
+							bind: '{record.allowedServices}',
+							border: false,
 							title: me.res('role.allowedServices.tit'),
 							iconCls: 'wtadm-icon-service-module',
-							bind: '{record.allowedServices}',
 							recordCreatorFn: function(value) {
 								return {serviceId: value};
 							}
 						}, {
 							xtype: 'wtadmsubjectpermissiongrid',
+							bind: '{record.permissions}',
+							border: false,
 							title: me.res('role.permissions.tit'),
 							iconCls: 'wtadm-icon-permission',
-							bind: '{record.permissions}',
 							recordCreatorFn: function(serviceId, context, action) {
 								return {string: Sonicle.String.join(':', serviceId, context, action)};
 							}
-							/*
-							recordCreatorFn: function(value) {
-								return {string: value};
-							}
-							*/
+							//recordCreatorFn: function(value) {
+							//	return {string: value};
+							//}
 						}
 					]
 				}

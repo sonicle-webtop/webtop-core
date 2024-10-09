@@ -34,9 +34,14 @@ Ext.define('Sonicle.webtop.core.admin.ux.SubjectPermissionGrid', {
 	extend: 'Ext.grid.Panel',
 	alias: 'widget.wtadmsubjectpermissiongrid',
 	requires: [
-		'Sonicle.Object',
 		'Sonicle.grid.column.Lookup'
 	],
+	uses: [
+		'Sonicle.Object',
+		'Sonicle.String'
+	],
+	
+	storeLookupField: 'serviceId',
 	
 	/**
 	 * @cfg {Function} recordCreatorFn
@@ -47,6 +52,12 @@ Ext.define('Sonicle.webtop.core.admin.ux.SubjectPermissionGrid', {
 	initComponent: function() {
 		var me = this;
 		if (!Ext.isFunction(me.recordCreatorFn)) Ext.raise('recordCreatorFn is mandatory');
+		
+		me.lookupStore = Ext.create('Ext.data.Store', {
+			autoLoad: true,
+			model: 'Sonicle.webtop.core.model.ServiceLkp',
+			proxy: WTF.proxy(WT.ID, 'LookupServices', null)
+		});
 		
 		me.selModel = {
 			type: 'rowmodel'
@@ -62,6 +73,19 @@ Ext.define('Sonicle.webtop.core.admin.ux.SubjectPermissionGrid', {
 			//me.hideHeaders = true;
 			me.columns = [
 				{
+					xtype: 'solookupcolumn',
+					dataIndex: me.storeLookupField,
+					store: me.lookupStore,
+					displayField: 'label',
+					flex: 1.5
+				}, {
+					dataIndex: 'action',
+					renderer: function(v, meta, rec) {
+						return Sonicle.String.htmlEncode(rec.get('context') + ' :: ' + v);
+					},
+					flex: 1
+				}/*
+				{
 					dataIndex: 'serviceId',
 					header: WT.res(WT.ID + '.admin', 'wtadmsubjectpermissiongrid.serviceId.lbl'),
 					flex: 1
@@ -72,17 +96,15 @@ Ext.define('Sonicle.webtop.core.admin.ux.SubjectPermissionGrid', {
 				}, {
 					dataIndex: 'action',
 					header: WT.res(WT.ID + '.admin', 'wtadmsubjectpermissiongrid.action.lbl'),
-					flex: 1
-				}, {
+					flex: 1			
+				}*/, {
 					xtype: 'soactioncolumn',
 					items: [
 						{
-							iconCls: 'far fa-trash-alt',
+							iconCls: 'wt-glyph-delete',
 							tooltip: WT.res('act-remove.lbl'),
-							handler: function(g, ridx) {
-								var sto = g.getStore(),
-									rec = sto.getAt(ridx);
-								sto.remove(rec);
+							handler: function(view, ridx, cidx, itm, e, rec) {
+								view.getStore().remove(rec);
 							}
 						}
 					]
@@ -93,6 +115,7 @@ Ext.define('Sonicle.webtop.core.admin.ux.SubjectPermissionGrid', {
 			me.tbar = me.tbar || [];
 			me.tbar.push(
 				{
+					ui: '{tertiary}',
 					text: WT.res('act-add.lbl'),
 					handler: function() {
 						me.showPicker();

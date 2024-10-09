@@ -121,6 +121,7 @@ Ext.define('Sonicle.webtop.core.admin.ux.AclSubjectGrid', {
 			me.tbar = me.tbar || [];
 			me.tbar.push(
 				{
+					ui: '{tertiary}',
 					text: WT.res('act-add.lbl'),
 					handler: function() {
 						me.showPicker();

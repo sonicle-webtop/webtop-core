@@ -82,12 +82,10 @@ Ext.define('Sonicle.webtop.core.admin.ux.SubjectServiceGrid', {
 					xtype: 'soactioncolumn',
 					items: [
 						{
-							iconCls: 'far fa-trash-alt',
+							iconCls: 'wt-glyph-delete',
 							tooltip: WT.res('act-remove.lbl'),
-							handler: function(g, ridx) {
-								var sto = g.getStore(),
-									rec = sto.getAt(ridx);
-								sto.remove(rec);
+							handler: function(view, ridx, cidx, itm, e, rec) {
+								view.getStore().remove(rec);
 							}
 						}
 					]
@@ -98,6 +96,7 @@ Ext.define('Sonicle.webtop.core.admin.ux.SubjectServiceGrid', {
 			me.tbar = me.tbar || [];
 			me.tbar.push(
 				{
+					ui: '{tertiary}',
 					text: WT.res('act-add.lbl'),
 					handler: function() {
 						me.showPicker();

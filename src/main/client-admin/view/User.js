@@ -34,9 +34,11 @@ Ext.define('Sonicle.webtop.core.admin.view.User', {
 	extend: 'WTA.sdk.ModelView',
 	requires: [
 		'Sonicle.FakeInput',
+		'Sonicle.VMUtils',
 		'Sonicle.form.Spacer',
 		'Sonicle.form.field.Password',
 		'Sonicle.plugin.NoAutocomplete',
+		'WTA.ux.panel.Tab',
 		'Sonicle.webtop.core.admin.ux.AclSubjectGrid',
 		'Sonicle.webtop.core.admin.ux.SubjectServiceGrid',
 		'Sonicle.webtop.core.admin.ux.SubjectPermissionGrid'
@@ -48,7 +50,7 @@ Ext.define('Sonicle.webtop.core.admin.view.User', {
 	dockableConfig: {
 		title: '{user.tit}',
 		iconCls: 'wtadm-icon-user',
-		width: 550,
+		width: 480,
 		height: 550
 	},
 	fieldTitle: 'userId',
@@ -74,7 +76,7 @@ Ext.define('Sonicle.webtop.core.admin.view.User', {
 		if (!cfg.domainId) Ext.raise('domainId is mandatory');
 		me.callParent([cfg]);
 		
-		WTU.applyFormulas(me.getVM(), {
+		Sonicle.VMUtils.applyFormulas(me.getVM(), {
 			foIsNew: WTF.foIsEqual('_mode', null, me.MODE_NEW),
 			foEnabled: WTF.checkboxBind('record', 'enabled'),
 			foPswDisabled: WTF.foGetFn('_mode', null, function(val) {
@@ -119,18 +121,16 @@ Ext.define('Sonicle.webtop.core.admin.view.User', {
 				{
 					xtype: 'wtfieldspanel',
 					reference: 'pnlmain',
-					paddingTop: true,
-					paddingSides: true,
+					scrollable: true,
+					autoPadding: 'ts',
 					modelValidation: true,
 					defaults: {
-						labelWidth: 120
+						labelAlign: 'top',
+						labelSeparator: ''
 					},
 					items: [
 						{
 							xtype: 'sofakeinput' // Disable Chrome autofill
-						}, {
-							xtype: 'sofakeinput', // Disable Chrome autofill
-							type: 'password'
 						}, {
 							xtype: 'textfield',
 							reference: 'flduserid',
@@ -165,28 +165,40 @@ Ext.define('Sonicle.webtop.core.admin.view.User', {
 							],
 							anchor: '100%'
 						}, {
-							xtype: 'sopasswordfield',
-							reference: 'fldpassword',
+							xtype: 'sofieldhgroup',
 							bind: {
-								value: '{record.password}',
 								hidden: '{foPswDisabled}'
 							},
-							maxLength: 128,
-							plugins: 'sonoautocomplete',
-							fieldLabel: me.res('user.fld-password.lbl'),
-							anchor: '100%'
-						}, {
-							xtype: 'sopasswordfield',
-							reference: 'fldpassword2',
-							bind: {
-								value: '{record.password2}',
-								hidden: '{foPswDisabled}'
-							},
-							maxLength: 128,
-							plugins: 'sonoautocomplete',
-							eye: false,
-							hideEmptyLabel: false,
-							emptyText: me.res('user.fld-password2.emp'),
+							items: [
+								{
+									xtype: 'sofakeinput', // Disable Chrome autofill
+									type: 'password'	
+								}, {
+									xtype: 'sopasswordfield',
+									reference: 'fldpassword',
+									bind: '{record.password}',
+									maxLength: 128,
+									plugins: 'sonoautocomplete',
+									fieldLabel: me.res('user.fld-password.lbl'),
+									flex: 1
+								}, {
+									xtype: 'sohspacer',
+									ui: 'small'
+								}, {
+									xtype: 'sofakeinput', // Disable Chrome autofill
+									type: 'password'
+								}, {
+									xtype: 'sopasswordfield',
+									reference: 'fldpassword2',
+									bind: '{record.password2}',
+									maxLength: 128,
+									plugins: 'sonoautocomplete',
+									eye: false,
+									hideEmptyLabel: false,
+									emptyText: me.res('user.fld-password2.emp'),
+									flex: 1
+								}
+							],
 							anchor: '100%'
 						}, {
 							xtype: 'checkbox',
@@ -194,48 +206,60 @@ Ext.define('Sonicle.webtop.core.admin.view.User', {
 							hideEmptyLabel: false,
 							boxLabel: me.res('user.fld-enabled.lbl')
 						}, {
-							xtype: 'textfield',
-							bind: '{record.firstName}',
-							fieldLabel: me.res('user.fld-firstName.lbl'),
-							anchor: '100%',
-							listeners: {
-								blur: function() {
-									me.lref('flddname').setEmptyText(me.getModel().buildDisplayName());
+							xtype: 'sofieldhgroup',
+							items: [
+								{
+									xtype: 'textfield',
+									bind: '{record.firstName}',
+									fieldLabel: me.res('user.fld-firstName.lbl'),
+									listeners: {
+										blur: function() {
+											me.lref('flddname').setEmptyText(me.getModel().buildDisplayName());
+										}
+									},
+									flex: 1
+								}, {
+									xtype: 'sohspacer',
+									ui: 'small'
+								}, {
+									xtype: 'textfield',
+									bind: '{record.lastName}',
+									fieldLabel: me.res('user.fld-lastName.lbl'),
+									listeners: {
+										blur: function() {
+											me.lref('flddname').setEmptyText(me.getModel().buildDisplayName());
+										}
+									},
+									flex: 1
 								}
-							}
-						}, {
-							xtype: 'textfield',
-							bind: '{record.lastName}',
-							fieldLabel: me.res('user.fld-lastName.lbl'),
-							anchor: '100%',
-							listeners: {
-								blur: function() {
-									me.lref('flddname').setEmptyText(me.getModel().buildDisplayName());
-								}
-							}
+							],
+							anchor: '100%'
 						}, {
 							xtype: 'textfield',
 							reference: 'flddname',
 							bind: '{record.displayName}',
 							fieldLabel: me.res('user.fld-displayName.lbl'),
-							anchor: '100%',
 							listeners: {
 								blur: function(s) {
 									s.setEmptyText(me.getModel().buildDisplayName());
 								}
-							}
+							},
+							anchor: '100%'
 						}
 					]
 				}, {
-					xtype: 'tabpanel',
+					xtype: 'wttabpanel',
+					autoMargin: 'bs',
+					border: true,
 					flex: 1,
 					activeTab: 0,
 					items: [
 						{
 							xtype: 'wtadmaclsubjectgrid',
+							bind: '{record.assignedGroups}',
+							border: false,
 							title: me.res('user.assignedGroups.tit'),
 							iconCls: 'wtadm-icon-groups',
-							bind: '{record.assignedGroups}',
 							lookupStore: me.groupSubjectStore,
 							recordCreatorFn: function(value) {
 								return {sid: value};
@@ -244,9 +268,10 @@ Ext.define('Sonicle.webtop.core.admin.view.User', {
 							pickerTitle: me.res('wtadmaclsubjectgrid.picker.groups.tit')
 						}, {
 							xtype: 'wtadmaclsubjectgrid',
+							bind: '{record.assignedRoles}',
+							border: false,
 							title: me.res('user.assignedRoles.tit'),
 							iconCls: 'wtadm-icon-roles',
-							bind: '{record.assignedRoles}',
 							lookupStore: me.roleSubjectStore,
 							recordCreatorFn: function(value) {
 								return {sid: value};
@@ -255,25 +280,25 @@ Ext.define('Sonicle.webtop.core.admin.view.User', {
 							pickerTitle: me.res('wtadmaclsubjectgrid.picker.roles.tit')
 						}, {
 							xtype: 'wtadmsubjectservicegrid',
+							bind: '{record.allowedServices}',
+							border: false,
 							title: me.res('user.allowedServices.tit'),
 							iconCls: 'wtadm-icon-service-module',
-							bind: '{record.allowedServices}',
 							recordCreatorFn: function(value) {
 								return {serviceId: value};
 							}
 						}, {
 							xtype: 'wtadmsubjectpermissiongrid',
+							bind: '{record.permissions}',
+							border: false,
 							title: me.res('user.permissions.tit'),
 							iconCls: 'wtadm-icon-permission',
-							bind: '{record.permissions}',
 							recordCreatorFn: function(serviceId, context, action) {
 								return {string: Sonicle.String.join(':', serviceId, context, action)};
 							}
-							/*
-							recordCreatorFn: function(value) {
-								return {string: value};
-							}
-							*/
+							//recordCreatorFn: function(value) {
+							//	return {string: value};
+							//}
 						}
 					]
 				}
