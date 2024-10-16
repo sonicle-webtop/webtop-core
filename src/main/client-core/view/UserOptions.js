@@ -1285,7 +1285,7 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 		this.lref('gpsync').getStore().load();
 	},
 	
-	showSyncDeviceInfo: function(rec) {
+	showSyncDeviceInfoUI: function(rec) {
 		var me = this;
 		me.wait();
 		WT.ajaxReq(WT.ID, 'ManageSyncDevices', {
@@ -1305,14 +1305,13 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 		});
 	},
 	
-	deleteSyncDevice: function(recs) {
+	deleteSyncDeviceUI: function(rec) {
 		var me = this,
-				grid = me.lref('gpsync'),
-				sto = grid.getStore();
+			sto = me.lref('gpsync').getStore();
 		
-		WT.confirm(WT.res('confirm.delete'), function(bid) {
+		WT.confirm(WT.res(WT.ID, 'opts.sync.eas.confirm.delete', rec.get('device')), function(bid) {
 			if (bid === 'yes') {
-				sto.remove(recs[0]);
+				sto.remove(rec);
 			}
 		}, me);
 	},
@@ -1354,13 +1353,13 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 								iconCls: 'fas fa-info-circle',
 								tooltip: WT.res('opts.sync.btn-showDeviceInfo.tip'),
 								handler: function(view, ridx, cidx, itm, e, rec) {
-									me.showSyncDeviceInfo(rec);
+									me.showSyncDeviceInfoUI(rec);
 								}
 							}, {
-								iconCls: 'fas fa-trash',
+								iconCls: 'wt-glyph-delete',
 								tooltip: WT.res('act-delete.lbl'),
 								handler: function(view, ridx, cidx, itm, e, rec) {
-									me.deleteSyncDevice(rec);
+									me.deleteSyncDeviceUI(rec);
 								}
 							}
 						]
