@@ -907,12 +907,12 @@ Ext.define('Sonicle.webtop.core.app.WT', {
 	ajaxReq: function(svc, act, opts) {
 		opts = opts || {};
 		var me = this,
-				fn = opts.callback, 
-				rfn = opts.rawCallback,
-				scope = opts.scope, 
-				sfn = opts.success, 
-				ffn = opts.failure,
-				hdrs = {};
+			fn = opts.callback, 
+			rfn = opts.rawCallback,
+			scope = opts.scope, 
+			sfn = opts.success, 
+			ffn = opts.failure,
+			hdrs = {};
 		
 		var obj = {
 			method: opts.method || 'POST',
@@ -950,6 +950,77 @@ Ext.define('Sonicle.webtop.core.app.WT', {
 		Ext.apply(obj, {headers: hdrs});
 		//headers: {"Content-Type": "application/x-www-form-urlencoded; charset=utf-8"},
 		Ext.Ajax.request(obj);
+	},
+	
+	/**
+	 * Makes a Form request to server.
+	 * @param {String} svc The service ID.
+	 * @param {String} act The service action to call.
+	 * @param {Object} [opts] Config options.
+	 * 
+	 * This object may contain any of the following properties:
+	 * 
+	 * @param {POST|GET} [opts.method] Sets the method, defaults to `POST`.
+	 * @param {Object} [opts.timeout] The number of milliseconds to wait for a response. Defaults to {@link Ext.form.Basic#timeout}.
+	 * @param {Object} [opts.params] Extra request params.
+	 * @param {Boolean} [opts.binaryResponse]
+	 * @param {Function} [opts.callback] The callback function to call.
+	 * @param {Boolean} opts.callback.success
+	 * @param {Object} opts.callback.json
+	 * @param {Object} opts.callback.opts
+	 * @param {Function} [opts.rawCallback] The raw callback function to call.
+	 * @param {Object} [opts.scope] The scope (this) for the supplied callback.
+	 */
+	formReq: function(svc, act, opts) {
+		opts = opts || {};
+		var me = this,
+			fn = opts.callback, 
+			rfn = opts.rawCallback,
+			scope = opts.scope, 
+			sfn = opts.success, 
+			ffn = opts.failure,
+			binResp = opts.binaryResponse === true,
+			obj = {
+				standardSubmit: true,
+				method: opts.method || 'POST',
+				url: WTF.requestBaseUrl()
+			},
+			form;
+		
+		if (Ext.isNumber(opts.timeout)) obj['timeout'] = opts.timeout;
+		
+		form = Ext.create('Ext.form.Panel', obj);
+		form.submit({
+			target: '_blank', // Avoids leaving the page
+			params: Ext.applyIf({
+				service: svc,
+				action: act
+			}, opts.params || {}),
+			success: function(resp, opts) {
+				form.close();
+				if (!binResp) {
+					if (Ext.isFunction(rfn)) {
+						Ext.callback(rfn, scope || me, [true, resp, opts]);
+					} else {
+						var json = Ext.decode(resp.responseText);
+						if (sfn) Ext.callback(sfn, scope || me, [resp, opts]);
+						Ext.callback(fn, scope || me, [json ? json['success'] : undefined, json, json ? json['metaData'] : undefined, opts]);
+					}
+				}
+			},
+			failure: function(resp, opts) {
+				form.close();
+				if (!binResp) {
+					if (Ext.isFunction(rfn)) {
+						Ext.callback(rfn, scope || me, [false, resp, opts]);
+					} else {
+						if (ffn) Ext.callback(ffn, scope || me, [resp, opts]);
+						Ext.callback(fn, scope || me, [false, {}, null, opts]);
+					}
+				}	
+			},
+			scope: me
+		});
 	},
 	
 	handleRequestError: function(sid, act, req, op) {
