@@ -184,8 +184,17 @@ public class LicenseManager extends AbstractAppManager<LicenseManager> {
 		licenseLeaseCache.clear();
 	}
 	
-	public String computeActivationHardwareID() {
-		return LangUtils.joinStrings("!", HardwareID.getHardwareIDFromHostName(), HardwareID.getHardwareIDFromEthernetAddress(true));
+	public String computeActivationHardwareID() throws WTException {
+		final String hw1 = HardwareID.getHardwareIDFromHostName();
+		if (LOGGER.isTraceEnabled()) LOGGER.trace("Computing HwID from hostname [{}]", hw1);
+		String hw2 = HardwareID.getHardwareIDFromEthernetAddress(true);
+		if (LOGGER.isTraceEnabled()) LOGGER.trace("Computing HwID from eth0 [{}]", hw2);
+		if (hw2 == null) {
+			hw2 = HardwareID.getHardwareIDFromUUIDString(WebTopProps.getUUID(getWebTopApp().getProperties()));
+			if (LOGGER.isTraceEnabled()) LOGGER.trace("Computing HwID from string [{}]", hw2);
+		}
+		if (StringUtils.isBlank(hw2)) throw new WTException("Computed HwID tokens do NOT meet requirement: unable to guarantee the uniqness!");
+		return LangUtils.joinStrings("!", hw1, hw2);
 	}
 	
 	public ProductLicense getProductLicenseOrThrow(final BaseServiceProduct product) throws WTNotFoundException {

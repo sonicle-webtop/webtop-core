@@ -767,7 +767,7 @@ public class CoreAdminManager extends BaseManager {
 		return licMgr.getLicense(domainId, productCode);
 	}
 
-	public String computeLicenseActivationHardwareID() {
+	public String computeLicenseActivationHardwareID() throws WTException {
 		LicenseManager licMgr = wta.getLicenseManager();
 		return licMgr.computeActivationHardwareID();
 	}
