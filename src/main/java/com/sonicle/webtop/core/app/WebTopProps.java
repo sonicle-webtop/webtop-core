@@ -51,6 +51,7 @@ import org.apache.commons.lang3.StringUtils;
  */
 public class WebTopProps {
 	public static final String WEBTOP_PROPERTIES_FILE = "webtop.properties";
+	public static final String PROP_UUID = "webtop.uuid";
 	public static final String PROP_HOME = "webtop.home";
 	public static final String PROP_ETC_DIR = "webtop.etc.dir";
 	public static final String PROP_LOG_DIR = "webtop.log.dir";
@@ -228,6 +229,10 @@ public class WebTopProps {
 		return getSchedulerDisabled(System.getProperties());
 	}
 	*/
+	
+	public static String getUUID(Properties props) {
+		return PropUtils.getStringProperty(props, PROP_UUID, null);
+	}
 	
 	public static String getEtcDir(Properties props) {
 		return PropUtils.getStringProperty(props, PROP_ETC_DIR, null);
