@@ -286,7 +286,7 @@ Ext.define('Sonicle.webtop.core.admin.Service', {
 	setMaintenanceFlagUI: function(status, silent) {
 		var me = this,
 			s = status ? 'on' : 'off',
-			reset = function(state) {
+			toggleButton = function(state) {
 				me.btnMaintenance().toggle(state, true);
 			};
 		
@@ -295,9 +295,10 @@ Ext.define('Sonicle.webtop.core.admin.Service', {
 				callback: function(success, json) {
 					WT.handleMessage(success, json);
 					if (success) {
+						toggleButton(status);
 						WT.toast(me.res('btn-maintenance.info.'+s));
 					} else {
-						reset(!status);
+						toggleButton(!status);
 					}
 				}
 			});
@@ -308,14 +309,15 @@ Ext.define('Sonicle.webtop.core.admin.Service', {
 						callback: function(success, json) {
 							WT.handleMessage(success, json);
 							if (success) {
+								toggleButton(status);
 								WT.toast(me.res('btn-maintenance.info.'+s));
 							} else {
-								reset(!status);
+								toggleButton(!status);
 							}
 						}
 					});
 				} else {
-					reset(!status);
+					toggleButton(!status);
 				}
 			}, me, {
 				title: me.res('btn-maintenance.confirm.tit'),
