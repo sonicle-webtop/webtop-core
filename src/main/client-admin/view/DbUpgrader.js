@@ -264,7 +264,7 @@ Ext.define('Sonicle.webtop.core.admin.view.DbUpgrader', {
 					if ((meta.pendingCount === 0) && me.mys.btnMaintenance().pressed) {
 						WT.confirm(me.mys.res('dbUpgrader.confirm.maintenance.disable'), function(bid) {
 							if(bid === 'yes') {
-								me.mys.setMaintenanceFlag(false);
+								me.mys.setMaintenanceFlagUI(false, true);
 							}
 						}, me);
 					}	

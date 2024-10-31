@@ -283,32 +283,45 @@ Ext.define('Sonicle.webtop.core.admin.Service', {
 		return sel.length > 0 ? sel[0] : null;
 	},
 	
-	setMaintenanceFlagUI: function(status) {
+	setMaintenanceFlagUI: function(status, silent) {
 		var me = this,
 			s = status ? 'on' : 'off',
 			reset = function(state) {
 				me.btnMaintenance().toggle(state, true);
 			};
 		
-		WT.confirmOk(me.res('btn-maintenance.confirm.'+s), function(bid) {
-			if (bid === 'ok') {
-				me.setMaintenanceFlag(status, {
-					callback: function(success, json) {
-						WT.handleMessage(success, json);
-						if (success) {
-							WT.toast(me.res('btn-maintenance.info.'+s));
-						} else {
-							reset(!status);
-						}
+		if (silent === true) {
+			me.setMaintenanceFlag(status, {
+				callback: function(success, json) {
+					WT.handleMessage(success, json);
+					if (success) {
+						WT.toast(me.res('btn-maintenance.info.'+s));
+					} else {
+						reset(!status);
 					}
-				});
-			} else {
-				reset(!status);
-			}
-		}, me, {
-			title: me.res('btn-maintenance.confirm.tit'),
-			okText: me.res('btn-maintenance.confirm.'+s+'.ok')
-		});
+				}
+			});
+		} else {
+			WT.confirmOk(me.res('btn-maintenance.confirm.'+s), function(bid) {
+				if (bid === 'ok') {
+					me.setMaintenanceFlag(status, {
+						callback: function(success, json) {
+							WT.handleMessage(success, json);
+							if (success) {
+								WT.toast(me.res('btn-maintenance.info.'+s));
+							} else {
+								reset(!status);
+							}
+						}
+					});
+				} else {
+					reset(!status);
+				}
+			}, me, {
+				title: me.res('btn-maintenance.confirm.tit'),
+				okText: me.res('btn-maintenance.confirm.'+s+'.ok')
+			});
+		}	
 	},
 	
 	setMaintenanceFlag: function(status, opts) {
