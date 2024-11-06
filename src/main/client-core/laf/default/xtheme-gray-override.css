@@ -22,11 +22,11 @@
 /* Maybe add another for vertical ??? */
 /* Fix missing right-border on pressed items (not the initial one) */
 .x-segmented-button-item-horizontal:has(+ .x-segmented-button-item-horizontal.x-btn-pressed) {
-    border-right: 1px solid #7a9ac4;
+    border-right: 1px solid #9d9d9d;
 }
 /* Fix missing right-border on highlight items (not the initial one) */
 .x-segmented-button-item-horizontal:has(+ .x-segmented-button-item-horizontal.x-btn-over) {
-    border-right: 1px solid #7a9ac4;
+    border-right: 1px solid #9d9d9d;
 }
 
 /* ---------- Ext.tree.Panel */
