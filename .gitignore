@@ -1,2 +1,3 @@
 /target/
+/.openapi-generator/*.sha256
 swagger.json
