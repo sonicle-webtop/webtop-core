@@ -101,6 +101,11 @@
 .wt-glyph-paste:before { content: '\f0ea'; font: var(--fa-font-solid); }
 .wt-glyph-clone:before { content: '\f24d'; font: var(--fa-font-solid); }
 .wt-glyph-password:before { content: '\f084'; font: var(--fa-font-solid); }
+.wt-glyph-user:before { content: '\f007'; font: var(--fa-font-solid); }
+.wt-glyph-menu-kebab:before { content: '\f142'; font: var(--fa-font-solid); } /* vertical dots */
+.wt-glyph-menu-meatballs:before { content: '\f141'; font: var(--fa-font-solid); } /* horizontal dots */
+.wt-glyph-menu-hamburger:before { content: '\f0c9'; font: var(--fa-font-solid); } /* horizontal lines */
+.wt-glyph-menu-bento:before { content: '\f58d'; font: var(--fa-font-solid); } /* 3x3 dots grid */
 /* ---------- Icons (actions) */
 .wt-icon-add { background-image: url('act-add_16.svg') !important; background-size: contain; }
 .wt-icon-open { background-image: url('act-open_16.svg') !important; background-size: contain; }
