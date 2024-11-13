@@ -49,6 +49,14 @@
 	border-left: 1px solid #b5b8c8;
 }
 
+/* ---------- Sonicle.form.field.Combo */
+/* Reduce swatch to make it looks better */
+.so-combo-swatch {
+    top: 1px;
+    width: 14px;
+    height: 14px;
+}
+
 /* ---------- Sonicle.form.Separator */
 /* Give extra spacing from above objects */
 .x-fieldset.so-form-separator {

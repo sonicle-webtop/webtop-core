@@ -40,7 +40,7 @@
 .wt-icon-changePassword { background-image: url('password_16.svg') !important; background-size: contain; }
 .wt-icon-options { background-image: url('options_16.svg') !important; background-size: contain; }
 .wt-icon-reminder { background-image: url('reminder_16.svg') !important; background-size: contain; }
-.wt-icon-reminder-ignore { background-image: none !important; background-size: contain; }
+.wt-icon-reminder-ignore { background-image: url('ok_16.svg') !important; background-size: contain; }
 .wt-icon-activity { background-image: url('activity_16.svg') !important; background-size: contain; }
 .wt-icon-causal { background-image: url('causal_16.svg') !important; background-size: contain; }
 .wt-icon-sharing { background-image: url('sharing_16.svg') !important; background-size: contain; }

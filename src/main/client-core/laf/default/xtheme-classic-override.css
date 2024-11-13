@@ -55,6 +55,14 @@
     margin-top: 20px;
 }
 
+/* ---------- Sonicle.form.field.Combo */
+/* Reduce swatch to make it looks better */
+.so-combo-swatch {
+    top: 1px;
+    width: 14px;
+    height: 14px;
+}
+
 /* ---------- Sonicle.plugin.FieldIcon */
 /* Do NOT apply table related autosizing on icon-wrapper element */
 .x-field:has(.so-fieldicon-wrap) {
