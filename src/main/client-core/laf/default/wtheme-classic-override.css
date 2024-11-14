@@ -98,6 +98,12 @@
     font-weight: bold !important;
 }
 
+/* ---------- Sonicle.form.field.Display */
+.so-displayfield-clickable:hover {
+    text-decoration: underline;
+    color: var(--wt-theme-color-info);
+}
+
 /* ---------- FullCalendar */
 .fc-event.fc-daygrid-event:not(.fc-daygrid-dot-event), .fc-event.fc-timegrid-event {
     border: 1px solid #4d4d4d !important;
