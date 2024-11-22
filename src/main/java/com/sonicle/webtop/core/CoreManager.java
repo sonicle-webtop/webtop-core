@@ -34,8 +34,6 @@
 package com.sonicle.webtop.core;
 
 import com.aventrix.jnanoid.jnanoid.NanoIdUtils;
-import com.sonicle.commons.BitFlag;
-import com.sonicle.commons.BitFlagEnum;
 import com.sonicle.commons.EnumUtils;
 import com.sonicle.commons.InternetAddressUtils;
 import com.sonicle.commons.LangUtils;
@@ -44,6 +42,7 @@ import com.sonicle.commons.beans.PageInfo;
 import com.sonicle.commons.beans.VirtualAddress;
 import com.sonicle.commons.db.DbUtils;
 import com.sonicle.commons.flags.BitFlags;
+import com.sonicle.commons.flags.BitFlagsEnum;
 import com.sonicle.commons.time.DateTimeUtils;
 import com.sonicle.commons.web.json.CompositeId;
 import com.sonicle.commons.web.json.JsonResult;
@@ -1873,7 +1872,7 @@ public class CoreManager extends BaseManager {
 	 */
 	public Map<String, CustomField.Type> listCustomFieldTypesById(final String serviceId) throws WTException {
 		Check.notEmpty(serviceId, "serviceId");
-		return listCustomFieldTypesById(serviceId, BitFlag.none());
+		return listCustomFieldTypesById(serviceId, BitFlags.noneOf(CustomFieldListOption.class));
 	}
 	
 	/**
@@ -1883,19 +1882,19 @@ public class CoreManager extends BaseManager {
 	 * @return Map of fields types by field IDs.
 	 * @throws WTException 
 	 */
-	public Map<String, CustomField.Type> listCustomFieldTypesById(final String serviceId, final BitFlag<CustomFieldListOptions> options) throws WTException {
+	public Map<String, CustomField.Type> listCustomFieldTypesById(final String serviceId, final BitFlags<CustomFieldListOption> options) throws WTException {
 		Check.notEmpty(serviceId, "serviceId");
 		Check.notNull(options, "options");
 		CustomFieldDAO cufDao = CustomFieldDAO.getInstance();
 		Connection con = null;
 		
 		try {
-			if (options.has(CustomFieldListOptions.PREVIEWABLE)) throw new IllegalArgumentException("Option PREVIEWABLE is not supported here");
+			if (options.has(CustomFieldListOption.PREVIEWABLE)) throw new IllegalArgumentException("Option PREVIEWABLE is not supported here");
 			String targetDomainId = getTargetProfileId().getDomainId();
 			ensureProfileDomain(targetDomainId);
 			
 			con = WT.getConnection(SERVICE_ID);
-			Boolean searchable = options.has(CustomFieldListOptions.SEARCHABLE) ? true : null;
+			Boolean searchable = options.has(CustomFieldListOption.SEARCHABLE) ? true : null;
 			LinkedHashMap<String, CustomField.Type> items = new LinkedHashMap<>();
 			for (Map.Entry<String, String> entry : cufDao.viewOnlineTypeByDomainServiceSearchable(con, targetDomainId, serviceId, searchable).entrySet()) {
 				CustomField.Type type = EnumUtils.forSerializedName(entry.getValue(), CustomField.Type.class);
@@ -1918,7 +1917,7 @@ public class CoreManager extends BaseManager {
 	 */
 	public Map<String, CustomFieldEx> listCustomFields(final String serviceId) throws WTException {
 		Check.notEmpty(serviceId, "serviceId");
-		return listCustomFields(serviceId, BitFlag.none());
+		return listCustomFields(serviceId, BitFlags.noneOf(CustomFieldListOption.class));
 	}
 	
 	/**
@@ -1928,7 +1927,7 @@ public class CoreManager extends BaseManager {
 	 * @return Map of fields by field IDs.
 	 * @throws WTException 
 	 */
-	public Map<String, CustomFieldEx> listCustomFields(final String serviceId, final BitFlag<CustomFieldListOptions> options) throws WTException {
+	public Map<String, CustomFieldEx> listCustomFields(final String serviceId, final BitFlags<CustomFieldListOption> options) throws WTException {
 		Check.notEmpty(serviceId, "serviceId");
 		Check.notNull(options, "options");
 		CustomFieldDAO cufDao = CustomFieldDAO.getInstance();
@@ -1939,8 +1938,8 @@ public class CoreManager extends BaseManager {
 			ensureProfileDomain(targetDomainId);
 			
 			con = WT.getConnection(SERVICE_ID);
-			Boolean searchable = options.has(CustomFieldListOptions.SEARCHABLE) ? true : null;
-			Boolean previewable = options.has(CustomFieldListOptions.PREVIEWABLE) ? true : null;
+			Boolean searchable = options.has(CustomFieldListOption.SEARCHABLE) ? true : null;
+			Boolean previewable = options.has(CustomFieldListOption.PREVIEWABLE) ? true : null;
 			LinkedHashMap<String, CustomFieldEx> items = new LinkedHashMap<>();
 			for (VCustomField vcfield : cufDao.viewOnlineByDomainServiceSearchablePreviewable(con, targetDomainId, serviceId, searchable, previewable, getCustomFieldsMaxNo()).values()) {
 				//items.put(vcfield.getCustomFieldId(), ManagerUtils.createCustomField(vcfield));
@@ -1962,7 +1961,7 @@ public class CoreManager extends BaseManager {
 	 * @return Set of CustomField IDs.
 	 * @throws WTException 
 	 */
-	public Set<String> listCustomFieldIds(final String serviceId, final BitFlag<CustomFieldListOptions> options) throws WTException {
+	public Set<String> listCustomFieldIds(final String serviceId, final BitFlags<CustomFieldListOption> options) throws WTException {
 		Check.notEmpty(serviceId, "serviceId");
 		Check.notNull(options, "options");
 		CustomFieldDAO cufDao = CustomFieldDAO.getInstance();
@@ -1973,8 +1972,8 @@ public class CoreManager extends BaseManager {
 			ensureProfileDomain(targetDomainId);
 			
 			con = WT.getConnection(SERVICE_ID);
-			Boolean searchable = options.has(CustomFieldListOptions.SEARCHABLE) ? true : null;
-			Boolean previewable = options.has(CustomFieldListOptions.PREVIEWABLE) ? true : null;
+			Boolean searchable = options.has(CustomFieldListOption.SEARCHABLE) ? true : null;
+			Boolean previewable = options.has(CustomFieldListOption.PREVIEWABLE) ? true : null;
 			return cufDao.viewOnlineIdsByDomainServiceSearchablePreviewable(con, targetDomainId, serviceId, searchable, previewable, getCustomFieldsMaxNo());
 			
 		} catch (Throwable t) {
@@ -4475,16 +4474,12 @@ public class CoreManager extends BaseManager {
 		CREATE, UPDATE, DELETE, MOVE
 	}
 	
-	/**
-	 * @deprecated move to BitFlagsEnum interface
-	 */
-	@Deprecated
-	public static enum CustomFieldListOptions implements BitFlagEnum {
-		SEARCHABLE(1), PREVIEWABLE(2);
+	public static enum CustomFieldListOption implements BitFlagsEnum<CustomFieldListOption> {
+		SEARCHABLE(1<<0), PREVIEWABLE(1<<1);
 		
-		private int value = 0;
-		private CustomFieldListOptions(int value) { this.value = value; }
+		private int mask = 0;
+		private CustomFieldListOption(int mask) { this.mask = mask; }
 		@Override
-		public int value() { return this.value; }
+		public long mask() { return this.mask; }
 	}
 }

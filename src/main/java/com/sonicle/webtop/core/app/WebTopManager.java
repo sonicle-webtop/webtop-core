@@ -3107,7 +3107,7 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 	}
 	
 	private static enum DomainProcessOpt implements BitFlagsEnum<DomainProcessOpt> {
-		PROCESS_DIRECTORY(1 << 1);
+		PROCESS_DIRECTORY(1<<1);
 		
 		private int mask = 0;
 		private DomainProcessOpt(int mask) { this.mask = mask; }
@@ -3386,7 +3386,7 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 	}
 	
 	private static enum UserProcessOpt implements BitFlagsEnum<UserProcessOpt> {
-		SUBJECTS_AS_SID(1 << 0), PROCESS_GROUPASSOCIATIONS(1 << 1), PROCESS_ROLEASSOCIATIONS(1 << 2), PROCESS_PERMISSIONS(1 << 3), PROCESS_SERVICEPERMISSIONS(1 << 4);
+		SUBJECTS_AS_SID(1<<0), PROCESS_GROUPASSOCIATIONS(1<<1), PROCESS_ROLEASSOCIATIONS(1<<2), PROCESS_PERMISSIONS(1<<3), PROCESS_SERVICEPERMISSIONS(1<<4);
 		
 		private int mask = 0;
 		private UserProcessOpt(int mask) { this.mask = mask; }
@@ -3629,7 +3629,7 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 	}
 	
 	private static enum GroupProcessOpt implements BitFlagsEnum<GroupProcessOpt> {
-		SUBJECTS_AS_SID(1 << 0), PROCESS_USERASSOCIATIONS(1 << 1), PROCESS_ROLEASSOCIATIONS(1 << 2), PROCESS_PERMISSIONS(1 << 3), PROCESS_SERVICEPERMISSIONS(1 << 4);
+		SUBJECTS_AS_SID(1<<0), PROCESS_USERASSOCIATIONS(1<<1), PROCESS_ROLEASSOCIATIONS(1<<2), PROCESS_PERMISSIONS(1<<3), PROCESS_SERVICEPERMISSIONS(1<<4);
 		
 		private int mask = 0;
 		private GroupProcessOpt(int mask) { this.mask = mask; }
@@ -3844,7 +3844,7 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 	}
 	
 	private static enum RoleProcessOpt implements BitFlagsEnum<RoleProcessOpt> {
-		SUBJECTS_AS_SID(1 << 0), PROCESS_SUBJECTASSOCIATIONS(1 << 1), PROCESS_PERMISSIONS(1 << 3), PROCESS_SERVICEPERMISSIONS(1 << 4);//, SUBJECTS_AS_PIDS(1 << 16);
+		SUBJECTS_AS_SID(1<<0), PROCESS_SUBJECTASSOCIATIONS(1<<1), PROCESS_PERMISSIONS(1<<3), PROCESS_SERVICEPERMISSIONS(1<<4);//, SUBJECTS_AS_PIDS(1<<16);
 		
 		private int mask = 0;
 		private RoleProcessOpt(int mask) { this.mask = mask; }
@@ -4021,7 +4021,7 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 	}
 	
 	private static enum ResourceProcessOpt implements BitFlagsEnum<ResourceProcessOpt> {
-		SUBJECTS_AS_SID(1 << 0), PROCESS_PERMISSIONS(1 << 1);
+		SUBJECTS_AS_SID(1<<0), PROCESS_PERMISSIONS(1<<1);
 		
 		private int mask = 0;
 		private ResourceProcessOpt(int mask) { this.mask = mask; }
