@@ -4,6 +4,10 @@
 /**************************************/
 
 /* ---------- Ext.panel.Panel */
+/* Force panel's body BG to 'white' when using 'border' layout */
+.x-panel-body-default.x-border-layout-ct {
+	background-color: #fff;
+}
 /* Disable theme's rbl border that causes ugly borders */
 .x-panel-default-outer-border-rbl {
     border-right-width: 0 !important;
