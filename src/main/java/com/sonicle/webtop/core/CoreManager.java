@@ -1910,6 +1910,35 @@ public class CoreManager extends BaseManager {
 	}
 	
 	/**
+	 * Returns a mapping table "name -> ID" of CustomFields related to the specified Service.
+	 * @param serviceId The owning Service ID.
+	 * @param options Listing options.
+	 * @return Map of fields IDs by field name.
+	 * @throws WTException 
+	 */
+	public Map<String, String> getCustomFieldNamesMap(final String serviceId, final BitFlags<CustomFieldListOption> options) throws WTException {
+		Check.notEmpty(serviceId, "serviceId");
+		Check.notNull(options, "options");
+		CustomFieldDAO cufDao = CustomFieldDAO.getInstance();
+		Connection con = null;
+		
+		try {
+			if (options.has(CustomFieldListOption.PREVIEWABLE)) throw new IllegalArgumentException("Option PREVIEWABLE is not supported here");
+			String targetDomainId = getTargetProfileId().getDomainId();
+			ensureProfileDomain(targetDomainId);
+			
+			con = WT.getConnection(SERVICE_ID);
+			Boolean searchable = options.has(CustomFieldListOption.SEARCHABLE) ? true : null;
+			return cufDao.mapOnlineNamesByDomainServiceSearchable(con, targetDomainId, serviceId, searchable);
+			
+		} catch (Throwable t) {
+			throw ExceptionUtils.wrapThrowable(t);
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
+	/**
 	 * Returns the list of CustomFields related to the specified Service.
 	 * @param serviceId The owning Service ID.
 	 * @return Map of fields by field IDs.
