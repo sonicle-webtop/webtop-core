@@ -406,7 +406,7 @@ public class CoreUserSettings extends BaseUserSettings {
 	
 	public static boolean setServiceVersion(SettingsManager setm, UserProfileId profileId, String serviceId, String value) {
 		boolean ret = setm.setUserSetting(profileId, serviceId, SERVICE_VERSION, value);
-		setm.setUserSetting(profileId, serviceId, SERVICE_VERSION_UPDATEDON, DateTimeUtils.createYmdHmFormatter(DateTimeZone.UTC).print(DateTimeUtils.now()));
+		setm.setUserSetting(profileId, serviceId, SERVICE_VERSION_TIMESTAMP, DateTimeUtils.createFormatter("yyyyMMdd'T'HHmmss'Z'", DateTimeZone.UTC).print(DateTimeUtils.now()));
 		return ret;
 	}
 	

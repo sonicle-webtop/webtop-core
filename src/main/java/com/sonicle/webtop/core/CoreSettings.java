@@ -739,7 +739,7 @@ public class CoreSettings {
 	 * [string]
 	 * Saves the timestamp when above "service.version" is updated
 	 */
-	public static final String SERVICE_VERSION_UPDATEDON = "service.version.updatedon";
+	public static final String SERVICE_VERSION_TIMESTAMP = "service.version.timestamp";
 	
 	/**
 	 * [user][*]
