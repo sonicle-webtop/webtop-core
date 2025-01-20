@@ -34,6 +34,7 @@
 package com.sonicle.webtop.core.app;
 
 import com.sonicle.commons.LangUtils;
+import com.sonicle.commons.concurrent.KeyedReentrantLocks;
 import com.sonicle.commons.db.DbUtils;
 import com.sonicle.commons.db.StatementUtils;
 import com.sonicle.commons.time.DateTimeUtils;
@@ -108,6 +109,7 @@ import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.stream.Collectors;
+import net.sf.qualitycheck.Check;
 import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.commons.configuration2.XMLConfiguration;
 import org.apache.commons.configuration2.builder.FileBasedConfigurationBuilder;
@@ -146,6 +148,7 @@ public class ServiceManager {
 	private Scheduler scheduler = null;
 	private final Object lock1 = new Object();
 	private final Object lock2 = new Object();
+	private final KeyedReentrantLocks<String> prepareProfileLocks = new KeyedReentrantLocks<>();
 	
 	private final LinkedHashMap<String, ServiceDescriptor> descriptors = new LinkedHashMap<>();
 	private final HashMap<String, String> xidToServiceId = new HashMap<>();
@@ -515,9 +518,9 @@ public class ServiceManager {
 	public void prepareProfile(String serviceId, UserProfileId profileId) {
 		ServiceDescriptor descr = getDescriptor(serviceId);
 		
-		// Attention! Keep checkAndSetProfileInitialization here, it internally  
+		// Attention! Keep evaluateProfileInit here, it internally  
 		// updates important db-values and so it must absolutely be called!
-		if (!checkAndSetProfileInitialization(serviceId, profileId)) {
+		if (!evaluateProfileInit(serviceId, profileId)) {
 			if (descr.doesControllerImplements(IControllerServiceHooks.class)) {
 				BaseController instance = getController(serviceId);
 				IControllerServiceHooks controller = (IControllerServiceHooks)instance;
@@ -533,17 +536,18 @@ public class ServiceManager {
 					LoggerUtils.clearContextServiceDC();
 				}
 			}
+			
 		} else {
-			if (descr.doesControllerImplements(IControllerServiceHooks.class)) {
-				BaseController instance = getController(serviceId);
-				IControllerServiceHooks controller = (IControllerServiceHooks)instance;
-				
-				ProfileVersionEvaluationResult res = evaluateProfileVersion(descr.getManifest(), profileId);
-				if (res.upgraded) {
+			ServiceVersionEvalResult upgradeResult = evaluateProfileUpgrade(descr.getManifest(), profileId);
+			if (upgradeResult.isUpgrade()) {
+				if (descr.doesControllerImplements(IControllerServiceHooks.class)) {
+					BaseController instance = getController(serviceId);
+					IControllerServiceHooks controller = (IControllerServiceHooks)instance;
+
 					logger.debug("Upgrading profile for service [{}]", serviceId);
 					try {
 						LoggerUtils.setContextDC(instance.SERVICE_ID);
-						controller.upgradeProfile(res.currentVersion, profileId, res.lastSeenVersion);
+						controller.upgradeProfile(upgradeResult.getCurrent(), profileId, upgradeResult.getPrevious());
 					} catch(Throwable t) {
 						//TODO: valutare se ritornare un booleano per verifica
 						logger.error("Controller: upgradeProfile() throws errors", t);
@@ -588,28 +592,54 @@ public class ServiceManager {
 	 * @param profileId The user profile ID.
 	 * @return The original value read before any update.
 	 */
-	private boolean checkAndSetProfileInitialization(String serviceId, UserProfileId profileId) {
-		synchronized(lock2) {
-			SettingsManager setMgr = wta.getSettingsManager();
+	private boolean evaluateProfileInit(String serviceId, UserProfileId profileId) {
+		SettingsManager setMgr = wta.getSettingsManager();
+		final String lockKey = serviceId + "|" + profileId.toString();
+		try {
+			prepareProfileLocks.lock(lockKey);
 			boolean value = LangUtils.value(setMgr.getUserSetting(profileId.getDomainId(), profileId.getUserId(), serviceId, CoreSettings.INITIALIZED), false);
 			if (!value) {
 				setMgr.setUserSetting(profileId.getDomainId(), profileId.getUserId(), serviceId, CoreSettings.INITIALIZED, true);
 			}
 			return value;
+			
+		} finally {
+			prepareProfileLocks.unlock(lockKey);
 		}
 	}
 	
-	public ProfileVersionEvaluationResult evaluateProfileVersion(String serviceId, UserProfileId profileId) {
-		ServiceDescriptor desc = getDescriptor(serviceId);
-		return evaluateProfileVersion(desc.getManifest(), profileId);
+	private ServiceVersionEvalResult evaluateProfileUpgrade(final ServiceManifest manifest, final UserProfileId profileId) {
+		SettingsManager setMgr = wta.getSettingsManager();
+		final String lockKey = manifest.getId() + "|" + profileId.toString();
+		
+		try {
+			prepareProfileLocks.lock(lockKey);
+			ServiceVersionEvalResult res = evaluateServiceVersionForProfile(manifest, profileId);
+			CoreUserSettings.setServiceVersion(setMgr, profileId, manifest.getId(), manifest.getVersion().toString());
+			return res;
+			
+		} finally {
+			prepareProfileLocks.unlock(lockKey);
+		}
 	}
 	
-	public ProfileVersionEvaluationResult evaluateProfileVersion(ServiceManifest manifest, UserProfileId profileId) {
+	public ServiceVersionEvalResult evaluateServiceVersionForProfile(final String serviceId, final UserProfileId profileId) {
+		Check.notEmpty(serviceId, "serviceId");
+		return evaluateServiceVersionForProfile(getDescriptor(serviceId).getManifest(), profileId);
+	}
+	
+	public ServiceVersionEvalResult evaluateServiceVersionForProfile(final ServiceManifest manifest, final UserProfileId profileId) {
+		SettingsManager setMgr = wta.getSettingsManager();
+		ServiceVersion manifestVer = manifest.getVersion();
+		ServiceVersion profileVer = new ServiceVersion(CoreUserSettings.getServiceVersion(setMgr, profileId, manifest.getId()));
+		return new ServiceVersionEvalResult(manifestVer, profileVer);
+	}
+	
+	public ServiceVersionEvalResult evaluateWhatsnewServiceVersionForProfile(final ServiceManifest manifest, final UserProfileId profileId) {
 		SettingsManager setm = wta.getSettingsManager();
 		ServiceVersion manifestVer = manifest.getVersion();
-		ServiceVersion userVer = new ServiceVersion(CoreUserSettings.getWhatsnewVersion(setm, profileId, manifest.getId()));
-		boolean upgraded = (manifestVer.compareTo(userVer) > 0);
-		return new ProfileVersionEvaluationResult(manifestVer, userVer, upgraded);
+		ServiceVersion profileVer = new ServiceVersion(CoreUserSettings.getWhatsnewVersion(setm, profileId, manifest.getId()));
+		return new ServiceVersionEvalResult(manifestVer, profileVer);
 	}
 	
 	@Deprecated
@@ -689,11 +719,11 @@ public class ServiceManager {
 		if (!css.getWhatsnewEnabled()) return false;
 		
 		// Gets current service's version info and last version for this user
-		ProfileVersionEvaluationResult res = evaluateProfileVersion(desc.getManifest(), profile.getId());
+		ServiceVersionEvalResult result = evaluateWhatsnewServiceVersionForProfile(desc.getManifest(), profile.getId());
 		
 		boolean show = false;
-		if(res.upgraded) {
-			String html = desc.getWhatsnew(profile.getLocale(), res.lastSeenVersion);
+		if (result.isUpgrade()) {
+			String html = desc.getWhatsnew(profile.getLocale(), result.getPrevious());
 			if(StringUtils.isEmpty(html)) {
 				// If content is empty, updates whatsnew version for the user;
 				// it basically realign versions in user-settings.
@@ -1503,6 +1533,28 @@ public class ServiceManager {
 			this.currentVersion = currentVersion;
 			this.lastSeenVersion = lastSeenVersion;
 			this.upgraded = upgraded;
+		}
+	}
+	
+	public static class ServiceVersionEvalResult {
+		private final ServiceVersion current;
+		private final ServiceVersion previous;
+		
+		public ServiceVersionEvalResult(ServiceVersion current, ServiceVersion previous) {
+			this.current = Check.notNull(current, "current");
+			this.previous = Check.notNull(previous, "previous");
+		}
+		
+		public ServiceVersion getCurrent() {
+			return this.current;
+		}
+		
+		public ServiceVersion getPrevious() {
+			return this.previous;
+		}
+		
+		public boolean isUpgrade() {
+			return !current.isUndefined() && !previous.isUndefined() && current.compareTo(previous) > 0;
 		}
 	}
 }
