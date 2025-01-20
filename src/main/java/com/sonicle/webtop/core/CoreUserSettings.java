@@ -35,6 +35,7 @@ package com.sonicle.webtop.core;
 
 import com.sonicle.commons.EnumUtils;
 import com.sonicle.commons.LangUtils;
+import com.sonicle.commons.time.DateTimeUtils;
 import com.sonicle.commons.web.json.JsonResult;
 import static com.sonicle.webtop.core.CoreSettings.*;
 import com.sonicle.webtop.core.app.CoreManifest;
@@ -44,6 +45,7 @@ import com.sonicle.webtop.core.sdk.UserProfileId;
 import com.sonicle.webtop.core.xmpp.PresenceStatus;
 import java.util.ArrayList;
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 
 /**
  *
@@ -396,6 +398,16 @@ public class CoreUserSettings extends BaseUserSettings {
 	
 	public boolean setIMSoundOnMessageSent(boolean value) {
 		return setBoolean(IM_SOUND_ON_MESSAGE_SENT, value);
+	}
+	
+	public static String getServiceVersion(SettingsManager setm, UserProfileId profileId, String serviceId) {
+		return setm.getUserSetting(profileId, serviceId, SERVICE_VERSION);
+	}
+	
+	public static boolean setServiceVersion(SettingsManager setm, UserProfileId profileId, String serviceId, String value) {
+		boolean ret = setm.setUserSetting(profileId, serviceId, SERVICE_VERSION, value);
+		setm.setUserSetting(profileId, serviceId, SERVICE_VERSION_UPDATEDON, DateTimeUtils.createYmdHmFormatter(DateTimeZone.UTC).print(DateTimeUtils.now()));
+		return ret;
 	}
 	
 	public static String getWhatsnewVersion(SettingsManager setm, UserProfileId profileId, String serviceId) {

@@ -730,6 +730,20 @@ public class CoreSettings {
 	/**
 	 * [user][*]
 	 * [string]
+	 * Saves last seen service version for a user profile
+	 */
+	public static final String SERVICE_VERSION = "service.version";
+	
+	/**
+	 * [user][*]
+	 * [string]
+	 * Saves the timestamp when above "service.version" is updated
+	 */
+	public static final String SERVICE_VERSION_UPDATEDON = "service.version.updatedon";
+	
+	/**
+	 * [user][*]
+	 * [string]
 	 * Saves last seen service version for whatsnew handling
 	 */
 	public static final String WHATSNEW_VERSION = "whatsnew.version";
