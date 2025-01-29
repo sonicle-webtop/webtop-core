@@ -33,6 +33,7 @@
  */
 package com.sonicle.webtop.core.app;
 
+import com.sonicle.commons.ClassUtils;
 import com.sonicle.commons.LangUtils;
 import com.sonicle.commons.concurrent.KeyedReentrantLocks;
 import com.sonicle.commons.db.DbUtils;
@@ -738,7 +739,7 @@ public class ServiceManager {
 	}
 	
 	public String getAboutInfo(String serviceId) throws IOException {
-		String resourceName = LangUtils.packageToPath(serviceId) + "/" + "meta/about.md";
+		String resourceName = ClassUtils.classPackageAsPath(serviceId) + "/" + "meta/about.md";
 		InputStream is = null;
 		
 		try {

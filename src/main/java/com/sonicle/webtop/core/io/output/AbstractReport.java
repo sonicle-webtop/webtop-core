@@ -33,7 +33,7 @@
  */
 package com.sonicle.webtop.core.io.output;
 
-import com.sonicle.commons.LangUtils;
+import com.sonicle.commons.ClassUtils;
 import com.sonicle.webtop.core.sdk.WTRuntimeException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -105,8 +105,8 @@ public abstract class AbstractReport {
 	}
 	
 	protected void buildPath() {
-		String pkg = LangUtils.getClassPackageName(this.getClass());
-		this.path = LangUtils.packageToPath(pkg) + "/";
+		String pkg = ClassUtils.getClassPackageName(this.getClass());
+		this.path = ClassUtils.classPackageAsPath(pkg) + "/";
 	}
 	
 	protected void fillBuiltInParams() {

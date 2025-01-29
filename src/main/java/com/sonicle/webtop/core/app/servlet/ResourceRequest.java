@@ -33,6 +33,7 @@
  */
 package com.sonicle.webtop.core.app.servlet;
 
+import com.sonicle.commons.ClassUtils;
 import com.sonicle.commons.LangUtils;
 import com.sonicle.commons.PropertiesEx;
 import com.sonicle.commons.RegexUtils;
@@ -483,7 +484,7 @@ public class ResourceRequest extends HttpServlet {
 		URL resUrl = null;
 		
 		try {
-			String resPath="/"+LangUtils.packageToPath(serviceId)+"/meta/"+path;
+			String resPath="/"+ClassUtils.classPackageAsPath(serviceId)+"/meta/"+path;
 			resUrl = toClasspathURL(resPath);
 			if (resUrl == null) throw new NotFoundException();
 			

@@ -33,7 +33,7 @@
  */
 package com.sonicle.webtop.core.sdk;
 
-import com.sonicle.commons.LangUtils;
+import com.sonicle.commons.ClassUtils;
 import com.sonicle.commons.l4j.AbstractProduct;
 import com.sonicle.webtop.core.app.ProductRegistry;
 import com.sonicle.webtop.core.app.WT;
@@ -141,7 +141,7 @@ public class ServiceManifest {
 			
 		} else { // Old-style configuration
 			if (svcEl.containsKey("controllerClassName")) {
-				controllerClassName = LangUtils.buildClassName(javaPackage, StringUtils.defaultIfEmpty(svcEl.getString("controllerClassName"), "Controller"));
+				controllerClassName = ClassUtils.buildClassName(javaPackage, StringUtils.defaultIfEmpty(svcEl.getString("controllerClassName"), "Controller"));
 			}
 		}
 		
@@ -157,7 +157,7 @@ public class ServiceManifest {
 			
 		} else { // Old-style configuration
 			if (svcEl.containsKey("managerClassName")) {
-				managerClassName = LangUtils.buildClassName(javaPackage, StringUtils.defaultIfEmpty(svcEl.getString("managerClassName"), "Manager"));
+				managerClassName = ClassUtils.buildClassName(javaPackage, StringUtils.defaultIfEmpty(svcEl.getString("managerClassName"), "Manager"));
 			}
 		}
 
@@ -174,7 +174,7 @@ public class ServiceManifest {
 				final String jcn = hconf.get(0).getString("[@jsClassName]");
 				if (StringUtils.isBlank(jcn)) throw new WTException(invalidAttributeValueEx("privateService", "jsClassName"));
 				
-				privateServiceClassName = LangUtils.buildClassName(javaPackage, cn);
+				privateServiceClassName = ClassUtils.buildClassName(javaPackage, cn);
 				privateServiceJsClassName = jcn;
 				privateServiceVarsModelJsClassName = hconf.get(0).getString("[@jsClassName]");
 			}
@@ -182,7 +182,7 @@ public class ServiceManifest {
 		} else { // Old-style configuration
 			if (svcEl.containsKey("serviceClassName")) {
 				String cn = StringUtils.defaultIfEmpty(svcEl.getString("serviceClassName"), "Service");
-				privateServiceClassName = LangUtils.buildClassName(javaPackage, cn);
+				privateServiceClassName = ClassUtils.buildClassName(javaPackage, cn);
 				privateServiceJsClassName = StringUtils.defaultIfEmpty(svcEl.getString("serviceJsClassName"), cn);
 				privateServiceVarsModelJsClassName = StringUtils.defaultIfEmpty(svcEl.getString("serviceVarsModelJsClassName"), "model.ServiceVars");
 			}
@@ -191,14 +191,14 @@ public class ServiceManifest {
 		
 		if (svcEl.containsKey("serviceClassName")) {
 			String cn = StringUtils.defaultIfEmpty(svcEl.getString("serviceClassName"), "Service");
-			privateServiceClassName = LangUtils.buildClassName(javaPackage, cn);
+			privateServiceClassName = ClassUtils.buildClassName(javaPackage, cn);
 			privateServiceJsClassName = StringUtils.defaultIfEmpty(svcEl.getString("serviceJsClassName"), cn);
 			privateServiceVarsModelJsClassName = StringUtils.defaultIfEmpty(svcEl.getString("serviceVarsModelJsClassName"), "model.ServiceVars");
 		}
 		
 		if(svcEl.containsKey("publicServiceClassName")) {
 			String cn = StringUtils.defaultIfEmpty(svcEl.getString("publicServiceClassName"), "PublicService");
-			publicServiceClassName = LangUtils.buildClassName(javaPackage, StringUtils.defaultIfEmpty(svcEl.getString("publicServiceClassName"), "PublicService"));
+			publicServiceClassName = ClassUtils.buildClassName(javaPackage, StringUtils.defaultIfEmpty(svcEl.getString("publicServiceClassName"), "PublicService"));
 			publicServiceJsClassName = StringUtils.defaultIfEmpty(svcEl.getString("publicServiceJsClassName"), cn);
 			publicServiceVarsModelJsClassName = StringUtils.defaultIfEmpty(svcEl.getString("publicServiceVarsModelJsClassName"), "model.PublicServiceVars");
 		}
@@ -209,11 +209,11 @@ public class ServiceManifest {
 			
 			final String cn = hconf.get(0).getString("[@className]");
 			if (StringUtils.isBlank(cn)) throw new WTException(invalidAttributeValueEx("backgroundService", "className"));
-			backgroundServiceClassName = LangUtils.buildClassName(javaPackage, cn);
+			backgroundServiceClassName = ClassUtils.buildClassName(javaPackage, cn);
 		}
 		
 		if(!svcEl.configurationsAt("userOptions").isEmpty()) {
-			userOptionsServiceClassName = LangUtils.buildClassName(javaPackage, StringUtils.defaultIfEmpty(svcEl.getString("userOptions.serviceClassName"), "UserOptionsService"));
+			userOptionsServiceClassName = ClassUtils.buildClassName(javaPackage, StringUtils.defaultIfEmpty(svcEl.getString("userOptions.serviceClassName"), "UserOptionsService"));
 			userOptionsViewJsClassName = StringUtils.defaultIfEmpty(svcEl.getString("userOptions.viewJsClassName"), "view.UserOptions");
 			userOptionsModelJsClassName = StringUtils.defaultIfEmpty(svcEl.getString("userOptions.modelJsClassName"), "model.UserOptions");
 		}
@@ -229,8 +229,8 @@ public class ServiceManifest {
 				final String implPackage = el.getString("[@package]", "." + JAVAPKG_REST + "." + context);
 				
 				if (restApis.containsKey(oasFile)) throw new WTException(invalidAttributeValueEx("restApis.restApi", "oasFile"));
-				//String oasFilePath = LangUtils.packageToPath(buildJavaPackage(javaPackage, "." + JAVAPKG_REST)) + "/" + oasFile;
-				String oasFilePath = LangUtils.packageToPath(javaPackage) + "/" + oasFile;
+				//String oasFilePath = ClassUtils.classPackageAsPath(buildJavaPackage(javaPackage, "." + JAVAPKG_REST)) + "/" + oasFile;
+				String oasFilePath = ClassUtils.classPackageAsPath(javaPackage) + "/" + oasFile;
 				restApis.put(oasFile, new RestApi(oasFilePath, context, buildJavaPackage(javaPackage, implPackage)));
 			}
 		}
@@ -268,7 +268,7 @@ public class ServiceManifest {
 				if (el.containsKey("[@jsClassName]")) {
 					final String jsClassName = el.getString("[@jsClassName]");
 					if (StringUtils.isBlank(jsClassName)) throw new WTException("Invalid value for attribute [portlet->jsClassName]");
-					portlets.add(new Portlet(LangUtils.buildClassName(jsPackage, jsClassName)));
+					portlets.add(new Portlet(ClassUtils.buildClassName(jsPackage, jsClassName)));
 				}
 			}
 		}
@@ -445,11 +445,11 @@ public class ServiceManifest {
 	 * @return The class name.
 	 */
 	public String getPrivateServiceJsClassName(boolean full) {
-		return (full) ? LangUtils.buildClassName(jsPackage, privateServiceJsClassName) : privateServiceJsClassName;
+		return (full) ? ClassUtils.buildClassName(jsPackage, privateServiceJsClassName) : privateServiceJsClassName;
 	}
 	
 	public String getPrivateServiceVarsModelJsClassName(boolean full) {
-		return (full) ? LangUtils.buildClassName(jsPackage, privateServiceVarsModelJsClassName) : privateServiceVarsModelJsClassName;
+		return (full) ? ClassUtils.buildClassName(jsPackage, privateServiceVarsModelJsClassName) : privateServiceVarsModelJsClassName;
 	}
 	
 	/**
@@ -459,19 +459,19 @@ public class ServiceManifest {
 	 * @return The class name.
 	 */
 	public String getPublicServiceJsClassName(boolean full) {
-		return (full) ? LangUtils.buildClassName(jsPackage, publicServiceJsClassName) : publicServiceJsClassName;
+		return (full) ? ClassUtils.buildClassName(jsPackage, publicServiceJsClassName) : publicServiceJsClassName;
 	}
 	
 	public String getPublicServiceVarsModelJsClassName(boolean full) {
-		return (full) ? LangUtils.buildClassName(jsPackage, publicServiceVarsModelJsClassName) : publicServiceVarsModelJsClassName;
+		return (full) ? ClassUtils.buildClassName(jsPackage, publicServiceVarsModelJsClassName) : publicServiceVarsModelJsClassName;
 	}
 	
 	public String getUserOptionsViewJsClassName(boolean full) {
-		return (full) ? LangUtils.buildClassName(jsPackage, userOptionsViewJsClassName) : userOptionsViewJsClassName;
+		return (full) ? ClassUtils.buildClassName(jsPackage, userOptionsViewJsClassName) : userOptionsViewJsClassName;
 	}
 	
 	public String getUserOptionsModelJsClassName(boolean full) {
-		return (full) ? LangUtils.buildClassName(jsPackage, userOptionsModelJsClassName) : userOptionsModelJsClassName;
+		return (full) ? ClassUtils.buildClassName(jsPackage, userOptionsModelJsClassName) : userOptionsModelJsClassName;
 	}
 	
 	/**
@@ -482,7 +482,7 @@ public class ServiceManifest {
 	 */
 	public String getLocaleJsClassName(Locale locale, boolean full) {
 		String cn = "Locale_" + locale.getLanguage();
-		return (full) ? LangUtils.buildClassName(jsPackage, cn) : cn;
+		return (full) ? ClassUtils.buildClassName(jsPackage, cn) : cn;
 	}
 	
 	/**
@@ -569,7 +569,7 @@ public class ServiceManifest {
 	
 	private String buildJavaClassName(String javaPackage, String className) {
 		if (StringUtils.startsWith(className, ".")) {
-			return LangUtils.buildClassName(javaPackage, className);
+			return ClassUtils.buildClassName(javaPackage, className);
 		} else {
 			return className;
 		}
@@ -577,7 +577,7 @@ public class ServiceManifest {
 	
 	private String buildJavaPackage(String javaBasePackage, String javaPackage) {
 		if (StringUtils.startsWith(javaPackage, ".")) {
-			return LangUtils.joinClassPackages(javaBasePackage, javaPackage);
+			return ClassUtils.joinClassPackages(javaBasePackage, javaPackage);
 		} else {
 			return javaPackage;
 		}

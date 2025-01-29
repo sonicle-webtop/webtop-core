@@ -33,6 +33,7 @@
  */
 package com.sonicle.webtop.core.app;
 
+import com.sonicle.commons.ClassUtils;
 import com.sonicle.webtop.core.app.util.ClassHelper;
 import com.sonicle.commons.LangUtils;
 import com.sonicle.webtop.core.sdk.BaseBackgroundService;
@@ -193,7 +194,7 @@ public class ServiceDescriptor {
 					logger.trace("Getting whatsnew from cache [{}, {}]", manifest.getId(), slocale);
 					wn = whatsnewCache.get(slocale);
 				} else {
-					resName = MessageFormat.format("/{0}/meta/whatsnew/{1}.txt", LangUtils.packageToPath(manifest.getId()), slocale);
+					resName = MessageFormat.format("/{0}/meta/whatsnew/{1}.txt", ClassUtils.classPackageAsPath(manifest.getId()), slocale);
 					logger.debug("Loading whatsnew [{}, {}, ver. >= {}]", manifest.getId(), resName, fromVersion);
 					wn = new Whatsnew(resName, defineWhatsnewVariables());
 					whatsnewCache.put(slocale, wn);
@@ -216,12 +217,12 @@ public class ServiceDescriptor {
 		String resName = null;
 		
 		try {
-			String pkgPath = MessageFormat.format("{0}/meta/db/", LangUtils.packageToPath(manifest.getId()));
+			String pkgPath = MessageFormat.format("{0}/meta/db/", ClassUtils.classPackageAsPath(manifest.getId()));
 			ServiceVersion fileVersion = null;
 			// List all .sql files in dedicated package and defines the right set
 			for(String file: LangUtils.listPackageFiles(getClass(), pkgPath)) {
 				try {
-					if (StringUtils.startsWithIgnoreCase(file, "init")) continue;
+					if (StringUtils.startsWith(file, "_") || StringUtils.startsWithIgnoreCase(file, "init")) continue;
 					fileVersion = SqlUpgradeScript.extractVersion(file);
 					if (fileVersion.compareTo(manifest.getOldVersion()) <= 0) continue; // Skip all version sections below oldVersion (included)
 					if (fileVersion.compareTo(manifest.getVersion()) > 0) continue; // Skip all version sections after manifestVersion

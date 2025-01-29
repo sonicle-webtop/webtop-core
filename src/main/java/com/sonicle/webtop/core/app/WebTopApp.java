@@ -34,6 +34,7 @@
 package com.sonicle.webtop.core.app;
 
 import com.mashape.unirest.http.Unirest;
+import com.sonicle.commons.ClassUtils;
 import com.sonicle.commons.IdentifierUtils;
 import com.sonicle.webtop.core.app.util.OSInfo;
 import com.sonicle.commons.InternetAddressUtils;
@@ -54,7 +55,6 @@ import com.sonicle.mail.email.Recipient;
 import com.sonicle.mail.producer.MimeMessageProducer;
 import com.sonicle.security.AuthenticationDomain;
 import com.sonicle.security.CryptoUtils;
-import com.sonicle.security.PasswordUtils;
 import com.sonicle.security.Principal;
 import com.sonicle.security.auth.directory.ADConfigBuilder;
 import com.sonicle.security.auth.directory.ADDirectory;
@@ -76,16 +76,13 @@ import com.sonicle.webtop.core.app.auth.LdapWebTopDirectory;
 import com.sonicle.webtop.core.app.auth.WebTopConfigBuilder;
 import com.sonicle.webtop.core.app.auth.WebTopDirectory;
 import com.sonicle.webtop.core.app.model.DomainBase;
-import com.sonicle.webtop.core.app.model.EnabledCond;
 import com.sonicle.webtop.core.app.model.GenericSubject;
 import com.sonicle.webtop.core.app.sdk.WTEmailSendException;
-import com.sonicle.webtop.core.bol.ODomain;
 import com.sonicle.webtop.core.model.ParamsLdapDirectory;
 import com.sonicle.webtop.core.io.FileResource;
 import com.sonicle.webtop.core.io.JarFileResource;
 import com.sonicle.webtop.core.sdk.ServiceMessage;
 import com.sonicle.webtop.core.sdk.UserProfileId;
-import com.sonicle.webtop.core.sdk.WTException;
 import com.sonicle.webtop.core.sdk.WTRuntimeException;
 import com.sonicle.webtop.core.app.shiro.WTRealm;
 import com.sonicle.webtop.core.sdk.AuthException;
@@ -986,7 +983,7 @@ public final class WebTopApp {
 		// Dedicated source folder embedded in sources is named 'tpl': define it 
 		// translating package (the service ID) into sub-folders name.
 		// -> 'com/sonicle/webtop/core/tpl/{relative-path}'
-		path = LangUtils.joinPaths(LangUtils.packageToPath(serviceId), "tpl", sanitizedRelativePath);
+		path = LangUtils.joinPaths(ClassUtils.classPackageAsPath(serviceId), "tpl", sanitizedRelativePath);
 		return internalGetTemplate(path, encoding);
 	}
 	

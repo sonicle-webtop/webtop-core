@@ -33,6 +33,7 @@
  */
 package com.sonicle.webtop.core.app.servlet;
 
+import com.sonicle.commons.ClassUtils;
 import com.sonicle.commons.LangUtils;
 import com.sonicle.commons.web.ServletUtils;
 import com.sonicle.webtop.core.app.SessionContext;
@@ -88,7 +89,7 @@ public class PublicRequest extends BaseRequest {
 	
 	public JarFileResource getInternalPublicFile(WebTopApp wta, String serviceId, String relativePath) throws URISyntaxException, IOException {
 		if (!StringUtils.startsWith(relativePath, PUBLIC_RESOURCES)) return null;
-		String pathname = LangUtils.joinPaths(LangUtils.packageToPath(serviceId), relativePath);
+		String pathname = LangUtils.joinPaths(ClassUtils.classPackageAsPath(serviceId), relativePath);
 		return wta.getJarResource(this.getClass().getResource("/" + pathname));
 	}
 	
