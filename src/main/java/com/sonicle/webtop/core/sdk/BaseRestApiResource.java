@@ -38,6 +38,7 @@ import com.sonicle.webtop.core.app.AbstractPlatformService;
 import com.sonicle.webtop.core.app.RunContext;
 import com.sonicle.webtop.core.app.WT;
 import com.sonicle.webtop.core.app.sdk.WTNotFoundException;
+import com.sonicle.webtop.core.app.sdk.WTParseException;
 import javax.ws.rs.core.Response;
 import org.apache.commons.lang3.ClassUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -62,8 +63,7 @@ public abstract class BaseRestApiResource extends AbstractPlatformService {
 		return WT.getManifest(SERVICE_ID);
 	}
 	
-	
-	public UserProfileId getTargetProfileId(String targetProfileId) {
+	protected UserProfileId getTargetProfileId(final String targetProfileId) {
 		Subject subject = RunContext.getSubject();
 		if (RunContext.isSysAdmin(subject)) {
 			return StringUtils.isBlank(targetProfileId) ? null : new UserProfileId(targetProfileId);
@@ -72,72 +72,83 @@ public abstract class BaseRestApiResource extends AbstractPlatformService {
 		}
 	}
 	
+	protected String userIdOrDefault(final String userId) {
+		return BaseRestApiUtils.parseUserId(userId, RunContext.getRunProfileId().getUserId());
+	}
+	
 	protected abstract Object createErrorEntity(Response.Status status, String message);
 	
-	public Response respOkNoContent() {
+	protected Response respOkNoContent() {
 		return respOk(Response.Status.NO_CONTENT);
 	}
 	
-	public Response respOkCreated() {
+	protected Response respOkCreated() {
 		return respOkCreated(null);
 	}
 	
-	public Response respOkCreated(Object entity) {
-		return respOk(Response.Status.CREATED, entity);
+	protected Response respOkCreated(final Object entity) {
+		return respOk(Response.Status.CREATED, entity, null);
 	}
 	
-	public Response respOk() {
-		return respOk(null, null);
+	protected Response respOk() {
+		return respOk(null, null, null);
 	}
 	
-	public Response respOk(Response.Status status) {
-		return respOk(status, null);
+	protected Response respOk(final Response.Status status) {
+		return respOk(status, null, null);
 	}
 	
-	public Response respOk(Object entity) {
-		return respOk(null, entity);
+	protected Response respOk(final Object entity) {
+		return respOk(null, entity, null);
 	}
 	
-	public Response respOk(Response.Status status, Object entity) {
+	protected Response respOk(final Object entity, final String mediaType) {
+		return respOk(null, entity, mediaType);
+	}
+	
+	protected Response respOk(final Response.Status status, final Object entity, final String mediaType) {
 		final Response.ResponseBuilder resp = (status != null) ? Response.status(status) : Response.ok();
 		if (entity != null) resp.entity(entity);
+		if (mediaType != null) resp.type(mediaType);
 		return resp.build();
 	}
 	
-	public Response respErrorBadRequest() {
+	protected Response respErrorBadRequest() {
 		return respErrorBadRequest(null);
 	}
 	
-	public Response respErrorBadRequest(String message, Object... arguments) {
+	protected Response respErrorBadRequest(final String message, final Object... arguments) {
 		return respError(Response.Status.BAD_REQUEST, message, arguments);
 	}
 	
-	public Response respErrorNotFound() {
+	protected Response respErrorNotFound() {
 		return respErrorNotFound(null);
 	}
 	
-	public Response respErrorNotFound(String message, Object... arguments) {
+	protected Response respErrorNotFound(final String message, final Object... arguments) {
 		return respError(Response.Status.NOT_FOUND, message, arguments);
 	}
 	
-	public Response respErrorNotAllowed() {
+	protected Response respErrorNotAllowed() {
 		return respErrorNotAllowed(null);
 	}
 	
-	public Response respErrorNotAllowed(String message, Object... arguments) {
+	protected Response respErrorNotAllowed(final String message, final Object... arguments) {
 		return respError(Response.Status.METHOD_NOT_ALLOWED, message, arguments);
 	}
 	
-	public Response respErrorForbidden(String message, Object... arguments) {
+	protected Response respErrorForbidden(final String message, final Object... arguments) {
 		return respError(Response.Status.FORBIDDEN, message, arguments);
 	}
 	
-	public Response respError(Throwable t) {
+	protected Response respError(final Throwable t) {
 		if (t instanceof AuthException) {
 			return respErrorForbidden(t.getMessage());
 		} else if (t instanceof WTNotFoundException) {
 			return respErrorNotFound(t.getMessage());
-		} else {
+		} else if (t instanceof WTParseException) {
+			return respErrorBadRequest(t.getMessage());
+		}  else {
 			if (t != null) {
 				if ("net.sf.qualitycheck.exception".equals(ClassUtils.getPackageName(LangUtils.getDeepestCause(t).getClass()))) {
 					return respErrorBadRequest(t.getMessage());
@@ -153,7 +164,7 @@ public abstract class BaseRestApiResource extends AbstractPlatformService {
 		}
 	}
 	
-	public Response respError(Response.Status status, String message, Object... arguments) {
+	protected Response respError(final Response.Status status, final String message, final Object... arguments) {
 		final Response.Status respStatus = (status != null) ? status : Response.Status.INTERNAL_SERVER_ERROR;
 		final Response.ResponseBuilder resp = Response.status(respStatus);
 		if (!StringUtils.isBlank(message)) {
