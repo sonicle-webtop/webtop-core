@@ -90,7 +90,7 @@ public class BaseRestApiUtils {
 	}
 	
 	public static Integer pageSizeOrDefault(final Integer pageNo, final Integer pageSize) {
-		return (pageNo != null && pageSize == null) ? 50 : pageSize;
+		return (pageNo != null && pageSize == null) ? ((Integer)50) : pageSize;
 	}
 	
 	public static Short toShort(Integer value) {

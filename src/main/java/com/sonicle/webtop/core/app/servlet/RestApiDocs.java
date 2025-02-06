@@ -95,12 +95,21 @@ public class RestApiDocs extends AssetsServlet {
 			specBaseUrl = StringUtils.replaceOnce(specBaseUrl, URL, RestApi.URL);
 			specBaseUrl = StringUtils.substringBeforeLast(specBaseUrl, "/") + "/" + RESOURCE_OPENAPI;
 			MapItemList urls = new MapItemList();
+			
+			// The actual spec file is the last one
+			ServiceDescriptor.OpenApiDefinition specDefinition = defs.get(defs.size()-1);
+			urls.add(new MapItem()
+					.add("name", specDefinition.context)
+					.add("url", specBaseUrl)
+				);
+			/*
 			for (ServiceDescriptor.OpenApiDefinition def : defs) {
 				urls.add(new MapItem()
 						.add("name", def.context)
 						.add("url", specBaseUrl)
 					);
 			}
+			*/
 			ServletUtils.writeJsonResponse(resp, new MapItem().add("urls", urls));
 			
 		} else {

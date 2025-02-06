@@ -76,7 +76,8 @@ public class WebTopProps {
 	public static final String PROP_WTDIR_SIMILARITY_TOKENSIZE = "webtop.directory.similarity.tokensize";
 	public static final String PROP_SESSION_FORCESECURECOOKIE = "webtop.session.forcesecurecookie";
 	public static final String PROP_PROVISIONING_API_TOKEN = "webtop.provisioning.api.token";
-	public static final String PROP_OPENAPI_SPEC_DISABLERESOURCE = "webtop.openapi.spec.disableresource";
+	public static final String PROP_OPENAPI_PUBLISH_SPEC = "webtop.openapi.spec.publish";
+	public static final String PROP_OPENAPI_UI_ENABLED = "webtop.openapi.ui.enabled";
 	public static final String PROP_LOGIN_TEMPLATE_VARS = "webtop.login.template.vars";
 	public static final String PROP_ADMIN_MODE_SINGLEDOMAIN = "webtop.admin.mode.singledomain";
 	public static final String PROP_ADMIN_LOGVIEWER_ENABLED = "webtop.admin.logviewer.enabled";
@@ -169,7 +170,8 @@ public class WebTopProps {
 		WebTopApp.logger.info("{} = {} [{}]", PROP_SESSION_FORCESECURECOOKIE, properties.getProperty(PROP_SESSION_FORCESECURECOOKIE), getSessionForceSecureCookie(emptyProperties));
 		WebTopApp.logger.info("{} = {} [{}]", PROP_HOME, properties.getProperty(PROP_HOME), getHome(emptyProperties));
 		WebTopApp.logger.info("{} = {} [{}]", PROP_PROVISIONING_API_TOKEN, PasswordUtils.printRedacted(properties.getProperty(PROP_PROVISIONING_API_TOKEN)), PasswordUtils.printRedacted(getProvisioningApiToken(emptyProperties)));
-		WebTopApp.logger.info("{} = {} [{}]", PROP_OPENAPI_SPEC_DISABLERESOURCE, properties.getProperty(PROP_OPENAPI_SPEC_DISABLERESOURCE), getOpenApiSpecDisableResource(emptyProperties));
+		WebTopApp.logger.info("{} = {} [{}]", PROP_OPENAPI_PUBLISH_SPEC, properties.getProperty(PROP_OPENAPI_PUBLISH_SPEC), getOpenApiPublishSpec(emptyProperties));
+		WebTopApp.logger.info("{} = {} [{}]", PROP_OPENAPI_UI_ENABLED, properties.getProperty(PROP_OPENAPI_UI_ENABLED), getOpenApiUIEnabled(emptyProperties));
 		WebTopApp.logger.info("{} = {} [{}]", PROP_ADMIN_MODE_SINGLEDOMAIN, properties.getProperty(PROP_ADMIN_MODE_SINGLEDOMAIN), getAdminModeSingleDomain(emptyProperties));
 		WebTopApp.logger.info("{} = {} [{}]", PROP_ADMIN_LOGVIEWER_ENABLED, properties.getProperty(PROP_ADMIN_LOGVIEWER_ENABLED), getAdminLogViewerEnabled(emptyProperties));
 		WebTopApp.logger.info("{} = {} [{}]", PROP_UI_LAYOUTS, properties.getProperty(PROP_UI_LAYOUTS), null);
@@ -190,6 +192,7 @@ public class WebTopProps {
 		testAndWarnPropUsage(properties, "com.sonicle.webtop.soExtDevMode", PROP_SOEXT_DEV_MODE);
 		testAndWarnPropUsage(properties, "com.sonicle.webtop.devMode", PROP_DEV_MODE);
 		testAndWarnPropUsage(properties, "com.sonicle.webtop.schedulerDisabled", PROP_SCHEDULER_DISABLED);
+		testAndWarnPropUsage(properties, "webtop.openapi.spec.disableresource", PROP_OPENAPI_PUBLISH_SPEC);
 	}
 	
 	/*
@@ -335,8 +338,14 @@ public class WebTopProps {
 		return PropUtils.getStringProperty(props, PROP_PROVISIONING_API_TOKEN, null);
 	}
 	
-	public static boolean getOpenApiSpecDisableResource(Properties props) {
-		return PropUtils.getBooleanProperty(props, PROP_OPENAPI_SPEC_DISABLERESOURCE, false);
+	public static boolean getOpenApiPublishSpec(Properties props) {
+		boolean uiEnabled = getOpenApiUIEnabled(props);
+		if (uiEnabled) return true; // UI needs spec published
+		return PropUtils.getBooleanProperty(props, PROP_OPENAPI_PUBLISH_SPEC, true);
+	}
+	
+	public static boolean getOpenApiUIEnabled(Properties props) {
+		return PropUtils.getBooleanProperty(props, PROP_OPENAPI_UI_ENABLED, true);
 	}
 	
 	public static Map<String, String> getLoginTemplateCustomVars(Properties props) {
