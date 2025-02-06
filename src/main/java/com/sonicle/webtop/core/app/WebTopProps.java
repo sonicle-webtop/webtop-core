@@ -341,11 +341,11 @@ public class WebTopProps {
 	public static boolean getOpenApiPublishSpec(Properties props) {
 		boolean uiEnabled = getOpenApiUIEnabled(props);
 		if (uiEnabled) return true; // UI needs spec published
-		return PropUtils.getBooleanProperty(props, PROP_OPENAPI_PUBLISH_SPEC, true);
+		return PropUtils.getBooleanProperty(props, PROP_OPENAPI_PUBLISH_SPEC, false);
 	}
 	
 	public static boolean getOpenApiUIEnabled(Properties props) {
-		return PropUtils.getBooleanProperty(props, PROP_OPENAPI_UI_ENABLED, true);
+		return PropUtils.getBooleanProperty(props, PROP_OPENAPI_UI_ENABLED, false);
 	}
 	
 	public static Map<String, String> getLoginTemplateCustomVars(Properties props) {
