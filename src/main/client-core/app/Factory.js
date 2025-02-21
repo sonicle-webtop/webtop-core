@@ -1264,7 +1264,9 @@ Ext.define('Sonicle.webtop.core.app.Factory', {
 	 * @param {String} modelProp ViewModel's property in which the model is stored
 	 * @param {String} associationName Model's association name
 	 * @param {Function} getFn A function to produce the desired value.
-	 * @param {Mixed...} [args] The arguments to append to getFn (after value argument, the 1st one).
+	 * @param {Object} getFn.data
+	 * @param {Integer} getFn.count
+	 * @param {Mixed...} [args] The arguments to append to getFn (after the 2nd argument).
 	 * @returns {Object} Formula configuration object
 	 */
 	foAssociationGetFn: function(modelProp, associationName, getFn) {
@@ -1273,7 +1275,7 @@ Ext.define('Sonicle.webtop.core.app.Factory', {
 		return {
 			bind: {bindTo: '{'+Sonicle.String.join('.', modelProp, associationName, 'data')+'}', deep: true},
 			get: function(data) {
-				return getFn.apply(this, [data].concat(moreArgs));
+				return getFn.apply(this, [data, (!data) ? 0 : data.length].concat(moreArgs));
 			}
 		};
 	},

@@ -439,7 +439,10 @@ Ext.define('Sonicle.webtop.core.app.WT', {
 	 * This object may contain any of the following properties:
 	 * 
 	 * @param {String} opts.title A custom title.
-	 * @param {Number} opts.buttons A custom bitwise button specifier.
+	 * @param {Number} [opts.buttons] A custom bitwise button specifier.
+	 * @param {String} [opts.okText] A custom label for Ok button.
+	 * @param {String} [opts.yesText] A custom label for Yes button.
+	 * @param {String} [opts.noText] A custom label for No button.
 	 * @param {Function} [opts.fn] A callback function which is called after a choice.
 	 * @param {String} opts.fn.buttonId The ID of the button pressed.
 	 * @param {String} opts.fn.value Value of the input field if either `prompt` or `multiline` is true.
@@ -454,18 +457,24 @@ Ext.define('Sonicle.webtop.core.app.WT', {
 	msg: function(msg, opts) {
 		opts = opts || {};
 		var exists = Ext.isString(opts.itemId) ? (Ext.ComponentQuery.query('messagebox#'+opts.itemId).length > 0) : false,
-				// Component is destroyed only if X button is pressed, so define a sequenced function in order to properly clear the MessageBox!
-				autoDestroyFn = function() { this.destroy(); },
-				mbox;
+			// Component is destroyed only if X button is pressed, so define a sequenced function in order to properly clear the MessageBox!
+			autoDestroyFn = function() { this.destroy(); },
+			buttonText = {},
+			mbox;
 		
 		if (exists) {
 			return null;
 		} else {
+			if (Ext.isString(opts.okText)) buttonText['ok'] = opts.okText;
+			if (Ext.isString(opts.yesText)) buttonText['yes'] = opts.yesText;
+			if (Ext.isString(opts.noText)) buttonText['no'] = opts.noText;
+			if (Ext.isString(opts.cancelText)) buttonText['cancel'] = opts.cancelText;
 			mbox = Ext.create('Ext.window.MessageBox', Ext.apply({itemId: opts.itemId, closeAction: 'destroy'}, opts.instConfig || {}));
 			return mbox.show(Ext.apply({
 				title: opts.title || WT.res('info'),
 				message: msg,
 				buttons: opts.buttons || Ext.MessageBox.OK,
+				buttonText: buttonText,
 				fn: Ext.isFunction(opts.fn) ? Ext.Function.createSequence(opts.fn, autoDestroyFn, mbox) : Ext.Function.bind(autoDestroyFn, mbox),
 				scope: opts.scope || mbox
 			}, opts.config || {}));
@@ -480,7 +489,10 @@ Ext.define('Sonicle.webtop.core.app.WT', {
 	 * This object may contain any of the following properties:
 	 * 
 	 * @param {String} opts.title A custom title.
-	 * @param {Number} opts.buttons A custom bitwise button specifier.
+	 * @param {Number} [opts.buttons] A custom bitwise button specifier.
+	 * @param {String} [opts.okText] A custom label for Ok button.
+	 * @param {String} [opts.yesText] A custom label for Yes button.
+	 * @param {String} [opts.noText] A custom label for No button.
 	 * @param {Function} [opts.fn] A callback function which is called after a choice.
 	 * @param {String} opts.fn.buttonId The ID of the button pressed.
 	 * @param {String} opts.fn.value Value of the input field if either `prompt` or `multiline` is true.
@@ -497,19 +509,25 @@ Ext.define('Sonicle.webtop.core.app.WT', {
 	info: function(msg, opts) {
 		opts = opts || {};
 		var txt = (!(opts.expandTpl === false) && WT.isResTpl(msg)) ? WT.resTpl(msg) : msg,
-				exists = Ext.isString(opts.itemId) ? (Ext.ComponentQuery.query('messagebox#'+opts.itemId).length > 0) : false,
-				// Component is destroyed only if X button is pressed, so define a sequenced function in order to properly clear the MessageBox!
-				autoDestroyFn = function() { this.destroy(); },
-				mbox;
+			exists = Ext.isString(opts.itemId) ? (Ext.ComponentQuery.query('messagebox#'+opts.itemId).length > 0) : false,
+			// Component is destroyed only if X button is pressed, so define a sequenced function in order to properly clear the MessageBox!
+			autoDestroyFn = function() { this.destroy(); },
+			buttonText = {},
+			mbox;
 		
 		if (exists) {
 			return null;
 		} else {
+			if (Ext.isString(opts.okText)) buttonText['ok'] = opts.okText;
+			if (Ext.isString(opts.yesText)) buttonText['yes'] = opts.yesText;
+			if (Ext.isString(opts.noText)) buttonText['no'] = opts.noText;
+			if (Ext.isString(opts.cancelText)) buttonText['cancel'] = opts.cancelText;
 			mbox = Ext.create('Ext.window.MessageBox', Ext.apply({itemId: opts.itemId, closeAction: 'destroy'}, opts.instConfig || {}));
 			return mbox.show(Ext.apply({
 				title: opts.title || WT.res('info'),
 				message: (opts.keepLineBreaks === true) ? txt : Sonicle.String.htmlLineBreaks(txt),
 				buttons: opts.buttons || Ext.MessageBox.OK,
+				buttonText: buttonText,
 				icon: Ext.MessageBox.INFO,
 				fn: Ext.isFunction(opts.fn) ? Ext.Function.createSequence(opts.fn, autoDestroyFn, mbox) : Ext.Function.bind(autoDestroyFn, mbox),
 				scope: opts.scope || mbox
@@ -525,7 +543,10 @@ Ext.define('Sonicle.webtop.core.app.WT', {
 	 * This object may contain any of the following properties:
 	 * 
 	 * @param {String} opts.title A custom title.
-	 * @param {Number} opts.buttons A custom bitwise button specifier.
+	 * @param {Number} [opts.buttons] A custom bitwise button specifier.
+	 * @param {String} [opts.okText] A custom label for Ok button.
+	 * @param {String} [opts.yesText] A custom label for Yes button.
+	 * @param {String} [opts.noText] A custom label for No button.
 	 * @param {Function} [opts.fn] A callback function which is called after a choice.
 	 * @param {String} opts.fn.buttonId The ID of the button pressed.
 	 * @param {String} opts.fn.value Value of the input field if either `prompt` or `multiline` is true.
@@ -542,19 +563,25 @@ Ext.define('Sonicle.webtop.core.app.WT', {
 	warn: function(msg, opts) {
 		opts = opts || {};
 		var txt = (!(opts.expandTpl === false) && WT.isResTpl(msg)) ? WT.resTpl(msg) : msg,
-				exists = Ext.isString(opts.itemId) ? (Ext.ComponentQuery.query('messagebox#'+opts.itemId).length > 0) : false,
-				// Component is destroyed only if X button is pressed, so define a sequenced function in order to properly clear the MessageBox!
-				autoDestroyFn = function() { this.destroy(); },
-				mbox;
+			exists = Ext.isString(opts.itemId) ? (Ext.ComponentQuery.query('messagebox#'+opts.itemId).length > 0) : false,
+			// Component is destroyed only if X button is pressed, so define a sequenced function in order to properly clear the MessageBox!
+			autoDestroyFn = function() { this.destroy(); },
+			buttonText = {},
+			mbox;
 		
 		if (exists) {
 			return null;
 		} else {
+			if (Ext.isString(opts.okText)) buttonText['ok'] = opts.okText;
+			if (Ext.isString(opts.yesText)) buttonText['yes'] = opts.yesText;
+			if (Ext.isString(opts.noText)) buttonText['no'] = opts.noText;
+			if (Ext.isString(opts.cancelText)) buttonText['cancel'] = opts.cancelText;
 			mbox = Ext.create('Ext.window.MessageBox', Ext.apply({itemId: opts.itemId, closeAction: 'destroy'}, opts.instConfig || {}));
 			return mbox.show(Ext.apply({
 				title: opts.title || WT.res('warning'),
 				message: (opts.keepLineBreaks === true) ? txt : Sonicle.String.htmlLineBreaks(txt),
 				buttons: opts.buttons || Ext.MessageBox.OK,
+				buttonText: buttonText,
 				icon: Ext.MessageBox.WARNING,
 				fn: Ext.isFunction(opts.fn) ? Ext.Function.createSequence(opts.fn, autoDestroyFn, mbox) : Ext.Function.bind(autoDestroyFn, mbox),
 				scope: opts.scope || mbox
@@ -571,6 +598,10 @@ Ext.define('Sonicle.webtop.core.app.WT', {
 	 * 
 	 * @param {String} [opts.title] A custom title.
 	 * @param {Number} [opts.buttons] A custom bitwise button specifier.
+	 * @param {String} [opts.okText] A custom label for Ok button.
+	 * @param {String} [opts.yesText] A custom label for Yes button.
+	 * @param {String} [opts.noText] A custom label for No button.
+	 * @param {String} [opts.cancelText] A custom label for Cancel button.
 	 * @param {Function} [opts.fn] A callback function which is called after a choice.
 	 * @param {String} opts.fn.buttonId The ID of the button pressed.
 	 * @param {String} opts.fn.value Value of the input field if either `prompt` or `multiline` is true.
@@ -587,10 +618,11 @@ Ext.define('Sonicle.webtop.core.app.WT', {
 	error: function(msg, opts) {
 		opts = opts || {};
 		var txt = (!(opts.expandTpl === false) && WT.isResTpl(msg)) ? WT.resTpl(msg) : msg,
-				exists = Ext.isString(opts.itemId) ? (Ext.ComponentQuery.query('messagebox#'+opts.itemId).length > 0) : false,
-				// Component is destroyed only if X button is pressed, so define a sequenced function in order to properly clear the MessageBox!
-				autoDestroyFn = function() { this.destroy(); },
-				mbox;
+			exists = Ext.isString(opts.itemId) ? (Ext.ComponentQuery.query('messagebox#'+opts.itemId).length > 0) : false,
+			// Component is destroyed only if X button is pressed, so define a sequenced function in order to properly clear the MessageBox!
+			autoDestroyFn = function() { this.destroy(); },
+			buttonText = {},
+			mbox;
 		
 		if (exists) {
 			return null;
@@ -599,11 +631,16 @@ Ext.define('Sonicle.webtop.core.app.WT', {
 				WT.getApp().logStackTrace('[W] WT.error() called with NO message.', 3);
 				
 			} else {
+				if (Ext.isString(opts.okText)) buttonText['ok'] = opts.okText;
+				if (Ext.isString(opts.yesText)) buttonText['yes'] = opts.yesText;
+				if (Ext.isString(opts.noText)) buttonText['no'] = opts.noText;
+				if (Ext.isString(opts.cancelText)) buttonText['cancel'] = opts.cancelText;
 				mbox = Ext.create('Ext.window.MessageBox', Ext.apply({itemId: opts.itemId, closeAction: 'destroy'}, opts.instConfig || {}));
 				return mbox.show(Ext.apply({
 					title: opts.title || WT.res('error'),
 					message: (opts.keepLineBreaks === true) ? txt : Sonicle.String.htmlLineBreaks(txt),
 					buttons: opts.buttons || Ext.MessageBox.OK,
+					buttonText: buttonText,
 					icon: Ext.MessageBox.ERROR,
 					fn: Ext.isFunction(opts.fn) ? Ext.Function.createSequence(opts.fn, autoDestroyFn, mbox) : Ext.Function.bind(autoDestroyFn, mbox),
 					scope: opts.scope || mbox
@@ -620,7 +657,10 @@ Ext.define('Sonicle.webtop.core.app.WT', {
 	 * This object may contain any of the following properties:
 	 * 
 	 * @param {String} opts.title A custom title.
+	 * @param {Number} [opts.buttons] A custom bitwise button specifier.
 	 * @param {String} [opts.okText] A custom label for Ok button.
+	 * @param {String} [opts.yesText] A custom label for Yes button.
+	 * @param {String} [opts.noText] A custom label for No button.
 	 * @param {String} [opts.cancelText] A custom label for Cancel button.
 	 * @param {Function} [opts.fn] A callback function which is called after a choice.
 	 * @param {String} opts.fn.buttonId The ID of the button pressed.
@@ -651,12 +691,14 @@ Ext.define('Sonicle.webtop.core.app.WT', {
 			return null;
 		} else {
 			if (Ext.isString(opts.okText)) buttonText['ok'] = opts.okText;
+			if (Ext.isString(opts.yesText)) buttonText['yes'] = opts.yesText;
+			if (Ext.isString(opts.noText)) buttonText['no'] = opts.noText;
 			if (Ext.isString(opts.cancelText)) buttonText['cancel'] = opts.cancelText;
 			mbox = Ext.create(xclass, Ext.apply({itemId: opts.itemId, closeAction: 'destroy'}, opts.instConfig || {}));
 			obj = {
 				title: opts.title || WT.res('prompt'),
 				message: msg,
-				buttons: Ext.Msg.OKCANCEL,
+				buttons: opts.buttons || Ext.Msg.OKCANCEL,
 				buttonText: buttonText,
 				callback: Ext.isFunction(opts.fn) ? Ext.Function.createSequence(opts.fn, autoDestroyFn, mbox) : Ext.Function.bind(autoDestroyFn, mbox),
 				scope: opts.scope,
@@ -712,6 +754,7 @@ Ext.define('Sonicle.webtop.core.app.WT', {
 	 * @param {String} [opts.okText] A custom label for Ok button.
 	 * @param {String} [opts.yesText] A custom label for Yes button.
 	 * @param {String} [opts.noText] A custom label for No button.
+	 * @param {String} [opts.cancelText] A custom label for Cancel button.
 	 * @param {Boolean} [opts.keepLineBreaks] True to disable line-breaks to HTML conversion.
 	 * @param {Object} [opts.config] A custom {@link Ext.MessageBox#show} config.
 	 * @param {String} [opts.instClass] The full classname of the type of instance to create. Defaults to `Ext.window.MessageBox`.
@@ -726,7 +769,8 @@ Ext.define('Sonicle.webtop.core.app.WT', {
 			// Component is destroyed only if X button is pressed, so define a sequenced function in order to properly clear the MessageBox!
 			autoDestroyFn = function() { this.destroy(); },
 			callbackFn = function(bid, value, cfg) { Ext.callback(fn, scope, [bid, value, cfg]); },
-			buttonText = {}, mbox;
+			buttonText = {},
+			mbox;
 		
 		if (exists) {
 			return null;
@@ -734,6 +778,7 @@ Ext.define('Sonicle.webtop.core.app.WT', {
 			if (Ext.isString(opts.okText)) buttonText['ok'] = opts.okText;
 			if (Ext.isString(opts.yesText)) buttonText['yes'] = opts.yesText;
 			if (Ext.isString(opts.noText)) buttonText['no'] = opts.noText;
+			if (Ext.isString(opts.cancelText)) buttonText['cancel'] = opts.cancelText;
 			mbox = Ext.create(xclass, Ext.apply({itemId: opts.itemId, closeAction: 'destroy'}, opts.instConfig || {}));
 			return mbox.show(Ext.merge({
 				title: opts.title || WT.res('confirm'),
