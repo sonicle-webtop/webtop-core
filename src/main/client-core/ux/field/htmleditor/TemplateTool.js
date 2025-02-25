@@ -95,6 +95,16 @@ Ext.define('Sonicle.webtop.core.ux.field.htmleditor.TemplateTool', {
 	 * @cfg {String} [confirmBodyMsgText]
 	 */
 	
+	/**
+	 * @cfg {Number/String} [gridWidth]
+	 */
+	gridWidth: 200,
+
+	/**
+	 * @cfg {Number/String} [gridHeight]
+	 */
+	gridHeight: 150,
+
 	constructor: function(cfg) {
 		var me = this,
 				icfg = Sonicle.Utils.getConstructorConfigs(me, cfg, [
@@ -146,9 +156,11 @@ Ext.define('Sonicle.webtop.core.ux.field.htmleditor.TemplateTool', {
 						},
 						disableSelection: true,
 						hideHeaders: true,
+						border: false,
 						columns: [
 							{
 								dataIndex: me.nameField,
+								cellTooltip: true,
 								flex: 1
 							}, {
 								xtype: 'soactioncolumn',
@@ -189,8 +201,8 @@ Ext.define('Sonicle.webtop.core.ux.field.htmleditor.TemplateTool', {
 								hed.editorInsertContent(rec.get(me.bodyField));
 							}
 						},
-						height: 150,
-						width: 200
+						height: me.gridHeight,
+						width: me.gridWidth
 					}
 				]
 			}

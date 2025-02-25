@@ -680,7 +680,7 @@ Ext.define('Sonicle.webtop.core.app.WTPrivate', {
 				rcpts = [];
 		Ext.iterate(arr, function(rcpt) {
 			if (!Ext.isEmpty(rcpt)) {
-				rcpts.push({rtype: 'to', email: rcpt});
+				rcpts.push({rtype: 'to', email: decodeURIComponent(rcpt)});
 			}
 		});
 		opts.torecipients = rcpts;
