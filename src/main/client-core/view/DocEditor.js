@@ -58,30 +58,21 @@ Ext.define('Sonicle.webtop.core.view.DocEditor', {
 	},
 	
 	/**
-	 * @cfg {String} editingId
-	 * The editing session identifier.
-	 */
-	editingId: null,
-	
-	/**
-	 * @cfg {Object} editorConfig
+	 * @cfg {Object} editingConfig
 	 * Set of configuration properties that will be used to set-up DocEditor
 	 * component. This object may contain any of the following properties:
 	 * 
-	 * @param {text|spreadsheet|presentation} opts.docType The document type.
-	 * @param {String} opts.docExtension The document file extension.
-	 * @param {String} opts.docTitle The document tile.
-	 * @param {String} opts.docUrl The absolute URL where the source viewed or edited document is stored.
-	 * @param {String} [opts.docKey] The unique document identifier used for document recognition; if known the document will be taken from the cache.
-	 * @param {Boolean} [opts.editable] If `true` the Edit button will be enabled, defaults to `false`.
-	 * @param {Boolean} [opts.downloadable] If `true` the Download button will be enabled, defaults to `true`.
-	 * @param {Boolean} [opts.printable] If `true` the Print button will be enabled, defaults to `true`.
-	 * @param {Boolean} [opts.commentable] If `true` the Comments menu will be enabled, defaults to `false`.
-	 * @param {Boolean} [opts.reviewable] If `true` the Review menu will be enabled, defaults to `false`.
-	 * @param {Boolean} [opts.autosave] Defines if the Autosave feature is enabled or disabled. Defaults to `true`.
-	 * @param {String} opts.callbackUrl The absolute callback URL to track editor actions.
+	 * @param {String} editingId The editing session ID, used as reference for any interaction.
+	 * @param {text|spreadsheet|presentation} docType The document type.
+	 * @param {String} docName The document file name.
+	 * @param {String} docExtension The document file extension.
+	 * @param {Boolean} editable If `true` the Edit button will be enabled, defaults to `false`.
+	 * @param {Boolean} downloadable If `true` the Download button will be enabled, defaults to `true`.
+	 * @param {Boolean} printable If `true` the Print button will be enabled, defaults to `true`.
+	 * @param {Boolean} commentable If `true` the Comments menu will be enabled, defaults to `false`.
+	 * @param {Boolean} reviewable If `true` the Review menu will be enabled, defaults to `false`.
 	 */
-	editorConfig: null,
+	editingConfig: null,
 	
 	/**
 	 * @private
@@ -101,7 +92,8 @@ Ext.define('Sonicle.webtop.core.view.DocEditor', {
 	
 	constructor: function(cfg) {
 		var me = this;
-		if (Ext.isEmpty(cfg.editingId)) Ext.raise('`editingId` is mandatory');
+		if (Ext.isEmpty(cfg.editingConfig)) Ext.raise('`editingConfig` is mandatory');
+		if (Ext.isEmpty(cfg.editingConfig.editingId)) Ext.raise('`editingConfig.editingId` is mandatory');
 		Ext.apply(cfg, {
 			confirmMsg: WT.res('docEditor.confirm.close')
 		});
@@ -145,11 +137,7 @@ Ext.define('Sonicle.webtop.core.view.DocEditor', {
 	onCtClose: function() {
 		var me = this;
 		if (me.isEdit === false) {
-			WT.ajaxReq(me.mys.ID, 'CleanupDocManagerEditing', {
-				params: {
-					editingId: me.editingId
-				}
-			});
+			me.doClearEditing(me.editingConfig.editingId);
 		}
 		me.callParent(arguments);
 	},
@@ -172,19 +160,22 @@ Ext.define('Sonicle.webtop.core.view.DocEditor', {
 	 */
 	beginView: function() {
 		var me = this,
-				cfg = me.editorConfig;
+			ecfg = me.editingConfig;
 		
 		me.isEdit = false;
-		me.setViewTitle(cfg.docTitle);
-		me.setViewIconCls(WTF.fileTypeCssIconCls(cfg.docExtension));
-		if ((cfg.editable === true) && me.getEnableSwitchBanner()) {
+		me.setViewTitle(ecfg.docName);
+		me.setViewIconCls(WTF.fileTypeCssIconCls(ecfg.docExtension));
+		if ((ecfg.editable === true) && me.getEnableSwitchBanner()) {
 			me.addDocked(Ext.apply(me.createSwitchTb(), {
 				dock: 'top'
 			}));
 		}
-		me.initDocEditor(me.createDocEditorCfg(Ext.apply(cfg, {
-			editorMode: 'view'
-		})));
+		me.doGetBaseClientConfig(ecfg.editingId, true, {
+			callback: function(success, data, json) {
+				if (success) me.initDocEditor(me.createDocEditorCfg(data));
+				WT.handleError(success, json);
+			}
+		});	
 	},
 	
 	/**
@@ -192,14 +183,17 @@ Ext.define('Sonicle.webtop.core.view.DocEditor', {
 	 */
 	beginEdit: function() {
 		var me = this,
-				cfg = me.editorConfig;
+			ecfg = me.editingConfig;
 		
 		me.isEdit = true;
-		me.setViewTitle(cfg.docTitle);
-		me.setViewIconCls(WTF.fileTypeCssIconCls(cfg.docExtension));
-		me.initDocEditor(me.createDocEditorCfg(Ext.apply(cfg, {
-			editorMode: 'edit'
-		})));
+		me.setViewTitle(ecfg.docName);
+		me.setViewIconCls(WTF.fileTypeCssIconCls(ecfg.docExtension));
+		me.doGetBaseClientConfig(ecfg.editingId, false, {
+			callback: function(success, data, json) {
+				if (success) me.initDocEditor(me.createDocEditorCfg(data));
+				WT.handleError(success, json);
+			}
+		});	
 	},
 	
 	initDocEditor: function(edCfg) {
@@ -241,48 +235,66 @@ Ext.define('Sonicle.webtop.core.view.DocEditor', {
 			return Sonicle.String.left(Sonicle.Crypto.md5Hex(docTitle + new Date().getTime().toString()), 20);
 		},
 		
-		createDocEditorCfg: function(cfg) {
-			var me = this,
-					autosave = !(cfg.autosave === false),
-					edCfg = {
-						width: '100%',
-						height: '100%',
-						type: WT.plTags.desktop ? 'desktop' : 'mobile',
-						documentType: cfg.docType
-					};
-			
-			if (!Ext.isEmpty(cfg.token)) edCfg = Ext.apply(edCfg, {token: cfg.token});
-			edCfg = Ext.apply(edCfg, {
-				document: {
-					key: Ext.isString(cfg.docKey) ? cfg.docKey : me.buildFakeDocKey(cfg.docTitle),
-					fileType: cfg.docExtension,
-					title: cfg.docTitle,
-					url: cfg.docUrl,
-					permissions: {
-						edit: (cfg.editable === true) ? true : false,
-						download: (cfg.downloadable === false) ? false : true,
-						print: (cfg.printable === false) ? false : true,
-						comment: (cfg.commentable === true) ? true : false,
-						review: (cfg.reviewable === true) ? true : false
-					}
+		doGetBaseClientConfig: function(editingId, view, opts) {
+			opts = opts || {};
+			var me = this;
+			WT.ajaxReq(WT.ID, 'ManageDocEditorEditing', {
+				params: {
+					crud: 'read',
+					editingId: editingId,
+					view: view
+				},
+				callback: function(success, json) {
+					Ext.callback(opts.callback, opts.scope || me, [success, json.data, json]);
 				}
 			});
-			edCfg = Ext.apply(edCfg, {
+		},
+		
+		doClearEditing: function(editingId, opts) {
+			opts = opts || {};
+			var me = this;
+			WT.ajaxReq(WT.ID, 'ManageDocEditorEditing', {
+				params: {
+					crud: 'end',
+					editingId: editingId
+				},
+				callback: function(success, json) {
+					Ext.callback(opts.callback, opts.scope || me, [success, json.data, json]);
+				}
+			});
+		},
+		
+		/**
+		 * Create a config object based on https://api.onlyoffice.com/docs/docs-api/usage-api/advanced-parameters/
+		 * @param {Object} baseCfg
+		 * @return {Object}
+		 */
+		createDocEditorCfg: function(baseCfg) {
+			var me = this,
+				autosave = true,
+				cfg;
+			
+			cfg = Ext.merge(baseCfg || {}, {
+				width: '100%',
+				height: '100%',
+				type: WT.plTags.desktop ? 'desktop' : 'mobile',
 				editorConfig: {
-					mode: (cfg.editorMode === 'edit') ? 'edit' : 'view',
 					lang: WT.getVar('language'),
 					user: {
 						id: WT.getVar('profileId'),
 						name: WT.getVar('userDisplayName')
 					},
-					callbackUrl: Ext.isString(cfg.callbackUrl) ? cfg.callbackUrl : null,
 					customization: {
 						autosave: autosave,
-						chat: false,
+						chat: false, // Hide chat button
+						/*close: {
+							visible: false
+						}*/
+						compactHeader: true,
 						compactToolbar: false,
 						feedback: false,
-						forcesave: !autosave,
-						goback: false
+						forcesave: !autosave
+						//goback: false
 					}
 				},
 				events: {
@@ -290,14 +302,14 @@ Ext.define('Sonicle.webtop.core.view.DocEditor', {
 					onDocumentStateChange: Ext.bind(me.onEdDocumentStateChange, me)
 				}
 			});
-			return edCfg;
+			return cfg;
 		},
 		
 		onEdDocumentStateChange: function(e) {
 			var me = this,
-					nv = (e.data === true);
+				nv = (e.data === true);
 			if (me.isDirty !== nv) {
-				me.setViewTitle(me.editorConfig.docTitle + (nv ? '*' : ''));
+				me.setViewTitle(me.editingCfg.docName + (nv ? '*' : ''));
 			}
 			me.isDirty = nv;
 		},

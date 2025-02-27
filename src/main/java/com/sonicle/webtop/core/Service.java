@@ -57,6 +57,7 @@ import com.sonicle.webtop.core.app.CoreAdminManifest;
 import com.sonicle.webtop.core.app.CoreManifest;
 import com.sonicle.webtop.core.app.RunContext;
 import com.sonicle.webtop.core.app.CorePrivateEnvironment;
+import com.sonicle.webtop.core.app.DocEditorManager;
 import com.sonicle.webtop.core.app.OTPManager;
 import com.sonicle.webtop.core.app.WT;
 import com.sonicle.webtop.core.app.WebTopSession;
@@ -138,6 +139,7 @@ import com.sonicle.webtop.core.app.model.UILayout;
 import com.sonicle.webtop.core.app.model.UILookAndFeel;
 import com.sonicle.webtop.core.app.model.UIPreset;
 import com.sonicle.webtop.core.app.model.UITheme;
+import com.sonicle.webtop.core.app.sdk.WTUnsupportedOperationException;
 import com.sonicle.webtop.core.products.TMCEPremiumProduct;
 import com.sonicle.webtop.core.util.AppLocale;
 import com.sonicle.webtop.core.sdk.BaseService;
@@ -1672,15 +1674,26 @@ public class Service extends BaseService implements EventListener {
 		}
 	}
 	
-	public void processCleanupDocManagerEditing(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
-		
+	public void processManageDocEditorEditing(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
 		try {
 			String editingId = ServletUtils.getStringParameter(request, "editingId", true);
-			getWts().finalizeDocumentEditing(editingId);
-			new JsonResult().printTo(out);
+			String crud = ServletUtils.getStringParameter(request, "crud", Crud.READ);
+			if (Crud.READ.equals(crud)) {
+				boolean view = ServletUtils.getBooleanParameter(request, "view", false);
+				
+				DocEditorManager.OOClientAPIBaseConfig config = getWts().docEditorGetClientAPIConfig(editingId, view);
+				new JsonResult(config).printTo(out);
+				
+			} else if (Crud.END.equals(crud)) {
+				getWts().docEditorFinalizeEditing(editingId);
+				new JsonResult().printTo(out);
+				
+			} else {
+				throw new WTUnsupportedOperationException("Unsupported action '{}'", crud);
+			}
 			
-		} catch(ParameterException ex) {
-			logger.error("Error in CleanupDocManagerEditing", ex);
+		} catch(Exception ex) {
+			logger.error("Error in action ManageDocEditorEditing", ex);
 			new JsonResult(ex).printTo(out);
 		}
 	}

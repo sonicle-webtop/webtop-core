@@ -155,7 +155,7 @@ public class DocEditor extends AbstractServlet {
 				
 				//UserProfileId profileId = new UserProfileId(payload.data.users.get(0));
 				if (payload.data.status == 2) {
-					docEdMgr.unregisterDocumentHandler(editingId);
+					docEdMgr.clearEditing(editingId);
 				}
 				ServletUtils.writeJsonResponse(response, new DocEditorCallbackResponse(0));
 				
@@ -167,12 +167,12 @@ public class DocEditor extends AbstractServlet {
 				} else if (payload.data.status == 7) {
 					logger.error("Error has occurred while force saving the document [{}, {}]", editingId, payload.data.key);
 				}
-				docEdMgr.unregisterDocumentHandler(editingId);
+				docEdMgr.clearEditing(editingId);
 				ServletUtils.writeJsonResponse(response, new DocEditorCallbackResponse(0));
 				
 			} else if (payload.data.status == 4) {
 				logger.debug("Document is closed with no changes [{}, {}]", editingId, payload.data.key);
-				docEdMgr.unregisterDocumentHandler(editingId);
+				docEdMgr.clearEditing(editingId);
 				ServletUtils.writeJsonResponse(response, new DocEditorCallbackResponse(0));
 			}
 		}

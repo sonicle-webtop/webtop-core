@@ -1468,12 +1468,16 @@ public class WebTopSession {
 		}
 	}
 	
-	public DocEditorManager.DocumentConfig prepareDocumentEditing(BaseDocEditorDocumentHandler docHandler, String filename, long lastModifiedTime) throws WTException, FileSystemException {
-		return wta.getDocEditorManager().registerDocumentHandler(getId(), docHandler, filename, lastModifiedTime);
+	public DocEditorManager.EditingResult docEditorPrepareEditing(final BaseDocEditorDocumentHandler docHandler, final String filename, final long lastModifiedTime) throws WTException, FileSystemException {
+		return wta.getDocEditorManager().registerEditing(getId(), docHandler, filename, lastModifiedTime);
 	}
 	
-	public void finalizeDocumentEditing(String editingId) {
-		wta.getDocEditorManager().unregisterDocumentHandler(editingId);
+	public DocEditorManager.OOClientAPIBaseConfig docEditorGetClientAPIConfig(final String editingId, final boolean view) {
+		return wta.getDocEditorManager().getClientAPIConfig(editingId, view);
+	}
+	
+	public void docEditorFinalizeEditing(final String editingId) {
+		wta.getDocEditorManager().clearEditing(editingId);
 	}
 	
 	public static class UploadedFile {
