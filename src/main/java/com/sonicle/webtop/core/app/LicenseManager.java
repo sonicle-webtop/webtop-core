@@ -615,7 +615,10 @@ public class LicenseManager extends AbstractAppManager<LicenseManager> {
 		
 		ProductLicense productLicense = getProductLicenseOrThrow(product);
 		boolean ret = internalChangeLicense(product.getDomainId(), product.SERVICE_ID, product.getProductCode(), productLicense, newString, activatedString, force);
-		if (ret) forgetProductLicense(product.getDomainId(), product.SERVICE_ID, product.getProductCode());
+		if (ret) {
+			fireEvent(new LicenseUpdateEvent(product.getDomainId(), LicenseUpdateEvent.Type.ACTIVATE, product));
+			forgetProductLicense(product.getDomainId(), product.SERVICE_ID, product.getProductCode());
+		}
 	}
 	
 	public void modifyLicense(final String domainId, final String productCode, final String modificationKey, final String modifiedLicenseString) throws WTException {
