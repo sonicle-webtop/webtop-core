@@ -50,9 +50,6 @@ import org.joda.time.format.DateTimeFormatter;
 public class BaseRestApiUtils {
 	public static final String DEFAULT_ETAG = "19700101000000000";
 	public static final DateTimeFormatter ETAG_FMT = DateTimeUtils.createFormatter("yyyyMMddHHmmssSSS", DateTimeZone.UTC);
-	public static final DateTimeFormatter ISO_LOCALDATE_FMT = DateTimeUtils.createFormatter("yyyy-MM-dd");
-	public static final DateTimeFormatter ISO_LOCALTIME_FMT = DateTimeUtils.createFormatter("HH:mm:ss");
-	public static final DateTimeFormatter ISO_DATEDIME_FMT = DateTimeUtils.createFormatter("yyyy-MM-dd'T'HH:mm:ss'Z'", DateTimeZone.UTC);
 	
 	public static boolean shouldSet(final Set<String> fields2set, final String name) {
 		return fields2set == null || fields2set.contains(name);
