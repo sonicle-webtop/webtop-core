@@ -714,17 +714,17 @@ Ext.define('Sonicle.webtop.core.app.WTPrivate', {
 	},
 	
 	/**
-	 * Convenience function to run a phone call through the configured pbx.
+	 * Convenience function to run a phone call through the configured Call provider, if configured.
 	 * @param {String} number The number to call.
 	 */
-	handlePbxCall: function(number) {
+	handleCallNumber: function(number) {
 		var svc = WT.getApp().getService('com.sonicle.webtop.core');
 		if (!svc) return;
-		svc.handlePbxCall(number);
+		svc.handleCallNumber(number);
 	},
 	
 	/**
-	 * Convenience function to send an SMS through the configured SMS provider.
+	 * Convenience function to send an SMS through the configured SMS provider, if configured.
 	 * @param {String} number The destination number.
 	 * @param {String} text The SMS text.
 	 */

@@ -754,9 +754,8 @@ Ext.define('Sonicle.webtop.core.Service', {
 		});
 	},
 	
-	handlePbxCall: function(number) {
-		var me=this;
-		if (WT.getVar("pbxConfigured")) {
+	handleCallNumber: function(number) {
+		if (WT.getVar('pbxConfigured')) {
 			WT.toast({
 				 html: number,
 				 title: WT.res('pbx.call.toast.lbl'),
@@ -775,20 +774,16 @@ Ext.define('Sonicle.webtop.core.Service', {
 					}
 				}
 			});
-		} else {
-			WT.toast({
-				 html: WT.res('opts.pbx.unconfigured.tit'),
-				 title: WT.res('error'),
-				 width: 300,
-				 align: 'br',
-				 timeout: 10000
-			});
+		} else { // Fallback on default click-to-call protocol
+			// https://developer.mozilla.org/en-US/docs/Web/API/Navigator/registerProtocolHandler
+			// https://www.ietf.org/rfc/rfc3966.txt
+			Sonicle.URLMgr.open('tel:'+number, false);
 		}
 	},
 	
 	handleSendSMS: function(name,number,text) {
 		var me=this;
-		if (WT.getVar("smsConfigured")) {
+		if (WT.getVar('smsConfigured')) {
 			var v=WT.createView(me.ID,'view.SMS',{
 				viewCfg: {
 					name: name,
