@@ -8,6 +8,12 @@
 .x-panel-body-default.x-border-layout-ct {
 	background-color: #fff;
 }
+
+/* Force splitter BG to its gray to avoid previous panel override to set it white  */
+.x-splitter {
+    background-color: #cfcfcf;
+}
+
 /* Disable theme's rbl border that causes ugly borders */
 .x-panel-default-outer-border-rbl {
     border-right-width: 0 !important;
