@@ -39,15 +39,6 @@
 			<id>52north-releases</id>
 			<url>http://52north.org/maven/repo/releases/</url>
 		</repository>
-		<repository>
-			<id>license4j-releases</id>
-			<url>https://www.license4j.com/maven/</url>
-			<layout>default</layout>
-			<releases>
-				<enabled>true</enabled>
-				<checksumPolicy>ignore</checksumPolicy>
-			</releases>
-		</repository>
 	</repositories>
 	
 	<dependencies>
