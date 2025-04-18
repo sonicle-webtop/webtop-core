@@ -38,6 +38,7 @@ Ext.define('Sonicle.webtop.core.admin.model.GridUpgradeRow', {
 	fields: [
 		WTF.field('upgradeStmtId', 'int', false),
 		WTF.field('serviceId', 'string', false),
+		WTF.field('scriptName', 'string', false),
 		WTF.field('sequenceNo', 'int', false),
 		WTF.field('stmtDataSource', 'string', true),
 		WTF.field('stmtType', 'string', false),

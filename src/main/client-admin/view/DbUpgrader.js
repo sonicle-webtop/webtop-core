@@ -171,6 +171,11 @@ Ext.define('Sonicle.webtop.core.admin.view.DbUpgrader', {
 					header: me.mys.res('dbUpgrader.gp.serviceId.lbl'),
 					flex: 2
 				}, {
+					dataIndex: 'scriptName',
+					header: me.mys.res('dbUpgrader.gp.scriptName.lbl'),
+					hidden: true,
+					flex: 1
+				}, {
 					dataIndex: 'sequenceNo',
 					header: me.mys.res('dbUpgrader.gp.sequenceNo.lbl'),
 					width: 40

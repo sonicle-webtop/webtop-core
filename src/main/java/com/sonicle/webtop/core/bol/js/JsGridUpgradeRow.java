@@ -42,6 +42,7 @@ import com.sonicle.webtop.core.bol.ORunnableUpgradeStatement;
 public class JsGridUpgradeRow {
 	public Integer upgradeStmtId;
 	public String serviceId;
+	public String scriptName;
 	public Short sequenceNo;
 	public String stmtType;
 	public String stmtDataSource;
@@ -56,6 +57,7 @@ public class JsGridUpgradeRow {
 	public JsGridUpgradeRow(ORunnableUpgradeStatement o) {
 		upgradeStmtId = o.getUpgradeStatementId();
 		serviceId = o.getServiceId();
+		scriptName = o.getScriptName();
 		sequenceNo = o.getSequenceNo();
 		stmtType = o.getStatementType();
 		stmtDataSource = o.getStatementDataSource();
