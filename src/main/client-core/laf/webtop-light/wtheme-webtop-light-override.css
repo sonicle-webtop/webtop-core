@@ -63,7 +63,8 @@ color-ct-ok-1 -> Green/700
     --wt-theme-color-navbar: #ffffff; /* White */
     --wt-theme-color-taskbar: #f5f5f5; /* Neutral/100 */
     --wt-theme-color-dialog: #ffffff; /* White */
-    --wt-theme-color-scrollbar: #d4d4d4; /* Neutral/300 */
+    --wt-theme-color-scrollbar-thumb: #d4d4d4; /* Neutral/300 */
+    --wt-theme-color-scrollbar-track: transparent; /* Neutral/300 */
     
     --wt-theme-fontsize-xs: 12px;
     --wt-theme-fontsize-sm: 14px;

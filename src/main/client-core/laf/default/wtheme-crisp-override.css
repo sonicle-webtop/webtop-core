@@ -38,7 +38,8 @@
     --wt-theme-color-topbar: #fafafa;
     --wt-theme-color-navbar: #fafafa;
     --wt-theme-color-taskbar: #fafafa;
-    --wt-theme-color-scrollbar: #e0e0e0;
+    --wt-theme-color-scrollbar-thumb: #e0e0e0;
+    --wt-theme-color-scrollbar-track: transparent;
     --wt-theme-color-dialog: #ffffff; /* White ????????????????? */
     
     --wt-theme-fontsize-xs: 10px;

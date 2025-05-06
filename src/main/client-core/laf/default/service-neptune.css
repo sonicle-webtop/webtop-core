@@ -21,7 +21,8 @@
     --wt-theme-color-topbar: #f0f5f9;
     --wt-theme-color-taskbar: #e0ebf3;
     --wt-theme-color-dialog: #ffffff; /* White */
-    --wt-theme-color-scrollbar: #e0e0e0;
+    --wt-theme-color-scrollbar-thumb: #e0e0e0;
+    --wt-theme-color-scrollbar-track: transparent;
     
     --wt-theme-fontsize-xs: 10px;
     --wt-theme-fontsize-sm: 12px;
