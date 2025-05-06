@@ -192,6 +192,10 @@
 	margin-bottom: 8px;
 }
 
+.wt-tabpanel {
+	padding: 0px 6px 0px 0px;
+}
+
 /* Make scollbar thin */
 ::-webkit-scrollbar {
     width: 6px; /* for vertical scrollbars */
