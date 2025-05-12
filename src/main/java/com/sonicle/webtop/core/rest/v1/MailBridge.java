@@ -77,6 +77,7 @@ public class MailBridge extends MailBridgeApi {
 					isSoftTW = ServiceLicense.isInsideSoftTimeWindow(license);
 				}
 				for (OPecBridgeFetcher fetcher : adminMgr.listPecBridgeFetchers(domainId)) {
+					if (!fetcher.getEnabled()) continue;
 					//Add only until we have licensed items or if inside soft time window or not api mode
 					if (isSoftTW || qta == null || items.size() < qta) items.add(createApiFetcher(fetcher));
 				}
@@ -105,6 +106,7 @@ public class MailBridge extends MailBridgeApi {
 					isSoftTW = ServiceLicense.isInsideSoftTimeWindow(license);
 				}
 				for (OPecBridgeRelay relay : adminMgr.listPecBridgeRelays(domainId)) {
+					if (!relay.getEnabled()) continue;
 					//Add only until we have licensed items or if inside soft time window or not api mode
 					if (isSoftTW || qta == null || items.size() < qta) items.add(createApiRelay(relay));
 				}
