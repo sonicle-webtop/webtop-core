@@ -43,7 +43,8 @@
     --wt-theme-color-topbar:
     --wt-theme-color-navbar:
     --wt-theme-color-taskbar:
-    --wt-theme-color-scrollbar:
+    --wt-theme-color-scrollbar-thumb:
+    --wt-theme-color-scrollbar-track:
 
     --wt-theme-fontsize-xs:
     --wt-theme-fontsize-sm:
@@ -191,20 +192,22 @@
 	margin-bottom: 8px;
 }
 
-/* ---------- Browser */
+.wt-tabpanel {
+	padding: 0px 6px 0px 0px;
+}
+
 /* Make scollbar thin */
 ::-webkit-scrollbar {
-    width: 12px; /* for vertical scrollbars */
-    height: 12px; /* for horizontal scrollbars */
+    width: 6px; /* for vertical scrollbars */
+    height: 6px; /* for horizontal scrollbars */
 }
 ::-webkit-scrollbar-track {
-    background-color: transparent;
+	background-color: var(--wt-theme-color-scrollbar-track, #f0f0f0);
+	border-radius: 9999px; /* rounded-full */	
 }
 ::-webkit-scrollbar-thumb {
-    background-color: var(--wt-theme-color-scrollbar, #e0e0e0);
-    border-radius: 6px;
-    border: 4px solid transparent;
-    background-clip: content-box;
+	background-color: var(--wt-theme-color-scrollbar-thumb, #e0e0e0);
+	border-radius: 9999px; /* rounded-full */	
 }
 /*
 ::-webkit-scrollbar-button:horizontal:increment {
