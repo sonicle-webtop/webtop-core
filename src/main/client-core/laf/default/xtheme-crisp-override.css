@@ -14,18 +14,6 @@
     background-color: #cfcfcf;
 }
 
-/* Disable theme's rbl border that causes ugly borders */
-.x-panel-default-outer-border-rbl {
-    border-right-width: 0 !important;
-    border-bottom-width: 0 !important;
-    border-left-width: 0 !important;
-}
-.x-grid:not(.x-grid-header-hidden) .x-panel-default-outer-border-rbl {
-    border-right-width: 1px !important;
-    border-bottom-width: 1px !important;
-    border-left-width: 1px !important;
-}
-
 /* ---------- Sonicle.form.Separator */
 /* Give extra spacing from above objects */
 .x-fieldset.so-form-separator {
