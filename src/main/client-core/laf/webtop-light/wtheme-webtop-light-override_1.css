@@ -326,15 +326,13 @@ color-ct-ok-1 -> Green/700
 .so-fullcalendar-panel-toolbar {
     margin-bottom: 16px;
 }
-.so-fullcalendar-panel-toolbar-month span:nth-child(1) {
-    font-weight: var(--wt-theme-fontweight-medium);
-    font-size: var(--wt-theme-fontsize-3xl);
-    line-height: var(--wt-theme-lineheight-3xl);
-}
-.so-fullcalendar-panel-toolbar-month span:nth-child(2) {
+.so-fullcalendar-panel-toolbar-hdtext {
     font-weight: var(--wt-theme-fontweight-regular);
     font-size: var(--wt-theme-fontsize-3xl);
     line-height: var(--wt-theme-lineheight-3xl);
+}
+.so-fullcalendar-panel-toolbar-hdtext .so-fullcalendar-panel-toolbar-hdtext-cmyo span[data-part="view-month"] {
+    font-weight: var(--wt-theme-fontweight-medium);
 }
 /* Hide old-style borders */
 .so-fullcalendar .fc-theme-standard table.fc-scrollgrid {

@@ -1179,14 +1179,15 @@ public class WebTopSession {
 		js.appManifest.addJs(VENDOR_PATH + "/codemirror/5.65.2/mode/sql/" + "sql.min.js");
 		js.appManifest.addCss(VENDOR_PATH + "/codemirror/5.65.2/" + "codemirror.min.css");
 		js.appManifest.addJs(VENDOR_PATH + "/jexl/2.3.0/" + "jexl.min.js");
-		js.appManifest.addJs(VENDOR_PATH + "/fullcalendar/6.1.11/" + "index.global.min.js");
-		js.appManifest.addJs(VENDOR_PATH + "/fullcalendar/6.1.11/locales/" + locale.getLanguage() + ".global.min.js");
+		js.appManifest.addJs(VENDOR_PATH + "/fullcalendar/6.1.17-premium/dist/" + "index.global.min.js");
+		js.appManifest.addJs(VENDOR_PATH + "/fullcalendar/6.1.17-premium/packages/core/locales/" + locale.getLanguage() + ".global.min.js");
 		
 		// Uncomment these lines to load debug versions of the libraries ----->
 		//js.appManifest.addJs(VENDOR_PATH + "/jsxc/3.4.0/" + "jsxc.dep.js");
 		//js.appManifest.addJs(VENDOR_PATH + "/tinymce/5.6.2/" + "tinymce.js");
 		//js.appManifest.addJs(VENDOR_PATH + "/tinymce/4.3.12/" + "tinymce.js");
 		//js.appManifest.addJs(VENDOR_PATH + "/tinymce/6.3.1/" + "tinymce.js");
+		//js.appManifest.addJs(VENDOR_PATH + "/tinymce/7.6.1/" + "tinymce.js");
 		//js.appManifest.addJs(VENDOR_PATH + "/plupload/2.3.6/" + "moxie.js");
 		//js.appManifest.addJs(VENDOR_PATH + "/plupload/2.3.6/" + "plupload.dev.js");
 		// <-------------------------------------------------------------------
