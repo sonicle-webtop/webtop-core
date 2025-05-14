@@ -143,6 +143,7 @@ Ext.define('Sonicle.webtop.core.sdk.FolderSharingView', {
 					tbar: [
 						{
 							text: WT.res('act-add.lbl'),
+							ui: '{secondary|toolbar}',
 							handler: function() {
 								me.addRightsUI();
 							}
