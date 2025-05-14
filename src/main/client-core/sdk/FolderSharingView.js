@@ -42,8 +42,8 @@ Ext.define('Sonicle.webtop.core.sdk.FolderSharingView', {
 	dockableConfig: {
 		title: '{folderSharing.tit@com.sonicle.webtop.core}',
 		iconCls: 'wt-icon-sharing',
-		width: 450,
-		height: 380
+		width: 500,
+		height: 480
 	},
 	modeTitle: false,
 	
@@ -162,9 +162,11 @@ Ext.define('Sonicle.webtop.core.sdk.FolderSharingView', {
 		me.add({
 			region: 'south',
 			xtype: 'wtfieldspanel',
-			height: 100,
+			paddingTop: true,
+			paddingSides: true,
+			height: 170,
 			defaults: {
-				labelWidth: 140
+				labelWidth: 160
 			},
 			items: [
 				{
