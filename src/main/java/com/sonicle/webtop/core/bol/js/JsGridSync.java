@@ -33,7 +33,7 @@
  */
 package com.sonicle.webtop.core.bol.js;
 
-import com.sonicle.commons.time.DateTimeUtils;
+import com.sonicle.commons.time.JodaTimeUtils;
 import com.sonicle.commons.web.json.CompositeId;
 import java.util.ArrayList;
 import org.joda.time.DateTime;
@@ -64,7 +64,7 @@ public class JsGridSync {
 	}
 	
 	public static DateTimeFormatter createFormatter(DateTimeZone profileTz) {
-		return DateTimeUtils.createYmdHmFormatter(profileTz);
+		return JodaTimeUtils.createFormatterYMDHM(profileTz);
 	}
 	
 	public static class JsGridSyncList extends ArrayList<JsGridSync> {

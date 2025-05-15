@@ -33,7 +33,7 @@
 package com.sonicle.webtop.core.bol.js;
 
 import com.sonicle.commons.EnumUtils;
-import com.sonicle.commons.time.DateTimeUtils;
+import com.sonicle.commons.time.JodaTimeUtils;
 import com.sonicle.webtop.core.model.CustomField;
 import com.sonicle.webtop.core.model.CustomFieldValue;
 import org.joda.time.DateTime;
@@ -73,11 +73,14 @@ public class ObjCustomFieldValue {
 			} else if (value instanceof Boolean) {
 				bo = (Boolean)value;
 			} else if (value instanceof LocalDate) {
-				da = DateTimeUtils.createYmdFormatter(DateTimeZone.UTC).print((LocalDate)value);
+				// We have a partial date here: always use UTC as reference!
+				da = JodaTimeUtils.print(JodaTimeUtils.createFormatterYMD(DateTimeZone.UTC), (LocalDate)value);
 			} else if (value instanceof LocalTime) {
-				ti = DateTimeUtils.createHmsFormatter(DateTimeZone.UTC).print((LocalTime)value);
+				// We have a partial time here: always use UTC as reference!
+				ti = JodaTimeUtils.print(JodaTimeUtils.createFormatterHMS(DateTimeZone.UTC), (LocalTime)value);
 			} else if (value instanceof DateTime) {
-				dt = DateTimeUtils.createYmdHmsFormatter(userTimezone).print((DateTime)value);
+				// We have a full date-time here: always use user timezone as reference!
+				dt = JodaTimeUtils.printYMDHMS(userTimezone, (DateTime)value);
 			}
 		}
 	}
@@ -94,11 +97,14 @@ public class ObjCustomFieldValue {
 		} else if ("bo".equals(vtype)) {
 			obj.setValue(type, bo);
 		} else if ("da".equals(vtype) && (da != null)) {
-			obj.setValue(type, DateTimeUtils.createYmdFormatter(DateTimeZone.UTC).parseLocalDate(da));
+			// We have a partial date here: always use UTC as reference!
+			obj.setValue(type, JodaTimeUtils.parseLocalDate(JodaTimeUtils.createFormatterYMD(DateTimeZone.UTC), da));
 		} else if ("ti".equals(vtype)&& (ti != null)) {
-			obj.setValue(type, DateTimeUtils.createHmsFormatter(DateTimeZone.UTC).parseLocalTime(ti));
+			// We have a partial time here: always use UTC as reference!
+			obj.setValue(type, JodaTimeUtils.parseLocalTime(JodaTimeUtils.createFormatterHMS(DateTimeZone.UTC), ti));
 		} else if ("dt".equals(vtype)&& (dt != null)) {
-			obj.setValue(type, DateTimeUtils.createYmdHmsFormatter(userTimezone).parseLocalDate(dt));
+			// We have a full date-time here: always use user timezone as reference!
+			obj.setValue(type, JodaTimeUtils.parseDateTimeYMDHMS(userTimezone, dt));
 		}
 		
 		return obj;
