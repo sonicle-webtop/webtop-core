@@ -32,9 +32,11 @@
  */
 package com.sonicle.webtop.core.app.shiro;
 
+import com.sonicle.commons.LangUtils;
 import com.sonicle.commons.flags.BitFlags;
 import com.sonicle.security.Principal;
 import com.sonicle.security.AuthenticationDomain;
+import com.sonicle.security.DomainAccount;
 import com.sonicle.security.auth.DirectoryException;
 import com.sonicle.security.auth.DirectoryManager;
 import com.sonicle.security.auth.directory.AbstractDirectory;
@@ -132,32 +134,92 @@ public class WTRealm extends AuthorizingRealm {
 		} else if (token instanceof BearerToken) {
 			BearerToken bt = (BearerToken)token;
 			
-			Principal principal = authenticateWithToken(bt.getToken());
-			if (principal != null) return new WTAuthenticationInfo(principal, bt.getToken().toCharArray(), this.getName());
+			String authInternetDomain = null;
+			String localUsername = null;
+			if (token instanceof BearerAuthUsernameToken) {
+				DomainAccount authAccount = DomainAccount.parseQuietly(((BearerAuthUsernameToken)token).getAuthUsername());
+				if (authAccount != null) {
+					authInternetDomain = authAccount.getDomain();
+					localUsername = authAccount.getLocal();
+				}
+			}
+			
+			Principal principal = authenticateApiUser(authInternetDomain, localUsername, bt.getToken());
+			return new WTAuthenticationInfo(principal, bt.getToken().toCharArray(), this.getName());
+			
+			//Principal principal = authenticateWithToken(bt.getToken());
+			//if (principal != null) return new WTAuthenticationInfo(principal, bt.getToken().toCharArray(), this.getName());
 		}
 		return null;
 	}
 	
-	private Principal authenticateWithToken(String token) throws AuthenticationException {
-		WebTopApp wta = WebTopApp.getInstance();
-		WebTopManager wtMgr = wta.getWebTopManager();
-		final String provisioningApiToken = WebTopProps.getProvisioningApiToken(WebTopApp.getInstanceProperties());
+	private Principal authenticateApiUser(final String authInternetDomain, final String localUsername, final String token) throws AuthenticationException {
+		if (StringUtils.isBlank(token)) throw new AuthenticationException();
 		
+		final String provisioningApiToken = WebTopProps.getProvisioningApiToken(WebTopApp.getInstanceProperties());
 		if (provisioningApiToken != null && provisioningApiToken.equals(token)) {
+			WebTopApp wta = WebTopApp.getInstance();
+			WebTopManager wtMgr = wta.getWebTopManager();
+			
 			// Support access leveraging on a pre-shared token, suitable for 
 			// provisioning application configuration through APIs.
-			
 			try {
 				AuthenticationDomain priAd = wtMgr.createSysAdminAuthenticationDomain();
 				Principal principal = new Principal(priAd, false, priAd.getDomainId(), WebTopManager.SYSADMIN_USERID, null);
 				principal.setDisplayName(WebTopManager.SYSADMIN_USERID);
 				return principal;
-				
+
 			} catch (URISyntaxException ex) {
 				throw new AuthenticationException(ex);
 			}
+
+		} else {
+			WebTopApp wta = WebTopApp.getInstance();
+			WebTopManager wtMgr = wta.getWebTopManager();
+			
+			try {
+				checkMaintenance(wta); // Stop users if system in under maintenance!
+				
+				// Verify provided ApiKey
+				if (!wtMgr.authenticateApiKey(token)) throw new AuthenticationException();
+				
+				String userDomainId = lookupAuthDomainId(wtMgr, null, authInternetDomain); // This will ensure to get a positive lookup or an exp!
+				
+				// Prepare authd
+				Domain userDomain = lookupAuthenticatingDomain(wtMgr, userDomainId);
+				AuthenticationDomain authd = wtMgr.createAuthenticationDomain(userDomain);
+				
+				// Prepare Directory
+				DirectoryManager dirManager = DirectoryManager.getManager();
+				DirectoryOptions opts = wta.createDirectoryOptions(authd);
+				AbstractDirectory directory = dirManager.getDirectory(authd.getDirUri().getScheme());
+				if (directory == null) throw new WTException("Directory not supported [{}]", authd.getDirUri().getScheme());
+				
+				// Prepare principal for authentication
+				Principal authPrincipal = createAuthenticatingPrincipal(authd, opts, directory, false, localUsername, null);
+				
+				// Authenticate against directory
+				AuthUser authUser = null;
+				try {
+					// In this case authentication is simply a existence check
+					authUser = directory.exist(opts, authPrincipal);
+					if (authUser == null) throw new AuthenticationException();
+				} catch (DirectoryException ex1) {
+					logger.trace("Unable to chck principal: {}", authPrincipal.toString(), ex1);
+					throw new AuthenticationException(ex1);
+				}
+				
+				// If we are here, directory has successfully authenticated the user, provided credentials are valid!
+				
+				// Now build resulting principal...
+				Principal principal = new Principal(null, false, authd.getDomainId(), authUser.userId, null);
+				principal.setDisplayName(StringUtils.defaultIfBlank(authUser.displayName, authUser.userId));
+				return principal;
+				
+			} catch (WTException ex) {
+				throw new AuthenticationException(ex);
+			}
 		}
-		return null;
 	}
 	
 	@Override
@@ -188,6 +250,50 @@ public class WTRealm extends AuthorizingRealm {
         return principals;
     }
 	
+	private void checkMaintenance(final WebTopApp wta) throws MaintenanceException {
+		if (wta.isInMaintenance()) {
+			logger.debug("Maintenance is active, stopping authentication process...");
+			throw new MaintenanceException("Maintenance is active. Only sys-admin can login.");
+		}
+	}
+	
+	private String lookupAuthDomainId(final WebTopManager wtMgr, /* deprecated */ final String authDomainId, final String authInternetDomain) throws AuthenticationException {
+		String userDomainId = null;
+		if (!StringUtils.isBlank(authInternetDomain)) {
+			userDomainId = wtMgr.authDomainNameToDomainId(authInternetDomain);
+			if (userDomainId == null) {
+				logger.debug("Unable to lookup domain ID for '{}': maybe not configured or disabled", authInternetDomain);
+				throw new AuthenticationException("Match for internet-name not found or Domain is not enabled");
+			}
+
+		} else if (!StringUtils.isBlank(authDomainId)) {
+			if (!wtMgr.isDomainIdEnabled(authDomainId)) {
+				logger.debug("Required domain ID '{}' is disabled", authDomainId);
+				throw new AuthenticationException("Domain is not enabled");
+			}
+			userDomainId = authDomainId;
+
+		} else {
+			// Both authDomainId and authInternetDomain are empty: this 
+			// can occur when no domain suffix (@domainname) is provided 
+			// in username field and there are no enabled domains, thus 
+			// authDomainId has not a default value.
+			logger.debug("No domain for authentication ('authInternetDomain' and 'authDomainId' are both empty)", authDomainId);
+			throw new AuthenticationException("No enabled Domains");
+		}
+		return userDomainId;
+	}
+	
+	private Principal createAuthenticatingPrincipal(final AuthenticationDomain authd, final DirectoryOptions directoryOpts, final AbstractDirectory directory, final boolean impersonate, final String username, final char[] password) {
+		String authUsername = impersonate ? "admin" : directory.sanitizeUsername(directoryOpts, username);
+		return new Principal(null, impersonate, authd.getDomainId(), authUsername, password);
+	}
+	
+	private Principal createAuthenticatingPrincipal_OLD(final AuthenticationDomain authd, final DirectoryOptions directoryOpts, final AbstractDirectory directory, final boolean impersonate, final String username, final char[] password) {
+		String authUsername = impersonate ? "admin" : directory.sanitizeUsername(directoryOpts, username);
+		return new Principal(authd, impersonate, authd.getDomainId(), authUsername, password);
+	}
+	
 	private Principal authenticateUser(String authDomainId, String authInternetDomain, String username, char[] password) throws AuthenticationException {
 		WebTopApp wta = WebTopApp.getInstance();
 		WebTopManager wtMgr = wta.getWebTopManager();
@@ -205,35 +311,8 @@ public class WTRealm extends AuthorizingRealm {
 				logger.debug("AuthenticationDomain for SysAdmin created");
 				
 			} else {
-				if (wta.isInMaintenance()) { // Stop users if system in under maintenance!
-					logger.debug("Maintenance is active, stopping authentication process...");
-					throw new MaintenanceException("Maintenance is active. Only sys-admin can login.");
-				}
-				
-				String userDomainId = null;
-				if (!StringUtils.isBlank(authInternetDomain)) {
-					userDomainId = wtMgr.authDomainNameToDomainId(authInternetDomain);
-					if (userDomainId == null) {
-						logger.debug("Unable to lookup domain ID for '{}': maybe not configured or disabled", authInternetDomain);
-						throw new AuthenticationException("Match for internet-name not found or Domain is not enabled");
-					}
-					
-				} else if (!StringUtils.isBlank(authDomainId)) {
-					if (!wtMgr.isDomainIdEnabled(authDomainId)) {
-						logger.debug("Required domain ID '{}' is disabled", authDomainId);
-						throw new AuthenticationException("Domain is not enabled");
-					}
-					userDomainId = authDomainId;
-					
-				} else {
-					// Both authDomainId and authInternetDomain are empty: this 
-					// can occur when no domain suffix (@domainname) is provided 
-					// in username field and there are no enabled domains, thus 
-					// authDomainId has not a default value.
-					logger.debug("No domain for authentication ('authInternetDomain' and 'authDomainId' are both empty)", authDomainId);
-					throw new AuthenticationException("No enabled Domains");
-				}
-				
+				checkMaintenance(wta); // Stop users if system in under maintenance!
+				String userDomainId = lookupAuthDomainId(wtMgr, authDomainId, authInternetDomain);
 				Domain userDomain = null;
 				if (isSysAdminImpersonate(username)) {
 					if (!isImpersonateEnabled(userDomainId)) {
@@ -271,10 +350,11 @@ public class WTRealm extends AuthorizingRealm {
 			if (directory == null) throw new WTException("Directory not supported [{}]", authAd.getDirUri().getScheme());
 			
 			// Prepare principal for authentication
-			String authUsername = impersonate ? "admin" : directory.sanitizeUsername(opts, username);
-			Principal authPrincipal = new Principal(authAd, impersonate, authAd.getDomainId(), authUsername, password);
-			logger.debug("Authenticating principal [{}, {}]", authPrincipal.getDomainId(), authPrincipal.getUserId());
+			//String authUsername = impersonate ? "admin" : directory.sanitizeUsername(opts, username);
+			//Principal authPrincipal = new Principal(authAd, impersonate, authAd.getDomainId(), authUsername, password);
+			Principal authPrincipal = createAuthenticatingPrincipal_OLD(authAd, opts, directory, impersonate, username, password);
 			
+			logger.debug("Authenticating principal [{}, {}]", authPrincipal.getDomainId(), authPrincipal.getUserId());
 			AuthUser authUser = null;
 			try {
 				authUser = directory.authenticate(opts, authPrincipal);

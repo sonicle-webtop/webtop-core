@@ -1171,7 +1171,7 @@ public class Admin extends AdminApi {
 		if (StringUtils.isBlank(string)) return null;
 		final UserProfileId profileId = UserProfileId.parseQuielty(string);
 		final String userId = (profileId != null) ? profileId.getUserId() : string;
-		return UserProfileId.buildFullName(defaultDomainId, userId);
+		return UserProfileId.buildFullyQualifiedName(defaultDomainId, userId);
 	}
 	
 	private ApiResultExceptions createApiResultExceptions(ResultVoid result) {

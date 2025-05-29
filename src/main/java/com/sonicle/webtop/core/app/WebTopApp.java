@@ -34,6 +34,7 @@
 package com.sonicle.webtop.core.app;
 
 import com.mashape.unirest.http.Unirest;
+import com.sonicle.commons.AlgoUtils;
 import com.sonicle.commons.ClassUtils;
 import com.sonicle.commons.IdentifierUtils;
 import com.sonicle.webtop.core.app.util.OSInfo;
@@ -651,7 +652,7 @@ public final class WebTopApp {
 			File keyFile = new File(getFileSystem().getHomePath() + "secret.key");
 			if (!keyFile.exists()) {
 				logger.info("Secret key file not found, generating new one...");
-				hexKey = CryptoUtils.hex(CryptoUtils.generateAESKey(256));
+				hexKey = CryptoUtils.hexEncode(CryptoUtils.generateAESKey(256));
 				
 				FileOutputStream fos = null;
 				try {

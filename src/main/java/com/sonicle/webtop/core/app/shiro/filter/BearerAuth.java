@@ -32,12 +32,54 @@
  */
 package com.sonicle.webtop.core.app.shiro.filter;
 
+import com.sonicle.webtop.core.app.shiro.BearerAuthUsernameToken;
+import com.sonicle.webtop.core.app.shiro.MaintenanceException;
+import java.io.IOException;
+import javax.servlet.ServletRequest;
+import javax.servlet.ServletResponse;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import org.apache.shiro.authc.AuthenticationException;
+import org.apache.shiro.authc.AuthenticationToken;
 import org.apache.shiro.web.filter.authc.BearerHttpAuthenticationFilter;
+import org.apache.shiro.web.util.WebUtils;
 
 /**
  *
  * @author malbinola
  */
 public class BearerAuth extends BearerHttpAuthenticationFilter {
+	private static final String X_AUTH_USERNAME = "X-Auth-Username";
 	
+	protected String getXAuthUsernameHeader(ServletRequest request) {
+		HttpServletRequest httpRequest = WebUtils.toHttp(request);
+		return httpRequest.getHeader(X_AUTH_USERNAME);
+	}
+	
+	@Override
+	protected AuthenticationToken createBearerToken(String token, ServletRequest request) {
+		String xAuthUsernameHeader = getXAuthUsernameHeader(request);
+		if (xAuthUsernameHeader == null || xAuthUsernameHeader.length() == 0) {
+			return super.createBearerToken(token, request);
+		} else {
+			return new BearerAuthUsernameToken(token, xAuthUsernameHeader, request.getRemoteHost());
+		}
+	}
+	
+	@Override
+	protected boolean onLoginFailure(AuthenticationToken token, AuthenticationException e, ServletRequest request, ServletResponse response) {
+		// Breaks the default flow in case of MaintenanceException:
+		// in this case send a SERVICE_UNAVAILABLE (503) error in order to allow 
+		// clients to get informed to the temporary condition.
+		if (e instanceof MaintenanceException) {
+			try {
+				WebUtils.toHttp(response).sendError(HttpServletResponse.SC_SERVICE_UNAVAILABLE, e.getMessage());
+				return false;
+			} catch(IOException ex) {
+				return super.onLoginFailure(token, e, request, response);
+			}
+		} else {
+			return super.onLoginFailure(token, e, request, response);
+		}
+	}
 }

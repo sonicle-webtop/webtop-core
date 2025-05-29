@@ -297,7 +297,7 @@ Ext.define('Sonicle.webtop.core.view.Meeting', {
 				hideWhat = opts.hideWhat === true,
 				hideDateTime = opts.hideDateTime === true,
 				whatAsRoomName = opts.whatAsRoomName === true;
-				
+			
 			WT.prompt(WT.res('meeting.promptForInfo.txt'), {
 				title: WT.res('meeting.promptForInfo.tit'),
 				instClass: 'Sonicle.webtop.core.ux.MeetingBox',

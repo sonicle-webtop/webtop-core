@@ -48,6 +48,8 @@ Ext.define('Sonicle.webtop.core.admin.Service', {
 		'Sonicle.webtop.core.admin.view.DbUpgrader',
 		'Sonicle.webtop.core.admin.view.DomainAccessLog',
 		'Sonicle.webtop.core.admin.view.DomainLicenses',
+		'Sonicle.webtop.core.admin.view.DomainDataSources',
+		'Sonicle.webtop.core.admin.view.DomainApiKeys',
 		'Sonicle.webtop.core.admin.view.DomainLauncherLinks',
 		'Sonicle.webtop.core.admin.view.License',
 		'Sonicle.webtop.core.admin.view.PecBridge',
@@ -168,6 +170,8 @@ Ext.define('Sonicle.webtop.core.admin.Service', {
 							me.showDomainLicensesUI(rec.parentNode, rec);
 						} else if (type === 'ddatasources') {
 							me.showDomainDataSourcesUI(rec.parentNode, rec);	
+						} else if (type === 'dapikeys') {
+							me.showDomainApiKeysUI(rec.parentNode, rec);	
 						} else if (type === 'dlauncherlinks') {
 							me.showDomainLauncherLinksUI(rec.parentNode, rec);
 						} else if (type === 'dpecbridge') {
@@ -1042,6 +1046,20 @@ Ext.define('Sonicle.webtop.core.admin.Service', {
 
 			me.showTab(itemId, function() {
 				return Ext.create('Sonicle.webtop.core.admin.view.DomainDataSources', {
+					mys: me,
+					itemId: itemId,
+					domainId: domNode.get('_domainId'),
+					closable: true
+				});
+			});
+		},
+		
+		showDomainApiKeysUI: function(domNode, node) {
+			var me = this,
+				itemId = WTU.forItemId(node.getId());
+
+			me.showTab(itemId, function() {
+				return Ext.create('Sonicle.webtop.core.admin.view.DomainApiKeys', {
 					mys: me,
 					itemId: itemId,
 					domainId: domNode.get('_domainId'),

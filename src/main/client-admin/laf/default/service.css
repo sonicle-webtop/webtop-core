@@ -56,6 +56,8 @@
 .wtadm-icon-dataSources { background-image: url('dataSource_16.svg') !important; background-size: contain; }
 .wtadm-icon-dataSource { background-image: url('dataSource_16.svg') !important; background-size: contain; }
 .wtadm-icon-dataSourceQuery { background-image: url('dataSource-query_16.svg') !important; background-size: contain; }
+.wtadm-icon-apiKeys { background-image: url('apiKey_16.svg') !important; background-size: contain; }
+.wtadm-icon-apiKey { background-image: url('apiKey_16.svg') !important; background-size: contain; }
 .wtadm-icon-virtualDomain { background-image: url('virtualDomain_16.svg') !important; background-size: contain; }
 .wtadm-icon-virtualEmail { background-image: url('virtualEmail_16.svg') !important; background-size: contain; }
 .wtadm-icon-pecBridge { background-image: url('pecBridge_16.svg') !important; background-size: contain; }

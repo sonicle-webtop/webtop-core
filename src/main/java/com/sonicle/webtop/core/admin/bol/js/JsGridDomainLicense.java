@@ -33,9 +33,6 @@
  */
 package com.sonicle.webtop.core.admin.bol.js;
 
-import com.sonicle.commons.FlagUtils;
-import com.sonicle.commons.l4j.ProductLicense;
-import com.sonicle.commons.l4j.ProductLicense.LicenseInfo;
 import com.sonicle.commons.time.DateTimeUtils;
 import com.sonicle.webtop.core.app.ProductRegistry;
 import com.sonicle.webtop.core.model.ProductId;
@@ -46,7 +43,6 @@ import java.util.ArrayList;
 import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
 import org.joda.time.format.DateTimeFormatter;
-import org.jooq.tools.StringUtils;
 
 /**
  *

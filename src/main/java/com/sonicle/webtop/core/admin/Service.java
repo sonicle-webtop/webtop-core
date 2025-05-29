@@ -46,12 +46,14 @@ import com.sonicle.commons.flags.BitFlags;
 import com.sonicle.commons.l4j.ProductLicense;
 import com.sonicle.commons.time.DateTimeRange;
 import com.sonicle.commons.time.DateTimeUtils;
+import com.sonicle.commons.time.JavaTimeUtils;
 import com.sonicle.commons.web.Crud;
 import com.sonicle.commons.web.ServletUtils;
 import com.sonicle.commons.web.json.CId;
 import com.sonicle.commons.web.json.CompositeId;
 import com.sonicle.commons.web.json.JsonResult;
 import com.sonicle.commons.web.json.MapItem;
+import com.sonicle.commons.web.json.MapItemList;
 import com.sonicle.commons.web.json.Payload;
 import com.sonicle.commons.web.json.PayloadAsList;
 import com.sonicle.commons.web.json.bean.QueryObj;
@@ -65,6 +67,7 @@ import com.sonicle.webtop.core.CoreLocaleKey;
 import com.sonicle.webtop.core.CoreManager;
 import com.sonicle.webtop.core.CoreServiceSettings;
 import com.sonicle.webtop.core.CoreSettings.LauncherLink;
+import com.sonicle.webtop.core.admin.bol.js.JsApiKey;
 import com.sonicle.webtop.core.admin.bol.js.JsDataSource;
 import com.sonicle.webtop.core.admin.bol.js.JsDataSourceQuery;
 import com.sonicle.webtop.core.admin.bol.js.JsDomainAccessLog;
@@ -73,6 +76,7 @@ import com.sonicle.webtop.core.admin.bol.js.JsGridResource;
 import com.sonicle.webtop.core.admin.bol.js.JsGridRole;
 import com.sonicle.webtop.core.admin.bol.js.JsGridUser;
 import com.sonicle.webtop.core.admin.bol.js.JsDomainLauncherLink;
+import com.sonicle.webtop.core.admin.bol.js.JsGridDomainApiKey;
 import com.sonicle.webtop.core.admin.bol.js.JsGridDomainDataSource;
 import com.sonicle.webtop.core.app.CoreManifest;
 import com.sonicle.webtop.core.app.CorePrivateEnvironment;
@@ -96,6 +100,8 @@ import com.sonicle.webtop.core.admin.bol.js.JsRole;
 import com.sonicle.webtop.core.admin.bol.js.JsUser;
 import com.sonicle.webtop.core.app.RunContext;
 import com.sonicle.webtop.core.app.WebTopProps;
+import com.sonicle.webtop.core.app.model.ApiKey;
+import com.sonicle.webtop.core.app.model.ApiKeyNew;
 import com.sonicle.webtop.core.app.model.DirectoryUser;
 import com.sonicle.webtop.core.app.model.Domain;
 import com.sonicle.webtop.core.app.model.DomainGetOption;
@@ -169,6 +175,7 @@ import java.io.InputStream;
 import java.io.PrintWriter;
 import java.sql.SQLException;
 import java.text.MessageFormat;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -320,6 +327,7 @@ public class Service extends BaseService {
 	private static final String NID_RESOURCES = "resources";
 	private static final String NID_LAUNCHERLINKS = "launcherlinks";
 	private static final String NID_DATASOURCES = "datasources";
+	private static final String NID_APIKEYS = "apikeys";
 	private static final String NID_LICENSES = "licenses";
 	private static final String NID_PECBRIDGE = "pecbridge";
 	private static final String NID_DBUPGRADER = "dbupgrader";
@@ -413,6 +421,7 @@ public class Service extends BaseService {
 							children.add(createDomainChildNode(nodeId, NID_ROLES, "droles", "wtadm-icon-roles", null, null, null));
 							children.add(createDomainChildNode(nodeId, NID_LICENSES, "dlicenses", "wtadm-icon-licenses", null, null, null));
 							children.add(createDomainChildNode(nodeId, NID_DATASOURCES, "ddatasources", "wtadm-icon-dataSources", null, null, null));
+							children.add(createDomainChildNode(nodeId, NID_APIKEYS, "dapikeys", "wtadm-icon-apiKeys", null, null, null));
 							children.add(createDomainChildNode(nodeId, NID_LAUNCHERLINKS, "dlauncherlinks", "wtadm-icon-launcherLinks", null, null, null));
 							
 							CoreServiceSettings css = new CoreServiceSettings(CoreManifest.ID, domainId);
@@ -1487,6 +1496,81 @@ public class Service extends BaseService {
 			
 		} catch (Exception ex) {
 			logger.error("Error in DataSourceQueryTester", ex);
+			new JsonResult(ex).printTo(out);
+		}
+	}
+	
+	public void processManageDomainApiKeys(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
+		try {
+			String domainId = ServletUtils.getStringParameter(request, "domainId", true);
+			String crud = ServletUtils.getStringParameter(request, "crud", true);
+			CoreAdminManager admMgr = getDomainCoreAdminManager(domainId);
+			UserProfile up = getEnv().getProfile();
+			ZoneId utz = JavaTimeUtils.toZoneId(up.getTimeZone());
+			
+			if (Crud.READ.equals(crud)) {
+				List<JsGridDomainApiKey> items = new ArrayList<>();
+				for (ApiKey apiKey : admMgr.listApiKeys().values()) {
+					items.add(new JsGridDomainApiKey(apiKey, utz));
+				}
+				new JsonResult(items).printTo(out);
+				
+			} else if (Crud.DELETE.equals(crud)) {
+				Payload<MapItemList, JsGridDomainApiKey.List> pl = ServletUtils.getPayload(request, MapItemList.class, JsGridDomainApiKey.List.class);
+				for (JsGridDomainApiKey js : pl.data) {
+					admMgr.deleteApiKey(js.id);
+				}
+				new JsonResult().printTo(out);
+				
+			} else {
+				throw new WTException("Unsupported operation [{}]", crud);
+			}
+			
+		} catch (Exception ex) {
+			logger.error("Error in ManageDomainApiKeys", ex);
+			new JsonResult(ex).printTo(out);
+		}
+	}
+	
+	public void processManageDomainApiKey(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
+		
+		try {
+			String domainId = ServletUtils.getStringParameter(request, "domainId", true);
+			String crud = ServletUtils.getStringParameter(request, "crud", true);
+			CoreAdminManager admMgr = getDomainCoreAdminManager(domainId);
+			UserProfile up = getEnv().getProfile();
+			ZoneId utz = JavaTimeUtils.toZoneId(up.getTimeZone());
+			
+			if (Crud.READ.equals(crud)) {
+				String id = ServletUtils.getStringParameter(request, "id", false);
+				
+				ApiKey item = admMgr.getApiKey(id);
+				new JsonResult(new JsApiKey(item, utz)).printTo(out);
+				
+			} else if (Crud.CREATE.equals(crud)) {
+				Payload<MapItem, JsApiKey> pl = ServletUtils.getPayload(request, JsApiKey.class);
+				
+				ApiKeyNew newApiKey = admMgr.createApiKey(JsApiKey.createApiKeyForAdd(pl.data, up.getTimeZone()));
+				new JsonResult().setMetaData(new ResultMeta().set("apiKeyString", newApiKey.getApiKeyString())).printTo(out);
+				
+			} else if (Crud.UPDATE.equals(crud)) {
+				Payload<MapItem, JsApiKey> pl = ServletUtils.getPayload(request, JsApiKey.class);
+				
+				admMgr.updateApiKeyDetails(pl.data.id, JsApiKey.createApiKeyForUpdate(pl.data, up.getTimeZone()));
+				new JsonResult().printTo(out);
+				
+			} else if (Crud.DELETE.equals(crud)) {
+				String id = ServletUtils.getStringParameter(request, "id", false);
+				
+				admMgr.deleteApiKey(id);
+				new JsonResult().printTo(out);
+				
+			} else {
+				throw new WTException("Unsupported operation [{}]", crud);
+			}
+			
+		} catch (Exception ex) {
+			logger.error("Error in ManageDomainApiKey", ex);
 			new JsonResult(ex).printTo(out);
 		}
 	}

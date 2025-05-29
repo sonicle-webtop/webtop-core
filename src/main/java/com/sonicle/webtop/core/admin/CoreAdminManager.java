@@ -56,6 +56,9 @@ import com.sonicle.webtop.core.app.WebTopProps;
 import com.sonicle.webtop.core.app.io.dbutils.FilterableArrayListHandler;
 import com.sonicle.webtop.core.app.io.dbutils.RowsAndCols;
 import com.sonicle.webtop.core.app.model.AclSubjectGetOption;
+import com.sonicle.webtop.core.app.model.ApiKey;
+import com.sonicle.webtop.core.app.model.ApiKeyBase;
+import com.sonicle.webtop.core.app.model.ApiKeyNew;
 import com.sonicle.webtop.core.app.model.DirectoryUser;
 import com.sonicle.webtop.core.app.model.Domain;
 import com.sonicle.webtop.core.app.model.DomainBase;
@@ -1029,6 +1032,45 @@ public class CoreAdminManager extends BaseManager {
 		}
 	}
 	
+	public Map<String, ApiKey> listApiKeys() throws WTException {
+		WebTopManager wtMgr = wta.getWebTopManager();
+		String domainId = getTargetProfileId().getDomainId();
+		
+		RunContext.ensureIsWebTopDomainAdmin(domainId);
+		return wtMgr.listApiKeys(domainId);
+	}
+	
+	public ApiKey getApiKey(final String apiKeyId) throws WTException {
+		WebTopManager wtMgr = wta.getWebTopManager();
+		String domainId = getTargetProfileId().getDomainId();
+
+		RunContext.ensureIsWebTopDomainAdmin(domainId);
+		return wtMgr.getApiKey(getTargetProfileId().getDomainId(), apiKeyId);
+	}
+	
+	public ApiKeyNew createApiKey(final ApiKeyBase apiKey) throws WTException {
+		WebTopManager wtMgr = wta.getWebTopManager();
+		String domainId = getTargetProfileId().getDomainId();
+		
+		RunContext.ensureIsWebTopDomainAdmin(domainId);
+		return wtMgr.createApiKey(getTargetProfileId().getDomainId(), apiKey);
+	}
+	
+	public void updateApiKeyDetails(final String apiKeyId, final ApiKeyBase apiKey) throws WTException {
+		WebTopManager wtMgr = wta.getWebTopManager();
+		String domainId = getTargetProfileId().getDomainId();
+		
+		RunContext.ensureIsWebTopDomainAdmin(domainId);
+		wtMgr.updateApiKeyDetails(getTargetProfileId().getDomainId(), apiKeyId, apiKey);
+	}
+	
+	public void deleteApiKey(final String apiKeyId) throws WTException {
+		WebTopManager wtMgr = wta.getWebTopManager();
+		String domainId = getTargetProfileId().getDomainId();
+
+		RunContext.ensureIsWebTopDomainAdmin(domainId);
+		wtMgr.deleteApiKey(getTargetProfileId().getDomainId(), apiKeyId);
+	}
 	
 	
 	

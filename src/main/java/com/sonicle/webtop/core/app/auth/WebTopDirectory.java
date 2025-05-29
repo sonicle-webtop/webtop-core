@@ -156,6 +156,26 @@ public class WebTopDirectory extends AbstractDirectory {
 	}
 	
 	@Override
+	public AuthUser exist(DirectoryOptions opts, Principal principal) throws DirectoryException {
+		WebTopConfigBuilder builder = getConfigBuilder();
+		LocalVaultDAO lvdao = LocalVaultDAO.getInstance();
+		WebTopApp wta = builder.getWebTopApp(opts);
+		Connection con = null;
+		
+		try {
+			con = wta.getConnectionManager().getConnection();
+			
+			OLocalVaultEntry entry = lvdao.selectByDomainUser(con, principal.getDomainId(), principal.getUserId());
+			return entry != null ? createUserEntry(principal) : null;
+			
+		} catch(SQLException | DAOException ex) {
+			throw new DirectoryException(ex, "DB error");
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
+	@Override
 	public AuthUser authenticate(DirectoryOptions opts, Principal principal) throws DirectoryException {
 		WebTopConfigBuilder builder = getConfigBuilder();
 		LocalVaultDAO lvdao = LocalVaultDAO.getInstance();

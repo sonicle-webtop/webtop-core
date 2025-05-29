@@ -43,6 +43,8 @@ import com.sonicle.security.auth.directory.SftpDirectory;
 import com.sonicle.security.auth.directory.SmbDirectory;
 import com.sonicle.webtop.core.app.auth.LdapWebTopDirectory;
 import com.sonicle.webtop.core.app.auth.WebTopDirectory;
+import com.sonicle.webtop.core.app.model.ApiKey;
+import com.sonicle.webtop.core.app.model.ApiKeyBase;
 import com.sonicle.webtop.core.app.model.Domain;
 import com.sonicle.webtop.core.app.model.DomainBase;
 import com.sonicle.webtop.core.app.model.Group;
@@ -54,6 +56,7 @@ import com.sonicle.webtop.core.app.model.Role;
 import com.sonicle.webtop.core.app.model.RoleBase;
 import com.sonicle.webtop.core.app.model.User;
 import com.sonicle.webtop.core.app.model.UserBase;
+import com.sonicle.webtop.core.bol.OApiKey;
 import com.sonicle.webtop.core.bol.ODomain;
 import com.sonicle.webtop.core.bol.OGroup;
 import com.sonicle.webtop.core.bol.OLicense;
@@ -315,7 +318,39 @@ public class AppManagerUtils {
 		return tgt;
 	}
 	
+	static <T extends ApiKey> T fillApiKey(T tgt, OApiKey src) {
+		fillApiKey((ApiKeyBase)tgt, src);
+		if ((tgt != null) && (src != null)) {
+			tgt.setApiKeyId(src.getApiKeyId());
+		}
+		return tgt;
+	}
 	
+	static <T extends ApiKeyBase> T fillApiKey(T tgt, OApiKey src) {
+		if ((tgt != null) && (src != null)) {
+			tgt.setCreationTimestamp(src.getCreationTimestamp());
+			tgt.setName(src.getName());
+			tgt.setDescription(src.getDescription());
+			tgt.setShortToken(src.getShortToken());
+			tgt.setLongToken(src.getLongToken());
+			tgt.setExpiresAt(src.getExpiresAt());
+			tgt.setLastUsedAt(src.getLastUsedAt());
+		}
+		return tgt;
+	}
+	
+	static OApiKey fillOApiKey(OApiKey tgt, ApiKeyBase src) {
+		if ((tgt != null) && (src != null)) {
+			tgt.setCreationTimestamp(src.getCreationTimestamp());
+			tgt.setName(src.getName());
+			tgt.setDescription(src.getDescription());
+			tgt.setShortToken(src.getShortToken());
+			tgt.setLongToken(src.getLongToken());
+			tgt.setExpiresAt(src.getExpiresAt());
+			tgt.setLastUsedAt(src.getLastUsedAt());
+		}
+		return tgt;
+	}
 	
 	
 	

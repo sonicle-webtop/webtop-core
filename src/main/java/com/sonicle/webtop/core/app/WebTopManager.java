@@ -37,8 +37,10 @@ import com.github.benmanes.caffeine.cache.CacheLoader;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 import com.sonicle.commons.AlgoUtils;
+import com.sonicle.commons.Base58;
 import com.sonicle.commons.ClassUtils;
 import com.sonicle.commons.EnumUtils;
+import com.sonicle.commons.IdentifierUtils;
 import com.sonicle.commons.InternetAddressUtils;
 import com.sonicle.commons.LangUtils;
 import com.sonicle.commons.PathUtils;
@@ -49,8 +51,12 @@ import com.sonicle.commons.db.DbUtils;
 import com.sonicle.commons.flags.BitFlags;
 import com.sonicle.commons.flags.BitFlagsEnum;
 import com.sonicle.commons.time.DateTimeUtils;
+import com.sonicle.commons.time.JodaTimeUtils;
 import com.sonicle.security.AuthenticationDomain;
 import com.sonicle.security.ConnectionSecurity;
+import com.sonicle.security.CryptoUtils;
+import com.sonicle.security.DigestAlgorithm;
+import com.sonicle.security.DigestValue;
 import com.sonicle.security.DomainAccount;
 import com.sonicle.security.PasswordUtils;
 import com.sonicle.security.Principal;
@@ -74,6 +80,10 @@ import com.sonicle.webtop.core.app.events.ResourceAvailabilityChangeEvent;
 import com.sonicle.webtop.core.app.events.ResourceUpdateEvent;
 import com.sonicle.webtop.core.app.events.UserAvailabilityChangeEvent;
 import com.sonicle.webtop.core.app.events.UserUpdateEvent;
+import com.sonicle.webtop.core.app.model.ApiKey;
+import com.sonicle.webtop.core.app.model.ApiKeyBase;
+import com.sonicle.webtop.core.app.model.ApiKeyLive;
+import com.sonicle.webtop.core.app.model.ApiKeyNew;
 import com.sonicle.webtop.core.app.model.DirectoryUser;
 import com.sonicle.webtop.core.app.model.Domain;
 import com.sonicle.webtop.core.app.model.DomainBase;
@@ -156,7 +166,10 @@ import com.sonicle.webtop.core.app.model.UserGetOption;
 import com.sonicle.webtop.core.app.model.UserUpdateOption;
 import com.sonicle.webtop.core.app.shiro.ShiroUtils;
 import com.sonicle.webtop.core.app.shiro.WTRealm;
+import com.sonicle.webtop.core.bol.OApiKey;
 import com.sonicle.webtop.core.bol.VUser;
+import com.sonicle.webtop.core.dal.ApiKeyDAO;
+import com.sonicle.webtop.core.dal.BaseDAO;
 import com.sonicle.webtop.core.dal.CustomFieldDAO;
 import com.sonicle.webtop.core.dal.CustomPanelDAO;
 import com.sonicle.webtop.core.dal.DataSourceDAO;
@@ -186,6 +199,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import jakarta.mail.internet.InternetAddress;
+import java.security.NoSuchAlgorithmException;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -194,6 +208,8 @@ import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.stream.Stream;
 import net.sf.qualitycheck.Check;
+import org.apache.commons.collections4.MultiValuedMap;
+import org.apache.commons.collections4.multimap.ArrayListValuedHashMap;
 import org.apache.commons.lang3.StringUtils;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -229,11 +245,13 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 	private final LoadingCache<UserProfileId, UserProfile.PersonalInfo> profileToPersonalInfoCache = Caffeine.newBuilder().build(new ProfilePersonalInfoCacheLoader());
 	private final LoadingCache<UserProfileId, UserProfile.Data> profileToDataCache = Caffeine.newBuilder().build(new ProfileDataCacheLoader());
 	private final Object foldersLock = new Object();
+	private final ApiKeyCache apiKeyCache;
 	
 	WebTopManager(WebTopApp wta) {
 		super(wta, true);
 		this.domainCache = new CacheDomainInfo();
 		this.subjectSidCache = new SubjectSidCache();
+		this.apiKeyCache = new ApiKeyCache();
 		initialize();
 	}
 	
@@ -246,6 +264,7 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 	protected void doAppManagerInitialize() {
 		domainCache.init();
 		subjectSidCache.init();
+		apiKeyCache.init();
 	}
 	
 	@Override
@@ -2121,7 +2140,125 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 		return new ResultVoid();
 	}
 	
+	public Map<String, ApiKey> listApiKeys(final String domainId) throws WTException {
+		Check.notEmpty(domainId, "domainId");
+		ApiKeyDAO apkDao = ApiKeyDAO.getInstance();
+		Connection con = null;
+		
+		try {
+			con = getConnection(true);
+			
+			Collection<OApiKey> oapks = apkDao.selectByDomain(con, domainId).values();
+			Map<String, ApiKey> items = new LinkedHashMap<>(oapks.size());
+			for (OApiKey oapk : oapks) {
+				items.put(oapk.getApiKeyId(), AppManagerUtils.fillApiKey(new ApiKey(), oapk));
+			}
+			return items;
+			
+		} catch (Exception ex) {
+			throw ExceptionUtils.wrapThrowable(ex);
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
 	
+	public ApiKey getApiKey(final String domainId, final String apiKeyId) throws WTException {
+		Check.notEmpty(domainId, "domainId");
+		Check.notEmpty(apiKeyId, "apiKeyId");
+		Connection con = null;
+		
+		try {
+			con = getConnection(false);
+			return doApiKeyGet(con, domainId, apiKeyId);
+			
+		} catch (Exception ex) {
+			DbUtils.rollbackQuietly(con);
+			throw ExceptionUtils.wrapThrowable(ex);
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
+	public ApiKeyNew createApiKey(final String domainId, final ApiKeyBase apiKey) throws WTException {
+		Check.notEmpty(domainId, "domainId");
+		Check.notNull(apiKey, "apiKey");
+		Connection con = null;
+		
+		ApiKeyNew newApiKey = null;
+		try {
+			con = getConnection(false);
+			ApiKeyInsertResult result = doApiKeyInsert(con, domainId, apiKey);
+			DbUtils.commitQuietly(con);
+			
+			newApiKey = AppManagerUtils.fillApiKey(new ApiKeyNew(), result.oapk);
+			newApiKey.setApiKeyString(result.apiKeyString); // The plain api-key
+			apiKeyCache.add(domainId, newApiKey.getApiKeyId(), newApiKey.getShortToken(), newApiKey.getLongToken(), newApiKey.getExpiresAt());
+			
+		} catch (Exception ex) {
+			DbUtils.rollbackQuietly(con);
+			throw ExceptionUtils.wrapThrowable(ex);
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+		
+		return newApiKey;
+	}
+	
+	public void updateApiKeyDetails(final String domainId, final String apiKeyId, final ApiKeyBase apiKey) throws WTException {
+		Check.notEmpty(domainId, "domainId");
+		Check.notEmpty(apiKeyId, "apiKeyId");
+		Check.notNull(apiKey, "apiKey");
+		Connection con = null;
+		
+		try {
+			LOGGER.debug("Updating apiKeyId '{}'", apiKeyId);
+			con = getConnection(false);
+			boolean ret = doApiKeyUpdate(con, domainId, apiKeyId, apiKey);
+			if (ret == false) throw new WTNotFoundException("ApiKey not found [{}, {}]", domainId, apiKeyId);
+			DbUtils.commitQuietly(con);
+			
+			if (!apiKeyCache.updateExpiration(domainId, apiKeyId, apiKey.getExpiresAt())) {
+				LOGGER.warn("Failed to update cache for apiKeyId '{}'", apiKeyId);
+			}
+			
+		} catch (Exception ex) {
+			DbUtils.rollbackQuietly(con);
+			throw ExceptionUtils.wrapThrowable(ex);
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
+	public ResultVoid deleteApiKey(final String domainId, final String apiKeyId) throws WTException {
+		Check.notEmpty(domainId, "domainId");
+		Check.notEmpty(apiKeyId, "apiKeyId");
+		Connection con = null;
+		
+		try {
+			LOGGER.debug("Deleting apiKeyId '{}'", apiKeyId);
+			con = getConnection(false);
+			doApiKeyDelete(con, domainId, apiKeyId);
+			DbUtils.commitQuietly(con);
+			
+			if (!apiKeyCache.remove(domainId, apiKeyId)) {
+				LOGGER.warn("Failed to update cache for apiKeyId '{}'", apiKeyId);
+			}
+			
+		} catch (Exception ex) {
+			DbUtils.rollbackQuietly(con);
+			throw ExceptionUtils.wrapThrowable(ex);
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+		
+		return new ResultVoid();
+	}
+	
+	public boolean authenticateApiKey(final String apiKeyString) throws WTException {
+		Check.notEmpty(apiKeyString, "apiKeyString");
+		final String tokens[] = ApiKeyBase.parseApiKeyString(apiKeyString);
+		return apiKeyCache.verify(tokens[0], tokens[1]);
+	}
 	
 	
 	
@@ -2392,7 +2529,7 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 		String domainId = authDomainNameToDomainId(pid.getDomain());
 		if (domainId == null) return null;
 		ensureProfileDomain(domainId);
-		return new UserProfileId(domainId, pid.getUser());
+		return new UserProfileId(domainId, pid.getLocal());
 	}
 	
 	public UserProfileId guessProfileIdByPersonalAddress(final String personalAddress) throws WTException {
@@ -4211,6 +4348,60 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 		}
 	}
 	
+	private ApiKey doApiKeyGet(final Connection con, final String domainId, final String apiKeyId) throws WTException {
+		ApiKeyDAO apkDao = ApiKeyDAO.getInstance();
+		
+		OApiKey oapk = apkDao.selectByDomainId(con, domainId, apiKeyId);
+		if (oapk == null) return null;
+		
+		return AppManagerUtils.fillApiKey(new ApiKey(), oapk);
+	}
+	
+	private ApiKeyInsertResult doApiKeyInsert(final Connection con, final String domainId, final ApiKeyBase apiKey) throws NoSuchAlgorithmException {
+		ApiKeyDAO apkDao = ApiKeyDAO.getInstance();
+		
+		String shortToken = ApiKeyBase.generateShortToken();
+		String plainLongToken = ApiKeyBase.generateLongToken();
+		String apiKeyString = ApiKeyBase.buildApiKeyString(shortToken, plainLongToken);
+		OApiKey oapk = AppManagerUtils.fillOApiKey(new OApiKey(), apiKey);
+		oapk.setDomainId(domainId);
+		oapk.setApiKeyId(IdentifierUtils.getUUIDTimeBased(true));
+		oapk.setShortToken(shortToken);
+		oapk.setLongToken(ApiKeyBase.hashLongToken(plainLongToken));
+		//OApiKey.fillDefaultsForInsert(oapk);
+		OApiKey.validate(oapk);
+		
+		apkDao.insert(con, oapk, BaseDAO.createRevisionTimestamp());
+		
+		return new ApiKeyInsertResult(oapk, apiKeyString);
+	}
+	
+	private boolean doApiKeyUpdate(final Connection con, final String domainId, final String apiKeyId, final ApiKeyBase apiKey) {
+		ApiKeyDAO apkDao = ApiKeyDAO.getInstance();
+		
+		OApiKey oapk = AppManagerUtils.fillOApiKey(new OApiKey(), apiKey);
+		oapk.setApiKeyId(apiKeyId);
+		//OApiKey.fillDefaultsForUpdate(oapk);
+		OApiKey.validate(oapk);
+		return apkDao.update(con, domainId, oapk, BaseDAO.createRevisionTimestamp()) == 1;
+	}
+	
+	private boolean doApiKeyDelete(final Connection con, final String domainId, final String apiKeyId) {
+		ApiKeyDAO apkDao = ApiKeyDAO.getInstance();
+		
+		return apkDao.deleteByDomainId(con, domainId, apiKeyId) == 1;
+	}
+	
+	private static class ApiKeyInsertResult {
+		public final OApiKey oapk;
+		public final String apiKeyString;
+		
+		public ApiKeyInsertResult(OApiKey oapk, String apiKeyString) {
+			this.oapk = oapk;
+			this.apiKeyString = apiKeyString;
+		}
+	}
+	
 	/**
 	 * Checks if passed SID is really valid: has a matching PID with a specified domain ID
 	 */
@@ -5293,6 +5484,123 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 		}
 	}
 	
+	private class ApiKeyCache extends AbstractBulkCache {
+		private final MultiValuedMap<String, String> digestByDomain = new ArrayListValuedHashMap<>();
+		private final HashMap<String, String> digestById = new HashMap<>();
+		private final HashMap<String, ApiKeyLive> keysByDigest = new HashMap<>();
+
+		@Override
+		protected void internalBuildCache() {
+			ApiKeyDAO apkDao = ApiKeyDAO.getInstance();
+			Connection con = null;
+			
+			try {
+				LOGGER.trace("[ApiKey Cache] Loading all...");
+				con = getConnection(true);
+				for (OApiKey oapk : apkDao.selectValidByInstant(con, JodaTimeUtils.now().withTimeAtStartOfDay()).values()) {
+					try {
+						final DigestValue digestValue = DigestValue.parse(oapk.getLongToken());
+						final String apiKeyDigested = ApiKeyBase.buildApiKeyString(oapk.getShortToken(), digestValue.getDigestString());
+						doAdd(oapk.getDomainId(), oapk.getApiKeyId(), apiKeyDigested, oapk.getExpiresAt());
+						
+					} catch (Exception ex) {
+						LOGGER.error("[ApiKey Cache] Unable to load ApiKey '{}'", ex, oapk.getApiKeyId());
+					}
+				}
+				
+			} catch (Throwable t) {
+				LOGGER.error("[ApiKey Cache] Unable to load all", t);
+			} finally {
+				DbUtils.closeQuietly(con);
+			}
+		}
+
+		@Override
+		protected void internalCleanupCache() {
+			digestByDomain.clear();
+			digestById.clear();
+			keysByDigest.clear();
+		}
+		
+		public void cleanupByDomain(final String domainId) {
+			long stamp = writeLock();
+			try {
+				Collection<String> domainDigests = digestByDomain.remove(domainId);
+				for (String digest : domainDigests) {
+					ApiKeyLive apiKey = keysByDigest.remove(digest);
+					if (apiKey != null) digestById.remove(apiKey.getApiKeyId());
+				}
+				
+			} finally {
+				unlockWrite(stamp);
+			}
+		}
+		
+		public void add(final String domainId, final String apiKeyId, final String apiKeyShortToken, final String apiKeyLongToken, final DateTime apiKeyExpireAt) {
+			final String longTokenDigest = DigestValue.parse(apiKeyLongToken).getDigestString();
+			final String apiKeyDigested = ApiKeyBase.buildApiKeyString(apiKeyShortToken, longTokenDigest);
+			
+			long stamp = writeLock();
+			try {
+				doAdd(domainId, apiKeyId, apiKeyDigested, apiKeyExpireAt);
+				
+			} finally {
+				unlockWrite(stamp);
+			}
+		}
+		
+		private void doAdd(final String domainId, final String apiKeyId, final String apiKeyDigested, final DateTime apiKeyExpireAt) {
+			digestByDomain.put(domainId, apiKeyDigested);
+			digestById.put(apiKeyId, apiKeyDigested);
+			keysByDigest.put(apiKeyDigested, new ApiKeyLive(domainId, apiKeyId, apiKeyDigested, apiKeyExpireAt));
+		}
+		
+		public boolean updateExpiration(final String domainId, final String apiKeyId, final DateTime newExpiration) {
+			long stamp = writeLock();
+			try {
+				String digest = digestById.get(apiKeyId);
+				if (digest == null) return false;
+				ApiKeyLive entry = keysByDigest.remove(digest);
+				if (entry == null) return false;
+				keysByDigest.put(digest, new ApiKeyLive(domainId, apiKeyId, digest, newExpiration));
+				return true;
+				
+			} finally {
+				unlockWrite(stamp);
+			}
+		}
+		
+		public boolean remove(final String domainId, final String apiKeyId) {
+			long stamp = writeLock();
+			try {
+				String digest = digestById.remove(apiKeyId);
+				if (digest == null) return false;
+				ApiKeyLive entry = keysByDigest.remove(digest);
+				if (entry == null) return false;
+				return digestByDomain.removeMapping(domainId, digest);
+				
+			} finally {
+				unlockWrite(stamp);
+			}
+		}
+		
+		public boolean verify(final String apiKeyShortToken, final String apiKeyLongTokenPlain) {
+			final String hashedLongToken = ApiKeyBase.hashLongToken(apiKeyLongTokenPlain);
+			final String longTokenDigest = DigestValue.parse(hashedLongToken).getDigestString();
+			final String apiKeyDigested = ApiKeyBase.buildApiKeyString(apiKeyShortToken, longTokenDigest);
+			
+			long stamp = readLock();
+			try {
+				ApiKeyLive entry = keysByDigest.get(apiKeyDigested);
+				if (entry == null) return false;
+				return !entry.isExpired();
+				
+			} finally {
+				unlockRead(stamp);
+			}
+		}
+	}
+	
 	private class SubjectSidCache {
 		private final LoadingCache<String, Optional<SubjectSid>> userPidToSid = Caffeine.newBuilder().build(new PidToSidLoader());
 		private final LoadingCache<String, Optional<SubjectSid>> rolePidToSid = Caffeine.newBuilder().build(new PidToSidLoader());
@@ -5520,6 +5828,8 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 			}
 		}
 	}
+	
+	
 	
 	public static class CheckUserResult {
 		public boolean exist;
