@@ -17,7 +17,7 @@ import javax.validation.Valid;
 
 @Path("/mail-bridge")
 @Api(description = "the mail-bridge API")
-@javax.annotation.Generated(value = "org.openapitools.codegen.languages.JavaJAXRSSpecServerCodegen", date = "2024-04-16T12:49:23.936+02:00[Europe/Berlin]")
+@javax.annotation.Generated(value = "org.openapitools.codegen.languages.JavaJAXRSSpecServerCodegen", date = "2025-05-30T15:27:46.249+02:00[Europe/Berlin]")
 public abstract class MailBridgeApi extends com.sonicle.webtop.core.sdk.BaseRestApiResource {
 
     @GET
@@ -25,7 +25,9 @@ public abstract class MailBridgeApi extends com.sonicle.webtop.core.sdk.BaseRest
     @Produces({ "application/json" })
     @ApiOperation(value = "List MailBridge Fetchers for a Domain", notes = "Lists Domain's MailBridge Fetchers.", response = ApiFetcher.class, responseContainer = "List", authorizations = {
         
-        @Authorization(value = "auth-bearer")
+        @Authorization(value = "auth-bearer"),
+        
+        @Authorization(value = "auth-basic")
          }, tags={ "mail-bridge-fetchers" })
     @ApiResponses(value = { 
         @ApiResponse(code = 200, message = "OK", response = ApiFetcher.class, responseContainer = "List"),
@@ -41,7 +43,9 @@ public abstract class MailBridgeApi extends com.sonicle.webtop.core.sdk.BaseRest
     @Produces({ "application/json" })
     @ApiOperation(value = "List MailBridge Relays for a Domain", notes = "Lists Domain's MailBridge Relays.", response = ApiRelay.class, responseContainer = "List", authorizations = {
         
-        @Authorization(value = "auth-bearer")
+        @Authorization(value = "auth-bearer"),
+        
+        @Authorization(value = "auth-basic")
          }, tags={ "mail-bridge-relays" })
     @ApiResponses(value = { 
         @ApiResponse(code = 200, message = "OK", response = ApiRelay.class, responseContainer = "List"),
@@ -58,7 +62,9 @@ public abstract class MailBridgeApi extends com.sonicle.webtop.core.sdk.BaseRest
     @Produces({ "application/json" })
     @ApiOperation(value = "Update auth state of fetcher", notes = "Updates auth state of fetcher.", response = Void.class, authorizations = {
         
-        @Authorization(value = "auth-bearer")
+        @Authorization(value = "auth-bearer"),
+        
+        @Authorization(value = "auth-basic")
          }, tags={ "mail-bridge-fetchers" })
     @ApiResponses(value = { 
         @ApiResponse(code = 200, message = "OK", response = Void.class),
@@ -76,7 +82,9 @@ public abstract class MailBridgeApi extends com.sonicle.webtop.core.sdk.BaseRest
     @Produces({ "application/json" })
     @ApiOperation(value = "Update auth state of relay", notes = "Updates auth state of relay.", response = Void.class, authorizations = {
         
-        @Authorization(value = "auth-bearer")
+        @Authorization(value = "auth-bearer"),
+        
+        @Authorization(value = "auth-basic")
          }, tags={ "mail-bridge-relays" })
     @ApiResponses(value = { 
         @ApiResponse(code = 200, message = "OK", response = Void.class),

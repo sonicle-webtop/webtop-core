@@ -1,13 +1,8 @@
 package com.sonicle.webtop.core.swagger.v1.model;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import com.sonicle.webtop.core.swagger.v1.model.ApiHomedException;
-import com.sonicle.webtop.core.swagger.v1.model.ApiResultExceptions;
-import com.sonicle.webtop.core.swagger.v1.model.ApiUser;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
-import java.util.ArrayList;
-import java.util.List;
 import javax.validation.constraints.*;
 import javax.validation.Valid;
 
@@ -20,28 +15,29 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 
 
 
-@JsonTypeName("adminAddUser_201_response")
+@JsonTypeName("ApiKeyGenerated_allOf")
 @javax.annotation.Generated(value = "org.openapitools.codegen.languages.JavaJAXRSSpecServerCodegen", date = "2025-05-30T15:27:46.249+02:00[Europe/Berlin]")
-public class ApiAdminAddUser201Response extends ApiResultExceptions  {
-  private @Valid ApiUser value;
+public class ApiApiKeyGeneratedAllOf   {
+  private @Valid String secretToken;
 
   /**
+   * The newly generated plain API Key secret token.
    **/
-  public ApiAdminAddUser201Response value(ApiUser value) {
-    this.value = value;
+  public ApiApiKeyGeneratedAllOf secretToken(String secretToken) {
+    this.secretToken = secretToken;
     return this;
   }
 
   
-  @ApiModelProperty(value = "")
-  @JsonProperty("value")
-  public ApiUser getValue() {
-    return value;
+  @ApiModelProperty(value = "The newly generated plain API Key secret token.")
+  @JsonProperty("secretToken")
+  public String getSecretToken() {
+    return secretToken;
   }
 
-  @JsonProperty("value")
-  public void setValue(ApiUser value) {
-    this.value = value;
+  @JsonProperty("secretToken")
+  public void setSecretToken(String secretToken) {
+    this.secretToken = secretToken;
   }
 
 
@@ -53,22 +49,21 @@ public class ApiAdminAddUser201Response extends ApiResultExceptions  {
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
-    ApiAdminAddUser201Response adminAddUser201Response = (ApiAdminAddUser201Response) o;
-    return Objects.equals(this.value, adminAddUser201Response.value) &&
-        super.equals(o);
+    ApiApiKeyGeneratedAllOf apiKeyGeneratedAllOf = (ApiApiKeyGeneratedAllOf) o;
+    return Objects.equals(this.secretToken, apiKeyGeneratedAllOf.secretToken);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(value, super.hashCode());
+    return Objects.hash(secretToken);
   }
 
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();
-    sb.append("class ApiAdminAddUser201Response {\n");
-    sb.append("    ").append(toIndentedString(super.toString())).append("\n");
-    sb.append("    value: ").append(toIndentedString(value)).append("\n");
+    sb.append("class ApiApiKeyGeneratedAllOf {\n");
+    
+    sb.append("    secretToken: ").append(toIndentedString(secretToken)).append("\n");
     sb.append("}");
     return sb.toString();
   }

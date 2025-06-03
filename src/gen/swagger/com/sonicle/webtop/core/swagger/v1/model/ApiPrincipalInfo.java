@@ -18,7 +18,7 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 
 
 @JsonTypeName("PrincipalInfo")
-@javax.annotation.Generated(value = "org.openapitools.codegen.languages.JavaJAXRSSpecServerCodegen", date = "2024-04-16T12:49:23.936+02:00[Europe/Berlin]")
+@javax.annotation.Generated(value = "org.openapitools.codegen.languages.JavaJAXRSSpecServerCodegen", date = "2025-05-30T15:27:46.249+02:00[Europe/Berlin]")
 public class ApiPrincipalInfo   {
   private @Valid String profileId;
   private @Valid String profileUsername;
@@ -26,7 +26,7 @@ public class ApiPrincipalInfo   {
   private @Valid String emailAddress;
   private @Valid String timezoneId;
   private @Valid String languageTag;
-  private @Valid List<Boolean> evalPermRefs = null;
+  private @Valid List<Boolean> evalPermRefs;
 
   /**
    * Internal profile ID (user@wtdomain)

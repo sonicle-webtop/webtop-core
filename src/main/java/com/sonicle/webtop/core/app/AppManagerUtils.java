@@ -329,6 +329,7 @@ public class AppManagerUtils {
 	static <T extends ApiKeyBase> T fillApiKey(T tgt, OApiKey src) {
 		if ((tgt != null) && (src != null)) {
 			tgt.setCreationTimestamp(src.getCreationTimestamp());
+			tgt.setRevisionTimestamp(src.getRevisionTimestamp());
 			tgt.setName(src.getName());
 			tgt.setDescription(src.getDescription());
 			tgt.setShortToken(src.getShortToken());
@@ -342,6 +343,7 @@ public class AppManagerUtils {
 	static OApiKey fillOApiKey(OApiKey tgt, ApiKeyBase src) {
 		if ((tgt != null) && (src != null)) {
 			tgt.setCreationTimestamp(src.getCreationTimestamp());
+			tgt.setRevisionTimestamp(src.getRevisionTimestamp());
 			tgt.setName(src.getName());
 			tgt.setDescription(src.getDescription());
 			tgt.setShortToken(src.getShortToken());

@@ -1,6 +1,7 @@
 package com.sonicle.webtop.core.swagger.v1.model;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import com.sonicle.webtop.core.swagger.v1.model.ApiLicenseBase;
 import com.sonicle.webtop.core.swagger.v1.model.ApiLicenseLease;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
@@ -21,8 +22,8 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
  **/
 @ApiModel(description = "The license data.")
 @JsonTypeName("License")
-@javax.annotation.Generated(value = "org.openapitools.codegen.languages.JavaJAXRSSpecServerCodegen", date = "2024-04-16T12:49:23.936+02:00[Europe/Berlin]")
-public class ApiLicense   {
+@javax.annotation.Generated(value = "org.openapitools.codegen.languages.JavaJAXRSSpecServerCodegen", date = "2025-05-30T15:27:46.249+02:00[Europe/Berlin]")
+public class ApiLicense extends ApiLicenseBase  {
   private @Valid String productCode;
   private @Valid String owningServiceId;
   private @Valid Boolean builtIn;
@@ -33,9 +34,6 @@ public class ApiLicense   {
   private @Valid Long status;
   private @Valid Integer maxLease;
   private @Valid List<ApiLicenseLease> leases = new ArrayList<>();
-  private @Valid String licenseString;
-  private @Valid String activatedLicenseString;
-  private @Valid Boolean autoLease;
 
   /**
    * The unique product code.
@@ -260,67 +258,6 @@ public class ApiLicense   {
 
     return this;
   }
-  /**
-   * The license text string.
-   **/
-  public ApiLicense licenseString(String licenseString) {
-    this.licenseString = licenseString;
-    return this;
-  }
-
-  
-  @ApiModelProperty(required = true, value = "The license text string.")
-  @JsonProperty("licenseString")
-  @NotNull
-  public String getLicenseString() {
-    return licenseString;
-  }
-
-  @JsonProperty("licenseString")
-  public void setLicenseString(String licenseString) {
-    this.licenseString = licenseString;
-  }
-
-  /**
-   * The licence activation string.
-   **/
-  public ApiLicense activatedLicenseString(String activatedLicenseString) {
-    this.activatedLicenseString = activatedLicenseString;
-    return this;
-  }
-
-  
-  @ApiModelProperty(value = "The licence activation string.")
-  @JsonProperty("activatedLicenseString")
-  public String getActivatedLicenseString() {
-    return activatedLicenseString;
-  }
-
-  @JsonProperty("activatedLicenseString")
-  public void setActivatedLicenseString(String activatedLicenseString) {
-    this.activatedLicenseString = activatedLicenseString;
-  }
-
-  /**
-   * Specifies if auto-lease feature is active for this license.
-   **/
-  public ApiLicense autoLease(Boolean autoLease) {
-    this.autoLease = autoLease;
-    return this;
-  }
-
-  
-  @ApiModelProperty(value = "Specifies if auto-lease feature is active for this license.")
-  @JsonProperty("autoLease")
-  public Boolean getAutoLease() {
-    return autoLease;
-  }
-
-  @JsonProperty("autoLease")
-  public void setAutoLease(Boolean autoLease) {
-    this.autoLease = autoLease;
-  }
-
 
   @Override
   public boolean equals(Object o) {
@@ -341,21 +278,19 @@ public class ApiLicense   {
         Objects.equals(this.status, license.status) &&
         Objects.equals(this.maxLease, license.maxLease) &&
         Objects.equals(this.leases, license.leases) &&
-        Objects.equals(this.licenseString, license.licenseString) &&
-        Objects.equals(this.activatedLicenseString, license.activatedLicenseString) &&
-        Objects.equals(this.autoLease, license.autoLease);
+        super.equals(o);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(productCode, owningServiceId, builtIn, revisionTimestamp, activationTimestamp, activationHwId, expirationDate, status, maxLease, leases, licenseString, activatedLicenseString, autoLease);
+    return Objects.hash(productCode, owningServiceId, builtIn, revisionTimestamp, activationTimestamp, activationHwId, expirationDate, status, maxLease, leases, super.hashCode());
   }
 
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();
     sb.append("class ApiLicense {\n");
-    
+    sb.append("    ").append(toIndentedString(super.toString())).append("\n");
     sb.append("    productCode: ").append(toIndentedString(productCode)).append("\n");
     sb.append("    owningServiceId: ").append(toIndentedString(owningServiceId)).append("\n");
     sb.append("    builtIn: ").append(toIndentedString(builtIn)).append("\n");
@@ -366,9 +301,6 @@ public class ApiLicense   {
     sb.append("    status: ").append(toIndentedString(status)).append("\n");
     sb.append("    maxLease: ").append(toIndentedString(maxLease)).append("\n");
     sb.append("    leases: ").append(toIndentedString(leases)).append("\n");
-    sb.append("    licenseString: ").append(toIndentedString(licenseString)).append("\n");
-    sb.append("    activatedLicenseString: ").append(toIndentedString(activatedLicenseString)).append("\n");
-    sb.append("    autoLease: ").append(toIndentedString(autoLease)).append("\n");
     sb.append("}");
     return sb.toString();
   }

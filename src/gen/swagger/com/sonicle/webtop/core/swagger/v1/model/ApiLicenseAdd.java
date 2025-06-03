@@ -1,6 +1,7 @@
 package com.sonicle.webtop.core.swagger.v1.model;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import com.sonicle.webtop.core.swagger.v1.model.ApiLicenseBase;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import java.util.ArrayList;
@@ -20,73 +21,9 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
  **/
 @ApiModel(description = "The license data for insertion.")
 @JsonTypeName("LicenseAdd")
-@javax.annotation.Generated(value = "org.openapitools.codegen.languages.JavaJAXRSSpecServerCodegen", date = "2024-04-16T12:49:23.936+02:00[Europe/Berlin]")
-public class ApiLicenseAdd   {
-  private @Valid String licenseString;
-  private @Valid String activatedLicenseString;
-  private @Valid Boolean autoLease;
-  private @Valid List<String> assignedLeases = null;
-
-  /**
-   * The license text string.
-   **/
-  public ApiLicenseAdd licenseString(String licenseString) {
-    this.licenseString = licenseString;
-    return this;
-  }
-
-  
-  @ApiModelProperty(required = true, value = "The license text string.")
-  @JsonProperty("licenseString")
-  @NotNull
-  public String getLicenseString() {
-    return licenseString;
-  }
-
-  @JsonProperty("licenseString")
-  public void setLicenseString(String licenseString) {
-    this.licenseString = licenseString;
-  }
-
-  /**
-   * The licence activation string.
-   **/
-  public ApiLicenseAdd activatedLicenseString(String activatedLicenseString) {
-    this.activatedLicenseString = activatedLicenseString;
-    return this;
-  }
-
-  
-  @ApiModelProperty(value = "The licence activation string.")
-  @JsonProperty("activatedLicenseString")
-  public String getActivatedLicenseString() {
-    return activatedLicenseString;
-  }
-
-  @JsonProperty("activatedLicenseString")
-  public void setActivatedLicenseString(String activatedLicenseString) {
-    this.activatedLicenseString = activatedLicenseString;
-  }
-
-  /**
-   * Specifies if auto-lease feature is active for this license.
-   **/
-  public ApiLicenseAdd autoLease(Boolean autoLease) {
-    this.autoLease = autoLease;
-    return this;
-  }
-
-  
-  @ApiModelProperty(value = "Specifies if auto-lease feature is active for this license.")
-  @JsonProperty("autoLease")
-  public Boolean getAutoLease() {
-    return autoLease;
-  }
-
-  @JsonProperty("autoLease")
-  public void setAutoLease(Boolean autoLease) {
-    this.autoLease = autoLease;
-  }
+@javax.annotation.Generated(value = "org.openapitools.codegen.languages.JavaJAXRSSpecServerCodegen", date = "2025-05-30T15:27:46.249+02:00[Europe/Berlin]")
+public class ApiLicenseAdd extends ApiLicenseBase  {
+  private @Valid List<String> assignedLeases;
 
   /**
    * A set of user IDs to assign a lease of this license.
@@ -134,25 +71,20 @@ public class ApiLicenseAdd   {
       return false;
     }
     ApiLicenseAdd licenseAdd = (ApiLicenseAdd) o;
-    return Objects.equals(this.licenseString, licenseAdd.licenseString) &&
-        Objects.equals(this.activatedLicenseString, licenseAdd.activatedLicenseString) &&
-        Objects.equals(this.autoLease, licenseAdd.autoLease) &&
-        Objects.equals(this.assignedLeases, licenseAdd.assignedLeases);
+    return Objects.equals(this.assignedLeases, licenseAdd.assignedLeases) &&
+        super.equals(o);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(licenseString, activatedLicenseString, autoLease, assignedLeases);
+    return Objects.hash(assignedLeases, super.hashCode());
   }
 
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();
     sb.append("class ApiLicenseAdd {\n");
-    
-    sb.append("    licenseString: ").append(toIndentedString(licenseString)).append("\n");
-    sb.append("    activatedLicenseString: ").append(toIndentedString(activatedLicenseString)).append("\n");
-    sb.append("    autoLease: ").append(toIndentedString(autoLease)).append("\n");
+    sb.append("    ").append(toIndentedString(super.toString())).append("\n");
     sb.append("    assignedLeases: ").append(toIndentedString(assignedLeases)).append("\n");
     sb.append("}");
     return sb.toString();

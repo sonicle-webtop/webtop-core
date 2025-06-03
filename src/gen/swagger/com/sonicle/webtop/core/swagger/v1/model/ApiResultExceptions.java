@@ -21,9 +21,9 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
  **/
 @ApiModel(description = "Wraps collected non-blocking exceptions in a response object.")
 @JsonTypeName("ResultExceptions")
-@javax.annotation.Generated(value = "org.openapitools.codegen.languages.JavaJAXRSSpecServerCodegen", date = "2024-04-16T12:49:23.936+02:00[Europe/Berlin]")
+@javax.annotation.Generated(value = "org.openapitools.codegen.languages.JavaJAXRSSpecServerCodegen", date = "2025-05-30T15:27:46.249+02:00[Europe/Berlin]")
 public class ApiResultExceptions   {
-  private @Valid List<ApiHomedException> exceptions = null;
+  private @Valid List<ApiHomedException> exceptions;
 
   /**
    **/

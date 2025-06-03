@@ -20,16 +20,16 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
  **/
 @ApiModel(description = "The user base data.")
 @JsonTypeName("UserBase")
-@javax.annotation.Generated(value = "org.openapitools.codegen.languages.JavaJAXRSSpecServerCodegen", date = "2024-04-16T12:49:23.936+02:00[Europe/Berlin]")
+@javax.annotation.Generated(value = "org.openapitools.codegen.languages.JavaJAXRSSpecServerCodegen", date = "2025-05-30T15:27:46.249+02:00[Europe/Berlin]")
 public class ApiUserBase   {
   private @Valid Boolean enabled;
   private @Valid String displayName;
   private @Valid String firstName;
   private @Valid String lastName;
-  private @Valid List<String> assignedGroups = null;
-  private @Valid List<String> assignedRoles = null;
-  private @Valid List<String> permissions = null;
-  private @Valid List<String> allowedServiceIds = null;
+  private @Valid List<String> assignedGroups;
+  private @Valid List<String> assignedRoles;
+  private @Valid List<String> permissions;
+  private @Valid List<String> allowedServiceIds;
 
   /**
    * Represent the availability status

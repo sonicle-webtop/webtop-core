@@ -1,6 +1,7 @@
 package com.sonicle.webtop.core.swagger.v1.model;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import com.sonicle.webtop.core.swagger.v1.model.ApiResourceBase;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import java.util.ArrayList;
@@ -20,62 +21,9 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
  **/
 @ApiModel(description = "The resource data for insertion.")
 @JsonTypeName("ResourceAdd")
-@javax.annotation.Generated(value = "org.openapitools.codegen.languages.JavaJAXRSSpecServerCodegen", date = "2024-04-16T12:49:23.936+02:00[Europe/Berlin]")
-public class ApiResourceAdd   {
+@javax.annotation.Generated(value = "org.openapitools.codegen.languages.JavaJAXRSSpecServerCodegen", date = "2025-05-30T15:27:46.249+02:00[Europe/Berlin]")
+public class ApiResourceAdd extends ApiResourceBase  {
   private @Valid String resourceId;
-  private @Valid Boolean enabled;
-  public enum TypeEnum {
-
-    ROOM(String.valueOf("room")), EQUIPMENT(String.valueOf("equipment"));
-
-
-    private String value;
-
-    TypeEnum (String v) {
-        value = v;
-    }
-
-    public String value() {
-        return value;
-    }
-
-    @Override
-    @JsonValue
-    public String toString() {
-        return String.valueOf(value);
-    }
-
-    /**
-     * Convert a String into String, as specified in the
-     * <a href="https://download.oracle.com/otndocs/jcp/jaxrs-2_0-fr-eval-spec/index.html">See JAX RS 2.0 Specification, section 3.2, p. 12</a>
-     */
-	public static TypeEnum fromString(String s) {
-        for (TypeEnum b : TypeEnum.values()) {
-            // using Objects.toString() to be safe if value type non-object type
-            // because types like 'int' etc. will be auto-boxed
-            if (java.util.Objects.toString(b.value).equals(s)) {
-                return b;
-            }
-        }
-        throw new IllegalArgumentException("Unexpected string value '" + s + "'");
-	}
-	
-    @JsonCreator
-    public static TypeEnum fromValue(String value) {
-        for (TypeEnum b : TypeEnum.values()) {
-            if (b.value.equals(value)) {
-                return b;
-            }
-        }
-        throw new IllegalArgumentException("Unexpected value '" + value + "'");
-    }
-}
-
-  private @Valid TypeEnum type;
-  private @Valid String displayName;
-  private @Valid String email;
-  private @Valid String managerSubject;
-  private @Valid List<String> allowedSubjects = null;
 
   /**
    * Resource ID, actually its name.
@@ -98,144 +46,6 @@ public class ApiResourceAdd   {
     this.resourceId = resourceId;
   }
 
-  /**
-   * Represent the availability status
-   **/
-  public ApiResourceAdd enabled(Boolean enabled) {
-    this.enabled = enabled;
-    return this;
-  }
-
-  
-  @ApiModelProperty(required = true, value = "Represent the availability status")
-  @JsonProperty("enabled")
-  @NotNull
-  public Boolean getEnabled() {
-    return enabled;
-  }
-
-  @JsonProperty("enabled")
-  public void setEnabled(Boolean enabled) {
-    this.enabled = enabled;
-  }
-
-  /**
-   * Type of the Resource.
-   **/
-  public ApiResourceAdd type(TypeEnum type) {
-    this.type = type;
-    return this;
-  }
-
-  
-  @ApiModelProperty(required = true, value = "Type of the Resource.")
-  @JsonProperty("type")
-  @NotNull
-  public TypeEnum getType() {
-    return type;
-  }
-
-  @JsonProperty("type")
-  public void setType(TypeEnum type) {
-    this.type = type;
-  }
-
-  /**
-   * Descriptive name to display purposes
-   **/
-  public ApiResourceAdd displayName(String displayName) {
-    this.displayName = displayName;
-    return this;
-  }
-
-  
-  @ApiModelProperty(value = "Descriptive name to display purposes")
-  @JsonProperty("displayName")
-  public String getDisplayName() {
-    return displayName;
-  }
-
-  @JsonProperty("displayName")
-  public void setDisplayName(String displayName) {
-    this.displayName = displayName;
-  }
-
-  /**
-   * The email address associated
-   **/
-  public ApiResourceAdd email(String email) {
-    this.email = email;
-    return this;
-  }
-
-  
-  @ApiModelProperty(value = "The email address associated")
-  @JsonProperty("email")
-  public String getEmail() {
-    return email;
-  }
-
-  @JsonProperty("email")
-  public void setEmail(String email) {
-    this.email = email;
-  }
-
-  /**
-   * Reference to a User/Group that acts as Manager. It can be an ID or a SID according to &#39;&#39; parameter.
-   **/
-  public ApiResourceAdd managerSubject(String managerSubject) {
-    this.managerSubject = managerSubject;
-    return this;
-  }
-
-  
-  @ApiModelProperty(value = "Reference to a User/Group that acts as Manager. It can be an ID or a SID according to '' parameter.")
-  @JsonProperty("managerSubject")
-  public String getManagerSubject() {
-    return managerSubject;
-  }
-
-  @JsonProperty("managerSubject")
-  public void setManagerSubject(String managerSubject) {
-    this.managerSubject = managerSubject;
-  }
-
-  /**
-   * One or more references to User/Groups that can use the Resource. They can be IDs or SIDs according to &#39;&#39; parameter.
-   **/
-  public ApiResourceAdd allowedSubjects(List<String> allowedSubjects) {
-    this.allowedSubjects = allowedSubjects;
-    return this;
-  }
-
-  
-  @ApiModelProperty(value = "One or more references to User/Groups that can use the Resource. They can be IDs or SIDs according to '' parameter.")
-  @JsonProperty("allowedSubjects")
-  public List<String> getAllowedSubjects() {
-    return allowedSubjects;
-  }
-
-  @JsonProperty("allowedSubjects")
-  public void setAllowedSubjects(List<String> allowedSubjects) {
-    this.allowedSubjects = allowedSubjects;
-  }
-
-  public ApiResourceAdd addAllowedSubjectsItem(String allowedSubjectsItem) {
-    if (this.allowedSubjects == null) {
-      this.allowedSubjects = new ArrayList<>();
-    }
-
-    this.allowedSubjects.add(allowedSubjectsItem);
-    return this;
-  }
-
-  public ApiResourceAdd removeAllowedSubjectsItem(String allowedSubjectsItem) {
-    if (allowedSubjectsItem != null && this.allowedSubjects != null) {
-      this.allowedSubjects.remove(allowedSubjectsItem);
-    }
-
-    return this;
-  }
 
   @Override
   public boolean equals(Object o) {
@@ -247,31 +57,20 @@ public class ApiResourceAdd   {
     }
     ApiResourceAdd resourceAdd = (ApiResourceAdd) o;
     return Objects.equals(this.resourceId, resourceAdd.resourceId) &&
-        Objects.equals(this.enabled, resourceAdd.enabled) &&
-        Objects.equals(this.type, resourceAdd.type) &&
-        Objects.equals(this.displayName, resourceAdd.displayName) &&
-        Objects.equals(this.email, resourceAdd.email) &&
-        Objects.equals(this.managerSubject, resourceAdd.managerSubject) &&
-        Objects.equals(this.allowedSubjects, resourceAdd.allowedSubjects);
+        super.equals(o);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(resourceId, enabled, type, displayName, email, managerSubject, allowedSubjects);
+    return Objects.hash(resourceId, super.hashCode());
   }
 
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();
     sb.append("class ApiResourceAdd {\n");
-    
+    sb.append("    ").append(toIndentedString(super.toString())).append("\n");
     sb.append("    resourceId: ").append(toIndentedString(resourceId)).append("\n");
-    sb.append("    enabled: ").append(toIndentedString(enabled)).append("\n");
-    sb.append("    type: ").append(toIndentedString(type)).append("\n");
-    sb.append("    displayName: ").append(toIndentedString(displayName)).append("\n");
-    sb.append("    email: ").append(toIndentedString(email)).append("\n");
-    sb.append("    managerSubject: ").append(toIndentedString(managerSubject)).append("\n");
-    sb.append("    allowedSubjects: ").append(toIndentedString(allowedSubjects)).append("\n");
     sb.append("}");
     return sb.toString();
   }

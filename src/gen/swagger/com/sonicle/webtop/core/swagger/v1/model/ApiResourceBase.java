@@ -20,7 +20,7 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
  **/
 @ApiModel(description = "The resource base data.")
 @JsonTypeName("ResourceBase")
-@javax.annotation.Generated(value = "org.openapitools.codegen.languages.JavaJAXRSSpecServerCodegen", date = "2024-04-16T12:49:23.936+02:00[Europe/Berlin]")
+@javax.annotation.Generated(value = "org.openapitools.codegen.languages.JavaJAXRSSpecServerCodegen", date = "2025-05-30T15:27:46.249+02:00[Europe/Berlin]")
 public class ApiResourceBase   {
   private @Valid Boolean enabled;
   public enum TypeEnum {
@@ -74,7 +74,7 @@ public class ApiResourceBase   {
   private @Valid String displayName;
   private @Valid String email;
   private @Valid String managerSubject;
-  private @Valid List<String> allowedSubjects = null;
+  private @Valid List<String> allowedSubjects;
 
   /**
    * Represent the availability status

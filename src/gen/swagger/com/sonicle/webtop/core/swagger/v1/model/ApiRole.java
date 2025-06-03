@@ -1,6 +1,7 @@
 package com.sonicle.webtop.core.swagger.v1.model;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import com.sonicle.webtop.core.swagger.v1.model.ApiRoleBase;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import java.util.ArrayList;
@@ -20,13 +21,10 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
  **/
 @ApiModel(description = "The role data for listing purposes.")
 @JsonTypeName("Role")
-@javax.annotation.Generated(value = "org.openapitools.codegen.languages.JavaJAXRSSpecServerCodegen", date = "2024-04-16T12:49:23.936+02:00[Europe/Berlin]")
-public class ApiRole   {
+@javax.annotation.Generated(value = "org.openapitools.codegen.languages.JavaJAXRSSpecServerCodegen", date = "2025-05-30T15:27:46.249+02:00[Europe/Berlin]")
+public class ApiRole extends ApiRoleBase  {
   private @Valid String roleId;
   private @Valid String roleSid;
-  private @Valid String description;
-  private @Valid List<String> permissions = null;
-  private @Valid List<String> allowedServiceIds = null;
 
   /**
    * Role ID, actually its name.
@@ -70,99 +68,6 @@ public class ApiRole   {
     this.roleSid = roleSid;
   }
 
-  /**
-   * Descriptive info about this Role.
-   **/
-  public ApiRole description(String description) {
-    this.description = description;
-    return this;
-  }
-
-  
-  @ApiModelProperty(required = true, value = "Descriptive info about this Role.")
-  @JsonProperty("description")
-  @NotNull
-  public String getDescription() {
-    return description;
-  }
-
-  @JsonProperty("description")
-  public void setDescription(String description) {
-    this.description = description;
-  }
-
-  /**
-   * One or more permissions describing a right granted to the User. They are in the form of permission string.
-   **/
-  public ApiRole permissions(List<String> permissions) {
-    this.permissions = permissions;
-    return this;
-  }
-
-  
-  @ApiModelProperty(value = "One or more permissions describing a right granted to the User. They are in the form of permission string.")
-  @JsonProperty("permissions")
-  public List<String> getPermissions() {
-    return permissions;
-  }
-
-  @JsonProperty("permissions")
-  public void setPermissions(List<String> permissions) {
-    this.permissions = permissions;
-  }
-
-  public ApiRole addPermissionsItem(String permissionsItem) {
-    if (this.permissions == null) {
-      this.permissions = new ArrayList<>();
-    }
-
-    this.permissions.add(permissionsItem);
-    return this;
-  }
-
-  public ApiRole removePermissionsItem(String permissionsItem) {
-    if (permissionsItem != null && this.permissions != null) {
-      this.permissions.remove(permissionsItem);
-    }
-
-    return this;
-  }
-  /**
-   * One or more references to service IDs to which the User has access.
-   **/
-  public ApiRole allowedServiceIds(List<String> allowedServiceIds) {
-    this.allowedServiceIds = allowedServiceIds;
-    return this;
-  }
-
-  
-  @ApiModelProperty(value = "One or more references to service IDs to which the User has access.")
-  @JsonProperty("allowedServiceIds")
-  public List<String> getAllowedServiceIds() {
-    return allowedServiceIds;
-  }
-
-  @JsonProperty("allowedServiceIds")
-  public void setAllowedServiceIds(List<String> allowedServiceIds) {
-    this.allowedServiceIds = allowedServiceIds;
-  }
-
-  public ApiRole addAllowedServiceIdsItem(String allowedServiceIdsItem) {
-    if (this.allowedServiceIds == null) {
-      this.allowedServiceIds = new ArrayList<>();
-    }
-
-    this.allowedServiceIds.add(allowedServiceIdsItem);
-    return this;
-  }
-
-  public ApiRole removeAllowedServiceIdsItem(String allowedServiceIdsItem) {
-    if (allowedServiceIdsItem != null && this.allowedServiceIds != null) {
-      this.allowedServiceIds.remove(allowedServiceIdsItem);
-    }
-
-    return this;
-  }
 
   @Override
   public boolean equals(Object o) {
@@ -175,26 +80,21 @@ public class ApiRole   {
     ApiRole role = (ApiRole) o;
     return Objects.equals(this.roleId, role.roleId) &&
         Objects.equals(this.roleSid, role.roleSid) &&
-        Objects.equals(this.description, role.description) &&
-        Objects.equals(this.permissions, role.permissions) &&
-        Objects.equals(this.allowedServiceIds, role.allowedServiceIds);
+        super.equals(o);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(roleId, roleSid, description, permissions, allowedServiceIds);
+    return Objects.hash(roleId, roleSid, super.hashCode());
   }
 
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();
     sb.append("class ApiRole {\n");
-    
+    sb.append("    ").append(toIndentedString(super.toString())).append("\n");
     sb.append("    roleId: ").append(toIndentedString(roleId)).append("\n");
     sb.append("    roleSid: ").append(toIndentedString(roleSid)).append("\n");
-    sb.append("    description: ").append(toIndentedString(description)).append("\n");
-    sb.append("    permissions: ").append(toIndentedString(permissions)).append("\n");
-    sb.append("    allowedServiceIds: ").append(toIndentedString(allowedServiceIds)).append("\n");
     sb.append("}");
     return sb.toString();
   }

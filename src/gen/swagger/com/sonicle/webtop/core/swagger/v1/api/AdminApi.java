@@ -5,6 +5,9 @@ import com.sonicle.webtop.core.swagger.v1.model.ApiAdminAddGroup201Response;
 import com.sonicle.webtop.core.swagger.v1.model.ApiAdminAddResource201Response;
 import com.sonicle.webtop.core.swagger.v1.model.ApiAdminAddRole201Response;
 import com.sonicle.webtop.core.swagger.v1.model.ApiAdminAddUser201Response;
+import com.sonicle.webtop.core.swagger.v1.model.ApiApiKey;
+import com.sonicle.webtop.core.swagger.v1.model.ApiApiKeyBase;
+import com.sonicle.webtop.core.swagger.v1.model.ApiApiKeyGenerated;
 import com.sonicle.webtop.core.swagger.v1.model.ApiDomain;
 import com.sonicle.webtop.core.swagger.v1.model.ApiDomainBase;
 import com.sonicle.webtop.core.swagger.v1.model.ApiDomainEntry;
@@ -41,7 +44,7 @@ import javax.validation.Valid;
 
 @Path("/admin")
 @Api(description = "the admin API")
-@javax.annotation.Generated(value = "org.openapitools.codegen.languages.JavaJAXRSSpecServerCodegen", date = "2024-04-16T12:49:23.936+02:00[Europe/Berlin]")
+@javax.annotation.Generated(value = "org.openapitools.codegen.languages.JavaJAXRSSpecServerCodegen", date = "2025-05-30T15:27:46.249+02:00[Europe/Berlin]")
 public abstract class AdminApi extends com.sonicle.webtop.core.sdk.BaseRestApiResource {
 
     @POST
@@ -50,7 +53,9 @@ public abstract class AdminApi extends com.sonicle.webtop.core.sdk.BaseRestApiRe
     @Produces({ "application/json" })
     @ApiOperation(value = "Activates a product's license for a domain", notes = "When no activated string is attached to body request, an online activation will be performed, otherwise the string will be used as result of manual (offline) activation process.", response = Void.class, authorizations = {
         
-        @Authorization(value = "auth-bearer")
+        @Authorization(value = "auth-bearer"),
+        
+        @Authorization(value = "auth-basic")
          }, tags={ "admin-licenses" })
     @ApiResponses(value = { 
         @ApiResponse(code = 200, message = "OK", response = Void.class),
@@ -68,7 +73,9 @@ public abstract class AdminApi extends com.sonicle.webtop.core.sdk.BaseRestApiRe
     @Produces({ "application/json" })
     @ApiOperation(value = "Add domain", notes = "Adds new Domain.", response = ApiAdminAddDomain201Response.class, authorizations = {
         
-        @Authorization(value = "auth-bearer")
+        @Authorization(value = "auth-bearer"),
+        
+        @Authorization(value = "auth-basic")
          }, tags={ "admin-domains" })
     @ApiResponses(value = { 
         @ApiResponse(code = 201, message = "Created", response = ApiAdminAddDomain201Response.class),
@@ -85,7 +92,9 @@ public abstract class AdminApi extends com.sonicle.webtop.core.sdk.BaseRestApiRe
     @Produces({ "application/json" })
     @ApiOperation(value = "Adds a domain group", notes = "Adds new Domain group.", response = ApiAdminAddGroup201Response.class, authorizations = {
         
-        @Authorization(value = "auth-bearer")
+        @Authorization(value = "auth-bearer"),
+        
+        @Authorization(value = "auth-basic")
          }, tags={ "admin-groups" })
     @ApiResponses(value = { 
         @ApiResponse(code = 201, message = "Created", response = ApiAdminAddGroup201Response.class),
@@ -102,7 +111,9 @@ public abstract class AdminApi extends com.sonicle.webtop.core.sdk.BaseRestApiRe
     @Produces({ "application/json" })
     @ApiOperation(value = "Adds a product's license for a domain", notes = "", response = Void.class, authorizations = {
         
-        @Authorization(value = "auth-bearer")
+        @Authorization(value = "auth-bearer"),
+        
+        @Authorization(value = "auth-basic")
          }, tags={ "admin-licenses" })
     @ApiResponses(value = { 
         @ApiResponse(code = 201, message = "Created", response = Void.class),
@@ -119,7 +130,9 @@ public abstract class AdminApi extends com.sonicle.webtop.core.sdk.BaseRestApiRe
     @Produces({ "application/json" })
     @ApiOperation(value = "Adds a resource for a domain", notes = "Adds new Domain resource.", response = ApiAdminAddResource201Response.class, authorizations = {
         
-        @Authorization(value = "auth-bearer")
+        @Authorization(value = "auth-bearer"),
+        
+        @Authorization(value = "auth-basic")
          }, tags={ "admin-resources" })
     @ApiResponses(value = { 
         @ApiResponse(code = 201, message = "Created", response = ApiAdminAddResource201Response.class),
@@ -136,7 +149,9 @@ public abstract class AdminApi extends com.sonicle.webtop.core.sdk.BaseRestApiRe
     @Produces({ "application/json" })
     @ApiOperation(value = "Adds a role for a domain", notes = "Adds new Domain role.", response = ApiAdminAddRole201Response.class, authorizations = {
         
-        @Authorization(value = "auth-bearer")
+        @Authorization(value = "auth-bearer"),
+        
+        @Authorization(value = "auth-basic")
          }, tags={ "admin-roles" })
     @ApiResponses(value = { 
         @ApiResponse(code = 201, message = "Created", response = ApiAdminAddRole201Response.class),
@@ -153,7 +168,9 @@ public abstract class AdminApi extends com.sonicle.webtop.core.sdk.BaseRestApiRe
     @Produces({ "application/json" })
     @ApiOperation(value = "Add domain user", notes = "Adds new Domain user.", response = ApiAdminAddUser201Response.class, authorizations = {
         
-        @Authorization(value = "auth-bearer")
+        @Authorization(value = "auth-bearer"),
+        
+        @Authorization(value = "auth-basic")
          }, tags={ "admin-users" })
     @ApiResponses(value = { 
         @ApiResponse(code = 201, message = "Created", response = ApiAdminAddUser201Response.class),
@@ -170,7 +187,9 @@ public abstract class AdminApi extends com.sonicle.webtop.core.sdk.BaseRestApiRe
     @Produces({ "application/json" })
     @ApiOperation(value = "Activates a product's license for a domain", notes = "Assigns a lease of a license to each specified users.", response = Void.class, authorizations = {
         
-        @Authorization(value = "auth-bearer")
+        @Authorization(value = "auth-bearer"),
+        
+        @Authorization(value = "auth-basic")
          }, tags={ "admin-licenses" })
     @ApiResponses(value = { 
         @ApiResponse(code = 200, message = "OK", response = Void.class),
@@ -187,7 +206,9 @@ public abstract class AdminApi extends com.sonicle.webtop.core.sdk.BaseRestApiRe
     @Produces({ "application/json" })
     @ApiOperation(value = "Deactivates a product's license for a domain", notes = "Deactivates a license performing an online deactivation prior to removing activation info. If offline parameter was specified, activation info are just removed without any online deactivation tentatives.", response = Void.class, authorizations = {
         
-        @Authorization(value = "auth-bearer")
+        @Authorization(value = "auth-bearer"),
+        
+        @Authorization(value = "auth-basic")
          }, tags={ "admin-licenses" })
     @ApiResponses(value = { 
         @ApiResponse(code = 200, message = "OK", response = Void.class),
@@ -204,7 +225,9 @@ public abstract class AdminApi extends com.sonicle.webtop.core.sdk.BaseRestApiRe
     @Produces({ "application/json" })
     @ApiOperation(value = "Delete domain", notes = "Deletes a Domain.", response = ApiResultExceptions.class, authorizations = {
         
-        @Authorization(value = "auth-bearer")
+        @Authorization(value = "auth-bearer"),
+        
+        @Authorization(value = "auth-basic")
          }, tags={ "admin-domains" })
     @ApiResponses(value = { 
         @ApiResponse(code = 200, message = "OK", response = ApiResultExceptions.class),
@@ -221,7 +244,9 @@ public abstract class AdminApi extends com.sonicle.webtop.core.sdk.BaseRestApiRe
     @Produces({ "application/json" })
     @ApiOperation(value = "Deletes a domain group", notes = "Deletes a Domain's group.", response = ApiResultExceptions.class, authorizations = {
         
-        @Authorization(value = "auth-bearer")
+        @Authorization(value = "auth-bearer"),
+        
+        @Authorization(value = "auth-basic")
          }, tags={ "admin-groups" })
     @ApiResponses(value = { 
         @ApiResponse(code = 200, message = "OK", response = ApiResultExceptions.class),
@@ -238,7 +263,9 @@ public abstract class AdminApi extends com.sonicle.webtop.core.sdk.BaseRestApiRe
     @Produces({ "application/json" })
     @ApiOperation(value = "Removes a product's license for a domain", notes = "", response = Void.class, authorizations = {
         
-        @Authorization(value = "auth-bearer")
+        @Authorization(value = "auth-bearer"),
+        
+        @Authorization(value = "auth-basic")
          }, tags={ "admin-licenses" })
     @ApiResponses(value = { 
         @ApiResponse(code = 200, message = "OK", response = Void.class),
@@ -255,7 +282,9 @@ public abstract class AdminApi extends com.sonicle.webtop.core.sdk.BaseRestApiRe
     @Produces({ "application/json" })
     @ApiOperation(value = "Deletes a resource for a domain", notes = "Deletes a Domain's resource.", response = ApiResultExceptions.class, authorizations = {
         
-        @Authorization(value = "auth-bearer")
+        @Authorization(value = "auth-bearer"),
+        
+        @Authorization(value = "auth-basic")
          }, tags={ "admin-resources" })
     @ApiResponses(value = { 
         @ApiResponse(code = 200, message = "OK", response = ApiResultExceptions.class),
@@ -272,7 +301,9 @@ public abstract class AdminApi extends com.sonicle.webtop.core.sdk.BaseRestApiRe
     @Produces({ "application/json" })
     @ApiOperation(value = "Deletes a role for a domain", notes = "Deletes a Domain's role.", response = ApiResultExceptions.class, authorizations = {
         
-        @Authorization(value = "auth-bearer")
+        @Authorization(value = "auth-bearer"),
+        
+        @Authorization(value = "auth-basic")
          }, tags={ "admin-roles" })
     @ApiResponses(value = { 
         @ApiResponse(code = 200, message = "OK", response = ApiResultExceptions.class),
@@ -289,7 +320,9 @@ public abstract class AdminApi extends com.sonicle.webtop.core.sdk.BaseRestApiRe
     @Produces({ "application/json" })
     @ApiOperation(value = "Deletes a domain user", notes = "Deletes a Domain's user.", response = ApiResultExceptions.class, authorizations = {
         
-        @Authorization(value = "auth-bearer")
+        @Authorization(value = "auth-bearer"),
+        
+        @Authorization(value = "auth-basic")
          }, tags={ "admin-users" })
     @ApiResponses(value = { 
         @ApiResponse(code = 200, message = "OK", response = ApiResultExceptions.class),
@@ -306,7 +339,9 @@ public abstract class AdminApi extends com.sonicle.webtop.core.sdk.BaseRestApiRe
     @Produces({ "application/json" })
     @ApiOperation(value = "Get domain", notes = "Get a single Domain.", response = ApiDomain.class, authorizations = {
         
-        @Authorization(value = "auth-bearer")
+        @Authorization(value = "auth-bearer"),
+        
+        @Authorization(value = "auth-basic")
          }, tags={ "admin-domains" })
     @ApiResponses(value = { 
         @ApiResponse(code = 200, message = "OK", response = ApiDomain.class),
@@ -322,7 +357,9 @@ public abstract class AdminApi extends com.sonicle.webtop.core.sdk.BaseRestApiRe
     @Produces({ "application/json" })
     @ApiOperation(value = "Gets a domain group", notes = "Get a single Domain's group.", response = ApiGroup.class, authorizations = {
         
-        @Authorization(value = "auth-bearer")
+        @Authorization(value = "auth-bearer"),
+        
+        @Authorization(value = "auth-basic")
          }, tags={ "admin-groups" })
     @ApiResponses(value = { 
         @ApiResponse(code = 200, message = "OK", response = ApiGroup.class),
@@ -338,7 +375,9 @@ public abstract class AdminApi extends com.sonicle.webtop.core.sdk.BaseRestApiRe
     @Produces({ "application/json" })
     @ApiOperation(value = "Get license offline request info for a domain", notes = "Returns info for performing offline activation requests, or for deactivation if specific parameter is turned on.", response = ApiLicenseOfflineReqInfo.class, authorizations = {
         
-        @Authorization(value = "auth-bearer")
+        @Authorization(value = "auth-bearer"),
+        
+        @Authorization(value = "auth-basic")
          }, tags={ "admin-licenses" })
     @ApiResponses(value = { 
         @ApiResponse(code = 200, message = "OK", response = ApiLicenseOfflineReqInfo.class),
@@ -355,7 +394,9 @@ public abstract class AdminApi extends com.sonicle.webtop.core.sdk.BaseRestApiRe
     @Produces({ "application/json" })
     @ApiOperation(value = "Gets a resource for a domain", notes = "Get a single Domain's resource.", response = ApiResource.class, authorizations = {
         
-        @Authorization(value = "auth-bearer")
+        @Authorization(value = "auth-bearer"),
+        
+        @Authorization(value = "auth-basic")
          }, tags={ "admin-resources" })
     @ApiResponses(value = { 
         @ApiResponse(code = 200, message = "OK", response = ApiResource.class),
@@ -372,7 +413,9 @@ public abstract class AdminApi extends com.sonicle.webtop.core.sdk.BaseRestApiRe
     @Produces({ "application/json" })
     @ApiOperation(value = "Gets a role for a domain", notes = "Get a single Domain's role.", response = ApiRole.class, authorizations = {
         
-        @Authorization(value = "auth-bearer")
+        @Authorization(value = "auth-bearer"),
+        
+        @Authorization(value = "auth-basic")
          }, tags={ "admin-roles" })
     @ApiResponses(value = { 
         @ApiResponse(code = 200, message = "OK", response = ApiRole.class),
@@ -389,7 +432,9 @@ public abstract class AdminApi extends com.sonicle.webtop.core.sdk.BaseRestApiRe
     @Produces({ "application/json" })
     @ApiOperation(value = "Gets a domain user", notes = "Get a single Domain's user.", response = ApiUser.class, authorizations = {
         
-        @Authorization(value = "auth-bearer")
+        @Authorization(value = "auth-bearer"),
+        
+        @Authorization(value = "auth-basic")
          }, tags={ "admin-users" })
     @ApiResponses(value = { 
         @ApiResponse(code = 200, message = "OK", response = ApiUser.class),
@@ -405,7 +450,9 @@ public abstract class AdminApi extends com.sonicle.webtop.core.sdk.BaseRestApiRe
     @Produces({ "application/json" })
     @ApiOperation(value = "List domains", notes = "Lists Domains.", response = ApiDomainEntry.class, responseContainer = "List", authorizations = {
         
-        @Authorization(value = "auth-bearer")
+        @Authorization(value = "auth-bearer"),
+        
+        @Authorization(value = "auth-basic")
          }, tags={ "admin-domains" })
     @ApiResponses(value = { 
         @ApiResponse(code = 200, message = "OK", response = ApiDomainEntry.class, responseContainer = "List"),
@@ -421,7 +468,9 @@ public abstract class AdminApi extends com.sonicle.webtop.core.sdk.BaseRestApiRe
     @Produces({ "application/json" })
     @ApiOperation(value = "List domain groups", notes = "Lists Domain's groups.", response = ApiGroup.class, responseContainer = "List", authorizations = {
         
-        @Authorization(value = "auth-bearer")
+        @Authorization(value = "auth-bearer"),
+        
+        @Authorization(value = "auth-basic")
          }, tags={ "admin-groups" })
     @ApiResponses(value = { 
         @ApiResponse(code = 200, message = "OK", response = ApiGroup.class, responseContainer = "List"),
@@ -437,7 +486,9 @@ public abstract class AdminApi extends com.sonicle.webtop.core.sdk.BaseRestApiRe
     @Produces({ "application/json" })
     @ApiOperation(value = "List product licenses for a domain", notes = "Lists Domain's product licenses.", response = ApiLicense.class, responseContainer = "List", authorizations = {
         
-        @Authorization(value = "auth-bearer")
+        @Authorization(value = "auth-bearer"),
+        
+        @Authorization(value = "auth-basic")
          }, tags={ "admin-licenses" })
     @ApiResponses(value = { 
         @ApiResponse(code = 200, message = "OK", response = ApiLicense.class, responseContainer = "List"),
@@ -453,7 +504,9 @@ public abstract class AdminApi extends com.sonicle.webtop.core.sdk.BaseRestApiRe
     @Produces({ "application/json" })
     @ApiOperation(value = "List resources for a domain", notes = "Lists Domain's resources.", response = ApiResource.class, responseContainer = "List", authorizations = {
         
-        @Authorization(value = "auth-bearer")
+        @Authorization(value = "auth-bearer"),
+        
+        @Authorization(value = "auth-basic")
          }, tags={ "admin-resources" })
     @ApiResponses(value = { 
         @ApiResponse(code = 200, message = "OK", response = ApiResource.class, responseContainer = "List"),
@@ -469,7 +522,9 @@ public abstract class AdminApi extends com.sonicle.webtop.core.sdk.BaseRestApiRe
     @Produces({ "application/json" })
     @ApiOperation(value = "List roles for a domain", notes = "Lists Domain's roles.", response = ApiRole.class, responseContainer = "List", authorizations = {
         
-        @Authorization(value = "auth-bearer")
+        @Authorization(value = "auth-bearer"),
+        
+        @Authorization(value = "auth-basic")
          }, tags={ "admin-roles" })
     @ApiResponses(value = { 
         @ApiResponse(code = 200, message = "OK", response = ApiRole.class, responseContainer = "List"),
@@ -485,7 +540,9 @@ public abstract class AdminApi extends com.sonicle.webtop.core.sdk.BaseRestApiRe
     @Produces({ "application/json" })
     @ApiOperation(value = "List domain users", notes = "Lists Domain's users.", response = ApiUser.class, responseContainer = "List", authorizations = {
         
-        @Authorization(value = "auth-bearer")
+        @Authorization(value = "auth-bearer"),
+        
+        @Authorization(value = "auth-basic")
          }, tags={ "admin-users" })
     @ApiResponses(value = { 
         @ApiResponse(code = 200, message = "OK", response = ApiUser.class, responseContainer = "List"),
@@ -502,7 +559,9 @@ public abstract class AdminApi extends com.sonicle.webtop.core.sdk.BaseRestApiRe
     @Produces({ "application/json" })
     @ApiOperation(value = "Deactivates a product's license for a domain", notes = "Revokes the lease of a license from each specified users.", response = Void.class, authorizations = {
         
-        @Authorization(value = "auth-bearer")
+        @Authorization(value = "auth-bearer"),
+        
+        @Authorization(value = "auth-basic")
          }, tags={ "admin-licenses" })
     @ApiResponses(value = { 
         @ApiResponse(code = 200, message = "OK", response = Void.class),
@@ -520,7 +579,9 @@ public abstract class AdminApi extends com.sonicle.webtop.core.sdk.BaseRestApiRe
     @Produces({ "application/json" })
     @ApiOperation(value = "Set user password", notes = "Updates user password.", response = Void.class, authorizations = {
         
-        @Authorization(value = "auth-bearer")
+        @Authorization(value = "auth-bearer"),
+        
+        @Authorization(value = "auth-basic")
          }, tags={ "admin-users" })
     @ApiResponses(value = { 
         @ApiResponse(code = 200, message = "OK", response = Void.class),
@@ -538,7 +599,9 @@ public abstract class AdminApi extends com.sonicle.webtop.core.sdk.BaseRestApiRe
     @Produces({ "application/json" })
     @ApiOperation(value = "Update domain", notes = "Updates a Domain.", response = Void.class, authorizations = {
         
-        @Authorization(value = "auth-bearer")
+        @Authorization(value = "auth-bearer"),
+        
+        @Authorization(value = "auth-basic")
          }, tags={ "admin-domains" })
     @ApiResponses(value = { 
         @ApiResponse(code = 200, message = "OK", response = Void.class),
@@ -556,7 +619,9 @@ public abstract class AdminApi extends com.sonicle.webtop.core.sdk.BaseRestApiRe
     @Produces({ "application/json" })
     @ApiOperation(value = "Updates a domain group", notes = "Updates a Domain's group.", response = Void.class, authorizations = {
         
-        @Authorization(value = "auth-bearer")
+        @Authorization(value = "auth-bearer"),
+        
+        @Authorization(value = "auth-basic")
          }, tags={ "admin-groups" })
     @ApiResponses(value = { 
         @ApiResponse(code = 200, message = "OK", response = Void.class),
@@ -574,7 +639,9 @@ public abstract class AdminApi extends com.sonicle.webtop.core.sdk.BaseRestApiRe
     @Produces({ "application/json" })
     @ApiOperation(value = "Updates a resource for a domain", notes = "Updates a Domain's resource.", response = Void.class, authorizations = {
         
-        @Authorization(value = "auth-bearer")
+        @Authorization(value = "auth-bearer"),
+        
+        @Authorization(value = "auth-basic")
          }, tags={ "admin-resources" })
     @ApiResponses(value = { 
         @ApiResponse(code = 200, message = "OK", response = Void.class),
@@ -592,7 +659,9 @@ public abstract class AdminApi extends com.sonicle.webtop.core.sdk.BaseRestApiRe
     @Produces({ "application/json" })
     @ApiOperation(value = "Updates a role for a domain", notes = "Updates a Domain's role.", response = Void.class, authorizations = {
         
-        @Authorization(value = "auth-bearer")
+        @Authorization(value = "auth-bearer"),
+        
+        @Authorization(value = "auth-basic")
          }, tags={ "admin-roles" })
     @ApiResponses(value = { 
         @ApiResponse(code = 200, message = "OK", response = Void.class),
@@ -610,7 +679,9 @@ public abstract class AdminApi extends com.sonicle.webtop.core.sdk.BaseRestApiRe
     @Produces({ "application/json" })
     @ApiOperation(value = "Updates a domain user", notes = "Updates a Domain's user.", response = ApiError.class, authorizations = {
         
-        @Authorization(value = "auth-bearer")
+        @Authorization(value = "auth-bearer"),
+        
+        @Authorization(value = "auth-basic")
          }, tags={ "admin-users" })
     @ApiResponses(value = { 
         @ApiResponse(code = 200, message = "OK", response = ApiError.class),
@@ -623,11 +694,32 @@ public abstract class AdminApi extends com.sonicle.webtop.core.sdk.BaseRestApiRe
     }
 
     @DELETE
+    @Path("/api-key/{apikey_id}")
+    @Produces({ "application/json" })
+    @ApiOperation(value = "Deletes an API key for a domain", notes = "Deletes the specified API key given its ID.", response = Void.class, authorizations = {
+        
+        @Authorization(value = "auth-bearer"),
+        
+        @Authorization(value = "auth-basic")
+         }, tags={ "admin-apikeys" })
+    @ApiResponses(value = { 
+        @ApiResponse(code = 200, message = "Success", response = Void.class),
+        @ApiResponse(code = 403, message = "Forbidden", response = ApiError.class),
+        @ApiResponse(code = 404, message = "Not Found", response = ApiError.class),
+        @ApiResponse(code = 500, message = "Internal Server Error", response = ApiError.class)
+    })
+    public Response deleteApiKey(@PathParam("apikey_id") @ApiParam("The API Key ID") String apikeyId,@QueryParam("domain_id") @NotNull  @ApiParam("The domain ID")  String domainId) {
+        return Response.ok().entity("magic!").build();
+    }
+
+    @DELETE
     @Path("/settings/{service_id}/{key}")
     @Produces({ "application/json" })
     @ApiOperation(value = "Delete setting entry (System/Domain)", notes = "Deletes setting value, System or Domain depending on the paramter.", response = Void.class, authorizations = {
         
-        @Authorization(value = "auth-bearer")
+        @Authorization(value = "auth-bearer"),
+        
+        @Authorization(value = "auth-basic")
          }, tags={ "admin-settings" })
     @ApiResponses(value = { 
         @ApiResponse(code = 200, message = "OK", response = Void.class),
@@ -639,12 +731,52 @@ public abstract class AdminApi extends com.sonicle.webtop.core.sdk.BaseRestApiRe
         return Response.ok().entity("magic!").build();
     }
 
+    @POST
+    @Path("/api-keys")
+    @Consumes({ "application/json" })
+    @Produces({ "application/json" })
+    @ApiOperation(value = "Generate new API key", notes = "Generates new API key for a domain.", response = ApiApiKeyGenerated.class, authorizations = {
+        
+        @Authorization(value = "auth-bearer"),
+        
+        @Authorization(value = "auth-basic")
+         }, tags={ "admin-apikeys" })
+    @ApiResponses(value = { 
+        @ApiResponse(code = 201, message = "Created", response = ApiApiKeyGenerated.class),
+        @ApiResponse(code = 403, message = "Forbidden", response = ApiError.class),
+        @ApiResponse(code = 500, message = "Internal Server Error", response = ApiError.class)
+    })
+    public Response generateApiKey(@QueryParam("domain_id") @NotNull  @ApiParam("The domain ID")  String domainId,@Valid ApiApiKeyBase body) {
+        return Response.ok().entity("magic!").build();
+    }
+
+    @GET
+    @Path("/api-key/{apikey_id}")
+    @Produces({ "application/json" })
+    @ApiOperation(value = "Gets an API key for a domain", notes = "Gets the specified API key given its ID.", response = ApiApiKey.class, authorizations = {
+        
+        @Authorization(value = "auth-bearer"),
+        
+        @Authorization(value = "auth-basic")
+         }, tags={ "admin-apikeys" })
+    @ApiResponses(value = { 
+        @ApiResponse(code = 200, message = "Success", response = ApiApiKey.class),
+        @ApiResponse(code = 403, message = "Forbidden", response = ApiError.class),
+        @ApiResponse(code = 404, message = "Not Found", response = ApiError.class),
+        @ApiResponse(code = 500, message = "Internal Server Error", response = ApiError.class)
+    })
+    public Response getApiKey(@PathParam("apikey_id") @ApiParam("The API Key ID") String apikeyId,@QueryParam("domain_id") @NotNull  @ApiParam("The domain ID")  String domainId) {
+        return Response.ok().entity("magic!").build();
+    }
+
     @GET
     @Path("/settings/{service_id}/{key}")
     @Produces({ "application/json" })
     @ApiOperation(value = "Get setting entry (System/Domain)", notes = "Gets specified setting value, System or Domain depending on the paramter.", response = ApiSettingEntry.class, authorizations = {
         
-        @Authorization(value = "auth-bearer")
+        @Authorization(value = "auth-bearer"),
+        
+        @Authorization(value = "auth-basic")
          }, tags={ "admin-settings" })
     @ApiResponses(value = { 
         @ApiResponse(code = 200, message = "OK", response = ApiSettingEntry.class),
@@ -657,11 +789,31 @@ public abstract class AdminApi extends com.sonicle.webtop.core.sdk.BaseRestApiRe
     }
 
     @GET
+    @Path("/api-keys")
+    @Produces({ "application/json" })
+    @ApiOperation(value = "List API keys", notes = "Returns a list of API keys generated for a domain.", response = ApiApiKey.class, responseContainer = "List", authorizations = {
+        
+        @Authorization(value = "auth-bearer"),
+        
+        @Authorization(value = "auth-basic")
+         }, tags={ "admin-apikeys" })
+    @ApiResponses(value = { 
+        @ApiResponse(code = 200, message = "Success", response = ApiApiKey.class, responseContainer = "List"),
+        @ApiResponse(code = 403, message = "Forbidden", response = ApiError.class),
+        @ApiResponse(code = 500, message = "Internal Server Error", response = ApiError.class)
+    })
+    public Response listApiKeys(@QueryParam("domain_id") @NotNull  @ApiParam("The domain ID")  String domainId) {
+        return Response.ok().entity("magic!").build();
+    }
+
+    @GET
     @Path("/settings")
     @Produces({ "application/json" })
     @ApiOperation(value = "List settings (System/Domain)", notes = "Return a list of all setting entries, System or Domain depending on the paramter.", response = ApiSettingEntry.class, responseContainer = "List", authorizations = {
         
-        @Authorization(value = "auth-bearer")
+        @Authorization(value = "auth-bearer"),
+        
+        @Authorization(value = "auth-basic")
          }, tags={ "admin-settings" })
     @ApiResponses(value = { 
         @ApiResponse(code = 200, message = "OK", response = ApiSettingEntry.class, responseContainer = "List"),
@@ -679,7 +831,9 @@ public abstract class AdminApi extends com.sonicle.webtop.core.sdk.BaseRestApiRe
     @Produces({ "application/json" })
     @ApiOperation(value = "Sets System Administrator password", notes = "Updates system administrator password.", response = Void.class, authorizations = {
         
-        @Authorization(value = "auth-bearer")
+        @Authorization(value = "auth-bearer"),
+        
+        @Authorization(value = "auth-basic")
          }, tags={ "admin-password" })
     @ApiResponses(value = { 
         @ApiResponse(code = 200, message = "OK", response = Void.class),
@@ -691,12 +845,34 @@ public abstract class AdminApi extends com.sonicle.webtop.core.sdk.BaseRestApiRe
     }
 
     @PUT
+    @Path("/api-key/{apikey_id}")
+    @Consumes({ "application/json" })
+    @Produces({ "application/json" })
+    @ApiOperation(value = "Updates an API key for a domain", notes = "Updates the specified API key given its ID: only few fields can be updated.", response = Void.class, authorizations = {
+        
+        @Authorization(value = "auth-bearer"),
+        
+        @Authorization(value = "auth-basic")
+         }, tags={ "admin-apikeys" })
+    @ApiResponses(value = { 
+        @ApiResponse(code = 200, message = "Success", response = Void.class),
+        @ApiResponse(code = 403, message = "Forbidden", response = ApiError.class),
+        @ApiResponse(code = 404, message = "Not Found", response = ApiError.class),
+        @ApiResponse(code = 500, message = "Internal Server Error", response = ApiError.class)
+    })
+    public Response updateApiKey(@PathParam("apikey_id") @ApiParam("The API Key ID") String apikeyId,@QueryParam("domain_id") @NotNull  @ApiParam("The domain ID")  String domainId,@Valid ApiApiKeyBase body) {
+        return Response.ok().entity("magic!").build();
+    }
+
+    @PUT
     @Path("/settings/{service_id}/{key}")
     @Consumes({ "application/json" })
     @Produces({ "application/json" })
     @ApiOperation(value = "Update setting entry (System/Domain)", notes = "Updates setting value, System or Domain depending on the paramter.", response = Void.class, authorizations = {
         
-        @Authorization(value = "auth-bearer")
+        @Authorization(value = "auth-bearer"),
+        
+        @Authorization(value = "auth-basic")
          }, tags={ "admin-settings" })
     @ApiResponses(value = { 
         @ApiResponse(code = 200, message = "OK", response = Void.class),
