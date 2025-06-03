@@ -20,6 +20,10 @@
 		<webtop.service.restApi.oas>openapi-v1.json</webtop.service.restApi.oas>
 		<!-- SENCHA -->
 		<sencha.properties.target>sencha75</sencha.properties.target>
+		
+		<!-- FIXME: leave customizations here for now, this will be moved into superpom-service project when tools will be effectively upgraded -->
+		<!-- We cannot move beyond v.6.6.0 due to Java 11 requirement -->
+		<openapi-generator-maven-plugin.version>6.6.0</openapi-generator-maven-plugin.version>
 	</properties>
 	
 	<repositories>
@@ -860,6 +864,15 @@
 				</executions>
 			</plugin>
 			-->
+			<!-- FIXME: leave customizations here for now, this will be moved into superpom-service project when tools will be effectively upgraded -->
+			<plugin>
+				<groupId>org.openapitools</groupId>
+				<artifactId>openapi-generator-maven-plugin</artifactId>
+				<version>${openapi-generator-maven-plugin.version}</version>
+				<configuration>
+					<openapiNormalizer>REF_AS_PARENT_IN_ALLOF=true</openapiNormalizer><!-- Force using Java inheritance for AllOf notation -->
+				</configuration>
+			</plugin>
 		</plugins>
 	</build>
 	
