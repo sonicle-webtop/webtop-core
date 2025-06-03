@@ -243,7 +243,7 @@ public class Admin extends AdminApi {
 	}
 	
 	@Override
-	public Response adminListDomains() {
+	public Response listDomains() {
 		try {
 			CoreAdminManager adminMgr = WT.getCoreAdminManager(RunContext.getRunProfileId());
 			List<ApiDomainEntry> items = new ArrayList<>();
@@ -259,7 +259,7 @@ public class Admin extends AdminApi {
 	}
 
 	@Override
-	public Response adminGetDomain(String domainId) {
+	public Response getDomain(String domainId) {
 		try {
 			CoreAdminManager adminMgr = WT.getCoreAdminManager(RunContext.buildDomainAdminProfileId(domainId));
 			BitFlags<DomainGetOption> options = BitFlags.with(
@@ -276,7 +276,7 @@ public class Admin extends AdminApi {
 	}
 
 	@Override
-	public Response adminAddDomain(ApiDomain body) {
+	public Response addDomain(ApiDomain body) {
 		try {
 			CoreAdminManager adminMgr = WT.getCoreAdminManager(RunContext.buildDomainAdminProfileId(body.getDomainId()));
 			Result<Domain> result = adminMgr.addDomain(body.getDomainId(), ApiUtils.fillDomainBase(new DomainBase(), body));
@@ -295,7 +295,7 @@ public class Admin extends AdminApi {
 	}
 
 	@Override
-	public Response adminUpdateDomain(String domainId, Long updateOptions, ApiDomainBase body) {
+	public Response updateDomain(String domainId, Long updateOptions, ApiDomainBase body) {
 		try {
 			CoreAdminManager adminMgr = WT.getCoreAdminManager(RunContext.buildDomainAdminProfileId(domainId));
 			BitFlags<DomainUpdateOption> options = ApiUtils.toDomainUpdateOption(updateOptions);
@@ -309,7 +309,7 @@ public class Admin extends AdminApi {
 	}
 
 	@Override
-	public Response adminDeleteDomain(String domainId, Boolean deep) {
+	public Response deleteDomain(String domainId, Boolean deep) {
 		boolean deepDelete = true;
 		if (deep != null) deepDelete = deep;
 		
@@ -324,7 +324,7 @@ public class Admin extends AdminApi {
 	}
 
 	@Override
-	public Response adminListGroups(String domainId) {
+	public Response listGroups(String domainId) {
 		try {
 			CoreAdminManager adminMgr = WT.getCoreAdminManager(RunContext.buildDomainAdminProfileId(domainId));
 			List<ApiGroup> items = new ArrayList<>();
@@ -339,7 +339,7 @@ public class Admin extends AdminApi {
 	}
 
 	@Override
-	public Response adminGetGroup(String groupId, String domainId) {
+	public Response getGroup(String groupId, String domainId) {
 		try {
 			CoreAdminManager adminMgr = WT.getCoreAdminManager(RunContext.buildDomainAdminProfileId(domainId));
 			BitFlags<GroupGetOption> options = BitFlags.with(
@@ -358,7 +358,7 @@ public class Admin extends AdminApi {
 	}
 
 	@Override
-	public Response adminAddGroup(String domainId, Long updateOptions, ApiGroupAdd body) {
+	public Response addGroup(String domainId, Long updateOptions, ApiGroupAdd body) {
 		try {
 			CoreAdminManager adminMgr = WT.getCoreAdminManager(RunContext.buildDomainAdminProfileId(domainId));
 			BitFlags<GroupUpdateOption> options = ApiUtils.toGroupUpdateOption(updateOptions);
@@ -375,7 +375,7 @@ public class Admin extends AdminApi {
 	}
 
 	@Override
-	public Response adminUpdateGroup(String groupId, String domainId, Long updateOptions, ApiGroupBase body) {
+	public Response updateGroup(String groupId, String domainId, Long updateOptions, ApiGroupBase body) {
 		try {
 			CoreAdminManager adminMgr = WT.getCoreAdminManager(RunContext.buildDomainAdminProfileId(domainId));
 			BitFlags<GroupUpdateOption> options = ApiUtils.toGroupUpdateOption(updateOptions);
@@ -388,7 +388,7 @@ public class Admin extends AdminApi {
 	}
 
 	@Override
-	public Response adminDeleteGroup(String groupId, String domainId) {
+	public Response deleteGroup(String groupId, String domainId) {
 		try {
 			CoreAdminManager adminMgr = WT.getCoreAdminManager(RunContext.buildDomainAdminProfileId(domainId));
 			ResultVoid result = adminMgr.deleteGroup(groupId);
@@ -400,7 +400,7 @@ public class Admin extends AdminApi {
 	}
 	
 	@Override
-	public Response adminListUsers(String domainId) {
+	public Response listUsers(String domainId) {
 		try {
 			CoreAdminManager adminMgr = WT.getCoreAdminManager(RunContext.buildDomainAdminProfileId(domainId));
 			List<ApiUser> items = new ArrayList<>();
@@ -415,7 +415,7 @@ public class Admin extends AdminApi {
 	}
 
 	@Override
-	public Response adminGetUser(String userId, String domainId) {
+	public Response getUser(String userId, String domainId) {
 		try {
 			CoreAdminManager adminMgr = WT.getCoreAdminManager(RunContext.buildDomainAdminProfileId(domainId));
 			BitFlags<UserGetOption> options = BitFlags.with(
@@ -434,7 +434,7 @@ public class Admin extends AdminApi {
 	}
 
 	@Override
-	public Response adminAddUser(String domainId, Long updateOptions, ApiUserAdd body) {
+	public Response addUser(String domainId, Long updateOptions, ApiUserAdd body) {
 		try {
 			CoreAdminManager adminMgr = WT.getCoreAdminManager(RunContext.buildDomainAdminProfileId(domainId));
 			BitFlags<UserUpdateOption> options = ApiUtils.toUserUpdateOption(updateOptions);
@@ -451,7 +451,7 @@ public class Admin extends AdminApi {
 	}
 
 	@Override
-	public Response adminUpdateUser(String userId, String domainId, Long updateOptions, ApiUserBase body) {
+	public Response updateUser(String userId, String domainId, Long updateOptions, ApiUserBase body) {
 		try {
 			CoreAdminManager adminMgr = WT.getCoreAdminManager(RunContext.buildDomainAdminProfileId(domainId));
 			BitFlags<UserUpdateOption> options = ApiUtils.toUserUpdateOption(updateOptions);
@@ -464,7 +464,7 @@ public class Admin extends AdminApi {
 	}
 
 	@Override
-	public Response adminDeleteUser(String userId, String domainId, Boolean deep) {
+	public Response deleteUser(String userId, String domainId, Boolean deep) {
 		boolean deepDelete = true;
 		if (deep != null) deepDelete = deep;
 		
@@ -479,7 +479,7 @@ public class Admin extends AdminApi {
 	}
 	
 	@Override
-	public Response adminSetUserPassword(String userId, String domainId, String body) {
+	public Response setUserPassword(String userId, String domainId, String body) {
 		try {
 			CoreAdminManager adminMgr = WT.getCoreAdminManager(RunContext.buildDomainAdminProfileId(domainId));
 			adminMgr.updateUserPassword(userId, LangUtils.value(body, (char[])null));
@@ -493,7 +493,7 @@ public class Admin extends AdminApi {
 	}
 	
 	@Override
-	public Response adminListResources(String domainId) {
+	public Response listResources(String domainId) {
 		if (LOGGER.isDebugEnabled()) {
 			LOGGER.debug("[{}] adminListResources()", RunContext.getRunProfileId());
 		}
@@ -513,7 +513,7 @@ public class Admin extends AdminApi {
 	}
 
 	@Override
-	public Response adminGetResource(String resourceId, String domainId) {
+	public Response getResource(String resourceId, String domainId) {
 		if (LOGGER.isDebugEnabled()) {
 			LOGGER.debug("[{}] getResource({})", RunContext.getRunProfileId(), resourceId);
 		}
@@ -533,7 +533,7 @@ public class Admin extends AdminApi {
 	}
 
 	@Override
-	public Response adminAddResource(String domainId, Long updateOptions, ApiResourceAdd body) {
+	public Response addResource(String domainId, Long updateOptions, ApiResourceAdd body) {
 		if (LOGGER.isDebugEnabled()) {
 			LOGGER.debug("[{}] addResource({})", RunContext.getRunProfileId(), updateOptions);
 		}
@@ -555,7 +555,7 @@ public class Admin extends AdminApi {
 	}
 
 	@Override
-	public Response adminUpdateResource(String resourceId, String domainId, Long updateOptions, ApiResourceBase body) {
+	public Response updateResource(String resourceId, String domainId, Long updateOptions, ApiResourceBase body) {
 		if (LOGGER.isDebugEnabled()) {
 			LOGGER.debug("[{}] updateResource({}, {})", RunContext.getRunProfileId(), resourceId, updateOptions);
 		}
@@ -573,7 +573,7 @@ public class Admin extends AdminApi {
 	}
 
 	@Override
-	public Response adminDeleteResource(String resourceId, String domainId) {
+	public Response deleteResource(String resourceId, String domainId) {
 		if (LOGGER.isDebugEnabled()) {
 			LOGGER.debug("[{}] deleteResource({})", RunContext.getRunProfileId(), resourceId);
 		}
@@ -590,7 +590,7 @@ public class Admin extends AdminApi {
 	}
 	
 	@Override
-	public Response adminListRoles(String domainId) {
+	public Response listRoles(String domainId) {
 		try {
 			CoreAdminManager adminMgr = WT.getCoreAdminManager(RunContext.buildDomainAdminProfileId(domainId));
 			List<ApiRole> items = new ArrayList<>();
@@ -605,7 +605,7 @@ public class Admin extends AdminApi {
 	}
 
 	@Override
-	public Response adminGetRole(String roleId, String domainId) {
+	public Response getRole(String roleId, String domainId) {
 		try {
 			CoreAdminManager adminMgr = WT.getCoreAdminManager(RunContext.buildDomainAdminProfileId(domainId));
 			BitFlags<RoleGetOption> options = BitFlags.with(
@@ -622,7 +622,7 @@ public class Admin extends AdminApi {
 	}
 
 	@Override
-	public Response adminAddRole(String domainId, Long updateOptions, ApiRoleAdd body) {
+	public Response addRole(String domainId, Long updateOptions, ApiRoleAdd body) {
 		try {
 			CoreAdminManager adminMgr = WT.getCoreAdminManager(RunContext.buildDomainAdminProfileId(domainId));
 			BitFlags<RoleUpdateOption> options = ApiUtils.toRoleUpdateOption(updateOptions);
@@ -639,7 +639,7 @@ public class Admin extends AdminApi {
 	}
 
 	@Override
-	public Response adminUpdateRole(String roleId, String domainId, Long updateOptions, ApiRoleBase body) {
+	public Response updateRole(String roleId, String domainId, Long updateOptions, ApiRoleBase body) {
 		try {
 			CoreAdminManager adminMgr = WT.getCoreAdminManager(RunContext.buildDomainAdminProfileId(domainId));
 			BitFlags<RoleUpdateOption> options = ApiUtils.toRoleUpdateOption(updateOptions);
@@ -652,7 +652,7 @@ public class Admin extends AdminApi {
 	}
 
 	@Override
-	public Response adminDeleteRole(String roleId, String domainId) {
+	public Response deleteRole(String roleId, String domainId) {
 		try {
 			CoreAdminManager adminMgr = WT.getCoreAdminManager(RunContext.buildDomainAdminProfileId(domainId));
 			ResultVoid result = adminMgr.deleteRole(roleId);
@@ -664,7 +664,7 @@ public class Admin extends AdminApi {
 	}
 
 	@Override
-	public Response adminListLicenses(String domainId, Boolean includeBuiltin) {
+	public Response listLicenses(String domainId, Boolean includeBuiltin) {
 		try {
 			CoreAdminManager adminMgr = WT.getCoreAdminManager(RunContext.buildDomainAdminProfileId(domainId));
 			BitFlags<LicenseListOption> options = BitFlags.with(LicenseListOption.EXTENDED_INFO);
@@ -681,7 +681,7 @@ public class Admin extends AdminApi {
 	}
 
 	@Override
-	public Response adminAddLicense(String productCode, String domainId, Boolean autoActivate, ApiLicenseAdd body) {
+	public Response addLicense(String productCode, String domainId, Boolean autoActivate, ApiLicenseAdd body) {
 		try {
 			CoreAdminManager adminMgr = WT.getCoreAdminManager(RunContext.buildDomainAdminProfileId(domainId));
 			adminMgr.addLicense(productCode, ApiUtils.fillLicenseBase(new LicenseBase(), body), LangUtils.value(autoActivate, true));
@@ -696,7 +696,7 @@ public class Admin extends AdminApi {
 	}
 
 	@Override
-	public Response adminDeleteLicense(String productCode, String domainId, Boolean force) {
+	public Response deleteLicense(String productCode, String domainId, Boolean force) {
 		try {
 			CoreAdminManager adminMgr = WT.getCoreAdminManager(RunContext.buildDomainAdminProfileId(domainId));
 			adminMgr.deleteLicense(productCode, LangUtils.value(force, false));
@@ -708,7 +708,7 @@ public class Admin extends AdminApi {
 	}
 
 	@Override
-	public Response adminAssignLicenseLease(String productCode, String domainId, List<String> body) {
+	public Response assignLicenseLease(String productCode, String domainId, List<String> body) {
 		try {
 			Check.notEmpty(body, "body");
 			CoreAdminManager adminMgr = WT.getCoreAdminManager(RunContext.buildDomainAdminProfileId(domainId));
@@ -721,7 +721,7 @@ public class Admin extends AdminApi {
 	}
 	
 	@Override
-	public Response adminRevokeLicenseLease(String productCode, String domainId, List<String> body) {
+	public Response revokeLicenseLease(String productCode, String domainId, List<String> body) {
 		try {
 			Check.notEmpty(body, "body");
 			CoreAdminManager adminMgr = WT.getCoreAdminManager(RunContext.buildDomainAdminProfileId(domainId));
@@ -734,7 +734,7 @@ public class Admin extends AdminApi {
 	}
 
 	@Override
-	public Response adminGetLicenseOfflineReqInfo(String productCode, String domainId, Boolean deactivation) {
+	public Response getLicenseOfflineReqInfo(String productCode, String domainId, Boolean deactivation) {
 		try {
 			CoreAdminManager adminMgr = WT.getCoreAdminManager(RunContext.buildDomainAdminProfileId(domainId));
 			ProductLicense productLicense = adminMgr.getProductLicense(productCode);
@@ -758,7 +758,7 @@ public class Admin extends AdminApi {
 	}
 
 	@Override
-	public Response adminActivateLicense(String productCode, String domainId, String body) {
+	public Response activateLicense(String productCode, String domainId, String body) {
 		try {
 			CoreAdminManager adminMgr = WT.getCoreAdminManager(RunContext.buildDomainAdminProfileId(domainId));
 			
@@ -775,7 +775,7 @@ public class Admin extends AdminApi {
 	}
 
 	@Override
-	public Response adminDeactivateLicense(String productCode, String domainId, Boolean offline) {
+	public Response deactivateLicense(String productCode, String domainId, Boolean offline) {
 		try {
 			CoreAdminManager adminMgr = WT.getCoreAdminManager(RunContext.buildDomainAdminProfileId(domainId));
 			

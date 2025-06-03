@@ -1,8 +1,13 @@
 package com.sonicle.webtop.core.swagger.v1.model;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import com.sonicle.webtop.core.swagger.v1.model.ApiHomedException;
+import com.sonicle.webtop.core.swagger.v1.model.ApiResultExceptions;
+import com.sonicle.webtop.core.swagger.v1.model.ApiUser;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
+import java.util.ArrayList;
+import java.util.List;
 import javax.validation.constraints.*;
 import javax.validation.Valid;
 
@@ -15,30 +20,28 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 
 
 
-@JsonTypeName("GroupAdd_allOf")
+@JsonTypeName("addUser_201_response")
 @javax.annotation.Generated(value = "org.openapitools.codegen.languages.JavaJAXRSSpecServerCodegen", date = "2025-06-03T16:46:12.383+02:00[Europe/Berlin]")
-public class ApiGroupAddAllOf   {
-  private @Valid String groupId;
+public class ApiAddUser201Response extends ApiResultExceptions  {
+  private @Valid ApiUser value;
 
   /**
-   * Group ID, actually its name.
    **/
-  public ApiGroupAddAllOf groupId(String groupId) {
-    this.groupId = groupId;
+  public ApiAddUser201Response value(ApiUser value) {
+    this.value = value;
     return this;
   }
 
   
-  @ApiModelProperty(required = true, value = "Group ID, actually its name.")
-  @JsonProperty("groupId")
-  @NotNull
-  public String getGroupId() {
-    return groupId;
+  @ApiModelProperty(value = "")
+  @JsonProperty("value")
+  public ApiUser getValue() {
+    return value;
   }
 
-  @JsonProperty("groupId")
-  public void setGroupId(String groupId) {
-    this.groupId = groupId;
+  @JsonProperty("value")
+  public void setValue(ApiUser value) {
+    this.value = value;
   }
 
 
@@ -50,21 +53,22 @@ public class ApiGroupAddAllOf   {
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
-    ApiGroupAddAllOf groupAddAllOf = (ApiGroupAddAllOf) o;
-    return Objects.equals(this.groupId, groupAddAllOf.groupId);
+    ApiAddUser201Response addUser201Response = (ApiAddUser201Response) o;
+    return Objects.equals(this.value, addUser201Response.value) &&
+        super.equals(o);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(groupId);
+    return Objects.hash(value, super.hashCode());
   }
 
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();
-    sb.append("class ApiGroupAddAllOf {\n");
-    
-    sb.append("    groupId: ").append(toIndentedString(groupId)).append("\n");
+    sb.append("class ApiAddUser201Response {\n");
+    sb.append("    ").append(toIndentedString(super.toString())).append("\n");
+    sb.append("    value: ").append(toIndentedString(value)).append("\n");
     sb.append("}");
     return sb.toString();
   }

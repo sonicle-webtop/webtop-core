@@ -1,6 +1,7 @@
 package com.sonicle.webtop.core.swagger.v1.model;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import com.sonicle.webtop.core.swagger.v1.model.ApiGroup;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import javax.validation.constraints.*;
@@ -15,30 +16,28 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 
 
 
-@JsonTypeName("GroupAdd_allOf")
+@JsonTypeName("addGroup_201_response_allOf")
 @javax.annotation.Generated(value = "org.openapitools.codegen.languages.JavaJAXRSSpecServerCodegen", date = "2025-06-03T16:46:12.383+02:00[Europe/Berlin]")
-public class ApiGroupAddAllOf   {
-  private @Valid String groupId;
+public class ApiAddGroup201ResponseAllOf   {
+  private @Valid ApiGroup value;
 
   /**
-   * Group ID, actually its name.
    **/
-  public ApiGroupAddAllOf groupId(String groupId) {
-    this.groupId = groupId;
+  public ApiAddGroup201ResponseAllOf value(ApiGroup value) {
+    this.value = value;
     return this;
   }
 
   
-  @ApiModelProperty(required = true, value = "Group ID, actually its name.")
-  @JsonProperty("groupId")
-  @NotNull
-  public String getGroupId() {
-    return groupId;
+  @ApiModelProperty(value = "")
+  @JsonProperty("value")
+  public ApiGroup getValue() {
+    return value;
   }
 
-  @JsonProperty("groupId")
-  public void setGroupId(String groupId) {
-    this.groupId = groupId;
+  @JsonProperty("value")
+  public void setValue(ApiGroup value) {
+    this.value = value;
   }
 
 
@@ -50,21 +49,21 @@ public class ApiGroupAddAllOf   {
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
-    ApiGroupAddAllOf groupAddAllOf = (ApiGroupAddAllOf) o;
-    return Objects.equals(this.groupId, groupAddAllOf.groupId);
+    ApiAddGroup201ResponseAllOf addGroup201ResponseAllOf = (ApiAddGroup201ResponseAllOf) o;
+    return Objects.equals(this.value, addGroup201ResponseAllOf.value);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(groupId);
+    return Objects.hash(value);
   }
 
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();
-    sb.append("class ApiGroupAddAllOf {\n");
+    sb.append("class ApiAddGroup201ResponseAllOf {\n");
     
-    sb.append("    groupId: ").append(toIndentedString(groupId)).append("\n");
+    sb.append("    value: ").append(toIndentedString(value)).append("\n");
     sb.append("}");
     return sb.toString();
   }
