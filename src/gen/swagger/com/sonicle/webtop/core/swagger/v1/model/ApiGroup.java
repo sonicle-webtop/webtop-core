@@ -21,7 +21,7 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
  **/
 @ApiModel(description = "The group data for listing purposes.")
 @JsonTypeName("Group")
-@javax.annotation.Generated(value = "org.openapitools.codegen.languages.JavaJAXRSSpecServerCodegen", date = "2025-06-03T16:46:12.383+02:00[Europe/Berlin]")
+@javax.annotation.Generated(value = "org.openapitools.codegen.languages.JavaJAXRSSpecServerCodegen", date = "2025-06-04T10:11:41.988+02:00[Europe/Berlin]")
 public class ApiGroup extends ApiGroupBase  {
   private @Valid String groupId;
   private @Valid String groupSid;

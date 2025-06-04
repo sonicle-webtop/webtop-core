@@ -19,7 +19,7 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
  **/
 @ApiModel(description = "Raw Directory parameters to be used with some schemes: ldap, ldapneth, ad")
 @JsonTypeName("DomainBase_dirRawParameters")
-@javax.annotation.Generated(value = "org.openapitools.codegen.languages.JavaJAXRSSpecServerCodegen", date = "2025-06-03T16:46:12.383+02:00[Europe/Berlin]")
+@javax.annotation.Generated(value = "org.openapitools.codegen.languages.JavaJAXRSSpecServerCodegen", date = "2025-06-04T10:11:41.988+02:00[Europe/Berlin]")
 public class ApiDomainBaseDirRawParameters   {
   private @Valid String loginDn;
   private @Valid String loginFilter;

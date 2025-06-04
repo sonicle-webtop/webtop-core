@@ -178,4 +178,19 @@ public abstract class BaseRestApiResource extends AbstractPlatformService {
 		}
 		return resp.build();
 	}
+	
+	protected boolean shouldLogError(final Throwable t) {
+		if (t instanceof AuthException) {
+			return false;
+		} else if (t instanceof WTNotFoundException) {
+			return false;
+		} else if (t instanceof WTParseException) {
+			return false;
+		}  else {
+			if (t != null && "net.sf.qualitycheck.exception".equals(ClassUtils.getPackageName(LangUtils.getDeepestCause(t).getClass()))) {
+				return false;
+			}
+		}
+		return true;
+	}
 }

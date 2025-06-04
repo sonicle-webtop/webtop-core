@@ -32,17 +32,11 @@
  */
 package com.sonicle.webtop.core.rest.v1;
 
-import com.sonicle.commons.EnumUtils;
 import com.sonicle.commons.LangUtils;
-import com.sonicle.commons.URIUtils;
 import com.sonicle.commons.flags.BitFlags;
 import com.sonicle.commons.l4j.ProductLicense;
-import com.sonicle.commons.time.DateTimeUtils;
-import com.sonicle.commons.time.JodaTimeUtils;
-import com.sonicle.security.ConnectionSecurity;
 import com.sonicle.webtop.core.admin.CoreAdminManager;
 import com.sonicle.webtop.core.app.CoreManifest;
-import com.sonicle.webtop.core.app.ProductRegistry;
 import com.sonicle.webtop.core.app.RunContext;
 import com.sonicle.webtop.core.app.WT;
 import com.sonicle.webtop.core.app.model.ApiKey;
@@ -57,12 +51,7 @@ import com.sonicle.webtop.core.app.model.Group;
 import com.sonicle.webtop.core.app.model.GroupBase;
 import com.sonicle.webtop.core.app.model.GroupGetOption;
 import com.sonicle.webtop.core.app.model.GroupUpdateOption;
-import com.sonicle.webtop.core.app.model.HomedThrowable;
-import com.sonicle.webtop.core.app.model.LdapDirectoryParams;
 import com.sonicle.webtop.core.app.model.LicenseBase;
-import com.sonicle.webtop.core.app.model.PermissionString;
-import com.sonicle.webtop.core.app.model.LicenseComputedStatus;
-import com.sonicle.webtop.core.app.model.LicenseExInfo;
 import com.sonicle.webtop.core.app.model.LicenseListOption;
 import com.sonicle.webtop.core.app.model.Resource;
 import com.sonicle.webtop.core.app.model.ResourceBase;
@@ -83,39 +72,29 @@ import com.sonicle.webtop.core.app.sdk.WTLicenseMismatchException;
 import com.sonicle.webtop.core.app.sdk.WTLicenseValidationException;
 import com.sonicle.webtop.core.app.sdk.WTNotFoundException;
 import com.sonicle.webtop.core.app.sdk.WTPwdPolicyException;
-import com.sonicle.webtop.core.model.License;
-import com.sonicle.webtop.core.model.ProductId;
 import com.sonicle.webtop.core.model.ServiceLicense;
-import com.sonicle.webtop.core.model.ServiceLicenseLease;
-import com.sonicle.webtop.core.sdk.UserProfileId;
 import com.sonicle.webtop.core.sdk.WTException;
 import com.sonicle.webtop.core.swagger.v1.api.AdminApi;
-import com.sonicle.webtop.core.swagger.v1.model.ApiAdminAddDomain201Response;
-import com.sonicle.webtop.core.swagger.v1.model.ApiAdminAddGroup201Response;
-import com.sonicle.webtop.core.swagger.v1.model.ApiAdminAddResource201Response;
-import com.sonicle.webtop.core.swagger.v1.model.ApiAdminAddRole201Response;
-import com.sonicle.webtop.core.swagger.v1.model.ApiAdminAddUser201Response;
+import com.sonicle.webtop.core.swagger.v1.model.ApiAddDomain201Response;
+import com.sonicle.webtop.core.swagger.v1.model.ApiAddGroup201Response;
+import com.sonicle.webtop.core.swagger.v1.model.ApiAddResource201Response;
+import com.sonicle.webtop.core.swagger.v1.model.ApiAddRole201Response;
+import com.sonicle.webtop.core.swagger.v1.model.ApiAddUser201Response;
 import com.sonicle.webtop.core.swagger.v1.model.ApiApiKey;
 import com.sonicle.webtop.core.swagger.v1.model.ApiApiKeyBase;
 import com.sonicle.webtop.core.swagger.v1.model.ApiApiKeyGenerated;
-import com.sonicle.webtop.core.swagger.v1.model.ApiDirectoryPasswordPolicies;
 import com.sonicle.webtop.core.swagger.v1.model.ApiDomain;
 import com.sonicle.webtop.core.swagger.v1.model.ApiDomainBase;
-import com.sonicle.webtop.core.swagger.v1.model.ApiDomainBaseDirRawParameters;
 import com.sonicle.webtop.core.swagger.v1.model.ApiDomainEntry;
 import com.sonicle.webtop.core.swagger.v1.model.ApiError;
 import com.sonicle.webtop.core.swagger.v1.model.ApiGroup;
 import com.sonicle.webtop.core.swagger.v1.model.ApiGroupAdd;
 import com.sonicle.webtop.core.swagger.v1.model.ApiGroupBase;
-import com.sonicle.webtop.core.swagger.v1.model.ApiHomedException;
 import com.sonicle.webtop.core.swagger.v1.model.ApiLicense;
 import com.sonicle.webtop.core.swagger.v1.model.ApiLicenseAdd;
-import com.sonicle.webtop.core.swagger.v1.model.ApiLicenseLease;
-import com.sonicle.webtop.core.swagger.v1.model.ApiLicenseOfflineReqInfo;
 import com.sonicle.webtop.core.swagger.v1.model.ApiResource;
 import com.sonicle.webtop.core.swagger.v1.model.ApiResourceAdd;
 import com.sonicle.webtop.core.swagger.v1.model.ApiResourceBase;
-import com.sonicle.webtop.core.swagger.v1.model.ApiResultExceptions;
 import com.sonicle.webtop.core.swagger.v1.model.ApiRole;
 import com.sonicle.webtop.core.swagger.v1.model.ApiRoleAdd;
 import com.sonicle.webtop.core.swagger.v1.model.ApiRoleBase;
@@ -123,19 +102,11 @@ import com.sonicle.webtop.core.swagger.v1.model.ApiSettingEntry;
 import com.sonicle.webtop.core.swagger.v1.model.ApiUser;
 import com.sonicle.webtop.core.swagger.v1.model.ApiUserAdd;
 import com.sonicle.webtop.core.swagger.v1.model.ApiUserBase;
-import java.net.URISyntaxException;
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.stream.Collectors;
 import javax.ws.rs.core.Response;
 import net.sf.qualitycheck.Check;
 import org.codehaus.plexus.util.StringUtils;
-import org.joda.time.DateTimeZone;
-import org.joda.time.format.DateTimeFormatter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -148,6 +119,10 @@ public class Admin extends AdminApi {
 
 	@Override
 	public Response setAdminPassword(String body) {
+		if (LOGGER.isDebugEnabled()) {
+			LOGGER.debug("[{}] setAdminPassword()", RunContext.getRunProfileId());
+		}
+		
 		try {
 			CoreAdminManager adminMgr = WT.getCoreAdminManager(RunContext.getRunProfileId());
 			adminMgr.updateSysAdminPassword(LangUtils.value(body, (char[])null));
@@ -155,13 +130,18 @@ public class Admin extends AdminApi {
 			
 		} catch (WTPwdPolicyException ex) {
 			return respErrorBadRequest(ex.getMessage());
-		} catch (Exception ex) {
-			return respError(ex);
+		} catch (Throwable t) {
+			if (shouldLogError(t)) LOGGER.error("[{}] setAdminPassword()", RunContext.getRunProfileId(), t);
+			return respError(t);
 		}
 	}
 
 	@Override
 	public Response listSettings(String domainId) {
+		if (LOGGER.isDebugEnabled()) {
+			LOGGER.debug("[{}] listSettings({})", RunContext.getRunProfileId(), domainId);
+		}
+		
 		try {
 			List<com.sonicle.webtop.core.model.SettingEntry> settings;
 			if (!StringUtils.isBlank(domainId)) {
@@ -179,13 +159,18 @@ public class Admin extends AdminApi {
 			}
 			return respOk(items);
 			
-		} catch (Exception ex) {
-			return respError(ex);
+		} catch (Throwable t) {
+			if (shouldLogError(t)) LOGGER.error("[{}] listSettings({})", RunContext.getRunProfileId(), domainId, t);
+			return respError(t);
 		}
 	}
 
 	@Override
 	public Response getSetting(String serviceId, String key, String domainId) {
+		if (LOGGER.isDebugEnabled()) {
+			LOGGER.debug("[{}] getSetting({}, {}, {})", RunContext.getRunProfileId(), domainId, serviceId, key);
+		}
+		
 		try {
 			String value;
 			if (!StringUtils.isBlank(domainId)) {
@@ -198,13 +183,18 @@ public class Admin extends AdminApi {
 			}
 			return respOk(ApiUtils.createApiSettingEntry(serviceId, key, value));
 			
-		} catch (Exception ex) {
-			return respError(ex);
+		} catch (Throwable t) {
+			if (shouldLogError(t)) LOGGER.error("[{}] getSetting({}, {}, {})", RunContext.getRunProfileId(), domainId, serviceId, key, t);
+			return respError(t);
 		}
 	}
 
 	@Override
 	public Response updateSetting(String serviceId, String key, String domainId, String body) {
+		if (LOGGER.isDebugEnabled()) {
+			LOGGER.debug("[{}] updateSetting({}, {}, {})", RunContext.getRunProfileId(), domainId, serviceId, key);
+		}
+		
 		try {
 			boolean result;
 			if (!StringUtils.isBlank(domainId)) {
@@ -218,13 +208,18 @@ public class Admin extends AdminApi {
 			if (!result) throw new WTException("Value cannot be updated");
 			return respOk();
 			
-		} catch (Exception ex) {
-			return respError(ex);
+		} catch (Throwable t) {
+			if (shouldLogError(t)) LOGGER.error("[{}] updateSetting({}, {}, {})", RunContext.getRunProfileId(), domainId, serviceId, key, t);
+			return respError(t);
 		}
 	}
 
 	@Override
 	public Response deleteSetting(String serviceId, String key, String domainId) {
+		if (LOGGER.isDebugEnabled()) {
+			LOGGER.debug("[{}] deleteSetting({}, {}, {})", RunContext.getRunProfileId(), domainId, serviceId, key);
+		}
+		
 		try {
 			boolean result;
 			if (!StringUtils.isBlank(domainId)) {
@@ -237,13 +232,18 @@ public class Admin extends AdminApi {
 			}
 			return result ? respOk() : respErrorNotFound();
 			
-		} catch (Exception ex) {
-			return respError(ex);
+		} catch (Throwable t) {
+			if (shouldLogError(t)) LOGGER.error("[{}] deleteSetting({}, {}, {})", RunContext.getRunProfileId(), domainId, serviceId, key, t);
+			return respError(t);
 		}
 	}
 	
 	@Override
 	public Response listDomains() {
+		if (LOGGER.isDebugEnabled()) {
+			LOGGER.debug("[{}] listDomains()", RunContext.getRunProfileId());
+		}
+		
 		try {
 			CoreAdminManager adminMgr = WT.getCoreAdminManager(RunContext.getRunProfileId());
 			List<ApiDomainEntry> items = new ArrayList<>();
@@ -253,13 +253,18 @@ public class Admin extends AdminApi {
 			}
 			return respOk(items);
 			
-		} catch (Exception ex) {
-			return respError(ex);
+		} catch (Throwable t) {
+			if (shouldLogError(t)) LOGGER.error("[{}] listDomains()", RunContext.getRunProfileId(), t);
+			return respError(t);
 		}
 	}
 
 	@Override
 	public Response getDomain(String domainId) {
+		if (LOGGER.isDebugEnabled()) {
+			LOGGER.debug("[{}] getDomain({})", RunContext.getRunProfileId(), domainId);
+		}
+		
 		try {
 			CoreAdminManager adminMgr = WT.getCoreAdminManager(RunContext.buildDomainAdminProfileId(domainId));
 			BitFlags<DomainGetOption> options = BitFlags.with(
@@ -270,13 +275,18 @@ public class Admin extends AdminApi {
 			String publicUrl = adminMgr.getDomainSetting(CoreManifest.ID, "public.url");
 			return respOk(ApiUtils.fillApiDomain(new ApiDomain(), domain, publicUrl));
 			
-		} catch (Exception ex) {
-			return respError(ex);
+		} catch (Throwable t) {
+			if (shouldLogError(t)) LOGGER.error("[{}] getDomain({})", RunContext.getRunProfileId(), domainId, t);
+			return respError(t);
 		}
 	}
 
 	@Override
 	public Response addDomain(ApiDomain body) {
+		if (LOGGER.isDebugEnabled()) {
+			LOGGER.debug("[{}] addDomain()", RunContext.getRunProfileId());
+		}
+		
 		try {
 			CoreAdminManager adminMgr = WT.getCoreAdminManager(RunContext.buildDomainAdminProfileId(body.getDomainId()));
 			Result<Domain> result = adminMgr.addDomain(body.getDomainId(), ApiUtils.fillDomainBase(new DomainBase(), body));
@@ -284,18 +294,23 @@ public class Admin extends AdminApi {
 			adminMgr.initDomain();
 			
 			String publicUrl = adminMgr.getDomainSetting(CoreManifest.ID, "public.url");
-			ApiAdminAddDomain201Response response = new ApiAdminAddDomain201Response();
+			ApiAddDomain201Response response = new ApiAddDomain201Response();
 			response.setValue(ApiUtils.fillApiDomain(new ApiDomain(), result.getObject(), publicUrl));
 			response.setExceptions(ApiUtils.createApiHomedExceptionList(result));
 			return respOkCreated(response);
 			
-		} catch (Exception ex) {
-			return respError(ex);
+		} catch (Throwable t) {
+			if (shouldLogError(t)) LOGGER.error("[{}] addDomain()", RunContext.getRunProfileId(), t);
+			return respError(t);
 		}
 	}
 
 	@Override
 	public Response updateDomain(String domainId, Long updateOptions, ApiDomainBase body) {
+		if (LOGGER.isDebugEnabled()) {
+			LOGGER.debug("[{}] updateDomain({}, {})", RunContext.getRunProfileId(), domainId, updateOptions);
+		}
+		
 		try {
 			CoreAdminManager adminMgr = WT.getCoreAdminManager(RunContext.buildDomainAdminProfileId(domainId));
 			BitFlags<DomainUpdateOption> options = ApiUtils.toDomainUpdateOption(updateOptions);
@@ -303,8 +318,9 @@ public class Admin extends AdminApi {
 			adminMgr.updateDomainSetting(CoreManifest.ID, "public.url", body.getPublicURL());
 			return respOk();
 			
-		} catch (Exception ex) {
-			return respError(ex);
+		} catch (Throwable t) {
+			if (shouldLogError(t)) LOGGER.error("[{}] updateDomain({}, {})", RunContext.getRunProfileId(), domainId, updateOptions, t);
+			return respError(t);
 		}
 	}
 
@@ -313,18 +329,27 @@ public class Admin extends AdminApi {
 		boolean deepDelete = true;
 		if (deep != null) deepDelete = deep;
 		
+		if (LOGGER.isDebugEnabled()) {
+			LOGGER.debug("[{}] deleteDomain({}, {})", RunContext.getRunProfileId(), domainId, deep);
+		}
+		
 		try {
 			CoreAdminManager adminMgr = WT.getCoreAdminManager(RunContext.buildDomainAdminProfileId(domainId));
 			ResultVoid result = adminMgr.deleteDomain(deepDelete);
 			return respOk(ApiUtils.createApiResultExceptions(result));
 			
-		} catch (Exception ex) {
-			return respError(ex);
+		} catch (Throwable t) {
+			if (shouldLogError(t)) LOGGER.error("[{}] deleteDomain({}, {})", RunContext.getRunProfileId(), domainId, deep, t);
+			return respError(t);
 		}
 	}
 
 	@Override
 	public Response listGroups(String domainId) {
+		if (LOGGER.isDebugEnabled()) {
+			LOGGER.debug("[{}] listGroups({})", RunContext.getRunProfileId(), domainId);
+		}
+		
 		try {
 			CoreAdminManager adminMgr = WT.getCoreAdminManager(RunContext.buildDomainAdminProfileId(domainId));
 			List<ApiGroup> items = new ArrayList<>();
@@ -333,13 +358,18 @@ public class Admin extends AdminApi {
 			}
 			return respOk(items);
 			
-		} catch (Exception ex) {
-			return respError(ex);
+		} catch (Throwable t) {
+			if (shouldLogError(t)) LOGGER.error("[{}] listGroups({})", RunContext.getRunProfileId(), domainId, t);
+			return respError(t);
 		}
 	}
 
 	@Override
 	public Response getGroup(String groupId, String domainId) {
+		if (LOGGER.isDebugEnabled()) {
+			LOGGER.debug("[{}] getGroup({}, {})", RunContext.getRunProfileId(), domainId, groupId);
+		}
+		
 		try {
 			CoreAdminManager adminMgr = WT.getCoreAdminManager(RunContext.buildDomainAdminProfileId(domainId));
 			BitFlags<GroupGetOption> options = BitFlags.with(
@@ -352,55 +382,75 @@ public class Admin extends AdminApi {
 			if (group == null) throw new WTNotFoundException("Group not found [{}, {}]", domainId, groupId);
 			return respOk(ApiUtils.fillApiGroup(new ApiGroup(), group));
 			
-		} catch (Exception ex) {
-			return respError(ex);
+		} catch (Throwable t) {
+			if (shouldLogError(t)) LOGGER.error("[{}] getGroup({}, {})", RunContext.getRunProfileId(), domainId, groupId, t);
+			return respError(t);
 		}
 	}
 
 	@Override
 	public Response addGroup(String domainId, Long updateOptions, ApiGroupAdd body) {
+		if (LOGGER.isDebugEnabled()) {
+			LOGGER.debug("[{}] updateGroup({}, {})", RunContext.getRunProfileId(), domainId, updateOptions);
+		}
+		
 		try {
 			CoreAdminManager adminMgr = WT.getCoreAdminManager(RunContext.buildDomainAdminProfileId(domainId));
 			BitFlags<GroupUpdateOption> options = ApiUtils.toGroupUpdateOption(updateOptions);
 			Result<Group> result = adminMgr.addGroup(body.getGroupId(), ApiUtils.fillGroupBase(new GroupBase(), body, domainId, options.has(GroupUpdateOption.SUBJECTS_AS_SID)), options);
 			
-			ApiAdminAddGroup201Response response = new ApiAdminAddGroup201Response();
+			ApiAddGroup201Response response = new ApiAddGroup201Response();
 			response.setValue(ApiUtils.fillApiGroup(new ApiGroup(), result.getObject()));
 			response.setExceptions(ApiUtils.createApiHomedExceptionList(result));
 			return respOkCreated(response);
 			
-		} catch (Exception ex) {
-			return respError(ex);
+		} catch (Throwable t) {
+			if (shouldLogError(t)) LOGGER.error("[{}] updateGroup({}, {})", RunContext.getRunProfileId(), domainId, updateOptions, t);
+			return respError(t);
 		}
 	}
 
 	@Override
 	public Response updateGroup(String groupId, String domainId, Long updateOptions, ApiGroupBase body) {
+		if (LOGGER.isDebugEnabled()) {
+			LOGGER.debug("[{}] updateGroup({}, {}, {})", RunContext.getRunProfileId(), domainId, groupId, updateOptions);
+		}
+		
 		try {
 			CoreAdminManager adminMgr = WT.getCoreAdminManager(RunContext.buildDomainAdminProfileId(domainId));
 			BitFlags<GroupUpdateOption> options = ApiUtils.toGroupUpdateOption(updateOptions);
 			adminMgr.updateGroup(groupId, ApiUtils.fillGroupBase(new GroupBase(), body, domainId, options.has(GroupUpdateOption.SUBJECTS_AS_SID)), options);
 			return respOk();
 			
-		} catch (Exception ex) {
-			return respError(ex);
+		} catch (Throwable t) {
+			if (shouldLogError(t)) LOGGER.error("[{}] updateGroup({}, {}, {})", RunContext.getRunProfileId(), domainId, groupId, updateOptions, t);
+			return respError(t);
 		}
 	}
 
 	@Override
 	public Response deleteGroup(String groupId, String domainId) {
+		if (LOGGER.isDebugEnabled()) {
+			LOGGER.debug("[{}] deleteGroup({}, {})", RunContext.getRunProfileId(), domainId, groupId);
+		}
+		
 		try {
 			CoreAdminManager adminMgr = WT.getCoreAdminManager(RunContext.buildDomainAdminProfileId(domainId));
 			ResultVoid result = adminMgr.deleteGroup(groupId);
 			return respOk(ApiUtils.createApiResultExceptions(result));
 			
-		} catch (Exception ex) {
-			return respError(ex);
+		} catch (Throwable t) {
+			if (shouldLogError(t)) LOGGER.error("[{}] deleteGroup({}, {})", RunContext.getRunProfileId(), domainId, groupId, t);
+			return respError(t);
 		}
 	}
 	
 	@Override
 	public Response listUsers(String domainId) {
+		if (LOGGER.isDebugEnabled()) {
+			LOGGER.debug("[{}] listUsers({})", RunContext.getRunProfileId(), domainId);
+		}
+		
 		try {
 			CoreAdminManager adminMgr = WT.getCoreAdminManager(RunContext.buildDomainAdminProfileId(domainId));
 			List<ApiUser> items = new ArrayList<>();
@@ -409,13 +459,18 @@ public class Admin extends AdminApi {
 			}
 			return respOk(items);
 			
-		} catch (Exception ex) {
-			return respError(ex);
+		} catch (Throwable t) {
+			if (shouldLogError(t)) LOGGER.error("[{}] listUsers({})", RunContext.getRunProfileId(), domainId, t);
+			return respError(t);
 		}
 	}
 
 	@Override
 	public Response getUser(String userId, String domainId) {
+		if (LOGGER.isDebugEnabled()) {
+			LOGGER.debug("[{}] getUser({}, {})", RunContext.getRunProfileId(), domainId, userId);
+		}
+		
 		try {
 			CoreAdminManager adminMgr = WT.getCoreAdminManager(RunContext.buildDomainAdminProfileId(domainId));
 			BitFlags<UserGetOption> options = BitFlags.with(
@@ -428,38 +483,49 @@ public class Admin extends AdminApi {
 			if (user == null) throw new WTNotFoundException("User not found [{}, {}]", domainId, userId);
 			return respOk(ApiUtils.fillApiUser(new ApiUser(), user));
 			
-		} catch (Exception ex) {
-			return respError(ex);
+		} catch (Throwable t) {
+			if (shouldLogError(t)) LOGGER.error("[{}] getUser({}, {})", RunContext.getRunProfileId(), domainId, userId, t);
+			return respError(t);
 		}
 	}
 
 	@Override
 	public Response addUser(String domainId, Long updateOptions, ApiUserAdd body) {
+		if (LOGGER.isDebugEnabled()) {
+			LOGGER.debug("[{}] addUser({}, {})", RunContext.getRunProfileId(), domainId, updateOptions);
+		}
+		
 		try {
 			CoreAdminManager adminMgr = WT.getCoreAdminManager(RunContext.buildDomainAdminProfileId(domainId));
 			BitFlags<UserUpdateOption> options = ApiUtils.toUserUpdateOption(updateOptions);
 			Result<User> result = adminMgr.addUser(body.getUserId(), ApiUtils.fillUserBase(new UserBase(), body, domainId, options.has(UserUpdateOption.SUBJECTS_AS_SID)), true, body.getPassword().toCharArray(), options);
 			
-			ApiAdminAddUser201Response response = new ApiAdminAddUser201Response();
+			ApiAddUser201Response response = new ApiAddUser201Response();
 			response.setValue(ApiUtils.fillApiUser(new ApiUser(), result.getObject()));
 			response.setExceptions(ApiUtils.createApiHomedExceptionList(result));
 			return respOkCreated(response);
 			
-		} catch (Exception ex) {
-			return respError(ex);
+		} catch (Throwable t) {
+			if (shouldLogError(t)) LOGGER.error("[{}] addUser({}, {})", RunContext.getRunProfileId(), domainId, updateOptions, t);
+			return respError(t);
 		}
 	}
 
 	@Override
 	public Response updateUser(String userId, String domainId, Long updateOptions, ApiUserBase body) {
+		if (LOGGER.isDebugEnabled()) {
+			LOGGER.debug("[{}] updateUser({}, {}, {})", RunContext.getRunProfileId(), domainId, userId, updateOptions);
+		}
+		
 		try {
 			CoreAdminManager adminMgr = WT.getCoreAdminManager(RunContext.buildDomainAdminProfileId(domainId));
 			BitFlags<UserUpdateOption> options = ApiUtils.toUserUpdateOption(updateOptions);
 			adminMgr.updateUser(userId, ApiUtils.fillUserBase(new UserBase(), body, domainId, options.has(UserUpdateOption.SUBJECTS_AS_SID)), options);
 			return respOk();
 			
-		} catch (Exception ex) {
-			return respError(ex);
+		} catch (Throwable t) {
+			if (shouldLogError(t)) LOGGER.error("[{}] updateUser({}, {}, {})", RunContext.getRunProfileId(), domainId, userId, updateOptions, t);
+			return respError(t);
 		}
 	}
 
@@ -468,18 +534,27 @@ public class Admin extends AdminApi {
 		boolean deepDelete = true;
 		if (deep != null) deepDelete = deep;
 		
+		if (LOGGER.isDebugEnabled()) {
+			LOGGER.debug("[{}] deleteUser({}, {}, {})", RunContext.getRunProfileId(), domainId, userId, deep);
+		}
+		
 		try {
 			CoreAdminManager adminMgr = WT.getCoreAdminManager(RunContext.buildDomainAdminProfileId(domainId));
 			ResultVoid result = adminMgr.deleteUser(userId, deepDelete);
 			return respOk(ApiUtils.createApiResultExceptions(result));
 			
-		} catch (Exception ex) {
-			return respError(ex);
+		} catch (Throwable t) {
+			if (shouldLogError(t)) LOGGER.error("[{}] deleteUser({}, {}, {})", RunContext.getRunProfileId(), domainId, userId, deep, t);
+			return respError(t);
 		}
 	}
 	
 	@Override
 	public Response setUserPassword(String userId, String domainId, String body) {
+		if (LOGGER.isDebugEnabled()) {
+			LOGGER.debug("[{}] setUserPassword({}, {}, {})", RunContext.getRunProfileId(), domainId, userId);
+		}
+		
 		try {
 			CoreAdminManager adminMgr = WT.getCoreAdminManager(RunContext.buildDomainAdminProfileId(domainId));
 			adminMgr.updateUserPassword(userId, LangUtils.value(body, (char[])null));
@@ -487,15 +562,16 @@ public class Admin extends AdminApi {
 			
 		} catch (WTPwdPolicyException ex) {
 			return respErrorBadRequest(ex.getMessage());
-		} catch (Exception ex) {
-			return respError(ex);
+		} catch (Throwable t) {
+			if (shouldLogError(t)) LOGGER.error("[{}] setUserPassword({}, {}, {})", RunContext.getRunProfileId(), domainId, userId, t);
+			return respError(t);
 		}
 	}
 	
 	@Override
 	public Response listResources(String domainId) {
 		if (LOGGER.isDebugEnabled()) {
-			LOGGER.debug("[{}] adminListResources()", RunContext.getRunProfileId());
+			LOGGER.debug("[{}] listResources({})", RunContext.getRunProfileId(), domainId);
 		}
 		
 		try {
@@ -507,7 +583,7 @@ public class Admin extends AdminApi {
 			return respOk(items);
 			
 		} catch (Throwable t) {
-			LOGGER.error("[{}] listApiKeys()", RunContext.getRunProfileId(), t);
+			if (shouldLogError(t)) LOGGER.error("[{}] listResources({})", RunContext.getRunProfileId(), domainId, t);
 			return respError(t);
 		}
 	}
@@ -515,7 +591,7 @@ public class Admin extends AdminApi {
 	@Override
 	public Response getResource(String resourceId, String domainId) {
 		if (LOGGER.isDebugEnabled()) {
-			LOGGER.debug("[{}] getResource({})", RunContext.getRunProfileId(), resourceId);
+			LOGGER.debug("[{}] getResource({}, {})", RunContext.getRunProfileId(), domainId, resourceId);
 		}
 		
 		try {
@@ -528,6 +604,7 @@ public class Admin extends AdminApi {
 			return respOkCreated(ApiUtils.fillApiResource(new ApiResource(), resource));
 			
 		} catch (Throwable t) {
+			if (shouldLogError(t)) LOGGER.error("[{}] getResource({}, {})", RunContext.getRunProfileId(), domainId, resourceId, t);
 			return respError(t);
 		}
 	}
@@ -535,7 +612,7 @@ public class Admin extends AdminApi {
 	@Override
 	public Response addResource(String domainId, Long updateOptions, ApiResourceAdd body) {
 		if (LOGGER.isDebugEnabled()) {
-			LOGGER.debug("[{}] addResource({})", RunContext.getRunProfileId(), updateOptions);
+			LOGGER.debug("[{}] addResource({}, {})", RunContext.getRunProfileId(), domainId, updateOptions);
 		}
 		
 		try {
@@ -543,13 +620,13 @@ public class Admin extends AdminApi {
 			BitFlags<ResourceUpdateOption> options = ApiUtils.toResourceUpdateOption(updateOptions);
 			Result<Resource> result = adminMgr.addResource(body.getResourceId(), ApiUtils.fillResourceBase(new ResourceBase(), domainId, body, options.has(ResourceUpdateOption.SUBJECTS_AS_SID)), options);
 			
-			ApiAdminAddResource201Response response = new ApiAdminAddResource201Response();
+			ApiAddResource201Response response = new ApiAddResource201Response();
 			response.setValue(ApiUtils.fillApiResource(new ApiResource(), result.getObject()));
 			response.setExceptions(ApiUtils.createApiHomedExceptionList(result));
 			return respOkCreated(response);
 			
 		} catch (Throwable t) {
-			LOGGER.error("[{}] addResource({})", RunContext.getRunProfileId(), updateOptions, t);
+			if (shouldLogError(t)) LOGGER.error("[{}] addResource({}, {})", RunContext.getRunProfileId(), domainId, updateOptions, t);
 			return respError(t);
 		}
 	}
@@ -557,7 +634,7 @@ public class Admin extends AdminApi {
 	@Override
 	public Response updateResource(String resourceId, String domainId, Long updateOptions, ApiResourceBase body) {
 		if (LOGGER.isDebugEnabled()) {
-			LOGGER.debug("[{}] updateResource({}, {})", RunContext.getRunProfileId(), resourceId, updateOptions);
+			LOGGER.debug("[{}] updateResource({}, {}, {})", RunContext.getRunProfileId(), domainId, resourceId, updateOptions);
 		}
 		
 		try {
@@ -567,7 +644,7 @@ public class Admin extends AdminApi {
 			return respOk();
 			
 		} catch (Throwable t) {
-			LOGGER.error("[{}] updateResource({}, {})", RunContext.getRunProfileId(), resourceId, updateOptions, t);
+			if (shouldLogError(t)) LOGGER.error("[{}] updateResource({}, {}, {})", RunContext.getRunProfileId(), domainId, resourceId, updateOptions, t);
 			return respError(t);
 		}
 	}
@@ -575,7 +652,7 @@ public class Admin extends AdminApi {
 	@Override
 	public Response deleteResource(String resourceId, String domainId) {
 		if (LOGGER.isDebugEnabled()) {
-			LOGGER.debug("[{}] deleteResource({})", RunContext.getRunProfileId(), resourceId);
+			LOGGER.debug("[{}] deleteResource({}, {})", RunContext.getRunProfileId(), domainId, resourceId);
 		}
 		
 		try {
@@ -584,13 +661,17 @@ public class Admin extends AdminApi {
 			return respOk(ApiUtils.createApiResultExceptions(result));
 			
 		} catch (Throwable t) {
-			LOGGER.error("[{}] deleteResource({})", RunContext.getRunProfileId(), resourceId, t);
+			if (shouldLogError(t)) LOGGER.error("[{}] deleteResource({}, {})", RunContext.getRunProfileId(), domainId, resourceId, t);
 			return respError(t);
 		}
 	}
 	
 	@Override
 	public Response listRoles(String domainId) {
+		if (LOGGER.isDebugEnabled()) {
+			LOGGER.debug("[{}] listRoles({})", RunContext.getRunProfileId(), domainId);
+		}
+		
 		try {
 			CoreAdminManager adminMgr = WT.getCoreAdminManager(RunContext.buildDomainAdminProfileId(domainId));
 			List<ApiRole> items = new ArrayList<>();
@@ -599,13 +680,18 @@ public class Admin extends AdminApi {
 			}
 			return respOk(items);
 			
-		} catch (Exception ex) {
-			return respError(ex);
+		} catch (Throwable t) {
+			if (shouldLogError(t)) LOGGER.error("[{}] listRoles({})", RunContext.getRunProfileId(), domainId, t);
+			return respError(t);
 		}
 	}
 
 	@Override
 	public Response getRole(String roleId, String domainId) {
+		if (LOGGER.isDebugEnabled()) {
+			LOGGER.debug("[{}] getRole({}, {})", RunContext.getRunProfileId(), domainId, roleId);
+		}
+		
 		try {
 			CoreAdminManager adminMgr = WT.getCoreAdminManager(RunContext.buildDomainAdminProfileId(domainId));
 			BitFlags<RoleGetOption> options = BitFlags.with(
@@ -616,55 +702,75 @@ public class Admin extends AdminApi {
 			if (role == null) throw new WTNotFoundException("Role not found [{}, {}]", domainId, roleId);
 			return respOk(ApiUtils.fillApiRole(new ApiRole(), role));
 			
-		} catch (Exception ex) {
-			return respError(ex);
+		} catch (Throwable t) {
+			if (shouldLogError(t)) LOGGER.error("[{}] getRole({}, {})", RunContext.getRunProfileId(), domainId, roleId, t);
+			return respError(t);
 		}
 	}
 
 	@Override
 	public Response addRole(String domainId, Long updateOptions, ApiRoleAdd body) {
+		if (LOGGER.isDebugEnabled()) {
+			LOGGER.debug("[{}] addRole({}, {})", RunContext.getRunProfileId(), domainId, updateOptions);
+		}
+		
 		try {
 			CoreAdminManager adminMgr = WT.getCoreAdminManager(RunContext.buildDomainAdminProfileId(domainId));
 			BitFlags<RoleUpdateOption> options = ApiUtils.toRoleUpdateOption(updateOptions);
 			Result<Role> result = adminMgr.addRole(body.getRoleId(), ApiUtils.fillRoleBase(new RoleBase(), body, domainId, options.has(RoleUpdateOption.SUBJECTS_AS_SID)), options);
 			
-			ApiAdminAddRole201Response response = new ApiAdminAddRole201Response();
+			ApiAddRole201Response response = new ApiAddRole201Response();
 			response.setValue(ApiUtils.fillApiRole(new ApiRole(), result.getObject()));
 			response.setExceptions(ApiUtils.createApiHomedExceptionList(result));
 			return respOkCreated(response);
 			
-		} catch (Exception ex) {
-			return respError(ex);
+		} catch (Throwable t) {
+			if (shouldLogError(t)) LOGGER.error("[{}] addRole({}, {})", RunContext.getRunProfileId(), domainId, updateOptions, t);
+			return respError(t);
 		}
 	}
 
 	@Override
 	public Response updateRole(String roleId, String domainId, Long updateOptions, ApiRoleBase body) {
+		if (LOGGER.isDebugEnabled()) {
+			LOGGER.debug("[{}] updateRole({}, {}, {})", RunContext.getRunProfileId(), domainId, roleId, updateOptions);
+		}
+		
 		try {
 			CoreAdminManager adminMgr = WT.getCoreAdminManager(RunContext.buildDomainAdminProfileId(domainId));
 			BitFlags<RoleUpdateOption> options = ApiUtils.toRoleUpdateOption(updateOptions);
 			adminMgr.updateRole(roleId, ApiUtils.fillRoleBase(new RoleBase(), body, domainId, options.has(RoleUpdateOption.SUBJECTS_AS_SID)), options);
 			return respOk();
 			
-		} catch (Exception ex) {
-			return respError(ex);
+		} catch (Throwable t) {
+			if (shouldLogError(t)) LOGGER.error("[{}] updateRole({}, {}, {})", RunContext.getRunProfileId(), domainId, roleId, updateOptions, t);
+			return respError(t);
 		}
 	}
 
 	@Override
 	public Response deleteRole(String roleId, String domainId) {
+		if (LOGGER.isDebugEnabled()) {
+			LOGGER.debug("[{}] deleteRole({}, {})", RunContext.getRunProfileId(), domainId, roleId);
+		}
+		
 		try {
 			CoreAdminManager adminMgr = WT.getCoreAdminManager(RunContext.buildDomainAdminProfileId(domainId));
 			ResultVoid result = adminMgr.deleteRole(roleId);
 			return respOk(ApiUtils.createApiResultExceptions(result));
 			
-		} catch (Exception ex) {
-			return respError(ex);
+		} catch (Throwable t) {
+			if (shouldLogError(t)) LOGGER.error("[{}] deleteRole({}, {})", RunContext.getRunProfileId(), domainId, roleId, t);
+			return respError(t);
 		}
 	}
 
 	@Override
 	public Response listLicenses(String domainId, Boolean includeBuiltin) {
+		if (LOGGER.isDebugEnabled()) {
+			LOGGER.debug("[{}] listLicenses({}, {})", RunContext.getRunProfileId(), domainId, includeBuiltin);
+		}
+		
 		try {
 			CoreAdminManager adminMgr = WT.getCoreAdminManager(RunContext.buildDomainAdminProfileId(domainId));
 			BitFlags<LicenseListOption> options = BitFlags.with(LicenseListOption.EXTENDED_INFO);
@@ -675,13 +781,18 @@ public class Admin extends AdminApi {
 			}
 			return respOk(items);
 			
-		} catch (Exception ex) {
-			return respError(ex);
+		} catch (Throwable t) {
+			if (shouldLogError(t)) LOGGER.error("[{}] listLicenses({}, {})", RunContext.getRunProfileId(), domainId, includeBuiltin, t);
+			return respError(t);
 		}
 	}
 
 	@Override
 	public Response addLicense(String productCode, String domainId, Boolean autoActivate, ApiLicenseAdd body) {
+		if (LOGGER.isDebugEnabled()) {
+			LOGGER.debug("[{}] addLicense({}, {}, {})", RunContext.getRunProfileId(), domainId, productCode, autoActivate);
+		}
+		
 		try {
 			CoreAdminManager adminMgr = WT.getCoreAdminManager(RunContext.buildDomainAdminProfileId(domainId));
 			adminMgr.addLicense(productCode, ApiUtils.fillLicenseBase(new LicenseBase(), body), LangUtils.value(autoActivate, true));
@@ -690,51 +801,71 @@ public class Admin extends AdminApi {
 			}
 			return respOk();
 			
-		} catch (Exception ex) {
-			return respError(ex);
+		} catch (Throwable t) {
+			if (shouldLogError(t)) LOGGER.error("[{}] addLicense({}, {}, {})", RunContext.getRunProfileId(), domainId, productCode, autoActivate, t);
+			return respError(t);
 		}
 	}
 
 	@Override
 	public Response deleteLicense(String productCode, String domainId, Boolean force) {
+		if (LOGGER.isDebugEnabled()) {
+			LOGGER.debug("[{}] deleteLicense({}, {}, {})", RunContext.getRunProfileId(), domainId, productCode, force);
+		}
+		
 		try {
 			CoreAdminManager adminMgr = WT.getCoreAdminManager(RunContext.buildDomainAdminProfileId(domainId));
 			adminMgr.deleteLicense(productCode, LangUtils.value(force, false));
 			return respOk();
 			
-		} catch (Exception ex) {
-			return respError(ex);
+		} catch (Throwable t) {
+			if (shouldLogError(t)) LOGGER.error("[{}] deleteLicense({}, {}, {})", RunContext.getRunProfileId(), domainId, productCode, force, t);
+			return respError(t);
 		}
 	}
 
 	@Override
 	public Response assignLicenseLease(String productCode, String domainId, List<String> body) {
+		if (LOGGER.isDebugEnabled()) {
+			LOGGER.debug("[{}] assignLicenseLease({}, {})", RunContext.getRunProfileId(), domainId, productCode);
+		}
+		
 		try {
 			Check.notEmpty(body, "body");
 			CoreAdminManager adminMgr = WT.getCoreAdminManager(RunContext.buildDomainAdminProfileId(domainId));
 			adminMgr.assignLicenseLease(productCode, LangUtils.asSet(body));
 			return respOk();
 			
-		} catch (Exception ex) {
-			return respError(ex);
+		} catch (Throwable t) {
+			if (shouldLogError(t)) LOGGER.error("[{}] assignLicenseLease({}, {})", RunContext.getRunProfileId(), domainId, productCode, t);
+			return respError(t);
 		}
 	}
 	
 	@Override
 	public Response revokeLicenseLease(String productCode, String domainId, List<String> body) {
+		if (LOGGER.isDebugEnabled()) {
+			LOGGER.debug("[{}] revokeLicenseLease({}, {})", RunContext.getRunProfileId(), domainId, productCode);
+		}
+		
 		try {
 			Check.notEmpty(body, "body");
 			CoreAdminManager adminMgr = WT.getCoreAdminManager(RunContext.buildDomainAdminProfileId(domainId));
 			adminMgr.revokeLicenseLease(productCode, LangUtils.asSet(body));
 			return respOk();
 			
-		} catch (Exception ex) {
-			return respError(ex);
+		} catch (Throwable t) {
+			if (shouldLogError(t)) LOGGER.error("[{}] revokeLicenseLease({}, {})", RunContext.getRunProfileId(), domainId, productCode, t);
+			return respError(t);
 		}
 	}
 
 	@Override
 	public Response getLicenseOfflineReqInfo(String productCode, String domainId, Boolean deactivation) {
+		if (LOGGER.isDebugEnabled()) {
+			LOGGER.debug("[{}] getLicenseOfflineReqInfo({}, {}, {})", RunContext.getRunProfileId(), domainId, productCode, deactivation);
+		}
+		
 		try {
 			CoreAdminManager adminMgr = WT.getCoreAdminManager(RunContext.buildDomainAdminProfileId(domainId));
 			ProductLicense productLicense = adminMgr.getProductLicense(productCode);
@@ -752,13 +883,18 @@ public class Admin extends AdminApi {
 				return respOk(ApiUtils.createApiLicenseOfflineReqInfo(productLicense.getManualActivationRequestInfo()));
 			}
 			
-		} catch (Exception ex) {
-			return respError(ex);
+		} catch (Throwable t) {
+			if (shouldLogError(t)) LOGGER.error("[{}] getLicenseOfflineReqInfo({}, {}, {})", RunContext.getRunProfileId(), domainId, productCode, deactivation, t);
+			return respError(t);
 		}
 	}
 
 	@Override
 	public Response activateLicense(String productCode, String domainId, String body) {
+		if (LOGGER.isDebugEnabled()) {
+			LOGGER.debug("[{}] activateLicense({}, {})", RunContext.getRunProfileId(), domainId, productCode);
+		}
+		
 		try {
 			CoreAdminManager adminMgr = WT.getCoreAdminManager(RunContext.buildDomainAdminProfileId(domainId));
 			
@@ -769,13 +905,18 @@ public class Admin extends AdminApi {
 				return respError(ex);
 			}	
 			
-		} catch (Exception ex) {
-			return respError(ex);
+		} catch (Throwable t) {
+			if (shouldLogError(t)) LOGGER.error("[{}] activateLicense({}, {})", RunContext.getRunProfileId(), domainId, productCode, t);
+			return respError(t);
 		}
 	}
 
 	@Override
 	public Response deactivateLicense(String productCode, String domainId, Boolean offline) {
+		if (LOGGER.isDebugEnabled()) {
+			LOGGER.debug("[{}] deactivateLicense({}, {}, {})", RunContext.getRunProfileId(), domainId, productCode, offline);
+		}
+		
 		try {
 			CoreAdminManager adminMgr = WT.getCoreAdminManager(RunContext.buildDomainAdminProfileId(domainId));
 			
@@ -786,15 +927,16 @@ public class Admin extends AdminApi {
 				return respError(ex);
 			}
 			
-		} catch (Exception ex) {
-			return respError(ex);
+		} catch (Throwable t) {
+			if (shouldLogError(t)) LOGGER.error("[{}] deactivateLicense({}, {}, {})", RunContext.getRunProfileId(), domainId, productCode, offline, t);
+			return respError(t);
 		}
 	}
 
 	@Override
 	public Response listApiKeys(String domainId) {
 		if (LOGGER.isDebugEnabled()) {
-			LOGGER.debug("[{}] listApiKeys()", RunContext.getRunProfileId());
+			LOGGER.debug("[{}] listApiKeys({})", RunContext.getRunProfileId(), domainId);
 		}
 		
 		try {
@@ -807,7 +949,7 @@ public class Admin extends AdminApi {
 			return respOk(items);
 			
 		} catch (Throwable t) {
-			LOGGER.error("[{}] listApiKeys()", RunContext.getRunProfileId(), t);
+			if (shouldLogError(t)) LOGGER.error("[{}] listApiKeys({})", RunContext.getRunProfileId(), domainId, t);
 			return respError(t);
 		}
 	}
@@ -815,7 +957,7 @@ public class Admin extends AdminApi {
 	@Override
 	public Response getApiKey(String apikeyId, String domainId) {
 		if (LOGGER.isDebugEnabled()) {
-			LOGGER.debug("[{}] getApiKey({})", RunContext.getRunProfileId(), apikeyId);
+			LOGGER.debug("[{}] getApiKey({}, {})", RunContext.getRunProfileId(), domainId, apikeyId);
 		}
 		
 		try {
@@ -827,7 +969,7 @@ public class Admin extends AdminApi {
 			return respOk(ApiUtils.fillApiKey(new ApiApiKey(), null, apiKey));
 			
 		} catch (Throwable t) {
-			LOGGER.error("[{}] getApiKey({})", RunContext.getRunProfileId(), apikeyId, t);
+			if (shouldLogError(t)) LOGGER.error("[{}] getApiKey({}, {})", RunContext.getRunProfileId(), domainId, apikeyId, t);
 			return respError(t);
 		}
 	}
@@ -835,7 +977,7 @@ public class Admin extends AdminApi {
 	@Override
 	public Response generateApiKey(String domainId, ApiApiKeyBase body) {
 		if (LOGGER.isDebugEnabled()) {
-			LOGGER.debug("[{}] generateApiKey()", RunContext.getRunProfileId());
+			LOGGER.debug("[{}] generateApiKey({})", RunContext.getRunProfileId(), domainId);
 		}
 		
 		try {
@@ -849,7 +991,7 @@ public class Admin extends AdminApi {
 			return respOkCreated(ApiUtils.fillApiKeyBase(apiKeyGenerated, null, apiKeyNew));
 			
 		} catch (Throwable t) {
-			LOGGER.error("[{}] generateApiKey()", RunContext.getRunProfileId(), t);
+			if (shouldLogError(t)) LOGGER.error("[{}] generateApiKey({})", RunContext.getRunProfileId(), domainId, t);
 			return respError(t);
 		}
 	}
@@ -857,7 +999,7 @@ public class Admin extends AdminApi {
 	@Override
 	public Response updateApiKey(String apikeyId, String domainId, ApiApiKeyBase body) {
 		if (LOGGER.isDebugEnabled()) {
-			LOGGER.debug("[{}] updateApiKey()", RunContext.getRunProfileId());
+			LOGGER.debug("[{}] updateApiKey({}, {})", RunContext.getRunProfileId(), domainId, apikeyId);
 		}
 		
 		try {
@@ -868,7 +1010,7 @@ public class Admin extends AdminApi {
 			return respOk();
 			
 		} catch (Throwable t) {
-			LOGGER.error("[{}] updateApiKey({})", RunContext.getRunProfileId(), apikeyId, t);
+			if (shouldLogError(t)) LOGGER.error("[{}] updateApiKey({}, {})", RunContext.getRunProfileId(), domainId, apikeyId, t);
 			return respError(t);
 		}
 	}
@@ -876,7 +1018,7 @@ public class Admin extends AdminApi {
 	@Override
 	public Response deleteApiKey(String apikeyId, String domainId) {
 		if (LOGGER.isDebugEnabled()) {
-			LOGGER.debug("[{}] deleteApiKey({})", RunContext.getRunProfileId(), apikeyId);
+			LOGGER.debug("[{}] deleteApiKey({}, {})", RunContext.getRunProfileId(), domainId, apikeyId);
 		}
 		
 		try {
@@ -886,7 +1028,7 @@ public class Admin extends AdminApi {
 			return respOk();
 			
 		} catch (Throwable t) {
-			LOGGER.error("[{}] deleteApiKey({})", RunContext.getRunProfileId(), apikeyId, t);
+			if (shouldLogError(t)) LOGGER.error("[{}] deleteApiKey({})", RunContext.getRunProfileId(), apikeyId, t);
 			return respError(t);
 		}
 	}
