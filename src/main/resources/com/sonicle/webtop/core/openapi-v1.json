@@ -559,7 +559,7 @@
     "/admin/domains": {
       "get": {
         "summary": "List domains",
-        "operationId": "adminListDomains",
+        "operationId": "listDomains",
         "parameters": [],
         "responses": {
           "200": {
@@ -604,7 +604,7 @@
       },
       "post": {
         "summary": "Add domain",
-        "operationId": "adminAddDomain",
+        "operationId": "addDomain",
         "responses": {
           "201": {
             "description": "Created",
@@ -671,7 +671,7 @@
     "/admin/domains/{domain_id}": {
       "get": {
         "summary": "Get domain",
-        "operationId": "adminGetDomain",
+        "operationId": "getDomain",
         "parameters": [],
         "responses": {
           "200": {
@@ -713,7 +713,7 @@
       },
       "put": {
         "summary": "Update domain",
-        "operationId": "adminUpdateDomain",
+        "operationId": "updateDomain",
         "responses": {
           "200": {
             "description": "OK"
@@ -771,7 +771,7 @@
       },
       "delete": {
         "summary": "Delete domain",
-        "operationId": "adminDeleteDomain",
+        "operationId": "deleteDomain",
         "responses": {
           "200": {
             "description": "OK",
@@ -844,7 +844,7 @@
     "/admin/groups": {
       "get": {
         "summary": "List domain groups",
-        "operationId": "adminListGroups",
+        "operationId": "listGroups",
         "parameters": [
           {
             "$ref": "#/components/parameters/domainId"
@@ -893,7 +893,7 @@
       },
       "post": {
         "summary": "Adds a domain group",
-        "operationId": "adminAddGroup",
+        "operationId": "addGroup",
         "responses": {
           "201": {
             "description": "Created",
@@ -966,7 +966,7 @@
     "/admin/groups/{group_id}": {
       "get": {
         "summary": "Gets a domain group",
-        "operationId": "adminGetGroup",
+        "operationId": "getGroup",
         "parameters": [
           {
             "$ref": "#/components/parameters/domainId"
@@ -1012,7 +1012,7 @@
       },
       "put": {
         "summary": "Updates a domain group",
-        "operationId": "adminUpdateGroup",
+        "operationId": "updateGroup",
         "responses": {
           "200": {
             "description": "OK"
@@ -1073,7 +1073,7 @@
       },
       "delete": {
         "summary": "Deletes a domain group",
-        "operationId": "adminDeleteGroup",
+        "operationId": "deleteGroup",
         "responses": {
           "200": {
             "description": "OK",
@@ -1144,7 +1144,7 @@
           "admin-users"
         ],
         "summary": "List domain users",
-        "operationId": "adminListUsers",
+        "operationId": "listUsers",
         "parameters": [
           {
             "$ref": "#/components/parameters/domainId"
@@ -1190,7 +1190,7 @@
       },
       "post": {
         "summary": "Add domain user",
-        "operationId": "adminAddUser",
+        "operationId": "addUser",
         "responses": {
           "201": {
             "description": "Created",
@@ -1265,7 +1265,7 @@
           "admin-users"
         ],
         "summary": "Gets a domain user",
-        "operationId": "adminGetUser",
+        "operationId": "getUser",
         "parameters": [
           {
             "$ref": "#/components/parameters/domainId"
@@ -1308,7 +1308,7 @@
       },
       "put": {
         "summary": "Updates a domain user",
-        "operationId": "adminUpdateUser",
+        "operationId": "updateUser",
         "responses": {
           "200": {
             "description": "OK",
@@ -1376,7 +1376,7 @@
       },
       "delete": {
         "summary": "Deletes a domain user",
-        "operationId": "adminDeleteUser",
+        "operationId": "deleteUser",
         "responses": {
           "200": {
             "description": "OK",
@@ -1452,7 +1452,7 @@
     "/admin/users/{user_id}/password": {
       "put": {
         "summary": "Set user password",
-        "operationId": "adminSetUserPassword",
+        "operationId": "setUserPassword",
         "responses": {
           "200": {
             "description": "OK"
@@ -1830,7 +1830,7 @@
     "/admin/roles": {
       "get": {
         "summary": "List roles for a domain",
-        "operationId": "adminListRoles",
+        "operationId": "listRoles",
         "parameters": [
           {
             "$ref": "#/components/parameters/domainId"
@@ -1879,7 +1879,7 @@
       },
       "post": {
         "summary": "Adds a role for a domain",
-        "operationId": "adminAddRole",
+        "operationId": "addRole",
         "responses": {
           "201": {
             "description": "Created",
@@ -1953,7 +1953,7 @@
       "get": {
         "summary": "Gets a role for a domain",
         "description": "Get a single Domain's role.",
-        "operationId": "adminGetRole",
+        "operationId": "getRole",
         "parameters": [
           {
             "$ref": "#/components/parameters/domainId"
@@ -2009,7 +2009,7 @@
       "put": {
         "summary": "Updates a role for a domain",
         "description": "Updates a Domain's role.",
-        "operationId": "adminUpdateRole",
+        "operationId": "updateRole",
         "parameters": [
           {
             "$ref": "#/components/parameters/domainId"
@@ -2071,7 +2071,7 @@
       "delete": {
         "summary": "Deletes a role for a domain",
         "description": "Deletes a Domain's role.",
-        "operationId": "adminDeleteRole",
+        "operationId": "deleteRole",
         "parameters": [
           {
             "$ref": "#/components/parameters/domainId"
@@ -2176,7 +2176,7 @@
             }
           }
         },
-        "operationId": "adminListLicenses",
+        "operationId": "listLicenses",
         "description": "Lists Domain's product licenses.",
         "parameters": [
           {
@@ -2209,7 +2209,7 @@
       ],
       "post": {
         "summary": "Adds a product's license for a domain",
-        "operationId": "adminAddLicense",
+        "operationId": "addLicense",
         "responses": {
           "201": {
             "description": "Created"
@@ -2266,7 +2266,7 @@
       },
       "delete": {
         "summary": "Removes a product's license for a domain",
-        "operationId": "adminDeleteLicense",
+        "operationId": "deleteLicense",
         "responses": {
           "200": {
             "description": "OK"
@@ -2335,7 +2335,7 @@
       ],
       "delete": {
         "summary": "Deactivates a product's license for a domain",
-        "operationId": "adminDeactivateLicense",
+        "operationId": "deactivateLicense",
         "responses": {
           "200": {
             "description": "OK"
@@ -2392,7 +2392,7 @@
       },
       "post": {
         "summary": "Activates a product's license for a domain",
-        "operationId": "adminActivateLicense",
+        "operationId": "activateLicense",
         "responses": {
           "200": {
             "description": "OK"
@@ -2465,7 +2465,7 @@
       ],
       "get": {
         "summary": "Get license offline request info for a domain",
-        "operationId": "adminGetLicenseOfflineReqInfo",
+        "operationId": "getLicenseOfflineReqInfo",
         "responses": {
           "200": {
             "description": "OK",
@@ -2543,7 +2543,7 @@
       ],
       "delete": {
         "summary": "Deactivates a product's license for a domain",
-        "operationId": "adminRevokeLicenseLease",
+        "operationId": "revokeLicenseLease",
         "responses": {
           "200": {
             "description": "OK"
@@ -2604,7 +2604,7 @@
       },
       "post": {
         "summary": "Activates a product's license for a domain",
-        "operationId": "adminAssignLicenseLease",
+        "operationId": "assignLicenseLease",
         "responses": {
           "200": {
             "description": "OK"
