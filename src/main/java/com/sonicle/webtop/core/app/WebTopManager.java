@@ -33,12 +33,11 @@
  */
 package com.sonicle.webtop.core.app;
 
+import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.CacheLoader;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 import com.sonicle.commons.AlgoUtils;
-import com.sonicle.commons.Base58;
-import com.sonicle.commons.ClassUtils;
 import com.sonicle.commons.EnumUtils;
 import com.sonicle.commons.IdentifierUtils;
 import com.sonicle.commons.InternetAddressUtils;
@@ -54,8 +53,6 @@ import com.sonicle.commons.time.DateTimeUtils;
 import com.sonicle.commons.time.JodaTimeUtils;
 import com.sonicle.security.AuthenticationDomain;
 import com.sonicle.security.ConnectionSecurity;
-import com.sonicle.security.CryptoUtils;
-import com.sonicle.security.DigestAlgorithm;
 import com.sonicle.security.DigestValue;
 import com.sonicle.security.DomainAccount;
 import com.sonicle.security.PasswordUtils;
@@ -90,7 +87,6 @@ import com.sonicle.webtop.core.app.model.DomainBase;
 import com.sonicle.webtop.core.app.model.DomainGetOption;
 import com.sonicle.webtop.core.app.model.DomainUpdateOption;
 import com.sonicle.webtop.core.app.model.EnabledCond;
-import com.sonicle.webtop.core.app.sdk.EventBase;
 import com.sonicle.webtop.core.app.sdk.Result;
 import com.sonicle.webtop.core.app.sdk.ResultVoid;
 import com.sonicle.webtop.core.app.sdk.WTMultiCauseWarnException;
@@ -137,7 +133,6 @@ import com.sonicle.webtop.core.app.model.GenericSubject;
 import com.sonicle.webtop.core.model.SubjectPid;
 import com.sonicle.webtop.core.model.SubjectSid;
 import com.sonicle.webtop.core.app.model.FolderShareOriginFolders;
-import com.sonicle.webtop.core.app.model.FolderShareOrigin;
 import com.sonicle.webtop.core.app.model.FolderSharing;
 import com.sonicle.webtop.core.app.model.Group;
 import com.sonicle.webtop.core.app.model.GroupBase;
@@ -206,6 +201,7 @@ import java.util.LinkedHashMap;
 import java.util.Locale;
 import java.util.Map.Entry;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 import net.sf.qualitycheck.Check;
 import org.apache.commons.collections4.MultiValuedMap;
@@ -244,8 +240,9 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 	private final SubjectSidCache subjectSidCache;
 	private final LoadingCache<UserProfileId, UserProfile.PersonalInfo> profileToPersonalInfoCache = Caffeine.newBuilder().build(new ProfilePersonalInfoCacheLoader());
 	private final LoadingCache<UserProfileId, UserProfile.Data> profileToDataCache = Caffeine.newBuilder().build(new ProfileDataCacheLoader());
-	private final Object foldersLock = new Object();
+	private final Cache<String, Optional<Integer>> shareIdCache = Caffeine.newBuilder().expireAfterWrite(60, TimeUnit.SECONDS).build();
 	private final ApiKeyCache apiKeyCache;
+	private final Object foldersLock = new Object();
 	
 	WebTopManager(WebTopApp wta) {
 		super(wta, true);
@@ -278,8 +275,7 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 	 * Used transitively by aliseoweb, vfs
 	 * @deprecated use listDomains instead
 	 */
-	@Deprecated
-	public List<ODomain> OLD_listDomains(boolean enabledOnly) throws WTException {
+	@Deprecated public List<ODomain> OLD_listDomains(boolean enabledOnly) throws WTException {
 		DomainDAO dao = DomainDAO.getInstance();
 		Connection con = null;
 		
@@ -302,8 +298,7 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 	 * Used transitively by aliseoweb
 	 * @deprecated use getDomain instead
 	 */
-	@Deprecated
-	public ODomain OLD_getDomain(String domainId) throws WTException {
+	@Deprecated public ODomain OLD_getDomain(String domainId) throws WTException {
 		DomainDAO domDao = DomainDAO.getInstance();
 		Connection con = null;
 		
@@ -321,8 +316,7 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 	/**
 	 * @deprecated used transitively in aliseoweb, drm
 	 */
-	@Deprecated
-	public List<OUser> listUsers(String domainId, boolean enabledOnly) throws WTException {
+	@Deprecated public List<OUser> listUsers(String domainId, boolean enabledOnly) throws WTException {
 		UserDAO dao = UserDAO.getInstance();
 		Connection con = null;
 		
@@ -728,7 +722,7 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 	
 	/**
 	 * Lookup a domain ID from its authentication domain-name.
-	 * Only enabled domains will return a lookup.
+	 * Only enabled domains will return a positive lookup.
 	 * @param authDomainName The authentication domain-name to find the corresponding domain ID.
 	 * @return 
 	 */
@@ -2427,26 +2421,42 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 		}
 	}
 	
-	public List<String> getComputedRolesAsStringByUser(UserProfileId pid, boolean self, boolean transitive) throws WTException {
+	/**
+	 * 
+	 * @param pid
+	 * @param self
+	 * @param transitive
+	 * @return
+	 * @throws WTException
+	 * @deprecated use getComputedRoleSidsByUser instead
+	 */
+	@Deprecated public List<String> getComputedRolesAsStringByUser(final UserProfileId pid, final boolean self, final boolean transitive) throws WTException {
 		ArrayList<String> sids = new ArrayList<>();
 		Set<RoleWithSource> roles = getComputedRolesByUser(pid, self, transitive);
-		for(RoleWithSource role : roles) {
+		for (RoleWithSource role : roles) {
 			sids.add(role.getRoleUid());
 		}
 		return sids;
 	}
 	
-	public Set<RoleWithSource> getComputedRolesByUser(UserProfileId pid, boolean self, boolean transitive) throws WTException {
-		WebTopManager usrm = getWebTopApp().getWebTopManager();
+	public Set<String> getComputedRoleSidsByUser(final UserProfileId pid, final boolean self, final boolean transitive) throws WTException {
+		Set<String> sids = new LinkedHashSet<>();
+		for (RoleWithSource role : getComputedRolesByUser(pid, self, transitive)) {
+			sids.add(role.getRoleUid());
+		}
+		return sids;
+	}
+	
+	public Set<RoleWithSource> getComputedRolesByUser(final UserProfileId pid, final boolean self, final boolean transitive) throws WTException {
 		Connection con = null;
 		HashSet<String> roleMap = new HashSet<>();
 		LinkedHashSet<RoleWithSource> roles = new LinkedHashSet<>();
 		
 		try {
 			con = WT.getConnection(CoreManifest.ID);
-			String userSid = usrm.lookupSubjectSid(pid, GenericSubject.Type.USER);
+			String userSid = lookupSubjectSid(pid, GenericSubject.Type.USER);
 			
-			if(self) {
+			if (self) {
 				UserDAO usedao = UserDAO.getInstance();
 				OUser user = usedao.selectBySid(con, userSid);
 				roles.add(new RoleWithSource(RoleWithSource.SOURCE_USER, userSid, user.getDomainId(), pid.getUserId(), user.getDisplayName()));
@@ -2456,22 +2466,22 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 			
 			// Gets by group
 			List<ORole> groles = roldao.selectFromGroupsByUser(con, userSid);
-			for(ORole role : groles) {
-				if(roleMap.contains(role.getRoleSid())) continue; // Skip duplicates
+			for (ORole role : groles) {
+				if (roleMap.contains(role.getRoleSid())) continue; // Skip duplicates
 				roleMap.add(role.getRoleSid());
 				roles.add(new RoleWithSource(RoleWithSource.SOURCE_GROUP, role.getRoleSid(), role.getDomainId(), role.getName(), role.getDescription()));
 			}
 			
 			// Gets direct assigned roles
 			List<ORole> droles = roldao.selectDirectByUser(con, userSid);
-			for(ORole role : droles) {
+			for (ORole role : droles) {
 				if(roleMap.contains(role.getRoleSid())) continue; // Skip duplicates
 				roleMap.add(role.getRoleSid());
 				roles.add(new RoleWithSource(RoleWithSource.SOURCE_ROLE, role.getRoleSid(), role.getDomainId(), role.getName(), role.getDescription()));
 			}
 			
 			// Get transivite roles (belonging to groups)
-			if(transitive) {
+			if (transitive) {
 				List<ORole> troles = roldao.selectTransitiveFromGroupsByUser(con, userSid);
 				for(ORole role : troles) {
 					if(roleMap.contains(role.getRoleSid())) continue; // Skip duplicates
@@ -2479,8 +2489,8 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 					roles.add(new RoleWithSource(RoleWithSource.SOURCE_TRANSITIVE, role.getRoleSid(), role.getDomainId(), role.getName(), role.getDescription()));
 				}
 			}
-		} catch(SQLException | DAOException ex) {
-			throw new WTException(ex, "DB error");
+		} catch (Exception ex) {
+			throw ExceptionUtils.wrapThrowable(ex);
 		} finally {
 			DbUtils.closeQuietly(con);
 		}
@@ -2488,20 +2498,38 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 	}
 	
 	/**
-	 * @deprecated Create new method with string result
+	 * Returns all permission strings related to specified role SID.
+	 * @param roleSid The target role SID (SubjectID) 
+	 * @return A set of string permissions
+	 * @throws WTException 
 	 */
-	@Deprecated
-	public List<ORolePermission> listRolePermissions(String roleSid) throws Exception {
+	public Set<String> getRolePermissionStrings(final String roleSid) throws WTException {
+		Check.notEmpty(roleSid, "roleSid");
+		RolePermissionDAO rpDao = RolePermissionDAO.getInstance();
 		Connection con = null;
 		
+		List<ORolePermission> rolePermissions = null;
 		try {
 			con = WT.getConnection(CoreManifest.ID);
-			RolePermissionDAO dao = RolePermissionDAO.getInstance();
-			return dao.selectByRoleSid(con, roleSid);
-		
+			rolePermissions = rpDao.selectByRoleSid(con, roleSid);
+			
+		} catch (Exception ex) {
+			throw ExceptionUtils.wrapThrowable(ex);
 		} finally {
 			DbUtils.closeQuietly(con);
 		}
+		
+		Set<String> permissionStrings = new LinkedHashSet<>(rolePermissions.size());
+		for (ORolePermission permission : rolePermissions) {
+			// Generate resource namespaced name:
+			// eg. resource "TEST" for service "com.sonicle.webtop.core" 
+			// will become "com.sonicle.webtop.core.TEST"
+			final String resourceName = ServicePermission.namespacedName(permission.getServiceId(), permission.getKey());
+			// Generate permission string (that shiro can understand)
+			// under the form: {resource}:{action}:{instance}
+			permissionStrings.add(ServicePermission.permissionString(resourceName, permission.getAction(), permission.getInstance()));
+		}
+		return permissionStrings;
 	}
 	
 	public EntityPermissions extractPermissions(Connection con, String roleSid) throws WTException {
@@ -2619,7 +2647,7 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 			if (targetPermissionKeys == null) {
 				originSids = shaDao.viewOriginatingSidsByServiceKey(con, serviceId, context);
 			} else {
-				final List<String> targetSubjectSids = getComputedRolesAsStringByUser(targetProfileId, true, true);
+				final Set<String> targetSubjectSids = getComputedRoleSidsByUser(targetProfileId, true, true);
 				originSids = shaDao.viewOriginatingSidsByRoleServiceKey(con, serviceId, context, targetSubjectSids, targetPermissionKeys);
 			}
 			
@@ -2666,7 +2694,7 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 		
 		// Define lookup targets
 		final String originSubjectSid = subjectSidCache.getSid(originProfileId, GenericSubject.Type.USER, GenericSubject.Type.RESOURCE);
-		final List<String> targetSubjectSids = getComputedRolesAsStringByUser(targetProfileId, true, true);
+		final Set<String> targetSubjectSids = getComputedRoleSidsByUser(targetProfileId, true, true);
 		
 		try {
 			con = WT.getCoreConnection();
@@ -2779,59 +2807,6 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 	}
 	
 	/**
-	 * Lists FolderShare (Root->Folder two-level sharing) origins for specified profileId.
-	 * @param targetProfileId The Profile ID under investigation.
-	 * @param serviceId The related service ID.
-	 * @param context The context-name (or groupName) of the share.
-	 * @return A list of origin objects
-	 * @throws WTException 
-	 */
-	public List<FolderShareOrigin> listFolderShareOrigins_OLD(final UserProfileId targetProfileId, final String serviceId, final String context) throws WTException {
-		Check.notNull(targetProfileId, "targetProfileId");
-		Check.notEmpty(serviceId, "serviceId");
-		Check.notEmpty(context, "context");
-		ShareDAO shaDao = ShareDAO.getInstance();
-		Connection con = null;
-		
-		// In order to find share origins, we need to look for any folders 
-		// of at least a permission, then collect their owner uids.
-		// So, we look into permissions table returning any row that have any 
-		// possible share keys ("*_FOLDER@SHARE" or "*_ITEMS@SHARE") and 
-		// satisfying a set of subject uids. Then we can get a list of unique 
-		// uids (from shares table) that originating the share.
-		
-		// Define lookup targets
-		final String targetSubjectSid = subjectSidCache.getSid(targetProfileId, GenericSubject.Type.USER, GenericSubject.Type.RESOURCE);
-		final List<String> targetSubjectSids = getComputedRolesAsStringByUser(targetProfileId, true, true);
-		final List<String> TARGET_PERMISSION_KEYS = buildFolderShareKeys(context);
-		
-		try {
-			con = WT.getCoreConnection();
-			Set<String> originSids = shaDao.viewOriginatingSidsByRoleServiceKey(con, serviceId, context, targetSubjectSids, TARGET_PERMISSION_KEYS);
-			ArrayList<FolderShareOrigin> origins = new ArrayList<>();
-			for (String uid : originSids) {
-				if (uid.equals(targetSubjectSid)) continue; // Skip self				
-				UserProfileId rootProfileId = subjectSidCache.getPid(uid, GenericSubject.Type.USER, GenericSubject.Type.RESOURCE);
-				if (rootProfileId == null) {
-					LOGGER.warn("Unable to lookup USER/RESOURCE profileId for uid '{}'", uid);
-				} else {
-					UserProfile.Data udata = lookupProfileData(rootProfileId, true);
-					origins.add(new FolderShareOrigin(rootProfileId, udata.getDisplayName()));
-				}
-			}
-			
-			Collections.sort(origins, (FolderShareOrigin so1, FolderShareOrigin so2) -> so1.getDisplayName().compareTo(so2.getDisplayName()));
-			return origins;
-			
-		} catch (Exception ex) {
-			LOGGER.error("Unable to compute folder-share origins for '{}' [{}, {}]", targetProfileId, serviceId, context);
-			throw ExceptionUtils.wrapThrowable(ex);
-		} finally {
-			DbUtils.closeQuietly(con);
-		}
-	}
-	
-	/**
 	 * Get FolderShare (Root->Folder two-level sharing) Folders for specified profileId.
 	 * @param targetProfileId The Profile ID under investigation.
 	 * @param originProfileId The source Origin ID of the share.
@@ -2858,52 +2833,6 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 	}
 	
 	/**
-	 * @deprecated 
-	 * Get FolderShare (Root->Folder two-level sharing) Folders for specified profileId.
-	 * @param targetProfileId The Profile ID under investigation.
-	 * @param originProfileId The source Origin ID of the share.
-	 * @param serviceId The related service ID.
-	 * @param context The context-name (or groupName) of the share.
-	 * @return
-	 * @throws WTException 
-	 */
-	@Deprecated
-	public FolderShareOriginFolders getFolderShareOriginFolders_OLD(final UserProfileId targetProfileId, final UserProfileId originProfileId, final String serviceId, final String context) throws WTException {
-		Check.notNull(targetProfileId, "targetProfileId");
-		Check.notNull(originProfileId, "originProfileId");
-		Check.notEmpty(serviceId, "serviceId");
-		Check.notEmpty(context, "context");
-		ShareDAO shaDao = ShareDAO.getInstance();
-		Connection con = null;
-		
-		// In order to find share instances, we need to look for any folders 
-		// of at least a permission, then collect their instance ids.
-		// So, we look into permissions table returning any row that have any 
-		// possible share keys ("*_FOLDER@SHARE" or "*_ITEMS@SHARE") and 
-		// satisfying a set of subject uids. Then we can get a list of unique 
-		// instances (from shares table) that originating the share.
-		
-		// Define lookup targets
-		final String originSubjectSid = subjectSidCache.getSid(originProfileId, GenericSubject.Type.USER, GenericSubject.Type.RESOURCE);
-		//final String targetSubjectSid = aclSubjectCache.getSid(targetProfileId);
-		final List<String> targetSubjectSids = getComputedRolesAsStringByUser(targetProfileId, true, true);
-		final List<String> TARGET_PERMISSION_KEYS = buildFolderShareKeys(context);
-		
-		try {
-			con = WT.getCoreConnection();
-			Set<String> instances = shaDao.viewInstancesByOriginServiceContextPermissions(con, originSubjectSid, serviceId, context, targetSubjectSids, TARGET_PERMISSION_KEYS);
-			boolean wildcardFound = instances.remove(FolderSharing.INSTANCE_WILDCARD);
-			return new FolderShareOriginFolders(instances, wildcardFound);
-			
-		} catch (Exception ex) {
-			LOGGER.error("Unable to compute folder-share folders for '{}' [{}, {}, {}]", targetProfileId, originSubjectSid, serviceId, context);
-			throw ExceptionUtils.wrapThrowable(ex);
-		} finally {
-			DbUtils.closeQuietly(con);
-		}
-	}
-	
-	/**
 	 * Evaluates passed FolderShare rights, described under-the-hood by actions, against profile's permissions.
 	 * @param targetProfileId The Profile ID under investigation.
 	 * @param originProfileId The source Origin ID of the share.
@@ -2925,8 +2854,6 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 		Check.notNull(scope, "scope");
 		Check.notNull(target, "target");
 		Check.notNull(actions, "actions");
-		ShareDAO shaDao = ShareDAO.getInstance();
-		Connection con = null;
 		
 		// Define lookup targets
 		final String originSubjectSid = subjectSidCache.getSid(originProfileId, GenericSubject.Type.USER, GenericSubject.Type.RESOURCE);
@@ -2948,27 +2875,19 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 			permissionKey = FolderShare.buildItemsPermissionKey(context);
 		}
 		
-		try {
-			con = WT.getCoreConnection();
-			Integer shareId = shaDao.selectIdByUserServiceKeyInstance(con, originSubjectSid, serviceId, context, shareInstance);
-			if (shareId == null) {
-				if (!throwOnMissingShare) return null;
-				throw new WTNotFoundException("Share not found [{}, {}, {}, {}]", originSubjectSid, serviceId, context, shareInstance);
-			}
-			
-			boolean[] bools = new boolean[actions.length];
-			for (int i=0; i<actions.length; i++) {
-				bools[i] = RunContext.isPermitted(true, targetProfileId, serviceId, permissionKey, actions[i], String.valueOf(shareId));
-				if (LOGGER.isTraceEnabled()) LOGGER.trace("SharePermission eval: [{}] for [{}] -> {}", ServicePermission.permissionString(ServicePermission.namespacedName(serviceId, permissionKey), actions[i], String.valueOf(shareId)), targetProfileId, bools[i]);
-			}
-			return bools;
-			
-		} catch (Exception ex) {
+		Integer shareId = doShareIdLookup(originSubjectSid, serviceId, context, shareInstance);
+		if (shareId == null) {
+			if (!throwOnMissingShare) return null;
 			LOGGER.error("Unable to evaluate permissions for '{}' [{}, {}, {}, {}]", targetProfileId, originSubjectSid, serviceId, context, shareInstance);
-			throw ExceptionUtils.wrapThrowable(ex);
-		} finally {
-			DbUtils.closeQuietly(con);
+			throw new WTNotFoundException("Share not found [{}, {}, {}, {}]", originSubjectSid, serviceId, context, shareInstance);
 		}
+		
+		boolean[] bools = new boolean[actions.length];
+		for (int i=0; i<actions.length; i++) {
+			bools[i] = RunContext.isPermitted(true, targetProfileId, serviceId, permissionKey, actions[i], String.valueOf(shareId));
+			if (LOGGER.isTraceEnabled()) LOGGER.trace("SharePermission eval: [{}] for [{}] -> {}", ServicePermission.permissionString(ServicePermission.namespacedName(serviceId, permissionKey), actions[i], String.valueOf(shareId)), targetProfileId, bools[i]);
+		}
+		return bools;
 	}
 	
 	/**
@@ -2987,8 +2906,6 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 		Check.notEmpty(serviceId, "serviceId");
 		Check.notEmpty(context, "context");
 		Check.notNull(scope, "scope");
-		ShareDAO shaDao = ShareDAO.getInstance();
-		Connection con = null;
 		
 		final String FOLDER_PERMISSION_KEY = FolderShare.buildFolderPermissionKey(context);
 		final String ITEMS_PERMISSION_KEY = FolderShare.buildItemsPermissionKey(context);
@@ -3007,35 +2924,27 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 			throw new IllegalArgumentException("Unsupported scope");
 		}
 		
-		try {
-			con = WT.getCoreConnection();
-			Integer shareId = shaDao.selectIdByUserServiceKeyInstance(con, originSubjectSid, serviceId, context, shareInstance);
-			if (shareId == null) {
-				if (!throwOnMissingShare) return null;
-				throw new WTNotFoundException("Share not found [{}, {}, {}, {}]", originSubjectSid, serviceId, context, shareInstance);
-			}
-			
-			FolderShare.FolderPermissions folderPerms = new FolderShare.FolderPermissions();
-			for (FolderShare.FolderRight right : EnumUtils.allTypesOf(FolderShare.FolderRight.class)) {
-				if (skipWildcardReservedRights && right.isReservedForWildcard()) continue;
-				if (RunContext.isPermitted(true, targetProfileId, serviceId, FOLDER_PERMISSION_KEY, right.name(), String.valueOf(shareId))) {
-					folderPerms.set(right);
-				}
-			}
-			FolderShare.ItemsPermissions itemsPerms = new FolderShare.ItemsPermissions();
-			for (FolderShare.ItemsRight right : EnumUtils.allTypesOf(FolderShare.ItemsRight.class)) {
-				if (RunContext.isPermitted(true, targetProfileId, serviceId, ITEMS_PERMISSION_KEY, right.name(), String.valueOf(shareId))) {
-					itemsPerms.set(right);
-				}
-			}
-			return new FolderShare.Permissions(folderPerms, itemsPerms);
-			
-		} catch (Exception ex) {
+		Integer shareId = doShareIdLookup(originSubjectSid, serviceId, context, shareInstance);
+		if (shareId == null) {
+			if (!throwOnMissingShare) return null;
 			LOGGER.error("Unable to evaluate permissions for '{}' [{}, {}, {}, {}]", targetProfileId, originSubjectSid, serviceId, context, shareInstance);
-			throw ExceptionUtils.wrapThrowable(ex);
-		} finally {
-			DbUtils.closeQuietly(con);
+			throw new WTNotFoundException("Share not found [{}, {}, {}, {}]", originSubjectSid, serviceId, context, shareInstance);
 		}
+		
+		FolderShare.FolderPermissions folderPerms = new FolderShare.FolderPermissions();
+		for (FolderShare.FolderRight right : EnumUtils.allTypesOf(FolderShare.FolderRight.class)) {
+			if (skipWildcardReservedRights && right.isReservedForWildcard()) continue;
+			if (RunContext.isPermitted(true, targetProfileId, serviceId, FOLDER_PERMISSION_KEY, right.name(), String.valueOf(shareId))) {
+				folderPerms.set(right);
+			}
+		}
+		FolderShare.ItemsPermissions itemsPerms = new FolderShare.ItemsPermissions();
+		for (FolderShare.ItemsRight right : EnumUtils.allTypesOf(FolderShare.ItemsRight.class)) {
+			if (RunContext.isPermitted(true, targetProfileId, serviceId, ITEMS_PERMISSION_KEY, right.name(), String.valueOf(shareId))) {
+				itemsPerms.set(right);
+			}
+		}
+		return new FolderShare.Permissions(folderPerms, itemsPerms);
 	}
 	
 	/**
@@ -3232,15 +3141,24 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	
+	private class DomainUpdateResult {
+		public final ODomain odomain;
+		
+		public DomainUpdateResult(ODomain odomain) {
+			this.odomain = odomain;
+		}
+	}
 	
-	
-	
-	
-	
-	
-	private ODomain doODomainGet(Connection con, String domainId) throws WTException {
-		DomainDAO domDao = DomainDAO.getInstance();
-		return domDao.selectById(con, domainId);
+	private class DomainInitResult {
+		public final boolean subjectCacheUpdated;
+		public final Result<User> adminResult;
+		public final ArrayList<HomedThrowable> errors;
+		
+		public DomainInitResult(boolean subjectCacheUpdated, Result<User> adminResult, ArrayList<HomedThrowable> errors) {
+			this.subjectCacheUpdated = subjectCacheUpdated;
+			this.adminResult = adminResult;
+			this.errors = errors;
+		}
 	}
 	
 	private static enum DomainProcessOpt implements BitFlagsEnum<DomainProcessOpt> {
@@ -3260,6 +3178,11 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 			// Flag values are compatible for now, simpy instantiate new object...
 			return BitFlags.newFrom(DomainProcessOpt.class, options);
 		}
+	}
+	
+	private ODomain doODomainGet(Connection con, String domainId) throws WTException {
+		DomainDAO domDao = DomainDAO.getInstance();
+		return domDao.selectById(con, domainId);
 	}
 	
 	private Domain doDomainGet(final Connection con, final String domainId, final BitFlags<DomainProcessOpt> options) throws WTException {
@@ -3347,26 +3270,6 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 		
 		LOGGER.debug("[{}] Deleting domain...", domainId);
 		DomainDAO.getInstance().deleteById(con, domainId);
-	}
-	
-	private class DomainUpdateResult {
-		public final ODomain odomain;
-		
-		public DomainUpdateResult(ODomain odomain) {
-			this.odomain = odomain;
-		}
-	}
-	
-	private class DomainInitResult {
-		public final boolean subjectCacheUpdated;
-		public final Result<User> adminResult;
-		public final ArrayList<HomedThrowable> errors;
-		
-		public DomainInitResult(boolean subjectCacheUpdated, Result<User> adminResult, ArrayList<HomedThrowable> errors) {
-			this.subjectCacheUpdated = subjectCacheUpdated;
-			this.adminResult = adminResult;
-			this.errors = errors;
-		}
 	}
 	
 	private DomainInitResult doDomainInitCheck(final String domainId) throws WTException {
@@ -3519,6 +3422,16 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 					LOGGER.warn("Domain folder deletion can be a lengthy operation. Please delete '{}' folder manually.", deletedDomainDirString);
 				}
 			}
+		}
+	}
+	
+	private static class UserInsertResult {
+		public final OUser ouser;
+		public final OUserInfo ouserinfo;
+		
+		public UserInsertResult(OUser ouser, OUserInfo ouserinfo) {
+			this.ouser = ouser;
+			this.ouserinfo = ouserinfo;
 		}
 	}
 	
@@ -3755,13 +3668,11 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 		return useDao.deleteByDomainUser(con, domainId, userId) == 1;
 	}
 	
-	private static class UserInsertResult {
-		public final OUser ouser;
-		public final OUserInfo ouserinfo;
+	private static class GroupInsertResult {
+		public final OGroup ogroup;
 		
-		public UserInsertResult(OUser ouser, OUserInfo ouserinfo) {
-			this.ouser = ouser;
-			this.ouserinfo = ouserinfo;
+		public GroupInsertResult(OGroup ogroup) {
+			this.ogroup = ogroup;
 		}
 	}
 	
@@ -3972,11 +3883,11 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 		return grpDao.deleteByProfile(con, domainId, groupId) == 1;
 	}
 	
-	private static class GroupInsertResult {
-		public final OGroup ogroup;
+	private static class RoleInsertResult {
+		public final ORole orole;
 		
-		public GroupInsertResult(OGroup ogroup) {
-			this.ogroup = ogroup;
+		public RoleInsertResult(ORole orole) {
+			this.orole = orole;
 		}
 	}
 	
@@ -4149,11 +4060,15 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 		return rolDao.deleteBySid(con, roleSid) == 1;
 	}
 	
-	private static class RoleInsertResult {
-		public final ORole orole;
+	private static class ResourceUpdateResult {
+		public final OUser ouser;
+		public final OUserInfo ouserinfo;
+		public final Set<String> changedPermissionSids;
 		
-		public RoleInsertResult(ORole orole) {
-			this.orole = orole;
+		public ResourceUpdateResult(OUser ouser, OUserInfo ouserinfo, Set<String> changedPermissionSids) {
+			this.ouser = ouser;
+			this.ouserinfo = ouserinfo;
+			this.changedPermissionSids = changedPermissionSids;
 		}
 	}
 	
@@ -4336,16 +4251,23 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 		return true;
 	}
 	
-	private static class ResourceUpdateResult {
-		public final OUser ouser;
-		public final OUserInfo ouserinfo;
-		public final Set<String> changedPermissionSids;
-		
-		public ResourceUpdateResult(OUser ouser, OUserInfo ouserinfo, Set<String> changedPermissionSids) {
-			this.ouser = ouser;
-			this.ouserinfo = ouserinfo;
-			this.changedPermissionSids = changedPermissionSids;
-		}
+	private Integer doShareIdLookup(final String originSubjectSid, final String serviceId, final String context, final String shareInstance) {
+		final String key = StringUtils.joinWith("|", originSubjectSid, serviceId, context, shareInstance);
+		return shareIdCache.get(key, (k) -> {
+			ShareDAO shaDao = ShareDAO.getInstance();
+			Connection con = null;
+
+			try {
+				if (LOGGER.isTraceEnabled()) LOGGER.trace("Looking for share ID by: [{}, {}, {}, {}]", originSubjectSid, serviceId, context, shareInstance);
+				con = WT.getCoreConnection();
+				return Optional.ofNullable(shaDao.selectIdByUserServiceKeyInstance(con, originSubjectSid, serviceId, context, shareInstance));
+
+			} catch (Exception ex) {
+				throw new WTRuntimeException();
+			} finally {
+				DbUtils.closeQuietly(con);
+			}
+		}).orElse(null);
 	}
 	
 	private ApiKey doApiKeyGet(final Connection con, final String domainId, final String apiKeyId) throws WTException {
@@ -5484,123 +5406,6 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 		}
 	}
 	
-	private class ApiKeyCache extends AbstractBulkCache {
-		private final MultiValuedMap<String, String> digestByDomain = new ArrayListValuedHashMap<>();
-		private final HashMap<String, String> digestById = new HashMap<>();
-		private final HashMap<String, ApiKeyLive> keysByDigest = new HashMap<>();
-
-		@Override
-		protected void internalBuildCache() {
-			ApiKeyDAO apkDao = ApiKeyDAO.getInstance();
-			Connection con = null;
-			
-			try {
-				LOGGER.trace("[ApiKey Cache] Loading all...");
-				con = getConnection(true);
-				for (OApiKey oapk : apkDao.selectValidByInstant(con, JodaTimeUtils.now().withTimeAtStartOfDay()).values()) {
-					try {
-						final DigestValue digestValue = DigestValue.parse(oapk.getLongToken());
-						final String apiKeyDigested = ApiKeyBase.buildApiKeyString(oapk.getShortToken(), digestValue.getDigestString());
-						doAdd(oapk.getDomainId(), oapk.getApiKeyId(), apiKeyDigested, oapk.getExpiresAt());
-						
-					} catch (Exception ex) {
-						LOGGER.error("[ApiKey Cache] Unable to load ApiKey '{}'", ex, oapk.getApiKeyId());
-					}
-				}
-				
-			} catch (Throwable t) {
-				LOGGER.error("[ApiKey Cache] Unable to load all", t);
-			} finally {
-				DbUtils.closeQuietly(con);
-			}
-		}
-
-		@Override
-		protected void internalCleanupCache() {
-			digestByDomain.clear();
-			digestById.clear();
-			keysByDigest.clear();
-		}
-		
-		public void cleanupByDomain(final String domainId) {
-			long stamp = writeLock();
-			try {
-				Collection<String> domainDigests = digestByDomain.remove(domainId);
-				for (String digest : domainDigests) {
-					ApiKeyLive apiKey = keysByDigest.remove(digest);
-					if (apiKey != null) digestById.remove(apiKey.getApiKeyId());
-				}
-				
-			} finally {
-				unlockWrite(stamp);
-			}
-		}
-		
-		public void add(final String domainId, final String apiKeyId, final String apiKeyShortToken, final String apiKeyLongToken, final DateTime apiKeyExpireAt) {
-			final String longTokenDigest = DigestValue.parse(apiKeyLongToken).getDigestString();
-			final String apiKeyDigested = ApiKeyBase.buildApiKeyString(apiKeyShortToken, longTokenDigest);
-			
-			long stamp = writeLock();
-			try {
-				doAdd(domainId, apiKeyId, apiKeyDigested, apiKeyExpireAt);
-				
-			} finally {
-				unlockWrite(stamp);
-			}
-		}
-		
-		private void doAdd(final String domainId, final String apiKeyId, final String apiKeyDigested, final DateTime apiKeyExpireAt) {
-			digestByDomain.put(domainId, apiKeyDigested);
-			digestById.put(apiKeyId, apiKeyDigested);
-			keysByDigest.put(apiKeyDigested, new ApiKeyLive(domainId, apiKeyId, apiKeyDigested, apiKeyExpireAt));
-		}
-		
-		public boolean updateExpiration(final String domainId, final String apiKeyId, final DateTime newExpiration) {
-			long stamp = writeLock();
-			try {
-				String digest = digestById.get(apiKeyId);
-				if (digest == null) return false;
-				ApiKeyLive entry = keysByDigest.remove(digest);
-				if (entry == null) return false;
-				keysByDigest.put(digest, new ApiKeyLive(domainId, apiKeyId, digest, newExpiration));
-				return true;
-				
-			} finally {
-				unlockWrite(stamp);
-			}
-		}
-		
-		public boolean remove(final String domainId, final String apiKeyId) {
-			long stamp = writeLock();
-			try {
-				String digest = digestById.remove(apiKeyId);
-				if (digest == null) return false;
-				ApiKeyLive entry = keysByDigest.remove(digest);
-				if (entry == null) return false;
-				return digestByDomain.removeMapping(domainId, digest);
-				
-			} finally {
-				unlockWrite(stamp);
-			}
-		}
-		
-		public boolean verify(final String apiKeyShortToken, final String apiKeyLongTokenPlain) {
-			final String hashedLongToken = ApiKeyBase.hashLongToken(apiKeyLongTokenPlain);
-			final String longTokenDigest = DigestValue.parse(hashedLongToken).getDigestString();
-			final String apiKeyDigested = ApiKeyBase.buildApiKeyString(apiKeyShortToken, longTokenDigest);
-			
-			long stamp = readLock();
-			try {
-				ApiKeyLive entry = keysByDigest.get(apiKeyDigested);
-				if (entry == null) return false;
-				return !entry.isExpired();
-				
-			} finally {
-				unlockRead(stamp);
-			}
-		}
-	}
-	
 	private class SubjectSidCache {
 		private final LoadingCache<String, Optional<SubjectSid>> userPidToSid = Caffeine.newBuilder().build(new PidToSidLoader());
 		private final LoadingCache<String, Optional<SubjectSid>> rolePidToSid = Caffeine.newBuilder().build(new PidToSidLoader());
@@ -5829,7 +5634,122 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 		}
 	}
 	
-	
+	private class ApiKeyCache extends AbstractBulkCache {
+		private final MultiValuedMap<String, String> digestByDomain = new ArrayListValuedHashMap<>();
+		private final HashMap<String, String> digestById = new HashMap<>();
+		private final HashMap<String, ApiKeyLive> keysByDigest = new HashMap<>();
+
+		@Override
+		protected void internalBuildCache() {
+			ApiKeyDAO apkDao = ApiKeyDAO.getInstance();
+			Connection con = null;
+			
+			try {
+				LOGGER.trace("[ApiKey Cache] Loading all...");
+				con = getConnection(true);
+				for (OApiKey oapk : apkDao.selectValidByInstant(con, JodaTimeUtils.now().withTimeAtStartOfDay()).values()) {
+					try {
+						final DigestValue digestValue = DigestValue.parse(oapk.getLongToken());
+						final String apiKeyDigested = ApiKeyBase.buildApiKeyString(oapk.getShortToken(), digestValue.getDigestString());
+						doAdd(oapk.getDomainId(), oapk.getApiKeyId(), apiKeyDigested, oapk.getExpiresAt());
+						
+					} catch (Exception ex) {
+						LOGGER.error("[ApiKey Cache] Unable to load ApiKey '{}'", ex, oapk.getApiKeyId());
+					}
+				}
+				
+			} catch (Throwable t) {
+				LOGGER.error("[ApiKey Cache] Unable to load all", t);
+			} finally {
+				DbUtils.closeQuietly(con);
+			}
+		}
+
+		@Override
+		protected void internalCleanupCache() {
+			digestByDomain.clear();
+			digestById.clear();
+			keysByDigest.clear();
+		}
+		
+		public void cleanupByDomain(final String domainId) {
+			long stamp = writeLock();
+			try {
+				Collection<String> domainDigests = digestByDomain.remove(domainId);
+				for (String digest : domainDigests) {
+					ApiKeyLive apiKey = keysByDigest.remove(digest);
+					if (apiKey != null) digestById.remove(apiKey.getApiKeyId());
+				}
+				
+			} finally {
+				unlockWrite(stamp);
+			}
+		}
+		
+		public void add(final String domainId, final String apiKeyId, final String apiKeyShortToken, final String apiKeyLongToken, final DateTime apiKeyExpireAt) {
+			final String longTokenDigest = DigestValue.parse(apiKeyLongToken).getDigestString();
+			final String apiKeyDigested = ApiKeyBase.buildApiKeyString(apiKeyShortToken, longTokenDigest);
+			
+			long stamp = writeLock();
+			try {
+				doAdd(domainId, apiKeyId, apiKeyDigested, apiKeyExpireAt);
+				
+			} finally {
+				unlockWrite(stamp);
+			}
+		}
+		
+		private void doAdd(final String domainId, final String apiKeyId, final String apiKeyDigested, final DateTime apiKeyExpireAt) {
+			digestByDomain.put(domainId, apiKeyDigested);
+			digestById.put(apiKeyId, apiKeyDigested);
+			keysByDigest.put(apiKeyDigested, new ApiKeyLive(domainId, apiKeyId, apiKeyDigested, apiKeyExpireAt));
+		}
+		
+		public boolean updateExpiration(final String domainId, final String apiKeyId, final DateTime newExpiration) {
+			long stamp = writeLock();
+			try {
+				String digest = digestById.get(apiKeyId);
+				if (digest == null) return false;
+				ApiKeyLive entry = keysByDigest.remove(digest);
+				if (entry == null) return false;
+				keysByDigest.put(digest, new ApiKeyLive(domainId, apiKeyId, digest, newExpiration));
+				return true;
+				
+			} finally {
+				unlockWrite(stamp);
+			}
+		}
+		
+		public boolean remove(final String domainId, final String apiKeyId) {
+			long stamp = writeLock();
+			try {
+				String digest = digestById.remove(apiKeyId);
+				if (digest == null) return false;
+				ApiKeyLive entry = keysByDigest.remove(digest);
+				if (entry == null) return false;
+				return digestByDomain.removeMapping(domainId, digest);
+				
+			} finally {
+				unlockWrite(stamp);
+			}
+		}
+		
+		public boolean verify(final String apiKeyShortToken, final String apiKeyLongTokenPlain) {
+			final String hashedLongToken = ApiKeyBase.hashLongToken(apiKeyLongTokenPlain);
+			final String longTokenDigest = DigestValue.parse(hashedLongToken).getDigestString();
+			final String apiKeyDigested = ApiKeyBase.buildApiKeyString(apiKeyShortToken, longTokenDigest);
+			
+			long stamp = readLock();
+			try {
+				ApiKeyLive entry = keysByDigest.get(apiKeyDigested);
+				if (entry == null) return false;
+				return !entry.isExpired();
+				
+			} finally {
+				unlockRead(stamp);
+			}
+		}
+	}
 	
 	public static class CheckUserResult {
 		public boolean exist;

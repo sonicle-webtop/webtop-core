@@ -59,11 +59,9 @@ import com.sonicle.webtop.core.app.SettingsManager;
 import com.sonicle.webtop.core.app.WebTopManager;
 import com.sonicle.webtop.core.app.WT;
 import com.sonicle.webtop.core.app.WebTopApp;
-import com.sonicle.webtop.core.app.WebTopProps;
 import com.sonicle.webtop.core.app.io.dbutils.FilterInfo;
 import com.sonicle.webtop.core.app.io.dbutils.FilterableArrayListHandler;
 import com.sonicle.webtop.core.app.io.dbutils.RowsAndCols;
-import com.sonicle.webtop.core.app.model.AclSubjectGetOption;
 import com.sonicle.webtop.core.app.model.Domain;
 import com.sonicle.webtop.core.app.model.DomainBase;
 import com.sonicle.webtop.core.app.model.EnabledCond;
@@ -125,7 +123,6 @@ import com.sonicle.webtop.core.dal.ServiceStoreEntryDAO;
 import com.sonicle.webtop.core.dal.ShareDAO;
 import com.sonicle.webtop.core.dal.ShareDataDAO;
 import com.sonicle.webtop.core.dal.TagDAO;
-import com.sonicle.webtop.core.dal.UserDAO;
 import com.sonicle.webtop.core.app.model.GenericSubject;
 import com.sonicle.webtop.core.model.Activity;
 import com.sonicle.webtop.core.model.AuditLog;
@@ -139,7 +136,6 @@ import com.sonicle.webtop.core.model.CustomPanelBase;
 import com.sonicle.webtop.core.model.DataSourceQuery;
 import com.sonicle.webtop.core.model.DataSourceBase;
 import com.sonicle.webtop.core.model.DataSourcePooled;
-import com.sonicle.webtop.core.model.DomainEntity;
 import com.sonicle.webtop.core.app.model.FolderShare;
 import com.sonicle.webtop.core.app.model.FolderShareOriginFolders;
 import com.sonicle.webtop.core.model.IMChat;
@@ -159,7 +155,6 @@ import com.sonicle.webtop.core.app.model.ShareOrigin;
 import com.sonicle.webtop.core.app.model.SubjectGetOption;
 import com.sonicle.webtop.core.app.model.User;
 import com.sonicle.webtop.core.app.model.UserGetOption;
-import com.sonicle.webtop.core.config.bol.OPecBridgeRelay;
 import com.sonicle.webtop.core.config.dal.PecBridgeFetcherDAO;
 import com.sonicle.webtop.core.config.dal.PecBridgeRelayDAO;
 import com.sonicle.webtop.core.model.Tag;
@@ -183,7 +178,6 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -659,8 +653,7 @@ public class CoreManager extends BaseManager {
 	 * Used in aliseoweb, drm
 	 * @deprecated use listSubjects, listUserIds, listUserProfileIds or listUsers instead
 	 */
-	@Deprecated
-	public List<OUser> listUsers(boolean enabledOnly) throws WTException {
+	@Deprecated public List<OUser> listUsers(boolean enabledOnly) throws WTException {
 		String domainId = getTargetProfileId().getDomainId();
 		WebTopManager wtmgr = wta.getWebTopManager();
 		
@@ -727,8 +720,7 @@ public class CoreManager extends BaseManager {
 	 * Used by aliseoweb service
 	 * @deprecated 
 	 */
-	@Deprecated
-	public OUser getUser(UserProfileId pid) throws WTException {
+	@Deprecated public OUser getUser(UserProfileId pid) throws WTException {
 		WebTopManager wtmgr = wta.getWebTopManager();
 		
 		if(RunContext.isSysAdmin()) {
@@ -3139,88 +3131,15 @@ public class CoreManager extends BaseManager {
 	/**
 	 * @deprecated use listFolderShareOrigins instead
 	 */
-	@Deprecated
-	public List<IncomingShareRoot> listIncomingShareRoots(String serviceId, String groupName) throws WTException {
-		WebTopManager wtmgr = wta.getWebTopManager();
-		ShareDAO shadao = ShareDAO.getInstance();
-		UserDAO usedao = UserDAO.getInstance();
-		UserProfileId targetPid = getTargetProfileId();
-		Connection con = null;
-		
-		try {
-			String profileUid = wtmgr.lookupSubjectSid(targetPid, GenericSubject.Type.USER);
-			List<String> roleUids = wtmgr.getComputedRolesAsStringByUser(targetPid, true, true);
-			
-			String rootKey = OShare.buildRootKey(groupName);
-			String folderKey = OShare.buildFolderKey(groupName);
-			String rootPermissionKey = ServiceSharePermission.buildRootPermissionKey(groupName);
-			String folderPermissionKey = ServiceSharePermission.buildFolderPermissionKey(groupName);
-			String elementsPermissionKey = ServiceSharePermission.buildElementsPermissionKey(groupName);
-			
-			con = WT.getCoreConnection();
-			
-			// In order to find incoming root, we need to pass through folders
-			// that have at least a permission, getting incoming uids.
-			// We look into permission returning each share instance that have 
-			// "*@SHARE_FOLDER" as key and satisfies a set of roles. Then we can
-			// get a list of unique uids (from shares table) that owns the share.
-			List<String> permissionKeys = Arrays.asList(rootPermissionKey, folderPermissionKey, elementsPermissionKey);
-			List<String> originUids = shadao.viewOriginByRoleServiceKey(con, roleUids, serviceId, folderKey, permissionKeys);
-			ArrayList<IncomingShareRoot> roots = new ArrayList<>();
-			for (String uid : originUids) {
-				if (uid.equals(profileUid)) continue; // Skip self role
-				
-				// Foreach incoming uid we have to find the root share and then
-				// test if READ right is allowed
-				
-				OShare root = shadao.selectByUserServiceKeyInstance2(con, uid, serviceId, rootKey, OShare.INSTANCE_ROOT);
-				if (root == null) continue;
-				OUser user = usedao.selectBySid(con, uid);
-				if (user == null) continue;
-				
-				roots.add(new IncomingShareRoot(root.getShareId().toString(), wtmgr.lookupSubjectProfile(root.getUserUid(), GenericSubject.Type.USER), user.getDisplayName()));
-			}
-			Collections.sort(roots, (IncomingShareRoot ish1, IncomingShareRoot ish2) -> ish1.getDescription().compareTo(ish2.getDescription()));
-			return roots;
-			
-		} catch(SQLException | DAOException ex) {
-			throw new WTException(ex, "Unable to list share roots for {0}", targetPid.toString());
-		} finally {
-			DbUtils.closeQuietly(con);
-		}
+	@Deprecated public List<IncomingShareRoot> listIncomingShareRoots(String serviceId, String groupName) throws WTException {
+		throw new UnsupportedOperationException("listIncomingShareRoots was removed for deprecation");
 	}
 	
 	/**
 	 * @deprecated use getFolderShareOriginFolders instead
 	 */
-	@Deprecated
-	public List<OShare> listIncomingShareFolders(String rootShareId, String groupName) throws WTException {
-		ShareDAO shadao = ShareDAO.getInstance();
-		Connection con = null;
-		
-		try {
-			con = WT.getCoreConnection();
-			
-			OShare rootShare = shadao.selectById(con, Integer.valueOf(rootShareId));
-			if(rootShare == null) throw new WTException("Unable to find root share [{0}]", rootShareId);
-			
-			String folderShareKey = OShare.buildFolderKey(groupName);
-			String folderPermissionKey = ServiceSharePermission.buildFolderPermissionKey(groupName);
-			
-			ArrayList<OShare> folders = new ArrayList<>();
-			List<OShare> shares = shadao.selectByUserServiceKey(con, rootShare.getUserUid(), rootShare.getServiceId(), folderShareKey);
-			for(OShare share : shares) {
-				if(RunContext.isPermitted(true, getTargetProfileId(), rootShare.getServiceId(), folderPermissionKey, ServicePermission.ACTION_READ, share.getShareId().toString())) {
-					folders.add(share);
-				}
-			}
-			return folders;
-			
-		} catch(SQLException | DAOException ex) {
-			throw new WTException(ex, "DB error");
-		} finally {
-			DbUtils.closeQuietly(con);
-		}
+	@Deprecated public List<OShare> listIncomingShareFolders(String rootShareId, String groupName) throws WTException {
+		throw new UnsupportedOperationException("listIncomingShareFolders was removed for deprecation");
 	}
 	
 	public <T>T getIncomingShareFolderData(String shareId, Class<T> type) throws WTException {

@@ -32,7 +32,7 @@
  */
 package com.sonicle.webtop.core.app.shiro;
 
-import com.sonicle.commons.LangUtils;
+import com.sonicle.commons.concurrent.KeyedReentrantLocks;
 import com.sonicle.commons.flags.BitFlags;
 import com.sonicle.security.Principal;
 import com.sonicle.security.AuthenticationDomain;
@@ -54,15 +54,14 @@ import com.sonicle.webtop.core.app.model.UserBase;
 import com.sonicle.webtop.core.app.model.UserGetOption;
 import com.sonicle.webtop.core.app.model.UserUpdateOption;
 import com.sonicle.webtop.core.app.sdk.Result;
-import com.sonicle.webtop.core.bol.ORolePermission;
 import com.sonicle.webtop.core.model.ServicePermission;
 import com.sonicle.webtop.core.bol.model.RoleWithSource;
 import com.sonicle.webtop.core.sdk.UserProfileId;
 import com.sonicle.webtop.core.sdk.WTException;
 import java.net.URISyntaxException;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import org.apache.commons.lang.StringUtils;
 import org.apache.shiro.authc.AuthenticationException;
 import org.apache.shiro.authc.AuthenticationInfo;
@@ -83,7 +82,7 @@ import org.slf4j.LoggerFactory;
 public class WTRealm extends AuthorizingRealm {
 	public static final String NAME = "wtrealm";
 	private final static Logger logger = (Logger)LoggerFactory.getLogger(WTRealm.class);
-	private final Object lock1 = new Object();
+	private final KeyedReentrantLocks<String> lockCheckUser = new KeyedReentrantLocks();
 	
 	@Override
 	public void clearCachedAuthorizationInfo(PrincipalCollection principals) {
@@ -418,6 +417,33 @@ public class WTRealm extends AuthorizingRealm {
 		WebTopManager wtMgr = wta.getWebTopManager();
 		AuthUser userEntry = principal.popDirectoryEntry();
 		
+		final String key = principal.getName();
+		try {
+			lockCheckUser.tryLock(key, 60, TimeUnit.SECONDS);
+			WebTopManager.CheckUserResult chk = wtMgr.checkUser(principal.getDomainId(), principal.getUserId());
+			if (!chk.exist) {
+				if (userEntry != null) {
+					logger.debug("Creating user [{}]", principal.getSubjectId());
+					Result<User> result = wtMgr.addUser(principal.getDomainId(), userEntry.userId, createUserBase(userEntry), false, false, null, UserUpdateOption.internalDefaultFlags());
+					if (result.hasExceptions()) {
+						logger.warn("User configuration may not have been fully completed. Please check log details above. [{}]", principal.getSubjectId());
+					}
+					
+				} else {
+					throw new WTException("User does not exist [{}]", principal.getSubjectId());
+				}
+				
+			} else if (chk.exist && !chk.enabled) {
+				throw new WTException("User is disabled [{}]", principal.getSubjectId());
+			}
+			
+		} catch (InterruptedException ex) {
+			throw new WTException("Unable to acquire lock for checking user [{}]", principal.getSubjectId());
+		} finally {
+			lockCheckUser.unlock(key);
+		}
+		
+		/*
 		//TODO: improve with a keyed lock
 		synchronized (lock1) {
 			WebTopManager.CheckUserResult chk = wtMgr.checkUser(principal.getDomainId(), principal.getUserId());
@@ -437,12 +463,15 @@ public class WTRealm extends AuthorizingRealm {
 				throw new WTException("User is disabled [{}]", principal.getSubjectId());
 			}
 		}
+		*/
 	}
 	
 	private WTAuthorizationInfo loadAuthorizationInfo(Principal principal) throws Exception {
 		WebTopApp wta = WebTopApp.getInstance();
 		WebTopManager wtMgr = wta.getWebTopManager();
 		UserProfileId pid = new UserProfileId(principal.getDomainId(), principal.getUserId());
+		
+		if (logger.isTraceEnabled()) logger.trace("Getting AuthorizationInfo for '{}'", principal.toString());
 		
 		HashSet<String> roles = new HashSet<>();
 		HashSet<String> perms = new HashSet<>();
@@ -462,19 +491,9 @@ public class WTRealm extends AuthorizingRealm {
 		perms.add(ServicePermission.permissionString(authRes, ServicePermission.ACTION_ACCESS, CoreManifest.ID));
 		
 		Set<RoleWithSource> userRoles = wtMgr.getComputedRolesByUser(pid, true, true);
-		for(RoleWithSource role : userRoles) {
+		for (RoleWithSource role : userRoles) {
 			roles.add(role.getRoleUid());
-
-			List<ORolePermission> rolePerms = wtMgr.listRolePermissions(role.getRoleUid());
-			for(ORolePermission perm : rolePerms) {
-				// Generate resource namespaced name:
-				// resource "TEST" for service "com.sonicle.webtop.core" 
-				// will become "com.sonicle.webtop.core.TEST"
-				authRes = ServicePermission.namespacedName(perm.getServiceId(), perm.getKey());
-				// Generate permission string that shiro can understand 
-				// under the form: {resource}:{action}:{instance}
-				perms.add(ServicePermission.permissionString(authRes, perm.getAction(), perm.getInstance()));
-			}
+			perms.addAll(wtMgr.getRolePermissionStrings(role.getRoleUid()));
 		}
 		return new WTAuthorizationInfo(roles, perms);
 	}
