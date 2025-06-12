@@ -11,7 +11,7 @@ CREATE TABLE "core"."api_keys" (
 "revision_timestamp" timestamptz NOT NULL,
 "name" varchar(255) NOT NULL,
 "description" varchar(255),
-"short_token" varchar(7),
+"short_token" varchar(8),
 "long_token" varchar(255),
 "expires_at" timestamptz,
 "last_used_at" timestamptz
