@@ -48,5 +48,93 @@ Ext.define('Sonicle.webtop.core.sdk.model.FolderSharingRights', {
 		// TODO: provide a convenient implementation using bitflags
 		//WTF.field('folder', 'int', false, {defaultValue: 0}),
 		//WTF.field('items', 'int', false, {defaultValue: 0})
-	]
+	],
+	
+	applyPreset: function(preset) {
+		var set = Ext.bind(this.set, this);
+		if ('ro' === preset) {
+			set('folderManage', false);
+			set('folderRead', true);
+			set('folderUpdate', false);
+			set('folderDelete', false);
+			set('itemsCreate', false);
+			set('itemsUpdate', false);
+			set('itemsDelete', false);
+		} else if ('rw' === preset) {
+			set('folderManage', false);
+			set('folderRead', true);
+			set('folderUpdate', false);
+			set('folderDelete', false);
+			set('itemsCreate', true);
+			set('itemsUpdate', true);
+			set('itemsDelete', true);
+		} else if ('rw' === preset) {
+			set('folderManage', false);
+			set('folderRead', true);
+			set('folderUpdate', false);
+			set('folderDelete', false);
+			set('itemsCreate', true);
+			set('itemsUpdate', true);
+			set('itemsDelete', true);
+		} else if ('full' === preset) {
+			set('folderManage', false);
+			set('folderRead', true);
+			set('folderUpdate', true);
+			set('folderDelete', true);
+			set('itemsCreate', true);
+			set('itemsUpdate', true);
+			set('itemsDelete', true);
+		} else if ('admin' === preset) {
+			set('folderManage', true);
+			set('folderRead', true);
+			set('folderUpdate', true);
+			set('folderDelete', true);
+			set('itemsCreate', true);
+			set('itemsUpdate', true);
+			set('itemsDelete', true);
+		}
+	},
+	
+	guessPreset: function() {
+		var get = Ext.bind(this.get, this);
+		if (!get('folderManage')
+				&& get('folderRead')
+				&& !get('folderUpdate')
+				&& !get('folderDelete')
+				&& !get('itemsCreate')
+				&& !get('itemsUpdate')
+				&& !get('itemsDelete')) {
+			return 'ro';
+			
+		} else if (!get('folderManage')
+				&& get('folderRead')
+				&& !get('folderUpdate')
+				&& !get('folderDelete')
+				&& get('itemsCreate')
+				&& get('itemsUpdate')
+				&& get('itemsDelete')) {
+			return 'rw';
+			
+		} else if (!get('folderManage')
+				&& get('folderRead')
+				&& get('folderUpdate')
+				&& get('folderDelete')
+				&& get('itemsCreate')
+				&& get('itemsUpdate')
+				&& get('itemsDelete')) {
+			return 'full';
+			
+		} else if (get('folderManage')
+				&& get('folderRead')
+				&& get('folderUpdate')
+				&& get('folderDelete')
+				&& get('itemsCreate')
+				&& get('itemsUpdate')
+				&& get('itemsDelete')) {
+			return 'admin';
+			
+		} else {
+			return 'custom';
+		}
+	}
 });

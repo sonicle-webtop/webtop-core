@@ -60,22 +60,42 @@ Ext.define('Sonicle.webtop.core.sdk.FolderSharingView', {
 	 */
 	
 	viewModel: {
-		formulas: {
-			isOrigin: {
-				bind: {bindTo: '{record.type}'},
-				get: function(val) {
-					return val === 'O';
-				}
-			},
-			wildcard: {
-				bind: {bindTo: '{record.type}'},
-				get: function(val) {
-					return (val === 'O') ? '*' : '';
-				}
+		data: {
+			data: {
+				preset: null
 			}
 		}
 	},
 	focusField: 'fldsubject',
+	
+	constructor: function(cfg) {
+		var me = this;
+		me.callParent([cfg]);
+		
+		Sonicle.VMUtils.applyFormulas(me.getVM(), {
+			foIsOrigin: WTF.foIsEqual('record', 'type', 'O'),
+			foFolderRightsLabel: WTF.foGetFn('record', 'type', function(v) {
+				var wildcard = (v === 'O') ? '.root' : '';
+				return WT.res('folderSharing.folderRights'+wildcard+'.lbl');
+			}),
+			foItemsRightsLabel: WTF.foGetFn('record', 'type', function(v) {
+				var wildcard = (v === 'O') ? '.root' : '';
+				return WT.res('folderSharing.itemsRights'+wildcard+'.lbl');
+			}),
+			foShowOriginRights: WTF.foMultiGetFn(undefined, ['gprights.selection', 'data.preset', 'foIsOrigin'], function(v) {
+				if (!v['gprights.selection'] || v['data.preset'] !== 'custom') return false;
+				return !!v['foIsOrigin'];
+			}),
+			foShowFolderRights: WTF.foMultiGetFn(undefined, ['gprights.selection', 'data.preset'], function(v) {
+				if (!v['gprights.selection'] || v['data.preset'] !== 'custom') return false;
+				return true;
+			}),
+			foShowItemsRights: WTF.foMultiGetFn(undefined, ['gprights.selection', 'data.preset'], function(v) {
+				if (!v['gprights.selection'] || v['data.preset'] !== 'custom') return false;
+				return true;
+			})
+		});
+	},
 	
 	initComponent: function() {
 		var me = this;
@@ -94,148 +114,206 @@ Ext.define('Sonicle.webtop.core.sdk.FolderSharingView', {
 		
 		me.add({
 			region: 'center',
-			xtype: 'wtfieldspanel',
-			layout: 'fit',
-			items: [
-				{
-					xtype: 'gridpanel',
-					reference: 'gprights',
-					bind: {
-						store: '{record.rights}'
-					},
-					border: true,
-					columns: [
-						{
-							xtype: 'solookupcolumn',
-							dataIndex: 'subjectSid',
-							store: me.aclSubjectStore,
-							displayField: 'name',
-							header: WT.res('folderSharing.gp-rights.subjectName.lbl'),
-							flex: 1
-						}, {
-							xtype: 'solookupcolumn',
-							dataIndex: 'subjectSid',
-							store: me.aclSubjectStore,
-							displayField: 'desc',
-							header: WT.res('folderSharing.gp-rights.subjectDisplayName.lbl'),
-							flex: 1
-						}, {
-							xtype: 'soactioncolumn',
-							items: [
-								{
-									iconCls: 'far fa-clone',
-									tooltip: WT.res('act-clone.lbl'),
-									handler: function(g, ridx) {
-										var rec = g.getStore().getAt(ridx);
-										me.cloneRightsUI(rec);
-									}
-								}, {
-									iconCls: 'far fa-trash-alt',
-									tooltip: WT.res('act-remove.lbl'),
-									handler: function(g, ridx) {
-										var rec = g.getStore().getAt(ridx);
-										me.deleteRightsUI(rec);
-									}
-								}
-							]
-						}
-					],
-					tbar: [
-						{
-							text: WT.res('act-add.lbl'),
-							ui: '{secondary|toolbar}',
-							handler: function() {
-								me.addRightsUI();
-							}
-						}
-					],
-					listeners: {
-						selectionchange: function(s,recs) {
-							me.lref('itemsrights').setDisabled(!recs.length);
-							me.lref('folderrights').setDisabled(!recs.length);
-							me.lref('originrights').setDisabled(!recs.length);
-						}
-					}
-				}
-			]
-		});
-		me.add({
-			region: 'south',
-			xtype: 'wtfieldspanel',
-			paddingTop: true,
-			paddingSides: true,
-			height: 170,
-			defaults: {
-				labelWidth: 160
+			xtype: 'container',
+			layout: {
+				type: 'vbox',
+				align: 'stretch'
 			},
 			items: [
 				{
-					xtype: 'fieldcontainer',
-					reference: 'itemsrights',
-					bind: {
-						fieldLabel: WT.res('folderSharing.itemsRights.lbl') + '{wildcard}'
+					xtype: 'wtfieldspanel',
+					paddingTop: true,
+					paddingSides: true,
+					flex: 1,
+					layout: 'fit',
+					items: [
+						{
+							xtype: 'gridpanel',
+							reference: 'gprights',
+							bind: {
+								store: '{record.rights}'
+							},
+							border: true,
+							columns: [
+								{
+									xtype: 'solookupcolumn',
+									dataIndex: 'subjectSid',
+									store: me.aclSubjectStore,
+									displayField: 'name',
+									header: WT.res('folderSharing.gp-rights.subjectName.lbl'),
+									flex: 1
+								}, {
+									xtype: 'solookupcolumn',
+									dataIndex: 'subjectSid',
+									store: me.aclSubjectStore,
+									displayField: 'desc',
+									header: WT.res('folderSharing.gp-rights.subjectDisplayName.lbl'),
+									flex: 1
+								}, {
+									xtype: 'soactioncolumn',
+									items: [
+										{
+											iconCls: 'far fa-clone',
+											tooltip: WT.res('act-clone.lbl'),
+											handler: function(g, ridx) {
+												var rec = g.getStore().getAt(ridx);
+												me.cloneRightsUI(rec);
+											}
+										}, {
+											iconCls: 'far fa-trash-alt',
+											tooltip: WT.res('act-remove.lbl'),
+											handler: function(g, ridx) {
+												var rec = g.getStore().getAt(ridx);
+												me.deleteRightsUI(rec);
+											}
+										}
+									]
+								}
+							],
+							tbar: [
+								{
+									text: WT.res('act-add.lbl'),
+									ui: '{secondary|toolbar}',
+									handler: function() {
+										me.addRightsUI();
+									}
+								}
+							],
+							listeners: {
+								selectionchange: function(s, recs) {
+									if (!Ext.isEmpty(recs)) {
+										me.getVM().set('data.preset', recs[0].guessPreset());
+									}
+								}
+							}
+						}
+					]
+				}, {
+					xtype: 'wtfieldspanel',
+					paddingTop: true,
+					paddingSides: true,
+					defaults: {
+						labelWidth: 140
 					},
-					disabled: true,
-					layout: 'hbox',
-					items: [{
-						xtype: 'checkbox',
-						bind: '{gprights.selection.itemsCreate}',
-						boxLabel: WT.res('folderSharing.fld-itemsCreate.lbl'),
-						width: 100
-					}, {
-						xtype: 'checkbox',
-						bind: '{gprights.selection.itemsUpdate}',
-						boxLabel: WT.res('folderSharing.fld-itemsUpdate.lbl'),
-						width: 100
-					}, {
-						xtype: 'checkbox',
-						bind: '{gprights.selection.itemsDelete}',
-						boxLabel: WT.res('folderSharing.fld-itemsDelete.lbl')
-					}
-				]
-			}, {
-				xtype: 'fieldcontainer',
-				reference: 'folderrights',
-				bind: {
-					fieldLabel: WT.res('folderSharing.folderRights.lbl') + '{wildcard}'
-				},
-				disabled: true,
-				layout: 'hbox',
-				items: [
-					{
-						xtype: 'checkbox',
-						bind: '{gprights.selection.folderRead}',
-						boxLabel: WT.res('folderSharing.fld-folderRead.lbl'),
-						width: 100
-					}, {
-						xtype: 'checkbox',
-						bind: '{gprights.selection.folderUpdate}',
-						boxLabel: WT.res('folderSharing.fld-folderUpdate.lbl'),
-						width: 100
-					}, {
-						xtype: 'checkbox',
-						bind: '{gprights.selection.folderDelete}',
-						boxLabel: WT.res('folderSharing.fld-folderDelete.lbl')
-					}
-				]
-			}, {
-				xtype: 'fieldcontainer',
-				reference: 'originrights',
-				bind: {
-					hidden: '{!isOrigin}'
-				},
-				disabled: true,
-				layout: 'hbox',
-				fieldLabel: WT.res('folderSharing.originRights.lbl'),
-				items: [
-					{
-						xtype: 'checkbox',
-						bind: '{gprights.selection.folderManage}',
-						boxLabel: WT.res('folderSharing.fld-folderManage.lbl')
-					}
-				]
-			}]
+					items: [
+						{
+							xtype: 'fieldcontainer',
+							reference: 'itemsrights',
+							bind: {
+								hidden: '{!foShowItemsRights}',
+								fieldLabel: '{foItemsRightsLabel}'
+							},
+							layout: 'hbox',
+							defaults: {
+								width: 100
+							},
+							items: [
+								{
+									xtype: 'checkbox',
+									bind: '{gprights.selection.itemsCreate}',
+									boxLabel: WT.res('folderSharing.fld-itemsCreate.lbl')
+								}, {
+									xtype: 'checkbox',
+									bind: '{gprights.selection.itemsUpdate}',
+									boxLabel: WT.res('folderSharing.fld-itemsUpdate.lbl')
+								}, {
+									xtype: 'checkbox',
+									bind: '{gprights.selection.itemsDelete}',
+									boxLabel: WT.res('folderSharing.fld-itemsDelete.lbl')
+								}
+							]
+						}, {
+							xtype: 'fieldcontainer',
+							reference: 'folderrights',
+							bind: {
+								hidden: '{!foShowFolderRights}',
+								fieldLabel: '{foFolderRightsLabel}'
+							},
+							layout: 'hbox',
+							defaults: {
+								width: 100
+							},
+							items: [
+								{
+									xtype: 'checkbox',
+									bind: '{gprights.selection.folderRead}',
+									boxLabel: WT.res('folderSharing.fld-folderRead.lbl')
+								}, {
+									xtype: 'checkbox',
+									bind: '{gprights.selection.folderUpdate}',
+									boxLabel: WT.res('folderSharing.fld-folderUpdate.lbl')
+								}, {
+									xtype: 'checkbox',
+									bind: '{gprights.selection.folderDelete}',
+									boxLabel: WT.res('folderSharing.fld-folderDelete.lbl')
+								}, {
+									xtype: 'checkbox',
+									bind: {
+										value: '{gprights.selection.folderManage}',
+										hidden: '{!foShowOriginRights}'
+									},
+									boxLabel: WT.res('folderSharing.fld-folderManage.lbl')
+								}
+							]
+						}
+					]
+				}, {
+					xtype: 'wtfieldspanel',
+					paddingSides: true,
+					defaults: {
+						labelWidth: 140
+					},
+					items: [
+						WTF.lookupCombo('id', 'desc', {
+							reference: 'cbopresets',
+							bind: {
+								value: '{data.preset}',
+								disabled: '{!gprights.selection}'
+							},
+							store: {
+								type: 'array',
+								autoLoad: true,
+								fields: [
+									{name: 'id', type: 'string'},
+									{name: 'desc', type: 'string'},
+									{name: 'info', type: 'string'}
+								],
+								data: [
+									['ro', WT.res('folderSharing.cbo-presets.ro.lbl'), WT.res('folderSharing.cbo-presets.ro.tip')],
+									['rw', WT.res('folderSharing.cbo-presets.rw.lbl'), WT.res('folderSharing.cbo-presets.rw.tip')],
+									['full', WT.res('folderSharing.cbo-presets.full.lbl'), WT.res('folderSharing.cbo-presets.full.tip')],
+									// admin item will be filtered out in non root sharing (see viewload)...
+									['admin', WT.res('folderSharing.cbo-presets.admin.lbl'), WT.res('folderSharing.cbo-presets.admin.tip')],
+									['custom', WT.res('folderSharing.cbo-presets.custom.lbl'), WT.res('folderSharing.cbo-presets.custom.tip')]
+								]
+							},
+							matchFieldWidth: false,
+							listConfig: {
+								getInnerTpl: function(displayField) {
+									return '{'+displayField+'}</br>'
+										+ '<span class="wt-text-off wt-theme-text-color-off">{info}</span>';
+								},
+								width: 400
+							},
+							fieldLabel: WT.res('folderSharing.cbo-presets.lbl'),
+							listeners: {
+								select: function(s, rec) {
+									var preset = rec.get('id'), recs;
+									if ('custom' !== preset) {
+										recs = me.lref('gprights').getSelection();
+										if (!Ext.isEmpty(recs)) {
+											recs[0].applyPreset(preset);
+										}
+									}
+								}
+							},
+							width: 300
+						})
+					]
+				}
+			]
 		});
+		me.on('viewload', me.onViewLoad);
 	},
 	
 	doDestroy: function() {
@@ -262,6 +340,21 @@ Ext.define('Sonicle.webtop.core.sdk.FolderSharingView', {
 	},
 	
 	privates: {
+		onViewLoad: function(s, success) {
+			var me = this,
+				mo = me.getModel(),
+				cbo;
+			
+			if (mo.get('type') !== 'O') {
+				cbo = me.lref('cbopresets');
+				if (cbo) {
+					cbo.getStore().addFilter(function(item) {
+						return item.get('id') !== 'admin';
+					});
+				}
+			}
+		},
+		
 		addRights: function(subjectSid, cloneRec) {
 			var me = this,
 				grid = me.lref('gprights'),
