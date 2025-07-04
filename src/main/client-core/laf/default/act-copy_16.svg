@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" width="16px" height="16px" viewBox="0 0 16 16" enable-background="new 0 0 16 16" xml:space="preserve">
+  <g id="icon">
+    <g>
+      <g>
+        <path d="M5,4.2583C5,3.5662,5.5662,3,6.2583,3h1.7943C7.0539,2.0601,5.753,0.8397,5.6637,0.7504C5.523,0.6096,5.3278,0.5,4.9855,0.5C4.6433,0.5,0.94,0.5,0.94,0.5C0.697,0.5,0.5,0.697,0.5,0.94v10.12c0,0.243,0.197,0.44,0.44,0.44H5V4.2583z" fill-rule="evenodd" fill="#FFFFFF"/>
+        <path d="M5,11H1V1h3.9855c0.2207,0,0.2858,0.0651,0.3246,0.1038c0.0641,0.0641,0.5606,0.5311,1.4327,1.3508c0.1875,0.1762,0.3846,0.3615,0.5801,0.5454H8.782c-0.3576,-0.337,-0.8203,-0.7721,-1.3543,-1.274C6.7639,1.102,6.0774,0.4567,6.0172,0.3967C5.7501,0.1298,5.4127,0,4.9855,0H0.94C0.4217,0,0,0.4217,0,0.94v10.12c0,0.5183,0.4217,0.94,0.94,0.94H5V11z" fill="#ABABAB"/>
+      </g>
+      <path d="M6,3.0271V0.9H5v3.2667c0,0.0149,0.0016,0.0292,0.0024,0.0438C5.0246,3.6282,5.446,3.1439,6,3.0271z" fill="#ABABAB"/>
+      <rect x="2" y="3" width="2" height="1" fill-rule="evenodd" fill="#70A9DB"/>
+      <rect x="2" y="5" width="2" height="1" fill-rule="evenodd" fill="#70A9DB"/>
+      <rect x="2" y="7" width="3" height="1" fill-rule="evenodd" fill="#70A9DB"/>
+      <rect x="2" y="9" width="3" height="1" fill-rule="evenodd" fill="#70A9DB"/>
+    </g>
+    <g>
+      <path d="M15.06,15.5H6.94c-0.243,0,-0.44,-0.197,-0.44,-0.44V4.94c0,-0.243,0.197,-0.44,0.44,-0.44c0,0,3.7033,0,4.0455,0s0.5374,0.1096,0.6782,0.2504c0.1407,0.1407,3.2925,3.0925,3.5247,3.3247c0.2322,0.2322,0.3116,0.4217,0.3116,0.7639s0,6.2211,0,6.2211C15.5,15.303,15.303,15.5,15.06,15.5z" fill-rule="evenodd" fill="#FFFFFF" stroke="#797979" stroke-width="1" stroke-miterlimit="10"/>
+      <path d="M11.5,4.9c0,0,0,3.0589,0,3.2667c0,0.2077,0.2111,0.3333,0.3333,0.3333C11.7268,8.5,15.5,8.5,15.5,8.5" fill-rule="evenodd" fill="none" stroke="#797979" stroke-width="1" stroke-miterlimit="10" stroke-linejoin="round"/>
+      <rect x="8" y="7" width="2" height="1" fill-rule="evenodd" fill="#3E79B4"/>
+      <rect x="8" y="9" width="2" height="1" fill-rule="evenodd" fill="#3E79B4"/>
+      <rect x="8" y="11" width="6" height="1" fill-rule="evenodd" fill="#3E79B4"/>
+      <rect x="8" y="13" width="6" height="1" fill-rule="evenodd" fill="#3E79B4"/>
+    </g>
+  </g>
+</svg>
