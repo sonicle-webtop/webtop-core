@@ -51,47 +51,47 @@ Ext.define('Sonicle.webtop.core.sdk.model.FolderSharingRights', {
 	],
 	
 	applyPreset: function(preset) {
-		var set = Ext.bind(this.set, this);
+		var me = this;
 		if ('ro' === preset) {
-			set('folderManage', false);
-			set('folderRead', true);
-			set('folderUpdate', false);
-			set('folderDelete', false);
-			set('itemsCreate', false);
-			set('itemsUpdate', false);
-			set('itemsDelete', false);
+			me.set({
+				folderManage: false,
+				folderRead: true,
+				folderUpdate: false,
+				folderDelete: false,
+				itemsCreate: false,
+				itemsUpdate: false,
+				itemsDelete: false
+			});
 		} else if ('rw' === preset) {
-			set('folderManage', false);
-			set('folderRead', true);
-			set('folderUpdate', false);
-			set('folderDelete', false);
-			set('itemsCreate', true);
-			set('itemsUpdate', true);
-			set('itemsDelete', true);
-		} else if ('rw' === preset) {
-			set('folderManage', false);
-			set('folderRead', true);
-			set('folderUpdate', false);
-			set('folderDelete', false);
-			set('itemsCreate', true);
-			set('itemsUpdate', true);
-			set('itemsDelete', true);
+			me.set({
+				folderManage: false,
+				folderRead: true,
+				folderUpdate: false,
+				folderDelete: false,
+				itemsCreate: true,
+				itemsUpdate: true,
+				itemsDelete: true
+			});
 		} else if ('full' === preset) {
-			set('folderManage', false);
-			set('folderRead', true);
-			set('folderUpdate', true);
-			set('folderDelete', true);
-			set('itemsCreate', true);
-			set('itemsUpdate', true);
-			set('itemsDelete', true);
+			me.set({
+				folderManage: false,
+				folderRead: true,
+				folderUpdate: true,
+				folderDelete: true,
+				itemsCreate: true,
+				itemsUpdate: true,
+				itemsDelete: true
+			});
 		} else if ('admin' === preset) {
-			set('folderManage', true);
-			set('folderRead', true);
-			set('folderUpdate', true);
-			set('folderDelete', true);
-			set('itemsCreate', true);
-			set('itemsUpdate', true);
-			set('itemsDelete', true);
+			me.set({
+				folderManage: true,
+				folderRead: true,
+				folderUpdate: true,
+				folderDelete: true,
+				itemsCreate: true,
+				itemsUpdate: true,
+				itemsDelete: true
+			});
 		}
 	},
 	

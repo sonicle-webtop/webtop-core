@@ -140,27 +140,27 @@ Ext.define('Sonicle.webtop.core.sdk.FolderSharingView', {
 									dataIndex: 'subjectSid',
 									store: me.aclSubjectStore,
 									displayField: 'name',
-									header: WT.res('folderSharing.gp-rights.subjectName.lbl'),
+									text: WT.res('folderSharing.gp-rights.subjectName.lbl'),
 									flex: 1
 								}, {
 									xtype: 'solookupcolumn',
 									dataIndex: 'subjectSid',
 									store: me.aclSubjectStore,
 									displayField: 'desc',
-									header: WT.res('folderSharing.gp-rights.subjectDisplayName.lbl'),
+									text: WT.res('folderSharing.gp-rights.subjectDisplayName.lbl'),
 									flex: 1
 								}, {
 									xtype: 'soactioncolumn',
 									items: [
 										{
-											iconCls: 'far fa-clone',
+											iconCls: 'wt-glyph-clone',
 											tooltip: WT.res('act-clone.lbl'),
 											handler: function(g, ridx) {
 												var rec = g.getStore().getAt(ridx);
 												me.cloneRightsUI(rec);
 											}
 										}, {
-											iconCls: 'far fa-trash-alt',
+											iconCls: 'wt-glyph-delete',
 											tooltip: WT.res('act-remove.lbl'),
 											handler: function(g, ridx) {
 												var rec = g.getStore().getAt(ridx);
@@ -345,12 +345,14 @@ Ext.define('Sonicle.webtop.core.sdk.FolderSharingView', {
 				mo = me.getModel(),
 				cbo;
 			
-			if (mo.get('type') !== 'O') {
-				cbo = me.lref('cbopresets');
-				if (cbo) {
-					cbo.getStore().addFilter(function(item) {
-						return item.get('id') !== 'admin';
-					});
+			if (success) {
+				if (mo.get('type') !== 'O') {
+					cbo = me.lref('cbopresets');
+					if (cbo) {
+						cbo.getStore().addFilter(function(item) {
+							return item.get('id') !== 'admin';
+						});
+					}
 				}
 			}
 		},
