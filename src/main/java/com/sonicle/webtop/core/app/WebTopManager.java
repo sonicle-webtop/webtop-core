@@ -49,7 +49,7 @@ import com.sonicle.commons.concurrent.KeyedReentrantLocks;
 import com.sonicle.commons.db.DbUtils;
 import com.sonicle.commons.flags.BitFlags;
 import com.sonicle.commons.flags.BitFlagsEnum;
-import com.sonicle.commons.time.DateTimeUtils;
+import com.sonicle.commons.time.JavaTimeUtils;
 import com.sonicle.commons.time.JodaTimeUtils;
 import com.sonicle.security.AuthenticationDomain;
 import com.sonicle.security.ConnectionSecurity;
@@ -1372,7 +1372,7 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 				if (setPassword && directory.hasCapability(DirectoryCapability.PASSWORD_WRITE)) {
 					LOGGER.debug("Setting user password");
 					directory.updateUserPassword(opts, userPid.getDomainId(), userPid.getUserId(), appliedPassword);
-					new CoreUserSettings(getWebTopApp().getSettingsManager(), userPid).setPasswordLastChange(DateTimeUtils.now());
+					new CoreUserSettings(getWebTopApp().getSettingsManager(), userPid).setPasswordLastChange(JodaTimeUtils.now());
 				}
 				
 			} else {
@@ -1485,7 +1485,7 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 			}
 
 			CoreUserSettings cus = new CoreUserSettings(userPid);
-			cus.setPasswordLastChange(DateTimeUtils.now());
+			cus.setPasswordLastChange(JodaTimeUtils.now());
 			cus.setPasswordForceChange(false);
 			
 		} catch (DirectoryException ex) {
@@ -1582,7 +1582,7 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 				CoreUserSettings cus = new CoreUserSettings(userPid);
 				DateTime lastChange = cus.getPasswordLastChange();
 				// NB: No last-change timestamp means password change needed!
-				if (lastChange == null || DateTimeUtils.datesBetween(lastChange, DateTimeUtils.now().toDateTime(DateTimeZone.UTC)) > pwdPolicies.getExpiration()) return true;
+				if (lastChange == null || JodaTimeUtils.calendarDaysBetween(lastChange, JodaTimeUtils.now().toDateTime(DateTimeZone.UTC)) > pwdPolicies.getExpiration()) return true;
 			}
 		}
 		
@@ -3414,7 +3414,7 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 			// Main folder (/domains/{domainId})
 			File domainDir = new File(getWebTopApp().getFileSystem().getHomePath(domainId));
 			if (domainDir.exists()) {
-				String nowSuffix = DateTimeUtils.print(DateTimeUtils.createFormatter("yyyyMMddHHmmssSSS", DateTimeZone.UTC), DateTimeUtils.now(true));
+				String nowSuffix = JavaTimeUtils.print(JavaTimeUtils.createFormatter("yyyyMMddHHmmssSSS"), JavaTimeUtils.now(true));
 				String deletedDomainDirString = getWebTopApp().getFileSystem().getHomePath(domainId + "." + nowSuffix);
 				File deletedDomainDir = new File(deletedDomainDirString);
 				if (!deletedDomainDir.exists()) {

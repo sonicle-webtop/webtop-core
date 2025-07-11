@@ -45,8 +45,8 @@ import com.sonicle.commons.beans.SortInfo;
 import com.sonicle.commons.flags.BitFlags;
 import com.sonicle.commons.l4j.ProductLicense;
 import com.sonicle.commons.time.DateTimeRange;
-import com.sonicle.commons.time.DateTimeUtils;
 import com.sonicle.commons.time.JavaTimeUtils;
+import com.sonicle.commons.time.JodaTimeUtils;
 import com.sonicle.commons.web.Crud;
 import com.sonicle.commons.web.ServletUtils;
 import com.sonicle.commons.web.json.CId;
@@ -90,7 +90,6 @@ import com.sonicle.webtop.core.config.bol.OPecBridgeRelay;
 import com.sonicle.webtop.core.bol.ORunnableUpgradeStatement;
 import com.sonicle.webtop.core.bol.OSettingDb;
 import com.sonicle.webtop.core.bol.OUpgradeStatement;
-import com.sonicle.webtop.core.bol.OUser;
 import com.sonicle.webtop.core.bol.js.JsDomain;
 import com.sonicle.webtop.core.admin.bol.js.JsGridDomainLicense;
 import com.sonicle.webtop.core.admin.bol.js.JsGridGroup;
@@ -127,7 +126,6 @@ import com.sonicle.webtop.core.bol.js.JsGridUpgradeRow;
 import com.sonicle.webtop.core.bol.js.JsPecBridgeFetcher;
 import com.sonicle.webtop.core.bol.js.JsPecBridgeRelay;
 import com.sonicle.webtop.core.bol.js.JsResource;
-import com.sonicle.webtop.core.bol.js.JsRoleLkp;
 import com.sonicle.webtop.core.bol.js.JsAclSubjectLkp;
 import com.sonicle.webtop.core.bol.js.JsServiceProductLkp;
 import com.sonicle.webtop.core.bol.js.JsSettingEntry;
@@ -136,7 +134,6 @@ import com.sonicle.webtop.core.bol.model.UserOptionsServiceData;
 import com.sonicle.webtop.core.model.DataSource;
 import com.sonicle.webtop.core.model.DataSourceBase;
 import com.sonicle.webtop.core.model.DataSourcePooled;
-import com.sonicle.webtop.core.model.DataSourceQuery;
 import com.sonicle.webtop.core.model.DataSourceType;
 import com.sonicle.webtop.core.model.DomainAccessLog;
 import com.sonicle.webtop.core.model.DomainAccessLogDetail;
@@ -156,7 +153,6 @@ import com.sonicle.webtop.core.app.model.UserGetOption;
 import com.sonicle.webtop.core.app.model.UserUpdateOption;
 import com.sonicle.webtop.core.bol.js.JsDomainPwdPolicies;
 import com.sonicle.webtop.core.bol.js.JsSubjectLkp;
-import com.sonicle.webtop.core.bol.model.RoleWithSource;
 import com.sonicle.webtop.core.model.DataSourceQuery;
 import com.sonicle.webtop.core.model.ServiceLicense;
 import com.sonicle.webtop.core.model.SettingEntry;
@@ -174,7 +170,6 @@ import jakarta.mail.internet.InternetAddress;
 import java.io.InputStream;
 import java.io.PrintWriter;
 import java.sql.SQLException;
-import java.text.MessageFormat;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -1991,9 +1986,9 @@ public class Service extends BaseService {
 				DateTime from = null, to = null;
 				for (QueryObj.ConditionEntry entry : queryObj.getConditions()) {
 					if ("dateFrom".equals(entry.keyword)) {
-						from = DateTimeUtils.createYmdFormatter(utz).parseDateTime(entry.value).withTimeAtStartOfDay();
+						from = JodaTimeUtils.createFormatterYMD(utz).parseDateTime(entry.value).withTimeAtStartOfDay();
 					} else if ("dateTo".equals(entry.keyword)) {
-						to = DateTimeUtils.createYmdFormatter(utz).parseDateTime(entry.value).plusDays(1).withTimeAtStartOfDay();
+						to = JodaTimeUtils.createFormatterYMD(utz).parseDateTime(entry.value).plusDays(1).withTimeAtStartOfDay();
 					}
 				}
 				queryObj.removeCondition("dateFrom");

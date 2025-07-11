@@ -35,7 +35,7 @@ package com.sonicle.webtop.core.sdk;
 
 import com.sonicle.commons.EnumUtils;
 import com.sonicle.commons.LangUtils;
-import com.sonicle.commons.time.DateTimeUtils;
+import com.sonicle.commons.time.JodaTimeUtils;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
@@ -80,13 +80,13 @@ public abstract class BaseSettings {
 	}
 	
 	public LocalTime getTime(String key, LocalTime defaultValue, String pattern) {
-		DateTimeFormatter dtf = DateTimeUtils.createFormatter(pattern);
+		DateTimeFormatter dtf = JodaTimeUtils.createFormatter(pattern);
 		String value = getString(key, null);
 		return (value == null) ? defaultValue : LocalTime.parse(value, dtf);
 	}
 	
 	public boolean setTime(String key, LocalTime value, String pattern) {
-		DateTimeFormatter dtf = DateTimeUtils.createFormatter(pattern);
+		DateTimeFormatter dtf = JodaTimeUtils.createFormatter(pattern);
 		return setString(key, (value == null) ? null : dtf.print(value));
 	}
 	
@@ -107,7 +107,7 @@ public abstract class BaseSettings {
 	}
 	
 	public DateTime getDateTime(String key, DateTime defaultValue, DateTimeZone dtz) {
-		DateTimeFormatter dtf = DateTimeUtils.createYmdHmsFormatter(dtz);
+		DateTimeFormatter dtf = JodaTimeUtils.createFormatterYMDHMS(dtz);
 		String value = getString(key, null);
 		return (value == null) ? defaultValue : DateTime.parse(value, dtf);
 	}
@@ -117,7 +117,7 @@ public abstract class BaseSettings {
 	}
 	
 	public boolean setDateTime(String key, DateTime value, DateTimeZone dtz) {
-		DateTimeFormatter dtf = DateTimeUtils.createYmdHmsFormatter(dtz);
+		DateTimeFormatter dtf = JodaTimeUtils.createFormatterYMDHMS(dtz);
 		return setString(key, (value == null) ? null : dtf.print(value));
 	}
 	

@@ -37,7 +37,7 @@ import com.sonicle.webtop.core.app.sdk.BaseDocEditorDocumentHandler;
 import com.sonicle.commons.AlgoUtils;
 import com.sonicle.commons.IdentifierUtils;
 import com.sonicle.commons.URIUtils;
-import com.sonicle.commons.time.DateTimeUtils;
+import com.sonicle.commons.time.JodaTimeUtils;
 import com.sonicle.commons.web.json.JsonResult;
 import com.sonicle.webtop.core.app.sdk.WTNotFoundException;
 import com.sonicle.webtop.core.app.servlet.DocEditor;
@@ -224,7 +224,7 @@ public class DocEditorManager extends AbstractAppManager<DocEditorManager> {
 	}
 	
 	public String buildDocumentKey(String documentUniqueId, long lastModifiedTime) {
-		String s = documentUniqueId + String.valueOf((lastModifiedTime > -1) ? lastModifiedTime : DateTimeUtils.now().getMillis());
+		String s = documentUniqueId + String.valueOf((lastModifiedTime > -1) ? lastModifiedTime : JodaTimeUtils.now().getMillis());
 		return StringUtils.left(AlgoUtils.md5Hex(s), 20);
 	}
 	

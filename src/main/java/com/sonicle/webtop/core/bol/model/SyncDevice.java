@@ -33,9 +33,8 @@
  */
 package com.sonicle.webtop.core.bol.model;
 
-import com.sonicle.commons.time.DateTimeUtils;
+import com.sonicle.commons.time.JodaTimeUtils;
 import com.sonicle.webtop.core.app.WT;
-import com.sonicle.webtop.core.util.ZPushManager.LastsyncRecord;
 import org.apache.commons.lang3.StringUtils;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormatter;
@@ -58,7 +57,7 @@ public class SyncDevice {
 			this.lastSync = null;
 		} else {
 			try {
-				DateTimeFormatter fmt = DateTimeUtils.createYmdHmFormatter(WT.getSystemTimeZone());
+				DateTimeFormatter fmt = JodaTimeUtils.createFormatterYMDHM(WT.getSystemTimeZone());
 				this.lastSync = fmt.parseDateTime(lastSync);
 			} catch(UnsupportedOperationException | IllegalArgumentException ex) {
 				this.lastSync = null;

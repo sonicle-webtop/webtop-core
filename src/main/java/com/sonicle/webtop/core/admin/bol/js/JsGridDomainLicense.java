@@ -33,7 +33,7 @@
  */
 package com.sonicle.webtop.core.admin.bol.js;
 
-import com.sonicle.commons.time.DateTimeUtils;
+import com.sonicle.commons.time.JodaTimeUtils;
 import com.sonicle.webtop.core.app.ProductRegistry;
 import com.sonicle.webtop.core.model.ProductId;
 import com.sonicle.webtop.core.model.ServiceLicense;
@@ -86,18 +86,18 @@ public class JsGridDomainLicense {
 		}
 		
 		LocalDate expiryDate = license.getExpirationDate();
-		if (expiryDate != null) expiry = DateTimeUtils.createYmdFormatter(profileTz).print(expiryDate);
+		if (expiryDate != null) expiry = JodaTimeUtils.createFormatterYMD(profileTz).print(expiryDate);
 		quantityTypeUsers = bsp.isLicenseQuantityTypeUsers();
 		quantityType = bsp.getLicenseQuantityType();
 		if (license.getQuantity() != null) maxLease = license.getQuantity();
 		
 		autoLease = license.getAutoLease();
-		DateTimeFormatter dmyHmsFmt = DateTimeUtils.createYmdHmsFormatter(profileTz);
+		DateTimeFormatter dmyHmsFmt = JodaTimeUtils.createFormatterYMDHMS(profileTz);
 		leases = new ArrayList<>();
 		for (ServiceLicenseLease lease : license.getLeases().values()) {
 			Lease jsl = new Lease();
 			jsl.userId = lease.getUserId();
-			jsl.leasedOn = DateTimeUtils.print(dmyHmsFmt, lease.getLeaseTimestamp());
+			jsl.leasedOn = JodaTimeUtils.print(dmyHmsFmt, lease.getLeaseTimestamp());
 			jsl.origin = lease.getLeaseOrigin();
 			leases.add(jsl);
 		}

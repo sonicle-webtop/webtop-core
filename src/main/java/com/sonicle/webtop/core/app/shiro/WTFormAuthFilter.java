@@ -34,7 +34,7 @@ package com.sonicle.webtop.core.app.shiro;
 
 import com.sonicle.commons.concurrent.KeyedReentrantLocks;
 import com.sonicle.commons.net.IPUtils;
-import com.sonicle.commons.time.DateTimeUtils;
+import com.sonicle.commons.time.JodaTimeUtils;
 import com.sonicle.commons.web.ServletUtils;
 import com.sonicle.commons.web.json.JsonResult;
 import com.sonicle.commons.web.json.MapItem;
@@ -294,7 +294,7 @@ public class WTFormAuthFilter extends FormAuthenticationFilter {
 	private DeviceCookie createDeviceCookie(String userAgentHeader) {
 		String uuid = IdentifierUtils.getUUIDTimeBased();
 		String deviceId = buildDeviceId(uuid, userAgentHeader);
-		long timestamp = DateTimeUtils.now().getMillis();
+		long timestamp = JodaTimeUtils.now().getMillis();
 		return new DeviceCookie(uuid, deviceId, timestamp);
 	}
 	

@@ -34,14 +34,12 @@ package com.sonicle.webtop.core.sdk;
 
 import com.sonicle.commons.LangUtils;
 import com.sonicle.commons.beans.SortInfo;
-import com.sonicle.commons.time.DateTimeUtils;
+import com.sonicle.commons.time.JodaTimeUtils;
 import com.sonicle.webtop.core.app.sdk.WTParseException;
 import java.text.ParseException;
 import java.util.Set;
 import org.apache.commons.lang3.StringUtils;
 import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
-import org.joda.time.format.DateTimeFormatter;
 
 /**
  *
@@ -49,7 +47,6 @@ import org.joda.time.format.DateTimeFormatter;
  */
 public class BaseRestApiUtils {
 	public static final String DEFAULT_ETAG = "19700101000000000";
-	public static final DateTimeFormatter ETAG_FMT = DateTimeUtils.createFormatter("yyyyMMddHHmmssSSS", DateTimeZone.UTC);
 	
 	public static boolean shouldSet(final Set<String> fields2set, final String name) {
 		return fields2set == null || fields2set.contains(name);
@@ -64,7 +61,7 @@ public class BaseRestApiUtils {
 	}
 	
 	public static DateTime parseETag(final String etag) {
-		return !StringUtils.isBlank(etag) ? ETAG_FMT.parseDateTime(etag) : null;
+		return JodaTimeUtils.parseDateTime(JodaTimeUtils.SYNCTAG_FMT, etag);
 	}
 	
 	public static String parseUserId(final String s, final String ifBlank) {
@@ -80,7 +77,7 @@ public class BaseRestApiUtils {
 	
 	public static String buildETag(final DateTime revisionTimestamp) {
 		if (revisionTimestamp != null) {
-			return ETAG_FMT.print(revisionTimestamp);
+			return JodaTimeUtils.SYNCTAG_FMT.print(revisionTimestamp);
 		} else {
 			return DEFAULT_ETAG;
 		}

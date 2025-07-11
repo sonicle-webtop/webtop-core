@@ -38,7 +38,7 @@ import com.sonicle.commons.LangUtils;
 import com.sonicle.commons.concurrent.KeyedReentrantLocks;
 import com.sonicle.commons.db.DbUtils;
 import com.sonicle.commons.db.StatementUtils;
-import com.sonicle.commons.time.DateTimeUtils;
+import com.sonicle.commons.time.JodaTimeUtils;
 import com.sonicle.webtop.core.CoreManager;
 import com.sonicle.webtop.core.CoreServiceSettings;
 import com.sonicle.webtop.core.CoreSettings;
@@ -81,7 +81,6 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.text.MessageFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -91,21 +90,12 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import org.apache.commons.lang3.StringUtils;
-import org.quartz.JobBuilder;
-import org.quartz.JobDataMap;
-import org.quartz.JobDetail;
-import org.quartz.JobKey;
 import org.quartz.Scheduler;
-import org.quartz.SchedulerException;
-import org.quartz.Trigger;
-import org.quartz.TriggerBuilder;
-import org.quartz.impl.matchers.GroupMatcher;
 import org.slf4j.Logger;
 import com.sonicle.webtop.core.app.sdk.interfaces.IControllerServiceHooks;
 import com.sonicle.webtop.core.sdk.BaseBackgroundService;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.Map;
@@ -204,7 +194,7 @@ public class ServiceManager {
 			String lastTag = upgdao.selectLastTag(con);
 			int pendingUpgrades = upgdao.countPendingByTagType(con, lastTag, OUpgradeStatement.STATEMENT_TYPE_SQL);
 			if (pendingUpgrades == 0) {
-				return String.valueOf(DateTimeUtils.now(true).getMillis());
+				return String.valueOf(JodaTimeUtils.now(true).getMillis());
 			} else {
 				return lastTag;
 			}
@@ -1447,7 +1437,7 @@ public class ServiceManager {
 		try {
 			logger.trace("[{}]: {}", statement.getUpgradeStatementId(), statement.getStatementBody());
 			stmt = statementCon.createStatement();
-			statement.setRunTimestamp(DateTimeUtils.now(true).withZone(DateTimeZone.getDefault()).toLocalDateTime());
+			statement.setRunTimestamp(JodaTimeUtils.now(true).withZone(DateTimeZone.getDefault()).toLocalDateTime());
 			int ret = stmt.executeUpdate(statement.getStatementBody());
 			statement.setRunStatus(OUpgradeStatement.RUN_STATUS_OK);
 			statement.setRunMessage(MessageFormat.format("Affected rows: {0}", ret));

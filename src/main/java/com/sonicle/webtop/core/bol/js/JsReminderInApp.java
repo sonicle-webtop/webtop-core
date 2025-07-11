@@ -33,7 +33,7 @@
  */
 package com.sonicle.webtop.core.bol.js;
 
-import com.sonicle.commons.time.DateTimeUtils;
+import com.sonicle.commons.time.JodaTimeUtils;
 import com.sonicle.webtop.core.bol.OSnoozedReminder;
 import com.sonicle.webtop.core.sdk.ReminderInApp;
 import com.sonicle.webtop.core.sdk.UserProfileId;
@@ -59,7 +59,7 @@ public class JsReminderInApp {
 		type = rem.getType();
 		instanceId = rem.getInstanceId();
 		title = rem.getTitle();
-		date = DateTimeUtils.printYmdHmsWithZone(rem.getDate(), tz);
+		date = JodaTimeUtils.printYMDHMS(tz, rem.getDate());
 		//if(rem.getDate() != null) date = ymdhmsFmt.print(rem.getDate());
 		timezone = rem.getTimezone();
 	}
@@ -71,7 +71,7 @@ public class JsReminderInApp {
 		type = rem.getType();
 		instanceId = rem.getInstanceId();
 		title = rem.getTitle();
-		date = DateTimeUtils.printYmdHmsWithZone(rem.getDate(), tz);
+		date = JodaTimeUtils.printYMDHMS(tz, rem.getDate());
 		//if(rem.getDate() != null) date = ymdhmsFmt.print(rem.getDate());
 		timezone = rem.getTimezone();
 	}
@@ -79,7 +79,7 @@ public class JsReminderInApp {
 	public static ReminderInApp createReminderInApp(UserProfileId profileId, JsReminderInApp js) {
 		ReminderInApp rem = new ReminderInApp(js.serviceId, profileId, js.type, js.instanceId);
 		rem.setTitle(js.title);
-		rem.setDate(DateTimeUtils.parseYmdHmsWithZone(js.date, DateTimeZone.forID(js.timezone)));
+		rem.setDate(JodaTimeUtils.parseDateTimeYMDHMS(DateTimeZone.forID(js.timezone), js.date));
 		rem.setTimezone(js.timezone);
 		return rem;
 	}

@@ -34,7 +34,7 @@
 package com.sonicle.webtop.core.bol.js;
 
 import com.sonicle.commons.EnumUtils;
-import com.sonicle.commons.time.DateTimeUtils;
+import com.sonicle.commons.time.JodaTimeUtils;
 import com.sonicle.webtop.core.model.IMMessage;
 import org.joda.time.DateTimeZone;
 import org.joda.time.format.DateTimeFormatter;
@@ -55,7 +55,7 @@ public class JsGridIMChatSearch {
 	public JsGridIMChatSearch() {}
 	
 	public JsGridIMChatSearch(IMMessage message, String senderNick, DateTimeZone utz) {
-		DateTimeFormatter fmt = DateTimeUtils.createYmdHmsFormatter(utz);
+		DateTimeFormatter fmt = JodaTimeUtils.createFormatterYMDHMS(utz);
 		
 		this.id = message.getMessageUid();
 		this.fromId = message.getSenderJid();

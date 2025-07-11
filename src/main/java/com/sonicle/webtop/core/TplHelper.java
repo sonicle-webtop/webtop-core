@@ -33,13 +33,11 @@
  */
 package com.sonicle.webtop.core;
 
-import com.sonicle.commons.LangUtils;
-import com.sonicle.commons.time.DateTimeUtils;
+import com.sonicle.commons.time.JodaTimeUtils;
 import com.sonicle.commons.web.json.MapItem;
 import com.sonicle.commons.web.json.ipstack.IPLookupResponse;
 import com.sonicle.webtop.core.app.CoreManifest;
 import com.sonicle.webtop.core.app.WT;
-import com.sonicle.webtop.core.app.WebTopApp;
 import com.sonicle.webtop.core.util.NotificationHelper;
 import freemarker.template.TemplateException;
 import java.io.IOException;
@@ -83,7 +81,7 @@ public class TplHelper {
 	}
 	
 	public static String buildNewDeviceNoticeBody(String account, DateTime timestamp, ReadableUserAgent userAgent, String ipAddress, IPLookupResponse ipLookup, Locale locale, DateTimeZone timezone, String dateFormat, String timeFormat) throws IOException, TemplateException {
-		DateTimeFormatter fmt = DateTimeUtils.createFormatter(dateFormat + " " + timeFormat, timezone);
+		DateTimeFormatter fmt = JodaTimeUtils.createFormatter(dateFormat + " " + timeFormat, timezone);
 		
 		String location = null;
 		if (ipLookup != null) {

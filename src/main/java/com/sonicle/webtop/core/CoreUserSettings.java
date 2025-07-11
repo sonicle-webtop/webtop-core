@@ -35,17 +35,14 @@ package com.sonicle.webtop.core;
 
 import com.sonicle.commons.EnumUtils;
 import com.sonicle.commons.LangUtils;
-import com.sonicle.commons.time.DateTimeUtils;
-import com.sonicle.commons.web.json.JsonResult;
+import com.sonicle.commons.time.JavaTimeUtils;
 import static com.sonicle.webtop.core.CoreSettings.*;
 import com.sonicle.webtop.core.app.CoreManifest;
 import com.sonicle.webtop.core.app.SettingsManager;
 import com.sonicle.webtop.core.sdk.BaseUserSettings;
 import com.sonicle.webtop.core.sdk.UserProfileId;
 import com.sonicle.webtop.core.xmpp.PresenceStatus;
-import java.util.ArrayList;
 import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
 
 /**
  *
@@ -406,7 +403,7 @@ public class CoreUserSettings extends BaseUserSettings {
 	
 	public static boolean setServiceVersion(SettingsManager setm, UserProfileId profileId, String serviceId, String value) {
 		boolean ret = setm.setUserSetting(profileId, serviceId, SERVICE_VERSION, value);
-		setm.setUserSetting(profileId, serviceId, SERVICE_VERSION_TIMESTAMP, DateTimeUtils.createFormatter("yyyyMMdd'T'HHmmss'Z'", DateTimeZone.UTC).print(DateTimeUtils.now()));
+		setm.setUserSetting(profileId, serviceId, SERVICE_VERSION_TIMESTAMP, JavaTimeUtils.print(JavaTimeUtils.ISO_DATEDIME_FMT, JavaTimeUtils.now()));
 		return ret;
 	}
 	

@@ -32,7 +32,7 @@
  */
 package com.sonicle.webtop.core.sdk;
 
-import com.sonicle.commons.time.DateTimeUtils;
+import com.sonicle.commons.time.JodaTimeUtils;
 import com.sonicle.webtop.core.app.WebTopApp;
 import com.sonicle.webtop.core.util.LoggerUtils;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -84,7 +84,7 @@ public abstract class BaseBackgroundServiceTask implements Job {
 	}
 	
 	protected void doExecuteWork(JobExecutionContext jec) {
-		DateTime now = DateTimeUtils.now();
+		DateTime now = JodaTimeUtils.now();
 
 		try {
 			getLogger().debug("Started [{}]", now);

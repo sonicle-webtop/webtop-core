@@ -46,7 +46,7 @@ import com.google.gson.annotations.SerializedName;
 import com.sonicle.commons.EnumUtils;
 import com.sonicle.commons.PathUtils;
 import com.sonicle.commons.PropUtils;
-import com.sonicle.commons.time.DateTimeUtils;
+import com.sonicle.commons.time.JodaTimeUtils;
 import com.sonicle.webtop.core.app.WebTopProps;
 import com.sonicle.webtop.core.model.LoggerEntry;
 import java.io.BufferedInputStream;
@@ -97,7 +97,7 @@ public class LogbackHelper {
 	private static URL lastConfiguration = null;
 	
 	public static void printToSystemOut(String message, Object... arguments) {
-		String date = DateTimeUtils.createYmdHmsFormatter(DateTimeZone.getDefault()).print(DateTimeUtils.now());
+		String date = JodaTimeUtils.createFormatterYMDHMS(DateTimeZone.getDefault()).print(JodaTimeUtils.now());
 		System.out.println(date + " " + MessageFormatter.arrayFormat(message, arguments).getMessage());
 	}
 	

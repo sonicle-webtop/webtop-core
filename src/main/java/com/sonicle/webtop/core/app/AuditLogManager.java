@@ -40,7 +40,7 @@ import com.sonicle.commons.concurrent.KeyedReentrantLocks;
 import com.sonicle.commons.db.DbUtils;
 import com.sonicle.commons.http.HttpClientUtils;
 import com.sonicle.commons.net.IPUtils;
-import com.sonicle.commons.time.DateTimeUtils;
+import com.sonicle.commons.time.JodaTimeUtils;
 import com.sonicle.commons.web.json.JsonResult;
 import com.sonicle.commons.web.json.ipstack.IPLookupResponse;
 import com.sonicle.webtop.core.CoreServiceSettings;
@@ -298,7 +298,7 @@ public class AuditLogManager extends AbstractAppManager<AuditLogManager> {
 				}
 
 				String subject = EmailNotification.buildSubject(ud.getLocale(), CoreManifest.ID, WT.lookupResource(CoreManifest.ID, ud.getLocale(), "tpl.email.newDevice.subject"));
-				String customBodyHtml = TplHelper.buildNewDeviceNoticeBody(ud.getProfileEmailAddress(), DateTimeUtils.now(), rua, remoteIp, ipData, ud.getLocale(), ud.getTimeZone(), ud.getShortDateFormat(), ud.getShortTimeFormat());
+				String customBodyHtml = TplHelper.buildNewDeviceNoticeBody(ud.getProfileEmailAddress(), JodaTimeUtils.now(), rua, remoteIp, ipData, ud.getLocale(), ud.getTimeZone(), ud.getShortDateFormat(), ud.getShortTimeFormat());
 				String html = new EmailNotification.NoReplyBuilder()
 					.withCustomBody(null, customBodyHtml)
 					.build(ud.getLocale(), EmailNotification.buildSource(ud.getLocale(), CoreManifest.ID)).write();

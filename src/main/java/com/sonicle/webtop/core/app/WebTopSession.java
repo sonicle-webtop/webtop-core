@@ -34,7 +34,7 @@
 package com.sonicle.webtop.core.app;
 
 import com.sonicle.webtop.core.app.sdk.BaseDocEditorDocumentHandler;
-import com.sonicle.commons.time.DateTimeUtils;
+import com.sonicle.commons.time.JodaTimeUtils;
 import com.sonicle.commons.web.json.JsonResult;
 import com.sonicle.commons.web.json.MapItem;
 import com.sonicle.mail.StoreUtils;
@@ -1500,7 +1500,7 @@ public class WebTopSession {
 			this.filename = filename;
 			this.size = size;
 			this.mediaType = mediaType;
-			this.uploadedOn = DateTimeUtils.now(true);
+			this.uploadedOn = JodaTimeUtils.now(true);
 		}
 		
 		public boolean isVirtual() {

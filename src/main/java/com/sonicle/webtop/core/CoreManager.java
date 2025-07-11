@@ -43,7 +43,7 @@ import com.sonicle.commons.beans.VirtualAddress;
 import com.sonicle.commons.db.DbUtils;
 import com.sonicle.commons.flags.BitFlags;
 import com.sonicle.commons.flags.BitFlagsEnum;
-import com.sonicle.commons.time.DateTimeUtils;
+import com.sonicle.commons.time.JodaTimeUtils;
 import com.sonicle.commons.web.json.CompositeId;
 import com.sonicle.commons.web.json.JsonResult;
 import com.sonicle.commons.web.json.JsonUtils;
@@ -2505,7 +2505,7 @@ public class CoreManager extends BaseManager {
 	private AuditLog createAuditLog(String domainId, OAuditLog olog) {
 		UserProfileId uid = new UserProfileId(domainId, olog.getUserId());
 		DateTimeZone userTz = DateTimeZone.forID(WT.getUserData(uid).getTimeZoneId());
-		DateTimeFormatter ymdhmsZoneFmt = DateTimeUtils.createYmdHmsFormatter(userTz);
+		DateTimeFormatter ymdhmsZoneFmt = JodaTimeUtils.createFormatterYMDHMS(userTz);
 		
 		AuditLog log = new AuditLog();
 		log.setAuditLogId(olog.getAuditLogId());

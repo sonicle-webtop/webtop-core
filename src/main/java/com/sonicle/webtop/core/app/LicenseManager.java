@@ -40,11 +40,10 @@ import com.sonicle.commons.flags.BitFlags;
 import com.sonicle.commons.l4j.HardwareID;
 import com.sonicle.commons.l4j.ProductLicense;
 import com.sonicle.commons.l4j.ProductLicense.LicenseInfo;
-import com.sonicle.commons.time.DateTimeUtils;
+import com.sonicle.commons.time.JodaTimeUtils;
 import com.sonicle.commons.web.json.bean.StringMap;
 import com.sonicle.webtop.core.app.model.GenericSubject;
 import com.sonicle.webtop.core.app.model.LicenseBase;
-import com.sonicle.webtop.core.app.model.LicenseComputedStatus;
 import com.sonicle.webtop.core.app.model.LicenseComputedStatus;
 import com.sonicle.webtop.core.app.model.LicenseExInfo;
 import com.sonicle.webtop.core.app.model.LicenseListOption;
@@ -60,7 +59,6 @@ import com.sonicle.webtop.core.app.events.LicenseUpdateEvent;
 import com.sonicle.webtop.core.dal.DAOException;
 import com.sonicle.webtop.core.dal.LicenseDAO;
 import com.sonicle.webtop.core.dal.LicenseLeaseDAO;
-import com.sonicle.webtop.core.model.License;
 import com.sonicle.webtop.core.model.ProductId;
 import com.sonicle.webtop.core.model.ServiceLicense;
 import com.sonicle.webtop.core.model.ServiceLicenseLease;
@@ -867,7 +865,7 @@ public class LicenseManager extends AbstractAppManager<LicenseManager> {
 			if (!li.isActivationCompleted()) throw new WTLicenseActivationException(li);
 			
 			con = getConnection(true);
-			boolean ret = licDao.replaceLicense(con, domainId, serviceId, productCode, plic.getLicenseString(), expDate, quantity, plic.getActivatedLicenseString(), DateTimeUtils.now(), li.getHardwareID()) == 1;
+			boolean ret = licDao.replaceLicense(con, domainId, serviceId, productCode, plic.getLicenseString(), expDate, quantity, plic.getActivatedLicenseString(), JodaTimeUtils.now(), li.getHardwareID()) == 1;
 			if (quantity != null) {
 				OLicense olic = licDao.lock(con, domainId, serviceId, productCode);
 				if (olic == null) throw new WTException("Unable to lookup license '{}'", productCode);
@@ -910,7 +908,7 @@ public class LicenseManager extends AbstractAppManager<LicenseManager> {
 			if (!li.isActivationCompleted()) throw new WTLicenseActivationException(li);
 			
 			con = getConnection(true);
-			boolean ret = licDao.updateActivation(con, domainId, serviceId, productCode, plic.getActivatedLicenseString(), DateTimeUtils.now(), li.getHardwareID(), li.getExpirationDate()) == 1;
+			boolean ret = licDao.updateActivation(con, domainId, serviceId, productCode, plic.getActivatedLicenseString(), JodaTimeUtils.now(), li.getHardwareID(), li.getExpirationDate()) == 1;
 			if (quantity != null) {
 				OLicense olic = licDao.lock(con, domainId, serviceId, productCode);
 				if (olic == null) throw new WTException("Unable to lookup license '{}'", productCode);
@@ -954,7 +952,7 @@ public class LicenseManager extends AbstractAppManager<LicenseManager> {
 			if (!li.isActivationCompleted()) throw new WTLicenseActivationException(li);
 			
 			con = getConnection(true);
-			boolean ret = licDao.updateActivation(con, domainId, productId.getServiceId(), productId.getProductCode(), plic.getActivatedLicenseString(), DateTimeUtils.now(), li.getHardwareID(), li.getExpirationDate()) == 1;
+			boolean ret = licDao.updateActivation(con, domainId, productId.getServiceId(), productId.getProductCode(), plic.getActivatedLicenseString(), JodaTimeUtils.now(), li.getHardwareID(), li.getExpirationDate()) == 1;
 			if (quantity != null) {
 				OLicense olic = licDao.lock(con, domainId, productId.getServiceId(), productId.getProductCode());
 				if (olic == null) throw new WTException("Unable to lookup license '{}'", productId.getProductCode());
@@ -1008,7 +1006,7 @@ public class LicenseManager extends AbstractAppManager<LicenseManager> {
 			}
 			
 			con = getConnection(true);
-			boolean ret = licDao.updateActivation(con, domainId, productId.getServiceId(), productId.getProductCode(), null, DateTimeUtils.now(), null) == 1;
+			boolean ret = licDao.updateActivation(con, domainId, productId.getServiceId(), productId.getProductCode(), null, JodaTimeUtils.now(), null) == 1;
 			if (afterUpdateThrow != null) throw afterUpdateThrow;
 			return ret;
 			
@@ -1037,7 +1035,7 @@ public class LicenseManager extends AbstractAppManager<LicenseManager> {
 				ret = -3;
 			} else {
 				if (origCount +1 <= maxQuantity) {
-					if (lleaDao.insert(con, domainId, productId.getServiceId(), productId.getProductCode(), userId, DateTimeUtils.now(), origin) == 1) {
+					if (lleaDao.insert(con, domainId, productId.getServiceId(), productId.getProductCode(), userId, JodaTimeUtils.now(), origin) == 1) {
 						ret = 1;
 					}
 				}
@@ -1072,7 +1070,7 @@ public class LicenseManager extends AbstractAppManager<LicenseManager> {
 			Set<String> okUserIds = getWebTopApp().getWebTopManager().parseSubjectsAsStringLocals(userIds, true, domainId, GenericSubject.Type.USER);
 			int origCount = lleaDao.countByDomainServiceProduct(con, domainId, productId.getServiceId(), productId.getProductCode());
 			if ((origCount + userIds.size()) <= li.getQuantity()) {
-				ret = lleaDao.batchInsert(con, domainId, productId.getServiceId(), productId.getProductCode(), okUserIds, DateTimeUtils.now(), origin).length == okUserIds.size();
+				ret = lleaDao.batchInsert(con, domainId, productId.getServiceId(), productId.getProductCode(), okUserIds, JodaTimeUtils.now(), origin).length == okUserIds.size();
 			} else {
 				throw new WTException("Unable to satisfy required quantity for '{}' [{}+{} > {}]", productId.getProductCode(), origCount, okUserIds.size(), li.getQuantity());
 			}

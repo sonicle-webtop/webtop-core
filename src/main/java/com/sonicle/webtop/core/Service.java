@@ -39,9 +39,8 @@ import com.sonicle.commons.LangUtils;
 import com.sonicle.commons.PathUtils;
 import com.sonicle.commons.beans.PageInfo;
 import com.sonicle.commons.db.DbUtils;
-import com.sonicle.commons.time.DateTimeUtils;
+import com.sonicle.commons.time.JodaTimeUtils;
 import com.sonicle.commons.web.Crud;
-import com.sonicle.commons.web.ParameterException;
 import com.sonicle.commons.web.json.JsonResult;
 import com.sonicle.commons.web.ServletUtils;
 import com.sonicle.commons.web.json.CompositeId;
@@ -79,7 +78,6 @@ import com.sonicle.webtop.core.msg.IMChatRoomUpdated;
 import com.sonicle.webtop.core.msg.IMFriendPresenceUpdated;
 import com.sonicle.webtop.core.msg.IMFriendsUpdated;
 import com.sonicle.webtop.core.bol.OAutosave;
-import com.sonicle.webtop.core.bol.OUser;
 import com.sonicle.webtop.core.bol.events.TagChangedEvent;
 import com.sonicle.webtop.core.bol.js.JsAclSubjectLkp;
 import com.sonicle.webtop.core.bol.js.JsActivityLkp;
@@ -143,7 +141,6 @@ import com.sonicle.webtop.core.app.sdk.WTUnsupportedOperationException;
 import com.sonicle.webtop.core.products.TMCEPremiumProduct;
 import com.sonicle.webtop.core.util.AppLocale;
 import com.sonicle.webtop.core.sdk.BaseService;
-import com.sonicle.webtop.core.sdk.BaseServiceProduct;
 import com.sonicle.webtop.core.sdk.ServiceMessage;
 import com.sonicle.webtop.core.sdk.UploadException;
 import com.sonicle.webtop.core.sdk.UserProfile;
@@ -1584,7 +1581,7 @@ public class Service extends BaseService implements EventListener {
 			Integer snooze = ServletUtils.getIntParameter(request, "snooze", 5);
 			PayloadAsList<JsReminderInApp.List> pl = ServletUtils.getPayloadAsList(request, JsReminderInApp.List.class);
 			
-			DateTime remindOn = DateTimeUtils.now(false).plusMinutes(snooze);
+			DateTime remindOn = JodaTimeUtils.now(false).plusMinutes(snooze);
 			for(JsReminderInApp js : pl.data) {
 				coreMgr.snoozeReminder(JsReminderInApp.createReminderInApp(getEnv().getProfileId(), js), remindOn);
 			}
@@ -2143,7 +2140,7 @@ public class Service extends BaseService implements EventListener {
 				String text = ServletUtils.getStringParameter(request, "text", true);
 				String lastSeenDate = ServletUtils.getStringParameter(request, "lastSeenDate", null);
 				
-				LocalDate lastSeen = (lastSeenDate == null) ? null : DateTimeUtils.parseYmdHmsWithZone(lastSeenDate, "00:00:00", utz).toLocalDate();
+				LocalDate lastSeen = (lastSeenDate == null) ? null : JodaTimeUtils.parseDateTimeYMDHMS(utz, lastSeenDate, "00:00:00").toLocalDate();
 				
 				if (xmppCli != null) {
 					EntityBareJid chatJid = XMPPHelper.asEntityBareJid(chatId);
@@ -2186,7 +2183,7 @@ public class Service extends BaseService implements EventListener {
 				String date = ServletUtils.getStringParameter(request, "date", null);
 				
 				final LocalDate nowLd = DateTime.now().withZone(utz).toLocalDate();
-				LocalDate ld = (date == null) ? nowLd : DateTimeUtils.parseYmdHmsWithZone(date, "00:00:00", utz).toLocalDate();
+				LocalDate ld = (date == null) ? nowLd : JodaTimeUtils.parseDateTimeYMDHMS(utz, date, "00:00:00").toLocalDate();
 				boolean history = (ld.compareTo(nowLd) != 0);
 				
 				IMChat chat = coreMgr.getIMChat(chatId);
@@ -2494,7 +2491,7 @@ public class Service extends BaseService implements EventListener {
 		@Override
 		public void onChatRoomMessageReceived(ChatRoom chatRoom, ChatMessage message) {
 			DateTimeZone utz = getEnv().getProfile().getTimeZone();
-			DateTimeFormatter fmt = DateTimeUtils.createYmdHmsFormatter(utz);
+			DateTimeFormatter fmt = JodaTimeUtils.createFormatterYMDHMS(utz);
 			
 			String action = EnumUtils.toSerializedName(IMMessage.Action.NONE);
 			String data = null;

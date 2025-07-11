@@ -34,7 +34,7 @@
 package com.sonicle.webtop.core.bol.js;
 
 import com.sonicle.commons.EnumUtils;
-import com.sonicle.commons.time.DateTimeUtils;
+import com.sonicle.commons.time.JodaTimeUtils;
 import com.sonicle.commons.web.json.JsonResult;
 import com.sonicle.commons.web.json.MapItem;
 import com.sonicle.webtop.core.model.IMMessage;
@@ -64,7 +64,7 @@ public class JsGridIMMessage {
 	public JsGridIMMessage() {}
 	
 	public JsGridIMMessage(boolean isSent, IMMessage message, String senderNick, DateTimeZone utz) {
-		DateTimeFormatter ymdhms = DateTimeUtils.createYmdHmsFormatter(utz);
+		DateTimeFormatter ymdhms = JodaTimeUtils.createFormatterYMDHMS(utz);
 		
 		this.id = message.getMessageUid();
 		this.fromId = message.getSenderJid();
@@ -78,7 +78,7 @@ public class JsGridIMMessage {
 	}
 	
 	public JsGridIMMessage(boolean isSent, ChatMessage message, DateTimeZone utz) {
-		DateTimeFormatter fmt = DateTimeUtils.createYmdHmsFormatter(utz);
+		DateTimeFormatter fmt = JodaTimeUtils.createFormatterYMDHMS(utz);
 		
 		this.id = message.getMessageUid();
 		this.fromId = message.getFromUser().toString();
@@ -109,12 +109,12 @@ public class JsGridIMMessage {
 	}
 	
 	public static JsGridIMMessage asDateAction(String id, LocalDate date) {
-		DateTimeFormatter ymd = DateTimeUtils.createYmdFormatter();
+		DateTimeFormatter ymd = JodaTimeUtils.createFormatterYMD();
 		return new JsGridIMMessage("!"+id, null, null, false, ymd.print(date) + " 00:00:00", "date", null, null, false);
 	}
 	
 	public static JsGridIMMessage asWarnAction(String id, DateTime timestamp, String key) {
-		DateTimeFormatter ymdmhs = DateTimeUtils.createYmdHmsFormatter();
+		DateTimeFormatter ymdmhs = JodaTimeUtils.createFormatterYMDHMS();
 		return new JsGridIMMessage("!"+id, null, null, false, ymdmhs.print(timestamp), "warn", key, null, false);
 	}
 	
