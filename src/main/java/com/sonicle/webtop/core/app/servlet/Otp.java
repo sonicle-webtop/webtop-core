@@ -52,7 +52,7 @@ import com.sonicle.webtop.core.app.RunContext;
 import com.sonicle.webtop.core.app.SessionContext;
 import com.sonicle.webtop.core.app.WT;
 import com.sonicle.webtop.core.app.util.LogbackHelper;
-import com.sonicle.webtop.core.util.LoggerUtils;
+import com.sonicle.webtop.core.app.util.LoggerUtils;
 import freemarker.template.Template;
 import freemarker.template.TemplateException;
 import java.io.IOException;

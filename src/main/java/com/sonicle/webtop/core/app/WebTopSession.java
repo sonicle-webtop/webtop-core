@@ -67,7 +67,7 @@ import com.sonicle.webtop.core.app.servlet.Otp;
 import com.sonicle.webtop.core.app.util.LogbackHelper;
 import com.sonicle.webtop.core.msg.AutosaveSM;
 import com.sonicle.webtop.core.util.IdentifierUtils;
-import com.sonicle.webtop.core.util.LoggerUtils;
+import com.sonicle.webtop.core.app.util.LoggerUtils;
 import java.io.File;
 import java.util.Arrays;
 import java.util.Collections;

@@ -34,7 +34,7 @@
 package com.sonicle.webtop.core.sdk;
 
 import com.sonicle.webtop.core.app.WT;
-import com.sonicle.webtop.core.util.LoggerUtils;
+import com.sonicle.webtop.core.app.util.LoggerUtils;
 import org.apache.shiro.subject.Subject;
 import org.jooq.tools.StringUtils;
 

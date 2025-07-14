@@ -62,7 +62,7 @@ import com.sonicle.webtop.core.sdk.UserProfile;
 import com.sonicle.webtop.core.sdk.UserProfileId;
 import com.sonicle.webtop.core.sdk.WTException;
 import com.sonicle.webtop.core.sdk.WTRuntimeException;
-import com.sonicle.webtop.core.util.LoggerUtils;
+import com.sonicle.webtop.core.app.util.LoggerUtils;
 import com.sonicle.webtop.core.versioning.AnnotationLine;
 import com.sonicle.webtop.core.versioning.BaseScriptLine;
 import com.sonicle.webtop.core.versioning.DataSourceAnnotationLine;

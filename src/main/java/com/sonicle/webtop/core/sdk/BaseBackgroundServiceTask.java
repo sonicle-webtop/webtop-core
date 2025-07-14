@@ -34,7 +34,7 @@ package com.sonicle.webtop.core.sdk;
 
 import com.sonicle.commons.time.JodaTimeUtils;
 import com.sonicle.webtop.core.app.WebTopApp;
-import com.sonicle.webtop.core.util.LoggerUtils;
+import com.sonicle.webtop.core.app.util.LoggerUtils;
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.apache.shiro.subject.Subject;
 import org.apache.shiro.subject.support.SubjectThreadState;

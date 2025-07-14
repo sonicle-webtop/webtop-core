@@ -35,7 +35,7 @@ package com.sonicle.webtop.core.app;
 
 import com.sonicle.commons.web.json.MapItem;
 import com.sonicle.webtop.core.sdk.ServiceVersion;
-import com.sonicle.webtop.core.util.LoggerUtils;
+import com.sonicle.webtop.core.app.util.LoggerUtils;
 import java.io.IOException;
 import java.util.Locale;
 import java.util.Map;

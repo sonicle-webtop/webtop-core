@@ -36,7 +36,7 @@ package com.sonicle.webtop.core.app.servlet;
 import com.sonicle.commons.web.ServletUtils;
 import com.sonicle.webtop.core.app.AbstractServlet;
 import com.sonicle.webtop.core.sdk.WTException;
-import com.sonicle.webtop.core.util.LoggerUtils;
+import com.sonicle.webtop.core.app.util.LoggerUtils;
 import java.util.Arrays;
 import java.io.PrintWriter;
 import java.lang.reflect.Method;

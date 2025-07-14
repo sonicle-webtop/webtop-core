@@ -56,7 +56,7 @@ import com.sonicle.webtop.core.app.servlet.PublicRequest;
 import com.sonicle.webtop.core.app.servlet.ResourceRequest;
 import com.sonicle.webtop.core.app.model.GenericSubject;
 import com.sonicle.webtop.core.sdk.BaseServiceProduct;
-import com.sonicle.webtop.core.util.LoggerUtils;
+import com.sonicle.webtop.core.app.util.LoggerUtils;
 import com.sonicle.webtop.core.util.RRuleStringify;
 import freemarker.ext.beans.BeansWrapper;
 import freemarker.template.Template;

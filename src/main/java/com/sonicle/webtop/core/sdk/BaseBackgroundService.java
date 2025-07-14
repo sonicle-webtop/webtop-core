@@ -33,7 +33,7 @@
 package com.sonicle.webtop.core.sdk;
 
 import com.sonicle.webtop.core.app.AbstractService;
-import com.sonicle.webtop.core.util.LoggerUtils;
+import com.sonicle.webtop.core.app.util.LoggerUtils;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Set;

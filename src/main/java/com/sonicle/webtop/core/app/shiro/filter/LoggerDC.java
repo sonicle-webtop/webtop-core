@@ -33,7 +33,7 @@
  */
 package com.sonicle.webtop.core.app.shiro.filter;
 
-import com.sonicle.webtop.core.util.LoggerUtils;
+import com.sonicle.webtop.core.app.util.LoggerUtils;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import org.apache.shiro.web.filter.PathMatchingFilter;
