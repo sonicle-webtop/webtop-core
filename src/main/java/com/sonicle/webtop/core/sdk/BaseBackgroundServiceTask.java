@@ -50,7 +50,7 @@ import org.slf4j.Logger;
  * @author malbinola
  */
 public abstract class BaseBackgroundServiceTask implements Job {
-	private static final AtomicBoolean running = new AtomicBoolean(false);
+	private final AtomicBoolean running = new AtomicBoolean(false);
 	
 	public abstract Logger getLogger();
 	//public abstract String getName();
