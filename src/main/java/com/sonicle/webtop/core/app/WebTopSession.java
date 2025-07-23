@@ -1164,7 +1164,7 @@ public class WebTopSession {
 		js.appManifest.addJs(VENDOR_PATH + "/screenfull/3.3.2/" + "screenfull.min.js");
 		js.appManifest.addJs(VENDOR_PATH + "/atmosphere/2.3.9/" + "atmosphere.min.js");
 		js.appManifest.addJs(VENDOR_PATH + "/jsxc/3.4.0/" + "jsxc.dep.js");
-		js.appManifest.addJs(VENDOR_PATH + "/tinymce/6.3.1/" + "tinymce.min.js");
+		js.appManifest.addJs(VENDOR_PATH + "/tinymce/7.9.1/" + "tinymce.min.js");
 		js.appManifest.addJs(VENDOR_PATH + "/plupload/2.3.6/" + "plupload.full.min.js"); // Remember to update paths in Factory.js
 		//js.appManifest.addJs(VENDOR_PATH + "/rrule/2.1.0/" + "rrule.min.js");
 		js.appManifest.addJs(VENDOR_PATH + "/rrule/2.7.1/" + "rrule.min.js");
@@ -1184,10 +1184,8 @@ public class WebTopSession {
 		
 		// Uncomment these lines to load debug versions of the libraries ----->
 		//js.appManifest.addJs(VENDOR_PATH + "/jsxc/3.4.0/" + "jsxc.dep.js");
-		//js.appManifest.addJs(VENDOR_PATH + "/tinymce/5.6.2/" + "tinymce.js");
-		//js.appManifest.addJs(VENDOR_PATH + "/tinymce/4.3.12/" + "tinymce.js");
 		//js.appManifest.addJs(VENDOR_PATH + "/tinymce/6.3.1/" + "tinymce.js");
-		//js.appManifest.addJs(VENDOR_PATH + "/tinymce/7.6.1/" + "tinymce.js");
+		//js.appManifest.addJs(VENDOR_PATH + "/tinymce/7.9.1/" + "tinymce.js");
 		//js.appManifest.addJs(VENDOR_PATH + "/plupload/2.3.6/" + "moxie.js");
 		//js.appManifest.addJs(VENDOR_PATH + "/plupload/2.3.6/" + "plupload.dev.js");
 		// <-------------------------------------------------------------------
