@@ -1,7 +1,13 @@
-Ext.define('Sonicle.overrides.webtop.core.app.Factory', {
-	override: 'Sonicle.webtop.core.app.Factory',
+Ext.define('Sonicle.overrides.webtop.core.app.util.FoldersTree2', {
+	override: 'Sonicle.webtop.core.app.util.FoldersTree2',
 	
-	coloredCheckboxTreeRenderer: function(opts) {
+	coloredBotTreeRendererCfg: function(opts) {
+		return Ext.apply(this.callParent(arguments), {
+			geometry: 'circle'
+		});
+	},
+	
+	coloredCheckboxTreeRendererCfg: function(opts) {
 		return Ext.apply(this.callParent(arguments), {
 			geometry: 'circle'
 		});

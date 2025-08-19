@@ -1,2 +1,40 @@
-@import url("xtheme-webtop-light-override.css");
+/*@import url("xtheme-webtop-light-override.css");*/
 @import url("wtheme-webtop-light-override.css");
+
+
+
+
+
+.wt-icon-dock-none-on { background-image: url('dock-none-on_16.svg') !important; background-size: contain; }
+.wt-icon-dock-none,
+.wt-icon-dock-none-off { background-image: url('dock-none-off_16.svg') !important; background-size: contain; }
+.wt-icon-dock-top-on { background-image: url('dock-top-on_16.svg') !important; background-size: contain; }
+.wt-icon-dock-top,
+.wt-icon-dock-top-off { background-image: url('dock-top-off_16.svg') !important; background-size: contain; }
+.wt-icon-dock-left-on { background-image: url('dock-left-on_16.svg') !important; background-size: contain; }
+.wt-icon-dock-left,
+.wt-icon-dock-left-off { background-image: url('dock-left-off_16.svg') !important; background-size: contain; }
+.wt-icon-dock-right-on { background-image: url('dock-right-on_16.svg') !important; background-size: contain; }
+.wt-icon-dock-right,
+.wt-icon-dock-right-off { background-image: url('dock-right-off_16.svg') !important; background-size: contain; }
+.wt-icon-dock-bottom-on { background-image: url('dock-bottom-on_16.svg') !important; background-size: contain; }
+.wt-icon-dock-bottom,
+.wt-icon-dock-bottom-off { background-image: url('dock-bottom-off_16.svg') !important; background-size: contain; }
+/* ---------- Icons (others) */
+.wt-icon-logout { background-image: url('logout_16.svg') !important; background-size: contain; } .wt-icon-logout:before { content: ''; }
+/* ---------- Icons (actions) */
+.wt-dangerzone .wt-icon-trash { background-image: url('act-trash-danger_16.svg') !important; background-size: contain; }
+.wt-dangerzone .wt-icon-delete { background-image: url('act-remove-danger_16.svg') !important; background-size: contain; }
+
+/* ---------- Icons (base items) */
+
+.wt-menuitem-dock-none-checked .x-menu-item-icon-default.x-menu-item-checkbox { background-image: url('dock-none-on_16.svg') !important; background-size: contain; }
+.wt-menuitem-dock-none-unchecked .x-menu-item-icon-default.x-menu-item-checkbox { background-image: url('dock-none-off_16.svg') !important; background-size: contain; }
+.wt-menuitem-dock-top-checked .x-menu-item-icon-default.x-menu-item-checkbox { background-image: url('dock-top-on_16.svg') !important; background-size: contain; }
+.wt-menuitem-dock-top-unchecked .x-menu-item-icon-default.x-menu-item-checkbox { background-image: url('dock-top-off_16.svg') !important; background-size: contain; }
+.wt-menuitem-dock-left-checked .x-menu-item-icon-default.x-menu-item-checkbox { background-image: url('dock-left-on_16.svg') !important; background-size: contain; }
+.wt-menuitem-dock-left-unchecked .x-menu-item-icon-default.x-menu-item-checkbox { background-image: url('dock-left-off_16.svg') !important; background-size: contain; }
+.wt-menuitem-dock-right-checked .x-menu-item-icon-default.x-menu-item-checkbox { background-image: url('dock-right-on_16.svg') !important; background-size: contain; }
+.wt-menuitem-dock-right-unchecked .x-menu-item-icon-default.x-menu-item-checkbox { background-image: url('dock-right-off_16.svg') !important; background-size: contain; }
+.wt-menuitem-dock-bottom-checked .x-menu-item-icon-default.x-menu-item-checkbox { background-image: url('dock-bottom-on_16.svg') !important; background-size: contain; }
+.wt-menuitem-dock-bottom-unchecked .x-menu-item-icon-default.x-menu-item-checkbox { background-image: url('dock-bottom-off_16.svg') !important; background-size: contain; }

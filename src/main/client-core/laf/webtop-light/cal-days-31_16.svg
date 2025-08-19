@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" width="16px" height="16px" viewBox="0 0 16 16" enable-background="new 0 0 16 16" xml:space="preserve">
+  <g id="icon">
+    <path d="M14.8,15.5H1.2c-0.385,0,-0.7,-0.315,-0.7,-0.7V4.5h15v10.3C15.5,15.185,15.185,15.5,14.8,15.5z" fill-rule="evenodd" fill="#FFFFFF" stroke="#797979" stroke-width="1" stroke-miterlimit="10"/>
+    <path d="M14.7,1h-0.7v2h-3V1H5v2H2V1h-0.7C0.5832,1,0,1.5832,0,2.3v2.7h16V2.3C16,1.5832,15.4168,1,14.7,1z" fill="#3E79B4"/>
+    <g>
+      <rect x="3" width="1" height="3" fill="#797979"/>
+      <rect x="12" width="1" height="3" fill="#797979"/>
+    </g>
+    <path d="M6,7v3H2v4h12V7H6zM6,13H3v-2h3V13zM9,13H7v-2h2V13zM9,10H7V8h2V10zM13,13h-3v-2h3V13zM13,10h-3V8h3V10z" fill="#E0E0E0"/>
+	<text x="3" y="14" font-family="Arial, Helvetica, sans-serif" font-weight="bold" font-size="10" fill="#FF5B5B">31</text>
+  </g>
+</svg>
