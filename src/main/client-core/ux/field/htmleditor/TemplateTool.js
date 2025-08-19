@@ -160,7 +160,7 @@ Ext.define('Sonicle.webtop.core.ux.field.htmleditor.TemplateTool', {
 						columns: [
 							{
 								dataIndex: me.nameField,
-								cellTooltip: true,
+								tooltipDataIndex: me.nameField,
 								flex: 1
 							}, {
 								xtype: 'soactioncolumn',
