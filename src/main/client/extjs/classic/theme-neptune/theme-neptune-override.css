@@ -1,0 +1,25 @@
+/**************************************/
+/* This file should contain tweaks/fixes for specific theme.
+/**************************************/
+
+@import url("../themes-override.css");
+@import url("../themes-isneptune-override.css");
+
+:root {
+    /* NOT yet used directly as main theme: this is why NO vars are defined here! */
+}
+
+/* ---------- Sonicle.form.Separator */
+/* Give extra spacing from above objects */
+.x-fieldset.so-form-separator {
+    margin-top: 20px;
+}
+
+/* ---------- Ext.grid.column.Action */
+/* Set lighter base color and set darker color on hover */
+.x-action-col-icon {
+    color: #bababa; /* #666666 with alpha 0.45 */
+}
+.x-action-col-icon:hover {
+	color: #666666;
+}

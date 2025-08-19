@@ -43,81 +43,11 @@ Ext.define('Sonicle.webtop.core.app.util.FoldersTree2', {
 	 */
 	
 	coloredBoxTreeRenderer: function(opts) {
-		opts = opts || {};
-		return WTF.coloredBoxTreeRenderer({
-			shouldCustomize: function(val, node) {
-				return node.isFolder();
-			},
-			getColor: function(val, node) {
-				return '#'+node.getFolderColor();
-			},
-			renderer: function(val, meta, node) {
-				var isPers = node.isPersonalNode();
-				meta.customElbowCls = (opts.showElbow === true) ? '' : 'wt-hidden';
-				if (node.isOrigin() || node.isGrouper()) {
-					meta.tdCls += ' wt-bold';
-					return '<span>' + Ext.String.htmlEncode(Ext.isFunction(opts.getNodeText) ? opts.getNodeText.apply(this, [node, val]) : val) + '</span>';
-				} else if (node.isFolder()) {
-					if (isPers && node.isDefaultFolder()) {
-						val += '<span class="wt-text-off wt-theme-text-color-off">&nbsp;(';
-						val += (opts.defaultText || 'default');
-						val += ')</span>';
-					} else {
-						var ir = node.getItemsRights();
-						if (!ir.CREATE && !ir.UPDATE && !ir.DELETE) meta.tdCls += ' wt-theme-text-color-off';
-					}
-					return val;
-				}
-			}
-		});
+		return WTF.coloredBoxTreeRenderer(this.coloredBotTreeRendererCfg(opts));
 	},
 	
 	coloredCheckboxTreeRenderer: function(opts) {
-		opts = opts || {};
-		return WTF.coloredCheckboxTreeRenderer({
-			shouldCustomize: function(val, node) {
-				return node.isFolder();
-			},
-			getColor: function(val, node) {
-				return '#'+node.getFolderColor();
-			},
-			renderer: function(val, meta, node) {
-				var isPers = node.isPersonalNode(),
-					countHtml = function(count) {
-						if (Ext.isNumber(count) && count > 0) {
-							return '<span class="wt-text-off wt-theme-text-color-off"'
-								+ Sonicle.Utils.generateTooltipAttrs(opts.countTooltip ? Ext.String.format(opts.countTooltip, count) : null)
-								+ '>&nbsp;+' + count + '</span>';
-						} else {
-							return '';
-						}
-					};
-				meta.customElbowCls = (opts.showElbow === true) ? '' : 'wt-hidden';
-				if (Ext.isFunction(opts.getNodeTdCls)) {
-					meta.tdCls = Sonicle.String.join(' ', meta.tdCls, opts.getNodeTdCls.apply(this, [node, val]));
-					//meta.tdCls += ' ' + opts.getNodeTdCls.apply(this, [node, val]);
-				}
-				if (node.isOrigin() || node.isGrouper()) {
-					meta.tdCls += ' wt-bold';
-					meta.iconCls = 'wt-hidden';
-					meta.customCheckboxCls = 'wt-tree-toggle ';
-					meta.customCheckboxCls += node.isChecked() ? 'wt-tree-toggle-on' : 'wt-tree-toggle-off';
-					return '<span>' + Ext.String.htmlEncode(Ext.isFunction(opts.getNodeText) ? opts.getNodeText.apply(this, [node, val]) : val) + '</span>' + (opts.countField ? countHtml(node.get(opts.countField)) : '');
-					
-				} else if (node.isFolder()) {
-					if (!isPers) {
-						var ir = node.getItemsRights();
-						if (!ir.CREATE && !ir.UPDATE && !ir.DELETE) meta.tdCls += ' wt-theme-text-color-off';
-					}
-					if (node.isDefaultFolder()) {
-						val += '<span class="wt-text-off wt-theme-text-color-off">&nbsp;(';
-						val += (opts.defaultText || 'default');
-						val += ')</span>';
-					}
-					return val;
-				}
-			}
-		});
+		return WTF.coloredCheckboxTreeRenderer(this.coloredCheckboxTreeRendererCfg(opts));
 	},
 	
 	getMyOrigin: function(tree) {
@@ -324,5 +254,85 @@ Ext.define('Sonicle.webtop.core.app.util.FoldersTree2', {
 			if (ir.CREATE) return node;
 		}
 		return null;
+	},
+	
+	privates: {
+		coloredBotTreeRendererCfg: function(opts) {
+			opts = opts || {};
+			return {
+				shouldCustomize: function(val, node) {
+					return node.isFolder();
+				},
+				getColor: function(val, node) {
+					return '#'+node.getFolderColor();
+				},
+				renderer: function(val, meta, node) {
+					var isPers = node.isPersonalNode();
+					meta.customElbowCls = (opts.showElbow === true) ? '' : 'wt-hidden';
+					if (node.isOrigin() || node.isGrouper()) {
+						meta.tdCls += ' wt-bold';
+						return '<span>' + Ext.String.htmlEncode(Ext.isFunction(opts.getNodeText) ? opts.getNodeText.apply(this, [node, val]) : val) + '</span>';
+					} else if (node.isFolder()) {
+						if (isPers && node.isDefaultFolder()) {
+							val += '<span class="wt-text-off wt-theme-text-color-off">&nbsp;(';
+							val += (opts.defaultText || 'default');
+							val += ')</span>';
+						} else {
+							var ir = node.getItemsRights();
+							if (!ir.CREATE && !ir.UPDATE && !ir.DELETE) meta.tdCls += ' wt-theme-text-color-off';
+						}
+						return val;
+					}
+				}
+			};
+		},
+		
+		coloredCheckboxTreeRendererCfg: function(opts) {
+			opts = opts || {};
+			return {
+				shouldCustomize: function(val, node) {
+					return node.isFolder();
+				},
+				getColor: function(val, node) {
+					return '#'+node.getFolderColor();
+				},
+				renderer: function(val, meta, node) {
+					var isPers = node.isPersonalNode(),
+						countHtml = function(count) {
+							if (Ext.isNumber(count) && count > 0) {
+								return '<span class="wt-text-off wt-theme-text-color-off"'
+									+ Sonicle.Utils.generateTooltipAttrs(opts.countTooltip ? Ext.String.format(opts.countTooltip, count) : null)
+									+ '>&nbsp;+' + count + '</span>';
+							} else {
+								return '';
+							}
+						};
+					meta.customElbowCls = (opts.showElbow === true) ? '' : 'wt-hidden';
+					if (Ext.isFunction(opts.getNodeTdCls)) {
+						meta.tdCls = Sonicle.String.join(' ', meta.tdCls, opts.getNodeTdCls.apply(this, [node, val]));
+						//meta.tdCls += ' ' + opts.getNodeTdCls.apply(this, [node, val]);
+					}
+					if (node.isOrigin() || node.isGrouper()) {
+						meta.tdCls += ' wt-bold';
+						meta.iconCls = 'wt-hidden';
+						meta.customCheckboxCls = 'wt-tree-toggle ';
+						meta.customCheckboxCls += node.isChecked() ? 'wt-tree-toggle-on' : 'wt-tree-toggle-off';
+						return '<span>' + Ext.String.htmlEncode(Ext.isFunction(opts.getNodeText) ? opts.getNodeText.apply(this, [node, val]) : val) + '</span>' + (opts.countField ? countHtml(node.get(opts.countField)) : '');
+
+					} else if (node.isFolder()) {
+						if (!isPers) {
+							var ir = node.getItemsRights();
+							if (!ir.CREATE && !ir.UPDATE && !ir.DELETE) meta.tdCls += ' wt-theme-text-color-off';
+						}
+						if (node.isDefaultFolder()) {
+							val += '<span class="wt-text-off wt-theme-text-color-off">&nbsp;(';
+							val += (opts.defaultText || 'default');
+							val += ')</span>';
+						}
+						return val;
+					}
+				}
+			};
+		}
 	}
 });

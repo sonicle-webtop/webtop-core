@@ -1,0 +1,161 @@
+/**************************************/
+/* This file should contain tweaks/fixes for all themes.
+/**************************************/
+
+:root {
+    --so-announcementbar-color-info-bg: var(--wt-theme-color-info);
+    --so-announcementbar-color-info-bg-on: var(--wt-theme-color-info-on);
+    --so-announcementbar-color-alert-bg: var(--wt-theme-color-error);
+    --so-announcementbar-color-alert-bg-on: var(--wt-theme-color-error-on);
+    --so-announcementbar-color-warning-bg: var(--wt-theme-color-warn);
+    --so-announcementbar-color-warning-bg-on: var(--wt-theme-color-warn-on);
+    --so-announcementbar-color-success-bg: var(--wt-theme-color-ok);
+    --so-announcementbar-color-success-bg-on: var(--wt-theme-color-ok-on);
+    --so-formfeedback-color-info: var(--wt-theme-color-info);
+    --so-formfeedback-color-info-bg: var(--wt-theme-color-info-ct);
+    --so-formfeedback-color-info-bg-on: var(--wt-theme-color-info-ct-on);
+    --so-formfeedback-color-alert: var(--wt-theme-color-error);
+    --so-formfeedback-color-alert-bg: var(--wt-theme-color-error-ct);
+    --so-formfeedback-color-alert-bg-on: var(--wt-theme-color-error-ct-on);
+    --so-formfeedback-color-warning: var(--wt-theme-color-warn);
+    --so-formfeedback-color-warning-bg: var(--wt-theme-color-warn-ct);
+    --so-formfeedback-color-warning-bg-on: var(--wt-theme-color-ct-on);
+    --so-formfeedback-color-success: var(--wt-theme-color-ok);
+    --so-formfeedback-color-success-bg: var(--wt-theme-color-ok-ct);
+    --so-formfeedback-color-success-bg-on: var(--wt-theme-color-ok-ct-on);
+}
+
+/* ---------- Browser */
+/* Make scrollbars modern */
+::-webkit-scrollbar {
+    width: 6px; /* for vertical scrollbars */
+    height: 6px; /* for horizontal scrollbars */
+}
+::-webkit-scrollbar-track {
+	background-color: var(--wt-theme-color-scrollbar-track, #f0f0f0);
+	border-radius: 9999px; /* rounded-full */	
+}
+::-webkit-scrollbar-thumb {
+	background-color: var(--wt-theme-color-scrollbar-thumb, #e0e0e0);
+	border-radius: 9999px; /* rounded-full */	
+}
+/*
+::-webkit-scrollbar-button:horizontal:increment {
+    background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAMAAAAoLQ9TAAAABlBMVEXM09b///8OmaLeAAAAAnRSTlP/AOW3MEoAAAAgSURBVHgBY2BEA+QLMGAIMGAIMGAIMBAUIGQoZU5HAwB+ZgDtGYq3fgAAAABJRU5ErkJggg==)
+}
+::-webkit-scrollbar-button:horizontal:increment:hover {
+    background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAMAAAAoLQ9TAAAABlBMVEWdtMT///8YSU3FAAAAAnRSTlP/AOW3MEoAAAAgSURBVHgBY2BEA+QLMGAIMGAIMGAIMBAUIGQoZU5HAwB+ZgDtGYq3fgAAAABJRU5ErkJggg==)
+}
+::-webkit-scrollbar-button:horizontal:decrement {
+    background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAMAAAAoLQ9TAAAABlBMVEXM09b///8OmaLeAAAAAnRSTlP/AOW3MEoAAAAiSURBVHgBY2BEAxQJMKAJMKAJMKAJMOATgIkQMBTBooZfAH56AO2yINTrAAAAAElFTkSuQmCC)
+}
+::-webkit-scrollbar-button:horizontal:decrement:hover {
+    background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAMAAAAoLQ9TAAAABlBMVEWdtMT///8YSU3FAAAAAnRSTlP/AOW3MEoAAAAiSURBVHgBY2BEAxQJMKAJMKAJMKAJMOATgIkQMBTBooZfAH56AO2yINTrAAAAAElFTkSuQmCC)
+}
+::-webkit-scrollbar-button:vertical:increment {
+    background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAMAAAAoLQ9TAAAABlBMVEXM09b///8OmaLeAAAAAnRSTlP/AOW3MEoAAAAfSURBVHgBY2BEA7QTYIAChAoYH6EFxkeYwQBj0MelAH3GAO2C9+AaAAAAAElFTkSuQmCC)
+}
+::-webkit-scrollbar-button:vertical:increment:hover {
+    background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAMAAAAoLQ9TAAAABlBMVEWdtMT///8YSU3FAAAAAnRSTlP/AOW3MEoAAAAfSURBVHgBY2BEA7QTYIAChAoYH6EFxkeYwQBj0MelAH3GAO2C9+AaAAAAAElFTkSuQmCC)
+}
+::-webkit-scrollbar-button:vertical:decrement {
+    background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAMAAAAoLQ9TAAAABlBMVEXM09b///8OmaLeAAAAAnRSTlP/AOW3MEoAAAAgSURBVHgBY2BEAzQVYIAzYHwGGAvOZ4AyIXyECH1cCgB/GgDtpWTgqAAAAABJRU5ErkJggg==)
+}
+::-webkit-scrollbar-button:vertical:decrement:hover {
+    background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAMAAAAoLQ9TAAAABlBMVEWdtMT///8YSU3FAAAAAnRSTlP/AOW3MEoAAAAgSURBVHgBY2BEAzQVYIAzYHwGGAvOZ4AyIXyECH1cCgB/GgDtpWTgqAAAAABJRU5ErkJggg==)
+}
+::-webkit-scrollbar {
+    height: 18px;
+    width: 18px
+}
+::-webkit-scrollbar:disabled {
+    display: none
+}
+::-webkit-scrollbar-button,::-webkit-scrollbar-corner {
+    background: transparent;
+    cursor: pointer
+}
+::-webkit-scrollbar-button:horizontal:decrement,::-webkit-scrollbar-button:horizontal:decrement:hover,::-webkit-scrollbar-button:horizontal:increment,::-webkit-scrollbar-button:horizontal:increment:hover,::-webkit-scrollbar-button:vertical:decrement,::-webkit-scrollbar-button:vertical:decrement:hover,::-webkit-scrollbar-button:vertical:increment,::-webkit-scrollbar-button:vertical:increment:hover {
+    background-position: 50%;
+    height: 18px;
+    width: 18px
+}
+::-webkit-scrollbar-track {
+    background: transparent
+}
+::-webkit-scrollbar-thumb,::-webkit-scrollbar-thumb:hover {
+    background-clip: content-box;
+    border: 6px solid transparent;
+    border-radius: 9px
+}
+::-webkit-scrollbar-thumb {
+    background-color: #e0e0e0;
+}
+::-webkit-scrollbar-thumb:hover {
+    background-color: #98a3a6;
+}
+::-webkit-scrollbar-thumb:vertical {
+    min-height: 50px
+}
+::-webkit-scrollbar-thumb:horizontal {
+    min-width: 50px
+}
+*/
+
+/* ---------- Ext.menu.MenuItem */
+/* Force 16px icon size (useful only with direct url icons) */
+.x-menu-item-icon {
+    background-size: 16px;
+}
+
+/* ---------- Ext.form.field.Text */
+.x-form-trigger {
+	/*line-height: inherit;*/ /* Fix icon vertical alignment a little in FF */
+    display: table-cell; /* Fix inputEl crushing (or icon falling) due to FontAwesome5 icon in Chrome */
+}
+
+/* ---------- Ext.form.field.TextArea */
+/* Provide SW (south-west) handle for customized smart resizing */
+.x-form-textarea-resizable-smart {
+    position: relative;
+	background: #fff url("data:image/svg+xml,%3Csvg%20width%3D%2213%22%20height%3D%2213%22%20viewBox%3D%220%200%2013%2013%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Cpath%20d%3D%22M10.2773%2011.7773L12.2773%209.77734M12.2773%206.77734L7.27734%2011.7773M12.2773%203.77734L4.27734%2011.7773M12.2773%200.777344L1.27734%2011.7773%22%20stroke%3D%22%239CA3AF%22%2F%3E%3C%2Fsvg%3E") 100% 100% no-repeat;
+	bottom: 1px;
+	right: 2px;
+}
+
+/* ---------- Ext.grid.Panel */
+/* Center empty text */
+.x-grid-empty { text-align: center; }
+/* Support newly defined x-grid-cell-empty class like x-grid-empty */
+.x-grid-cell-empty { color: grey; }
+/* Avoids annoying focus border on focused cells */
+.x-grid-item-focused .x-grid-cell-inner:before { display: none; }
+
+/* ---------- Ext.grid.column.Action */
+/* Adds some extra spacing between action column icons */
+.x-action-col-icon {
+	margin-left: 4px;
+}
+
+/* ---------- Ext.grid.column.Check */
+/* Adds right mouse-pointer */
+.x-grid-checkcolumn {
+    cursor: pointer;
+}
+
+/* ---------- Ext.toolbar.Toolbar */
+/* Provide better margins */
+.x-toolbar .x-toolbar-item {
+    margin-right: 2px;
+}   
+.x-toolbar .x-toolbar-separator-horizontal {
+	margin-left: 2px !important;
+    margin-right: 4px !important;
+	padding-right: 2px !important;
+}
+
+/* ---------- Sonicle.fullcalendar.Panel */
+/* Fix popover bg: default transparency disturb data reading */
+.fc-popover {
+	background-color: var(--wt-theme-color-surface, #ffffff);
+}

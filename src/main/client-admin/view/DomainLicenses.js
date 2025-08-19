@@ -129,12 +129,12 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainLicenses', {
 					getIconCls: function(v, rec) {
 						if (rec.isValid()) {
 							if (rec.isExpireSoon()) {
-								return 'wt-icon-okwarn';
+								return 'wt-icon-ok-with-warning';
 							} else {
 								return 'wt-icon-ok';
 							}
 						} else if (rec.isActivationPening()) {
-							return 'wt-icon-ok-yellow';
+							return 'wt-icon-ok-warning';
 						} else { // invalid...
 							return 'wt-icon-critical';
 						}
@@ -166,9 +166,9 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainLicenses', {
 							case 'valid':
 								return 'wt-icon-ok';
 							case 'valid-warn':
-								return 'wt-icon-okwarn';
+								return 'wt-icon-ok-with-warning';
 							case 'pending':
-								return 'wt-icon-ok-yellow';
+								return 'wt-icon-ok-warning';
 							default:
 								return 'wt-icon-critical';
 						}

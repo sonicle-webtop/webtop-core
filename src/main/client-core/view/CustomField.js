@@ -584,8 +584,8 @@ Ext.define('Sonicle.webtop.core.view.CustomField', {
 								{
 									xtype: 'sotogglebutton',
 									toggleGroup: propviewGroup,
-									offIconCls: 'wt-icon-propView-hier-gray',
-									onIconCls: 'wt-icon-propView-hier',
+									offIconCls: 'wt-icon-propView-hier-on',
+									onIconCls: 'wt-icon-propView-hier-off',
 									allowDepress: false,
 									pressed: true,
 									toggleHandler: function(s, pressed) {
@@ -594,8 +594,8 @@ Ext.define('Sonicle.webtop.core.view.CustomField', {
 								}, {
 									xtype: 'sotogglebutton',
 									toggleGroup: propviewGroup,
-									offIconCls: 'wt-icon-propView-sorted-gray',
-									onIconCls: 'wt-icon-propView-sorted',
+									offIconCls: 'wt-icon-propView-sorted-off',
+									onIconCls: 'wt-icon-propView-sorted-on',
 									allowDepress: false,
 									pressed: false,
 									toggleHandler: function(s, pressed) {

@@ -316,8 +316,8 @@ Ext.define('Sonicle.webtop.core.view.CustomPanel', {
 								}, {
 									xtype: 'sotogglebutton',
 									toggleGroup: propviewGroup,
-									offIconCls: 'wt-icon-propView-sorted-gray',
-									onIconCls: 'wt-icon-propView-sorted',
+									offIconCls: 'wt-icon-propView-sorted-off',
+									onIconCls: 'wt-icon-propView-sorted-on',
 									allowDepress: false,
 									pressed: false,
 									toggleHandler: function(s, pressed) {

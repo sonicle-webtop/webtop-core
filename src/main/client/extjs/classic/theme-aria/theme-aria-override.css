@@ -1,0 +1,20 @@
+/**************************************/
+/* This file should contain tweaks/fixes for specific theme.
+/**************************************/
+
+@import url("../themes-override.css");
+@import url("../themes-isneptune-override.css");
+
+:root {
+    /* NOT yet used directly as main theme: this is why NO vars are defined here! */
+}
+
+/* ---------- Ext.toolbar.Toolbar */
+.x-btn-default-toolbar-small {
+	background-color: transparent;
+	border-color: transparent;
+}
+.x-btn-default-toolbar-small.x-btn-over {
+	background-color: #da7b19 !important;
+	border-color: transparent;
+}

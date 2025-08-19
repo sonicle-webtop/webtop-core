@@ -1,0 +1,35 @@
+/**************************************/
+/* This file should contain tweaks/fixes for specific theme.
+/**************************************/
+
+@import url("../themes-override.css");
+@import url("../themes-isneptune-override.css");
+
+:root {
+    /* NOT yet used directly as main theme: this is why NO vars are defined here! */
+}
+
+/* ---------- Ext.form.Panel */
+/* Reduce default margin between items lowering bottom-margin */
+.x-autocontainer-form-item,
+.x-anchor-form-item,
+.x-vbox-form-item,
+.x-table-form-item {
+    margin-bottom: 5px;
+}
+
+/* ---------- Ext.form.field.Text */
+/* Show more text lowering LR padding */
+.x-form-text-default {
+    padding-left: 5px;
+    padding-right: 5px;
+}
+
+/* ---------- Ext.grid.column.Action */
+/* Set lighter base color and set darker color on hover */
+.x-action-col-icon {
+    color: #c2c2c2;
+}
+.x-action-col-icon:hover {
+	color: #666666;
+}

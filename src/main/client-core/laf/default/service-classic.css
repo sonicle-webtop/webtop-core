@@ -1,15 +1,4 @@
-@import url("xtheme-override.css");
-@import url("xtheme-classic-override.css");
 @import url("wtheme-classic-override.css");
-
-/*
- * By convention, FontAwesome CSS classes used as iconCls in objects are styled 
- * as glyphs (lighter colored), like using ExtJS's glyph config. This is done in 
- * ad-hoc override in "xtheme-override.css" that applies a new opacity for all 
- * FontAwesome classes (fas, far).
- * With this class we provide a way to reset opacity to its initial value.
- */
-.wt-theme-glyph-reset { opacity: initial !important; }
 
 .wt-tool-hd-wrap {
 	background-image: -webkit-linear-gradient(top, #dfe9f5, #d3e1f1);

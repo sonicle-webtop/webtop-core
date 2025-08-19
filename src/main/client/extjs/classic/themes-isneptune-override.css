@@ -1,0 +1,57 @@
+/**************************************/
+/* This file should contain tweaks/fixes for all "neptune" themes (eg. Neptune, Crisp).
+/* Only for pre-built themes (not customized one using Themer app).
+/**************************************/
+
+/* ---------- Icons */
+/* Force glyph behaviour (light opacity) when using FontAwesome classes as icons */
+.x-btn-icon-el.fas {
+    opacity: 0.6;
+}
+.x-btn-icon-el.far {
+    opacity: 0.6;
+}
+.x-menu-item-icon.fas {
+    opacity: 0.6;
+}
+.x-menu-item-icon.far {
+    opacity: 0.6;
+}
+.x-tab-icon-el.fas {
+    opacity: 0.6;
+}
+.x-tab-icon-el.far {
+    opacity: 0.6;
+}
+.x-form-trigger.fas {
+    opacity: 0.4;
+}
+.x-form-trigger.far {
+    opacity: 0.4;
+}
+
+/* ---------- Ext.form.FieldSet */
+/* Provide better disabled style */
+.x-fieldset.x-item-disabled {
+	opacity: 0.3
+}
+
+/* ---------- Ext.picker.Date */
+/* Style highlight and full dates */
+.x-datepicker-cell.so-datepicker-highlighted {
+    /*background-color: #FFEDD5;*/ /* Orange/100 */
+}
+.x-datepicker-cell.so-datepicker-fulldate > .x-datepicker-date {
+    font-weight: bold !important;
+}
+
+/* ---------- Sonicle.form.field.Display */
+.so-displayfield-clickable:hover {
+    text-decoration: underline;
+    color: var(--wt-theme-color-info);
+}
+
+/* ---------- Sonicle.fullcalendar.Panel */
+.fc-event.fc-daygrid-event:not(.fc-daygrid-dot-event), .fc-event.fc-timegrid-event {
+    border: 1px solid #4d4d4d !important;
+}

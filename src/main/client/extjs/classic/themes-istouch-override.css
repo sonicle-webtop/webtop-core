@@ -1,0 +1,10 @@
+/**************************************/
+/* This file should contain tweaks/fixes for all touch themes.
+/**************************************/
+
+/* ActionColumn: adds some extra spacing between action column icons */
+.x-action-col-icon {
+	margin-left: 8px;
+	margin-right: 8px;
+	font-size: 20px;
+}

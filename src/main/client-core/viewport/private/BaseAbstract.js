@@ -430,7 +430,7 @@ Ext.define('Sonicle.webtop.core.viewport.private.BaseAbstract', {
 							{
 								itemId: 'logout',
 								text: WT.res('accountmenu.logout.lbl'),
-								iconCls: 'fas fa-arrow-right-from-bracket',
+								iconCls: 'wt-icon-logout',
 								handler: 'onAccountMenuButtonClick'
 							}
 						]
@@ -453,13 +453,7 @@ Ext.define('Sonicle.webtop.core.viewport.private.BaseAbstract', {
 						paddingBottom: 0
 					},
 					items: [
-						{
-							xtype: 'splitbutton',
-							reference: 'newbtn',
-							text: WT.plTags.desktop ? WT.res('new.btn-new.lbl') : null,
-							menu: [],
-							handler: 'onNewActionButtonClick'
-						}
+						me.createNewButtonCfg()
 					]
 				}, {
 					xtype: 'container',
@@ -483,6 +477,18 @@ Ext.define('Sonicle.webtop.core.viewport.private.BaseAbstract', {
 					items: menuTbItms
 				}
 			];
+		},
+		
+		createNewButtonCfg: function() {
+			return Sonicle.Utils.applyIfDefined({
+				xtype: 'splitbutton',
+				reference: 'newbtn',
+				text: WT.plTags.desktop ? WT.res('new.btn-new.lbl') : null,
+				menu: [],
+				handler: 'onNewActionButtonClick'
+			}, {
+				ui: !Ext.isEmpty(Ext.theme.ui.button.primary) ? '{primary}' : undefined
+			});
 		},
 		
 		createAvatarButtonCfg: function() {

@@ -1,16 +1,4 @@
-@import url("xtheme-override.css");
-@import url("xtheme-crisp-override.css");
 @import url("wtheme-crisp-override.css");
-
-/*
- * Adjust action colors: base color is too light and add hover color
- */
-.x-action-col-icon {
-    color: #bababa; /* #666666 with alpha 0.45 */
-}
-.x-action-col-icon:hover {
-	color: #666666;
-}
 
 .x-toolbar-default {padding-left: 6px;}
 

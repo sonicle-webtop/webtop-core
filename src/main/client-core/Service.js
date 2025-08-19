@@ -434,6 +434,10 @@ Ext.define('Sonicle.webtop.core.Service', {
 		});
 	},
 	
+	showDebugTheme: function() {
+		WT.createView(this.ID, 'view.DebugTheme').show();
+	},
+	
 	showActivities: function() {
 		WT.createView(this.ID, 'view.Activities').show();
 	},

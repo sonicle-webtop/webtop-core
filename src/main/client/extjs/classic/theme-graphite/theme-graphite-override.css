@@ -1,0 +1,10 @@
+/**************************************/
+/* This file should contain tweaks/fixes for specific theme.
+/**************************************/
+
+@import url("../themes-override.css");
+@import url("../themes-isneptune-override.css");
+
+:root {
+    /* NOT yet used directly as main theme: this is why NO vars are defined here! */
+}

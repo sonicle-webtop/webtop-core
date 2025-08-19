@@ -1,0 +1,112 @@
+/**************************************/
+/* This file should contain tweaks/fixes for specific theme.
+/**************************************/
+
+@import url("../themes-override.css");
+@import url("../themes-custombuiltbased-override.css");
+
+:root {
+    --wt-theme-color-surface: #ffffff; /* White */
+    --wt-theme-color-surface-on: #404040; /* Neutral/700 */
+    --wt-theme-color-surface-on-low: #737373; /* Neutral/500 */
+    --wt-theme-color-surface-ct: #f5f5f5; /* Neutral/100 */
+    --wt-theme-color-surface-ct-high: #e5e5e5; /* Neutral/200 */
+    
+    --wt-theme-color-1: #0e7490; /* Cyan/700 */
+    --wt-theme-color-1-on: #fafafa; /* Neutral/50 */
+    --wt-theme-color-1-ct: #e0f2fe; /* Sky/100 */
+    --wt-theme-color-1-ct-on: #404040; /* Neutral/700 */
+    
+    --wt-theme-color-2: #e5e7eb; /* Neutral/200 */
+    --wt-theme-color-2-on: #404040; /* Neutral/700 */
+    --wt-theme-color-ct-2: #ffffff; /* White */
+    --wt-theme-color-ct-2-on: #e5e5e5; /* Neutral/500 */
+    
+    --wt-theme-color-ok: #047857; /* Emerald/700 */
+    --wt-theme-color-ok-on: #ecfdf5; /* Emerald/50 */
+    --wt-theme-color-ok-ct: #d1fae5; /* Emerald/100 */
+    --wt-theme-color-ok-ct-on: #059669; /* Emerald/600 */
+    --wt-theme-color-warn: #f59e0b; /* Amber/500 */
+    --wt-theme-color-warn-on: #fffbeb; /* Amber/50 */
+    --wt-theme-color-warn-ct: #fef3c7; /* Amber/100 */
+    --wt-theme-color-warn-ct-on: #f59e0b; /* Amber/500 */
+    --wt-theme-color-error: #be123c; /* Rose/700 */
+    --wt-theme-color-error-on: #fff1f2; /* Rose/50 */
+    --wt-theme-color-error-ct: #ffe4e6; /* Rose/100 */
+    --wt-theme-color-error-ct-on: #9f1239; /* Rose/800 */
+    --wt-theme-color-info: #3730a3; /* Indigo/800 */
+    --wt-theme-color-info-on: #eef2ff; /* Indigo/50 */
+    --wt-theme-color-info-ct: #e0e7ff; /* Indigo/100 */
+    --wt-theme-color-info-ct-on: #4338ca; /* Indigo/700 */
+    --wt-theme-color-off: #a3a3a3; /* Neutral/400 */
+    
+    --wt-theme-color-scrollbar-thumb: #d4d4d4; /* Neutral/300 */
+    --wt-theme-color-scrollbar-track: transparent;
+    --wt-theme-color-mask: rgba(107, 114, 128, 0.75); /* Gray/500 @75% */
+    --wt-theme-color-dialog: #ffffff; /* White */
+    --wt-theme-color-dialog-on: #404040; /* Neutral/700 */
+    --wt-theme-color-dialog-hd: #F5F5F5; /* Neutral/100 */
+    --wt-theme-color-dialog-hd-on: #404040; /* Neutral/700 */
+    --wt-theme-color-mbox: #F5F5F5; /* Neutral/100 */
+    --wt-theme-color-mbox-on: #404040; /* Neutral/700 */
+    --wt-theme-color-mbox-hd: #F5F5F5; /* Neutral/100 */
+    --wt-theme-color-mbox-hd-on: #404040; /* Neutral/700 */
+    --wt-theme-color-popup: #737373; /* Neutral/500 */
+    --wt-theme-color-popup-on: #e5e5e5; /* Neutral/200 */
+    --wt-theme-color-topbar: #f5f5f5; /* Neutral/100 */
+    --wt-theme-color-navbar: #f5f5f5; /* Neutral/100 */
+    --wt-theme-color-taskbar: #f5f5f5; /* Neutral/100 */
+    
+    --wt-theme-fontsize-xs: 12px;
+    --wt-theme-fontsize-sm: 14px;
+    --wt-theme-fontsize-base: 16px;
+    --wt-theme-fontsize-lg: 18px;
+    --wt-theme-fontsize-xl: 20px;
+    --wt-theme-fontsize-2xl: 24px;
+    --wt-theme-fontsize-3xl: 30px;
+    --wt-theme-fontsize-4xl: 36px;
+    --wt-theme-fontsize-5xl: 48px;
+    --wt-theme-fontsize-6xl: 64px;
+    --wt-theme-lineheight-xs: 18px;
+    --wt-theme-lineheight-sm: 21px;
+    --wt-theme-lineheight-base: 24px;
+    --wt-theme-lineheight-lg: 27px;
+    --wt-theme-lineheight-xl: 30px;
+    --wt-theme-lineheight-2xl: 36px;
+    --wt-theme-lineheight-3xl: 45px;
+    --wt-theme-lineheight-4xl: 54px;
+    --wt-theme-lineheight-5xl: 72px;
+    --wt-theme-lineheight-6xl: 96px;
+    --wt-theme-fontweight-regular: 400;
+    --wt-theme-fontweight-medium: 500;
+    --wt-theme-fontweight-bold: 500; /* Do NOT use it keep at 500 */
+    
+    --wt-theme-dialog-radius: 4px;
+    --wt-theme-menu-radius: 4px;
+    --wt-theme-field-radius: 4px;
+    --wt-theme-grid-radius: 4px;
+    
+    --fc-border-color: #E5E7EB !Important; /* Gray/200 */
+    --fc-now-indicator-color: var(--wt-theme-color-1) !Important;
+    --fc-neutral-bg-color: #f9fafb !Important; /* Gray/50 */
+    --fc-non-business-color: rgba(229,231,235,.3) !Important; /* Gray/200 */
+    --fc-today-bg-color: #fff7ed !Important; /* Orange/50 */
+    
+    --so-kanban-column-border-radius: 4px;
+    --so-displayfield-clickable-color: #0e7490; /* Cyan/700 */
+    --so-displayfield-clickable-hover-color: #164e63; /* Cyan/900 */
+}
+
+/* ---------- ContextMenu */
+/* Highlight the row that activates the context-menu */
+.x-grid-view .so-contextmenu-owner,
+.x-tree-view .so-contextmenu-owner {
+    background-color: #a3a3a3 !important; /* Neutral/400 */
+}
+
+/* ---------- Ext.menu.Item */
+/* Fix FontAwesome icons vertical position */
+/* <-- USEFUL?
+.x-menu-item-icon.fas { top: 8px; }
+.x-menu-item-icon.far { top: 8px; }
+*/

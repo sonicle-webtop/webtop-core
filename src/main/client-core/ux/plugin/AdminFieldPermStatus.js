@@ -35,6 +35,6 @@ Ext.define('Sonicle.webtop.core.ux.plugin.AdminFieldPermStatus', {
 	extend: 'Sonicle.webtop.core.ux.plugin.FieldPermStatus',
 	alias: 'plugin.wtadminfieldpermstatus',
 	
-	iconCls: 'wt-icon-permission-locked-gray',
-	adminIconCls: 'wt-icon-permission-unlocked-gray'
+	iconCls: 'wt-icon-permission-locked-off',
+	adminIconCls: 'wt-icon-permission-unlocked-off'
 });

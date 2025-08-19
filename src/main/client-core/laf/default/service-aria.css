@@ -1,4 +1,3 @@
-@import url("xtheme-override.css");
 
 .wt-viewport-body {}
 .wt-vieport-dock {}
@@ -43,14 +42,4 @@
 }
 .wt-vieport-dock .x-btn-default-toolbar-small.x-btn-over {
 	background-color: #da7b19 !important;
-}
-
-.x-btn-default-toolbar-small {
-	background-color: transparent;
-	border-color: transparent;
-}
-
-.x-btn-default-toolbar-small.x-btn-over {
-	background-color: #da7b19 !important;
-	border-color: transparent;
 }

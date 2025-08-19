@@ -1,0 +1,153 @@
+/**************************************/
+/* This file should contain tweaks/fixes for specific theme.
+/**************************************/
+
+@import url("../themes-override.css");
+@import url("../themes-isclassic-override.css");
+
+:root {
+    --wt-theme-color-surface: #ffffff; /* White */
+    /*--wt-theme-color-surface-on: */
+    /*--wt-theme-color-surface-on-low: */
+    --wt-theme-color-surface-ct: #ffffff; /* White */
+    /*--wt-theme-color-surface-ct-high: */
+    
+    --wt-theme-color-1: #567CAE;
+    --wt-theme-color-1-on: #f9fafb; /* Gray/50 */
+    /*--wt-theme-color-1-ct: */
+    /*--wt-theme-color-1-ct-on: */
+    /*--wt-theme-color-2: */
+    /*--wt-theme-color-2-on: */
+    /*--wt-theme-color-ct-2: */
+    /*--wt-theme-color-ct-2-on: */
+    
+    --wt-theme-color-ok: #388E3C; /* Green/700 (https://materialui.co/colors/) */
+    --wt-theme-color-ok-on: #ffffff; /* White (https://materialui.co/colors/) */
+    --wt-theme-color-ok-ct: #E8F5E9; /* Green/50 (https://materialui.co/colors/) */
+    --wt-theme-color-ok-ct-on: #43A047; /* Green/600 (https://materialui.co/colors/) */
+    --wt-theme-color-warn: #FFA000; /* Amber/700 (https://materialui.co/colors/) */
+    --wt-theme-color-warn-on: #ffffff; /* White */
+    --wt-theme-color-warn-ct: #FFF8E1; /* Amber/50 (https://materialui.co/colors/) */
+    --wt-theme-color-warn-ct-on: #FFCA28; /* Amber/400 (https://materialui.co/colors/) */
+    --wt-theme-color-error: #D32F2F; /* Red/700 (https://materialui.co/colors/) */
+    --wt-theme-color-error-on: #FAFAFA; /* Grey/50 (https://materialui.co/colors/) */
+    --wt-theme-color-error-ct: #FFEBEE; /* Red/50 (https://materialui.co/colors/) */
+    --wt-theme-color-error-ct-on: #C62828; /* Red/800 (https://materialui.co/colors/) */
+    --wt-theme-color-info: #707070;
+    --wt-theme-color-info-on: #F6F6F6;
+    --wt-theme-color-info-ct: #F6F6F6;
+    --wt-theme-color-info-ct-on: #707070;
+    --wt-theme-color-off: gray;
+    
+    --wt-theme-color-scrollbar-thumb: #bababa;
+    --wt-theme-color-scrollbar-track: transparent;
+    --wt-theme-color-mask: rgba(204, 204, 204, 0.5);
+    --wt-theme-color-dialog: #e8e8e8;
+    --wt-theme-color-dialog-on: #000000;
+    --wt-theme-color-dialog-hd: #e8e8e8;
+    --wt-theme-color-dialog-hd-on: #333333;
+    --wt-theme-color-mbox: #e8e8e8;
+    --wt-theme-color-mbox-on: #000000;
+    --wt-theme-color-mbox-hd: #e8e8e8;
+    --wt-theme-color-mbox-hd-on: #333333;
+    --wt-theme-color-popup: #cccccc;
+    --wt-theme-color-popup-on: #444444;
+    --wt-theme-color-topbar: #e6e6e6;
+    --wt-theme-color-navbar: #e6e6e6;
+    --wt-theme-color-taskbar: #e6e6e6;
+    
+    --wt-theme-fontsize-xs: 8px;
+    --wt-theme-fontsize-sm: 10px;
+    --wt-theme-fontsize-base: 11px;
+    --wt-theme-fontsize-lg: 13px;
+    --wt-theme-fontsize-xl: 15px;
+    /*--wt-theme-fontsize-2xl: */
+    /*--wt-theme-fontsize-3xl: */
+    /*--wt-theme-fontsize-4xl: */
+    /*--wt-theme-fontsize-5xl: */
+    /*--wt-theme-fontsize-6xl: */
+    --wt-theme-fontweight-regular: 500;
+    --wt-theme-fontweight-medium: 600;
+    --wt-theme-fontweight-bold: 600;
+    --wt-theme-lineheight-xs: 9px;
+    --wt-theme-lineheight-sm: 11px;
+    --wt-theme-lineheight-base: 13px;
+    --wt-theme-lineheight-lg: 15px;
+    --wt-theme-lineheight-xl: 17px;
+    /*--wt-theme-lineheight-2xl: */
+    /*--wt-theme-lineheight-3xl: */
+    /*--wt-theme-lineheight-4xl: */
+    /*--wt-theme-lineheight-5xl: */
+    /*--wt-theme-lineheight-6xl: */
+    
+    --wt-theme-dialog-radius: 0px;
+    --wt-theme-menu-radius: 0px;
+    --wt-theme-field-radius: 0px;
+    --wt-theme-grid-radius: 0px;
+}
+
+/* ---------- Ext.grid.column.Action */
+/* Set lighter base color and set darker color on hover */
+.x-action-col-icon {
+    color: #bababa; /* #666666 with alpha 0.45 */
+}
+.x-action-col-icon:hover {
+	color: #666666;
+}
+
+/* ---------- Ext.button.Button */
+/* Set button glyph color ()missing in original css definitions) */
+.x-btn-icon-el {
+	color: #666666;
+}
+
+/* ---------- Ext.button.Segmented */
+/* Maybe add another for vertical ??? */
+/* Fix missing right-border on pressed items (not the initial one) */
+.x-segmented-button-item-horizontal:has(+ .x-segmented-button-item-horizontal.x-btn-pressed) {
+    border-right: 1px solid #9d9d9d;
+}
+/* Fix missing right-border on highlight items (not the initial one) */
+.x-segmented-button-item-horizontal:has(+ .x-segmented-button-item-horizontal.x-btn-over) {
+    border-right: 1px solid #9d9d9d;
+}
+
+/* ---------- Ext.tree.Panel */
+/* Avoid icon fall to left side, due to missing left padding */
+.x-grid-cell-inner-treecolumn {
+	padding-left: 3px;
+}
+
+/* ---------- Ext.form.field.Trigger */
+.x-form-trigger {
+    /* Classic theme fields has triggers outside field, so reset back tweaked opacity (see xtheme-override.css) */
+    opacity: 1 !important;
+}
+/* Hide ugly bottom border only for icon-triggers (eg. not for combo's arrow) */
+.x-form-trigger:not(.x-form-arrow-trigger) {
+    border-bottom: none;
+}
+/* Fix left-border when displayed on the right (thanks to Sonicle.overrides.form.field.Text) */
+.x-form-trigger-wrap > .x-form-trigger:first-child {
+	border-left: 1px solid #b5b8c8;
+}
+
+/* ---------- Sonicle.form.field.Combo */
+/* Reduce swatch to make it looks better */
+.so-combo-swatch {
+    top: 1px;
+    width: 14px;
+    height: 14px;
+}
+
+/* ---------- Sonicle.form.Separator */
+/* Give extra spacing from above objects */
+.x-fieldset.so-form-separator {
+    margin-top: 20px;
+}
+
+/* ---------- Sonicle.plugin.FieldIcon */
+/* Do NOT apply table related autosizing on icon-wrapper element */
+.x-field:has(.so-fieldicon-wrap) {
+    table-layout: auto;
+}

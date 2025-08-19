@@ -1,0 +1,112 @@
+/**************************************/
+/* This file should contain tweaks/fixes for specific theme.
+/**************************************/
+
+@import url("../themes-override.css");
+@import url("../themes-isneptune-override.css");
+
+:root {
+    --wt-theme-color-surface: #ffffff; /* White */
+    /*--wt-theme-color-surface-on: */
+    /*--wt-theme-color-surface-on-low: */
+    --wt-theme-color-surface-ct: #e0ebf3;
+    /*--wt-theme-color-surface-ct-high: */
+    
+    /*--wt-theme-color-1: */
+    /*--wt-theme-color-1-on: */
+    /*--wt-theme-color-1-ct: */
+    /*--wt-theme-color-1-ct-on: */
+    /*--wt-theme-color-2: */
+    /*--wt-theme-color-2-on: */
+    /*--wt-theme-color-ct-2: */
+    /*--wt-theme-color-ct-2-on: */
+    
+    --wt-theme-color-ok: #388E3C; /* Green/700 (https://materialui.co/colors/) */
+    --wt-theme-color-ok-on: #ffffff; /* White (https://materialui.co/colors/) */
+    --wt-theme-color-ok-ct: #E8F5E9; /* Green/50 (https://materialui.co/colors/) */
+    --wt-theme-color-ok-ct-on: #43A047; /* Green/600 (https://materialui.co/colors/) */
+    --wt-theme-color-warn: #FFA000; /* Amber/700 (https://materialui.co/colors/) */
+    --wt-theme-color-warn-on: #ffffff; /* White */
+    --wt-theme-color-warn-ct: #FFF8E1; /* Amber/50 (https://materialui.co/colors/) */
+    --wt-theme-color-warn-ct-on: #FFCA28; /* Amber/400 (https://materialui.co/colors/) */
+    --wt-theme-color-error: #D32F2F; /* Red/700 (https://materialui.co/colors/) */
+    --wt-theme-color-error-on: #FAFAFA; /* Grey/50 (https://materialui.co/colors/) */
+    --wt-theme-color-error-ct: #FFEBEE; /* Red/50 (https://materialui.co/colors/) */
+    --wt-theme-color-error-ct-on: #C62828; /* Red/800 (https://materialui.co/colors/) */
+    --wt-theme-color-info: #0276C9;
+    --wt-theme-color-info-on: #E3F2FD; /* Blue/50 (https://materialui.co/colors/) */
+    --wt-theme-color-info-ct: #BBDEFB; /* Blue/100 (https://materialui.co/colors/) */
+    --wt-theme-color-info-ct-on: #3892D4;
+    --wt-theme-color-off: #b4b4b4;
+    
+    --wt-theme-color-scrollbar-thumb: #e0e0e0;
+    --wt-theme-color-scrollbar-track: transparent;
+    --wt-theme-color-mask: rgba(255, 255, 255, 0.7);
+    --wt-theme-color-dialog: #ffffff;
+    --wt-theme-color-dialog-on: #000000;
+    --wt-theme-color-dialog-hd: #f5f5f5;
+    --wt-theme-color-dialog-hd-on: #157fcc;
+    --wt-theme-color-mbox: #ffffff;
+    --wt-theme-color-mbox-on: #000000;
+    --wt-theme-color-mbox-hd: #f5f5f5;
+    --wt-theme-color-mbox-hd-on: #157fcc;
+    --wt-theme-color-popup: #ebf4fb;
+    --wt-theme-color-popup-on: #000000;
+    --wt-theme-color-topbar: #fafafa;
+    --wt-theme-color-navbar: #fafafa;
+    --wt-theme-color-taskbar: #fafafa;
+    
+    --wt-theme-fontsize-xs: 10px;
+    --wt-theme-fontsize-sm: 12px;
+    --wt-theme-fontsize-base: 13px;
+    --wt-theme-fontsize-lg: 15px;
+    --wt-theme-fontsize-xl: 17px;
+    /*--wt-theme-fontsize-2xl: */
+    /*--wt-theme-fontsize-3xl: */
+    /*--wt-theme-fontsize-4xl: */
+    /*--wt-theme-fontsize-5xl: */
+    /*--wt-theme-fontsize-6xl: */
+    --wt-theme-fontweight-regular: 500;
+    --wt-theme-fontweight-medium: 700;
+    --wt-theme-fontweight-bold: 700;
+    --wt-theme-lineheight-xs: 11px;
+    --wt-theme-lineheight-sm: 13px;
+    --wt-theme-lineheight-base: 15px;
+    --wt-theme-lineheight-lg: 17px;
+    --wt-theme-lineheight-xl: 19px;
+    /*--wt-theme-lineheight-2xl: */
+    /*--wt-theme-lineheight-3xl: */
+    /*--wt-theme-lineheight-4xl: */
+    /*--wt-theme-lineheight-5xl: */
+    /*--wt-theme-lineheight-6xl: */
+    
+    --wt-theme-dialog-radius: 0px;
+    --wt-theme-menu-radius: 0px;
+    --wt-theme-field-radius: 0px;
+    --wt-theme-grid-radius: 0px;
+}
+
+/* ---------- Sonicle.form.Separator */
+/* Give extra spacing from above objects */
+.x-fieldset.so-form-separator {
+    margin-top: 20px;
+}
+
+/* ---------- Ext.panel.Panel */
+/* Force panel's body BG to 'white' when using 'border' layout */
+.x-panel-body-default.x-border-layout-ct {
+	background-color: #fff;
+}
+/* Force splitter BG to its gray to avoid previous panel override to set it white  */
+.x-splitter {
+    background-color: #cfcfcf;
+}
+
+/* ---------- Ext.grid.column.Action */
+/* Set lighter base color and set darker color on hover */
+.x-action-col-icon {
+    color: #bababa; /* #666666 with alpha 0.45 */
+}
+.x-action-col-icon:hover {
+	color: #666666;
+}

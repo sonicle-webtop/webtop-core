@@ -1,5 +1,3 @@
-@import url("xtheme-override.css");
-@import url("xtheme-neptune-override.css");
 @import url("wtheme-neptune-override.css");
 
 :root {
@@ -54,22 +52,3 @@
 /* accountmenu: pad user-info */
 .wt-accountmenu-label1 { padding-top: 5px; }
 .wt-accountmenu-label2 { padding-bottom: 5px; }
-
-/*
- * By convention, FontAwesome CSS classes used as iconCls in objects are styled 
- * as glyphs (lighter colored), like using ExtJS's glyph config. This is done in 
- * ad-hoc override in "xtheme-override.css" that applies a new opacity for all 
- * FontAwesome classes (fas, far).
- * With this class we provide a way to reset opacity to its initial value.
- */
-.wt-theme-glyph-reset { opacity: initial !important; }
-
-/*
- * Adjust action colors: base color is too light and add hover color
- */
-.x-action-col-icon {
-    color: #bababa; /* #666666 with alpha 0.45 */
-}
-.x-action-col-icon:hover {
-	color: #666666;
-}

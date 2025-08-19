@@ -1201,19 +1201,23 @@ public class WebTopSession {
 		String extBaseTheme = UIBoot.getBaseExtJSTheme(extThemeName);
 		String extLang = "-" + locale.getLanguage();
 		
-		// Main: library + locales
+		// ExtJS: core library + locales
 		js.appManifest.addJs(EXTJS_PATH + "ext-all" + extRtl + extDebug + ".js");
 		js.appManifest.addJs(EXTJS_PATH + js.appManifest.toolkit + "/locale/" + "locale" + extLang + extDebug + ".js");
-		// Themes: library (overrides) + styles
-		js.appManifest.addJs(EXTJS_PATH + js.appManifest.toolkit + "/" + "theme-" + extTheme + "/" + "theme-" + extTheme + extDebug + ".js");
-		js.appManifest.addJs(EXTJS_PATH + js.appManifest.toolkit + "/" + "theme-" + extTheme + "/" + "theme-" + extTheme + "-override" + extDebug + ".js");
-		js.appManifest.addCss(EXTJS_PATH + js.appManifest.toolkit + "/" + "theme-" + extTheme + "/resources/" + "theme-" + extTheme + "-all" + extRtl + extDebug + ".css");
-		// Charts: library + styles
+		// ExtJS: themes library + styles (see below for overrides)
+		js.appManifest.addJs(EXTJS_PATH + js.appManifest.toolkit + "/" + "theme-" + extTheme + "/" + "theme-" + extTheme + extDebug + ".js"); // Original theme's JS file
+		js.appManifest.addCss(EXTJS_PATH + js.appManifest.toolkit + "/" + "theme-" + extTheme + "/resources/" + "theme-" + extTheme + "-all" + extRtl + extDebug + ".css"); // Original theme's CSS file
+		// ExtJS: charts library + styles
 		js.appManifest.addJs(EXTJS_PATH + "packages/charts/" + js.appManifest.toolkit + "/" + "charts" + extDebug + ".js");
 		js.appManifest.addCss(EXTJS_PATH + "packages/charts/" + js.appManifest.toolkit + "/" + extBaseTheme + "/resources/" + "charts-all" + extRtl + extDebug + ".css");
-		// UX: library + styles
+		// ExtJS: UX library + styles
 		js.appManifest.addJs(EXTJS_PATH + "packages/ux/" + js.appManifest.toolkit + "/" + "ux" + extDebug + ".js");
 		js.appManifest.addCss(EXTJS_PATH + "packages/ux/" + js.appManifest.toolkit + "/" + extBaseTheme + "/resources/" + "ux-all" + extRtl + extDebug + ".css");
+		// ExtJS: themes overrides
+		js.appManifest.addJs(EXTJS_PATH + js.appManifest.toolkit + "/" + "theme-" + extTheme + "/" + "theme-" + extTheme + "-override" + extDebug + ".js"); // Supports overriding theme's JS file
+		//TODO: add debug
+		js.appManifest.addCss(EXTJS_PATH + js.appManifest.toolkit + "/" + "theme-" + extTheme + "/" + "theme-" + extTheme + "-override" + ".css"); // Supports overriding theme's CSS file
+		
 		// Fonts: styles
 		js.appManifest.addCss(EXTJS_PATH + "packages/font-awesome/resources/" + "font-awesome-all" + extRtl + extDebug + ".css");
 		js.appManifest.addCss(EXTJS_PATH + "packages/font-awesome/resources/vendor/6.4.2/css/fontawesome.min.css");
