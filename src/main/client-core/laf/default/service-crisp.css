@@ -1,5 +1,2 @@
+@import url("xtheme-override.css");
 @import url("wtheme-crisp-override.css");
-
-.x-toolbar-default {padding-left: 6px;}
-
-.wt-modelview-toolbar { padding-right: 6px; }

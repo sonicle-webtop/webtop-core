@@ -1,5 +1,7 @@
+@import url("xtheme-override.css");
 @import url("wtheme-classic-override.css");
 
+/* ---------- WT Tool-Header wrap */
 .wt-tool-hd-wrap {
 	background-image: -webkit-linear-gradient(top, #dfe9f5, #d3e1f1);
 }
@@ -7,8 +9,3 @@
 .wt-fieldspanel .x-panel-bodyWrap .x-panel-body:first-child {
 	background: none;
 }
-
-
-.x-toolbar-default {padding-left: 6px;}
-
-.wt-modelview-toolbar { padding-right: 6px; }

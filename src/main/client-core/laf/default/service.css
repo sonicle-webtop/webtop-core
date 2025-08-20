@@ -107,6 +107,7 @@
 .wt-glyph-menu-meatballs:before { content: '\f141'; font: var(--fa-font-solid); } /* horizontal dots */
 .wt-glyph-menu-hamburger:before { content: '\f0c9'; font: var(--fa-font-solid); } /* horizontal lines */
 .wt-glyph-menu-bento:before { content: '\f58d'; font: var(--fa-font-solid); } /* 3x3 dots grid */
+.wt-glyph-ai:before { content: '\f5dc'; font: var(--fa-font-solid); }
 /* ---------- Icons (actions) */
 .wt-icon-add { background-image: url('act-add_16.svg') !important; background-size: contain; }
 .wt-icon-open { background-image: url('act-open_16.svg') !important; background-size: contain; }
@@ -168,6 +169,7 @@
 .wt-icon-priority4-high { background-image: url('priority4-high_16.svg') !important; background-size: contain; }
 .wt-icon-priority4-critical { background-image: url('priority4-critical_16.svg') !important; background-size: contain; }
 /* ---------- Icons (base items) */
+.wt-icon-ai { background-image: url('ai_16.svg') !important; background-size: contain; }
 .wt-icon-platform-win { background-image: url('platform-win_16.svg') !important; background-size: contain; }
 .wt-icon-platform-mac { background-image: url('platform-mac_16.svg') !important; background-size: contain; }
 .wt-icon-search-adv { background-image: url('search-adv_16.svg') !important; background-size: contain; }
@@ -231,8 +233,8 @@
 .wt-icon-htmled-pre { background-image: url('htmleditor/pre_16.svg') !important; background-size: contain; }
 .wt-icon-htmled-indent { background-image: url('htmleditor/indent_16.svg') !important; background-size: contain; }
 .wt-icon-htmled-outdent { background-image: url('htmleditor/outdent_16.svg') !important; background-size: contain; }
-.wt-icon-htmled-lowercase { background-image: url('htmleditor/character-case_16.svg') !important; background-size: contain; }
-.wt-icon-htmled-uppercase { background-image: url('htmleditor/character-case_16.svg') !important; background-size: contain; }
+.wt-icon-htmled-lowercase { background-image: url('htmleditor/character-lowercase_16.svg') !important; background-size: contain; }
+.wt-icon-htmled-uppercase { background-image: url('htmleditor/character-uppercase_16.svg') !important; background-size: contain; }
 .wt-icon-htmled-clearformat { background-image: url('htmleditor/clearformat_16.svg') !important; background-size: contain; }
 .wt-icon-htmled-alignCenter { background-image: url('htmleditor/align-center_16.svg') !important; background-size: contain; }
 .wt-icon-htmled-alignJustify { background-image: url('htmleditor/align-justify_16.svg') !important; background-size: contain; }

@@ -1,6 +1,8 @@
+@import url("xtheme-override.css");
 @import url("wtheme-gray-override.css");
 
 /* ---------- WT Tool-Header wrap */
+/* Emulate linear-gradient used in theme's headers */
 .wt-tool-hd-wrap {
 	background-image: -webkit-linear-gradient(top, #e6e6e6, #efefef);
 }
@@ -8,8 +10,3 @@
 .wt-fieldspanel .x-panel-bodyWrap .x-panel-body:first-child {
 	background: none;
 }
-
-
-.x-toolbar-default {padding-left: 6px;}
-
-.wt-modelview-toolbar { padding-right: 6px; }
