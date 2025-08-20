@@ -1,10 +1,12 @@
-/*@import url("xtheme-webtop-light-override.css");*/
+@import url("xtheme-override.css");
 @import url("wtheme-webtop-light-override.css");
 
-
-
-
-
+/* ---------- Icons (others) */
+.wt-icon-logout { background-image: url('logout_16.svg') !important; background-size: contain; } .wt-icon-logout:before { content: ''; }
+/* ---------- Icons (actions) */
+.wt-dangerzone .wt-icon-trash { background-image: url('act-trash-danger_16.svg') !important; background-size: contain; }
+.wt-dangerzone .wt-icon-delete { background-image: url('act-remove-danger_16.svg') !important; background-size: contain; }
+/* ---------- Icons (base items) */
 .wt-icon-dock-none-on { background-image: url('dock-none-on_16.svg') !important; background-size: contain; }
 .wt-icon-dock-none,
 .wt-icon-dock-none-off { background-image: url('dock-none-off_16.svg') !important; background-size: contain; }
@@ -20,13 +22,6 @@
 .wt-icon-dock-bottom-on { background-image: url('dock-bottom-on_16.svg') !important; background-size: contain; }
 .wt-icon-dock-bottom,
 .wt-icon-dock-bottom-off { background-image: url('dock-bottom-off_16.svg') !important; background-size: contain; }
-/* ---------- Icons (others) */
-.wt-icon-logout { background-image: url('logout_16.svg') !important; background-size: contain; } .wt-icon-logout:before { content: ''; }
-/* ---------- Icons (actions) */
-.wt-dangerzone .wt-icon-trash { background-image: url('act-trash-danger_16.svg') !important; background-size: contain; }
-.wt-dangerzone .wt-icon-delete { background-image: url('act-remove-danger_16.svg') !important; background-size: contain; }
-
-/* ---------- Icons (base items) */
 
 .wt-menuitem-dock-none-checked .x-menu-item-icon-default.x-menu-item-checkbox { background-image: url('dock-none-on_16.svg') !important; background-size: contain; }
 .wt-menuitem-dock-none-unchecked .x-menu-item-icon-default.x-menu-item-checkbox { background-image: url('dock-none-off_16.svg') !important; background-size: contain; }
