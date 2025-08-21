@@ -1,23 +1,4 @@
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-neutral/sass/var/tab/Tab.scss:4065 */
-.x-tab-focus.x-tab-active .x-tab-default-right-tl,
-.x-tab-focus.x-tab-active .x-tab-default-right-bl,
-.x-tab-focus.x-tab-active .x-tab-default-right-tr,
-.x-tab-focus.x-tab-active .x-tab-default-right-br,
-.x-tab-focus.x-tab-active .x-tab-default-right-tc,
-.x-tab-focus.x-tab-active .x-tab-default-right-bc {
-    background-image: url(images/tab/tab-default-right-focus-active-corners.gif);
-}
-/* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-neutral/sass/var/tab/Tab.scss:4074 */
-.x-tab-focus.x-tab-active .x-tab-default-right-ml,
-.x-tab-focus.x-tab-active .x-tab-default-right-mr {
-    background-image: url(images/tab/tab-default-right-focus-active-sides.gif);
-}
-/* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-neutral/sass/var/tab/Tab.scss:4079 */
-.x-tab-focus.x-tab-active .x-tab-default-right-mc {
-    background-repeat: repeat-x;
-    background-image: url(images/tab/tab-default-right-focus-active-fbg.gif);
-}
-/* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-neutral/sass/var/tab/Tab.scss:4065 */
 .x-tab.x-tab-disabled .x-tab-default-right-tl,
 .x-tab.x-tab-disabled .x-tab-default-right-bl,
 .x-tab.x-tab-disabled .x-tab-default-right-tr,
@@ -15030,4 +15011,32 @@ a.x-btn:active {
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:383 */
 .x-btn-button-icon-medium-bc {
     background-position: 0 -4px;
+}
+/* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:388 */
+.x-btn-button-icon-medium-tr,
+.x-btn-button-icon-medium-br,
+.x-btn-button-icon-medium-mr {
+    padding-right: 4px;
+}
+/* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:394 */
+.x-btn-button-icon-medium-tl,
+.x-btn-button-icon-medium-bl,
+.x-btn-button-icon-medium-ml {
+    padding-left: 4px;
+}
+/* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:400 */
+.x-btn-button-icon-medium-tc {
+    height: 4px;
+}
+/* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:403 */
+.x-btn-button-icon-medium-bc {
+    height: 4px;
+}
+/* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:464 */
+.x-btn-button-icon-medium-mc {
+    padding: 4px 5px 4px 5px;
+}
+/* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-neutral/sass/var/button/Button.scss:2463 */
+.x-btn-button-icon-medium {
+    border-color: transparent;
 }

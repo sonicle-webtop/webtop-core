@@ -1,56 +1,3 @@
-/* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-neutral/sass/var/button/Button.scss:2603 */
-.x-btn-arrow-bottom > .x-btn-button-button-secondary-small,
-.x-btn-split-bottom > .x-btn-button-button-secondary-small {
-    padding-bottom: 6px;
-}
-/* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-neutral/sass/var/button/Button.scss:2609 */
-.x-btn-wrap-button-secondary-small.x-btn-arrow-right:after {
-    width: 18px;
-    content: '\f0d7';
-    font: 16px/1 'Font Awesome 5 Free';
-    color: #f5f5f5;
-}
-/* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-neutral/sass/var/button/Button.scss:2636 */
-.x-btn-wrap-button-secondary-small.x-btn-arrow-bottom:after {
-    height: 12px;
-    content: '\f0d7';
-    font: 16px/12px 'Font Awesome 5 Free';
-    color: #f5f5f5;
-}
-/* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-neutral/sass/var/button/Button.scss:2663 */
-.x-btn-wrap-button-secondary-small.x-btn-split-right > .x-btn-button {
-    padding-right: 7px;
-}
-/* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-neutral/sass/var/button/Button.scss:2666 */
-.x-btn-wrap-button-secondary-small.x-btn-split-right > .x-btn-button.x-rtl {
-    padding-right: 0;
-    padding-left: 7px;
-}
-/* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-neutral/sass/var/button/Button.scss:2671 */
-.x-btn-wrap-button-secondary-small.x-btn-split-right > .x-btn-button:after {
-    border-right: 1px solid #f5f5f5;
-}
-/* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-neutral/sass/var/button/Button.scss:2676 */
-.x-btn-wrap-button-secondary-small.x-btn-split-right:after {
-    width: 20px;
-    content: '\f0d7';
-    font: 16px/1 'Font Awesome 5 Free';
-    color: #f5f5f5;
-    padding-left: 7px;
-}
-/* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-neutral/sass/var/button/Button.scss:2692 */
-.x-btn-wrap-button-secondary-small.x-rtl.x-btn-split-right:after {
-    padding-left: 0;
-    padding-right: 7px;
-}
-/* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-neutral/sass/var/button/Button.scss:2702 */
-.x-btn-wrap-button-secondary-small.x-btn-split-bottom {
-    margin-bottom: -6px;
-}
-/* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-neutral/sass/var/button/Button.scss:2704 */
-.x-btn-wrap-button-secondary-small.x-btn-split-bottom > .x-btn-button:after {
-    border-bottom: 1px solid #f5f5f5;
-}
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-neutral/sass/var/button/Button.scss:2715 */
 .x-btn-wrap-button-secondary-small.x-btn-split-bottom:after {
     height: 20px;
@@ -3701,4 +3648,365 @@
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-neutral/sass/var/button/Button.scss:3299 */
 .x-button-button-segmented-medium-cell > .x-grid-cell-inner >.x-btn-button-segmented-medium {
     vertical-align: top;
+}
+/* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-neutral/sass/var/panel/Panel.scss:799 */
+.x-panel-panel-kanbancolumn {
+    border-color: #f5f5f5;
+    padding: 0;
+}
+/* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-neutral/sass/var/panel/Panel.scss:802 */
+.x-panel-panel-kanbancolumn.x-masked {
+    border-color: #fafafa;
+}
+/* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-neutral/sass/var/panel/Panel.scss:810 */
+.x-panel-header-panel-kanbancolumn {
+    font-size: 16px;
+    border: 1px solid #f5f5f5;
+}
+/* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-neutral/sass/var/panel/Panel.scss:842 */
+.x-panel-header-panel-kanbancolumn-horizontal {
+    padding: 11px 15px 12px;
+}
+/* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-neutral/sass/var/panel/Panel.scss:846 */
+.x-panel-header-panel-kanbancolumn-horizontal .x-panel-header-panel-kanbancolumn-tab-bar {
+    margin-top: -11px;
+    margin-bottom: -12px;
+}
+/* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-neutral/sass/var/panel/Panel.scss:854 */
+.x-panel-header-panel-kanbancolumn-horizontal.x-header-noborder {
+    padding: 12px 16px 12px 16px;
+}
+/* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-neutral/sass/var/panel/Panel.scss:858 */
+.x-panel-header-panel-kanbancolumn-horizontal.x-header-noborder .x-panel-header-panel-kanbancolumn-tab-bar {
+    margin-top: -12px;
+    margin-bottom: -12px;
+}
+/* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-neutral/sass/var/panel/Panel.scss:866 */
+.x-panel-header-panel-kanbancolumn-vertical {
+    padding: 15px 11px 15px 12px;
+}
+/* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-neutral/sass/var/panel/Panel.scss:870 */
+.x-panel-header-panel-kanbancolumn-vertical .x-panel-header-panel-kanbancolumn-tab-bar {
+    margin-right: -11px;
+    margin-left: -12px;
+}
+/* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-neutral/sass/var/panel/Panel.scss:878 */
+.x-panel-header-panel-kanbancolumn-vertical.x-header-noborder {
+    padding: 16px 12px 16px 12px;
+}
+/* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-neutral/sass/var/panel/Panel.scss:882 */
+.x-panel-header-panel-kanbancolumn-vertical.x-header-noborder .x-panel-header-panel-kanbancolumn-tab-bar {
+    margin-right: -12px;
+    margin-left: -12px;
+}
+/* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-neutral/sass/var/panel/Panel.scss:891 */
+.x-rtl.x-panel-header-panel-kanbancolumn-vertical {
+    padding: 15px 12px 15px 11px;
+}
+/* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-neutral/sass/var/panel/Panel.scss:895 */
+.x-rtl.x-panel-header-panel-kanbancolumn-vertical .x-panel-header-panel-kanbancolumn-tab-bar {
+    margin-left: -11px;
+    margin-right: -12px;
+}
+/* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-neutral/sass/var/panel/Panel.scss:903 */
+.x-rtl.x-panel-header-panel-kanbancolumn-vertical.x-header-noborder {
+    padding: 16px 12px 16px 12px;
+}
+/* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-neutral/sass/var/panel/Panel.scss:907 */
+.x-rtl.x-panel-header-panel-kanbancolumn-vertical.x-header-noborder .x-panel-header-panel-kanbancolumn-tab-bar {
+    margin-left: -12px;
+    margin-right: -12px;
+}
+/* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-neutral/sass/var/panel/Panel.scss:916 */
+.x-panel-header-title-panel-kanbancolumn {
+    color: #404040;
+    font-size: 16px;
+    font-weight: 400;
+    font-family: Inter, sans-serif;
+    line-height: 20px;
+}
+/* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-neutral/sass/var/panel/Panel.scss:929 */
+.x-keyboard-mode .x-panel-header-title-panel-kanbancolumn.x-title-focus {
+    outline: 1px solid #fff;
+    outline-offset: 2px;
+}
+/* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/css-outline.scss:63 */
+.x-ie .x-keyboard-mode .x-panel-header-title-panel-kanbancolumn.x-title-focus,
+.x-ie10p .x-keyboard-mode .x-panel-header-title-panel-kanbancolumn.x-title-focus,
+.x-edge .x-keyboard-mode .x-panel-header-title-panel-kanbancolumn.x-title-focus {
+    outline: none;
+}
+/* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/css-outline.scss:39 */
+.x-ie .x-keyboard-mode .x-panel-header-title-panel-kanbancolumn.x-title-focus:after,
+.x-ie10p .x-keyboard-mode .x-panel-header-title-panel-kanbancolumn.x-title-focus:after,
+.x-edge .x-keyboard-mode .x-panel-header-title-panel-kanbancolumn.x-title-focus:after {
+    position: absolute;
+    content: ' ';
+    top: -3px;
+    right: -3px;
+    bottom: -3px;
+    left: -3px;
+    border: 1px solid #fff;
+    pointer-events: none;
+}
+/* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-neutral/sass/var/panel/Panel.scss:950 */
+.x-panel-header-title-panel-kanbancolumn > .x-title-text-panel-kanbancolumn {
+    text-transform: none;
+    padding: 0;
+}
+/* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-neutral/sass/var/panel/Panel.scss:997 */
+.x-panel-header-title-panel-kanbancolumn > .x-title-icon-wrap-panel-kanbancolumn.x-title-icon-top {
+    height: 24px;
+    padding-bottom: 8px;
+}
+/* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-neutral/sass/var/panel/Panel.scss:1002 */
+.x-panel-header-title-panel-kanbancolumn > .x-title-icon-wrap-panel-kanbancolumn.x-title-icon-right {
+    width: 24px;
+    padding-left: 8px;
+}
+/* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-neutral/sass/var/panel/Panel.scss:1007 */
+.x-panel-header-title-panel-kanbancolumn > .x-title-icon-wrap-panel-kanbancolumn.x-title-icon-right.x-rtl {
+    padding-left: 0;
+    padding-right: 8px;
+}
+/* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-neutral/sass/var/panel/Panel.scss:1014 */
+.x-panel-header-title-panel-kanbancolumn > .x-title-icon-wrap-panel-kanbancolumn.x-title-icon-bottom {
+    height: 24px;
+    padding-top: 8px;
+}
+/* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-neutral/sass/var/panel/Panel.scss:1019 */
+.x-panel-header-title-panel-kanbancolumn > .x-title-icon-wrap-panel-kanbancolumn.x-title-icon-left {
+    width: 24px;
+    padding-right: 8px;
+}
+/* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-neutral/sass/var/panel/Panel.scss:1024 */
+.x-panel-header-title-panel-kanbancolumn > .x-title-icon-wrap-panel-kanbancolumn.x-title-icon-left.x-rtl {
+    padding-right: 0;
+    padding-left: 8px;
+}
+/* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-neutral/sass/var/panel/Panel.scss:1031 */
+.x-panel-header-title-panel-kanbancolumn > .x-title-icon-wrap-panel-kanbancolumn > .x-title-icon-panel-kanbancolumn {
+    width: 16px;
+    height: 16px;
+    font-size: 16px;
+    color: #404040;
+    background-position: center center;
+}
+/* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-neutral/sass/var/panel/Panel.scss:1051 */
+.x-ie8 .x-panel-header-title-panel-kanbancolumn > .x-title-icon-wrap-panel-kanbancolumn > .x-title-icon-panel-kanbancolumn.x-title-glyph {
+    color: #404040;
+}
+/* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-neutral/sass/var/panel/Panel.scss:1062 */
+.x-panel-body-panel-kanbancolumn {
+    background: #fff;
+    border-color: #d1d1d1;
+    color: #404040;
+    font-size: 13px;
+    font-weight: 400;
+    font-family: Inter, sans-serif;
+    border-width: 1px;
+    border-style: solid;
+}
+/* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-neutral/sass/var/panel/Panel.scss:1226 */
+.x-panel-header-panel-kanbancolumn {
+    background-image: none;
+    background-color: #fff;
+}
+/* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-neutral/sass/var/panel/Panel.scss:1230 */
+.x-panel-header-panel-kanbancolumn-vertical {
+    background-image: none;
+    background-color: #fff;
+}
+/* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-neutral/sass/var/panel/Panel.scss:1235 */
+.x-rtl.x-panel-header-panel-kanbancolumn-vertical {
+    background-image: none;
+    background-color: #fff;
+}
+/* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-neutral/sass/var/panel/Panel.scss:1288 */
+.x-panel .x-panel-header-panel-kanbancolumn-collapsed-border-top {
+    border-bottom-width: 1px !important;
+}
+/* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-neutral/sass/var/panel/Panel.scss:1292 */
+.x-panel .x-panel-header-panel-kanbancolumn-collapsed-border-right {
+    border-left-width: 1px !important;
+}
+/* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-neutral/sass/var/panel/Panel.scss:1296 */
+.x-panel .x-panel-header-panel-kanbancolumn-collapsed-border-bottom {
+    border-top-width: 1px !important;
+}
+/* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-neutral/sass/var/panel/Panel.scss:1300 */
+.x-panel .x-panel-header-panel-kanbancolumn-collapsed-border-left {
+    border-right-width: 1px !important;
+}
+/* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-neutral/sass/var/panel/Panel.scss:1336 */
+.x-panel-header-panel-kanbancolumn-horizontal .x-tool-after-title {
+    margin: 0 0 0 6px;
+}
+/* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-neutral/sass/var/panel/Panel.scss:1341 */
+.x-panel-header-panel-kanbancolumn-horizontal .x-rtl.x-tool-after-title {
+    margin: 0 6px 0 0;
+}
+/* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-neutral/sass/var/panel/Panel.scss:1346 */
+.x-panel-header-panel-kanbancolumn-horizontal .x-tool-before-title {
+    margin: 0 6px 0 0;
+}
+/* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-neutral/sass/var/panel/Panel.scss:1351 */
+.x-panel-header-panel-kanbancolumn-horizontal .x-rtl.x-tool-before-title {
+    margin: 0 0 0 6px;
+}
+/* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-neutral/sass/var/panel/Panel.scss:1358 */
+.x-panel-header-panel-kanbancolumn-vertical .x-tool-after-title {
+    margin: 6px 0 0 0;
+}
+/* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-neutral/sass/var/panel/Panel.scss:1363 */
+.x-panel-header-panel-kanbancolumn-vertical .x-rtl.x-tool-after-title {
+    margin: 6px 0 0 0;
+}
+/* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-neutral/sass/var/panel/Panel.scss:1368 */
+.x-panel-header-panel-kanbancolumn-vertical .x-tool-before-title {
+    margin: 0 0 6px 0;
+}
+/* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-neutral/sass/var/panel/Panel.scss:1373 */
+.x-panel-header-panel-kanbancolumn-vertical .x-rtl.x-tool-before-title {
+    margin: 0 0 6px 0;
+}
+/* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-neutral/sass/var/panel/Panel.scss:1381 */
+.x-keyboard-mode .x-panel-header-panel-kanbancolumn .x-tool-focus {
+    outline: 1px solid #fff;
+    outline-offset: 2px;
+}
+/* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/css-outline.scss:63 */
+.x-ie .x-keyboard-mode .x-panel-header-panel-kanbancolumn .x-tool-focus,
+.x-ie10p .x-keyboard-mode .x-panel-header-panel-kanbancolumn .x-tool-focus,
+.x-edge .x-keyboard-mode .x-panel-header-panel-kanbancolumn .x-tool-focus {
+    outline: none;
+}
+/* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/css-outline.scss:39 */
+.x-ie .x-keyboard-mode .x-panel-header-panel-kanbancolumn .x-tool-focus:after,
+.x-ie10p .x-keyboard-mode .x-panel-header-panel-kanbancolumn .x-tool-focus:after,
+.x-edge .x-keyboard-mode .x-panel-header-panel-kanbancolumn .x-tool-focus:after {
+    position: absolute;
+    content: ' ';
+    top: -3px;
+    right: -3px;
+    bottom: -3px;
+    left: -3px;
+    border: 1px solid #fff;
+    pointer-events: none;
+}
+/* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-neutral/sass/var/panel/Panel.scss:1412 */
+.x-rtl.x-panel-header-panel-kanbancolumn-collapsed-border-right {
+    border-right-width: 1px !important;
+}
+/* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-neutral/sass/var/panel/Panel.scss:1415 */
+.x-rtl.x-panel-header-panel-kanbancolumn-collapsed-border-left {
+    border-left-width: 1px !important;
+}
+/* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-neutral/sass/var/panel/Panel.scss:1429 */
+.x-panel-panel-kanbancolumn-resizable .x-panel-handle {
+    -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=0)";
+    opacity: 0;
+}
+/* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/border-management.scss:2 */
+.x-panel-panel-kanbancolumn-outer-border-l {
+    border-left-color: #f5f5f5 !important;
+    border-left-width: 1px !important;
+}
+/* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/border-management.scss:6 */
+.x-panel-panel-kanbancolumn-outer-border-b {
+    border-bottom-color: #f5f5f5 !important;
+    border-bottom-width: 1px !important;
+}
+/* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/border-management.scss:10 */
+.x-panel-panel-kanbancolumn-outer-border-bl {
+    border-bottom-color: #f5f5f5 !important;
+    border-bottom-width: 1px !important;
+    border-left-color: #f5f5f5 !important;
+    border-left-width: 1px !important;
+}
+/* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/border-management.scss:16 */
+.x-panel-panel-kanbancolumn-outer-border-r {
+    border-right-color: #f5f5f5 !important;
+    border-right-width: 1px !important;
+}
+/* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/border-management.scss:20 */
+.x-panel-panel-kanbancolumn-outer-border-rl {
+    border-right-color: #f5f5f5 !important;
+    border-right-width: 1px !important;
+    border-left-color: #f5f5f5 !important;
+    border-left-width: 1px !important;
+}
+/* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/border-management.scss:26 */
+.x-panel-panel-kanbancolumn-outer-border-rb {
+    border-right-color: #f5f5f5 !important;
+    border-right-width: 1px !important;
+    border-bottom-color: #f5f5f5 !important;
+    border-bottom-width: 1px !important;
+}
+/* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/border-management.scss:32 */
+.x-panel-panel-kanbancolumn-outer-border-rbl {
+    border-right-color: #f5f5f5 !important;
+    border-right-width: 1px !important;
+    border-bottom-color: #f5f5f5 !important;
+    border-bottom-width: 1px !important;
+    border-left-color: #f5f5f5 !important;
+    border-left-width: 1px !important;
+}
+/* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/border-management.scss:40 */
+.x-panel-panel-kanbancolumn-outer-border-t {
+    border-top-color: #f5f5f5 !important;
+    border-top-width: 1px !important;
+}
+/* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/border-management.scss:44 */
+.x-panel-panel-kanbancolumn-outer-border-tl {
+    border-top-color: #f5f5f5 !important;
+    border-top-width: 1px !important;
+    border-left-color: #f5f5f5 !important;
+    border-left-width: 1px !important;
+}
+/* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/border-management.scss:50 */
+.x-panel-panel-kanbancolumn-outer-border-tb {
+    border-top-color: #f5f5f5 !important;
+    border-top-width: 1px !important;
+    border-bottom-color: #f5f5f5 !important;
+    border-bottom-width: 1px !important;
+}
+/* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/border-management.scss:56 */
+.x-panel-panel-kanbancolumn-outer-border-tbl {
+    border-top-color: #f5f5f5 !important;
+    border-top-width: 1px !important;
+    border-bottom-color: #f5f5f5 !important;
+    border-bottom-width: 1px !important;
+    border-left-color: #f5f5f5 !important;
+    border-left-width: 1px !important;
+}
+/* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/border-management.scss:64 */
+.x-panel-panel-kanbancolumn-outer-border-tr {
+    border-top-color: #f5f5f5 !important;
+    border-top-width: 1px !important;
+    border-right-color: #f5f5f5 !important;
+    border-right-width: 1px !important;
+}
+/* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/border-management.scss:70 */
+.x-panel-panel-kanbancolumn-outer-border-trl {
+    border-top-color: #f5f5f5 !important;
+    border-top-width: 1px !important;
+    border-right-color: #f5f5f5 !important;
+    border-right-width: 1px !important;
+    border-left-color: #f5f5f5 !important;
+    border-left-width: 1px !important;
+}
+/* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/border-management.scss:78 */
+.x-panel-panel-kanbancolumn-outer-border-trb {
+    border-top-color: #f5f5f5 !important;
+    border-top-width: 1px !important;
+    border-right-color: #f5f5f5 !important;
+    border-right-width: 1px !important;
+    border-bottom-color: #f5f5f5 !important;
+    border-bottom-width: 1px !important;
+}
+/* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/border-management.scss:86 */
+.x-panel-panel-kanbancolumn-outer-border-trbl {
+    border-color: #f5f5f5 !important;
+    border-width: 1px !important;
 }
