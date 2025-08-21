@@ -3,21 +3,24 @@
 /**************************************/
 
 @import url("../themes-override.css");
-@import url("../themes-custombuiltbased-override.css");
+@import url("../themes-custombuilt-override.css");
 
 :root {
-    --wt-theme-color-surface: #ffffff; /* White */
-    --wt-theme-color-surface-on: #404040; /* Neutral/700 */
-    --wt-theme-color-surface-on-low: #737373; /* Neutral/500 */
-    --wt-theme-color-surface-ct: #f5f5f5; /* Neutral/100 */
-    --wt-theme-color-surface-ct-high: #e5e5e5; /* Neutral/200 */
+    --wt-theme-color-surface-l0: #ffffff; /* White */
+    --wt-theme-color-surface-l1: #fafafa; /* Neutral/50 */
+    --wt-theme-color-surface-l2: #f5f5f5; /* Neutral/100 */
+    --wt-theme-color-surface-l2-inv: #ffffff; /* White */
+    --wt-theme-color-surface-l3: #e5e5e5; /* Neutral/200 */
+    --wt-theme-color-surface-on-1: #404040; /* Neutral/700 */
+    --wt-theme-color-surface-on-2: #737373; /* Neutral/500 */
+    --wt-theme-color-surface-on-3: #a3a3a3; /* Neutral/400 */
     
     --wt-theme-color-1: #0e7490; /* Cyan/700 */
     --wt-theme-color-1-on: #fafafa; /* Neutral/50 */
     --wt-theme-color-1-ct: #e0f2fe; /* Sky/100 */
     --wt-theme-color-1-ct-on: #404040; /* Neutral/700 */
     
-    --wt-theme-color-2: #e5e7eb; /* Neutral/200 */
+    --wt-theme-color-2: #e5e7eb; /* Cyan/200 */
     --wt-theme-color-2-on: #404040; /* Neutral/700 */
     --wt-theme-color-ct-2: #ffffff; /* White */
     --wt-theme-color-ct-2-on: #e5e5e5; /* Neutral/500 */
@@ -103,10 +106,3 @@
 .x-tree-view .so-contextmenu-owner {
     background-color: #a3a3a3 !important; /* Neutral/400 */
 }
-
-/* ---------- Ext.menu.Item */
-/* Fix FontAwesome icons vertical position */
-/* <-- USEFUL?
-.x-menu-item-icon.fas { top: 8px; }
-.x-menu-item-icon.far { top: 8px; }
-*/

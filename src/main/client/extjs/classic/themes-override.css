@@ -127,7 +127,7 @@
 /* Center empty text */
 .x-grid-empty { text-align: center; }
 /* Support newly defined x-grid-cell-empty class like x-grid-empty */
-.x-grid-cell-empty { color: grey; }
+.x-grid-cell-empty { color: var(--wt-theme-color-off, grey); }
 /* Avoids annoying focus border on focused cells */
 .x-grid-item-focused .x-grid-cell-inner:before { display: none; }
 
@@ -155,7 +155,15 @@
 }
 
 /* ---------- Sonicle.fullcalendar.Panel */
+.so-fullcalendar-panel-toolbar-hdtext {
+    font-weight: var(--wt-theme-fontweight-regular);
+    font-size: var(--wt-theme-fontsize-3xl);
+    line-height: var(--wt-theme-lineheight-3xl);
+}
+.so-fullcalendar-panel-toolbar-hdtext .so-fullcalendar-panel-toolbar-hdtext-cmyo span[data-part="view-month"] {
+    font-weight: var(--wt-theme-fontweight-medium);
+}
 /* Fix popover bg: default transparency disturb data reading */
 .fc-popover {
-	background-color: var(--wt-theme-color-surface, #ffffff);
+	background-color: var(--wt-theme-color-surface-l0, #ffffff);
 }

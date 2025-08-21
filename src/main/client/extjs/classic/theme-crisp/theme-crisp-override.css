@@ -6,9 +6,11 @@
 @import url("../themes-isneptune-override.css");
 
 :root {
-    --wt-theme-color-surface: #ffffff; /* White */
-    /*--wt-theme-color-surface-on: */
-    /*--wt-theme-color-surface-on-low: */
+    --wt-theme-color-surface-l0: #ffffff; /* White */
+    --wt-theme-color-surface-on-1: #000000; /* Black */
+    --wt-theme-color-surface-on-2: #000000; /* Black */
+    --wt-theme-color-surface-on-3: #000000; /* Black */
+    
     --wt-theme-color-surface-ct: #e0ebf3;
     /*--wt-theme-color-surface-ct-high: */
     

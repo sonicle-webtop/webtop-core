@@ -1,12 +1,20 @@
 
 # Theme Variables to define in *-override.css:
 Heavily inspired by https://m3.material.io/styles/color/roles
-    
---wt-theme-color-surface         : Surface – Default color for backgrounds
---wt-theme-color-surface-on      : On surface – Text and icons against any surface color
---wt-theme-color-surface-on-low  : On surface variant – Lower-emphasis color for text and icons against any surface color
---wt-theme-color-surface-ct      : Surface container – Default container color
---wt-theme-color-surface-ct-high : Surface container high – High-emphasis container color
+
+## Surface
+
+Base surface color is defined as elevation from Level 0 to Level 3.
+Use surface colors for elements like cards, buttons, modals, toolbars, and other components.
+
+--wt-theme-color-surface-l0       : Surface – Default color for backgrounds (L0)
+--wt-theme-color-surface-l1       : Surface – Color for backgrounds at L1
+--wt-theme-color-surface-l2       : Surface – Color for backgrounds at L2
+--wt-theme-color-surface-l2-inv   : Surface – Color for backgrounds at L2 inverted
+--wt-theme-color-surface-l3       : Surface – Color for backgrounds at L3
+--wt-theme-color-surface-on-1     : On surface (primary) – Text and icons against any base surface color
+--wt-theme-color-surface-on-2     : On surface (secondary) – Text and icons with lower-emphasis against any base surface color
+--wt-theme-color-surface-on-3     : On surface (tertiary) – Text and icons with low-emphasis against any base surface color
 
 Use primary roles for the most prominent components across the UI, such as the FAB, high-emphasis buttons, and active states.
 --wt-theme-color-1       : Primary – High-emphasis fills, texts, and icons against surface
