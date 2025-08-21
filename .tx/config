@@ -1,5 +1,5 @@
 [main]
-host = https://www.transifex.com
+host = https://app.transifex.com
 
 [o:sonicle:p:webtop-core:r:admin-client_locale]
 file_filter = src/main/client-admin/locale_<lang>.properties
