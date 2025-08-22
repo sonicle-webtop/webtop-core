@@ -19,7 +19,7 @@
     --so-formfeedback-color-alert-bg-on: var(--wt-theme-color-error-ct-on);
     --so-formfeedback-color-warning: var(--wt-theme-color-warn);
     --so-formfeedback-color-warning-bg: var(--wt-theme-color-warn-ct);
-    --so-formfeedback-color-warning-bg-on: var(--wt-theme-color-ct-on);
+    --so-formfeedback-color-warning-bg-on: var(--wt-theme-color-warn-ct-on);
     --so-formfeedback-color-success: var(--wt-theme-color-ok);
     --so-formfeedback-color-success-bg: var(--wt-theme-color-ok-ct);
     --so-formfeedback-color-success-bg-on: var(--wt-theme-color-ok-ct-on);

@@ -4,7 +4,7 @@ Heavily inspired by https://m3.material.io/styles/color/roles
 
 ## Surface
 
-Base surface color is defined as elevation from Level 0 to Level 3.
+Base surface color is defined as elevation from Level 0 to Level 4.
 Use surface colors for elements like cards, buttons, modals, toolbars, and other components.
 
 --wt-theme-color-surface-l0       : Surface – Default color for backgrounds (L0)
@@ -12,6 +12,7 @@ Use surface colors for elements like cards, buttons, modals, toolbars, and other
 --wt-theme-color-surface-l2       : Surface – Color for backgrounds at L2
 --wt-theme-color-surface-l2-inv   : Surface – Color for backgrounds at L2 inverted
 --wt-theme-color-surface-l3       : Surface – Color for backgrounds at L3
+--wt-theme-color-surface-l4       : Surface – Color for backgrounds at L4
 --wt-theme-color-surface-on-1     : On surface (primary) – Text and icons against any base surface color
 --wt-theme-color-surface-on-2     : On surface (secondary) – Text and icons with lower-emphasis against any base surface color
 --wt-theme-color-surface-on-3     : On surface (tertiary) – Text and icons with low-emphasis against any base surface color
