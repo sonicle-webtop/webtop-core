@@ -6,6 +6,7 @@
 @import url("../themes-isclassic-override.css");
 
 :root {
+    color-scheme: only light;
     --wt-theme-color-surface-l0: #ffffff; /* White */
     /*--wt-theme-color-surface-l1: */
     /*--wt-theme-color-surface-l2: */
@@ -65,6 +66,7 @@
     --wt-theme-color-navbar: #dfe9f6;
     --wt-theme-color-taskbar: #dfe9f6;
     
+    --wt-theme-fontfamily: 'helvetica, arial, verdana, sans-serif';
     --wt-theme-fontsize-xs: 8px;
     --wt-theme-fontsize-sm: 10px;
     --wt-theme-fontsize-base: 11px;

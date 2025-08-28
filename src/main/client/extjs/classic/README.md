@@ -66,6 +66,7 @@ Use primary roles for the most prominent components across the UI, such as the F
 --wt-theme-color-navbar          : Color for navbar background
 --wt-theme-color-taskbar         : Color for taskbar background
 
+--wt-theme-fontfamily    : Font family of texts
 --wt-theme-fontsize-xs   : Font size for x-small texts
 --wt-theme-fontsize-sm   : Font size for small texts
 --wt-theme-fontsize-base : Font size for base texts

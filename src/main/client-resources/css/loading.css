@@ -7,7 +7,7 @@ body { margin: 0; }
 	left: 0;
 	bottom: 0;
 	right: 0;
-	background: #f8f8f8;
+    background: light-dark(var(--wt-theme-color-surface-l0, #FFFFFF), var(--wt-theme-color-surface-l0, #000000));
 	outline: none !important;
 }
 #wt-loading {
@@ -25,7 +25,7 @@ body { margin: 0; }
 	display: block;
 	padding-left: 40px;
 	line-height: 35px;
-	color: black;
+    color: light-dark(var(--wt-theme-color-surface-on-1, #000000), var(--wt-theme-color-surface-on-1, #FFFFFF));
 	font-size: 16px;
 	font-weight: 300;
 	font-family: helvetica, arial, verdana, sans-serif;

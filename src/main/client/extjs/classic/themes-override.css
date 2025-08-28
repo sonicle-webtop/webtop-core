@@ -30,6 +30,14 @@
 }
 
 /* ---------- Browser */
+/* Document defaults */
+body {
+    background-color: light-dark(var(--wt-theme-color-surface-l0, #FFFFFF), var(--wt-theme-color-surface-l0, #000000));
+    color: light-dark(var(--wt-theme-color-surface-on-1, #000000), var(--wt-theme-color-surface-on-1, #FFFFFF));
+    /*background-color: var(--wt-theme-color-surface-l0);*/
+    /*color: var(--wt-theme-color-surface-on-1);*/
+    font-family: var(--wt-theme-fontfamily, 'helvetica, arial, verdana, sans-serif');
+}
 /* Make scrollbars modern */
 ::-webkit-scrollbar {
     width: 6px; /* for vertical scrollbars */

@@ -64,6 +64,7 @@
     --wt-theme-color-navbar: #f5f5f5; /* Neutral/100 */
     --wt-theme-color-taskbar: #f5f5f5; /* Neutral/100 */
     
+    --wt-theme-fontfamily: 'Inter, helvetica, arial, verdana, sans-serif';
     --wt-theme-fontsize-xs: 12px;
     --wt-theme-fontsize-sm: 14px;
     --wt-theme-fontsize-base: 16px;
