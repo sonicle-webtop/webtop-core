@@ -85,7 +85,8 @@ public class ResourceRequest extends HttpServlet {
 			+ RegexUtils.MATCH_URL_SEPARATOR
 			+ RegexUtils.capture(RegexUtils.MATCH_ANY)
 			+ "$");
-	private static final Pattern PATTERN_LAF_PATH = Pattern.compile("^laf\\/([\\w\\-\\.]+)\\/(.*)$");
+	
+	private static final Pattern PATTERN_LAF_PATH = Pattern.compile("^laf\\/([\\w\\-\\.]+(?:@[\\w\\-]+)?)\\/(.*)$");
 	private static final Pattern PATTERN_LOCALE_FILE = Pattern.compile("^(Locale_(\\w*)).js$");
 	private static final ConcurrentHashMap<String, Long> lastModifiedCache = new ConcurrentHashMap<>();
 	
@@ -152,7 +153,7 @@ public class ResourceRequest extends HttpServlet {
 				//logger.trace("Requested path [{}]", reqPath);
 
 				Matcher matcher = PATTERN_VIRTUAL_URL.matcher(reqPath);
-				if(matcher.matches()) {
+				if (matcher.matches()) { // Virtual URL
 					// Matches URLs like: /{service.id}/{service.version}/{remaining.url.part}
 					// Eg. /com.sonicle.webtop.core/5.1.1/laf/default/service.css
 					//	{service.id} -> com.sonicle.webtop.core
@@ -171,11 +172,11 @@ public class ResourceRequest extends HttpServlet {
 					isVirtualUrl = false;
 					String[] urlParts = splitPath(reqPath);
 					subject = urlParts[0];
+					path = urlParts[1];
 					jsPath = wta.getServiceManager().getServiceJsPath(subject);
 					jsPathFound = (jsPath != null);
 					subjectPath = (jsPathFound) ? jsPath : urlParts[0];
-					path = urlParts[1];
-
+					
 					targetUrl = new URL("http://fake/"+subjectPath+"/"+path);
 				}
 				targetPath = targetUrl.getPath();
@@ -225,23 +226,23 @@ public class ResourceRequest extends HttpServlet {
 					//String sessionId = ServletHelper.getSessionID(req);
 					if (StringUtils.startsWith(path, "resources/vendor") || StringUtils.startsWith(path, "resources/libs")) {
 						// If targets lib folder, simply return requested file without handling debug versions
-						return lookupJs(req, targetUrl, false);
+						return lookupJs(req, targetUrl, path, false);
 
 					} else if (StringUtils.startsWith(path, "boot/")) {
-						return lookupJs(req, targetUrl, isJsDebug());
+						return lookupJs(req, targetUrl, path, isJsDebug());
 
 					} else if (StringUtils.startsWith(FilenameUtils.getBaseName(path), "Locale")) {
 						return lookupLocaleJs(req, targetUrl, subject);
 
 					} else if (StringUtils.startsWith(path, "laf") && StringUtils.endsWith(path, "override.js")) {
-						return lookupJs(req, targetUrl, isJsDebug(), true);
+						return lookupLAF(req, targetUrl, path, true);
 
 					} else {
-						return lookupJs(req, targetUrl, isJsDebug());
+						return lookupJs(req, targetUrl, path, isJsDebug());
 					}
 
 				} else if (StringUtils.startsWith(path, "laf")) {
-					return lookupLAF(req, targetUrl, path, subject, subjectPath);
+					return lookupLAF(req, targetUrl, path, false);
 
 				} else {
 					return lookupDefault(req, isVirtualUrl ? ClientCaching.YES : ClientCaching.AUTO, targetUrl);
@@ -358,11 +359,11 @@ public class ResourceRequest extends HttpServlet {
 		}
 	}
 	
-	private LookupResult lookupJs(HttpServletRequest request, URL targetUrl, boolean debugVersion) {
-		return lookupJs(request, targetUrl, debugVersion, false);
+	private LookupResult lookupJs(HttpServletRequest request, URL targetUrl, String path, boolean debugVersion) {
+		return lookupJs(request, targetUrl, path, debugVersion, false);
 	}
 	
-	private LookupResult lookupJs(HttpServletRequest request, URL targetUrl, boolean debugVersion, boolean gracefulNotFound) {
+	private LookupResult lookupJs(HttpServletRequest request, URL targetUrl, String path, boolean debugVersion, boolean gracefulNotFound) {
 		String targetPath = targetUrl.getPath();
 		URL resUrl = null;
 		
@@ -375,22 +376,17 @@ public class ResourceRequest extends HttpServlet {
 			if (resUrl == null) {
 				resUrl = toClasspathURL(targetPath);
 			}
-			Resource resFile;
-			try {
-				resFile = getFileResource(WebTopApp.get(request), resUrl);
-			} catch (NotFoundException ex1) {
-				if (gracefulNotFound) {
-					return new Error(HttpServletResponse.SC_MOVED_TEMPORARILY, "Moved temporarily");
-				} else {
-					throw ex1;
-				}
-			}
+			Resource resFile = getFileResource(WebTopApp.get(request), resUrl);
 			return new StaticFile(resUrl.toString(), getMimeType(targetPath), ClientCaching.YES, resFile);
 		
 		} catch (ForbiddenException ex) {
 			return new Error(HttpServletResponse.SC_FORBIDDEN, "Forbidden");
 		} catch (NotFoundException ex) {
-			return new Error(HttpServletResponse.SC_NOT_FOUND, "Not Found");
+			if (gracefulNotFound) {
+				return new Error(HttpServletResponse.SC_MOVED_TEMPORARILY, "Moved temporarily");
+			} else {
+				return new Error(HttpServletResponse.SC_NO_CONTENT, "Not Content");
+			}
 		} catch (InternalServerException ex) {
 			return new Error(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Internal server error");
 		} catch (ServletException ex) {
@@ -447,22 +443,35 @@ public class ResourceRequest extends HttpServlet {
 		}
 	}
 	
-	private LookupResult lookupLAF(HttpServletRequest request, URL targetUrl, String path, String serviceId, String subjectPath) {
+	private LookupResult lookupLAF(HttpServletRequest request, URL targetUrl, String path, boolean gracefulNotFound) {
 		URL fileUrl = null;
 		
 		try {
 			String baseTargetPath = StringUtils.substringBefore(targetUrl.getPath(), path);
 			Matcher lafm = PATTERN_LAF_PATH.matcher(path);
 			if (!lafm.matches()) return new Error(HttpServletResponse.SC_BAD_REQUEST, "Bad Request");
-			String pathLaf = lafm.group(1);
-			String remainingPath = lafm.group(2);
+			final String pathLaf = lafm.group(1);
+			final String remainingPath = lafm.group(2);
+			final boolean minifiable = isMinifiable(remainingPath);
 			
 			// Try to get resource in folder related to the requested look&feel...
 			// If not found, look for the default one (default)
-			String[] lafs = new String[]{pathLaf, "default"};
-			for (String laf : lafs) {
-				fileUrl = toClasspathURL(baseTargetPath + "laf/" + laf + "/" + remainingPath);
-				if(fileUrl != null) break;
+			String[] targetFolders;
+			if (StringUtils.contains(pathLaf, "@")) {
+				final String lafName = StringUtils.substringBefore(pathLaf, "@");
+				final String lafSub = StringUtils.substringAfter(pathLaf, "@");
+				targetFolders = new String[]{lafName + "/@" + lafSub, lafName, "default"};
+			} else {
+				targetFolders = new String[]{pathLaf, "default"};
+			}
+			for (String targetFolder : targetFolders) {
+				if (minifiable) {
+					fileUrl = toClasspathURL(baseTargetPath + "laf/" + targetFolder + "/" + toMinifiedPath(remainingPath));
+				}
+				if (fileUrl == null) {
+					fileUrl = toClasspathURL(baseTargetPath + "laf/" + targetFolder + "/" + remainingPath);
+				}
+				if (fileUrl != null) break;
 			}
 			if (fileUrl == null) throw new NotFoundException();
 			
@@ -472,7 +481,11 @@ public class ResourceRequest extends HttpServlet {
 		} catch (ForbiddenException ex) {
 			return new Error(HttpServletResponse.SC_FORBIDDEN, "Forbidden");
 		} catch (NotFoundException ex) {
-			return new Error(HttpServletResponse.SC_NO_CONTENT, "Not Content");
+			if (gracefulNotFound) {
+				return new Error(HttpServletResponse.SC_MOVED_TEMPORARILY, "Moved temporarily");
+			} else {
+				return new Error(HttpServletResponse.SC_NO_CONTENT, "Not Content");
+			}
 		} catch (InternalServerException ex) {
 			return new Error(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Internal server error");
 		} catch (ServletException ex) {
@@ -521,6 +534,16 @@ public class ResourceRequest extends HttpServlet {
 		} catch(ServletException ex) {
 			return new Error(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, ex.getMessage());
 		}
+	}
+	
+	private boolean isMinifiable(final String filePath) {
+		final String ext = StringUtils.lowerCase(FilenameUtils.getExtension(filePath));
+		//return "js".equals(ext) || "css".equals(ext); // Only js are supported for now
+		return "js".equals(ext);
+	}
+	
+	private String toMinifiedPath(final String filePath) {
+		return StringUtils.substringBeforeLast(filePath, ".") + ".min." + StringUtils.substringAfterLast(filePath, ".");
 	}
 	
 	private Resource getFileResource(WebTopApp wta, URL url) throws ResourceRequest.ForbiddenException, ResourceRequest.NotFoundException, ResourceRequest.InternalServerException {

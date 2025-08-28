@@ -13,6 +13,7 @@
     --wt-theme-color-surface-l3: #e5e5e5; /* Neutral/200 */
     --wt-theme-color-surface-l4: #d4d4d4; /* Neutral/300 */
     --wt-theme-color-surface-on-1: #404040; /* Neutral/700 */
+    --wt-theme-color-surface-on-1-inv: #404040; /* Neutral/700 */
     --wt-theme-color-surface-on-2: #737373; /* Neutral/500 */
     --wt-theme-color-surface-on-3: #a3a3a3; /* Neutral/400 */
     
@@ -25,6 +26,8 @@
     --wt-theme-color-2-on: #404040; /* Neutral/700 */
     --wt-theme-color-ct-2: #ffffff; /* White */
     --wt-theme-color-ct-2-on: #e5e5e5; /* Neutral/500 */
+    
+    --wt-theme-color-3: #a3a3a3; /* Neutral/400 */
     
     --wt-theme-color-ok: #047857; /* Emerald/700 */
     --wt-theme-color-ok-on: #ecfdf5; /* Emerald/50 */

@@ -170,7 +170,7 @@ public class UIPrivate extends AbstractServlet {
 	
 	private void writePasswordChangePage(WebTopApp wta, Locale locale, DomainBase.PasswordPolicies passwordPolicies, String username, String failureMessage, HttpServletResponse response) throws IOException, TemplateException {
 		Map tplMap = new HashMap();
-		AbstractServlet.fillPageVars(tplMap, locale, null);
+		AbstractServlet.fillPageVars(tplMap, locale, null, null, null);
 		AbstractServlet.fillSystemVars(tplMap, wta, locale, false, false);
 		
 		tplMap.put("similarityLevenThres", WebTopProps.getWTDirectorySimilarityLevenThres(wta.getProperties()));
@@ -214,10 +214,6 @@ public class UIPrivate extends AbstractServlet {
 			}
 		}
 		
-		Map tplMap = new HashMap();
-		AbstractServlet.fillPageVars(tplMap, wts.getLocale(), userTitle, null);
-		tplMap.put("loadingMessage", wta.lookupResource(wts.getLocale(), "tpl.start.loading"));
-		
 		// Startup variables
 		JsWTSPrivate jswts = new JsWTSPrivate();
 		jswts.sessionId = wts.getId();
@@ -229,6 +225,10 @@ public class UIPrivate extends AbstractServlet {
 		jswts.miniServiceArgs=ServletUtils.getStringParameter(request, "args", null);
 		jswts.miniMode=(jswts.miniServiceName!=null);
 		wts.fillStartup(jswts);
+		
+		Map tplMap = new HashMap();
+		AbstractServlet.fillPageVars(tplMap, wts.getLocale(), userTitle, AbstractServlet.guessColorScheme(jswts.lafName), null);
+		tplMap.put("loadingMessage", wta.lookupResource(wts.getLocale(), "tpl.start.loading"));
 		tplMap.put("WTS", LangUtils.unescapeUnicodeBackslashes(jswts.toJson()));
 		
 		ServletUtils.setHtmlContentType(response);

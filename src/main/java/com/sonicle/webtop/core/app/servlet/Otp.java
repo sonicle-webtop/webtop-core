@@ -196,7 +196,7 @@ public class Otp extends AbstractServlet {
 	
 	private void writePage(WebTopApp wta, CoreServiceSettings css, Locale locale, String deliveryMode, String failureMessage, HttpServletResponse response) throws IOException, TemplateException {
 		Map tplMap = new HashMap();
-		AbstractServlet.fillPageVars(tplMap, locale, null);
+		AbstractServlet.fillPageVars(tplMap, locale, null, null, null);
 		AbstractServlet.fillSystemVars(tplMap, wta, locale, false, false);
 		tplMap.put("showFailure", !StringUtils.isBlank(failureMessage));
 		tplMap.put("failureMessage", failureMessage);

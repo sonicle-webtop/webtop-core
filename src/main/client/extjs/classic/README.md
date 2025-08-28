@@ -10,12 +10,13 @@ Use surface colors for elements like cards, buttons, modals, toolbars, and other
 --wt-theme-color-surface-l0       : Surface – Default color for backgrounds (L0)
 --wt-theme-color-surface-l1       : Surface – Color for backgrounds at L1
 --wt-theme-color-surface-l2       : Surface – Color for backgrounds at L2
---wt-theme-color-surface-l2-inv   : Surface – Color for backgrounds at L2 inverted
+--wt-theme-color-surface-l2-inv   : Surface – Inverted color of the above L2
 --wt-theme-color-surface-l3       : Surface – Color for backgrounds at L3
 --wt-theme-color-surface-l4       : Surface – Color for backgrounds at L4
---wt-theme-color-surface-on-1     : On surface (primary) – Text and icons against any base surface color
---wt-theme-color-surface-on-2     : On surface (secondary) – Text and icons with lower-emphasis against any base surface color
---wt-theme-color-surface-on-3     : On surface (tertiary) – Text and icons with low-emphasis against any base surface color
+--wt-theme-color-surface-on-1     : On surface – Neutral primary text and icons against any base surface color
+--wt-theme-color-surface-on-1-inv : On surface – Inverted color of the above primary
+--wt-theme-color-surface-on-2     : On surface – Neutral secondary text and icons with lower-emphasis against any base surface color
+--wt-theme-color-surface-on-3     : On surface – Neutral tertiary text and icons with low-emphasis against any base surface color
 
 Use primary roles for the most prominent components across the UI, such as the FAB, high-emphasis buttons, and active states.
 --wt-theme-color-1       : Primary – High-emphasis fills, texts, and icons against surface
@@ -27,6 +28,8 @@ Use primary roles for the most prominent components across the UI, such as the F
 --wt-theme-color-2-on    : On secondary – Text and icons against secondary
 --wt-theme-color-ct-2    : Secondary container – Less prominent fill color against surface, for recessive components like tonal buttons
 --wt-theme-color-ct-2-on : On secondary container – Text and icons against secondary container
+
+--wt-theme-color-3       : Tertiary – Neutral fills, text, and icons against surface
 
 --wt-theme-color-ok          : Ok – Attention-grabbing color against surface for fills, icons, and text; indicating safe status
 --wt-theme-color-ok-on       : On ok – Text and icons against safe status

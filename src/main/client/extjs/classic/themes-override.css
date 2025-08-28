@@ -3,6 +3,10 @@
 /**************************************/
 
 :root {
+    --so-toggle-button-icon-color-pressed: var(--wt-theme-color-1);
+    --so-toggle-button-text-color-pressed: var(--wt-theme-color-1);
+    --so-toggle-button-icon-color-unpressed: var(--wt-theme-color-3);
+    --so-toggle-button-text-color-unpressed: var(--wt-theme-color-3);
     --so-announcementbar-color-info-bg: var(--wt-theme-color-info);
     --so-announcementbar-color-info-bg-on: var(--wt-theme-color-info-on);
     --so-announcementbar-color-alert-bg: var(--wt-theme-color-error);

@@ -2,10 +2,10 @@
 /* Base WebTop's definitions for all themes
 /**************************************/
 
-.wt-theme-bg-surface-1 { background-color: var(--wt-theme-color-surface-ct); }
-.wt-theme-bg-surface-2 { background-color: var(--wt-theme-color-surface); }
-.wt-theme-bg-window { background-color: var(--wt-theme-color-surface); }
-.wt-theme-bg-dialog { background-color: var(--wt-theme-color-surface); }
+.wt-theme-bg-surface-1 { background-color: var(--wt-theme-color-surface-l1); }
+.wt-theme-bg-surface-2 { background-color: var(--wt-theme-color-surface-l0); }
+.wt-theme-bg-window { background-color: var(--wt-theme-color-surface-l0); }
+.wt-theme-bg-dialog { background-color: var(--wt-theme-color-surface-l0); }
 .wt-theme-1 { background-color: var(--wt-theme-color-1); color: var(--wt-theme-color-1-on); }
 .wt-theme-color-ok { color: var(--wt-theme-color-ok); }
 .wt-theme-color-warn { color: var(--wt-theme-color-warn); }
@@ -26,7 +26,7 @@
 .wt-viewport-navbar { background-color: var(--wt-theme-color-navbar); }
 .wt-viewport-topbar { background-color: var(--wt-theme-color-topbar); }
 .wt-viewport-taskbar { background-color: var(--wt-theme-color-taskbar); }
-.wt-portal-body { background-color: var(--wt-theme-color-surface-ct); }
+.wt-portal-body { background-color: var(--wt-theme-color-surface-l1); }
 .wt-accountmenu-label1 { font-size: var(--wt-theme-fontsize-sm); line-height: var(--wt-theme-lineheight-sm); font-weight: bold; }
 .wt-accountmenu-label2 { font-size: var(--wt-theme-fontsize-xs); line-height: var(--wt-theme-lineheight-xs); }
 

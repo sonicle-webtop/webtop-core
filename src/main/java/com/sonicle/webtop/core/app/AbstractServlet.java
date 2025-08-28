@@ -33,6 +33,7 @@
  */
 package com.sonicle.webtop.core.app;
 
+import com.sonicle.commons.LangUtils;
 import com.sonicle.commons.web.json.MapItem;
 import com.sonicle.webtop.core.sdk.ServiceVersion;
 import com.sonicle.webtop.core.app.util.LoggerUtils;
@@ -102,15 +103,17 @@ public abstract class AbstractServlet extends HttpServlet {
 		vars.put("custom", propVars);
 	}
 	
-	public static void fillPageVars(Map vars, Locale locale, String baseUrl) {
-		fillPageVars(vars, locale, null, baseUrl);
+	public static String guessColorScheme(final String lafName) {
+		final String overlay = StringUtils.lowerCase(StringUtils.substringAfterLast(lafName, "@"));
+		return ("light".equals(overlay) || "dark".equals(overlay)) ? overlay : null;
 	}
 	
-	public static void fillPageVars(Map vars, Locale locale, String userTitle, String baseUrl) {
+	public static void fillPageVars(final Map vars, final Locale locale, final String titleDN, final String colorScheme, final String baseUrl) {
 		ServiceVersion version = WT.getManifest(CoreManifest.ID).getVersion();
 		String title = WT.getPlatformName() + " " + version.getMajor();
-		if (!StringUtils.isBlank(userTitle)) title += " [" + userTitle + "]";
+		if (!StringUtils.isBlank(titleDN)) title += " [" + titleDN + "]";
 		vars.put("title", title);
+		vars.put("colorScheme", LangUtils.coalesceStrings(colorScheme, "light"));
 		vars.put("coreVersion", version);		
 		vars.put("versionString", buildVersion(version));
 		vars.put("baseUrl", baseUrl);

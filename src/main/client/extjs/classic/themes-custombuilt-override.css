@@ -105,15 +105,19 @@ body > .x-mask {
 .x-column-header { /* Why this???? */
     border-right: 0px solid #d4d4d4 !important; /* Neutral/300 */
 }
-/* Implement rounded-style for Grids */
+/* Support rounded-style for Header */
 .x-grid.x-grid-rounded .x-grid-header-ct {
 	border-top-left-radius: var(--wt-theme-grid-radius, 0px);
 	border-top-right-radius: var(--wt-theme-grid-radius, 0px);
 }
-/* Implement rounded-style for Grids */
+/* Support rounded-style for Body */
 .x-grid.x-grid-rounded .x-grid-body {
     border-bottom-left-radius: var(--wt-theme-grid-radius, 0px);
 	border-bottom-right-radius: var(--wt-theme-grid-radius, 0px);
+}
+/* Add depth effect for rounded-style grids */
+.x-grid.x-grid-rounded .x-grid-item {
+    background-color: var(--wt-theme-color-surface-l0);
 }
 /* Fix hide top border when x-grid-no-border (custom class) is explict */
 .x-grid .x-grid-body.x-grid-no-border {
@@ -166,9 +170,9 @@ body > .x-mask {
 .x-panel-body-default.x-border-layout-ct {
 	background-color: var(--wt-theme-color-surface-l0);
 }
-/* Force splitter BG to its original color (gray) to avoid previous panel override to set it white  */
+/* Force splitter BG to its original color, to avoid that the above override set it back to L0  */
 .x-splitter {
-    background-color: var(--wt-theme-color-2);
+    background-color: var(--wt-theme-color-surface-l3);
 }
 
 /* ---------- Ext.panel.Panel@KanbanColumm */
@@ -418,8 +422,9 @@ body > .x-mask {
     gap: 16px;
     width: 260px; /* Keep nav-buttons equally spaced! */
 }
+/* Style week number (WXX) in month view */
 .so-fullcalendar .fc-daygrid-week-number {
-    background-color: #FFEDD5; /* Orange/100 */
+    background-color: var(--wt-theme-color-2-ct);
 }
 .so-fullcalendar-panel-toolbar {
     margin-bottom: 16px;
@@ -465,7 +470,7 @@ body > .x-mask {
 }
 .so-fullcalendar .fc-timegrid-slot-minor {
     border-top-style: solid; /* Do not use dotted style */
-    border-top-color: #F3F4F6; /* Gray/100 */
+    /*border-top-color: #F3F4F6; /* Gray/100 */
 }
 /* Add padding in event content */
 .so-fullcalendar .fc-timegrid .fc-event-main {

@@ -13,6 +13,7 @@
     /*--wt-theme-color-surface-l3: */
     /*--wt-theme-color-surface-l4: */
     --wt-theme-color-surface-on-1: #000000; /* Black */
+    --wt-theme-color-surface-on-1-inv: #ffffff; /* White */
     --wt-theme-color-surface-on-2: #000000; /* Black */
     --wt-theme-color-surface-on-3: #000000; /* Black */
     
@@ -27,6 +28,7 @@
     /*--wt-theme-color-2-on: */
     /*--wt-theme-color-ct-2: */
     /*--wt-theme-color-ct-2-on: */
+    --wt-theme-color-3: gray;
     
     --wt-theme-color-ok: #388E3C; /* Green/700 (https://materialui.co/colors/) */
     --wt-theme-color-ok-on: #ffffff; /* White (https://materialui.co/colors/) */

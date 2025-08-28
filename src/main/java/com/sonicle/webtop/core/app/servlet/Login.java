@@ -167,7 +167,7 @@ public class Login extends AbstractServlet {
 		boolean showDomain = (css.getHideLoginDomains()) ? false : (domains.size() > 1);
 		
 		MapItem vars = new MapItem();
-		AbstractServlet.fillPageVars(vars, locale, null);
+		AbstractServlet.fillPageVars(vars, locale, null, null, null);
 		AbstractServlet.fillSystemVars(vars, wta, locale, !css.getHideLoginSystemInfo(), !css.getHideLoginWebappName());
 		AbstractServlet.fillCustomVars(vars, WebTopProps.getLoginTemplateCustomVars(WT.getProperties()));
 		

@@ -5,6 +5,7 @@
 
 /* ---------- Ext.tree.Panel */
 /* Prettify folder icons */
+/* NB: for triton-based themes forcing an empty content on :before is mandatory */
 .x-grid-item .x-grid-cell-inner-treecolumn .x-tree-icon { background-image: url(folder_16.svg); background-size: contain; }
 .x-grid-item .x-grid-cell-inner-treecolumn .x-tree-icon-parent { background-image: url(folder_16.svg); background-size: contain; }
 .x-grid-item .x-grid-cell-inner-treecolumn .x-tree-icon-leaf { background-image: url(folder_16.svg); background-size: contain; }

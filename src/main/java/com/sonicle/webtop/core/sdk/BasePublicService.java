@@ -95,7 +95,7 @@ public abstract class BasePublicService extends AbstractEnvironmentService<Publi
 		// are targeted using relative URLs starting from the Browser's URL, usually
 		// used in Service's public page. In this case passed base path must point
 		// to the path after the host (if present) on client side.
-		AbstractServlet.fillPageVars(vars, locale, contextPath);
+		AbstractServlet.fillPageVars(vars, locale, null, null, contextPath);
 		
 		ServletUtils.setHtmlContentType(response);
 		ServletUtils.setCacheControlPrivate(response);
