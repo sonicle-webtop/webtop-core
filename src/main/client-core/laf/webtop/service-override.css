@@ -1,5 +1,5 @@
 @import url("xtheme-override.css");
-@import url("wtheme-webtop-light-override.css");
+@import url("wtheme-webtop-override.css");
 
 /* ---------- Icons (others) */
 .wt-icon-logout { background-image: url('logout_16.svg') !important; background-size: contain; } .wt-icon-logout:before { content: ''; }

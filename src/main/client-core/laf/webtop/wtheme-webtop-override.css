@@ -1,0 +1,163 @@
+/**************************************/
+/* Tweaks WebTop's components for specific theme
+/**************************************/
+
+/* ---------- Ext.tree.Panel */
+/* NB: for triton-based themes forcing an empty content on :before is mandatory */
+.x-grid-item .x-grid-cell-inner-treecolumn .x-tree-icon:before { content: ''; }
+
+.wt-theme-text-color-off {}
+.wt-theme-text-color-title { color: var(--wt-theme-color-info); }
+.wt-theme-text-color-subtitle {}
+.wt-theme-text-color-hyperlink { color: var(--wt-theme-color-1); }
+.wt-theme-text-color-info {}
+
+.wt-form-body-title {
+    font-size: var(--wt-theme-fontsize-base);
+	font-weight: var(--wt-theme-fontweight-medium);
+}
+.wt-form-body-subtitle {
+    font-size: var(--wt-theme-fontsize-sm);
+	font-weight: var(--wt-theme-fontweight-base);
+}
+.wt-form-toolbar-title {
+    font-size: var(--wt-theme-fontsize-base, inherit);
+    font-weight: var(--wt-theme-fontweight-medium, normal);
+    color: var(--wt-theme-color-surface-on-1) !important;
+}
+
+/* ---------- Topbar */
+.wt-viewport-topbar { background-color: var(--wt-theme-color-surface-l3); }
+.wt-viewport-topbar .x-toolbar-separator {
+    border-left-color: #d4d4d4; /* Neutral/300 */
+}
+
+/* ---------- Navbar */
+/* Set main backgrounds */
+.wt-viewport-navbar { background-color: var(--wt-theme-color-surface-l3); }
+.wt-viewport-navbar-watermark-right {
+    background-color: #d4d4d4; /* Neutral/300 */
+    width: 1px;
+}
+/* Define 40x40 logo image */
+.wt-viewport-navbar-logo.so-tbimage { padding: 0px; }
+.wt-viewport-navbar-logo.so-tbimage .so-tbimage-image { background-image: url('logo.svg'); background-repeat: round; width: 40px !important; height: 40px !important; }
+/* Force button sizes */
+.wt-viewport-navbar .x-btn .x-btn-button { min-height: 24px; }
+.wt-viewport-navbar .x-btn .x-btn-icon-el { width: 24px; height: 24px; }
+/* Set specific color and radius to buttons */
+.wt-viewport-navbar .x-btn.x-btn-pressed, .wt-viewport-navbar .x-btn.x-btn-over {
+    border-radius: 100%;
+    background-color: var(--wt-theme-color-surface-l2);
+}
+/* Do NOT show focus outline/shadow on buttons */
+.wt-viewport-navbar .x-btn.x-btn-focus { box-shadow: none !important; }
+
+/* ---------- Tool HD/Body */
+/* Hide ugly border when docking top */
+.wt-tool .x-panel-body { border-top: 0px; }
+/* Customize HD style */
+.wt-tool .wt-tool-bg { background-color: var(--wt-theme-color-surface-l2); }
+.wt-tool-hd-wrap { background-color: var(--wt-theme-color-surface-l2); padding-top: 10px; padding-left: 6px; }
+.wt-tool-hd-title { font-size: var(--wt-theme-fontsize-lg); font-weight: 500; }
+.wt-tool-hd-separator { border-top-color: #e5e7eb !important; } /* Gray/200 FIXME: evaluate to change directly fieldset color in theme */
+.wt-tool-foo { padding-top: 10px; padding-bottom: 15px; }
+
+/* ---------- AccountMenu */
+/* Pad user-info */
+.wt-accountmenu-label1 { padding-top: 6px; }
+.wt-accountmenu-label2 { padding-bottom: 6px; }
+
+/* ---------- WTA.sdk.ModelView */
+/* Customize toolbars */
+/* <-- USEFUL?
+.wt-modelview-toolbar {
+	padding-left: 24px;
+	padding-right: 24px;
+    border-top: none;
+}
+.wt-modelview-toolbar-first {
+	padding-top: 24px;
+}
+.wt-modelview-toolbar-last {}
+*/
+
+/* ---------- WTA.ux.field.Attachments */
+/* Hide tagfield borders */
+/* <-- USEFUL?
+.wt-attachmentsfield .x-form-trigger-wrap {
+	border: none;
+}
+*/
+
+/* ---------- WTA.ux.field.Search */
+/* Customize trigger-icon */
+/* <-- USEFUL?
+.wt-searchfield .x-form-arrow-trigger-default { background: url(search-sliders.svg) no-repeat left !important; }
+.wt-searchfield .x-form-arrow-trigger-default:before { content: ''; }
+*/
+
+/* ---------- WTA.ux.field.Recipients */
+/* Adjust gap between items */
+/* <-- USEFUL?
+.wt-recipients-field .x-tagfield-list {
+    column-gap: 16px;
+}
+*/
+
+/* ---------- WTA.ux.panel.Fields */
+.wt-fieldspanel-body-padding-t {
+	padding-top: 16px;
+}
+.wt-fieldspanel-body-padding-b {
+	padding-bottom: 16px;
+}
+.wt-fieldspanel-body-padding-lr {
+	padding-left: 16px;
+	padding-right: 16px;
+}
+
+/* ---------- WTA.ux.panel.Tab */
+.wt-tabpanel-margin-t {
+	margin-top: 16px;
+}
+.wt-tabpanel-margin-lr {
+	margin-left: 16px;
+	margin-right: 16px;
+}
+.wt-tabpanel-margin-b {
+	margin-bottom: 16px;
+}
+
+/* ---------- Ext.menu.Item */
+/* Use the following selector for Ext.button.Button: ".wt-dangerzone .x-btn-inner, .wt-dangerzone .x-btn-icon-el" */
+/* Customize text and icon color */
+.wt-dangerzone .x-menu-item-text, .wt-dangerzone .x-menu-item-icon {
+    color: var(--wt-theme-color-error);
+}
+
+/* ---------- Ext.tree.Panel */
+/* Customize toggle color for both on/off states */
+.wt-tree-toggle.x-tree-checkbox:before {
+	color: var(--wt-theme-color-error);
+}
+.wt-tree-toggle.x-tree-checkbox-checked:before {
+	color: var(--wt-theme-color-1);
+}
+
+/* ---------- Ext.panel.Tree (treecolumn colorswatch) */
+/* <-- USEFUL?
+.wt-tree-colorswatch.x-tree-icon {
+    margin-top: 4px;
+}
+.x-tree-view .x-tree-checkbox.wt-tree-colorswatch {
+    top: 10px;
+}
+.x-tree-view .x-tree-icon.wt-tree-colorswatch {
+   height: 16px;
+}
+*/
+
+
+
+
