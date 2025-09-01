@@ -96,6 +96,12 @@
     --wt-theme-field-radius: 0px;
     --wt-theme-grid-radius: 0px;
     
+    /* ---------- FullCalendar */
+    --fc-day-other-color: rgba(214,214,214,.2);
+    --fc-non-business-color: rgba(234,243,250,.3);
+    --fc-event-resizer-swatch-bg-color: #ffffff;
+    --fc-event-resizer-swatch-border-color: #111827;
+	--fc-event-style-shadow: rgba(0,0,0,.1);
     --so-mask-button-text-color: var(--wt-theme-color-mbox-hd-on);
 }
 

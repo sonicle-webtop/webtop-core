@@ -94,15 +94,22 @@
     --wt-theme-field-radius: 4px;
     --wt-theme-grid-radius: 4px;
     
-    --fc-border-color: #E5E7EB !Important; /* Gray/200 */
-    --fc-now-indicator-color: var(--wt-theme-color-1) !Important;
-    --fc-neutral-bg-color: #f9fafb !Important; /* Gray/50 */
-    --fc-non-business-color: rgba(229,231,235,.3) !Important; /* Gray/200 */
-    --fc-today-bg-color: #fff7ed !Important; /* Orange/50 */
-    
-    --so-kanban-column-border-radius: 4px;
+    /* ---------- Sonicle.panel.CanbanColumn */
+    --so-kanbancolumn-border-radius: 4px;
+    /* ---------- Sonicle.form.field.Display */
     --so-displayfield-clickable-color: #0e7490; /* Cyan/700 */
     --so-displayfield-clickable-hover-color: #164e63; /* Cyan/900 */
+    /* ---------- FullCalendar */
+    --fc-page-bg-color: var(--wt-theme-color-surface-l0) !Important;
+    --fc-border-color: #E5E7EB !Important; /* Gray/200 */
+    --fc-neutral-bg-color: #f9fafb !Important; /* Gray/50 */
+    --fc-now-indicator-color: var(--wt-theme-color-1) !Important;
+    --fc-today-bg-color: #fff7ed !Important; /* Orange/50 */
+    --fc-day-other-color: rgba(214,214,214,.2);
+    --fc-non-business-color: rgba(229,231,235,.3) !Important; /* Gray/200 */
+    --fc-event-resizer-swatch-bg-color: #ffffff;
+    --fc-event-resizer-swatch-border-color: #111827;
+	--fc-event-style-shadow: rgba(0,0,0,.1);
 }
 
 /* ---------- ContextMenu */

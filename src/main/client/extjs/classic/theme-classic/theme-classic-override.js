@@ -4,3 +4,8 @@ Ext.define('Ext.theme.classic.Component', {
 	//Ext.namespace('Ext.theme.ui.button').primary = 'default';
 	Ext.namespace('Ext.theme.ui.button').toolbar = 'default-toolbar';
 });
+Ext.define('Sonicle.overrides.panel.KanbanColumn', {
+	override: 'Sonicle.panel.KanbanColumn',
+	
+	border: true
+});

@@ -175,7 +175,13 @@ body {
 .so-fullcalendar-panel-toolbar-hdtext .so-fullcalendar-panel-toolbar-hdtext-cmyo span[data-part="view-month"] {
     font-weight: var(--wt-theme-fontweight-medium);
 }
+
+/* ---------- Fullcalendar */
 /* Fix popover bg: default transparency disturb data reading */
 .fc-popover {
-	background-color: var(--wt-theme-color-surface-l0, #ffffff);
+	background-color: light-dark(var(--wt-theme-color-surface-l0, #FFFFFF), var(--wt-theme-color-surface-l0, #000000));
+}
+/* Set a BG valid for both light/dark themes */
+.fc-timegrid-body, .fc-daygrid-body {
+    background-color: light-dark(var(--wt-theme-color-surface-l0, #FFFFFF), var(--wt-theme-color-surface-l0, #000000));
 }

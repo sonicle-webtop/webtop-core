@@ -175,24 +175,25 @@ body > .x-mask {
     background-color: var(--wt-theme-color-surface-l3);
 }
 
-/* ---------- Ext.panel.Panel@KanbanColumm */
+/* ---------- Ext.panel.Panel@panel-kanbancolumn */
+/* Add radius support to panel-kanbancolumn UI */
 .x-panel-panel-kanbancolumn {
-    border-top-left-radius: var(--so-kanban-column-border-radius);
-    border-top-right-radius: var(--so-kanban-column-border-radius);
-    border-bottom-left-radius: var(--so-kanban-column-border-radius);
-    border-bottom-right-radius: var(--so-kanban-column-border-radius);
+    border-top-left-radius: var(--so-kanbancolumn-border-radius);
+    border-top-right-radius: var(--so-kanbancolumn-border-radius);
+    border-bottom-left-radius: var(--so-kanbancolumn-border-radius);
+    border-bottom-right-radius: var(--so-kanbancolumn-border-radius);
 }
 .x-panel-panel-kanbancolumn .x-panel-header {
-    border-top-left-radius: var(--so-kanban-column-border-radius);
-    border-top-right-radius: var(--so-kanban-column-border-radius);
+    border-top-left-radius: var(--so-kanbancolumn-border-radius);
+    border-top-right-radius: var(--so-kanbancolumn-border-radius);
 }
 .x-panel-panel-kanbancolumn .x-panel-header.x-panel-header-collapsed {
-    border-bottom-left-radius: var(--so-kanban-column-border-radius);
-    border-bottom-right-radius: var(--so-kanban-column-border-radius);
+    border-bottom-left-radius: var(--so-kanbancolumn-border-radius);
+    border-bottom-right-radius: var(--so-kanbancolumn-border-radius);
 }
 .x-panel-panel-kanbancolumn .x-panel-body-panel-kanbancolumn {
-    border-bottom-left-radius: var(--so-kanban-column-border-radius);
-    border-bottom-right-radius: var(--so-kanban-column-border-radius);
+    border-bottom-left-radius: var(--so-kanbancolumn-border-radius);
+    border-bottom-right-radius: var(--so-kanbancolumn-border-radius);
 }
 
 /* ---------- Ext.panel.Tool */
@@ -422,10 +423,6 @@ body > .x-mask {
     gap: 16px;
     width: 260px; /* Keep nav-buttons equally spaced! */
 }
-/* Style week number (WXX) in month view */
-.so-fullcalendar .fc-daygrid-week-number {
-    background-color: var(--wt-theme-color-2-ct);
-}
 .so-fullcalendar-panel-toolbar {
     margin-bottom: 16px;
 }
@@ -452,10 +449,11 @@ body > .x-mask {
     border-left-width: 0px;
     border-right-width: 0px;
 }
+/* Style week number (WXX) in month view */
+.so-fullcalendar .fc-daygrid-week-number {
+    background-color: var(--wt-theme-color-2-ct);
+}
 .so-fullcalendar .fc-more-link {
-    /*font-size: var(--wt-theme-fontsize-sm) !important;*/
-    /*font-weight: var(--wt-theme-fontweight-medium) !important;*/
-    /*line-height: var(--wt-theme-lineheight-sm) !important;*/
     color: var(--wt-theme-color-1) !important;
 }
 .so-fullcalendar .fc-col-header-cell.fc-day-today .fc-col-header-cell-cushion {
@@ -533,13 +531,13 @@ body > .x-mask {
 /* ---------- Sonicle.panel.KanbanColumn */
 /* Change collapse/expand icons and header color */
 /* <-- USEFUL?
-.x-panel.so-kanban-column .x-tool-expand-bottom:before {
+.x-panel-panel-kanbancolumn .x-tool-expand-bottom:before {
     content: '\f424'
 }
-.x-panel.so-kanban-column .x-tool-collapse-top:before {
+.x-panel-panel-kanbancolumn .x-tool-collapse-top:before {
     content: '\f422'
 }
-.x-panel.so-kanban-column .x-panel-header {
+.x-panel-panel-kanbancolumn .x-panel-header {
     background-color: #ffffff;
 }
 */
