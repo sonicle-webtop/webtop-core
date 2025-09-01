@@ -95,6 +95,8 @@
     --wt-theme-menu-radius: 0px;
     --wt-theme-field-radius: 0px;
     --wt-theme-grid-radius: 0px;
+    
+    --so-mask-button-text-color: var(--wt-theme-color-dialog-hd-on);
 }
 
 /* ---------- Ext.grid.column.Action */
@@ -161,4 +163,10 @@
 /* Do NOT apply table related autosizing on icon-wrapper element */
 .x-field:has(.so-fieldicon-wrap) {
     table-layout: auto;
+}
+
+/* ---------- Sonicle.LoadMask */
+.so-mask-button-wrap {
+    padding-top: 5px;
+    padding-bottom: 5px;
 }

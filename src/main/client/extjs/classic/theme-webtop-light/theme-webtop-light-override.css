@@ -111,3 +111,8 @@
 .x-tree-view .so-contextmenu-owner {
     background-color: #a3a3a3 !important; /* Neutral/400 */
 }
+
+/* ---------- Sonicle.LoadMask */
+.so-mask-button-wrap {
+    padding-top: 15px;
+}

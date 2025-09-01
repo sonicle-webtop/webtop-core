@@ -95,6 +95,8 @@
     --wt-theme-menu-radius: 0px;
     --wt-theme-field-radius: 0px;
     --wt-theme-grid-radius: 0px;
+    
+    --so-mask-button-text-color: var(--wt-theme-color-mbox-hd-on);
 }
 
 /* ---------- Sonicle.form.Separator */
@@ -120,4 +122,9 @@
 }
 .x-action-col-icon:hover {
 	color: #666666;
+}
+
+/* ---------- Sonicle.LoadMask */
+.so-mask-button-wrap {
+    padding-top: 15px;
 }
