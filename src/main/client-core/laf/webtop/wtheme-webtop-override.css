@@ -23,20 +23,18 @@
 .wt-form-toolbar-title {
     font-size: var(--wt-theme-fontsize-base, inherit);
     font-weight: var(--wt-theme-fontweight-medium, normal);
-    color: var(--wt-theme-color-surface-on-1) !important;
+    color: var(--wt-theme-color-n1) !important;
 }
 
 /* ---------- Topbar */
-.wt-viewport-topbar { background-color: var(--wt-theme-color-surface-l3); }
 .wt-viewport-topbar .x-toolbar-separator {
-    border-left-color: #d4d4d4; /* Neutral/300 */
+    border-left-color: var(--wt-theme-color-surface-l4);
 }
 
 /* ---------- Navbar */
 /* Set main backgrounds */
-.wt-viewport-navbar { background-color: var(--wt-theme-color-surface-l3); }
 .wt-viewport-navbar-watermark-right {
-    background-color: #d4d4d4; /* Neutral/300 */
+    background-color: var(--wt-theme-color-surface-l4);
     width: 1px;
 }
 /* Define 40x40 logo image */

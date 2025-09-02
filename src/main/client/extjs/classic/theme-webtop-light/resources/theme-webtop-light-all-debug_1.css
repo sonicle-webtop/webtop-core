@@ -647,7 +647,7 @@
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/packages/core/sass/src/list/TreeItem.scss:372 */
 .x-treelist-row-over {
-    background-color: #e3eef1;
+    background-color: #f0f9ff;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/packages/core/sass/src/list/TreeItem.scss:376 */
 .x-treelist-row-over > * > .x-treelist-item-icon {
@@ -3526,18 +3526,18 @@ body > .x-mask {
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:187 */
 .x-btn-default-small {
-    -moz-border-radius-topleft: 4px;
-    -webkit-border-top-left-radius: 4px;
-    border-top-left-radius: 4px;
-    -moz-border-radius-topright: 4px;
-    -webkit-border-top-right-radius: 4px;
-    border-top-right-radius: 4px;
-    -moz-border-radius-bottomright: 4px;
-    -webkit-border-bottom-right-radius: 4px;
-    border-bottom-right-radius: 4px;
-    -moz-border-radius-bottomleft: 4px;
-    -webkit-border-bottom-left-radius: 4px;
-    border-bottom-left-radius: 4px;
+    -moz-border-radius-topleft: 5px;
+    -webkit-border-top-left-radius: 5px;
+    border-top-left-radius: 5px;
+    -moz-border-radius-topright: 5px;
+    -webkit-border-top-right-radius: 5px;
+    border-top-right-radius: 5px;
+    -moz-border-radius-bottomright: 5px;
+    -webkit-border-bottom-right-radius: 5px;
+    border-bottom-right-radius: 5px;
+    -moz-border-radius-bottomleft: 5px;
+    -webkit-border-bottom-left-radius: 5px;
+    border-bottom-left-radius: 5px;
     padding: 6px 7px 6px 7px;
     border-width: 1px;
     border-style: solid;
@@ -3565,23 +3565,23 @@ body > .x-mask {
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:281 */
 .x-btn-default-small-frameInfo {
-    font-family: th-4-4-4-4-1-1-1-1-6-7-6-7;
+    font-family: th-5-5-5-5-1-1-1-1-6-7-6-7;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:347 */
 .x-btn-default-small-tl {
-    background-position: 0 -8px;
+    background-position: 0 -10px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:351 */
 .x-btn-default-small-tr {
-    background-position: right -12px;
+    background-position: right -15px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:355 */
 .x-btn-default-small-bl {
-    background-position: 0 -16px;
+    background-position: 0 -20px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:359 */
 .x-btn-default-small-br {
-    background-position: right -20px;
+    background-position: right -25px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:363 */
 .x-btn-default-small-ml {
@@ -3597,27 +3597,27 @@ body > .x-mask {
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:383 */
 .x-btn-default-small-bc {
-    background-position: 0 -4px;
+    background-position: 0 -5px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:388 */
 .x-btn-default-small-tr,
 .x-btn-default-small-br,
 .x-btn-default-small-mr {
-    padding-right: 4px;
+    padding-right: 5px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:394 */
 .x-btn-default-small-tl,
 .x-btn-default-small-bl,
 .x-btn-default-small-ml {
-    padding-left: 4px;
+    padding-left: 5px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:400 */
 .x-btn-default-small-tc {
-    height: 4px;
+    height: 5px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:403 */
 .x-btn-default-small-bc {
-    height: 4px;
+    height: 5px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:407 */
 .x-btn-default-small-tl,
@@ -3637,7 +3637,7 @@ body > .x-mask {
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:464 */
 .x-btn-default-small-mc {
-    padding: 3px 4px 3px 4px;
+    padding: 2px 3px 2px 3px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-neutral/sass/var/button/Button.scss:2463 */
 .x-btn-default-small {
@@ -4074,18 +4074,18 @@ body > .x-mask {
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:187 */
 .x-btn-default-medium {
-    -moz-border-radius-topleft: 4px;
-    -webkit-border-top-left-radius: 4px;
-    border-top-left-radius: 4px;
-    -moz-border-radius-topright: 4px;
-    -webkit-border-top-right-radius: 4px;
-    border-top-right-radius: 4px;
-    -moz-border-radius-bottomright: 4px;
-    -webkit-border-bottom-right-radius: 4px;
-    border-bottom-right-radius: 4px;
-    -moz-border-radius-bottomleft: 4px;
-    -webkit-border-bottom-left-radius: 4px;
-    border-bottom-left-radius: 4px;
+    -moz-border-radius-topleft: 5px;
+    -webkit-border-top-left-radius: 5px;
+    border-top-left-radius: 5px;
+    -moz-border-radius-topright: 5px;
+    -webkit-border-top-right-radius: 5px;
+    border-top-right-radius: 5px;
+    -moz-border-radius-bottomright: 5px;
+    -webkit-border-bottom-right-radius: 5px;
+    border-bottom-right-radius: 5px;
+    -moz-border-radius-bottomleft: 5px;
+    -webkit-border-bottom-left-radius: 5px;
+    border-bottom-left-radius: 5px;
     padding: 7px 8px 7px 8px;
     border-width: 1px;
     border-style: solid;
@@ -4113,23 +4113,23 @@ body > .x-mask {
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:281 */
 .x-btn-default-medium-frameInfo {
-    font-family: th-4-4-4-4-1-1-1-1-7-8-7-8;
+    font-family: th-5-5-5-5-1-1-1-1-7-8-7-8;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:347 */
 .x-btn-default-medium-tl {
-    background-position: 0 -8px;
+    background-position: 0 -10px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:351 */
 .x-btn-default-medium-tr {
-    background-position: right -12px;
+    background-position: right -15px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:355 */
 .x-btn-default-medium-bl {
-    background-position: 0 -16px;
+    background-position: 0 -20px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:359 */
 .x-btn-default-medium-br {
-    background-position: right -20px;
+    background-position: right -25px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:363 */
 .x-btn-default-medium-ml {
@@ -4145,27 +4145,27 @@ body > .x-mask {
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:383 */
 .x-btn-default-medium-bc {
-    background-position: 0 -4px;
+    background-position: 0 -5px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:388 */
 .x-btn-default-medium-tr,
 .x-btn-default-medium-br,
 .x-btn-default-medium-mr {
-    padding-right: 4px;
+    padding-right: 5px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:394 */
 .x-btn-default-medium-tl,
 .x-btn-default-medium-bl,
 .x-btn-default-medium-ml {
-    padding-left: 4px;
+    padding-left: 5px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:400 */
 .x-btn-default-medium-tc {
-    height: 4px;
+    height: 5px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:403 */
 .x-btn-default-medium-bc {
-    height: 4px;
+    height: 5px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:407 */
 .x-btn-default-medium-tl,
@@ -4185,7 +4185,7 @@ body > .x-mask {
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:464 */
 .x-btn-default-medium-mc {
-    padding: 4px 5px 4px 5px;
+    padding: 3px 4px 3px 4px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-neutral/sass/var/button/Button.scss:2463 */
 .x-btn-default-medium {
@@ -4622,18 +4622,18 @@ body > .x-mask {
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:187 */
 .x-btn-default-large {
-    -moz-border-radius-topleft: 4px;
-    -webkit-border-top-left-radius: 4px;
-    border-top-left-radius: 4px;
-    -moz-border-radius-topright: 4px;
-    -webkit-border-top-right-radius: 4px;
-    border-top-right-radius: 4px;
-    -moz-border-radius-bottomright: 4px;
-    -webkit-border-bottom-right-radius: 4px;
-    border-bottom-right-radius: 4px;
-    -moz-border-radius-bottomleft: 4px;
-    -webkit-border-bottom-left-radius: 4px;
-    border-bottom-left-radius: 4px;
+    -moz-border-radius-topleft: 5px;
+    -webkit-border-top-left-radius: 5px;
+    border-top-left-radius: 5px;
+    -moz-border-radius-topright: 5px;
+    -webkit-border-top-right-radius: 5px;
+    border-top-right-radius: 5px;
+    -moz-border-radius-bottomright: 5px;
+    -webkit-border-bottom-right-radius: 5px;
+    border-bottom-right-radius: 5px;
+    -moz-border-radius-bottomleft: 5px;
+    -webkit-border-bottom-left-radius: 5px;
+    border-bottom-left-radius: 5px;
     padding: 7px 9px 7px 9px;
     border-width: 1px;
     border-style: solid;
@@ -4661,23 +4661,23 @@ body > .x-mask {
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:281 */
 .x-btn-default-large-frameInfo {
-    font-family: th-4-4-4-4-1-1-1-1-7-9-7-9;
+    font-family: th-5-5-5-5-1-1-1-1-7-9-7-9;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:347 */
 .x-btn-default-large-tl {
-    background-position: 0 -8px;
+    background-position: 0 -10px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:351 */
 .x-btn-default-large-tr {
-    background-position: right -12px;
+    background-position: right -15px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:355 */
 .x-btn-default-large-bl {
-    background-position: 0 -16px;
+    background-position: 0 -20px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:359 */
 .x-btn-default-large-br {
-    background-position: right -20px;
+    background-position: right -25px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:363 */
 .x-btn-default-large-ml {
@@ -4693,27 +4693,27 @@ body > .x-mask {
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:383 */
 .x-btn-default-large-bc {
-    background-position: 0 -4px;
+    background-position: 0 -5px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:388 */
 .x-btn-default-large-tr,
 .x-btn-default-large-br,
 .x-btn-default-large-mr {
-    padding-right: 4px;
+    padding-right: 5px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:394 */
 .x-btn-default-large-tl,
 .x-btn-default-large-bl,
 .x-btn-default-large-ml {
-    padding-left: 4px;
+    padding-left: 5px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:400 */
 .x-btn-default-large-tc {
-    height: 4px;
+    height: 5px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:403 */
 .x-btn-default-large-bc {
-    height: 4px;
+    height: 5px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:407 */
 .x-btn-default-large-tl,
@@ -4733,7 +4733,7 @@ body > .x-mask {
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:464 */
 .x-btn-default-large-mc {
-    padding: 4px 6px 4px 6px;
+    padding: 3px 5px 3px 5px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-neutral/sass/var/button/Button.scss:2463 */
 .x-btn-default-large {
@@ -5170,18 +5170,18 @@ body > .x-mask {
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:187 */
 .x-btn-default-toolbar-small {
-    -moz-border-radius-topleft: 4px;
-    -webkit-border-top-left-radius: 4px;
-    border-top-left-radius: 4px;
-    -moz-border-radius-topright: 4px;
-    -webkit-border-top-right-radius: 4px;
-    border-top-right-radius: 4px;
-    -moz-border-radius-bottomright: 4px;
-    -webkit-border-bottom-right-radius: 4px;
-    border-bottom-right-radius: 4px;
-    -moz-border-radius-bottomleft: 4px;
-    -webkit-border-bottom-left-radius: 4px;
-    border-bottom-left-radius: 4px;
+    -moz-border-radius-topleft: 5px;
+    -webkit-border-top-left-radius: 5px;
+    border-top-left-radius: 5px;
+    -moz-border-radius-topright: 5px;
+    -webkit-border-top-right-radius: 5px;
+    border-top-right-radius: 5px;
+    -moz-border-radius-bottomright: 5px;
+    -webkit-border-bottom-right-radius: 5px;
+    border-bottom-right-radius: 5px;
+    -moz-border-radius-bottomleft: 5px;
+    -webkit-border-bottom-left-radius: 5px;
+    border-bottom-left-radius: 5px;
     padding: 6px 7px 6px 7px;
     border-width: 1px;
     border-style: solid;
@@ -5209,23 +5209,23 @@ body > .x-mask {
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:281 */
 .x-btn-default-toolbar-small-frameInfo {
-    font-family: th-4-4-4-4-1-1-1-1-6-7-6-7;
+    font-family: th-5-5-5-5-1-1-1-1-6-7-6-7;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:347 */
 .x-btn-default-toolbar-small-tl {
-    background-position: 0 -8px;
+    background-position: 0 -10px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:351 */
 .x-btn-default-toolbar-small-tr {
-    background-position: right -12px;
+    background-position: right -15px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:355 */
 .x-btn-default-toolbar-small-bl {
-    background-position: 0 -16px;
+    background-position: 0 -20px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:359 */
 .x-btn-default-toolbar-small-br {
-    background-position: right -20px;
+    background-position: right -25px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:363 */
 .x-btn-default-toolbar-small-ml {
@@ -5241,31 +5241,31 @@ body > .x-mask {
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:383 */
 .x-btn-default-toolbar-small-bc {
-    background-position: 0 -4px;
+    background-position: 0 -5px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:388 */
 .x-btn-default-toolbar-small-tr,
 .x-btn-default-toolbar-small-br,
 .x-btn-default-toolbar-small-mr {
-    padding-right: 4px;
+    padding-right: 5px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:394 */
 .x-btn-default-toolbar-small-tl,
 .x-btn-default-toolbar-small-bl,
 .x-btn-default-toolbar-small-ml {
-    padding-left: 4px;
+    padding-left: 5px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:400 */
 .x-btn-default-toolbar-small-tc {
-    height: 4px;
+    height: 5px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:403 */
 .x-btn-default-toolbar-small-bc {
-    height: 4px;
+    height: 5px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:464 */
 .x-btn-default-toolbar-small-mc {
-    padding: 3px 4px 3px 4px;
+    padding: 2px 3px 2px 3px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-neutral/sass/var/button/Button.scss:2463 */
 .x-btn-default-toolbar-small {
@@ -5700,18 +5700,18 @@ body > .x-mask {
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:187 */
 .x-btn-default-toolbar-medium {
-    -moz-border-radius-topleft: 4px;
-    -webkit-border-top-left-radius: 4px;
-    border-top-left-radius: 4px;
-    -moz-border-radius-topright: 4px;
-    -webkit-border-top-right-radius: 4px;
-    border-top-right-radius: 4px;
-    -moz-border-radius-bottomright: 4px;
-    -webkit-border-bottom-right-radius: 4px;
-    border-bottom-right-radius: 4px;
-    -moz-border-radius-bottomleft: 4px;
-    -webkit-border-bottom-left-radius: 4px;
-    border-bottom-left-radius: 4px;
+    -moz-border-radius-topleft: 5px;
+    -webkit-border-top-left-radius: 5px;
+    border-top-left-radius: 5px;
+    -moz-border-radius-topright: 5px;
+    -webkit-border-top-right-radius: 5px;
+    border-top-right-radius: 5px;
+    -moz-border-radius-bottomright: 5px;
+    -webkit-border-bottom-right-radius: 5px;
+    border-bottom-right-radius: 5px;
+    -moz-border-radius-bottomleft: 5px;
+    -webkit-border-bottom-left-radius: 5px;
+    border-bottom-left-radius: 5px;
     padding: 7px 8px 7px 8px;
     border-width: 1px;
     border-style: solid;
@@ -5739,23 +5739,23 @@ body > .x-mask {
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:281 */
 .x-btn-default-toolbar-medium-frameInfo {
-    font-family: th-4-4-4-4-1-1-1-1-7-8-7-8;
+    font-family: th-5-5-5-5-1-1-1-1-7-8-7-8;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:347 */
 .x-btn-default-toolbar-medium-tl {
-    background-position: 0 -8px;
+    background-position: 0 -10px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:351 */
 .x-btn-default-toolbar-medium-tr {
-    background-position: right -12px;
+    background-position: right -15px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:355 */
 .x-btn-default-toolbar-medium-bl {
-    background-position: 0 -16px;
+    background-position: 0 -20px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:359 */
 .x-btn-default-toolbar-medium-br {
-    background-position: right -20px;
+    background-position: right -25px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:363 */
 .x-btn-default-toolbar-medium-ml {
@@ -5771,31 +5771,31 @@ body > .x-mask {
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:383 */
 .x-btn-default-toolbar-medium-bc {
-    background-position: 0 -4px;
+    background-position: 0 -5px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:388 */
 .x-btn-default-toolbar-medium-tr,
 .x-btn-default-toolbar-medium-br,
 .x-btn-default-toolbar-medium-mr {
-    padding-right: 4px;
+    padding-right: 5px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:394 */
 .x-btn-default-toolbar-medium-tl,
 .x-btn-default-toolbar-medium-bl,
 .x-btn-default-toolbar-medium-ml {
-    padding-left: 4px;
+    padding-left: 5px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:400 */
 .x-btn-default-toolbar-medium-tc {
-    height: 4px;
+    height: 5px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:403 */
 .x-btn-default-toolbar-medium-bc {
-    height: 4px;
+    height: 5px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:464 */
 .x-btn-default-toolbar-medium-mc {
-    padding: 4px 5px 4px 5px;
+    padding: 3px 4px 3px 4px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-neutral/sass/var/button/Button.scss:2463 */
 .x-btn-default-toolbar-medium {
@@ -6230,18 +6230,18 @@ body > .x-mask {
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:187 */
 .x-btn-default-toolbar-large {
-    -moz-border-radius-topleft: 4px;
-    -webkit-border-top-left-radius: 4px;
-    border-top-left-radius: 4px;
-    -moz-border-radius-topright: 4px;
-    -webkit-border-top-right-radius: 4px;
-    border-top-right-radius: 4px;
-    -moz-border-radius-bottomright: 4px;
-    -webkit-border-bottom-right-radius: 4px;
-    border-bottom-right-radius: 4px;
-    -moz-border-radius-bottomleft: 4px;
-    -webkit-border-bottom-left-radius: 4px;
-    border-bottom-left-radius: 4px;
+    -moz-border-radius-topleft: 5px;
+    -webkit-border-top-left-radius: 5px;
+    border-top-left-radius: 5px;
+    -moz-border-radius-topright: 5px;
+    -webkit-border-top-right-radius: 5px;
+    border-top-right-radius: 5px;
+    -moz-border-radius-bottomright: 5px;
+    -webkit-border-bottom-right-radius: 5px;
+    border-bottom-right-radius: 5px;
+    -moz-border-radius-bottomleft: 5px;
+    -webkit-border-bottom-left-radius: 5px;
+    border-bottom-left-radius: 5px;
     padding: 7px 9px 7px 9px;
     border-width: 1px;
     border-style: solid;
@@ -6269,23 +6269,23 @@ body > .x-mask {
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:281 */
 .x-btn-default-toolbar-large-frameInfo {
-    font-family: th-4-4-4-4-1-1-1-1-7-9-7-9;
+    font-family: th-5-5-5-5-1-1-1-1-7-9-7-9;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:347 */
 .x-btn-default-toolbar-large-tl {
-    background-position: 0 -8px;
+    background-position: 0 -10px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:351 */
 .x-btn-default-toolbar-large-tr {
-    background-position: right -12px;
+    background-position: right -15px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:355 */
 .x-btn-default-toolbar-large-bl {
-    background-position: 0 -16px;
+    background-position: 0 -20px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:359 */
 .x-btn-default-toolbar-large-br {
-    background-position: right -20px;
+    background-position: right -25px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:363 */
 .x-btn-default-toolbar-large-ml {
@@ -6301,31 +6301,31 @@ body > .x-mask {
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:383 */
 .x-btn-default-toolbar-large-bc {
-    background-position: 0 -4px;
+    background-position: 0 -5px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:388 */
 .x-btn-default-toolbar-large-tr,
 .x-btn-default-toolbar-large-br,
 .x-btn-default-toolbar-large-mr {
-    padding-right: 4px;
+    padding-right: 5px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:394 */
 .x-btn-default-toolbar-large-tl,
 .x-btn-default-toolbar-large-bl,
 .x-btn-default-toolbar-large-ml {
-    padding-left: 4px;
+    padding-left: 5px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:400 */
 .x-btn-default-toolbar-large-tc {
-    height: 4px;
+    height: 5px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:403 */
 .x-btn-default-toolbar-large-bc {
-    height: 4px;
+    height: 5px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:464 */
 .x-btn-default-toolbar-large-mc {
-    padding: 4px 6px 4px 6px;
+    padding: 3px 5px 3px 5px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-neutral/sass/var/button/Button.scss:2463 */
 .x-btn-default-toolbar-large {
@@ -9306,19 +9306,19 @@ body > .x-mask {
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:187 */
 .x-btn-group-default-framed {
-    -moz-border-radius-topleft: 4px;
-    -webkit-border-top-left-radius: 4px;
-    border-top-left-radius: 4px;
-    -moz-border-radius-topright: 4px;
-    -webkit-border-top-right-radius: 4px;
-    border-top-right-radius: 4px;
-    -moz-border-radius-bottomright: 4px;
-    -webkit-border-bottom-right-radius: 4px;
-    border-bottom-right-radius: 4px;
-    -moz-border-radius-bottomleft: 4px;
-    -webkit-border-bottom-left-radius: 4px;
-    border-bottom-left-radius: 4px;
-    padding: 3px 3px 3px 3px;
+    -moz-border-radius-topleft: 5px;
+    -webkit-border-top-left-radius: 5px;
+    border-top-left-radius: 5px;
+    -moz-border-radius-topright: 5px;
+    -webkit-border-top-right-radius: 5px;
+    border-top-right-radius: 5px;
+    -moz-border-radius-bottomright: 5px;
+    -webkit-border-bottom-right-radius: 5px;
+    border-bottom-right-radius: 5px;
+    -moz-border-radius-bottomleft: 5px;
+    -webkit-border-bottom-left-radius: 5px;
+    border-bottom-left-radius: 5px;
+    padding: 4px 4px 4px 4px;
     border-width: 1px;
     border-style: solid;
     background-color: #fff;
@@ -9341,23 +9341,23 @@ body > .x-mask {
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:281 */
 .x-btn-group-default-framed-frameInfo {
-    font-family: dh-4-4-4-4-1-1-1-1-3-3-3-3;
+    font-family: dh-5-5-5-5-1-1-1-1-4-4-4-4;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:347 */
 .x-btn-group-default-framed-tl {
-    background-position: 0 -8px;
+    background-position: 0 -10px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:351 */
 .x-btn-group-default-framed-tr {
-    background-position: right -12px;
+    background-position: right -15px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:355 */
 .x-btn-group-default-framed-bl {
-    background-position: 0 -16px;
+    background-position: 0 -20px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:359 */
 .x-btn-group-default-framed-br {
-    background-position: right -20px;
+    background-position: right -25px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:363 */
 .x-btn-group-default-framed-ml {
@@ -9373,27 +9373,27 @@ body > .x-mask {
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:383 */
 .x-btn-group-default-framed-bc {
-    background-position: 0 -4px;
+    background-position: 0 -5px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:388 */
 .x-btn-group-default-framed-tr,
 .x-btn-group-default-framed-br,
 .x-btn-group-default-framed-mr {
-    padding-right: 4px;
+    padding-right: 5px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:394 */
 .x-btn-group-default-framed-tl,
 .x-btn-group-default-framed-bl,
 .x-btn-group-default-framed-ml {
-    padding-left: 4px;
+    padding-left: 5px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:400 */
 .x-btn-group-default-framed-tc {
-    height: 4px;
+    height: 5px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:403 */
 .x-btn-group-default-framed-bc {
-    height: 4px;
+    height: 5px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:407 */
 .x-btn-group-default-framed-tl,
@@ -9418,19 +9418,19 @@ body > .x-mask {
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:187 */
 .x-btn-group-default-framed-notitle {
-    -moz-border-radius-topleft: 4px;
-    -webkit-border-top-left-radius: 4px;
-    border-top-left-radius: 4px;
-    -moz-border-radius-topright: 4px;
-    -webkit-border-top-right-radius: 4px;
-    border-top-right-radius: 4px;
-    -moz-border-radius-bottomright: 4px;
-    -webkit-border-bottom-right-radius: 4px;
-    border-bottom-right-radius: 4px;
-    -moz-border-radius-bottomleft: 4px;
-    -webkit-border-bottom-left-radius: 4px;
-    border-bottom-left-radius: 4px;
-    padding: 3px 3px 3px 3px;
+    -moz-border-radius-topleft: 5px;
+    -webkit-border-top-left-radius: 5px;
+    border-top-left-radius: 5px;
+    -moz-border-radius-topright: 5px;
+    -webkit-border-top-right-radius: 5px;
+    border-top-right-radius: 5px;
+    -moz-border-radius-bottomright: 5px;
+    -webkit-border-bottom-right-radius: 5px;
+    border-bottom-right-radius: 5px;
+    -moz-border-radius-bottomleft: 5px;
+    -webkit-border-bottom-left-radius: 5px;
+    border-bottom-left-radius: 5px;
+    padding: 4px 4px 4px 4px;
     border-width: 1px;
     border-style: solid;
     background-color: #fff;
@@ -9453,23 +9453,23 @@ body > .x-mask {
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:281 */
 .x-btn-group-default-framed-notitle-frameInfo {
-    font-family: dh-4-4-4-4-1-1-1-1-3-3-3-3;
+    font-family: dh-5-5-5-5-1-1-1-1-4-4-4-4;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:347 */
 .x-btn-group-default-framed-notitle-tl {
-    background-position: 0 -8px;
+    background-position: 0 -10px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:351 */
 .x-btn-group-default-framed-notitle-tr {
-    background-position: right -12px;
+    background-position: right -15px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:355 */
 .x-btn-group-default-framed-notitle-bl {
-    background-position: 0 -16px;
+    background-position: 0 -20px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:359 */
 .x-btn-group-default-framed-notitle-br {
-    background-position: right -20px;
+    background-position: right -25px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:363 */
 .x-btn-group-default-framed-notitle-ml {
@@ -9485,27 +9485,27 @@ body > .x-mask {
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:383 */
 .x-btn-group-default-framed-notitle-bc {
-    background-position: 0 -4px;
+    background-position: 0 -5px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:388 */
 .x-btn-group-default-framed-notitle-tr,
 .x-btn-group-default-framed-notitle-br,
 .x-btn-group-default-framed-notitle-mr {
-    padding-right: 4px;
+    padding-right: 5px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:394 */
 .x-btn-group-default-framed-notitle-tl,
 .x-btn-group-default-framed-notitle-bl,
 .x-btn-group-default-framed-notitle-ml {
-    padding-left: 4px;
+    padding-left: 5px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:400 */
 .x-btn-group-default-framed-notitle-tc {
-    height: 4px;
+    height: 5px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:403 */
 .x-btn-group-default-framed-notitle-bc {
-    height: 4px;
+    height: 5px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:407 */
 .x-btn-group-default-framed-notitle-tl,
@@ -9540,12 +9540,12 @@ body > .x-mask {
     padding: 8px 8px 7px;
     line-height: 16px;
     background: #fff;
-    -moz-border-radius-topleft: 4px 4px 4px 4px;
-    -webkit-border-top-left-radius: 4px 4px 4px 4px;
-    border-top-left-radius: 4px 4px 4px 4px;
-    -moz-border-radius-topright: 4px 4px 4px 4px;
-    -webkit-border-top-right-radius: 4px 4px 4px 4px;
-    border-top-right-radius: 4px 4px 4px 4px;
+    -moz-border-radius-topleft: 5px 5px 5px 5px;
+    -webkit-border-top-left-radius: 5px 5px 5px 5px;
+    border-top-left-radius: 5px 5px 5px 5px;
+    -moz-border-radius-topright: 5px 5px 5px 5px;
+    -webkit-border-top-right-radius: 5px 5px 5px 5px;
+    border-top-right-radius: 5px 5px 5px 5px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-neutral/sass/var/container/ButtonGroup.scss:263 */
 .x-btn-group-header-default-framed .x-tool-img {
@@ -9607,26 +9607,26 @@ body > .x-mask {
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-neutral/sass/var/window/Window.scss:545 */
 .x-window-default {
     border-color: #e5e5e5;
-    -webkit-border-radius: 4px 4px 4px 4px;
-    -moz-border-radius: 4px 4px 4px 4px;
-    -ms-border-radius: 4px 4px 4px 4px;
-    -o-border-radius: 4px 4px 4px 4px;
-    border-radius: 4px 4px 4px 4px;
+    -webkit-border-radius: 5px 5px 5px 5px;
+    -moz-border-radius: 5px 5px 5px 5px;
+    -ms-border-radius: 5px 5px 5px 5px;
+    -o-border-radius: 5px 5px 5px 5px;
+    border-radius: 5px 5px 5px 5px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:187 */
 .x-window-default {
-    -moz-border-radius-topleft: 4px;
-    -webkit-border-top-left-radius: 4px;
-    border-top-left-radius: 4px;
-    -moz-border-radius-topright: 4px;
-    -webkit-border-top-right-radius: 4px;
-    border-top-right-radius: 4px;
-    -moz-border-radius-bottomright: 4px;
-    -webkit-border-bottom-right-radius: 4px;
-    border-bottom-right-radius: 4px;
-    -moz-border-radius-bottomleft: 4px;
-    -webkit-border-bottom-left-radius: 4px;
-    border-bottom-left-radius: 4px;
+    -moz-border-radius-topleft: 5px;
+    -webkit-border-top-left-radius: 5px;
+    border-top-left-radius: 5px;
+    -moz-border-radius-topright: 5px;
+    -webkit-border-top-right-radius: 5px;
+    border-top-right-radius: 5px;
+    -moz-border-radius-bottomright: 5px;
+    -webkit-border-bottom-right-radius: 5px;
+    border-bottom-right-radius: 5px;
+    -moz-border-radius-bottomleft: 5px;
+    -webkit-border-bottom-left-radius: 5px;
+    border-bottom-left-radius: 5px;
     padding: 0 0 0 0;
     border-width: 0px;
     border-style: solid;
@@ -9650,23 +9650,23 @@ body > .x-mask {
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:281 */
 .x-window-default-frameInfo {
-    font-family: dh-4-4-4-4-0-0-0-0-4px-4px-4px-4px;
+    font-family: dh-5-5-5-5-0-0-0-0-5px-5px-5px-5px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:347 */
 .x-window-default-tl {
-    background-position: 0 -8px;
+    background-position: 0 -10px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:351 */
 .x-window-default-tr {
-    background-position: right -12px;
+    background-position: right -15px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:355 */
 .x-window-default-bl {
-    background-position: 0 -16px;
+    background-position: 0 -20px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:359 */
 .x-window-default-br {
-    background-position: right -20px;
+    background-position: right -25px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:363 */
 .x-window-default-ml {
@@ -9682,27 +9682,27 @@ body > .x-mask {
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:383 */
 .x-window-default-bc {
-    background-position: 0 -4px;
+    background-position: 0 -5px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:388 */
 .x-window-default-tr,
 .x-window-default-br,
 .x-window-default-mr {
-    padding-right: 4px;
+    padding-right: 5px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:394 */
 .x-window-default-tl,
 .x-window-default-bl,
 .x-window-default-ml {
-    padding-left: 4px;
+    padding-left: 5px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:400 */
 .x-window-default-tc {
-    height: 4px;
+    height: 5px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:403 */
 .x-window-default-bc {
-    height: 4px;
+    height: 5px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:407 */
 .x-window-default-tl,
@@ -9803,12 +9803,12 @@ body > .x-mask {
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:187 */
 .x-window-header-default-top {
-    -moz-border-radius-topleft: 4px;
-    -webkit-border-top-left-radius: 4px;
-    border-top-left-radius: 4px;
-    -moz-border-radius-topright: 4px;
-    -webkit-border-top-right-radius: 4px;
-    border-top-right-radius: 4px;
+    -moz-border-radius-topleft: 5px;
+    -webkit-border-top-left-radius: 5px;
+    border-top-left-radius: 5px;
+    -moz-border-radius-topright: 5px;
+    -webkit-border-top-right-radius: 5px;
+    border-top-right-radius: 5px;
     -moz-border-radius-bottomright: 0;
     -webkit-border-bottom-right-radius: 0;
     border-bottom-right-radius: 0;
@@ -9838,23 +9838,23 @@ body > .x-mask {
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:281 */
 .x-window-header-default-top-frameInfo {
-    font-family: dh-4-4-0-4-0-0-0-0-10-14-10-14;
+    font-family: dh-5-5-0-5-0-0-0-0-10-14-10-14;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:347 */
 .x-window-header-default-top-tl {
-    background-position: 0 -8px;
+    background-position: 0 -10px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:351 */
 .x-window-header-default-top-tr {
-    background-position: right -12px;
+    background-position: right -15px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:355 */
 .x-window-header-default-top-bl {
-    background-position: 0 -16px;
+    background-position: 0 -20px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:359 */
 .x-window-header-default-top-br {
-    background-position: right -20px;
+    background-position: right -25px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:363 */
 .x-window-header-default-top-ml {
@@ -9870,23 +9870,23 @@ body > .x-mask {
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:383 */
 .x-window-header-default-top-bc {
-    background-position: 0 -4px;
+    background-position: 0 -5px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:388 */
 .x-window-header-default-top-tr,
 .x-window-header-default-top-br,
 .x-window-header-default-top-mr {
-    padding-right: 4px;
+    padding-right: 5px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:394 */
 .x-window-header-default-top-tl,
 .x-window-header-default-top-bl,
 .x-window-header-default-top-ml {
-    padding-left: 4px;
+    padding-left: 5px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:400 */
 .x-window-header-default-top-tc {
-    height: 4px;
+    height: 5px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:403 */
 .x-window-header-default-top-bc {
@@ -9911,19 +9911,19 @@ body > .x-mask {
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:464 */
 .x-window-header-default-top-mc {
-    padding: 6px 10px 10px 10px;
+    padding: 5px 9px 10px 9px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:187 */
 .x-window-header-default-right {
     -moz-border-radius-topleft: 0;
     -webkit-border-top-left-radius: 0;
     border-top-left-radius: 0;
-    -moz-border-radius-topright: 4px;
-    -webkit-border-top-right-radius: 4px;
-    border-top-right-radius: 4px;
-    -moz-border-radius-bottomright: 4px;
-    -webkit-border-bottom-right-radius: 4px;
-    border-bottom-right-radius: 4px;
+    -moz-border-radius-topright: 5px;
+    -webkit-border-top-right-radius: 5px;
+    border-top-right-radius: 5px;
+    -moz-border-radius-bottomright: 5px;
+    -webkit-border-bottom-right-radius: 5px;
+    border-bottom-right-radius: 5px;
     -moz-border-radius-bottomleft: 0;
     -webkit-border-bottom-left-radius: 0;
     border-bottom-left-radius: 0;
@@ -9950,23 +9950,23 @@ body > .x-mask {
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:281 */
 .x-window-header-default-right-frameInfo {
-    font-family: dh-4-4-4-0-0-0-0-0-14-10-14-10;
+    font-family: dh-5-5-5-0-0-0-0-0-14-10-14-10;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:347 */
 .x-window-header-default-right-tl {
-    background-position: 0 -8px;
+    background-position: 0 -10px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:351 */
 .x-window-header-default-right-tr {
-    background-position: right -12px;
+    background-position: right -15px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:355 */
 .x-window-header-default-right-bl {
-    background-position: 0 -16px;
+    background-position: 0 -20px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:359 */
 .x-window-header-default-right-br {
-    background-position: right -20px;
+    background-position: right -25px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:363 */
 .x-window-header-default-right-ml {
@@ -9982,13 +9982,13 @@ body > .x-mask {
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:383 */
 .x-window-header-default-right-bc {
-    background-position: 0 -4px;
+    background-position: 0 -5px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:388 */
 .x-window-header-default-right-tr,
 .x-window-header-default-right-br,
 .x-window-header-default-right-mr {
-    padding-right: 4px;
+    padding-right: 5px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:394 */
 .x-window-header-default-right-tl,
@@ -9998,11 +9998,11 @@ body > .x-mask {
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:400 */
 .x-window-header-default-right-tc {
-    height: 4px;
+    height: 5px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:403 */
 .x-window-header-default-right-bc {
-    height: 4px;
+    height: 5px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:407 */
 .x-window-header-default-right-tl,
@@ -10023,7 +10023,7 @@ body > .x-mask {
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:464 */
 .x-window-header-default-right-mc {
-    padding: 10px 6px 10px 10px;
+    padding: 9px 5px 9px 10px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:187 */
 .x-window-header-default-bottom {
@@ -10033,12 +10033,12 @@ body > .x-mask {
     -moz-border-radius-topright: 0;
     -webkit-border-top-right-radius: 0;
     border-top-right-radius: 0;
-    -moz-border-radius-bottomright: 4px;
-    -webkit-border-bottom-right-radius: 4px;
-    border-bottom-right-radius: 4px;
-    -moz-border-radius-bottomleft: 4px;
-    -webkit-border-bottom-left-radius: 4px;
-    border-bottom-left-radius: 4px;
+    -moz-border-radius-bottomright: 5px;
+    -webkit-border-bottom-right-radius: 5px;
+    border-bottom-right-radius: 5px;
+    -moz-border-radius-bottomleft: 5px;
+    -webkit-border-bottom-left-radius: 5px;
+    border-bottom-left-radius: 5px;
     padding: 10px 14px 10px 14px;
     border-width: 0px 0px 0px 0px;
     border-style: solid;
@@ -10062,23 +10062,23 @@ body > .x-mask {
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:281 */
 .x-window-header-default-bottom-frameInfo {
-    font-family: dh-0-4-4-4-0-0-0-0-10-14-10-14;
+    font-family: dh-0-5-5-5-0-0-0-0-10-14-10-14;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:347 */
 .x-window-header-default-bottom-tl {
-    background-position: 0 -8px;
+    background-position: 0 -10px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:351 */
 .x-window-header-default-bottom-tr {
-    background-position: right -12px;
+    background-position: right -15px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:355 */
 .x-window-header-default-bottom-bl {
-    background-position: 0 -16px;
+    background-position: 0 -20px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:359 */
 .x-window-header-default-bottom-br {
-    background-position: right -20px;
+    background-position: right -25px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:363 */
 .x-window-header-default-bottom-ml {
@@ -10094,19 +10094,19 @@ body > .x-mask {
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:383 */
 .x-window-header-default-bottom-bc {
-    background-position: 0 -4px;
+    background-position: 0 -5px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:388 */
 .x-window-header-default-bottom-tr,
 .x-window-header-default-bottom-br,
 .x-window-header-default-bottom-mr {
-    padding-right: 4px;
+    padding-right: 5px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:394 */
 .x-window-header-default-bottom-tl,
 .x-window-header-default-bottom-bl,
 .x-window-header-default-bottom-ml {
-    padding-left: 4px;
+    padding-left: 5px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:400 */
 .x-window-header-default-bottom-tc {
@@ -10114,7 +10114,7 @@ body > .x-mask {
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:403 */
 .x-window-header-default-bottom-bc {
-    height: 4px;
+    height: 5px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:407 */
 .x-window-header-default-bottom-tl,
@@ -10135,22 +10135,22 @@ body > .x-mask {
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:464 */
 .x-window-header-default-bottom-mc {
-    padding: 10px 10px 6px 10px;
+    padding: 10px 9px 5px 9px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:187 */
 .x-window-header-default-left {
-    -moz-border-radius-topleft: 4px;
-    -webkit-border-top-left-radius: 4px;
-    border-top-left-radius: 4px;
+    -moz-border-radius-topleft: 5px;
+    -webkit-border-top-left-radius: 5px;
+    border-top-left-radius: 5px;
     -moz-border-radius-topright: 0;
     -webkit-border-top-right-radius: 0;
     border-top-right-radius: 0;
     -moz-border-radius-bottomright: 0;
     -webkit-border-bottom-right-radius: 0;
     border-bottom-right-radius: 0;
-    -moz-border-radius-bottomleft: 4px;
-    -webkit-border-bottom-left-radius: 4px;
-    border-bottom-left-radius: 4px;
+    -moz-border-radius-bottomleft: 5px;
+    -webkit-border-bottom-left-radius: 5px;
+    border-bottom-left-radius: 5px;
     padding: 14px 10px 14px 10px;
     border-width: 0px 0px 0px 0px;
     border-style: solid;
@@ -10174,23 +10174,23 @@ body > .x-mask {
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:281 */
 .x-window-header-default-left-frameInfo {
-    font-family: dh-4-0-4-4-0-0-0-0-14-10-14-10;
+    font-family: dh-5-0-5-5-0-0-0-0-14-10-14-10;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:347 */
 .x-window-header-default-left-tl {
-    background-position: 0 -8px;
+    background-position: 0 -10px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:351 */
 .x-window-header-default-left-tr {
-    background-position: right -12px;
+    background-position: right -15px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:355 */
 .x-window-header-default-left-bl {
-    background-position: 0 -16px;
+    background-position: 0 -20px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:359 */
 .x-window-header-default-left-br {
-    background-position: right -20px;
+    background-position: right -25px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:363 */
 .x-window-header-default-left-ml {
@@ -10206,7 +10206,7 @@ body > .x-mask {
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:383 */
 .x-window-header-default-left-bc {
-    background-position: 0 -4px;
+    background-position: 0 -5px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:388 */
 .x-window-header-default-left-tr,
@@ -10218,15 +10218,15 @@ body > .x-mask {
 .x-window-header-default-left-tl,
 .x-window-header-default-left-bl,
 .x-window-header-default-left-ml {
-    padding-left: 4px;
+    padding-left: 5px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:400 */
 .x-window-header-default-left-tc {
-    height: 4px;
+    height: 5px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:403 */
 .x-window-header-default-left-bc {
-    height: 4px;
+    height: 5px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:407 */
 .x-window-header-default-left-tl,
@@ -10247,22 +10247,22 @@ body > .x-mask {
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:464 */
 .x-window-header-default-left-mc {
-    padding: 10px 10px 10px 6px;
+    padding: 9px 10px 9px 5px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:187 */
 .x-window-header-default-collapsed-top {
-    -moz-border-radius-topleft: 4px;
-    -webkit-border-top-left-radius: 4px;
-    border-top-left-radius: 4px;
-    -moz-border-radius-topright: 4px;
-    -webkit-border-top-right-radius: 4px;
-    border-top-right-radius: 4px;
-    -moz-border-radius-bottomright: 4px;
-    -webkit-border-bottom-right-radius: 4px;
-    border-bottom-right-radius: 4px;
-    -moz-border-radius-bottomleft: 4px;
-    -webkit-border-bottom-left-radius: 4px;
-    border-bottom-left-radius: 4px;
+    -moz-border-radius-topleft: 5px;
+    -webkit-border-top-left-radius: 5px;
+    border-top-left-radius: 5px;
+    -moz-border-radius-topright: 5px;
+    -webkit-border-top-right-radius: 5px;
+    border-top-right-radius: 5px;
+    -moz-border-radius-bottomright: 5px;
+    -webkit-border-bottom-right-radius: 5px;
+    border-bottom-right-radius: 5px;
+    -moz-border-radius-bottomleft: 5px;
+    -webkit-border-bottom-left-radius: 5px;
+    border-bottom-left-radius: 5px;
     padding: 10px 14px 10px 14px;
     border-width: 0px;
     border-style: solid;
@@ -10286,23 +10286,23 @@ body > .x-mask {
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:281 */
 .x-window-header-default-collapsed-top-frameInfo {
-    font-family: dh-4-4-4-4-0-0-0-0-10-14-10-14;
+    font-family: dh-5-5-5-5-0-0-0-0-10-14-10-14;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:347 */
 .x-window-header-default-collapsed-top-tl {
-    background-position: 0 -8px;
+    background-position: 0 -10px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:351 */
 .x-window-header-default-collapsed-top-tr {
-    background-position: right -12px;
+    background-position: right -15px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:355 */
 .x-window-header-default-collapsed-top-bl {
-    background-position: 0 -16px;
+    background-position: 0 -20px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:359 */
 .x-window-header-default-collapsed-top-br {
-    background-position: right -20px;
+    background-position: right -25px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:363 */
 .x-window-header-default-collapsed-top-ml {
@@ -10318,27 +10318,27 @@ body > .x-mask {
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:383 */
 .x-window-header-default-collapsed-top-bc {
-    background-position: 0 -4px;
+    background-position: 0 -5px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:388 */
 .x-window-header-default-collapsed-top-tr,
 .x-window-header-default-collapsed-top-br,
 .x-window-header-default-collapsed-top-mr {
-    padding-right: 4px;
+    padding-right: 5px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:394 */
 .x-window-header-default-collapsed-top-tl,
 .x-window-header-default-collapsed-top-bl,
 .x-window-header-default-collapsed-top-ml {
-    padding-left: 4px;
+    padding-left: 5px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:400 */
 .x-window-header-default-collapsed-top-tc {
-    height: 4px;
+    height: 5px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:403 */
 .x-window-header-default-collapsed-top-bc {
-    height: 4px;
+    height: 5px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:407 */
 .x-window-header-default-collapsed-top-tl,
@@ -10359,22 +10359,22 @@ body > .x-mask {
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:464 */
 .x-window-header-default-collapsed-top-mc {
-    padding: 6px 10px 6px 10px;
+    padding: 5px 9px 5px 9px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:187 */
 .x-window-header-default-collapsed-right {
-    -moz-border-radius-topleft: 4px;
-    -webkit-border-top-left-radius: 4px;
-    border-top-left-radius: 4px;
-    -moz-border-radius-topright: 4px;
-    -webkit-border-top-right-radius: 4px;
-    border-top-right-radius: 4px;
-    -moz-border-radius-bottomright: 4px;
-    -webkit-border-bottom-right-radius: 4px;
-    border-bottom-right-radius: 4px;
-    -moz-border-radius-bottomleft: 4px;
-    -webkit-border-bottom-left-radius: 4px;
-    border-bottom-left-radius: 4px;
+    -moz-border-radius-topleft: 5px;
+    -webkit-border-top-left-radius: 5px;
+    border-top-left-radius: 5px;
+    -moz-border-radius-topright: 5px;
+    -webkit-border-top-right-radius: 5px;
+    border-top-right-radius: 5px;
+    -moz-border-radius-bottomright: 5px;
+    -webkit-border-bottom-right-radius: 5px;
+    border-bottom-right-radius: 5px;
+    -moz-border-radius-bottomleft: 5px;
+    -webkit-border-bottom-left-radius: 5px;
+    border-bottom-left-radius: 5px;
     padding: 14px 10px 14px 10px;
     border-width: 0px;
     border-style: solid;
@@ -10398,23 +10398,23 @@ body > .x-mask {
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:281 */
 .x-window-header-default-collapsed-right-frameInfo {
-    font-family: dh-4-4-4-4-0-0-0-0-14-10-14-10;
+    font-family: dh-5-5-5-5-0-0-0-0-14-10-14-10;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:347 */
 .x-window-header-default-collapsed-right-tl {
-    background-position: 0 -8px;
+    background-position: 0 -10px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:351 */
 .x-window-header-default-collapsed-right-tr {
-    background-position: right -12px;
+    background-position: right -15px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:355 */
 .x-window-header-default-collapsed-right-bl {
-    background-position: 0 -16px;
+    background-position: 0 -20px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:359 */
 .x-window-header-default-collapsed-right-br {
-    background-position: right -20px;
+    background-position: right -25px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:363 */
 .x-window-header-default-collapsed-right-ml {
@@ -10430,27 +10430,27 @@ body > .x-mask {
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:383 */
 .x-window-header-default-collapsed-right-bc {
-    background-position: 0 -4px;
+    background-position: 0 -5px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:388 */
 .x-window-header-default-collapsed-right-tr,
 .x-window-header-default-collapsed-right-br,
 .x-window-header-default-collapsed-right-mr {
-    padding-right: 4px;
+    padding-right: 5px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:394 */
 .x-window-header-default-collapsed-right-tl,
 .x-window-header-default-collapsed-right-bl,
 .x-window-header-default-collapsed-right-ml {
-    padding-left: 4px;
+    padding-left: 5px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:400 */
 .x-window-header-default-collapsed-right-tc {
-    height: 4px;
+    height: 5px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:403 */
 .x-window-header-default-collapsed-right-bc {
-    height: 4px;
+    height: 5px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:407 */
 .x-window-header-default-collapsed-right-tl,
@@ -10471,22 +10471,22 @@ body > .x-mask {
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:464 */
 .x-window-header-default-collapsed-right-mc {
-    padding: 10px 6px 10px 6px;
+    padding: 9px 5px 9px 5px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:187 */
 .x-window-header-default-collapsed-bottom {
-    -moz-border-radius-topleft: 4px;
-    -webkit-border-top-left-radius: 4px;
-    border-top-left-radius: 4px;
-    -moz-border-radius-topright: 4px;
-    -webkit-border-top-right-radius: 4px;
-    border-top-right-radius: 4px;
-    -moz-border-radius-bottomright: 4px;
-    -webkit-border-bottom-right-radius: 4px;
-    border-bottom-right-radius: 4px;
-    -moz-border-radius-bottomleft: 4px;
-    -webkit-border-bottom-left-radius: 4px;
-    border-bottom-left-radius: 4px;
+    -moz-border-radius-topleft: 5px;
+    -webkit-border-top-left-radius: 5px;
+    border-top-left-radius: 5px;
+    -moz-border-radius-topright: 5px;
+    -webkit-border-top-right-radius: 5px;
+    border-top-right-radius: 5px;
+    -moz-border-radius-bottomright: 5px;
+    -webkit-border-bottom-right-radius: 5px;
+    border-bottom-right-radius: 5px;
+    -moz-border-radius-bottomleft: 5px;
+    -webkit-border-bottom-left-radius: 5px;
+    border-bottom-left-radius: 5px;
     padding: 10px 14px 10px 14px;
     border-width: 0px;
     border-style: solid;
@@ -10510,23 +10510,23 @@ body > .x-mask {
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:281 */
 .x-window-header-default-collapsed-bottom-frameInfo {
-    font-family: dh-4-4-4-4-0-0-0-0-10-14-10-14;
+    font-family: dh-5-5-5-5-0-0-0-0-10-14-10-14;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:347 */
 .x-window-header-default-collapsed-bottom-tl {
-    background-position: 0 -8px;
+    background-position: 0 -10px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:351 */
 .x-window-header-default-collapsed-bottom-tr {
-    background-position: right -12px;
+    background-position: right -15px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:355 */
 .x-window-header-default-collapsed-bottom-bl {
-    background-position: 0 -16px;
+    background-position: 0 -20px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:359 */
 .x-window-header-default-collapsed-bottom-br {
-    background-position: right -20px;
+    background-position: right -25px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:363 */
 .x-window-header-default-collapsed-bottom-ml {
@@ -10542,27 +10542,27 @@ body > .x-mask {
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:383 */
 .x-window-header-default-collapsed-bottom-bc {
-    background-position: 0 -4px;
+    background-position: 0 -5px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:388 */
 .x-window-header-default-collapsed-bottom-tr,
 .x-window-header-default-collapsed-bottom-br,
 .x-window-header-default-collapsed-bottom-mr {
-    padding-right: 4px;
+    padding-right: 5px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:394 */
 .x-window-header-default-collapsed-bottom-tl,
 .x-window-header-default-collapsed-bottom-bl,
 .x-window-header-default-collapsed-bottom-ml {
-    padding-left: 4px;
+    padding-left: 5px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:400 */
 .x-window-header-default-collapsed-bottom-tc {
-    height: 4px;
+    height: 5px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:403 */
 .x-window-header-default-collapsed-bottom-bc {
-    height: 4px;
+    height: 5px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:407 */
 .x-window-header-default-collapsed-bottom-tl,
@@ -10583,22 +10583,22 @@ body > .x-mask {
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:464 */
 .x-window-header-default-collapsed-bottom-mc {
-    padding: 6px 10px 6px 10px;
+    padding: 5px 9px 5px 9px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:187 */
 .x-window-header-default-collapsed-left {
-    -moz-border-radius-topleft: 4px;
-    -webkit-border-top-left-radius: 4px;
-    border-top-left-radius: 4px;
-    -moz-border-radius-topright: 4px;
-    -webkit-border-top-right-radius: 4px;
-    border-top-right-radius: 4px;
-    -moz-border-radius-bottomright: 4px;
-    -webkit-border-bottom-right-radius: 4px;
-    border-bottom-right-radius: 4px;
-    -moz-border-radius-bottomleft: 4px;
-    -webkit-border-bottom-left-radius: 4px;
-    border-bottom-left-radius: 4px;
+    -moz-border-radius-topleft: 5px;
+    -webkit-border-top-left-radius: 5px;
+    border-top-left-radius: 5px;
+    -moz-border-radius-topright: 5px;
+    -webkit-border-top-right-radius: 5px;
+    border-top-right-radius: 5px;
+    -moz-border-radius-bottomright: 5px;
+    -webkit-border-bottom-right-radius: 5px;
+    border-bottom-right-radius: 5px;
+    -moz-border-radius-bottomleft: 5px;
+    -webkit-border-bottom-left-radius: 5px;
+    border-bottom-left-radius: 5px;
     padding: 14px 10px 14px 10px;
     border-width: 0px;
     border-style: solid;
@@ -10622,23 +10622,23 @@ body > .x-mask {
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:281 */
 .x-window-header-default-collapsed-left-frameInfo {
-    font-family: dh-4-4-4-4-0-0-0-0-14-10-14-10;
+    font-family: dh-5-5-5-5-0-0-0-0-14-10-14-10;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:347 */
 .x-window-header-default-collapsed-left-tl {
-    background-position: 0 -8px;
+    background-position: 0 -10px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:351 */
 .x-window-header-default-collapsed-left-tr {
-    background-position: right -12px;
+    background-position: right -15px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:355 */
 .x-window-header-default-collapsed-left-bl {
-    background-position: 0 -16px;
+    background-position: 0 -20px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:359 */
 .x-window-header-default-collapsed-left-br {
-    background-position: right -20px;
+    background-position: right -25px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:363 */
 .x-window-header-default-collapsed-left-ml {
@@ -10654,27 +10654,27 @@ body > .x-mask {
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:383 */
 .x-window-header-default-collapsed-left-bc {
-    background-position: 0 -4px;
+    background-position: 0 -5px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:388 */
 .x-window-header-default-collapsed-left-tr,
 .x-window-header-default-collapsed-left-br,
 .x-window-header-default-collapsed-left-mr {
-    padding-right: 4px;
+    padding-right: 5px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:394 */
 .x-window-header-default-collapsed-left-tl,
 .x-window-header-default-collapsed-left-bl,
 .x-window-header-default-collapsed-left-ml {
-    padding-left: 4px;
+    padding-left: 5px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:400 */
 .x-window-header-default-collapsed-left-tc {
-    height: 4px;
+    height: 5px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:403 */
 .x-window-header-default-collapsed-left-bc {
-    height: 4px;
+    height: 5px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:407 */
 .x-window-header-default-collapsed-left-tl,
@@ -10695,7 +10695,7 @@ body > .x-mask {
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:464 */
 .x-window-header-default-collapsed-left-mc {
-    padding: 10px 6px 10px 6px;
+    padding: 9px 5px 9px 5px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-neutral/sass/var/window/Window.scss:857 */
 .x-window-header-default .x-window-header-icon {
@@ -10941,7 +10941,7 @@ body > .x-mask {
     border-width: 1px;
     border-style: solid;
     border-color: #d4d4d4;
-    border-radius: 4px 4px 4px 4px;
+    border-radius: 5px 5px 5px 5px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-neutral/sass/var/form/field/Text.scss:229 */
 .x-form-trigger-wrap-default.x-form-trigger-wrap-focus {
@@ -10956,7 +10956,7 @@ body > .x-mask {
     color: #404040;
     padding: 4px 6px 3px 6px;
     background-color: #fff;
-    border-radius: 4px 4px 4px 4px;
+    border-radius: 5px 5px 5px 5px;
     font: 400 13px/21px Inter, sans-serif;
     min-height: 28px;
 }
@@ -11773,18 +11773,18 @@ a.x-monthpicker-yearnav-button:hover {
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:187 */
 .x-tip-default {
-    -moz-border-radius-topleft: 4px;
-    -webkit-border-top-left-radius: 4px;
-    border-top-left-radius: 4px;
-    -moz-border-radius-topright: 4px;
-    -webkit-border-top-right-radius: 4px;
-    border-top-right-radius: 4px;
+    -moz-border-radius-topleft: 5px;
+    -webkit-border-top-left-radius: 5px;
+    border-top-left-radius: 5px;
+    -moz-border-radius-topright: 5px;
+    -webkit-border-top-right-radius: 5px;
+    border-top-right-radius: 5px;
     -moz-border-radius-bottomright: 5px;
     -webkit-border-bottom-right-radius: 5px;
     border-bottom-right-radius: 5px;
-    -moz-border-radius-bottomleft: 4px;
-    -webkit-border-bottom-left-radius: 4px;
-    border-bottom-left-radius: 4px;
+    -moz-border-radius-bottomleft: 5px;
+    -webkit-border-bottom-left-radius: 5px;
+    border-bottom-left-radius: 5px;
     padding: 4px 4px 4px 4px;
     border-width: 1px;
     border-style: solid;
@@ -11956,18 +11956,18 @@ a.x-monthpicker-yearnav-button:hover {
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:187 */
 .x-tip-form-invalid {
-    -moz-border-radius-topleft: 4px;
-    -webkit-border-top-left-radius: 4px;
-    border-top-left-radius: 4px;
-    -moz-border-radius-topright: 4px;
-    -webkit-border-top-right-radius: 4px;
-    border-top-right-radius: 4px;
+    -moz-border-radius-topleft: 5px;
+    -webkit-border-top-left-radius: 5px;
+    border-top-left-radius: 5px;
+    -moz-border-radius-topright: 5px;
+    -webkit-border-top-right-radius: 5px;
+    border-top-right-radius: 5px;
     -moz-border-radius-bottomright: 5px;
     -webkit-border-bottom-right-radius: 5px;
     border-bottom-right-radius: 5px;
-    -moz-border-radius-bottomleft: 4px;
-    -webkit-border-bottom-left-radius: 4px;
-    border-bottom-left-radius: 4px;
+    -moz-border-radius-bottomleft: 5px;
+    -webkit-border-bottom-left-radius: 5px;
+    border-bottom-left-radius: 5px;
     padding: 4px 4px 4px 4px;
     border-width: 1px;
     border-style: solid;
@@ -12380,11 +12380,11 @@ a.x-color-picker-item:hover {
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-neutral/sass/var/form/field/Tag.scss:333 */
 .x-form-text-default .x-tagfield-item {
-    -webkit-border-radius: 4px 4px 4px 4px;
-    -moz-border-radius: 4px 4px 4px 4px;
-    -ms-border-radius: 4px 4px 4px 4px;
-    -o-border-radius: 4px 4px 4px 4px;
-    border-radius: 4px 4px 4px 4px;
+    -webkit-border-radius: 5px 5px 5px 5px;
+    -moz-border-radius: 5px 5px 5px 5px;
+    -ms-border-radius: 5px 5px 5px 5px;
+    -o-border-radius: 5px 5px 5px 5px;
+    border-radius: 5px 5px 5px 5px;
     background-color: #e5e5e5;
     border: 1px solid #e5e5e5;
     padding: 0 21px 0 5px;
@@ -12469,12 +12469,12 @@ a.x-color-picker-item:hover {
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-neutral/sass/src/view/Table.scss:36 */
 .x-grid-item-alt {
-    background-color: #f6f6f6;
+    background-color: #fff;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-neutral/sass/src/view/Table.scss:40 */
 .x-grid-item-over {
     color: #404040;
-    background-color: #e3eef1;
+    background-color: #f0f9ff;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-neutral/sass/src/view/Table.scss:47 */
 .x-grid-item-focused {
@@ -12503,7 +12503,7 @@ a.x-color-picker-item:hover {
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-neutral/sass/src/view/Table.scss:83 */
 .x-grid-item-selected {
     color: #404040;
-    background-color: #fffbeb;
+    background-color: #f0f9ff;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-neutral/sass/src/view/Table.scss:89 */
 .x-grid-with-row-lines .x-grid-item {
@@ -12518,22 +12518,22 @@ a.x-color-picker-item:hover {
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-neutral/sass/src/view/Table.scss:101 */
 .x-grid-with-row-lines .x-grid-item.x-grid-item-over {
     border-style: solid;
-    border-color: #d8e2e5;
+    border-color: #e4edf2;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-neutral/sass/src/view/Table.scss:106 */
 .x-grid-with-row-lines .x-grid-item-over + .x-grid-item {
     border-top-style: solid;
-    border-top-color: #d8e2e5;
+    border-top-color: #e4edf2;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-neutral/sass/src/view/Table.scss:111 */
 .x-grid-with-row-lines .x-grid-item.x-grid-item-selected {
     border-style: solid;
-    border-color: #f2eedf;
+    border-color: #e4edf2;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-neutral/sass/src/view/Table.scss:116 */
 .x-grid-with-row-lines .x-grid-item-selected + .x-grid-item {
     border-top-style: solid;
-    border-top-color: #f2eedf;
+    border-top-color: #e4edf2;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-neutral/sass/src/view/Table.scss:121 */
 .x-grid-with-row-lines .x-grid-item:last-child {
@@ -12573,7 +12573,7 @@ a.x-color-picker-item:hover {
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-neutral/sass/src/view/Table.scss:242 */
 .x-grid-row .x-grid-cell-selected {
     color: #404040;
-    background-color: #fffbeb;
+    background-color: #f0f9ff;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-neutral/sass/src/view/Table.scss:249 */
 .x-grid-with-col-lines .x-grid-cell {
@@ -12583,12 +12583,12 @@ a.x-color-picker-item:hover {
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-neutral/sass/src/view/Table.scss:255 */
 .x-grid-with-col-lines .x-grid-item-over .x-grid-cell {
-    border-color: #d8e2e5;
+    border-color: #e4edf2;
     border-style: solid;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-neutral/sass/src/view/Table.scss:260 */
 .x-grid-with-col-lines .x-grid-item-selected .x-grid-cell {
-    border-color: #f2eedf;
+    border-color: #e4edf2;
     border-style: solid;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-neutral/sass/src/view/Table.scss:273 */
@@ -12731,7 +12731,7 @@ a.x-color-picker-item:hover {
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-neutral/sass/src/grid/column/Column.scss:79 */
 .x-column-header-over {
     background-image: none;
-    background-color: #e3eef1;
+    background-color: #f0f9ff;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-neutral/sass/src/grid/column/Column.scss:83 */
 .x-column-header-sort-ASC,
@@ -12741,11 +12741,11 @@ a.x-color-picker-item:hover {
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-neutral/sass/src/grid/column/Column.scss:111 */
 .x-column-header-open {
-    background-color: #e3eef1;
+    background-color: #f0f9ff;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-neutral/sass/src/grid/column/Column.scss:114 */
 .x-column-header-open .x-column-header-trigger {
-    background-color: #d8e2e5;
+    background-color: #e4edf2;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-neutral/sass/src/grid/column/Column.scss:119 */
 .x-column-header-over .x-column-header-trigger,
@@ -14263,7 +14263,7 @@ a.x-color-picker-item:hover {
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-neutral/sass/src/grid/plugin/grouping/Column.scss:27 */
 .x-grid-group-column-over {
     background-image: none;
-    background-color: #e3eef1;
+    background-color: #f0f9ff;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-neutral/sass/src/grid/plugin/grouping/Column.scss:31 */
 .x-grid-group-column-inner {

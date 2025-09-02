@@ -42,7 +42,7 @@ body > .x-mask {
     height: 100%;
     /*top: -5%; for original lineheight */
     top: 0%;
-    border-color: var(--wt-theme-color-1-on);
+    border-color: var(--wt-theme-color-1);
 }
 .x-btn-wrap-button-secondary-small.x-btn-split-right > .x-btn-button:after,
 .x-btn-wrap-button-secondary-medium.x-btn-split-right > .x-btn-button:after,
@@ -213,12 +213,12 @@ body > .x-mask {
 }
 /* Fix button down-arrow color and icon */
 .x-datepicker .x-btn-wrap-default-small.x-btn-arrow-right:after {
-    color: var(--wt-theme-color-surface-on-1);
+    color: var(--wt-theme-color-n1);
     /*content: '\f0d7'*/
 }
 /* Style highlight and full dates */
 .x-datepicker-cell.so-datepicker-highlighted {
-    background-color: var(--wt-theme-color-1-ct);
+    background-color: var(--wt-theme-color-ct-1);
 }
 .x-datepicker-cell.so-datepicker-highlighted.so-datepicker-highlighted-begin {
     border-top-left-radius: 4px;
@@ -451,7 +451,7 @@ body > .x-mask {
 }
 /* Style week number (WXX) in month view */
 .so-fullcalendar .fc-daygrid-week-number {
-    background-color: var(--wt-theme-color-2-ct);
+    background-color: var(--wt-theme-color-ct-2);
 }
 .so-fullcalendar .fc-more-link {
     color: var(--wt-theme-color-1) !important;
@@ -505,7 +505,7 @@ body > .x-mask {
 
 /* ---------- Sonicle.grid.column.Nest */
 .so-nestcolumn-hierarchysymbol {
-    color: var(--wt-theme-color-surface-on-2);
+    color: var(--wt-theme-color-n2);
 }
 /* <-- USEFUL?
 .so-nestcolumn-wrap-root > span:nth-of-type(1), .so-nestcolumn-wrap-root > i:nth-of-type(1) {

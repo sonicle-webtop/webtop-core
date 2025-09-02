@@ -2,10 +2,8 @@
 @import url("wtheme-neptune-override.css");
 
 :root {
-    --wt-theme-color-surface-ct: #fafafa;
     --wt-theme-color-surface: #ffffff; /* White */
     --wt-theme-color-1: #3892d4;
-    --wt-theme-color-1-on: #f9fafb; /* Gray/50 */
     
     --wt-theme-color-ok: #4da07d;
     --wt-theme-color-ok-on: #ffffff; /* White */

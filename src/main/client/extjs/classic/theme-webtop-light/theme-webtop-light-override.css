@@ -12,23 +12,15 @@
     --wt-theme-color-surface-l2-inv: #ffffff; /* White */
     --wt-theme-color-surface-l3: #e5e5e5; /* Neutral/200 */
     --wt-theme-color-surface-l4: #d4d4d4; /* Neutral/300 */
-    --wt-theme-color-surface-on-1: #404040; /* Neutral/700 */
-    --wt-theme-color-surface-on-1-inv: #404040; /* Neutral/700 */
-    --wt-theme-color-surface-on-2: #737373; /* Neutral/500 */
-    --wt-theme-color-surface-on-3: #a3a3a3; /* Neutral/400 */
-    
-    --wt-theme-color-1: #0e7490; /* Cyan/700 */
-    --wt-theme-color-1-on: #fafafa; /* Neutral/50 */
-    --wt-theme-color-1-ct: #e0f2fe; /* Sky/100 */
-    --wt-theme-color-1-ct-on: #404040; /* Neutral/700 */
-    
-    --wt-theme-color-2: #e5e7eb; /* Cyan/200 */
-    --wt-theme-color-2-on: #404040; /* Neutral/700 */
-    --wt-theme-color-ct-2: #ffffff; /* White */
-    --wt-theme-color-ct-2-on: #e5e5e5; /* Neutral/500 */
-    
-    --wt-theme-color-3: #a3a3a3; /* Neutral/400 */
-    
+    --wt-theme-color-ct-1: #f0f9ff; /* Sky/50 */
+    --wt-theme-color-ct-2: #fff7ed; /* Orange/50 */
+    --wt-theme-color-n1: #404040; /* Neutral/700 */
+    --wt-theme-color-n1-inv: #404040; /* Neutral/700 */
+    --wt-theme-color-n2: #737373; /* Neutral/500 */
+    --wt-theme-color-n3: #a3a3a3; /* Neutral/400 */
+    --wt-theme-color-1: #0e7490; /* Cyan/700 - Text/Icon 1st */
+    --wt-theme-color-2: #4338CA; /* Indigo/700 - Text/Icon 2nd */
+    --wt-theme-color-3: #a3a3a3; /* Neutral/400 - Text Placeholder/Icon Inactive */
     --wt-theme-color-ok: #047857; /* Emerald/700 */
     --wt-theme-color-ok-on: #ecfdf5; /* Emerald/50 */
     --wt-theme-color-ok-ct: #d1fae5; /* Emerald/100 */
@@ -60,9 +52,9 @@
     --wt-theme-color-mbox-hd-on: #404040; /* Neutral/700 */
     --wt-theme-color-popup: #737373; /* Neutral/500 */
     --wt-theme-color-popup-on: #e5e5e5; /* Neutral/200 */
-    --wt-theme-color-topbar: #f5f5f5; /* Neutral/100 */
-    --wt-theme-color-navbar: #f5f5f5; /* Neutral/100 */
-    --wt-theme-color-taskbar: #f5f5f5; /* Neutral/100 */
+    --wt-theme-color-topbar: var(--wt-theme-color-surface-l3);
+    --wt-theme-color-navbar: var(--wt-theme-color-surface-l3);
+    --wt-theme-color-taskbar: var(--wt-theme-color-surface-l3);
     
     --wt-theme-fontfamily: 'Inter, helvetica, arial, verdana, sans-serif';
     --wt-theme-fontsize-xs: 12px;
@@ -89,10 +81,10 @@
     --wt-theme-fontweight-medium: 500;
     --wt-theme-fontweight-bold: 500; /* Do NOT use it keep at 500 */
     
-    --wt-theme-dialog-radius: 4px;
-    --wt-theme-menu-radius: 4px;
-    --wt-theme-field-radius: 4px;
-    --wt-theme-grid-radius: 4px;
+    --wt-theme-dialog-radius: 5px;
+    --wt-theme-menu-radius: 5px;
+    --wt-theme-field-radius: 5px;
+    --wt-theme-grid-radius: 5px;
     
     /* ---------- Sonicle.panel.CanbanColumn */
     --so-kanbancolumn-border-radius: 4px;
@@ -100,15 +92,16 @@
     --so-displayfield-clickable-color: #0e7490; /* Cyan/700 */
     --so-displayfield-clickable-hover-color: #164e63; /* Cyan/900 */
     /* ---------- FullCalendar */
-    --fc-page-bg-color: var(--wt-theme-color-surface-l0) !Important;
-    --fc-border-color: #E5E7EB !Important; /* Gray/200 */
-    --fc-neutral-bg-color: #f9fafb !Important; /* Gray/50 */
-    --fc-now-indicator-color: var(--wt-theme-color-1) !Important;
-    --fc-today-bg-color: #fff7ed !Important; /* Orange/50 */
-    --fc-day-other-color: rgba(214,214,214,.2);
-    --fc-non-business-color: rgba(229,231,235,.3) !Important; /* Gray/200 */
-    --fc-event-resizer-swatch-bg-color: #ffffff;
-    --fc-event-resizer-swatch-border-color: #111827;
+    --fc-page-bg-color: var(--wt-theme-color-surface-l0) !important;
+    --fc-border-color: var(--wt-theme-color-surface-l3) !important;
+    --fc-neutral-bg-color: var(--wt-theme-color-surface-l1) !important;
+    --fc-now-indicator-color: var(--wt-theme-color-1) !important;
+    --fc-today-bg-color: var(--wt-theme-color-ct-2) !important;
+    --fc-day-other-color: rgba(229,229,229,.3) !important; /* Neutral/200 @30% */
+    --fc-non-business-color: rgba(229,229,229,.2) !important; /* Neutral/200 @20% */
+    --fc-highlight-color: rgba(186,230,253,.3) !important; /* Sky/200 @30% */
+    --fc-event-resizer-swatch-bg-color: #171717; /* Neutral/900 */
+    --fc-event-resizer-swatch-border-color: #171717; /* Neutral/900 */
 	--fc-event-style-shadow: rgba(0,0,0,.1);
 }
 
@@ -122,4 +115,10 @@
 /* ---------- Sonicle.LoadMask */
 .so-mask-button-wrap {
     padding-top: 15px;
+}
+
+/* ---------- Fullcalendar */
+/* Fix opacity: other-days daynum is too light and similar with bg */
+.fc .fc-day-other .fc-daygrid-day-top {
+    opacity: .5;
 }

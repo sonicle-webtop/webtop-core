@@ -6,7 +6,6 @@
 .wt-theme-bg-surface-2 { background-color: var(--wt-theme-color-surface-l0); }
 .wt-theme-bg-window { background-color: var(--wt-theme-color-surface-l0); }
 .wt-theme-bg-dialog { background-color: var(--wt-theme-color-surface-l0); }
-.wt-theme-1 { background-color: var(--wt-theme-color-1); color: var(--wt-theme-color-1-on); }
 .wt-theme-color-ok { color: var(--wt-theme-color-ok); }
 .wt-theme-color-warn { color: var(--wt-theme-color-warn); }
 .wt-theme-color-error { color: var(--wt-theme-color-error); }

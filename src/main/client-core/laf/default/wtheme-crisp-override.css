@@ -30,7 +30,7 @@
 .wt-form-toolbar-title {
     font-size: var(--wt-theme-fontsize-base, inherit);
     font-weight: var(--wt-theme-fontweight-medium, normal);
-    color: var(--wt-theme-color-surface-on-1) !important;
+    color: var(--wt-theme-color-n1) !important;
 }
 
 /* topbar: border */
