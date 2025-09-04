@@ -5760,7 +5760,7 @@ body > .x-mask {
 .x-btn.x-btn-menu-active.x-btn-default-toolbar-small,
 .x-btn.x-btn-pressed.x-btn-default-toolbar-small {
     background-image: none;
-    background-color: transparent;
+    background-color: #d4d4d4;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-neutral/sass/var/button/Button.scss:2904 */
 .x-keyboard-mode .x-btn-focus.x-btn-menu-active.x-btn-default-toolbar-small,
@@ -5856,7 +5856,7 @@ body > .x-mask {
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-neutral/sass/var/button/Button.scss:3055 */
 .x-btn.x-btn-menu-active .x-btn-default-toolbar-small-mc,
 .x-btn.x-btn-pressed .x-btn-default-toolbar-small-mc {
-    background-color: transparent;
+    background-color: #d4d4d4;
     background-image: url(images/btn/btn-default-toolbar-small-pressed-fbg.gif);
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-neutral/sass/var/button/Button.scss:3069 */
@@ -5884,7 +5884,7 @@ body > .x-mask {
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-neutral/sass/var/button/Button.scss:3081 */
 .x-keyboard-mode .x-btn-focus.x-btn-menu-active .x-btn-default-toolbar-small-mc,
 .x-keyboard-mode .x-btn-focus.x-btn-pressed .x-btn-default-toolbar-small-mc {
-    background-color: transparent;
+    background-color: #d4d4d4;
     background-image: url(images/btn/btn-default-toolbar-small-focus-pressed-fbg.gif);
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-neutral/sass/var/button/Button.scss:3095 */
@@ -6315,7 +6315,7 @@ body > .x-mask {
 .x-btn.x-btn-menu-active.x-btn-default-toolbar-medium,
 .x-btn.x-btn-pressed.x-btn-default-toolbar-medium {
     background-image: none;
-    background-color: transparent;
+    background-color: #d4d4d4;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-neutral/sass/var/button/Button.scss:2904 */
 .x-keyboard-mode .x-btn-focus.x-btn-menu-active.x-btn-default-toolbar-medium,
@@ -6411,7 +6411,7 @@ body > .x-mask {
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-neutral/sass/var/button/Button.scss:3055 */
 .x-btn.x-btn-menu-active .x-btn-default-toolbar-medium-mc,
 .x-btn.x-btn-pressed .x-btn-default-toolbar-medium-mc {
-    background-color: transparent;
+    background-color: #d4d4d4;
     background-image: url(images/btn/btn-default-toolbar-medium-pressed-fbg.gif);
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-neutral/sass/var/button/Button.scss:3069 */
@@ -6439,7 +6439,7 @@ body > .x-mask {
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-neutral/sass/var/button/Button.scss:3081 */
 .x-keyboard-mode .x-btn-focus.x-btn-menu-active .x-btn-default-toolbar-medium-mc,
 .x-keyboard-mode .x-btn-focus.x-btn-pressed .x-btn-default-toolbar-medium-mc {
-    background-color: transparent;
+    background-color: #d4d4d4;
     background-image: url(images/btn/btn-default-toolbar-medium-focus-pressed-fbg.gif);
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-neutral/sass/var/button/Button.scss:3095 */
@@ -6870,7 +6870,7 @@ body > .x-mask {
 .x-btn.x-btn-menu-active.x-btn-default-toolbar-large,
 .x-btn.x-btn-pressed.x-btn-default-toolbar-large {
     background-image: none;
-    background-color: transparent;
+    background-color: #d4d4d4;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-neutral/sass/var/button/Button.scss:2904 */
 .x-keyboard-mode .x-btn-focus.x-btn-menu-active.x-btn-default-toolbar-large,
@@ -6966,7 +6966,7 @@ body > .x-mask {
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-neutral/sass/var/button/Button.scss:3055 */
 .x-btn.x-btn-menu-active .x-btn-default-toolbar-large-mc,
 .x-btn.x-btn-pressed .x-btn-default-toolbar-large-mc {
-    background-color: transparent;
+    background-color: #d4d4d4;
     background-image: url(images/btn/btn-default-toolbar-large-pressed-fbg.gif);
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-neutral/sass/var/button/Button.scss:3069 */
@@ -6994,7 +6994,7 @@ body > .x-mask {
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-neutral/sass/var/button/Button.scss:3081 */
 .x-keyboard-mode .x-btn-focus.x-btn-menu-active .x-btn-default-toolbar-large-mc,
 .x-keyboard-mode .x-btn-focus.x-btn-pressed .x-btn-default-toolbar-large-mc {
-    background-color: transparent;
+    background-color: #d4d4d4;
     background-image: url(images/btn/btn-default-toolbar-large-focus-pressed-fbg.gif);
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-neutral/sass/var/button/Button.scss:3095 */

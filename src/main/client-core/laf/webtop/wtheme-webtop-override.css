@@ -56,7 +56,7 @@
 .wt-tool .x-panel-body { border-top: 0px; }
 /* Customize HD style */
 .wt-tool .wt-tool-bg { background-color: var(--wt-theme-color-surface-l2); }
-.wt-tool-hd-wrap { background-color: var(--wt-theme-color-surface-l2); padding-top: 10px; padding-left: 6px; }
+.wt-tool-hd-wrap { background-color: var(--wt-theme-color-surface-l2); padding-top: 4px }
 .wt-tool-hd-title { font-size: var(--wt-theme-fontsize-lg); font-weight: 500; }
 .wt-tool-hd-separator { border-top-color: #e5e7eb !important; } /* Gray/200 FIXME: evaluate to change directly fieldset color in theme */
 .wt-tool-foo { padding-top: 10px; padding-bottom: 15px; }

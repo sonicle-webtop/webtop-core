@@ -118,6 +118,7 @@
 .wt-icon-delete { background-image: url('act-delete_16.svg') !important; background-size: contain; }
 .wt-icon-copy { background-image: url('act-copy_16.svg') !important; background-size: contain; }
 .wt-icon-move { background-image: url('act-move_16.svg') !important; background-size: contain; }
+.wt-icon-clipboard-paste { background-image: url('clipboard-paste_16.svg') !important; background-size: contain; }
 .wt-icon-restore { background-image: url('act-restore_16.svg') !important; background-size: contain; }
 .wt-icon-refresh { background-image: url('act-refresh_16.svg') !important; background-size: contain; }
 .wt-icon-cleanup { background-image: url('act-cleanup_16.svg') !important; background-size: contain; }
@@ -214,7 +215,6 @@
 .wt-icon-propView-hier-off { background-image: url('propview-hier-off_16.svg') !important; background-size: contain; }
 .wt-icon-browser-checkPermission { background-image: url('browser-checkperms_16.svg') !important; background-size: contain; }
 .wt-icon-emoji { background-image: url('emoji_16.svg') !important; background-size: contain; }
-.wt-icon-clipboard-paste { background-image: url('clipboard-paste_16.svg') !important; background-size: contain; }
 .wt-icon-viewOptions { background-image: url('viewOptions_16.svg') !important; background-size: contain; }
 .wt-icon-clearState { background-image: url('clear-state_16.svg') !important; background-size: contain; }
 /* ---------- Icons (HTMLEditor) */
