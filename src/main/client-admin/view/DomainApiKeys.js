@@ -110,7 +110,7 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainApiKeys', {
 					format: WT.getShortDateTimeFmt(),
 					usingDefaultRenderer: true, // Necessary for renderer usage below
 					renderer : function(v, meta, rec) {
-						if (rec.isExpired()) meta.tdCls = 'wt-theme-color-error';
+						if (rec.isExpired()) meta.tdCls = 'wt-color-error';
 						return Ext.isEmpty(v) ? '<span style="font-size:larger;">&#8734;</span>' : this.defaultRenderer(v);
 					},
 					align: 'center',

@@ -92,7 +92,7 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainResources', {
 			},
 			viewConfig: {
 				getRowClass: function(rec) {
-					return rec.get('available') === false ? 'wt-text-striked wt-theme-color-error' : '';
+					return rec.get('available') === false ? 'wt-text-striked wt-color-error' : '';
 				}
 			},
 			columns: [

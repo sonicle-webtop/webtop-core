@@ -62,7 +62,7 @@ body > .x-mask {
 }
 
 /* ---------- Ext.form.field.Text */
-/* Internal triggers do NOT have radius set by default, this hides corners when using radius... */
+/* Internal wrapped triggers do NOT have radius set by default, this hides external corners when using radius... */
 .x-form-trigger.x-form-trigger-right.x-form-trigger-last {
     border-top-right-radius: var(--wt-theme-field-radius);
     border-bottom-right-radius: var(--wt-theme-field-radius);
@@ -71,20 +71,14 @@ body > .x-mask {
     border-top-left-radius: var(--wt-theme-field-radius);
     border-bottom-left-radius: var(--wt-theme-field-radius);
 }
-/*.x-form-trigger:not(.x-form-trigger-left) {
-    border-top-right-radius: var(--wt-theme-field-radius);
-    border-bottom-right-radius: var(--wt-theme-field-radius);
+/* Force a BG for the trigger-wrap el: this allows to hide the ugly effect on INPUT el (x-form-field) when using rounded corners */
+.x-form-trigger-wrap-default {
+    background-color: var(--wt-theme-color-surface-l0);
 }
-.x-form-trigger.x-form-trigger-left {
-    border-top-left-radius: var(--wt-theme-field-radius);
-    border-bottom-left-radius: var(--wt-theme-field-radius);
-}
-*/
 
-/* ---------- Ext.form.field.TextArea */
-.x-form-text-wrap:not(.x-form-trigger-wrap > .x-form-trigger.x-form-trigger-left) {
-    
-}
+/* ---------- Ext.form.field.Text (some tries that does NOT work!) */
+/* Do NOT apply any right-radius on INPUT el (x-form-field) when there are some right-triggers (x-form-trigger-left) */
+/*
 .x-form-text-wrap {
     border-radius: var(--wt-theme-field-radius);
 }
@@ -92,6 +86,11 @@ body > .x-mask {
     border-top-right-radius: 0px;
     border-bottom-right-radius: 0px;
 }
+.x-form-text-wrap:has(+ .x-form-trigger-right) .x-form-field {
+    border-top-right-radius: 0px;
+    border-bottom-right-radius: 0px;
+}
+*/
 
 /* ---------- Ext.form.trigger.Spinner  */
 /* Fix width, too large for field */
@@ -126,7 +125,7 @@ body > .x-mask {
 /* Fix top-border size and apply radius only for no-header grids */
 .x-grid.x-grid-header-hidden .x-grid-body:not(.x-grid-no-border) {
     border-top-width: 1px;
-    border-radius: var(--wt-theme-grid-radius, 0px);
+    /*border-radius: var(--wt-theme-grid-radius, 0px);*/
 }
 
 /* ---------- Ext.grid.RowEditorButtons */
@@ -424,12 +423,12 @@ body > .x-mask {
     width: 260px; /* Keep nav-buttons equally spaced! */
 }
 .so-fullcalendar-panel-toolbar {
-    margin-bottom: 16px;
+    margin-bottom: 12px;
 }
 .so-fullcalendar-panel-toolbar-hdtext {
     font-weight: var(--wt-theme-fontweight-regular);
-    font-size: var(--wt-theme-fontsize-3xl);
-    line-height: var(--wt-theme-lineheight-3xl);
+    font-size: var(--wt-theme-fontsize-2xl);
+    line-height: var(--wt-theme-lineheight-2xl);
 }
 .so-fullcalendar-panel-toolbar-hdtext .so-fullcalendar-panel-toolbar-hdtext-cmyo span[data-part="view-month"] {
     font-weight: var(--wt-theme-fontweight-medium);

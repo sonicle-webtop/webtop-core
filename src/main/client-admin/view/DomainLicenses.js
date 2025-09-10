@@ -186,8 +186,8 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainLicenses', {
 					//emptyCellText: '\u221e',
 					usingDefaultRenderer: true, // Necessary for renderer usage below
 					renderer : function(v, meta, rec) {
-						if (rec.isExpired()) meta.tdCls = 'wt-theme-color-error';
-						//if (rec.get('expired')) meta.tdCls = 'wt-theme-color-error';
+						if (rec.isExpired()) meta.tdCls = 'wt-color-error';
+						//if (rec.get('expired')) meta.tdCls = 'wt-color-error';
 						return Ext.isEmpty(v) ? '<span style="font-size:larger;">&#8734;</span>' : this.defaultRenderer(v);
 					},
 					align: 'center',
@@ -199,7 +199,7 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainLicenses', {
 						if (!rec.get('quantityTypeUsers')) return '';
 						var max = rec.get('maxLease');
 						if (max > -1) {
-							if (v >= max) meta.tdCls = 'wt-theme-color-error';
+							if (v >= max) meta.tdCls = 'wt-color-error';
 							return v + ' / ' + max;
 						} else {
 							return '<span style="font-size:larger;">&#8734;</span>';
@@ -242,7 +242,7 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainLicenses', {
 							buildDetails: function(values) {
 								var s = '';
 								if (values['builtIn'] === true) {
-									s += '<span class="wt-text-off wt-theme-text-color-off">' + me.res('domainLicenses.gp.details.builtin') + '</span>' ;
+									s += '<span class="wt-text-off wt-color-off">' + me.res('domainLicenses.gp.details.builtin') + '</span>' ;
 								} else {
 									if (!Ext.isEmpty(values['hwId'])) {
 										if (s.length !== 0) s += ' | ';

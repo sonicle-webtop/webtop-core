@@ -109,8 +109,8 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainUsers', {
 			},
 			viewConfig: {
 				getRowClass: function(rec) {
-					if (rec.get('exist') === false) return 'wt-theme-text-color-off';
-					if (rec.get('enabled') === false) return 'wt-text-striked wt-theme-color-error';
+					if (rec.get('exist') === false) return 'wt-color-off';
+					if (rec.get('enabled') === false) return 'wt-text-striked wt-color-error';
 					return '';
 				}
 			},

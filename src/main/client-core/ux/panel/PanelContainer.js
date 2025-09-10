@@ -36,5 +36,13 @@ Ext.define('Sonicle.webtop.core.ux.panel.PanelContainer', {
 	alias: 'widget.wtpanelct',
 	
 	layout: 'fit',
-	border: false
+	border: false,
+	
+	noBorderCls: Ext.baseCSSPrefix + 'noborder-trbl',
+	
+	initComponent: function() {
+		var me = this;
+		me.callParent(arguments);
+		if (me.border === false) me.addBodyCls(me.noBorderCls);
+	}
 });

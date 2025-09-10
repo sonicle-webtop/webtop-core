@@ -291,7 +291,7 @@ Ext.define('Sonicle.webtop.core.sdk.FolderSharingView', {
 							listConfig: {
 								getInnerTpl: function(displayField) {
 									return '{'+displayField+'}</br>'
-										+ '<span class="wt-text-off wt-theme-text-color-off">{info}</span>';
+										+ '<span class="wt-text-off wt-color-off">{info}</span>';
 								},
 								width: 400
 							},

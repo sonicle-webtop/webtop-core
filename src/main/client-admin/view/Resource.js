@@ -179,7 +179,7 @@ Ext.define('Sonicle.webtop.core.admin.view.Resource', {
 					title: me.res('resource.permissions.tit')
 				}, {
 					xtype: 'sotext',
-					cls: 'wt-theme-text-color-off',
+					cls: 'wt-color-off',
 					text: me.res('resource.permissions.info')
 				}, {
 					xtype: 'wtadmaclsubjectgrid',

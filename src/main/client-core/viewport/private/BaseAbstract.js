@@ -494,7 +494,8 @@ Ext.define('Sonicle.webtop.core.viewport.private.BaseAbstract', {
 		createAvatarButtonCfg: function() {
 			return {
 				xtype: 'soavatarbutton',
-				scale: 'medium'
+				scale: 'medium',
+				arrowVisible: false
 				//scale: this.topbarItemsScale()
 			};
 		},

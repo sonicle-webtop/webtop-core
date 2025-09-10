@@ -207,7 +207,7 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainDataSources', {
 							}, {
 								dataIndex: 'description',
 								renderer : function(v, meta, rec) {
-									meta.tdCls = 'wt-theme-text-color-off';
+									meta.tdCls = 'wt-color-off';
 									return v;
 								},
 								flex: 2

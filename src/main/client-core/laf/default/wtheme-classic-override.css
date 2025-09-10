@@ -4,7 +4,6 @@
 
 /* ---------- Base styling */
 .wt-theme-bg-dialog { background-color: #ced9e7; }
-.wt-theme-text-color-off { color: #808080; }
 .wt-theme-text-color-title { color: var(--wt-theme-color-info); }
 .wt-theme-text-color-subtitle { color: #888888; }
 .wt-theme-text-color-hyperlink { color: var(--wt-theme-color-1); }

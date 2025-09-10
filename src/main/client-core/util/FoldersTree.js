@@ -48,18 +48,18 @@ Ext.define('Sonicle.webtop.core.app.util.FoldersTree', {
 			},
 			renderer: function(val, meta, rec) {
 				var isPers = rec.isPersonalNode();
-				meta.customElbowCls = 'wt-hidden';
+				meta.customElbowCls = 'wt-nodisplay';
 				if (rec.isFolderRoot()) {
 					meta.tdCls += ' wt-bold';
 					return '<span>' + (isPers && opts.personalRootText ? opts.personalRootText : val) + '</span>';
 				} else if (rec.isFolder()) {
 					if (isPers && rec.get('_default')) {
-						val += '<span class="wt-text-off wt-theme-text-color-off">&nbsp;(';
+						val += '<span class="wt-text-off wt-color-off">&nbsp;(';
 						val += (opts.defaultText || 'default');
 						val += ')</span>';
 					} else {
 						var rr = WTA.util.FoldersTree.toRightsObj(rec.get('_erights'));
-						if (!rr.CREATE && !rr.UPDATE && !rr.DELETE) meta.tdCls += ' wt-theme-text-color-off';
+						if (!rr.CREATE && !rr.UPDATE && !rr.DELETE) meta.tdCls += ' wt-color-off';
 					}
 					return val;
 				}
@@ -80,17 +80,17 @@ Ext.define('Sonicle.webtop.core.app.util.FoldersTree', {
 				var isPers = rec.isPersonalNode(),
 					countHtml = function(count) {
 						if (Ext.isNumber(count) && count > 0) {
-							return '<span class="wt-text-off wt-theme-text-color-off"'
+							return '<span class="wt-text-off wt-color-off"'
 								+ Sonicle.Utils.generateTooltipAttrs(opts.countTooltip ? Ext.String.format(opts.countTooltip, count) : null)
 								+ '>&nbsp;+' + count + '</span>';
 						} else {
 							return '';
 						}
 					};
-				meta.customElbowCls = 'wt-hidden';
+				meta.customElbowCls = 'wt-nodisplay';
 				if (rec.isFolderRoot()) {
 					meta.tdCls += ' wt-bold';
-					meta.iconCls = 'wt-hidden';
+					meta.iconCls = 'wt-nodisplay';
 					meta.customCheckboxCls = 'wt-tree-toggle ';
 					meta.customCheckboxCls += rec.get('checked') ? 'wt-tree-toggle-on' : 'wt-tree-toggle-off';
 					return '<span>' + (isPers && opts.personalRootText ? opts.personalRootText : val) + '</span>' + (opts.countField ? countHtml(rec.get(opts.countField)) : '');
@@ -98,10 +98,10 @@ Ext.define('Sonicle.webtop.core.app.util.FoldersTree', {
 				} else if (rec.isFolder()) {
 					if (!isPers) {
 						var rr = WTA.util.FoldersTree.toRightsObj(rec.get('_erights'));
-						if (!rr.CREATE && !rr.UPDATE && !rr.DELETE) meta.tdCls += ' wt-theme-text-color-off';
+						if (!rr.CREATE && !rr.UPDATE && !rr.DELETE) meta.tdCls += ' wt-color-off';
 					}
 					if (rec.get('_default') === true) {
-						val += '<span class="wt-text-off wt-theme-text-color-off">&nbsp;(';
+						val += '<span class="wt-text-off wt-color-off">&nbsp;(';
 						val += (opts.defaultText || 'default');
 						val += ')</span>';
 					}

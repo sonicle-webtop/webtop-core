@@ -1,11 +1,13 @@
 
+/* ---------- Appearance */
 .wt-opacity-100 { opacity: 1 !important; }
 .wt-opacity-70 { opacity: 0.7 !important; }
 .wt-opacity-60 { opacity: 0.6 !important; }
 .wt-opacity-50 { opacity: 0.5 !important; }
 .wt-opacity-40 { opacity: 0.4 !important; }
-.wt-valign-middle { vertical-align: middle; }
-.wt-hidden { display: none; }
+.wt-nodisplay { display: none; }
+
+/* ---------- Cursor & Selection */
 .wt-pointer-default { cursor: default !important; }
 .wt-pointer-link { cursor: pointer !important; }
 .wt-selectable {
@@ -14,16 +16,18 @@
     -ms-user-select: text;
     user-select: text;
 }
+
+/* ---------- Alignment */
+.wt-valign-middle { vertical-align: middle; }
+
+/* ---------- Text Decoration */
 .wt-text-italic, .wt-italic { font-style: italic; }
 .wt-text-underlined, .wt-underlined { text-decoration: underline; }
 .wt-text-striked, .wt-striked { text-decoration: line-through; }
 .wt-text-centered, .wt-centered { text-align: center; }
-.wt-text-off { font-size: 0.8em; }
-.wt-text-smaller-10 { font-size: 0.9em; }
-.wt-text-smaller-20 { font-size: 0.8em; }
-.wt-text-bigger-10 { font-size: 1.1em; }
-.wt-text-bigger-20 { font-size: 1.2em; }
 .wt-text-ellipsis { text-overflow: ellipsis; overflow: hidden; white-space: nowrap; }
+
+/* ---------- Text Style & Size */
 .wt-text-regular { font-weight: var(--wt-theme-fontweight-regular, normal); }
 .wt-text-medium { font-weight: var(--wt-theme-fontweight-medium, medium); }
 .wt-text-bold, .wt-bold { font-weight: var(--wt-theme-fontweight-bold, bold); }
@@ -35,6 +39,34 @@
 .wt-text-base-regular { font-size: var(--wt-theme-fontsize-base, inherit); line-height: var(--wt-theme-lineheight-base, inherit); font-weight: var(--wt-theme-fontweight-regular, normal); }
 .wt-text-xs-regular { font-size: var(--wt-theme-fontsize-xs, x-small); line-height: var(--wt-theme-lineheight-xs, inherit); font-weight: var(--wt-theme-fontweight-regular, normal); }
 .wt-text-sm-medium { font-size: var(--wt-theme-fontsize-sm, small); line-height: var(--wt-theme-lineheight-sm, inherit); font-weight: var(--wt-theme-fontweight-medium, medium); }
+.wt-text-smaller-10 { font-size: 0.9em; }
+.wt-text-smaller-20 { font-size: 0.8em; }
+.wt-text-bigger-10 { font-size: 1.1em; }
+.wt-text-bigger-20 { font-size: 1.2em; }
+.wt-text-off { font-size: 0.8em; }
+
+
+/* ---------- Foreground Colors */
+.wt-color-n1 { color: var(--wt-theme-color-n1); }
+.wt-color-n1-inv { color: var(--wt-theme-color-n1-inv); }
+.wt-color-n2 { color: var(--wt-theme-color-n2); }
+.wt-color-n3 { color: var(--wt-theme-color-n3); }
+.wt-color-1 { color: var(--wt-theme-color-1); }
+.wt-color-2 { color: var(--wt-theme-color-2); }
+.wt-color-3 { color: var(--wt-theme-color-3); }
+.wt-color-ok { color: var(--wt-theme-color-ok); }
+.wt-color-warn { color: var(--wt-theme-color-warn); }
+.wt-color-error { color: var(--wt-theme-color-error); }
+.wt-color-info { color: var(--wt-theme-color-info); }
+.wt-color-off { color: var(--wt-theme-color-off); }
+
+/* ---------- Background colors */
+.wt-bg-l0 { background-color: var(--wt-theme-color-surface-l0); }
+.wt-bg-l1 { background-color: var(--wt-theme-color-surface-l1); }
+.wt-bg-l2 { background-color: var(--wt-theme-color-surface-l2); }
+.wt-bg-l2-inv { background-color: var(--wt-theme-color-surface-l2-inv); }
+.wt-bg-l3 { background-color: var(--wt-theme-color-surface-l3); }
+.wt-bg-l4 { background-color: var(--wt-theme-color-surface-l4); }
 
 /*
  * By convention, FontAwesome CSS classes used as iconCls in objects are styled 

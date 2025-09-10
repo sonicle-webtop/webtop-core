@@ -5,6 +5,10 @@
 @import url("../themes-override.css");
 @import url("../themes-custombuilt-override.css");
 
+/*
+grep -l "#0E7490" * | while read fname; do echo "sedding $fname"; sed -i -e 's/#0E7490/#0891b2/g' $fname; done
+*/
+
 :root {
     --wt-theme-color-surface-l0: #ffffff; /* White */
     --wt-theme-color-surface-l1: #fafafa; /* Neutral/50 */
@@ -15,10 +19,10 @@
     --wt-theme-color-ct-1: #f0f9ff; /* Sky/50 */
     --wt-theme-color-ct-2: #fff7ed; /* Orange/50 */
     --wt-theme-color-n1: #404040; /* Neutral/700 */
-    --wt-theme-color-n1-inv: #404040; /* Neutral/700 */
+    --wt-theme-color-n1-inv: #f5f5f5; /* Neutral/100 */
     --wt-theme-color-n2: #737373; /* Neutral/500 */
     --wt-theme-color-n3: #a3a3a3; /* Neutral/400 */
-    --wt-theme-color-1: #0e7490; /* Cyan/700 - Text/Icon 1st */
+    --wt-theme-color-1: #0891b2; /* Cyan/600 - Text/Icon 1st */
     --wt-theme-color-2: #4338CA; /* Indigo/700 - Text/Icon 2nd */
     --wt-theme-color-3: #a3a3a3; /* Neutral/400 - Text Placeholder/Icon Inactive */
     --wt-theme-color-ok: #047857; /* Emerald/700 */
@@ -110,6 +114,17 @@
 .x-grid-view .so-contextmenu-owner,
 .x-tree-view .so-contextmenu-owner {
     background-color: #a3a3a3 !important; /* Neutral/400 */
+}
+
+/* ---------- Sonicle.ColorUtils */
+.so-colorswatch-framed {
+    border-color: #737373; /* Neutral/500 */
+}
+.so-colorswatch-darkmark {
+	color: #404040; /* Neutral/700 */
+}
+.so-colorswatch-lightmark {
+	color: #f5f5f5; /* Neutral/100 */
 }
 
 /* ---------- Sonicle.LoadMask */

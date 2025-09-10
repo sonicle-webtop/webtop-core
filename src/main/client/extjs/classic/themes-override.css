@@ -165,6 +165,22 @@ body {
     font-weight: var(--wt-theme-fontweight-medium);
 }
 
+/* ---------- Sonicle.rtc.Panel (deprecated) */
+.so-rtc-lvideo {
+	position: absolute;
+	width: 200px;
+	bottom: 0;
+	right: 0;
+	margin: 1em;
+}
+.so-rtc-rvideo {
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+}
+
 /* ---------- Fullcalendar */
 /* Fix popover bg: default transparency disturb data reading */
 .fc-popover {

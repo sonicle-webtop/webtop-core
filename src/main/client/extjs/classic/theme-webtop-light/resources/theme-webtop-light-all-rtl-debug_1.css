@@ -3862,7 +3862,7 @@ body > .x-mask {
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-neutral/sass/var/button/Button.scss:2463 */
 .x-btn-default-small {
-    border-color: #0787a6;
+    border-color: #0891b2;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-neutral/sass/var/button/Button.scss:2470 */
 .x-btn-button-default-small {
@@ -4044,7 +4044,7 @@ body > .x-mask {
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-neutral/sass/var/button/Button.scss:2817 */
 .x-btn-over.x-btn-default-small {
-    border-color: #077c98;
+    border-color: #0785a4;
     background-image: none;
     background-color: #0785a4;
 }
@@ -4057,7 +4057,7 @@ body > .x-mask {
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-neutral/sass/var/button/Button.scss:2874 */
 .x-btn.x-btn-menu-active.x-btn-default-small,
 .x-btn.x-btn-pressed.x-btn-default-small {
-    border-color: #06657c;
+    border-color: #066d86;
     background-image: none;
     background-color: #066d86;
 }
@@ -4435,7 +4435,7 @@ body > .x-mask {
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-neutral/sass/var/button/Button.scss:2463 */
 .x-btn-default-medium {
-    border-color: #0787a6;
+    border-color: #0891b2;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-neutral/sass/var/button/Button.scss:2470 */
 .x-btn-button-default-medium {
@@ -4617,7 +4617,7 @@ body > .x-mask {
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-neutral/sass/var/button/Button.scss:2817 */
 .x-btn-over.x-btn-default-medium {
-    border-color: #077c98;
+    border-color: #0785a4;
     background-image: none;
     background-color: #0785a4;
 }
@@ -4630,7 +4630,7 @@ body > .x-mask {
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-neutral/sass/var/button/Button.scss:2874 */
 .x-btn.x-btn-menu-active.x-btn-default-medium,
 .x-btn.x-btn-pressed.x-btn-default-medium {
-    border-color: #06657c;
+    border-color: #066d86;
     background-image: none;
     background-color: #066d86;
 }
@@ -5008,7 +5008,7 @@ body > .x-mask {
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-neutral/sass/var/button/Button.scss:2463 */
 .x-btn-default-large {
-    border-color: #0787a6;
+    border-color: #0891b2;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-neutral/sass/var/button/Button.scss:2470 */
 .x-btn-button-default-large {
@@ -5190,7 +5190,7 @@ body > .x-mask {
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-neutral/sass/var/button/Button.scss:2817 */
 .x-btn-over.x-btn-default-large {
-    border-color: #077c98;
+    border-color: #0785a4;
     background-image: none;
     background-color: #0785a4;
 }
@@ -5203,7 +5203,7 @@ body > .x-mask {
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-neutral/sass/var/button/Button.scss:2874 */
 .x-btn.x-btn-menu-active.x-btn-default-large,
 .x-btn.x-btn-pressed.x-btn-default-large {
-    border-color: #06657c;
+    border-color: #066d86;
     background-image: none;
     background-color: #066d86;
 }
@@ -12438,7 +12438,7 @@ div.x-datepicker-date:hover {
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-neutral/sass/src/picker/Date.scss:181 */
 .x-datepicker-selected div.x-datepicker-date {
-    background-color: #0e7490;
+    background-color: #0891b2;
     color: #fff;
     font-weight: 400;
 }
@@ -12524,7 +12524,7 @@ a.x-monthpicker-item-inner:hover {
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-neutral/sass/src/picker/Date.scss:301 */
 .x-monthpicker-item a.x-monthpicker-selected {
-    background-color: #0e7490;
+    background-color: #0891b2;
     color: #fff;
     border-style: solid;
     border-color: #39a7c1;
@@ -13911,7 +13911,7 @@ a.x-color-picker-item:hover {
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-neutral/sass/var/button/Button.scss:2463 */
 .x-btn-grid-cell-small {
-    border-color: #0787a6;
+    border-color: #0891b2;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-neutral/sass/var/button/Button.scss:2470 */
 .x-btn-button-grid-cell-small {
@@ -14086,14 +14086,14 @@ a.x-color-picker-item:hover {
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-neutral/sass/var/button/Button.scss:2817 */
 .x-btn-over.x-btn-grid-cell-small {
-    border-color: #077c98;
+    border-color: #0785a4;
     background-image: none;
     background-color: #0785a4;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-neutral/sass/var/button/Button.scss:2874 */
 .x-btn.x-btn-menu-active.x-btn-grid-cell-small,
 .x-btn.x-btn-pressed.x-btn-grid-cell-small {
-    border-color: #06657c;
+    border-color: #066d86;
     background-image: none;
     background-color: #066d86;
 }

@@ -268,18 +268,18 @@ Ext.define('Sonicle.webtop.core.app.util.FoldersTree2', {
 				},
 				renderer: function(val, meta, node) {
 					var isPers = node.isPersonalNode();
-					meta.customElbowCls = (opts.showElbow === true) ? '' : 'wt-hidden';
+					meta.customElbowCls = (opts.showElbow === true) ? '' : 'wt-nodisplay';
 					if (node.isOrigin() || node.isGrouper()) {
 						meta.tdCls += ' wt-bold';
 						return '<span>' + Ext.String.htmlEncode(Ext.isFunction(opts.getNodeText) ? opts.getNodeText.apply(this, [node, val]) : val) + '</span>';
 					} else if (node.isFolder()) {
 						if (isPers && node.isDefaultFolder()) {
-							val += '<span class="wt-text-off wt-theme-text-color-off">&nbsp;(';
+							val += '<span class="wt-text-off wt-color-off">&nbsp;(';
 							val += (opts.defaultText || 'default');
 							val += ')</span>';
 						} else {
 							var ir = node.getItemsRights();
-							if (!ir.CREATE && !ir.UPDATE && !ir.DELETE) meta.tdCls += ' wt-theme-text-color-off';
+							if (!ir.CREATE && !ir.UPDATE && !ir.DELETE) meta.tdCls += ' wt-color-off';
 						}
 						return val;
 					}
@@ -300,21 +300,21 @@ Ext.define('Sonicle.webtop.core.app.util.FoldersTree2', {
 					var isPers = node.isPersonalNode(),
 						countHtml = function(count) {
 							if (Ext.isNumber(count) && count > 0) {
-								return '<span class="wt-text-off wt-theme-text-color-off"'
+								return '<span class="wt-text-off wt-color-off"'
 									+ Sonicle.Utils.generateTooltipAttrs(opts.countTooltip ? Ext.String.format(opts.countTooltip, count) : null)
 									+ '>&nbsp;+' + count + '</span>';
 							} else {
 								return '';
 							}
 						};
-					meta.customElbowCls = (opts.showElbow === true) ? '' : 'wt-hidden';
+					meta.customElbowCls = (opts.showElbow === true) ? '' : 'wt-nodisplay';
 					if (Ext.isFunction(opts.getNodeTdCls)) {
 						meta.tdCls = Sonicle.String.join(' ', meta.tdCls, opts.getNodeTdCls.apply(this, [node, val]));
 						//meta.tdCls += ' ' + opts.getNodeTdCls.apply(this, [node, val]);
 					}
 					if (node.isOrigin() || node.isGrouper()) {
 						meta.tdCls += ' wt-bold';
-						meta.iconCls = 'wt-hidden';
+						meta.iconCls = 'wt-nodisplay';
 						meta.customCheckboxCls = 'wt-tree-toggle ';
 						meta.customCheckboxCls += node.isChecked() ? 'wt-tree-toggle-on' : 'wt-tree-toggle-off';
 						return '<span>' + Ext.String.htmlEncode(Ext.isFunction(opts.getNodeText) ? opts.getNodeText.apply(this, [node, val]) : val) + '</span>' + (opts.countField ? countHtml(node.get(opts.countField)) : '');
@@ -322,10 +322,10 @@ Ext.define('Sonicle.webtop.core.app.util.FoldersTree2', {
 					} else if (node.isFolder()) {
 						if (!isPers) {
 							var ir = node.getItemsRights();
-							if (!ir.CREATE && !ir.UPDATE && !ir.DELETE) meta.tdCls += ' wt-theme-text-color-off';
+							if (!ir.CREATE && !ir.UPDATE && !ir.DELETE) meta.tdCls += ' wt-color-off';
 						}
 						if (node.isDefaultFolder()) {
-							val += '<span class="wt-text-off wt-theme-text-color-off">&nbsp;(';
+							val += '<span class="wt-text-off wt-color-off">&nbsp;(';
 							val += (opts.defaultText || 'default');
 							val += ')</span>';
 						}

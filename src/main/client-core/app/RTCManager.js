@@ -184,19 +184,19 @@ Ext.define('Sonicle.webtop.core.app.RTCManager', {
 				{
 					buttons: [
 						{
-							iconCls: 'fas fa-phone wt-color-success', action: 'audio', 
+							iconCls: 'fas fa-phone wt-color-ok', action: 'audio', 
 							handler: function() {
 								toast.close();
 								me.acceptIncomingCall(session);
 							}
 						}, {
-							iconCls: 'fas fa-video wt-color-success', action: 'video', 
+							iconCls: 'fas fa-video wt-color-ok', action: 'video', 
 							handler: function() {
 								toast.close();
 								me.acceptIncomingCall(session,true);
 							}
 						}, {
-							iconCls: 'fas fa-phone fa-rotate-90 wt-color-alert',
+							iconCls: 'fas fa-phone fa-rotate-90 wt-color-error',
 							handler: function() {
 								me.stopAudioRing();
 								session.decline();

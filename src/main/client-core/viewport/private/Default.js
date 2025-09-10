@@ -134,6 +134,11 @@ Ext.define('Sonicle.webtop.core.viewport.private.Default', {
 		createNavbarItemsCfg: function() {
 			var me = this;
 			return [
+				{
+					xtype: 'tbimage',
+					scale: me.navbarItemsScale(),
+					cls: 'wt-viewport-navbar-logo'
+				},
 				'->', // This controls alignment: remove this element to disable vertical centering!
 				//me.applyMoreCfg(me.createPortalButtonCfg(), {scale: me.navbarItemsScale()}),
 				me.applyMoreCfg(me.createMoreLinksButtonCfg(), {scale: me.navbarItemsScale()}),

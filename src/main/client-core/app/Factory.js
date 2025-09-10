@@ -944,7 +944,7 @@ Ext.define('Sonicle.webtop.core.app.Factory', {
 				
 				if (!rec.get('checked')) delete obj.backgroundColor;
 				styles = Ext.DomHelper.generateStyles(obj);
-				meta.iconCls = 'wt-hidden';
+				meta.iconCls = 'wt-nodisplay';
 			}
 			
 			meta.customCheckboxCls = cls;

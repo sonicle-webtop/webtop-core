@@ -114,8 +114,8 @@ Ext.define('Sonicle.webtop.core.admin.view.PecBridge', {
 				},
 				viewConfig: {
 					getRowClass: function(rec) {
-						var cls = rec.get('licensed') === false ? 'wt-text-italic wt-text-striked wt-theme-color-error' :
-							rec.get('enabled') === false ? 'wt-text-striked wt-text-off wt-theme-text-color-off' : '';
+						var cls = rec.get('licensed') === false ? 'wt-text-italic wt-text-striked wt-color-error' :
+							rec.get('enabled') === false ? 'wt-text-striked wt-text-off wt-color-off' : '';
 						return cls;
 					}
 				},
@@ -175,7 +175,7 @@ Ext.define('Sonicle.webtop.core.admin.view.PecBridge', {
 					me.fetchersMessageLabel = Ext.create({
 						xtype: 'label',
 						text: '',
-						cls: 'wt-theme-color-error'
+						cls: 'wt-color-error'
 					}),
 					'->',
 					me.addAct('refreshFetchers', {
@@ -223,8 +223,8 @@ Ext.define('Sonicle.webtop.core.admin.view.PecBridge', {
 				},
 				viewConfig: {
 					getRowClass: function(rec) {
-						var cls = rec.get('licensed') === false ? 'wt-text-italic wt-text-striked wt-theme-color-error' :
-							rec.get('enabled') === false ? 'wt-text-striked wt-text-off wt-theme-text-color-off' : '';
+						var cls = rec.get('licensed') === false ? 'wt-text-italic wt-text-striked wt-color-error' :
+							rec.get('enabled') === false ? 'wt-text-striked wt-text-off wt-color-off' : '';
 						return cls;
 					}
 				},
@@ -284,7 +284,7 @@ Ext.define('Sonicle.webtop.core.admin.view.PecBridge', {
 					me.relaysMessageLabel = Ext.create({
 						xtype: 'label',
 						text: '',
-						cls: 'wt-theme-color-error'
+						cls: 'wt-color-error'
 					}),
 					'->',
 					me.addAct('refreshRelays', {
