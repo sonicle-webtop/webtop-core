@@ -297,15 +297,6 @@ body > .x-mask {
 	border-radius: 5px;
 	font-size: 90%;
 }
-.so-colorswatch-framed {
-    border-color: #a3a3a3; /* Neutral/400 */
-}
-.so-colorswatch-darkmark {
-	color: #171717; /* Neutral/900 */
-}
-.so-colorswatch-lightmark {
-	color: #fafafa; /* Neutral/50 */
-}
 
 /* ---------- Sonicle.form.field.ComboBox */
 .so-combo-swatch-wrap {

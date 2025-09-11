@@ -245,6 +245,8 @@
 .wt-icon-htmled-outdent { background-image: url('htmleditor/outdent_16.svg') !important; background-size: contain; }
 .wt-icon-htmled-lowercase { background-image: url('htmleditor/character-lowercase_16.svg') !important; background-size: contain; }
 .wt-icon-htmled-uppercase { background-image: url('htmleditor/character-uppercase_16.svg') !important; background-size: contain; }
+.wt-icon-htmled-sentencecase { background-image: url('htmleditor/character-case_16.svg') !important; background-size: contain; }
+.wt-icon-htmled-titlecase { background-image: url('htmleditor/character-case_16.svg') !important; background-size: contain; }
 .wt-icon-htmled-clearformat { background-image: url('htmleditor/clearformat_16.svg') !important; background-size: contain; }
 .wt-icon-htmled-alignCenter { background-image: url('htmleditor/align-center_16.svg') !important; background-size: contain; }
 .wt-icon-htmled-alignJustify { background-image: url('htmleditor/align-justify_16.svg') !important; background-size: contain; }
@@ -266,10 +268,6 @@
 .wt-icon-htmled-template { background-image: url('htmleditor/template_16.svg') !important; background-size: contain; }
 .wt-icon-htmled-addTemplate { background-image: url('htmleditor/template-add_16.svg') !important; background-size: contain; }
 .wt-icon-htmled-variable { background-image: url('htmleditor/variable_16.svg') !important; background-size: contain; }
-.wt-icon-htmled-lowercase { background-image: url('htmleditor/character-case_16.svg') !important; background-size: contain; }
-.wt-icon-htmled-uppercase { background-image: url('htmleditor/character-case_16.svg') !important; background-size: contain; }
-.wt-icon-htmled-sentencecase { background-image: url('htmleditor/character-case_16.svg') !important; background-size: contain; }
-.wt-icon-htmled-titlecase { background-image: url('htmleditor/character-case_16.svg') !important; background-size: contain; }
 /* ---------- Icons (file types) */
 .wt-ftype-application { background-image: url('ftypes/application_16.svg') !important; background-size: contain; }
 .wt-ftype-application-script { background-image: url('ftypes/application-script_16.svg') !important; background-size: contain; }

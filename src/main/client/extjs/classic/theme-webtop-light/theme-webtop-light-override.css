@@ -91,6 +91,10 @@ grep -l "#0E7490" * | while read fname; do echo "sedding $fname"; sed -i -e 's/#
     --wt-theme-field-radius: 5px;
     --wt-theme-grid-radius: 5px;
     
+    /* ---------- Sonicle.ColorUtils */
+    --so-colorswatch-framed-border-color: #737373; /* Neutral/500 */
+    --so-colorswatch-darkmark-color: #404040; /* Neutral/700 */
+    --so-colorswatch-lightmark-color: #f5f5f5; /* Neutral/100 */
     /* ---------- Sonicle.panel.CanbanColumn */
     --so-kanbancolumn-border-radius: 4px;
     /* ---------- Sonicle.form.field.Display */
@@ -115,17 +119,6 @@ grep -l "#0E7490" * | while read fname; do echo "sedding $fname"; sed -i -e 's/#
 .x-grid-view .so-contextmenu-owner,
 .x-tree-view .so-contextmenu-owner {
     background-color: #a3a3a3 !important; /* Neutral/400 */
-}
-
-/* ---------- Sonicle.ColorUtils */
-.so-colorswatch-framed {
-    border-color: #737373; /* Neutral/500 */
-}
-.so-colorswatch-darkmark {
-	color: #404040; /* Neutral/700 */
-}
-.so-colorswatch-lightmark {
-	color: #f5f5f5; /* Neutral/100 */
 }
 
 /* ---------- Sonicle.LoadMask */
