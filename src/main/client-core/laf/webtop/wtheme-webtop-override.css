@@ -8,8 +8,6 @@
 
 .wt-theme-text-color-title { color: var(--wt-theme-color-info); }
 .wt-theme-text-color-subtitle {}
-.wt-theme-text-color-hyperlink { color: var(--wt-theme-color-1); }
-.wt-theme-text-color-info {}
 
 .wt-form-body-title {
     font-size: var(--wt-theme-fontsize-base);

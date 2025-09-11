@@ -20,6 +20,8 @@
     /*--wt-theme-color-1: */
     /*--wt-theme-color-2: */
     --wt-theme-color-3: #c7c7c7;
+    --wt-theme-color-off: #b4b4b4;
+    --wt-theme-color-hyperlink: #0078d7;
     /*--wt-theme-color-ct-1: */
     /*--wt-theme-color-ct-2: */
     --wt-theme-color-ok: #388E3C; /* Green/700 (https://materialui.co/colors/) */
@@ -38,7 +40,7 @@
     --wt-theme-color-info-on: #E3F2FD; /* Blue/50 (https://materialui.co/colors/) */
     --wt-theme-color-info-ct: #BBDEFB; /* Blue/100 (https://materialui.co/colors/) */
     --wt-theme-color-info-ct-on: #3892D4;
-    --wt-theme-color-off: #b4b4b4;
+    /*.wt-theme-text-color-info { color: #4d4d4d; }*/
     
     --wt-theme-color-scrollbar-thumb: #e0e0e0;
     --wt-theme-color-scrollbar-track: transparent;

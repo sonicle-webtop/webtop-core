@@ -19,9 +19,11 @@ Use surface colors for elements like cards, buttons, modals, toolbars, and other
 --wt-theme-color-n2      : On color – Neutral secondary text and icons with lower-emphasis against any base surface color
 --wt-theme-color-n3      : On color – Neutral tertiary text and icons with low-emphasis against any base surface color
 
---wt-theme-color-1       : Primary – High-emphasis fills, texts, and icons against surface
---wt-theme-color-2       : Secondary – Less prominent fills, text, and icons against surface
---wt-theme-color-3       : Tertiary – Neutral fills, text, and icons against surface
+--wt-theme-color-1         : Primary – High-emphasis fills, texts, and icons against surface
+--wt-theme-color-2         : Secondary – Less prominent fills, text, and icons against surface
+--wt-theme-color-3         : Tertiary – Neutral fills, text, and icons against surface
+--wt-theme-color-off       : Off - Low-attention (indicating off/disabled status) fills, texts, and icons against surface 
+--wt-theme-color-hyperlink : Hyperlinks - Emphatized fills, text, and icons against surface
 
 Use primary roles for the most prominent components across the UI, such as the FAB, high-emphasis buttons, and active states.
 
@@ -49,7 +51,6 @@ Use primary roles for the most prominent components across the UI, such as the F
 --wt-theme-color-info-on     : On info – Text and icons against info
 --wt-theme-color-info-ct     : Info container – Attention-grabbing fill color against surface
 --wt-theme-color-info-ct-on  : On info container – Text and icons against info container
---wt-theme-color-off         : Off - Low-attention (off/disabled) color against surface for fills, icons, and text; indicating off status
 
 --wt-theme-color-scrollbar-thumb : Color for scrollbar thumb component
 --wt-theme-color-scrollbar-track : Color for scrollbar track component

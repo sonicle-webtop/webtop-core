@@ -54,11 +54,12 @@
 .wt-color-1 { color: var(--wt-theme-color-1); }
 .wt-color-2 { color: var(--wt-theme-color-2); }
 .wt-color-3 { color: var(--wt-theme-color-3); }
+.wt-color-off { color: var(--wt-theme-color-off); }
+.wt-color-hyperlink { color: var(--wt-theme-color-hyperlink); }
 .wt-color-ok { color: var(--wt-theme-color-ok); }
 .wt-color-warn { color: var(--wt-theme-color-warn); }
 .wt-color-error { color: var(--wt-theme-color-error); }
 .wt-color-info { color: var(--wt-theme-color-info); }
-.wt-color-off { color: var(--wt-theme-color-off); }
 
 /* ---------- Background colors */
 .wt-bg-l0 { background-color: var(--wt-theme-color-surface-l0); }
@@ -67,6 +68,9 @@
 .wt-bg-l2-inv { background-color: var(--wt-theme-color-surface-l2-inv); }
 .wt-bg-l3 { background-color: var(--wt-theme-color-surface-l3); }
 .wt-bg-l4 { background-color: var(--wt-theme-color-surface-l4); }
+
+.wt-bg-dialog .wt-theme-bg-dialog { background-color: var(--wt-theme-color-dialog); }
+.wt-bg-dialog-hd { background-color: var(--wt-theme-color-dialog-hd); }
 
 /*
  * By convention, FontAwesome CSS classes used as iconCls in objects are styled 

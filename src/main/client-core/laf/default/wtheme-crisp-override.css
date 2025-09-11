@@ -5,8 +5,6 @@
 /* ---------- Base styling */
 .wt-theme-text-color-title { color: #157fcc; }
 .wt-theme-text-color-subtitle { color: #888888; }
-.wt-theme-text-color-hyperlink { color: #0078d7; }
-.wt-theme-text-color-info { color: #4d4d4d; }
 
 .wt-pane-body-title {
     font-size: var(--wt-theme-fontsize-lg);

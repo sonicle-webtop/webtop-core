@@ -46,7 +46,7 @@ Ext.define('Sonicle.webtop.core.ux.CopyBox', {
 		var me = this;
 		return {
 			xtype: 'wtfieldspanel',
-			bodyCls: 'wt-theme-bg-dialog',
+			bodyCls: 'wt-bg-dialog',
 			referenceHolder: true,
 			defaults: {
 				labelAlign: 'top'

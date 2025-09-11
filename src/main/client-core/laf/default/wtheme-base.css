@@ -2,13 +2,8 @@
 /* Base WebTop's definitions for all themes
 /**************************************/
 
-
-.wt-theme-bg-window { background-color: var(--wt-theme-color-surface-l0); }
-.wt-theme-bg-dialog { background-color: var(--wt-theme-color-surface-l0); }
 .wt-theme-text-color-title { /* Hey, define me! */ } /* Color styles for header texts (typically like --wt-theme-color-info) */
 .wt-theme-text-color-subtitle { /* Hey, define me! */ } /* Color styles for sub-header texts */
-.wt-theme-text-color-hyperlink { /* Hey, define me! */ } /* Color styles for hyperlinks texts */
-.wt-theme-text-color-info { /* Hey, define me! */ } /* Color styles for info texts */
 
 .wt-pane-body-title { /* Hey, define me! */ } /* Font styles for titles in panel bodys (should not include colors) */
 .wt-pane-body-subtitle { /* Hey, define me! */ } /* Font styles for sub-titles in panel bodys (should not include colors) */
@@ -16,15 +11,21 @@
 .wt-form-body-subtitle { /* Hey, define me! */ } /* Font styles for sub-titles in form (panel with fields) bodys (should not include colors) */
 .wt-form-toolbar-title { /* Hey, define me! */ } /* Font styles for titles in form toolbars (should not include colors) */
 
-.wt-viewport-navbar { background-color: var(--wt-theme-color-navbar); }
+.wt-portal-body { background-color: var(--wt-theme-color-surface-l1); } /* Deprecated! */
+
+/* ---------- Topbar */
 .wt-viewport-topbar { background-color: var(--wt-theme-color-topbar); }
-.wt-viewport-taskbar { background-color: var(--wt-theme-color-taskbar); }
-.wt-portal-body { background-color: var(--wt-theme-color-surface-l1); }
 .wt-accountmenu-label1 { font-size: var(--wt-theme-fontsize-sm); line-height: var(--wt-theme-lineheight-sm); font-weight: bold; }
 .wt-accountmenu-label2 { font-size: var(--wt-theme-fontsize-xs); line-height: var(--wt-theme-lineheight-xs); }
 
+/* ---------- Navbar */
+.wt-viewport-navbar { background-color: var(--wt-theme-color-navbar); }
+
 /* ---------- Tool HD/Body */
 .wt-tool-hd-title { font-size: var(--wt-theme-fontsize-lg); font-weight: 500; }
+
+/* ---------- Taskbar */
+.wt-viewport-taskbar { background-color: var(--wt-theme-color-taskbar); }
 
 /* ---------- WTA.view.DocEditor */
 .wt-doced-switch-btn .x-btn-inner {

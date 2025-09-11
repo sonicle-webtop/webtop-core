@@ -25,6 +25,8 @@ grep -l "#0E7490" * | while read fname; do echo "sedding $fname"; sed -i -e 's/#
     --wt-theme-color-1: #0891b2; /* Cyan/600 - Text/Icon 1st */
     --wt-theme-color-2: #4338CA; /* Indigo/700 - Text/Icon 2nd */
     --wt-theme-color-3: #a3a3a3; /* Neutral/400 - Text Placeholder/Icon Inactive */
+    --wt-theme-color-off: #a3a3a3; /* Neutral/400 */
+    --wt-theme-color-hyperlink: var(--wt-theme-color-1);
     --wt-theme-color-ok: #047857; /* Emerald/700 */
     --wt-theme-color-ok-on: #ecfdf5; /* Emerald/50 */
     --wt-theme-color-ok-ct: #d1fae5; /* Emerald/100 */
@@ -41,18 +43,17 @@ grep -l "#0E7490" * | while read fname; do echo "sedding $fname"; sed -i -e 's/#
     --wt-theme-color-info-on: #eef2ff; /* Indigo/50 */
     --wt-theme-color-info-ct: #e0e7ff; /* Indigo/100 */
     --wt-theme-color-info-ct-on: #4338ca; /* Indigo/700 */
-    --wt-theme-color-off: #a3a3a3; /* Neutral/400 */
     
     --wt-theme-color-scrollbar-thumb: #d4d4d4; /* Neutral/300 */
     --wt-theme-color-scrollbar-track: transparent;
     --wt-theme-color-mask: rgba(107, 114, 128, 0.75); /* Gray/500 @75% */
-    --wt-theme-color-dialog: #ffffff; /* White */
+    --wt-theme-color-dialog: var(--wt-theme-color-surface-l0);
     --wt-theme-color-dialog-on: #404040; /* Neutral/700 */
-    --wt-theme-color-dialog-hd: #F5F5F5; /* Neutral/100 */
+    --wt-theme-color-dialog-hd: var(--wt-theme-color-surface-l2);
     --wt-theme-color-dialog-hd-on: #404040; /* Neutral/700 */
-    --wt-theme-color-mbox: #F5F5F5; /* Neutral/100 */
+    --wt-theme-color-mbox: var(--wt-theme-color-surface-l2);
     --wt-theme-color-mbox-on: #404040; /* Neutral/700 */
-    --wt-theme-color-mbox-hd: #F5F5F5; /* Neutral/100 */
+    --wt-theme-color-mbox-hd: var(--wt-theme-color-surface-l2);
     --wt-theme-color-mbox-hd-on: #404040; /* Neutral/700 */
     --wt-theme-color-popup: #737373; /* Neutral/500 */
     --wt-theme-color-popup-on: #e5e5e5; /* Neutral/200 */
