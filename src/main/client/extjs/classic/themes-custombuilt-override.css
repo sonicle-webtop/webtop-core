@@ -9,6 +9,13 @@ body > .x-mask {
     background-color: var(--wt-theme-color-mask);
 }
 
+/* ---------- ContextMenu */
+/* Highlight the row that activates the context-menu */
+.x-grid-view .so-contextmenu-owner,
+.x-tree-view .so-contextmenu-owner {
+    background-color: var(--wt-theme-color-ct-1) !important;
+}
+
 /* ---------- Ext.button.Button */
 /* Add default icon family to FA free */
 .x-btn-icon-el:empty { font-family: var(--fa-style-family-classic); }
@@ -115,7 +122,7 @@ body > .x-mask {
 	border-bottom-right-radius: var(--wt-theme-grid-radius, 0px);
 }
 /* Add depth effect for rounded-style grids */
-.x-grid.x-grid-rounded .x-grid-item {
+.x-grid.x-grid-rounded .x-grid-item:not(.x-grid-item-selected) {
     background-color: var(--wt-theme-color-surface-l0);
 }
 /* Fix hide top border when x-grid-no-border (custom class) is explict */
@@ -264,6 +271,11 @@ body > .x-mask {
 /* ---------- Ext.tip.QuickTip */
 /* Add border radius */
 .x-tip-default { border-radius: var(--wt-theme-dialog-radius); }
+
+/* ---------- Ext.tree.Panel */
+/* Add rounded selection */
+.x-tree-view .x-grid-item-selected { border-radius: 5px; }
+.x-tree-view .x-grid-item-over { border-radius: 5px; }
 
 /* ---------- Ext.view.BoundList */
 /* Avoid borders */

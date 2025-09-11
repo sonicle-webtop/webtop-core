@@ -16,7 +16,7 @@ grep -l "#0E7490" * | while read fname; do echo "sedding $fname"; sed -i -e 's/#
     --wt-theme-color-surface-l2-inv: #ffffff; /* White */
     --wt-theme-color-surface-l3: #e5e5e5; /* Neutral/200 */
     --wt-theme-color-surface-l4: #d4d4d4; /* Neutral/300 */
-    --wt-theme-color-ct-1: #f0f9ff; /* Sky/50 */
+    --wt-theme-color-ct-1: #e0f2fe; /* Sky/100 */
     --wt-theme-color-ct-2: #fff7ed; /* Orange/50 */
     --wt-theme-color-n1: #404040; /* Neutral/700 */
     --wt-theme-color-n1-inv: #f5f5f5; /* Neutral/100 */
@@ -112,13 +112,6 @@ grep -l "#0E7490" * | while read fname; do echo "sedding $fname"; sed -i -e 's/#
     --fc-event-resizer-swatch-bg-color: #171717; /* Neutral/900 */
     --fc-event-resizer-swatch-border-color: #171717; /* Neutral/900 */
 	--fc-event-style-shadow: rgba(0,0,0,.1);
-}
-
-/* ---------- ContextMenu */
-/* Highlight the row that activates the context-menu */
-.x-grid-view .so-contextmenu-owner,
-.x-tree-view .so-contextmenu-owner {
-    background-color: #a3a3a3 !important; /* Neutral/400 */
 }
 
 /* ---------- Sonicle.LoadMask */
