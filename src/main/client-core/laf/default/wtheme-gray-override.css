@@ -2,9 +2,13 @@
 /* Tweaks WebTop's components for specific theme
 /**************************************/
 
-/* ---------- Base styling */
 .wt-theme-text-color-title { color: var(--wt-theme-color-info); }
 .wt-theme-text-color-subtitle { color: #888888; }
+.wt-pane-body-title { font-size: var(--wt-theme-fontsize-base); font-weight: var(--wt-theme-fontweight-medium); }
+.wt-pane-body-subtitle { font-size: var(--wt-theme-fontsize-xs); font-weight: var(--wt-theme-fontweight-base); }
+.wt-form-body-title { font-size: var(--wt-theme-fontsize-base); font-weight: var(--wt-theme-fontweight-medium); }
+.wt-form-body-subtitle { font-size: var(--wt-theme-fontsize-xs); font-weight: var(--wt-theme-fontweight-base); }
+.wt-form-toolbar-title { font-size: var(--wt-theme-fontsize-base, inherit); font-weight: var(--wt-theme-fontweight-medium, normal); }
 
 /* viewport toolbars: disable gradient */
 .wt-viewport-navbar .x-toolbar-default { background-image: none; }

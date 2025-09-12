@@ -106,78 +106,85 @@ Ext.define('Sonicle.webtop.core.ux.UploadBar', {
 		
 		if (Ext.isString(mfs)) mfs = SoByt.parse(mfs);
 		me.callParent(arguments);
-		me.add([{
-			xtype: 'souploadbutton',
-			itemId: 'btnupload',
-			text: WT.res('wtuploadbar.btn-upload.lbl'),
-			tooltip: WT.res('wtuploadbar.btn-upload.tip'),
-			iconCls: me.buttonIconCls,
-			ui: me.buttonUI,
-			uploaderConfig: WTF.uploader(me.sid, me.uploadContext, {
-				autoStart: me.autoStart,
-				extraParams: {
-					tag: me.uploadTag
-				},
-				maxFileSize: mfs,
-				dropElement: de ? de : undefined,
-				fileExtraParams: function() {
-					if (Ext.isFunction(me.fileExtraParams)) {
-						return me.fileExtraParams.apply(me);
-					} else {
-						return null;
-					}
-				},
-				listeners: {
-					filesadded: function(s, files) {
-						me.fireEvent('filesadded', me, files);
+		me.add([
+			{
+				xtype: 'souploadbutton',
+				itemId: 'btnupload',
+				text: WT.res('wtuploadbar.btn-upload.lbl'),
+				tooltip: WT.res('wtuploadbar.btn-upload.tip'),
+				iconCls: me.buttonIconCls,
+				ui: me.buttonUI,
+				uploaderConfig: WTF.uploader(me.sid, me.uploadContext, {
+					autoStart: me.autoStart,
+					extraParams: {
+						tag: me.uploadTag
 					},
-					uploaderror: function(s, file, cause) {
-						me.self.handleUploadError(s, file, cause);
-					},
-					fileuploaded: function(s, file, json, resp) {
-						me.fireEvent('fileuploaded', me, file, json, resp);
-					},
-					overallprogress: function(s, percent, total, succeeded, failed, queued, speed) {
-						var pro = me.getProgress(),
-								drh = me.geDropHere();
-						if (queued > 0) {
-							pro.updateProgress(percent*0.01, WT.res('wtuploadbar.progress.lbl', percent, queued-1, SoByt.format(speed || 0)));
-							pro.setHidden(false);
-							drh.setHidden(true);
+					maxFileSize: mfs,
+					dropElement: de ? de : undefined,
+					fileExtraParams: function() {
+						if (Ext.isFunction(me.fileExtraParams)) {
+							return me.fileExtraParams.apply(me);
 						} else {
-							pro.reset();
-							pro.setHidden(true);
-							drh.setHidden(false);
+							return null;
+						}
+					},
+					listeners: {
+						filesadded: function(s, files) {
+							me.fireEvent('filesadded', me, files);
+						},
+						uploaderror: function(s, file, cause) {
+							me.self.handleUploadError(s, file, cause);
+						},
+						fileuploaded: function(s, file, json, resp) {
+							me.fireEvent('fileuploaded', me, file, json, resp);
+						},
+						overallprogress: function(s, percent, total, succeeded, failed, queued, speed) {
+							var pro = me.getProgress(),
+									drh = me.geDropHere();
+							if (queued > 0) {
+								pro.updateProgress(percent*0.01, WT.res('wtuploadbar.progress.lbl', percent, queued-1, SoByt.format(speed || 0)));
+								pro.setHidden(false);
+								drh.setHidden(true);
+							} else {
+								pro.reset();
+								pro.setHidden(true);
+								drh.setHidden(false);
+							}
 						}
 					}
-				}
-			})
-		}, ' ', {
-			xtype: 'progressbar',
-			itemId: 'progress',
-			hidden: true,
-			flex: 1
-		}, {
-			xtype: 'toolbar',
-			itemId: 'drophere',
-			cls: 'wt-uploadbar-drophere',
-			layout: {
-				type: 'hbox',
-				pack: 'center'
+				})
 			},
-			border: 1,
-			style: {
-				borderStyle: 'dashed',
-				borderRadius: '4px'
+			' ',
+			{
+				xtype: 'progressbar',
+				itemId: 'progress',
+				hidden: true,
+				flex: 1
+			}, {
+				xtype: 'toolbar',
+				itemId: 'drophere',
+				cls: 'wt-uploadbar-drophere',
+				layout: {
+					type: 'hbox',
+					pack: 'center'
+				},
+				border: 1,
+				style: {
+					borderStyle: 'dashed',
+					borderRadius: '4px'
+				},
+				items: [
+					{
+						xtype: 'tbtext',
+						cls: 'x-unselectable wt-uploadbar-drophere-text',
+						text: WT.res('wtuploadbar.drophere.lbl')
+
+					}
+				],
+				flex: 1
 			},
-			items: [{
-					xtype: 'tbtext',
-					cls: 'x-unselectable wt-uploadbar-drophere-text',
-					text: WT.res('wtuploadbar.drophere.lbl')
-					
-			}],
-			flex: 1
-		}, ' ']);
+			' '
+		]);
 	},
 	
 	getUploadButton: function() {

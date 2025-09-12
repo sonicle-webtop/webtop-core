@@ -39,3 +39,23 @@ Ext.define('Sonicle.overrides.webtop.core.viewport.private.Default', {
 	}
 });
 */
+Ext.define('Sonicle.overrides.grid.RowEditorButtons', {
+	override: 'Ext.grid.RowEditorButtons',
+	
+	reverseButtons: true,
+	updateButtonUI: '{primary}',
+	cancelButtonUI: '{secondary}'
+});
+Ext.define('Sonicle.overrides.window.MessageBox', {
+	override: 'Ext.window.MessageBox',
+	
+	/* Swap buttons, align them and customize pseudo-UI */
+	reverseButtons: true,
+	buttonsAlign: 'right',
+	buttonPseudoUi: {
+		ok: '{primary}',
+		yes: '{primary}',
+		no: '{tertiary}',
+		cancel: '{tertiary}'
+	}
+});

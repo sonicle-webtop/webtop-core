@@ -2,14 +2,13 @@
 /* Base WebTop's definitions for all themes
 /**************************************/
 
-.wt-theme-text-color-title { /* Hey, define me! */ } /* Color styles for header texts (typically like --wt-theme-color-info) */
-.wt-theme-text-color-subtitle { /* Hey, define me! */ } /* Color styles for sub-header texts */
-
-.wt-pane-body-title { /* Hey, define me! */ } /* Font styles for titles in panel bodys (should not include colors) */
-.wt-pane-body-subtitle { /* Hey, define me! */ } /* Font styles for sub-titles in panel bodys (should not include colors) */
-.wt-form-body-title { /* Hey, define me! */ } /* Font styles for titles in form (panel with fields) bodys (should not include colors) */
-.wt-form-body-subtitle { /* Hey, define me! */ } /* Font styles for sub-titles in form (panel with fields) bodys (should not include colors) */
-.wt-form-toolbar-title { /* Hey, define me! */ } /* Font styles for titles in form toolbars (should not include colors) */
+.wt-theme-text-color-title { /* Hey, define me! */ } /* Color styles for header texts (ONLY colors) */
+.wt-theme-text-color-subtitle { /* Hey, define me! */ } /* Color styles for sub-header texts (ONLY colors) */
+.wt-pane-body-title { /* Hey, define me! */ } /* Font styles for titles in panel bodys (NO colors) */
+.wt-pane-body-subtitle { /* Hey, define me! */ } /* Font styles for sub-titles in panel bodys (NO colors) */
+.wt-form-body-title { /* Hey, define me! */ } /* Font styles for titles in form (panel with fields) bodys (NO colors) */
+.wt-form-body-subtitle { /* Hey, define me! */ } /* Font styles for sub-titles in form (panel with fields) bodys (NO colors) */
+.wt-form-toolbar-title { /* Hey, define me! */ } /* Font styles for titles in form toolbars (NO colors) */
 
 .wt-portal-body { background-color: var(--wt-theme-color-surface-l1); } /* Deprecated! */
 

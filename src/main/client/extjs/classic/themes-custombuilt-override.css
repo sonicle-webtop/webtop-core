@@ -69,6 +69,10 @@ body > .x-mask {
 }
 
 /* ---------- Ext.form.field.Text */
+/* Some wrapped inputs (eg. textarea) require radius on wrap, otherwise radiuses applied on wrapped input are NOT enought */
+.x-form-text-wrap {
+	border-radius: var(--wt-theme-field-radius);
+}
 /* Internal wrapped triggers do NOT have radius set by default, this hides external corners when using radius... */
 .x-form-trigger.x-form-trigger-right.x-form-trigger-last {
     border-top-right-radius: var(--wt-theme-field-radius);
@@ -343,20 +347,18 @@ body > .x-mask {
 }
 
 /* ---------- Sonicle.form.Feedback */
-/* <-- USEFUL?
 .so-formfeedback {
-    font-size: var(--wt-theme-fontsize-sm, inherit);
-    line-height: var(--wt-theme-lineheight-sm, inherit);
+    font-size: var(--wt-theme-fontsize-xs, inherit);
+    line-height: var(--wt-theme-lineheight-xs, inherit);
     font-weight: var(--wt-theme-fontweight-regular, normal);
-    border-radius: 6px;
+    border-radius: 4px;
+}
+.so-formfeedback-title {
+	font-size: var(--wt-theme-fontsize-sm, inherit);
 }
 .so-formfeedback.so-formfeedback-accent {
-	border-left-width: 6px;
+	border-left-width: 5px;
 }
-.so-formfeedback-wrap {
-    padding: 16px;
-}
-*/
 
 /* ---------- Sonicle.form.FieldSection */
 /* <-- USEFUL?

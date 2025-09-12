@@ -95,11 +95,15 @@ grep -l "#0E7490" * | while read fname; do echo "sedding $fname"; sed -i -e 's/#
     --so-colorswatch-framed-border-color: #737373; /* Neutral/500 */
     --so-colorswatch-darkmark-color: #404040; /* Neutral/700 */
     --so-colorswatch-lightmark-color: #f5f5f5; /* Neutral/100 */
-    /* ---------- Sonicle.panel.CanbanColumn */
-    --so-kanbancolumn-border-radius: 4px;
     /* ---------- Sonicle.form.field.Display */
     --so-displayfield-clickable-color: #0e7490; /* Cyan/700 */
     --so-displayfield-clickable-hover-color: #164e63; /* Cyan/900 */
+    /* ---------- Sonicle.panel.CanbanColumn */
+    --so-kanbancolumn-border-radius: 4px;
+    /* ---------- Sonicle.plugin.DropMask */
+    --so-dropmask-border-color: var(--wt-theme-color-1);
+    --so-dropmask-text-color: var(--wt-theme-color-1);
+    --so-dropmask-text-size: var(--wt-theme-fontsize-3xl);
     /* ---------- FullCalendar */
     --fc-page-bg-color: var(--wt-theme-color-surface-l0) !important;
     --fc-border-color: var(--wt-theme-color-surface-l3) !important;
