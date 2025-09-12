@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg id="Livello_1" data-name="Livello 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 104 104">
-  <polygon class="cls-3" points="68.89 54.74 101.38 36.02 96.26 27.14 58.19 49.09 68.89 54.74" fill="#3760aa;"/>
-  <polygon class="cls-5" points="62.85 1.25 52.6 1.24 52.57 45.19 62.82 38.74 62.85 1.25" fill="#4199d5;"/>
-  <polygon class="cls-2" points="45.93 36 13.47 17.23 8.34 26.1 46.39 48.1 45.93 36" fill="#7bb929;"/>
-  <polygon class="cls-4" points="35.11 49.26 2.62 67.98 7.74 76.86 45.82 54.91 35.11 49.26" fill="#fcc10c;"/>
-  <polygon class="cls-6" points="41.15 102.75 51.4 102.76 51.43 58.81 41.18 65.26 41.15 102.75" fill="#ed6a2c;"/>
-  <polygon class="cls-1" points="58.07 68 90.53 86.77 95.66 77.9 57.62 55.9 58.07 68" fill="#e22f88;"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 104 104">
+  <polygon points="68.89 54.74 101.38 36.02 96.26 27.14 58.19 49.09 68.89 54.74" fill="#3760aa"/>
+  <polygon points="62.85 1.25 52.6 1.24 52.57 45.19 62.82 38.74 62.85 1.25" fill="#4199d5"/>
+  <polygon points="45.93 36 13.47 17.23 8.34 26.1 46.39 48.1 45.93 36" fill="#7bb929"/>
+  <polygon points="35.11 49.26 2.62 67.98 7.74 76.86 45.82 54.91 35.11 49.26" fill="#fcc10c"/>
+  <polygon points="41.15 102.75 51.4 102.76 51.43 58.81 41.18 65.26 41.15 102.75" fill="#ed6a2c"/>
+  <polygon points="58.07 68 90.53 86.77 95.66 77.9 57.62 55.9 58.07 68" fill="#e22f88"/>
 </svg>

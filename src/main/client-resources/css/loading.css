@@ -29,5 +29,5 @@ body { margin: 0; }
 	font-size: 16px;
 	font-weight: 300;
 	font-family: helvetica, arial, verdana, sans-serif;
-	background: url('../images/elica-anim_32.gif') no-repeat left center;
+    background: url('../images/spinner.svg') no-repeat left center/contain !important;
 }
