@@ -4,10 +4,9 @@
   <g id="icon">
     <polygon points="6,5 11.5,5 11.5,2.5 8.2,2.5 3.3,2.5 0.5,2.5 0.5,14.5 6,14.5" fill="#F7DA8E" stroke-linejoin="miter"/>
     <path d="M6,15H0V2h3.3c0.276,0,0.5,0.224,0.5,0.5s-0.224,0.5,-0.5,0.5H1v11h5V15zM8.2,3h2.8v2h1V2H8.2c-0.276,0,-0.5,0.224,-0.5,0.5S7.924,3,8.2,3z" fill="#E57428"/>
-    <rect x="2" y="5" width="4" height="8" fill="#FFFFFF"/>
-    <path d="M8.011,2.5c0,-1.094,-0.892,-1.98,-1.993,-1.98S4.025,1.406,4.025,2.5H2.5v2h7V2.5H8.011z" fill="#FFFFFF" stroke="#383838" stroke-width="1" stroke-miterlimit="10"/>
-    <polygon points="15.5,15.5 7.5,15.5 7.5,6.5 12.505,6.5 15.5,9.495" fill="#FFFFFF" stroke="#383838" stroke-width="1" stroke-miterlimit="10" stroke-linejoin="miter"/>
-    <polyline points="15.5,9.5 12.5,9.5 12.5,6.5" fill="none" stroke="#383838" stroke-width="1" stroke-miterlimit="10" stroke-linejoin="miter"/>
-    <path d="M9,13.5h5M9,11.5h5M9,9.5h2" fill="none" stroke="#228BCB" stroke-width="1" stroke-miterlimit="10"/>
+    <rect x="2" y="5" width="4" height="8" id="b" fill="#FFFFFF"/>
+    <path d="M8.011,2.5c0,-1.094,-0.892,-1.98,-1.993,-1.98S4.025,1.406,4.025,2.5H2.5v2h7V2.5H8.011z" id="b" fill="#FFFFFF" stroke="#383838" stroke-width="1" stroke-miterlimit="50"/>
+    <polygon points="15.5,15.5 7.5,15.5 7.5,6.5 12.505,6.5 15.5,9.495" id="b" fill="#FFFFFF" stroke="#383838" stroke-width="1" stroke-miterlimit="50" stroke-linejoin="miter"/>
+    <polyline points="15.5,9.5 12.5,9.5 12.5,6.5" fill="none" stroke="#383838" stroke-width="1" stroke-miterlimit="50" stroke-linejoin="miter"/>
   </g>
 </svg>

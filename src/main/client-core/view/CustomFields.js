@@ -201,7 +201,7 @@ Ext.define('Sonicle.webtop.core.view.CustomFields', {
 								me.cloneCustomFieldUI(rec);
 							}
 						}, {
-							iconCls: 'far fa-trash-alt',
+							iconCls: 'wt-icon-trash',
 							tooltip: WT.res('act-remove.lbl'),
 							handler: function(g, ridx) {
 								var rec = g.getStore().getAt(ridx);

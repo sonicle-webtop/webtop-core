@@ -11805,7 +11805,7 @@ body > .x-mask {
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-neutral/sass/var/form/field/Text.scss:332 */
 .x-form-trigger-default {
-    width: 32px;
+    width: 24px;
     font: 16px/28px 'Font Awesome 5 Free';
     background: #fff;
     color: #737373;
@@ -11816,19 +11816,19 @@ body > .x-mask {
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-neutral/sass/var/form/field/Text.scss:355 */
 .x-form-trigger-default.x-form-trigger-over {
-    background-position: -32px center;
+    background-position: -24px center;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-neutral/sass/var/form/field/Text.scss:361 */
 .x-form-trigger-default.x-form-trigger-over.x-form-trigger-focus {
-    background-position: -128px center;
+    background-position: -96px center;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-neutral/sass/var/form/field/Text.scss:366 */
 .x-form-trigger-default.x-form-trigger-focus {
-    background-position: -96px center;
+    background-position: -72px center;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-neutral/sass/var/form/field/Text.scss:375 */
 .x-form-trigger.x-form-trigger-default.x-form-trigger-click {
-    background-position: -64px center;
+    background-position: -48px center;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-neutral/sass/var/form/field/Text.scss:384 */
 .x-textfield-default-cell > .x-grid-cell-inner {
@@ -12108,7 +12108,7 @@ body > .x-mask {
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-neutral/sass/var/form/trigger/Spinner.scss:71 */
 .x-form-trigger-spinner-default {
-    width: 32px;
+    width: 24px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-neutral/sass/var/form/trigger/Spinner.scss:79 */
 .x-form-trigger-spinner-default:before {
@@ -12117,7 +12117,7 @@ body > .x-mask {
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-neutral/sass/var/form/trigger/Spinner.scss:85 */
 .x-form-spinner-default {
     background-color: #fff;
-    width: 32px;
+    width: 24px;
     height: 14px;
     color: #737373;
 }
@@ -12143,19 +12143,19 @@ body > .x-mask {
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-neutral/sass/var/form/trigger/Spinner.scss:146 */
 .x-form-spinner-up-default.x-form-spinner-over {
-    background-position: -32px 0;
+    background-position: -24px 0;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-neutral/sass/var/form/trigger/Spinner.scss:148 */
 .x-form-spinner-up-default.x-form-spinner-over.x-form-spinner-focus {
-    background-position: -128px 0;
+    background-position: -96px 0;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-neutral/sass/var/form/trigger/Spinner.scss:153 */
 .x-form-spinner-up-default.x-form-spinner-focus {
-    background-position: -96px 0;
+    background-position: -72px 0;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-neutral/sass/var/form/trigger/Spinner.scss:158 */
 .x-form-spinner-up-default.x-form-spinner.x-form-spinner-click {
-    background-position: -64px 0;
+    background-position: -48px 0;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-neutral/sass/var/form/trigger/Spinner.scss:163 */
 .x-form-spinner-down-default {
@@ -12163,19 +12163,19 @@ body > .x-mask {
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-neutral/sass/var/form/trigger/Spinner.scss:166 */
 .x-form-spinner-down-default.x-form-spinner-over {
-    background-position: -32px -14px;
+    background-position: -24px -14px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-neutral/sass/var/form/trigger/Spinner.scss:168 */
 .x-form-spinner-down-default.x-form-spinner-over.x-form-spinner-focus {
-    background-position: -128px -14px;
+    background-position: -96px -14px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-neutral/sass/var/form/trigger/Spinner.scss:173 */
 .x-form-spinner-down-default.x-form-spinner-focus {
-    background-position: -96px -14px;
+    background-position: -72px -14px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-neutral/sass/var/form/trigger/Spinner.scss:178 */
 .x-form-spinner-down-default.x-form-spinner.x-form-spinner-click {
-    background-position: -64px -14px;
+    background-position: -48px -14px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-neutral/sass/src/toolbar/Paging.scss:1 */
 .x-tbar-page-number {

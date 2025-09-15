@@ -100,7 +100,7 @@ Ext.define('Sonicle.webtop.core.view.Activity', {
 						me.addAct('activityAuditLog', {
 							text: null,
 							tooltip: WT.res('act-auditLog.lbl'),
-							iconCls: 'fas fa-history',
+							iconCls: 'wt-icon-audit',
 							handler: function() {
 								me.mys.openAuditUI(me.getModel().getId(), 'ACTIVITY');
 							},

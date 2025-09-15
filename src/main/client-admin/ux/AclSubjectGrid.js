@@ -105,7 +105,7 @@ Ext.define('Sonicle.webtop.core.admin.ux.AclSubjectGrid', {
 					xtype: 'soactioncolumn',
 					items: [
 						{
-							iconCls: 'far fa-trash-alt',
+							iconCls: 'wt-icon-trash',
 							tooltip: WT.res('act-remove.lbl'),
 							handler: function(g, ridx) {
 								var sto = g.getStore(),

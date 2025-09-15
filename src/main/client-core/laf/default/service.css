@@ -93,29 +93,40 @@
 .wt-icon-tag { background-image: url('tag_16.svg') !important; background-size: contain; }
 /* ---------- Icons (glyphs) */
 .wt-glyph-add:before { content: '\f055'; font: var(--fa-font-solid); }
-.wt-glyph-edit:before { content: '\f044'; font: var(--fa-font-solid); }
-.wt-glyph-delete:before { content: '\f1f8'; font: var(--fa-font-solid); }
-.wt-glyph-settings:before { content: '\f013'; font: var(--fa-font-solid); }
-.wt-glyph-earth:before { content: '\f57d'; font: var(--fa-font-solid); }
+.wt-glyph-ai:before { content: '\f5dc'; font: var(--fa-font-solid); }
+.wt-glyph-bell:before { content: '\f0f3'; font: var(--fa-font-solid); }
+.wt-glyph-building:before { content: '\f1ad'; font: var(--fa-font-solid); }
 .wt-glyph-clipboard-copy:before { content: '\f24d'; font: var(--fa-font-solid); }
-.wt-glyph-copy:before { content: '\f0c5'; font: var(--fa-font-solid); }
-.wt-glyph-paste:before { content: '\f0ea'; font: var(--fa-font-solid); }
 .wt-glyph-clone:before { content: '\f24d'; font: var(--fa-font-solid); }
-.wt-glyph-password:before { content: '\f084'; font: var(--fa-font-solid); }
+.wt-glyph-copy:before { content: '\f0c5'; font: var(--fa-font-solid); }
 .wt-glyph-contact:before { content: '\f007'; font: var(--fa-font-solid); }
+.wt-glyph-cloud-arrow-up:before { content: '\f0ee'; font: var(--fa-font-solid); } /* fa-cloud-arrow-up */
+.wt-glyph-cloud-arrow-down:before { content: '\f0ed'; font: var(--fa-font-solid); } /* fa-cloud-arrow-down */
+.wt-glyph-delete:before { content: '\f1f8'; font: var(--fa-font-solid); } /* fa-trash */
+.wt-glyph-earth:before { content: '\f57d'; font: var(--fa-font-solid); } /* fa-earth-americas */
+.wt-glyph-edit:before { content: '\f044'; font: var(--fa-font-solid); } /* fa-pen-to-square */
+.wt-glyph-envelope:before { content: '\f0e0'; font: var(--fa-font-solid); } /* fa-envelope */
+.wt-glyph-file:before { content: '\f15b'; font: var(--fa-font-solid); } /* fa-file */
+.wt-glyph-folder:before { content: '\f07b'; font: var(--fa-font-solid); } /* fa-folder */
+.wt-glyph-link:before { content: '\f0c1'; font: var(--fa-font-solid); } /* fa-link */
+.wt-glyph-location-pin:before { content: '\f3c5'; font: var(--fa-font-solid); } /* fa-location-dot */
+.wt-glyph-lock:before { content: '\f023'; font: var(--fa-font-solid); } /* fa-lock */
 .wt-glyph-menu-kebab:before { content: '\f142'; font: var(--fa-font-solid); } /* vertical dots */
 .wt-glyph-menu-meatballs:before { content: '\f141'; font: var(--fa-font-solid); } /* horizontal dots */
 .wt-glyph-menu-hamburger:before { content: '\f0c9'; font: var(--fa-font-solid); } /* horizontal lines */
 .wt-glyph-menu-bento:before { content: '\f58d'; font: var(--fa-font-solid); } /* 3x3 dots grid */
-.wt-glyph-ai:before { content: '\f5dc'; font: var(--fa-font-solid); }
-
-/* ---------- Icons (actions) */
-.wt-icon-action-add { background-size: contain; } .wt-icon-action-add:before { content: '\f055'; font: var(--fa-font-solid); }
-.wt-icon-action-edit { background-size: contain; } .wt-icon-action-edit:before { content: '\f044'; font: var(--fa-font-solid); }
-.wt-icon-action-delete { background-size: contain; } .wt-icon-action-delete:before { content: '\f1f8'; font: var(--fa-font-solid); }
-.wt-icon-action-copy { background-size: contain; } .wt-icon-action-copy:before { content: '\f0c5'; font: var(--fa-font-solid); }
-.wt-icon-action-paste { background-size: contain; } .wt-icon-action-paste:before { content: '\f0ea'; font: var(--fa-font-solid); }
-.wt-icon-action-clone { background-size: contain; } .wt-icon-action-clone:before { content: '\f24d'; font: var(--fa-font-solid); }
+.wt-glyph-meeting:before { content: '\f03d'; font: var(--fa-font-solid); } /* fa-video */
+.wt-glyph-mobile:before { content: '\f3cd'; font: var(--fa-font-solid); } /* fa-mobile-screen-button */
+.wt-glyph-open:before { content: '\f08e'; font: var(--fa-font-solid); } /* fa-arrow-up-right-from-square */
+.wt-glyph-password:before { content: '\f084'; font: var(--fa-font-solid); } /* fa-key */
+.wt-glyph-paste:before { content: '\f0ea'; font: var(--fa-font-solid); } /* fa-paste */
+.wt-glyph-phone:before { content: '\f095'; font: var(--fa-font-solid); } /* fa-phone */
+.wt-glyph-priority:before { content: '\f071'; font: var(--fa-font-solid); } /* fa-triangle-exclamation */
+.wt-glyph-settings:before { content: '\f013'; font: var(--fa-font-solid); } /* fa-gear */
+.wt-glyph-signature:before { content: '\f5b7'; font: var(--fa-font-solid); } /* fa-signature */
+.wt-glyph-status:before { content: '\f624'; font: var(--fa-font-solid); } /* fa-gauge */
+.wt-glyph-stopwatch:before { content: '\f2f2'; font: var(--fa-font-solid); } /* fa-stopwatch */
+.wt-glyph-tag:before { content: '\f02b'; font: var(--fa-font-solid); } /* fa-tag */
 
 /* ---------- Icons (actions) */
 .wt-icon-add { background-image: url('act-add_16.svg') !important; background-size: contain; }
@@ -125,6 +136,7 @@
 .wt-icon-trash { background-image: url('act-trash_16.svg') !important; background-size: contain; }
 .wt-icon-remove { background-image: url('act-remove_16.svg') !important; background-size: contain; }
 .wt-icon-delete { background-image: url('act-delete_16.svg') !important; background-size: contain; }
+.wt-icon-clone { background-image: url('act-clone_16.svg') !important; background-size: contain; }
 .wt-icon-copy { background-image: url('act-copy_16.svg') !important; background-size: contain; }
 .wt-icon-move { background-image: url('act-move_16.svg') !important; background-size: contain; }
 .wt-icon-clipboard-copy { background-image: url('clipboard-copy_16.svg') !important; background-size: contain; }
@@ -227,6 +239,7 @@
 .wt-icon-emoji { background-image: url('emoji_16.svg') !important; background-size: contain; }
 .wt-icon-viewOptions { background-image: url('viewOptions_16.svg') !important; background-size: contain; }
 .wt-icon-clearState { background-image: url('clear-state_16.svg') !important; background-size: contain; }
+.wt-icon-audit { background-image: url('audit_16.svg') !important; background-size: contain; }
 /* ---------- Icons (HTMLEditor) */
 .wt-icon-htmled-forecolor { background-image: url('htmleditor/color-fore_16.svg') !important; background-position: center top; background-size: auto; }
 .wt-icon-htmled-backcolor { background-image: url('htmleditor/color-back_16.svg') !important; background-position: center top; background-size: auto; }

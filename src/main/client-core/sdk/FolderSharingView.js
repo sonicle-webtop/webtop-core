@@ -153,14 +153,14 @@ Ext.define('Sonicle.webtop.core.sdk.FolderSharingView', {
 									xtype: 'soactioncolumn',
 									items: [
 										{
-											iconCls: 'wt-glyph-clone',
+											iconCls: 'wt-icon-clone',
 											tooltip: WT.res('act-clone.lbl'),
 											handler: function(g, ridx) {
 												var rec = g.getStore().getAt(ridx);
 												me.cloneRightsUI(rec);
 											}
 										}, {
-											iconCls: 'wt-glyph-delete',
+											iconCls: 'wt-icon-trash',
 											tooltip: WT.res('act-remove.lbl'),
 											handler: function(g, ridx) {
 												var rec = g.getStore().getAt(ridx);

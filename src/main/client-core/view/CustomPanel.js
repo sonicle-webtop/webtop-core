@@ -258,7 +258,7 @@ Ext.define('Sonicle.webtop.core.view.CustomPanel', {
 									xtype: 'soactioncolumn',
 									items: [
 										{
-											iconCls: 'far fa-trash-alt',
+											iconCls: 'wt-icon-trash',
 											tooltip: WT.res('act-remove.lbl'),
 											handler: function(g, ridx) {
 												var rec = g.getStore().getAt(ridx);
@@ -339,7 +339,7 @@ Ext.define('Sonicle.webtop.core.view.CustomPanel', {
 						me.addAct('customPanelAuditLog', {
 							text: null,
 							tooltip: WT.res('act-auditLog.lbl'),
-							iconCls: 'fas fa-history',
+							iconCls: 'wt-icon-audit',
 							handler: function() {
 								me.mys.openAuditUI(me.getModel().getId(), 'CUSTOMPANEL');
 							},

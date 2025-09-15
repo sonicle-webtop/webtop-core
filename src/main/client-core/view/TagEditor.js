@@ -171,7 +171,7 @@ Ext.define('Sonicle.webtop.core.view.TagEditor', {
 						me.addAct('tagAuditLog', {
 							text: null,
 							tooltip: WT.res('act-auditLog.lbl'),
-							iconCls: 'fas fa-history',
+							iconCls: 'wt-icon-audit',
 							handler: function() {
 								me.mys.openAuditUI(me.getVM().get('data.id'), 'TAG');
 							},

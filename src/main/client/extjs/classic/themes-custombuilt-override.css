@@ -231,15 +231,15 @@ body > .x-mask {
     background-color: var(--wt-theme-color-ct-1);
 }
 .x-datepicker-cell.so-datepicker-highlighted.so-datepicker-highlighted-begin {
-    border-top-left-radius: 4px;
-    border-bottom-left-radius: 4px;
+    border-top-left-radius: 5px;
+    border-bottom-left-radius: 5px;
 }
 .x-datepicker-cell.so-datepicker-highlighted.so-datepicker-highlighted-begin.so-datepicker-highlighted-row {
     border-bottom-left-radius: 0px;
 }
 .x-datepicker-cell.so-datepicker-highlighted.so-datepicker-highlighted-end {
-    border-top-right-radius: 4px;
-    border-bottom-right-radius: 4px;
+    border-top-right-radius: 5px;
+    border-bottom-right-radius: 5px;
 }
 .x-datepicker-cell.so-datepicker-highlighted.so-datepicker-highlighted-end.so-datepicker-highlighted-row {
     border-top-right-radius: 0px;

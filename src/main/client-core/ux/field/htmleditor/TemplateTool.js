@@ -166,7 +166,7 @@ Ext.define('Sonicle.webtop.core.ux.field.htmleditor.TemplateTool', {
 								xtype: 'soactioncolumn',
 								items: [
 									{
-										iconCls: 'far fa-edit',
+										iconCls: 'wt-icon-edit',
 										tooltip: WT.res('act-edit.lbl'),
 										handler: function(g, ridx) {
 											var sto = g.getStore(),
@@ -179,7 +179,7 @@ Ext.define('Sonicle.webtop.core.ux.field.htmleditor.TemplateTool', {
 											}, me);
 										}
 									}, {
-										iconCls: 'far fa-trash-alt',
+										iconCls: 'wt-icon-trash',
 										tooltip: WT.res('act-remove.lbl'),
 										handler: function(g, ridx) {
 											var sto = g.getStore(),

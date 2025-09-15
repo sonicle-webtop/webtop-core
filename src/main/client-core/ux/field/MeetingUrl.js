@@ -70,6 +70,7 @@ Ext.define('Sonicle.webtop.core.ux.field.MeetingUrl', {
 				margin: '0 2 0 0',
 				handler: function(s, e) {
 					Sonicle.ClipboardMgr.copy(me.value);
+					WT.toast(WT.res('toast.info.copied'));
 					me.fireEvent('copy', me, me.value);
 				}
 			}, {

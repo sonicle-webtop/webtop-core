@@ -200,22 +200,24 @@ Ext.define('Sonicle.webtop.core.ux.grid.Attachments', {
 			flex: 1
 		}, {
 			xtype: 'soactioncolumn',
-			items: [{
-				iconCls: 'fas fa-cloud-download-alt',
-				tooltip: WT.res('act-download.lbl'),
-				handler: function(g, ridx) {
-					var rec = g.getStore().getAt(ridx);
-					me.fireEvent('attachmentdownloadclick', me, rec, ridx);
-				},
-				hidden: WT.plTags.mobile
-			}, {
-				iconCls: 'far fa-trash-alt',
-				tooltip: WT.res('act-remove.lbl'),
-				handler: function(g, ridx) {
-					var rec = g.getStore().getAt(ridx);
-					me.fireEvent('attachmentdeleteclick', me, rec, ridx);
+			items: [
+				{
+					iconCls: 'wt-icon-file-download',
+					tooltip: WT.res('act-download.lbl'),
+					handler: function(g, ridx) {
+						var rec = g.getStore().getAt(ridx);
+						me.fireEvent('attachmentdownloadclick', me, rec, ridx);
+					},
+					hidden: WT.plTags.mobile
+				}, {
+					iconCls: 'wt-icon-trash',
+					tooltip: WT.res('act-remove.lbl'),
+					handler: function(g, ridx) {
+						var rec = g.getStore().getAt(ridx);
+						me.fireEvent('attachmentdeleteclick', me, rec, ridx);
+					}
 				}
-			}],
+			],
 			width: 80
 		}];
 	},
