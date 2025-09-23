@@ -123,7 +123,7 @@ body {
 /* ---------- Ext.form.field.Text */
 .x-form-trigger {
 	/*line-height: inherit;*/ /* Fix icon vertical alignment a little in FF */
-    display: table-cell; /* Fix inputEl crushing (or icon falling) due to FontAwesome5 icon in Chrome */
+    display: table-cell !important; /* Restore orig. table-cell display, this fixes inputEl crushing (or icon falling) due to FontAwesomeX icons */
 }
 
 /* ---------- Ext.form.field.TextArea */
