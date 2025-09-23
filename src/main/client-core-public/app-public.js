@@ -33,7 +33,7 @@
 Ext.Loader.setConfig('disableCaching', false);
 Ext.application({
 	name: 'Sonicle.webtop.core.app.App',
-	extend: 'Sonicle.webtop.core.app.AppPublic'
+	extend: 'Sonicle.webtop.core.public.app.App'
 	/*
 	appFolder: WTS.appPaths['Sonicle.webtop.core'],
 	paths: Ext.applyIf({

@@ -12,6 +12,15 @@
 
 .wt-portal-body { background-color: var(--wt-theme-color-surface-l1); } /* Deprecated! */
 
+/* ---------- Viewport (public)) */
+.wt-viewport-public .wt-viewport-contentwrap {
+    padding: 24px;
+}
+.wt-viewport-public .wt-viewport-topbar-logo {
+    background-image: url(logo.svg); background-repeat: no-repeat;
+    margin-bottom: 16px;
+}
+
 /* ---------- Topbar */
 .wt-viewport-topbar { background-color: var(--wt-theme-color-topbar); }
 .wt-accountmenu-label1 { font-size: var(--wt-theme-fontsize-sm); line-height: var(--wt-theme-lineheight-sm); font-weight: bold; }

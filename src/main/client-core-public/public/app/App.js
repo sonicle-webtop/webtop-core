@@ -31,17 +31,17 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-Ext.define('Sonicle.webtop.core.app.AppPublic', {
+Ext.define('Sonicle.webtop.core.public.app.App', {
 	extend: 'Sonicle.webtop.core.app.AppBase',
 	requires: [
-		'Sonicle.webtop.core.app.WTPublic'
+		'Sonicle.webtop.core.public.app.WT'
 	].concat(WTS.appRequires || []),
 	uses: [
 		'Sonicle.DesktopNotificationMgr',
-		'Sonicle.webtop.core.app.DescriptorPublic'
+		'Sonicle.webtop.core.public.app.Descriptor'
 	],
 	views: [
-		'WTA.view.pub.Viewport'
+		'WTA.public.viewport.Default'
 	],
 	refs: {
 		viewport: 'viewport'
@@ -70,23 +70,28 @@ Ext.define('Sonicle.webtop.core.app.AppPublic', {
 		});
 		
 		var sids = me.getServices(),
-				vp, desc;
+			vp, vpc, desc;
 		
 		// Initialize core service (this will implicitly creates its instance)
 		me.getDescriptor(sids[0]).initService();
 		
 		// Creates main viewport
 		vp = me.viewport = me.getView(me.views[0]).create();
+		vpc = me.viewport.getController();
 		
 		// Instantiates remaining services (the only one remaining)
 		desc = me.getDescriptor(sids[1]);
 		if (desc.initService()) {
-			vp.addService(desc.getInstance());
+			vpc.addService(desc.getInstance());
 		}
 	},
 	
+	getViewportController: function() {
+		return this.viewport.getController();
+	},
+	
 	createServiceDescriptor: function(cfg) {
-		return Ext.create('WTA.DescriptorPublic', cfg);
+		return Ext.create('WTA.public.app.Descriptor', cfg);
 	},
 	
 	/**

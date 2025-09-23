@@ -89,7 +89,7 @@
  *      |                (unused)                 |
  *      +-----------------------------------------+
  * 
- * avaiable CSS classes:
+ * available CSS classes:
  * 
  * wt-viewport-content
  */

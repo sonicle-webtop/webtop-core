@@ -1,6 +1,5 @@
-/*
- * WebTop Services is a Web Application framework developed by Sonicle S.r.l.
- * Copyright (C) 2014 Sonicle S.r.l.
+/* 
+ * Copyright (C) 2025 Sonicle S.r.l.
  *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by
@@ -11,7 +10,7 @@
  *
  * This program is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
+ * FOR A PARTICULAR PURPOSE. See the GNU Affero General Public License for more
  * details.
  *
  * You should have received a copy of the GNU Affero General Public License
@@ -19,7 +18,7 @@
  * the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
  * MA 02110-1301 USA.
  *
- * You can contact Sonicle S.r.l. at email address sonicle@sonicle.com
+ * You can contact Sonicle S.r.l. at email address sonicle[at]sonicle[dot]com
  *
  * The interactive user interfaces in modified source and object code versions
  * of this program must display Appropriate Legal Notices, as required under
@@ -29,59 +28,44 @@
  * version 3, these Appropriate Legal Notices must retain the display of the
  * Sonicle logo and Sonicle copyright notice. If the display of the logo is not
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
- * display the words "Copyright (C) 2014 Sonicle S.r.l.".
+ * display the words "Copyright (C) 2025 Sonicle S.r.l.".
  */
-Ext.define('Sonicle.webtop.core.ux.panel.UploadedGrid', {
-	alternateClassName: 'WTA.ux.panel.UploadedGrid',
-	extend: 'Ext.grid.Panel',
-	alias: ['widget.wtuploadedgrid'],
-	requires: [
-		'Sonicle.grid.column.Bytes',
-		'Sonicle.upload.Model'
-	],
+Ext.define('Sonicle.webtop.core.sdk.BaseViewPublicMessage', {
+	alternateClassName: 'WTA.sdk.BaseViewPublicMessage',
+	//extend: 'WTA.ux.panel.PanelContainer',
+	extend: 'WTA.sdk.BaseViewPublic',
+	
+	/**
+	 * @cfg {info|ok|warn|error} [type=error]
+	 */
+	type: 'error',
+	
+	/**
+	 * @cfg {String} message
+	 */
+	message: null,
+	
+	header: false,
+	layout: 'center',
 	
 	initComponent: function() {
-		Ext.apply(this, {
-			selModel: {
-				type: 'rowmodel'
-			},
-			columns: [
-				{
-					xtype: 'gridcolumn',
-					dataIndex: 'name',
-					header: WT.res('wtuploadedgrid.name'),
-					sortable: false,
-					flex: 2
-				}, {
-					xtype: 'sobytescolumn',
-					dataIndex: 'size',
-					header: WT.res('wtuploadedgrid.size'),
-					sortable: false,
-					flex: 1
-				}, {
-					xtype: 'widgetcolumn',
-					dataIndex: 'progress',
-					header: '&nbsp;',
-					widget: {
-						xtype: 'progressbarwidget',
-						textTpl: ['{percent:number("0")}%']
-					},
-					sortable: false,
-					flex: 1
-				}/*, {
-					xtype: 'actioncolumn',
-					header: '',
-					flex: 1,
-					items: [{
-						text: 'annulla',
-						handler: function(s, rIndex) {
-							//var rec = s.getStore().getAt(rIndex), qsp;
-
-						}
-					}]
-				}*/
-			]
+		var me = this, colorCls;
+		me.callParent(arguments);
+		if (Ext.isEmpty(me.message)) me.message = me.res('error.unexpected');
+		if (Ext.isEmpty(me.type)) me.type = 'error';
+		if ('info' === me.type) {
+			colorCls = 'wt-color-info';
+		} else if ('ok' === me.type) {
+			colorCls = 'wt-color-ok';
+		} else if ('warn' === me.type) {
+			colorCls = 'wt-color-warn';
+		} else {
+			colorCls = 'wt-color-error';
+		}
+		me.add({
+			xtype: 'solabel',
+			cls: 'wt-pane-body-title ' + colorCls,
+			text: me.message
 		});
-		this.callParent(arguments);
 	}
 });

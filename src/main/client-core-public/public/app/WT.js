@@ -31,43 +31,8 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-Ext.define('Sonicle.webtop.core.app.DescriptorPublic', {
-	extend: 'Sonicle.webtop.core.app.DescriptorBase',
-	alternateClassName: 'WTA.DescriptorPublic',
+Ext.define('Sonicle.webtop.core.public.app.WT', {
+	override: 'Sonicle.webtop.core.app.WT',
 	
-	serviceClassName: null,
-	serviceVarsClassName: null,
-	
-	getServiceClassName: function() {
-		return this.serviceClassName;
-	},
-	
-	setServiceClassName: function(value) {
-		this.serviceClassName = value;
-	},
-	
-	getServiceVarsClassName: function() {
-		return this.serviceVarsClassName;
-	},
-	
-	setServiceVarsClassName: function(value) {
-		this.serviceVarsClassName = value;
-	},
-	
-	createAndSetInstance: function() {
-		var me = this,
-				cn = me.getServiceClassName();
-		if (!Ext.isString(cn)) return null;
-		try {
-			me.instance = Ext.create(cn, {
-				ID: me.getId(),
-				XID: me.getXid(),
-				serviceVarsClassName: me.getServiceVarsClassName(),
-				varsData: WTS.servicesVars[me.getOrder()]
-			});
-		} catch(e) {
-			WTA.Log.error('Unable to instantiate service class [{0}]', cn);
-			WTA.Log.exception(e);
-		}
-	}
+	isPublic: true
 });

@@ -89,6 +89,8 @@ public class WebTopProps {
 	public static final String PROP_UI_PRESET_TRYME = "webtop.ui.preset.tryme";
 	//public static final String PROP_UI_THEMES = "webtop.ui.themes";
 	//public static final String PROP_UI_LAFS = "webtop.ui.lafs";
+	public static final String PROP_UI_PUBLIC_THEME = "webtop.ui.public.theme";
+	public static final String PROP_UI_PUBLIC_LAF = "webtop.ui.public.laf";
 	public static final String PROP_MAILBRIDGE_SMTP_HOST = "webtop.mailbridge.smtp.host";
 	public static final String PROP_MAILBRIDGE_SMTP_PORT = "webtop.mailbridge.smtp.port";
 	public static final String PROP_MAILBRIDGE_SMTP_AUTH = "webtop.mailbridge.smtp.auth";
@@ -180,6 +182,8 @@ public class WebTopProps {
 		WebTopApp.logger.info("{} = {} [{}]", PROP_UI_PRESETS_EXTRA, properties.getProperty(PROP_UI_PRESETS_EXTRA), null);
 		WebTopApp.logger.info("{} = {} [{}]", PROP_UI_PRESET_FORCED, properties.getProperty(PROP_UI_PRESET_FORCED), getUIPresetForced(emptyProperties));
 		WebTopApp.logger.info("{} = {} [{}]", PROP_UI_PRESET_TRYME, properties.getProperty(PROP_UI_PRESET_TRYME), getUIPresetTryMe(emptyProperties));
+		WebTopApp.logger.info("{} = {} [{}]", PROP_UI_PUBLIC_THEME, properties.getProperty(PROP_UI_PUBLIC_THEME), null);
+		WebTopApp.logger.info("{} = {} [{}]", PROP_UI_PUBLIC_LAF, properties.getProperty(PROP_UI_PUBLIC_LAF), null);
 		//WebTopApp.logger.info("{} = {} [{}]", PROP_UI_THEMES, properties.getProperty(PROP_UI_THEMES), null);
 		//WebTopApp.logger.info("{} = {} [{}]", PROP_UI_LAFS, properties.getProperty(PROP_UI_LAFS), null);
 	}
@@ -384,6 +388,14 @@ public class WebTopProps {
 		return PropUtils.getStringProperty(props, PROP_UI_PRESET_TRYME, null);
 	}
 	
+	public static String getUIPublicTheme(Properties props) {
+		return PropUtils.getStringProperty(props, PROP_UI_PUBLIC_THEME, "crisp");
+	}
+	
+	public static String getUIPublicLAF(Properties props) {
+		return PropUtils.getStringProperty(props, PROP_UI_PUBLIC_LAF, "default");
+	}
+	
 	public static String getMailBridgeSMTPHost(Properties props) {
 		return PropUtils.getStringProperty(props, PROP_MAILBRIDGE_SMTP_HOST, null);
 	}
@@ -413,6 +425,10 @@ public class WebTopProps {
 		return LangUtils.parseStringAsKeyValueMap(PropUtils.getStringProperty(props, PROP_UI_LAFS, null), ":");
 	}
 	*/
+	
+	
+	
+	
 	
 	private static void copyOldProp(Properties props, String oldKey, String newKey) {
 		PropUtils.copy(props, oldKey, props, newKey);

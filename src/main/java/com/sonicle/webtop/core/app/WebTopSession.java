@@ -946,7 +946,7 @@ public class WebTopSession {
 		js.layoutClassName = StringUtils.capitalize(layout);
 		
 		List<String> privateSids = getPrivateServices(true);
-				
+		
 		// Include Core references
 		//js.appManifest.name = coreManifest.getJsPackageName();
 		fillServiceManifest(js, coreManifest, locale, svcm.isInMaintenance(coreManifest.getId()));
@@ -992,12 +992,30 @@ public class WebTopSession {
 	}
 	
 	private void fillServiceReferences(ServiceManager svcm, JsWTS js, ServiceDescriptor descriptor, Locale locale, String theme, String lookAndFeel) {
-		ServiceManifest manifest = descriptor.getManifest();
+		final ServiceManifest manifest = descriptor.getManifest();
 		if (manifest.getId().equals(CoreManifest.ID)) throw new WTRuntimeException("Core service's references should not be added in this way");
 		
+		final boolean devMode = (js instanceof JsWTSPublic) ? true : svcm.isInDevMode(manifest.getId());
 		fillServiceManifest(js, manifest, locale, svcm.isInMaintenance(manifest.getId()));
 		// Includes service references
-		fillServiceJsReferences(svcm.isInDevMode(manifest.getId()), js, manifest, locale, theme, lookAndFeel);
+		fillServiceJsReferences(devMode, js, manifest, locale, theme, lookAndFeel);
+		// Includes service stylesheet references
+		fillServiceCssReferences(js, manifest, locale, theme, lookAndFeel);
+	}
+	
+	private void fillServiceReferences2(ServiceManager svcm, JsWTS js, ServiceDescriptor descriptor, Locale locale, String theme, String lookAndFeel) {
+		final ServiceManifest manifest = descriptor.getManifest();
+		final boolean devMode = (js instanceof JsWTSPublic) ? true : svcm.isInDevMode(manifest.getId());
+		
+		// Includes manifest data
+		fillServiceManifest(js, manifest, locale, svcm.isInMaintenance(manifest.getId()));
+		// Includes service references
+		if (manifest.getId().equals(CoreManifest.ID)) {
+			final String target = (js instanceof JsWTSPublic) ? "public" : "private";
+			fillCoreServiceJsReferences(devMode, target, js, manifest, locale, theme, lookAndFeel);
+		} else {
+			fillServiceJsReferences(devMode, js, manifest, locale, theme, lookAndFeel);
+		}
 		// Includes service stylesheet references
 		fillServiceCssReferences(js, manifest, locale, theme, lookAndFeel);
 	}
@@ -1069,9 +1087,8 @@ public class WebTopSession {
 	public void fillStartup(JsWTSPublic js, String publicServiceId) {
 		Locale locale = getLocale();
 		ServiceManager svcm = wta.getServiceManager();
-		ServiceManifest coreManifest = svcm.getManifest(CoreManifest.ID);
-		String theme = "crisp";
-		String lookAndFeel = "default";
+		String theme = WebTopProps.getUIPublicTheme(wta.getProperties());
+		String lookAndFeel = WebTopProps.getUIPublicLAF(wta.getProperties());
 		
 		ReadableUserAgent readableUa = WebTopApp.getUserAgentInfo(getClientPlainUserAgent());
 		ReadableDeviceCategory.Category deviceCategory = ReadableDeviceCategory.Category.UNKNOWN;
@@ -1082,36 +1099,28 @@ public class WebTopSession {
 
 		fillAppReferences(js, locale, theme, lookAndFeel, false);
 		
-		// Include Core references
-		//js.appManifest.name = coreManifest.getJsPackageName();
-		fillServiceManifest(js, coreManifest, locale, svcm.isInMaintenance(coreManifest.getId()));
-		fillCoreServiceJsReferences(true/*svcm.isInDevMode(CoreManifest.ID)*/, "public", js, coreManifest, locale, theme, lookAndFeel);
-		fillServiceCssReferences(js, coreManifest, locale, theme, lookAndFeel);
-		
-		fillStartupForPublicService(js, CoreManifest.ID, locale);
-		fillStartupForPublicService(js, publicServiceId, locale);
+		final List<String> publicSids = Arrays.asList(CoreManifest.ID, publicServiceId);
+		// Include services references
+		for (String sid : publicSids) {
+			ServiceDescriptor descriptor = svcm.getDescriptor(sid);
+			fillServiceReferences2(svcm, js, descriptor, locale, theme, lookAndFeel);
+		}
+		// Evaluate services
+		for (String sid : publicSids) {
+			ServiceDescriptor descriptor = svcm.getDescriptor(sid);
+			fillStartupForService(svcm, js, descriptor, locale);
+		}
 	}
 	
-	private void fillStartupForPublicService(JsWTSPublic js, String serviceId, Locale locale) {
-		ServiceManager svcm = wta.getServiceManager();
-		ServiceDescriptor sdesc = svcm.getDescriptor(serviceId);
-		ServiceManifest manifest = sdesc.getManifest();
-		
-		// Fill application manifest with service references (NOTE: core service is skipped here!)
-		if (!serviceId.equals(CoreManifest.ID)) {
-			fillServiceManifest(js, manifest, locale, svcm.isInMaintenance(serviceId));
-			// Includes service references
-			fillServiceJsReferences(true/*svcm.isInDevMode(serviceId)*/, js, manifest, locale, "crisp", "default");
-			// Includes service stylesheet references
-			fillServiceCssReferences(js, manifest, locale, "crisp", "default");
-		}
+	private void fillStartupForService(ServiceManager svcm, JsWTSPublic js, ServiceDescriptor descriptor, Locale locale) {
+		final ServiceManifest manifest = descriptor.getManifest();
 		
 		JsWTSPublic.PublicService jssvc2 = (JsWTSPublic.PublicService)js.createServiceInstance();
 		jssvc2.id = manifest.getId();
 		jssvc2.serviceCN = manifest.getPublicServiceJsClassName(true);
 		jssvc2.serviceVarsCN = manifest.getPublicServiceVarsModelJsClassName(true);
 		js.services.add(jssvc2);
-		js.servicesVars.add(getPublicServiceVars(serviceId));
+		js.servicesVars.add(getPublicServiceVars(manifest.getId()));
 	}
 	
 	private JsWTSPublic.Vars getPublicServiceVars(String serviceId) {

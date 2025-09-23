@@ -460,9 +460,9 @@ public class ResourceRequest extends HttpServlet {
 			if (StringUtils.contains(pathLaf, "@")) {
 				final String lafName = StringUtils.substringBefore(pathLaf, "@");
 				final String lafSub = StringUtils.substringAfter(pathLaf, "@");
-				targetFolders = new String[]{lafName + "/@" + lafSub, lafName, "default"};
+				targetFolders = new String[]{lafName + "/@" + lafSub, lafName, "default/@" + lafSub, "default/@light", "default"};
 			} else {
-				targetFolders = new String[]{pathLaf, "default"};
+				targetFolders = new String[]{pathLaf, "default/@light", "default"};
 			}
 			for (String targetFolder : targetFolders) {
 				if (minifiable) {

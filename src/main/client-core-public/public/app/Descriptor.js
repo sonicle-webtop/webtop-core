@@ -31,57 +31,43 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-Ext.define('Sonicle.webtop.core.ux.panel.UploadedGrid', {
-	alternateClassName: 'WTA.ux.panel.UploadedGrid',
-	extend: 'Ext.grid.Panel',
-	alias: ['widget.wtuploadedgrid'],
-	requires: [
-		'Sonicle.grid.column.Bytes',
-		'Sonicle.upload.Model'
-	],
+Ext.define('Sonicle.webtop.core.public.app.Descriptor', {
+	extend: 'Sonicle.webtop.core.app.DescriptorBase',
+	alternateClassName: 'WTA.public.app.Descriptor',
 	
-	initComponent: function() {
-		Ext.apply(this, {
-			selModel: {
-				type: 'rowmodel'
-			},
-			columns: [
-				{
-					xtype: 'gridcolumn',
-					dataIndex: 'name',
-					header: WT.res('wtuploadedgrid.name'),
-					sortable: false,
-					flex: 2
-				}, {
-					xtype: 'sobytescolumn',
-					dataIndex: 'size',
-					header: WT.res('wtuploadedgrid.size'),
-					sortable: false,
-					flex: 1
-				}, {
-					xtype: 'widgetcolumn',
-					dataIndex: 'progress',
-					header: '&nbsp;',
-					widget: {
-						xtype: 'progressbarwidget',
-						textTpl: ['{percent:number("0")}%']
-					},
-					sortable: false,
-					flex: 1
-				}/*, {
-					xtype: 'actioncolumn',
-					header: '',
-					flex: 1,
-					items: [{
-						text: 'annulla',
-						handler: function(s, rIndex) {
-							//var rec = s.getStore().getAt(rIndex), qsp;
-
-						}
-					}]
-				}*/
-			]
-		});
-		this.callParent(arguments);
+	serviceClassName: null,
+	serviceVarsClassName: null,
+	
+	getServiceClassName: function() {
+		return this.serviceClassName;
+	},
+	
+	setServiceClassName: function(value) {
+		this.serviceClassName = value;
+	},
+	
+	getServiceVarsClassName: function() {
+		return this.serviceVarsClassName;
+	},
+	
+	setServiceVarsClassName: function(value) {
+		this.serviceVarsClassName = value;
+	},
+	
+	createAndSetInstance: function() {
+		var me = this,
+				cn = me.getServiceClassName();
+		if (!Ext.isString(cn)) return null;
+		try {
+			me.instance = Ext.create(cn, {
+				ID: me.getId(),
+				XID: me.getXid(),
+				serviceVarsClassName: me.getServiceVarsClassName(),
+				varsData: WTS.servicesVars[me.getOrder()]
+			});
+		} catch(e) {
+			WTA.Log.error('Unable to instantiate service class [{0}]', cn);
+			WTA.Log.exception(e);
+		}
 	}
 });
