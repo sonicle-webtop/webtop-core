@@ -123,7 +123,9 @@ body {
 /* ---------- Ext.form.field.Text */
 .x-form-trigger {
 	/*line-height: inherit;*/ /* Fix icon vertical alignment a little in FF */
-    display: table-cell !important; /* Restore orig. table-cell display, this fixes inputEl crushing (or icon falling) due to FontAwesomeX icons */
+    /* Restore orig. table-cell display, this fixes inputEl crushing (or icon falling) due to FontAwesomeX icons */
+    /* Please note that this restores visibility over hidden triggers, we need to impose none display using !important keyword (see Sonicle.form.trigger.Hideable) */
+    display: table-cell !important;
 }
 
 /* ---------- Ext.form.field.TextArea */
