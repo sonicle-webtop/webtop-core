@@ -6,6 +6,7 @@
 /* ---------- Icons (actions) */
 .wt-dangerzone .wt-icon-trash { background-image: url('act-trash-danger_16.svg') !important; background-size: contain; }
 .wt-dangerzone .wt-icon-delete { background-image: url('act-remove-danger_16.svg') !important; background-size: contain; }
+.x-btn-ui-default .wt-icon-newMeeting { background-image: url('meeting-new-primary_16.svg') !important; background-size: contain; }
 /* ---------- Icons (base items) */
 .wt-icon-dock-none-on { background-image: url('dock-none-on_16.svg') !important; background-size: contain; }
 .wt-icon-dock-none,
