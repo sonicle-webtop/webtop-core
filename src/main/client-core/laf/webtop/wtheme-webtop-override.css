@@ -42,7 +42,7 @@
 /* ---------- Navbar */
 /* Navbar: define 50x50 logo image */
 .wt-viewport-navbar-logo.so-tbimage { padding: 0px; }
-.wt-viewport-navbar-logo.so-tbimage .so-tbimage-image { background-image: url('logo.svg'); background-repeat: round; width: 40px !important; height: 40px !important; }
+.wt-viewport-navbar-logo.so-tbimage .so-tbimage-image { background-image: url('logo-symbol.svg'); background-repeat: round; width: 40px !important; height: 40px !important; }
 
 /* Force button sizes */
 .wt-viewport-navbar .x-btn .x-btn-button { min-height: 24px; }
