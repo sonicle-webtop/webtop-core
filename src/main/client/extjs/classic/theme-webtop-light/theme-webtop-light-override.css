@@ -91,6 +91,10 @@ grep -l "#0E7490" * | while read fname; do echo "sedding $fname"; sed -i -e 's/#
     --wt-theme-field-radius: 5px;
     --wt-theme-grid-radius: 5px;
     
+    /* ---------- Ext.button.Button */
+    --so-button-pressed-nostyle-color: var(--wt-theme-color-n1);
+    --so-button-toggle-indicator-color-off: var(--wt-theme-color-n3);
+    --so-button-toggle-indicator-color-on: var(--wt-theme-color-1);
     /* ---------- Sonicle.ColorUtils */
     --so-colorswatch-framed-border-color: #737373; /* Neutral/500 */
     --so-colorswatch-darkmark-color: #404040; /* Neutral/700 */
