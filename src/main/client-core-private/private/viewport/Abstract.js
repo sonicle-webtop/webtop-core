@@ -93,17 +93,17 @@
  * 
  * wt-viewport-content
  */
-Ext.define('Sonicle.webtop.core.viewport.private.Abstract', {
-	alternateClassName: 'WTA.viewport.private.Abstract',
+Ext.define('Sonicle.webtop.core.private.viewport.Abstract', {
+	alternateClassName: 'WTA.private.viewport.Abstract',
 	extend: 'Ext.container.Viewport',
 	mixins: [
 		'Sonicle.mixin.RefHolder'
 	],
 	requires: [
 		'Sonicle.Announcement',
-		'WTA.viewport.private.ViewController'
+		'WTA.private.viewport.ViewController'
 	],
-	controller: Ext.create('WTA.viewport.private.ViewController'),
+	controller: Ext.create('WTA.private.viewport.ViewController'),
 	
 	layout: {
 		type: 'vbox',

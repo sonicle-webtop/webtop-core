@@ -35,7 +35,9 @@ Ext.define('Sonicle.webtop.core.app.AppBase', {
 	extend: 'Ext.app.Application',
 	appProperty: 'instance',
 	namespaces: [
-		'Sonicle.webtop.core.app'
+		'Sonicle.webtop.core.app',
+		'Sonicle.webtop.core.private.app',
+		'Sonicle.webtop.core.public.app'
 	],
 	requires: [
 		'Sonicle.String',

@@ -31,73 +31,76 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-Ext.define('Sonicle.webtop.core.view.pub.Viewport', {
-	alternateClassName: 'WTA.view.pub.Viewport',
-	extend: 'Ext.container.Viewport',
+Ext.define('Sonicle.webtop.core.private.app.Descriptor', {
+	extend: 'Sonicle.webtop.core.app.DescriptorBase',
+	alternateClassName: 'WTA.private.app.Descriptor',
 	
-	layout: 'border',
-	referenceHolder: true,
+	build: null,
+	serviceClassName: null,
+	serviceVarsClassName: null,
+	userOptions: null,
+	portletClassNames: null,
 	
-	mainmap: null,
-	
-	constructor: function() {
-		var me = this;
-		me.mainmap = {};
-		me.callParent(arguments);
+	getBuild: function() {
+		return this.build;
 	},
 	
-	destroy: function() {
-		var me = this;
-		me.callParent(arguments);
-		me.mainmap = null;
+	setBuild: function(value) {
+		this.build = value;
 	},
 	
-	/**
-	 * Adds passed service to wiewport's layout.
-	 * @param {WTA.sdk.PublicService} svc The service instance.
-	 */
-	addService: function(svc) {
+	getServiceClassName: function() {
+		return this.serviceClassName;
+	},
+	
+	setServiceClassName: function(value) {
+		this.serviceClassName = value;
+	},
+	
+	getServiceVarsClassName: function() {
+		return this.serviceVarsClassName;
+	},
+	
+	setServiceVarsClassName: function(value) {
+		this.serviceVarsClassName = value;
+	},
+	
+	getUserOptions: function() {
+		return this.userOptions;
+	},
+	
+	setUserOptions: function(value) {
+		this.userOptions = value;
+	},
+	
+	getPortletClassNames: function() {
+		return this.portletClassNames;
+	},
+	
+	setPortletClassNames: function(value) {
+		this.portletClassNames = value;
+	},
+	
+	createAndSetInstance: function() {
 		var me = this,
-				id = svc.ID,
-				main = null;
-		
-		if (me.mainmap[id]) return; // Checks if service has been already added
-		
-		// Retrieves service components
-		if (Ext.isFunction(svc.getMainComponent)) main = svc.getMainComponent.call(svc);
-		me.addServiceComponents(svc, main);
+				cn = me.getServiceClassName();
+		if (!Ext.isString(cn)) return null;
+		try {
+			me.instance = Ext.create(cn, {
+				ID: me.getId(),
+				XID: me.getXid(),
+				serviceVarsClassName: me.getServiceVarsClassName(),
+				permsData: WTS.servicesPerms[me.getOrder()],
+				varsData: WTS.servicesVars[me.getOrder()]
+			});
+		} catch(e) {
+			WTA.Log.error('Unable to instantiate service class [{0}]', cn);
+			WTA.Log.exception(e);
+		}
 	},
 	
-	addServiceComponents: function(svc, main) {
-		var me = this;
-		
-		if (!main || !main.isXType('container')) {
-			main = Ext.create({xtype: 'wtpanel'});
-		}
-		me.mainmap[svc.ID] = main.getId();
-		me.addToRegion('center', main);
-	},
-	
-	/*
-	 * @private
-	 * Adds passed config to chosen layout region.
-	 * @param {String} region Border layout region
-	 * @param {Ext.Component} cmp The component to add
-	 */
-	addToRegion: function(region, cmp) {
-		var me = this;
-		if(cmp) {
-			if(cmp.isComponent) {
-				cmp.setRegion(region);
-				cmp.setReference(region);
-			} else {
-				Ext.apply(cmp, {
-					region: region,
-					reference: region,
-					referenceHolder: true
-				});
-			}
-			me.add(cmp);
-		}
+	doInstanceInit: function(inst, miniCfg) {
+		inst.privateInit.call(inst);
+		this.callParent(arguments);
 	}
 });

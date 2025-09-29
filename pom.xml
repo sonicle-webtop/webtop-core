@@ -1270,7 +1270,7 @@
 										<argument>compile</argument>
 										<argument>--classpath=${sencha.compile.classpath}</argument>
 										<argument>--classpath=${sencha.compile.wt.classpath}</argument>
-										<argument>--classpath=client-core,client-core-private</argument>
+										<argument>--classpath=client-core-private,client-core</argument>
 										<argument>exclude</argument>
 										<argument>-all</argument>
 										<argument>and</argument>
@@ -1316,12 +1316,12 @@
 										<argument>compile</argument>
 										<argument>--classpath=${sencha.compile.classpath}</argument>
 										<argument>--classpath=${sencha.compile.wt.classpath}</argument>
-										<argument>--classpath=client-core,client-core-public</argument>
+										<argument>--classpath=client-core-public,client-core</argument>
 										<argument>exclude</argument>
 										<argument>-all</argument>
 										<argument>and</argument>
 										<argument>include</argument>
-										<argument>--namespace=Sonicle.webtop.core.app.*,Sonicle.webtop.core.PublicService</argument>
+										<argument>--namespace=Sonicle.webtop.core.app.*,Sonicle.webtop.core.public.*,Sonicle.webtop.core.PublicService</argument>
 										<argument>and</argument>
 										<argument>concatenate</argument>
 										<argument>--input-js-version=ANY</argument>

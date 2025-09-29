@@ -45,9 +45,9 @@
  * wt-viewport-navbar
  * wt-viewport-bottombar
  */
-Ext.define('Sonicle.webtop.core.viewport.private.Compact', {
-	alternateClassName: 'WTA.viewport.private.Compact',
-	extend: 'WTA.viewport.private.BaseAbstract',
+Ext.define('Sonicle.webtop.core.private.viewport.Compact', {
+	alternateClassName: 'WTA.private.viewport.Compact',
+	extend: 'WTA.private.viewport.BaseAbstract',
 	
 	getLauncher: function() {
 		var bdock = this.bottomDockCmp();

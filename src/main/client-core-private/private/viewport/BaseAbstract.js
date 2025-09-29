@@ -46,9 +46,9 @@
  * wt-tool-collapse-button
  * wt-viewport-taskbar
  */
-Ext.define('Sonicle.webtop.core.viewport.private.BaseAbstract', {
-	alternateClassName: 'WTA.viewport.private.BaseAbstract',
-	extend: 'WTA.viewport.private.Abstract',
+Ext.define('Sonicle.webtop.core.private.viewport.BaseAbstract', {
+	alternateClassName: 'WTA.private.viewport.BaseAbstract',
+	extend: 'WTA.private.viewport.Abstract',
 	requires: [
 		'Sonicle.button.Avatar',
 		'Sonicle.toolbar.Image',

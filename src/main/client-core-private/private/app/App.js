@@ -31,23 +31,23 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-Ext.define('Sonicle.webtop.core.app.AppPrivate', {
+Ext.define('Sonicle.webtop.core.private.app.App', {
 	extend: 'Sonicle.webtop.core.app.AppBase',
 	requires: [
-		'Sonicle.webtop.core.app.WTPrivate',
-		'Sonicle.webtop.core.viewport.private.Default',
-		'Sonicle.webtop.core.viewport.private.Compact'
+		'Sonicle.webtop.core.private.app.WT',
+		'Sonicle.webtop.core.private.app.Descriptor',
+		'Sonicle.webtop.core.private.viewport.Default',
+		'Sonicle.webtop.core.private.viewport.Compact'
 	],
 	uses: [
 		'Sonicle.DesktopNotificationMgr',
 		'Sonicle.PageActivityMonitor',
 		'Sonicle.Sound',
-		'Sonicle.webtop.core.app.DescriptorPrivate',
 		'Sonicle.webtop.core.app.PushManager',
 		'Sonicle.webtop.core.sdk.Service'
 	],
 	views: [
-		Ext.String.format('WTA.viewport.private.{0}', WTS.layoutClassName)
+		Ext.String.format('WTA.private.viewport.{0}', WTS.layoutClassName)
 	],
 	refs: {
 		viewport: 'viewport'
@@ -285,7 +285,7 @@ Ext.define('Sonicle.webtop.core.app.AppPrivate', {
 	},
 	
 	createServiceDescriptor: function(cfg) {
-		return Ext.create('WTA.DescriptorPrivate', cfg);
+		return Ext.create('WTA.private.app.Descriptor', cfg);
 	},
 	
 	getViewportController: function() {
