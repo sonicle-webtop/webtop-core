@@ -34,7 +34,9 @@
 Ext.define('Sonicle.webtop.core.app.AppPrivate', {
 	extend: 'Sonicle.webtop.core.app.AppBase',
 	requires: [
-		'Sonicle.webtop.core.app.WTPrivate'
+		'Sonicle.webtop.core.app.WTPrivate',
+		'Sonicle.webtop.core.viewport.private.Default',
+		'Sonicle.webtop.core.viewport.private.Compact'
 	],
 	uses: [
 		'Sonicle.DesktopNotificationMgr',
