@@ -18,10 +18,10 @@ grep -l "#0E7490" * | while read fname; do echo "sedding $fname"; sed -i -e 's/#
     --wt-theme-color-surface-l4: #d4d4d4; /* Neutral/300 */
     --wt-theme-color-ct-1: #e0f2fe; /* Sky/100 */
     --wt-theme-color-ct-2: #fff7ed; /* Orange/50 */
-    --wt-theme-color-n1: #404040; /* Neutral/700 */
+	--wt-theme-color-n1: #262626; /* Neutral/800 */
     --wt-theme-color-n1-inv: #f5f5f5; /* Neutral/100 */
-    --wt-theme-color-n2: #737373; /* Neutral/500 */
-    --wt-theme-color-n3: #a3a3a3; /* Neutral/400 */
+    --wt-theme-color-n2: #525252; /* Neutral/600 */
+    --wt-theme-color-n3: #737373; /* Neutral/500 */
     --wt-theme-color-1: #0891b2; /* Cyan/600 - Text/Icon 1st */
     --wt-theme-color-2: #4338CA; /* Indigo/700 - Text/Icon 2nd */
     --wt-theme-color-3: #a3a3a3; /* Neutral/400 - Text Placeholder/Icon Inactive */
@@ -33,8 +33,8 @@ grep -l "#0E7490" * | while read fname; do echo "sedding $fname"; sed -i -e 's/#
     --wt-theme-color-ok-ct-on: #059669; /* Emerald/600 */
     --wt-theme-color-warn: #f59e0b; /* Amber/500 */
     --wt-theme-color-warn-on: #fffbeb; /* Amber/50 */
-    --wt-theme-color-warn-ct: #fef3c7; /* Amber/100 */
-    --wt-theme-color-warn-ct-on: #f59e0b; /* Amber/500 */
+    --wt-theme-color-warn-ct: #fde68a; /* Amber/200 */
+    --wt-theme-color-warn-ct-on: #d97706; /* Amber/600 */
     --wt-theme-color-error: #be123c; /* Rose/700 */
     --wt-theme-color-error-on: #fff1f2; /* Rose/50 */
     --wt-theme-color-error-ct: #ffe4e6; /* Rose/100 */
@@ -61,7 +61,7 @@ grep -l "#0E7490" * | while read fname; do echo "sedding $fname"; sed -i -e 's/#
     --wt-theme-color-navbar: var(--wt-theme-color-surface-l3);
     --wt-theme-color-taskbar: var(--wt-theme-color-surface-l3);
     
-    --wt-theme-fontfamily: 'Inter, helvetica, arial, verdana, sans-serif';
+    --wt-theme-fontfamily: Inter, helvetica, arial, verdana, sans-serif;
     --wt-theme-fontsize-xs: 12px;
     --wt-theme-fontsize-sm: 14px;
     --wt-theme-fontsize-base: 16px;
@@ -84,7 +84,7 @@ grep -l "#0E7490" * | while read fname; do echo "sedding $fname"; sed -i -e 's/#
     --wt-theme-lineheight-6xl: 96px;
     --wt-theme-fontweight-regular: 400;
     --wt-theme-fontweight-medium: 500;
-    --wt-theme-fontweight-bold: 500; /* Do NOT use it keep at 500 */
+    --wt-theme-fontweight-bold: 700;
     
     --wt-theme-dialog-radius: 5px;
     --wt-theme-menu-radius: 5px;
