@@ -50,9 +50,9 @@
  * wt-viewport-navbar-watermark-right
  * wt-viewport-bottombar
  */
-Ext.define('Sonicle.webtop.core.viewport.private.Default', {
-	alternateClassName: 'WTA.viewport.private.Default',
-	extend: 'WTA.viewport.private.BaseAbstract',
+Ext.define('Sonicle.webtop.core.private.viewport.Default', {
+	alternateClassName: 'WTA.private.viewport.Default',
+	extend: 'WTA.private.viewport.BaseAbstract',
 	
 	getLauncher: function() {
 		var drawer = this.drawerCmp();

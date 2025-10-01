@@ -33,7 +33,7 @@
 Ext.Loader.setConfig('disableCaching', false);
 Ext.application({
 	name: 'Sonicle.webtop.core.app.App',
-	extend: 'Sonicle.webtop.core.app.AppPrivate'
+	extend: 'Sonicle.webtop.core.private.app.App'
 });
 
 Ext.override(Ext.data.proxy.Server, {

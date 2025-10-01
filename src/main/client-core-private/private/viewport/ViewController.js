@@ -30,8 +30,8 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2023 Sonicle S.r.l.".
  */
-Ext.define('Sonicle.webtop.core.viewport.private.ViewController', {
-	alternateClassName: 'WTA.viewport.private.ViewController',
+Ext.define('Sonicle.webtop.core.private.viewport.ViewController', {
+	alternateClassName: 'WTA.private.viewport.ViewController',
 	extend: 'Ext.app.ViewController',
 	requires: [
 		'Sonicle.Crypto',

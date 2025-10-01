@@ -34,11 +34,12 @@
 Ext.define('Sonicle.webtop.core.public.app.App', {
 	extend: 'Sonicle.webtop.core.app.AppBase',
 	requires: [
-		'Sonicle.webtop.core.public.app.WT'
+		'Sonicle.webtop.core.public.app.WT',
+		'Sonicle.webtop.core.public.app.Descriptor',
+		'Sonicle.webtop.core.public.viewport.Default'
 	].concat(WTS.appRequires || []),
 	uses: [
-		'Sonicle.DesktopNotificationMgr',
-		'Sonicle.webtop.core.public.app.Descriptor'
+		'Sonicle.DesktopNotificationMgr'
 	],
 	views: [
 		'WTA.public.viewport.Default'
