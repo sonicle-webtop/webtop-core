@@ -34,6 +34,7 @@
 package com.sonicle.webtop.core.app.servlet;
 
 import com.sonicle.commons.EnumUtils;
+import com.sonicle.commons.LangUtils;
 import com.sonicle.commons.web.ServletUtils;
 import com.sonicle.commons.web.json.JsonResult;
 import com.sonicle.commons.web.json.MapItem;
@@ -53,7 +54,6 @@ import com.sonicle.webtop.core.app.SessionContext;
 import com.sonicle.webtop.core.app.WT;
 import com.sonicle.webtop.core.app.util.LogbackHelper;
 import com.sonicle.webtop.core.app.util.LoggerUtils;
-import freemarker.template.Template;
 import freemarker.template.TemplateException;
 import java.io.IOException;
 import java.text.MessageFormat;
@@ -108,7 +108,7 @@ public class Otp extends AbstractServlet {
 				if (tries == null) throw new NoMoreTriesException();
 				tries++;
 				
-				String userCode = ServletUtils.getStringParameter(request, "wtcode", null);
+				String userCode = StringUtils.defaultIfBlank(LangUtils.joinStrings("", ServletUtils.getStringParameters(request, "wtcode")), null);
 				if (otpm.checkCode(pid, config, userCode)) {
 					if (css.getOTPDeviceTrustEnabled()) {
 						boolean trustThis = ServletUtils.getBooleanParameter(request, "wttrust", false);
@@ -131,20 +131,24 @@ public class Otp extends AbstractServlet {
 				}
 			}
 			
-		} catch(NoMoreTriesException ex) {
+		} catch (NoMoreTriesException ex) {
 			if (wts != null) wts.clearProperty(CoreManifest.ID, WTSPROP_OTP_VERIFIED);
 			writeOTPLog(wta, wts, request, false);
 			ServletUtils.forwardRequest(request, response, Logout.URL);
-		} catch(SkipException ex) {
+			
+		} catch (SkipException ex) {
 			if (wts != null) {
 				wts.setProperty(CoreManifest.ID, WTSPROP_OTP_VERIFIED, true);
 				wts.clearProperty(CoreManifest.ID, WTSPROP_OTP_PENDING);
 				writeOTPLog(wta, wts, request, true);
 			}
 			ServletUtils.forwardRequest(request, response, UIPrivate.URL);
-		} catch(Exception ex) {
-			logger.error("Error", ex);
-			//TODO: pagina di errore
+			
+		} catch (Exception ex) {
+			logger.error("Unexpected Error", ex);
+			//TODO: error page??
+			if (wts != null) wts.clearProperty(CoreManifest.ID, WTSPROP_OTP_VERIFIED);
+			ServletUtils.forwardRequest(request, response, Logout.URL);
 		}
 	}
 	
@@ -195,26 +199,31 @@ public class Otp extends AbstractServlet {
 	}
 	
 	private void writePage(WebTopApp wta, CoreServiceSettings css, Locale locale, String deliveryMode, String failureMessage, HttpServletResponse response) throws IOException, TemplateException {
-		Map tplMap = new HashMap();
-		AbstractServlet.fillPageVars(tplMap, locale, null, null, null);
-		AbstractServlet.fillSystemVars(tplMap, wta, locale, false, false);
-		tplMap.put("showFailure", !StringUtils.isBlank(failureMessage));
-		tplMap.put("failureMessage", failureMessage);
-		tplMap.put("helpTitle", wta.lookupResource(locale, CoreLocaleKey.TPL_OTP_HELPTITLE, true));
-		tplMap.put("deliveryTitle", wta.lookupResource(locale, CoreLocaleKey.TPL_OTP_DELIVERY_TITLE, true));
-		tplMap.put("deliveryMode", deliveryMode);
-		tplMap.put("deliveryInfo", wta.lookupResource(locale, MessageFormat.format(CoreLocaleKey.TPL_OTP_DELIVERY_INFO, deliveryMode), true));
-		tplMap.put("codePlaceholder", wta.lookupResource(locale, CoreLocaleKey.TPL_OTP_CODE_PLACEHOLDER, true));
-		tplMap.put("submitLabel", wta.lookupResource(locale, CoreLocaleKey.TPL_OTP_SUBMIT_LABEL, true));
-		tplMap.put("trustLabel", wta.lookupResource(locale, CoreLocaleKey.TPL_OTP_TRUST_LABEL, true));
-		tplMap.put("showTrustCheckbox", css.getOTPDeviceTrustEnabled());
+		Map vars = new HashMap();
+		AbstractServlet.fillPageVars(vars, locale, null, null, null);
+		AbstractServlet.fillSystemVars(vars, wta, locale, false, false);
+		vars.put("showFailure", !StringUtils.isBlank(failureMessage));
+		vars.put("failureMessage", failureMessage);
+		vars.put("deliveryMode", deliveryMode);
+		vars.put("showTrustCheckbox", css.getOTPDeviceTrustEnabled());
+		
+		Map i18n = new HashMap();
+		i18n.put("boxTitle", wta.lookupResource(locale, CoreLocaleKey.TPL_OTP_HELPTITLE, true));
+		i18n.put("formTitle", wta.lookupResource(locale, CoreLocaleKey.TPL_OTP_DELIVERY_TITLE, true));
+		i18n.put("formText", wta.lookupResource(locale, MessageFormat.format(CoreLocaleKey.TPL_OTP_DELIVERY_INFO, deliveryMode), true));
+		i18n.put("trustLabel", wta.lookupResource(locale, CoreLocaleKey.TPL_OTP_TRUST_LABEL, true));
+		i18n.put("submitLabel", wta.lookupResource(locale, CoreLocaleKey.TPL_OTP_SUBMIT_LABEL, true));
+		vars.put("helpTitle", i18n.get("boxTitle")); // DEPRECATED leave for cbackward compatibility!
+		vars.put("deliveryTitle", i18n.get("formTitle")); // DEPRECATED leave for cbackward compatibility!
+		vars.put("deliveryInfo", i18n.get("formText")); // DEPRECATED leave for cbackward compatibility!
+		vars.put("codePlaceholder", wta.lookupResource(locale, CoreLocaleKey.TPL_OTP_CODE_PLACEHOLDER, true)); // DEPRECATED leave for cbackward compatibility!
+		vars.put("trustLabel", i18n.get("trustLabel")); // DEPRECATED leave for cbackward compatibility!
+		vars.put("submitLabel", i18n.get("submitLabel")); // DEPRECATED leave for cbackward compatibility!
+		vars.put("i18n", i18n);
 		
 		ServletUtils.setHtmlContentType(response);
 		ServletUtils.setCacheControlPrivate(response);
-		
-		// Load and build template
-		Template tpl = WT.loadTemplate(CoreManifest.ID, "page/otp.html");
-		tpl.process(tplMap, response.getWriter());
+		WT.writeTemplate(CoreManifest.ID, "page/otp.html", vars, response.getWriter());
 	}
 	
 	private static class NoMoreTriesException extends Exception {}

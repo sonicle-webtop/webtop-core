@@ -52,8 +52,10 @@ import freemarker.template.TemplateException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -148,12 +150,23 @@ public class Login extends AbstractServlet {
 				}
 			}
 			
+			/*
 			// Prepare domains list
 			Collection<Domain> enabledDomains = wtMgr.listDomains(EnabledCond.ENABLED_ONLY).values();
 			List<HtmlSelect> domains = new ArrayList<>();
-			if(enabledDomains.size() > 1) domains.add(new HtmlSelect("", wta.lookupResource(locale, CoreLocaleKey.TPL_LOGIN_DOMAIN_PROMPT, true)));
+			if(enabledDomains.size() > 1) domains.add(new HtmlSelect("", wta.lookupResource(locale, CoreLocaleKey.TPL_LOGIN_DOMAIN_PLACEHOLDER, true)));
 			for(Domain domain : enabledDomains) {
 				domains.add(new HtmlSelect(domain.getDomainId(), domain.getDisplayName()));
+			}
+			*/
+			
+			List<HtmlSelect> domains = null;
+			if (wtMgr.getEnabledDomainsCount() > 1) {
+				domains = new ArrayList<>();
+				domains.add(new HtmlSelect("", wta.lookupResource(locale, CoreLocaleKey.TPL_LOGIN_DOMAIN_PLACEHOLDER, true)));
+				for (Map.Entry<String, String> entry : wtMgr.getEnabledDomains().entrySet()) {
+					domains.add(new HtmlSelect(entry.getKey(), entry.getValue()));
+				}
 			}
 			
 			writePage(wta, css, locale, domains, maintenanceMessage, failureMessage, response);
@@ -163,8 +176,8 @@ public class Login extends AbstractServlet {
 		}
 	}
 	
-	private void writePage(WebTopApp wta, CoreServiceSettings css, Locale locale, List<HtmlSelect> domains, String maintenanceMessage, String failureMessage, HttpServletResponse response) throws IOException, TemplateException {
-		boolean showDomain = (css.getHideLoginDomains()) ? false : (domains.size() > 1);
+	private void writePage(final WebTopApp wta, final CoreServiceSettings css, final Locale locale, final List<HtmlSelect> domains, final String maintenanceMessage, final String failureMessage, final HttpServletResponse response) throws IOException, TemplateException {
+		boolean showDomain = domains != null;
 		
 		MapItem vars = new MapItem();
 		AbstractServlet.fillPageVars(vars, locale, null, null, null);
@@ -175,18 +188,30 @@ public class Login extends AbstractServlet {
 		vars.put("maintenanceMessage", maintenanceMessage);
 		vars.put("showFailure", !StringUtils.isBlank(failureMessage));
 		vars.put("failureMessage", failureMessage);
-		vars.put("usernamePlaceholder", wta.lookupResource(locale, CoreLocaleKey.TPL_LOGIN_USERNAME_PLACEHOLDER, true));
-		vars.put("passwordPlaceholder", wta.lookupResource(locale, CoreLocaleKey.TPL_LOGIN_PASSWORD_PLACEHOLDER, true));
-		vars.put("domainLabel", wta.lookupResource(locale, CoreLocaleKey.TPL_LOGIN_DOMAIN_LABEL, true));
-		vars.put("submitLabel", wta.lookupResource(locale, CoreLocaleKey.TPL_LOGIN_SUBMIT_LABEL, true));
 		vars.put("showDomain", showDomain);
-		vars.put("domains", domains);
+		vars.put("domains", showDomain ? domains : /* allow backward compatibility */ new ArrayList<>());
+		vars.put("showRememberMe", false);
+		
+		Map i18n = new HashMap();
+		i18n.put("usernameLabel", wta.lookupResource(locale, CoreLocaleKey.TPL_LOGIN_USERNAME_LABEL, true));
+		i18n.put("usernamePlaceholder", wta.lookupResource(locale, CoreLocaleKey.TPL_LOGIN_USERNAME_PLACEHOLDER, true));
+		i18n.put("passwordLabel", wta.lookupResource(locale, CoreLocaleKey.TPL_LOGIN_PASSWORD_LABEL, true));
+		i18n.put("passwordPlaceholder", wta.lookupResource(locale, CoreLocaleKey.TPL_LOGIN_PASSWORD_PLACEHOLDER, true));
+		i18n.put("domainLabel", wta.lookupResource(locale, CoreLocaleKey.TPL_LOGIN_DOMAIN_LABEL, true));
+		i18n.put("rememberMeLabel", wta.lookupResource(locale, CoreLocaleKey.TPL_LOGIN_REMEMBERME_LABEL, true));
+		i18n.put("submitLabel", wta.lookupResource(locale, CoreLocaleKey.TPL_LOGIN_SUBMIT_LABEL, true));
+		vars.put("usernameLabel", i18n.get("usernameLabel")); // DEPRECATED leave for cbackward compatibility!
+		vars.put("usernamePlaceholder", i18n.get("usernamePlaceholder")); // DEPRECATED leave for cbackward compatibility!
+		vars.put("passwordLabel", i18n.get("passwordLabel")); // DEPRECATED leave for cbackward compatibility!
+		vars.put("passwordPlaceholder", i18n.get("passwordPlaceholder")); // DEPRECATED leave for cbackward compatibility!
+		vars.put("domainLabel", i18n.get("domainLabel")); // DEPRECATED leave for cbackward compatibility!
+		vars.put("rememberMeLabel", i18n.get("rememberMeLabel")); // DEPRECATED leave for cbackward compatibility!
+		vars.put("submitLabel", i18n.get("submitLabel")); // DEPRECATED leave for cbackward compatibility!
+		vars.put("i18n", i18n);
 		
 		ServletUtils.setHtmlContentType(response);
 		ServletUtils.setCacheControlPrivate(response);
-		
-		// Load and build template
-		WT.loadTemplate(CoreManifest.ID, "page/login.html").process(vars, response.getWriter());
+		WT.writeTemplate(CoreManifest.ID, "page/login.html", vars, response.getWriter());
 	}
 	
 	public static class HtmlSelect {

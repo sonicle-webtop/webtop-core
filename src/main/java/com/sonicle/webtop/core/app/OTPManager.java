@@ -248,6 +248,7 @@ public class OTPManager {
 	}
 	
 	public boolean checkCode(UserProfileId pid, Config data, String code) {
+		if (StringUtils.isBlank(code)) return false;
 		OtpDeliveryMode deliveryMode = getDeliveryMode(pid);
 		if (OtpDeliveryMode.EMAIL.equals(deliveryMode)) {
 			CoreServiceSettings css = new CoreServiceSettings(CoreManifest.ID, pid.getDomainId());

@@ -107,12 +107,11 @@ public class UIPrivate extends AbstractServlet {
 						}
 						wta.getWebTopManager().updateUserPassword(pid.getDomainId(), pid.getUserId(), RunContext.getPrincipal().getPassword(), password.toCharArray());
 						((com.sonicle.security.Principal)RunContext.getPrincipal()).setPassword(password.toCharArray());
-						wts.clearProperty(CoreManifest.ID, UIPrivate.WTSPROP_PASSWORD_CHANGEUPONLOGIN);
 						writePage = false;
 					}
 				} catch (PasswordMustBeDifferent ex) {
 					logger.debug("Password change failure: password matches the current one");
-					failureMessage = wta.lookupResource(wts.getLocale(), CoreLocaleKey.TPL_PASSWORD_ERROR_MUSTBEDIFFERENT);
+					failureMessage = wta.lookupResource(wts.getLocale(), CoreLocaleKey.TPL_PWCHANGE_ERROR_MUSTBEDIFFERENT);
 				} catch (WTPwdPolicyException ex) {
 					logger.debug("Password change failure: password does not satisfy password policies [{}]", ex.getCode(), ex);
 					DomainBase.PasswordPolicies policies = wta.getWebTopManager().getDomainPasswordPolicies(pid.getDomainId());
@@ -120,7 +119,7 @@ public class UIPrivate extends AbstractServlet {
 				} catch (WTException ex) {
 					//TODO: display a centralized error page (like Throwable catch below)
 					logger.error("Unable to update password", ex);
-					failureMessage = wta.lookupResource(wts.getLocale(), CoreLocaleKey.TPL_PASSWORD_ERROR_UNEXPECTED);
+					failureMessage = wta.lookupResource(wts.getLocale(), CoreLocaleKey.TPL_PWCHANGE_ERROR_UNEXPECTED);
 				}
 				
 				if (writePage) {
@@ -154,55 +153,59 @@ public class UIPrivate extends AbstractServlet {
 	private String lookupPolicyExceptionCodeMessage(WebTopApp wta, Locale locale, int code, DomainBase.PasswordPolicies passwordPolicies) {
 		switch(code) {
 			case 1:
-				return wta.lookupAndFormatResource(locale, CoreLocaleKey.TPL_PASSWORD_ERROR_MINLENGTH, false, passwordPolicies.getMinLength());
+				return wta.lookupAndFormatResource(locale, CoreLocaleKey.TPL_PWCHANGE_ERROR_MINLENGTH, false, passwordPolicies.getMinLength());
 			case 2:
-				return wta.lookupResource(locale, CoreLocaleKey.TPL_PASSWORD_ERROR_COMPLEXITY);
+				return wta.lookupResource(locale, CoreLocaleKey.TPL_PWCHANGE_ERROR_COMPLEXITY);
 			case 3:
-				return wta.lookupResource(locale, CoreLocaleKey.TPL_PASSWORD_ERROR_CONSECUTIVEDUPLCHARS);
+				return wta.lookupResource(locale, CoreLocaleKey.TPL_PWCHANGE_ERROR_CONSECUTIVEDUPLCHARS);
 			case 4:
-				return wta.lookupResource(locale, CoreLocaleKey.TPL_PASSWORD_ERROR_USERNAMESIMILARITY);
+				return wta.lookupResource(locale, CoreLocaleKey.TPL_PWCHANGE_ERROR_USERNAMESIMILARITY);
 			case 41:
-				return wta.lookupResource(locale, CoreLocaleKey.TPL_PASSWORD_ERROR_PASSWORDSIMILARITY);
+				return wta.lookupResource(locale, CoreLocaleKey.TPL_PWCHANGE_ERROR_PASSWORDSIMILARITY);
 			default:
-				return wta.lookupResource(locale, CoreLocaleKey.TPL_PASSWORD_ERROR_UNEXPECTED);
+				return wta.lookupResource(locale, CoreLocaleKey.TPL_PWCHANGE_ERROR_UNEXPECTED);
 		}
 	}
 	
 	private void writePasswordChangePage(WebTopApp wta, Locale locale, DomainBase.PasswordPolicies passwordPolicies, String username, String failureMessage, HttpServletResponse response) throws IOException, TemplateException {
-		Map tplMap = new HashMap();
-		AbstractServlet.fillPageVars(tplMap, locale, null, null, null);
-		AbstractServlet.fillSystemVars(tplMap, wta, locale, false, false);
+		Map vars = new HashMap();
+		AbstractServlet.fillPageVars(vars, locale, null, null, null);
+		AbstractServlet.fillSystemVars(vars, wta, locale, false, false);
 		
-		tplMap.put("similarityLevenThres", WebTopProps.getWTDirectorySimilarityLevenThres(wta.getProperties()));
-		tplMap.put("similarityTokenSize", WebTopProps.getWTDirectorySimilarityTokenSize(wta.getProperties()));
-		tplMap.put("checkpolicy", CId.build(
+		vars.put("similarityLevenThres", WebTopProps.getWTDirectorySimilarityLevenThres(wta.getProperties()));
+		vars.put("similarityTokenSize", WebTopProps.getWTDirectorySimilarityTokenSize(wta.getProperties()));
+		vars.put("checkpolicy", CId.build(
 			passwordPolicies.getMinLength() != null ? passwordPolicies.getMinLength() : "",
 			passwordPolicies.getComplexity() ? "1" : "",
 			passwordPolicies.getAvoidConsecutiveChars() ? "1" : "",
 			passwordPolicies.getAvoidUsernameSimilarity() ? "1" : ""
 		));
-		tplMap.put("username", username);
-		tplMap.put("showFailure", !StringUtils.isBlank(failureMessage));
-		tplMap.put("failureMessage", failureMessage);
+		vars.put("username", username);
+		vars.put("showFailure", !StringUtils.isBlank(failureMessage));
+		vars.put("failureMessage", failureMessage);
 		
 		Map i18n = new HashMap();
-		i18n.put("mainTitle", wta.lookupResource(locale, CoreLocaleKey.TPL_PASSWORD_MAIN_TITLE));
-		i18n.put("mainText", wta.lookupResource(locale, CoreLocaleKey.TPL_PASSWORD_MAIN_TEXT));
-		i18n.put("passwordLabel", wta.lookupResource(locale, CoreLocaleKey.TPL_PASSWORD_PASSWORD_LABEL));
-		i18n.put("passwordConfirmLabel", wta.lookupResource(locale, CoreLocaleKey.TPL_PASSWORD_PASSWORDCONFIRM_LABEL));
-		i18n.put("submitLabel", wta.lookupResource(locale, CoreLocaleKey.TPL_PASSWORD_SUBMIT_LABEL));
-		i18n.put("emptyFieldError", wta.lookupResource(locale, CoreLocaleKey.TPL_PASSWORD_ERROR_EMPTYFIELD));
-		i18n.put("passwordPolicyErrorComplexity", wta.lookupResource(locale, CoreLocaleKey.TPL_PASSWORD_ERROR_COMPLEXITY));
-		i18n.put("passwordPolicyErrorMinLength", wta.lookupAndFormatResource(locale, CoreLocaleKey.TPL_PASSWORD_ERROR_MINLENGTH, false, passwordPolicies.getMinLength() != null ? passwordPolicies.getMinLength() : 8));
-		i18n.put("passwordPolicyErrorConsecutiveDuplChars", wta.lookupResource(locale, CoreLocaleKey.TPL_PASSWORD_ERROR_CONSECUTIVEDUPLCHARS));
-		i18n.put("passwordPolicyErrorUsernameSimilarity", wta.lookupResource(locale, CoreLocaleKey.TPL_PASSWORD_ERROR_USERNAMESIMILARITY));
-		i18n.put("passwordConfirmNoMatchError", wta.lookupResource(locale, CoreLocaleKey.TPL_PASSWORD_ERROR_CONFIRMNOTMATCH));
-		tplMap.put("i18n", i18n);
+		i18n.put("formTitle", wta.lookupResource(locale, CoreLocaleKey.TPL_PWCHANGE_MAIN_TITLE));
+		i18n.put("formText", wta.lookupResource(locale, CoreLocaleKey.TPL_PWCHANGE_MAIN_TEXT));
+		i18n.put("passwordLabel", wta.lookupResource(locale, CoreLocaleKey.TPL_PWCHANGE_PASSWORD_LABEL));
+		i18n.put("passwordPlaceholder", wta.lookupResource(locale, CoreLocaleKey.TPL_PWCHANGE_PASSWORD_PLACEHOLDER));
+		i18n.put("passwordConfirmLabel", wta.lookupResource(locale, CoreLocaleKey.TPL_PWCHANGE_PASSWORDCONFIRM_LABEL));
+		i18n.put("passwordConfirmPlaceholder", wta.lookupResource(locale, CoreLocaleKey.TPL_PWCHANGE_PASSWORDCONFIRM_PLACEHOLDER));
+		i18n.put("submitLabel", wta.lookupResource(locale, CoreLocaleKey.TPL_PWCHANGE_SUBMIT_LABEL));
+		i18n.put("emptyFieldError", wta.lookupResource(locale, CoreLocaleKey.TPL_PWCHANGE_ERROR_EMPTYFIELD));
+		i18n.put("passwordPolicyErrorComplexity", wta.lookupResource(locale, CoreLocaleKey.TPL_PWCHANGE_ERROR_COMPLEXITY));
+		i18n.put("passwordPolicyErrorMinLength", wta.lookupAndFormatResource(locale, CoreLocaleKey.TPL_PWCHANGE_ERROR_MINLENGTH, false, passwordPolicies.getMinLength() != null ? passwordPolicies.getMinLength() : 8));
+		i18n.put("passwordPolicyErrorConsecutiveDuplChars", wta.lookupResource(locale, CoreLocaleKey.TPL_PWCHANGE_ERROR_CONSECUTIVEDUPLCHARS));
+		i18n.put("passwordPolicyErrorUsernameSimilarity", wta.lookupResource(locale, CoreLocaleKey.TPL_PWCHANGE_ERROR_USERNAMESIMILARITY));
+		i18n.put("passwordConfirmNoMatchError", wta.lookupResource(locale, CoreLocaleKey.TPL_PWCHANGE_ERROR_CONFIRMNOTMATCH));
+		i18n.put("mainTitle", i18n.get("formTitle")); // DEPRECATED leave for cbackward compatibility!
+		i18n.put("mainText", i18n.get("formText")); // DEPRECATED leave for cbackward compatibility!
+		vars.put("i18n", i18n);
 		
 		ServletUtils.setHtmlContentType(response);
 		ServletUtils.setCacheControlPrivate(response);
 		
-		WT.writeTemplate(CoreManifest.ID, "tpl/page/password.html", tplMap, response.getWriter());
+		WT.writeTemplate(CoreManifest.ID, "tpl/page/password.html", vars, response.getWriter());
 	}
 	
 	private void writePrivatePage(WebTopApp wta, WebTopSession wts, String baseUrl, HttpServletRequest request, HttpServletResponse response)  throws IOException, TemplateException {

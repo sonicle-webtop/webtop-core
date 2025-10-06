@@ -691,12 +691,24 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 		return null;
 	}
 	
+	public String getUniqueEnabledDomainId() {
+		return domainCache.returnTheUniqueEnabledDomainId();
+	}
+	
+	public int getEnabledDomainsCount() {
+		return domainCache.getEnabledCount();
+	}
+	
+	public Map<String, String> getEnabledDomains() {
+		return domainCache.getEnabledMap();
+	}
+	
 	public boolean existsDomainId(final String domainId) {
 		return domainCache.exists(domainId);
 	}
 	
 	public Boolean isDomainIdEnabled(final String domainId) {
-		return domainCache.enabled(domainId);
+		return domainCache.isEnabled(domainId);
 	}
 	
 	public String domainIdToDomainPublicId(final String domainId) {
@@ -4867,14 +4879,16 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 			public final String domainName;
 			public final String publicFqdn;
 			public final boolean enabled;
+			public final String label;
 			
-			public Data(String domainId, String publicId, String authDomainName, String domainName, String publicFqdn, boolean enabled) {
+			public Data(String domainId, String publicId, String authDomainName, String domainName, String publicFqdn, boolean enabled, String label) {
 				this.domainId = domainId;
 				this.publicId = publicId;
 				this.authDomainName = authDomainName;
 				this.domainName = domainName;
 				this.publicFqdn = publicFqdn;
 				this.enabled = enabled;
+				this.label = label;
 			}
 		}
 		
@@ -4915,7 +4929,8 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 						odomain.getAuthDomainName(),
 						odomain.getDomainName(),
 						publicInternetName,
-						enabled
+						enabled,
+						odomain.getDescription()
 					);
 					
 					LOGGER.trace("[DomainInfoCache] Working on '{}'", data.domainId);
@@ -4980,6 +4995,34 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 			}
 		}
 		
+		public int getEnabledCount() {
+			this.internalCheckBeforeGetDoNotLockThis();
+			long stamp = this.readLock();
+			try {
+				int count = 0;
+				for (Map.Entry<String, Data> entry : this.byDomainId.entrySet()) {
+					if (entry.getValue().enabled) count++;
+				}
+				return count;
+			} finally {
+				this.unlockRead(stamp);
+			}
+		}
+		
+		public Map<String, String> getEnabledMap() {
+			this.internalCheckBeforeGetDoNotLockThis();
+			long stamp = this.readLock();
+			try {
+				LinkedHashMap<String, String> map = new LinkedHashMap<>();
+				for (Map.Entry<String, Data> entry : this.byDomainId.entrySet()) {
+					if (entry.getValue().enabled) map.put(entry.getValue().domainId, entry.getValue().label);
+				}
+				return map;
+			} finally {
+				this.unlockRead(stamp);
+			}
+		}
+		
 		public boolean exists(final String domainId) {
 			this.internalCheckBeforeGetDoNotLockThis();
 			long stamp = this.readLock();
@@ -4990,7 +5033,7 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 			}
 		}
 		
-		public Boolean enabled(final String domainId) {
+		public Boolean isEnabled(final String domainId) {
 			this.internalCheckBeforeGetDoNotLockThis();
 			long stamp = this.readLock();
 			try {
@@ -5036,6 +5079,29 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 					Map.Entry<String, Data> entry = this.byAuthDomainName.entrySet().iterator().next();
 					return entry.getValue().domainId;
 				} else {
+					return null;
+				}
+			} finally {
+				this.unlockRead(stamp);
+			}
+		}
+		
+		/**
+		 * Returns the domain ID of the only one enabled domain, if configured.
+		 * @return A domain ID or null.
+		 */
+		public String returnTheUniqueEnabledDomainId() {
+			this.internalCheckBeforeGetDoNotLockThis();
+			long stamp = this.readLock();
+			try {
+				if (this.byDomainId.size() == 1) {
+					final String domainId = this.byDomainId.keySet().iterator().next();
+					final Data data = this.byDomainId.get(domainId);
+					return data.enabled ? domainId : null;
+				} else {
+					for (Map.Entry<String, Data> entry : this.byDomainId.entrySet()) {
+						if (entry.getValue().enabled) return entry.getKey();
+					}
 					return null;
 				}
 			} finally {

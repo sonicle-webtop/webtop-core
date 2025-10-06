@@ -1,3 +1,4 @@
+<#assign LangUtils=statics['com.sonicle.commons.LangUtils']>
 <!DOCTYPE html>
 <html>
     <head>
@@ -5,9 +6,10 @@
         <meta http-equiv="X-UA-Compatible" content="IE=edge">
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+        <meta name="color-scheme" content="light dark" />
         <meta name="robots" content="none" />
         
-        <title>${title}</title>
+        <title>${LangUtils.encodeForHTMLContent(title)}</title>
         <#if baseUrl??><base href="${baseUrl}" target="_blank"></#if>
         <link rel="icon" type="image/svg+xml" href="${coreResourcesImagesUrl}/favicon.svg">
         <link rel="icon" type="image/png" href="${coreResourcesImagesUrl}/favicon.png">
@@ -21,87 +23,224 @@
             <script src="${coreResourcesVendorUrl}/respond/1.4.2/respond.min.js"></script>
         <![endif]-->
         
-        <!-- Bootstrap -->
-        <link rel="stylesheet" property="stylesheet" type="text/css" href="${coreResourcesVendorUrl}/bootstrap/3.3.7/css/bootstrap.min.css" />
-        <link rel="stylesheet" property="stylesheet" type="text/css" href="${coreResourcesCssUrl}/login.css" />
-        <script src="${coreResourcesVendorUrl}/jquery/3.3.1/jquery.min.js"></script>
+        <!-- Tailwind -->
+        <script src="${coreResourcesVendorUrl}/tailwind/3.4.17/tailwind.min.js"></script>
+        <script>
+            tailwind.config = {
+                darkMode: "media",
+                theme: {
+                    fontFamily: {
+                        "body": ['Inter','ui-sans-serif','system-ui','-apple-system','Segoe UI','Roboto','Helvetica Neue','Arial','Noto Sans','sans-serif','Apple Color Emoji','Segoe UI Emoji','Segoe UI Symbol','Noto Color Emoji'],
+                        "sans": ['Inter','ui-sans-serif','system-ui','-apple-system','Segoe UI','Roboto','Helvetica Neue','Arial','Noto Sans','sans-serif','Apple Color Emoji','Segoe UI Emoji','Segoe UI Symbol','Noto Color Emoji']
+                    }
+                }
+            };
+        </script>
+        <style type="text/tailwindcss">
+        @layer utilities {
+            .text-2xs { @apply text-[0.6rem]  leading-[0.9rem]; }
+            .text-3xs { @apply text-[0.5rem]  leading-[0.75rem]; }
+        }
+        @layer components {
+            .ui-input-field {
+                @apply rounded-md border px-3 py-2 pr-8 text-sm;
+                @apply border-neutral-300 dark:border-gray-600 bg-neutral-50 dark:bg-gray-700 text-neutral-900 dark:text-neutral-50 placeholder-neutral-500 dark:placeholder-gray-400;
+                @apply focus:outline-none focus:z-[8] focus:ring-2 focus:ring-offset-0 focus:ring-cyan-500;
+                @apply disabled:cursor-not-allowed disabled:border-gray-200 disabled:bg-gray-50 disabled:text-gray-500;
+            }
+            .ui-input-field.touched:not(:focus) {
+                @apply invalid:border-rose-700 dark:invalid:border-rose-500;
+            }
+            .ui-input-label {
+                @apply block font-medium text-sm;
+            }
+            .ui-input-invalid-message {
+                @apply text-xs text-rose-700;
+            }
+            .ui-input-checkbox {
+                @apply h-4 w-4 rounded border shrink-0;
+                @apply border-neutral-300 dark:border-gray-600 bg-neutral-50 dark:bg-gray-700 text-cyan-600;
+                @apply focus:outline-none focus:ring-2 focus:ring-cyan-500 dark:focus:ring-cyan-600 dark:ring-offset-gray-800;
+            }
+            .ui-input-checkbox-label {
+                @apply block text-sm;
+            }
+            .ui-input-select {
+                @apply rounded-md border px-2 py-2 text-sm;
+                @apply border-neutral-300 dark:border-gray-600 bg-neutral-50 dark:bg-gray-700 text-neutral-900 dark:text-neutral-50 placeholder-neutral-500 dark:placeholder-gray-400;
+                @apply focus:outline-none focus:z-[8] focus:ring-2 focus:ring-offset-0 focus:ring-cyan-500;
+                @apply disabled:cursor-not-allowed disabled:border-gray-200 disabled:bg-gray-50 disabled:text-gray-500;
+            }
+            .ui-button-primary {
+                @apply font-medium tracking-wide transition-colors;
+                @apply rounded-md border px-4 py-1.5 text-[15px] cursor-pointer;
+                @apply border-transparent bg-cyan-700 text-neutral-50;
+                @apply focus:outline-none focus:z-20 focus:ring-2 focus:ring-offset-2 focus:ring-cyan-500;
+                @apply disabled:cursor-not-allowed disabled:opacity-50;
+            }
+            .ui-text-info {
+                @apply text-indigo-700 dark:text-indigo-200;
+            }
+            .ui-text-ok {
+                @apply text-emerald-700 dark:text-emerald-200;
+            }
+            .ui-text-warning {
+                @apply text-amber-700 dark:text-amber-200;
+            }
+            .ui-text-error {
+                @apply text-rose-700 dark:text-rose-200;
+            }
+            .ui-messagebox {
+                @apply flex items-center;
+                @apply rounded border-l-4 p-2;
+            }
+            .ui-messagebox-icon {
+                @apply shrink-0 inline w-4 h-4 me-3;
+            }
+            .ui-messagebox-text {
+                @apply text-sm;
+            }
+            .ui-messagebox-info {
+                @apply border-indigo-700 dark:border-indigo-200 bg-indigo-100 dark:bg-indigo-800;
+            }
+            .ui-messagebox-ok {
+                @apply border-emerald-700 dark:border-emerald-200 bg-emerald-100 dark:bg-emerald-800;
+            }
+            .ui-messagebox-warning {
+                @apply border-amber-700 dark:border-amber-200 bg-amber-100 dark:bg-amber-800;
+            }
+            .ui-messagebox-error {
+                @apply border-rose-700 dark:border-rose-200 bg-rose-100 dark:bg-rose-800;
+            }
+            .ui-input-codedigit {
+                @apply rounded-md border p-2 w-[48px] text-base text-center;
+                @apply border-neutral-300 dark:border-gray-600 bg-neutral-50 dark:bg-gray-700 text-neutral-900 dark:text-neutral-50 placeholder-neutral-500 dark:placeholder-gray-400;
+                @apply focus:outline-none focus:z-[8] focus:ring-2 focus:ring-offset-0 focus:ring-cyan-500;
+                @apply disabled:cursor-not-allowed disabled:border-gray-200 disabled:bg-gray-50 disabled:text-gray-500;
+            }
+        }
+        </style>
         
-        <script type="text/javascript">
+        <!-- Page -->
+        <script src="${coreResourcesVendorUrl}/cash/8.1.5/cash.min.js"></script>
+        <link rel="stylesheet" type="text/css" href="${coreResourcesFontsUrl}/inter/4.1/inter.css" />
+        <link rel="stylesheet" type="text/css" href="${coreResourcesExtJSUrl}/packages/font-awesome/resources/vendor/6.4.2/css/fontawesome.min.css" />
+        <link rel="stylesheet" type="text/css" href="${coreResourcesExtJSUrl}/packages/font-awesome/resources/vendor/6.4.2/css/solid.min.css" />
+        
+        <script type="text/javascript">//# sourceURL=inline-script.js
             $(function () {
-                setTimeout(function () {
-                    $('#wtusername').focus();
-                }, 100);
-                $('#wtsubmit').bind('click tap', function () {
-                    $('#location').val(window.location);
-                    $('form[name="login"]').submit();
-                    $(this).prop("disabled", true);
+                const $form = $('form[name="login"]');
+                const $submit = $('#wtsubmit');
+                const syncSubmitState = () => { $submit.prop('disabled', !$form[0].checkValidity()); };
+                
+                setTimeout(() => { $('#wtusername')[0].focus(); }, 100); // Initial focus
+                syncSubmitState(); // Initial submit state
+                
+                // Keep in sync submit button state
+                $('#wtusername, #wtpassword').on('input change', syncSubmitState);
+                // Track user interaction on :required inputs
+                $(':required').on('input blur keydown', function () {
+                    const $el = $(this);
+                    if ($el.data('touched')) return;
+                    $el.addClass('touched');
+                    $el.data('touched', true);
+                });
+                // Handle form submit
+                $form.on('submit', function (e) {
+                    e.preventDefault();
+                    $('#location').val(window.location.href);
+                    $submit.prop('disabled', true);
+                    this.submit();
                 });
             });
         </script>
     </head>
-    <body>
-        <div class="jumbotron">
-            <div id="login" class="container">
-                <div class="row">
-                    <div class="col-xs-12 col-sm-10 col-sm-offset-1 col-md-10 col-md-offset-1 col-lg-8 col-lg-offset-2">
-                        <img class="logo img-responsive" src="${coreResourcesImagesUrl}/login.png">
+    <body class="bg-gray-100 dark:bg-gray-900 text-neutral-900 dark:text-neutral-50">
+        <div class="min-h-screen flex flex-col items-center justify-center">
+            <#if serverInfo??>
+            <div class="grow"></div>
+            </#if> 
+            <div class="max-w-[400px] w-full">
+                <div class="p-3 pb-2 rounded-md sm:pb-4 sm:p-8 sm:rounded-2xl dark:border shadow-md border-neutral-50 bg-neutral-50 dark:border-gray-800 dark:bg-gray-800">
+                    <div class="flex flex-col items-center justify-center">
+                        <picture class="mx-auto w-auto">
+                            <source srcset="${coreResourcesImagesUrl}/login@light" media="(prefers-color-scheme: light)"/>
+                            <source srcset="${coreResourcesImagesUrl}/login@dark" media="(prefers-color-scheme: dark)"/>
+                            <img src="${coreResourcesImagesUrl}/login@light" alt="logo" class="w-full h-full max-h-[200px]">
+                        </picture>
+                    </div>
+                    <form name="login" method="post" action="login" role="form" novalidate class="mt-6 space-y-4">
+                        <input id="location" name="location" type="hidden">
                         <#if showMaintenance>
-                        <div class="alert alert-warning text-center" role="alert">
-                            <span class="glyphicon glyphicon-info-sign"></span>&nbsp;
-                            ${maintenanceMessage}
+                        <div class="w-full ui-messagebox ui-messagebox-warning ui-text-warning">
+                            <i class="ui-messagebox-icon fa-solid fa-circle-info"></i>
+                            <div class="ui-messagebox-text">${LangUtils.encodeForHTMLContent(maintenanceMessage)}</div>
                         </div>
                         </#if>
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col-xs-12 col-sm-8 col-sm-offset-2 col-md-6 col-md-offset-3 col-lg-4 col-lg-offset-4">
-                        <form name="login" method="post" action="login">
-                            <input id="location" name="location" type="hidden">
-                            <div class="box">
-                                <#if showFailure>
-                                <p class="text-center text-danger">
-                                    <span class="glyphicon glyphicon-exclamation-sign"></span>
-                                    ${failureMessage}
-                                </p>
-                                </#if>
-                                <div class="form-group">
-                                    <div class="input-group">
-                                        <input class="form-control" id="wtusername" name="wtusername" type="text" placeholder="${usernamePlaceholder}">
-                                        <div class="input-group-addon"><i class="glyphicon glyphicon-user"></i></div>
-                                    </div>
-                                </div>
-                                <div class="form-group">
-                                    <div class="input-group">
-                                        <input class="form-control" id="wtpassword" name="wtpassword" type="password" placeholder="${passwordPlaceholder}">
-                                        <div class="input-group-addon"><i class="glyphicon glyphicon-lock"></i></div>
-                                    </div>
-                                </div>
-                                <div class="form-group" <#if !showDomain>style="display: none;"</#if>>
-                                     <div class="input-group">
-                                        <div class="input-group-addon">${domainLabel}</div>
-                                        <select class="form-control" id="wtdomain" name="wtdomain">
-                                            <#list domains as domain>
-                                            <option value="${domain.getValue()}" >${domain.getDescription()}</option>
-                                            </#list>
-                                        </select>
-                                    </div>
-                                </div>
-                                <br>
-                                <button class="btn btn-primary" id="wtsubmit" type="sumbit">${submitLabel}</button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col-xs-12 col-sm-10 col-sm-offset-1 col-md-10 col-md-offset-1 col-lg-8 col-lg-offset-2">
-                        <img class="powered img-responsive" src="${coreResourcesImagesUrl}/poweredby.png">
-                        <h5 class="powered text-center"><small>${versionString}</small></h5>
-                        <#if serverInfo??>
-                        <h6 class="serverinfo text-center"><small>${serverInfo}</small></h6>
+                        <#if showFailure>
+                        <div class="w-full ui-messagebox ui-messagebox-error ui-text-error">
+                            <i class="ui-messagebox-icon fa-solid fa-circle-exclamation"></i>
+                            <div class="ui-messagebox-text">${LangUtils.encodeForHTMLContent(failureMessage)}</div>
+                        </div>
                         </#if>
+                        <div>
+                            <label for="wtusername" class="mb-2 ui-input-label">${LangUtils.encodeForHTMLContent(i18n.usernameLabel)}</label>
+                            <div class="relative flex flex-col">
+                                <input id="wtusername" name="wtusername" type="text" required class="ui-input-field w-full" placeholder="${LangUtils.encodeForHTMLAttribute(i18n.usernamePlaceholder)}" />
+                            </div>
+                        </div>
+                        <div>
+                            <label for="wtpassword" class="mb-2 ui-input-label">${LangUtils.encodeForHTMLContent(i18n.passwordLabel)}</label>
+                            <div class="relative flex flex-col">
+                                <input id="wtpassword" name="wtpassword" type="password" required class="ui-input-field w-full" placeholder="${LangUtils.encodeForHTMLAttribute(i18n.passwordPlaceholder)}" />
+                            </div>
+                        </div>
+                        <#if showRememberMe>
+                        <div class="flex flex-wrap items-center justify-between gap-4">
+                            <div class="flex items-center">
+                                <input name="wtrememberme" type="checkbox" class="ui-input-checkbox" />
+                                <label for="wtrememberme" class="ui-input-checkbox-label ml-3">${LangUtils.encodeForHTMLContent(i18n.rememberMeLabel)}</label>
+                            </div>
+                        </div>
+                        </#if>
+                        <#if showDomain>
+                        <div>
+                            <label for="wtdomain" class="mb-2 ui-input-label">${LangUtils.encodeForHTMLContent(i18n.domainLabel)}</label>
+                            <div class="relative flex items-center">
+                                <select name="wtdomain" class="ui-input-select w-full">
+                                    <#list domains as domain>
+                                    <option value="${LangUtils.encodeForHTMLAttribute(domain.getValue())}" >${LangUtils.encodeForHTMLContent(domain.getDescription())}</option>
+                                    </#list>
+                                </select>
+                            </div>
+                        </div>
+                        </#if>
+                        <div class="!mt-8">
+                            <button id="wtsubmit" type="submit" class="ui-button-primary w-full">${LangUtils.encodeForHTMLContent(i18n.submitLabel)}</button>
+                        </div>
+                    </form>
+                    <div class="mt-4 flex items-end">
+                        <picture>
+                            <source srcset="${coreResourcesImagesUrl}/poweredby@light.svg" media="(prefers-color-scheme: light)"/>
+                            <source srcset="${coreResourcesImagesUrl}/poweredby@dark.svg" media="(prefers-color-scheme: dark)"/>
+                            <img src="${coreResourcesImagesUrl}/poweredby@light.svg" alt="logo" class="w-auto h-8">
+                        </picture>
+                        <div class="flex-1 text-xs text-right">${LangUtils.encodeForHTMLContent(versionString)}</div>
                     </div>
+                    <!--
+                    <div class="mt-4 flex flex-col items-center">
+                        <picture>
+                            <source srcset="${coreResourcesImagesUrl}/poweredby@light.svg" media="(prefers-color-scheme: light)"/>
+                            <source srcset="${coreResourcesImagesUrl}/poweredby@dark.svg" media="(prefers-color-scheme: dark)"/>
+                            <img src="${coreResourcesImagesUrl}/poweredby@light.svg" alt="logo" class="w-auto h-8 flex-1">
+                        </picture>
+                    </div>-->
                 </div>
             </div>
+            <#if serverInfo??>
+            <div class="grow"></div>
+            <div class="mb-1 text-3xs sm:text-2xs text-center ui-text-info">${LangUtils.encodeForHTMLContent(serverInfo)}</div>
+            </#if> 
         </div>
     </body>
 </html>

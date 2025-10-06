@@ -54,6 +54,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.MalformedURLException;
+import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.ArrayList;
@@ -88,6 +89,7 @@ public class ResourceRequest extends HttpServlet {
 	
 	private static final Pattern PATTERN_LAF_PATH = Pattern.compile("^laf\\/([\\w\\-\\.]+(?:@[\\w\\-]+)?)\\/(.*)$");
 	private static final Pattern PATTERN_LOCALE_FILE = Pattern.compile("^(Locale_(\\w*)).js$");
+	private static final Pattern PATTERN_LOGIN_IMAGE_URL = Pattern.compile("^resources\\/images\\/login(?:\\@(light|dark))?$");
 	private static final ConcurrentHashMap<String, Long> lastModifiedCache = new ConcurrentHashMap<>();
 	
 	@Override
@@ -143,6 +145,7 @@ public class ResourceRequest extends HttpServlet {
 		String subject = null, subjectPath = null, jsPath = null, path = null, targetPath = null;
 		boolean isVirtualUrl = false, jsPathFound = false;
 		URL targetUrl = null;
+		Matcher matcher = null;
 		
 		try {
 			WebTopApp wta = WebTopApp.get(req);
@@ -151,9 +154,10 @@ public class ResourceRequest extends HttpServlet {
 			try {
 				//String reqPath = req.getPathInfo();
 				//logger.trace("Requested path [{}]", reqPath);
-
-				Matcher matcher = PATTERN_VIRTUAL_URL.matcher(reqPath);
-				if (matcher.matches()) { // Virtual URL
+				
+				if ((matcher = PATTERN_VIRTUAL_URL.matcher(reqPath)).matches()) { // Virtual URL
+				//Matcher matcher = PATTERN_VIRTUAL_URL.matcher(reqPath);
+				//if (matcher.matches()) { // Virtual URL
 					// Matches URLs like: /{service.id}/{service.version}/{remaining.url.part}
 					// Eg. /com.sonicle.webtop.core/5.1.1/laf/default/service.css
 					//	{service.id} -> com.sonicle.webtop.core
@@ -191,15 +195,15 @@ public class ResourceRequest extends HttpServlet {
 			if (!isVirtualUrl && path.startsWith("images")) {
 				// Addresses domain public images
 				// URLs like "/{domainPublicName}/images/{relativePathToFile}"
-				// Eg.	"/1bbc048f/images/login.png"
-				//		"/1bbc048f/images/sub/login.png"
+				// Eg.	"/1bbc048f/images/file.png"
+				//		"/1bbc048f/images/sub/file.png"
 				WebTopManager wtMgr = wta.getWebTopManager();
 
 				String domainId = wtMgr.domainPublicIdToDomainId(subject);
 				if (StringUtils.isBlank(domainId)) {
 					// We must support old-style URL using {domainInternetName}
 					// instead of {domainPublicName}
-					// Eg.	"/sonicle.com/images/login.png"
+					// Eg.	"/sonicle.com/images/file.png"
 					domainId = wtMgr.legacyInternetNameToDomain(subject);
 				}
 				if (StringUtils.isBlank(domainId)) {
@@ -207,10 +211,17 @@ public class ResourceRequest extends HttpServlet {
 				}
 
 				return lookupDomainImage(req, targetUrl, domainId);
+			
+			} else if (isVirtualUrl && subject.equals(CoreManifest.ID) && (matcher = PATTERN_LOGIN_IMAGE_URL.matcher(path)).matches()) {
+				// Retrieve login image
+				// URLs like "/com.sonicle.webtop.core/{serviceVersion}/resources/images/login@{variant}"
+				// URLs like "/com.sonicle.webtop.core/{serviceVersion}/resources/images/login"
+				// Eg.	"/com.sonicle.webtop.core/5.0.0/images/login@light"
+				return lookupLoginImage(wta, req, targetUrl, path, matcher.group(1));
 
 			} else if (isVirtualUrl && subject.equals(CoreManifest.ID) && path.equals("resources/images/login.png")) {
-				// Addresses login image
-				// URLs like "/{serviceId}/{serviceVersion}/resources/images/login.png"
+				// Retrieve login image (DEPRECATED method, see above)
+				// URLs like "/com.sonicle.webtop.core/{serviceVersion}/resources/images/login.png"
 				// Eg.	"/com.sonicle.webtop.core/5.0.0/images/login.png"
 				return lookupLoginImage(wta, req, targetUrl);
 
@@ -232,7 +243,7 @@ public class ResourceRequest extends HttpServlet {
 						return lookupJs(req, targetUrl, path, isJsDebug());
 
 					} else if (StringUtils.startsWith(FilenameUtils.getBaseName(path), "Locale")) {
-						return lookupLocaleJs(req, targetUrl, subject);
+						return lookupLocaleJs(wta, req, targetUrl, subject);
 
 					} else if (StringUtils.startsWith(path, "laf") && StringUtils.endsWith(path, "override.js")) {
 						return lookupLAF(req, targetUrl, path, true);
@@ -291,7 +302,63 @@ public class ResourceRequest extends HttpServlet {
 		}
 	}
 	
-	private LookupResult lookupLoginImage(WebTopApp wta, HttpServletRequest request, URL targetUrl) {
+	private LookupResult lookupLoginImage(final WebTopApp wta, final HttpServletRequest request, final URL targetUrl, final String path, final String colorSchemeVariant) {
+		final String targetPath = targetUrl.getPath();
+		final String targetFileName = FilenameUtils.getName(targetPath);
+		final String baseTargetPath = StringUtils.substringBefore(targetPath, targetFileName);
+		final String host = ServletUtils.getHostByHeaders(request);
+		URL resUrl = null;
+		
+		try {
+			WebTopManager wtMgr = wta.getWebTopManager();
+			String domainId = (wtMgr != null) ? wtMgr.publicFqdnToDomainId(host, false) : null;
+			
+			// Color-scheme variant can be "light", "dark" or <blank>
+			// See URL regex on top that protects input
+			final String targetVariant = StringUtils.isBlank(colorSchemeVariant) ? "light" : colorSchemeVariant;
+			
+			if (!StringUtils.isBlank(domainId)) {
+				final String baseImagesPath = wta.getFileSystem().getImagesPath(domainId);
+				
+				String[] filenames = new String[] {
+					"login@" + targetVariant + ".svg",
+					"login@" + targetVariant + ".png",
+					"login@" + targetVariant + ".jpg",
+					"login.svg",
+					"login.jpg",
+					"login.png" // Legacy fallback name
+				};
+				for (String filename : filenames) {
+					File file = new File(baseImagesPath + filename);
+					if (file.exists() && file.canRead()) {
+						resUrl = toURLQuietly(file.toURI());
+					}
+					if (resUrl != null) break;
+				}
+			}
+			
+			if (resUrl == null) {
+				// According to actual implementation, fallback files logo@light.svg 
+				// and logo@dark.svg are always there. Serve them as usual taking into 
+				// account desired color-scheme variant.
+				resUrl = toClasspathURL(baseTargetPath + "logo@" + targetVariant + ".svg");
+			}
+			
+			Resource resFile = getFileResource(wta, resUrl);
+			StaticFile sf = new StaticFile(resUrl.toString(), getMimeType(targetPath), ClientCaching.NO, resFile);
+			sf.cacheLastModified = false;
+			return sf;
+			
+		} catch (ForbiddenException ex) {
+			return new Error(HttpServletResponse.SC_FORBIDDEN, "Forbidden");
+		} catch (NotFoundException ex) {
+			return new Error(HttpServletResponse.SC_NOT_FOUND, "Not Found");
+		} catch (InternalServerException ex) {
+			return new Error(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Internal server error");
+		}
+	}
+	
+	@Deprecated private LookupResult lookupLoginImage(WebTopApp wta, HttpServletRequest request, URL targetUrl) {
 		String targetPath = targetUrl.getPath();
 		URL resUrl = null;
 		
@@ -394,12 +461,11 @@ public class ResourceRequest extends HttpServlet {
 		}
 	}
 	
-	private LookupResult lookupLocaleJs(HttpServletRequest request, URL targetUrl, String serviceId) {
+	private LookupResult lookupLocaleJs(final WebTopApp wta, final HttpServletRequest request, final URL targetUrl, final String serviceId) {
 		String targetPath = targetUrl.getPath();
 		URL resUrl = null;
 		
 		try {
-			WebTopApp wta = WebTopApp.get(request);
 			String fileName = FilenameUtils.getName(targetPath);
 			String baseTargetPath = StringUtils.substringBefore(targetPath, fileName);
 			Matcher matcher = PATTERN_LOCALE_FILE.matcher(fileName);
@@ -418,7 +484,7 @@ public class ResourceRequest extends HttpServlet {
 			}
 			for (String suffix : suffixes) {
 				resUrl = toClasspathURL(baseTargetPath + "locale_" + suffix + ".properties");
-				if(resUrl != null) break;
+				if (resUrl != null) break;
 			}
 			if (resUrl == null) throw new NotFoundException();
 			
@@ -434,16 +500,14 @@ public class ResourceRequest extends HttpServlet {
 			
 		} catch (ForbiddenException ex) {
 			return new Error(HttpServletResponse.SC_FORBIDDEN, "Forbidden");
-		} catch(NotFoundException ex) {
+		} catch (NotFoundException ex) {
 			return new Error(HttpServletResponse.SC_NOT_FOUND, "Not Found");
-		} catch(InternalServerException ex) {
+		} catch (InternalServerException ex) {
 			return new Error(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Internal server error");
-		} catch(ServletException ex) {
-			return new Error(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, ex.getMessage());
 		}
 	}
 	
-	private LookupResult lookupLAF(HttpServletRequest request, URL targetUrl, String path, boolean gracefulNotFound) {
+	private LookupResult lookupLAF(final HttpServletRequest request, final URL targetUrl, final String path, final boolean gracefulNotFound) {
 		URL fileUrl = null;
 		
 		try {
@@ -589,6 +653,13 @@ public class ResourceRequest extends HttpServlet {
 		public ForbiddenException() {
 			super();
 		}
+	}
+	
+	protected URL toURLQuietly(final URI uri) {
+		try {
+			return uri.toURL();
+		} catch (MalformedURLException ex) { /* Do nothing... */ }
+		return null;
 	}
 	
 	protected String getPath(HttpServletRequest request) {

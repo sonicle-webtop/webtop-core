@@ -151,6 +151,16 @@ public class WTFormAuthFilter extends FormAuthenticationFilter {
 
 	@Override
 	protected boolean onAccessDenied(ServletRequest request, ServletResponse response) throws Exception {
+		
+		boolean isLoginRequest = false;
+		boolean isLoginSubmission = false;
+		if (isLoginRequest(request, response)) {
+			isLoginRequest = true;
+			if (isLoginSubmission(request, response)) {
+				isLoginSubmission = true;
+			}
+		}
+		
 		String ctxRequestUrl = ServletUtils.getContextRelativeRequestURIString((HttpServletRequest)request);
 		if (StringUtils.startsWithIgnoreCase(ctxRequestUrl, PrivateRequest.URL)
 				|| StringUtils.startsWithIgnoreCase(ctxRequestUrl, PrivateRequest.URL_LEGACY) // for compatibility purpose only!
@@ -163,14 +173,23 @@ public class WTFormAuthFilter extends FormAuthenticationFilter {
 	}
 	
 	@Override
-	protected void redirectToLogin(ServletRequest request, ServletResponse response) throws IOException {		
+	protected void redirectToLogin(ServletRequest request, ServletResponse response) throws IOException {
+		
 		try {
 			// Do a forward instead of classic redirect. It avoids ugly URL suffixes.
 			ServletUtils.forwardRequest((HttpServletRequest)request, (HttpServletResponse)response, getLoginUrl());
 		} catch(ServletException ex) {
 			throw new IOException(ex);
 		}
+		//WebUtils.issueRedirect(request, response, "");
 	}
+	
+	/*
+	@Override
+	protected void issueSuccessRedirect(ServletRequest request, ServletResponse response) throws Exception {
+		WebUtils.redirectToSavedRequest(request, response, "");
+	}
+	*/
 	
 	@Override
 	protected AuthenticationToken createToken(String username, String password, ServletRequest request, ServletResponse response) {
@@ -308,6 +327,8 @@ public class WTFormAuthFilter extends FormAuthenticationFilter {
 			return null;
 		}
 	}
+	
+	
 	
 	/* 
 		This is useful only if welcome page is different from successUrl.

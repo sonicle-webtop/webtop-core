@@ -182,7 +182,7 @@ public class WTRealm extends AuthorizingRealm {
 				// Verify provided ApiKey
 				if (!wtMgr.authenticateApiKey(token)) throw new AuthenticationException();
 				
-				String userDomainId = lookupAuthDomainId(wtMgr, null, authInternetDomain); // This will ensure to get a positive lookup or an exp!
+				String userDomainId = lookupAuthDomainId(wtMgr, authInternetDomain, null); // This will ensure to get a positive lookup or an exp!
 				
 				// Prepare authd
 				Domain userDomain = lookupAuthenticatingDomain(wtMgr, userDomainId);
@@ -256,7 +256,7 @@ public class WTRealm extends AuthorizingRealm {
 		}
 	}
 	
-	private String lookupAuthDomainId(final WebTopManager wtMgr, /* deprecated */ final String authDomainId, final String authInternetDomain) throws AuthenticationException {
+	private String lookupAuthDomainId(final WebTopManager wtMgr, final String authInternetDomain, final String authDomainId) throws AuthenticationException {
 		String userDomainId = null;
 		if (!StringUtils.isBlank(authInternetDomain)) {
 			userDomainId = wtMgr.authDomainNameToDomainId(authInternetDomain);
@@ -293,13 +293,22 @@ public class WTRealm extends AuthorizingRealm {
 		return new Principal(authd, impersonate, authd.getDomainId(), authUsername, password);
 	}
 	
-	private Principal authenticateUser(String authDomainId, String authInternetDomain, String username, char[] password) throws AuthenticationException {
+	private Principal authenticateUser(String authDomainId, String authInternetDomain, final String username, final char[] password) throws AuthenticationException {
 		WebTopApp wta = WebTopApp.getInstance();
 		WebTopManager wtMgr = wta.getWebTopManager();
 		AuthenticationDomain authAd = null, priAd = null;
 		boolean autoCreate = false, impersonate = false;
 		
 		try {
+			// If authDomainId is passed blank, try to autofill it with the ID
+			// of the only one enabled domain, if any!
+			if (StringUtils.isBlank(authDomainId)) {
+				authDomainId = wtMgr.getUniqueEnabledDomainId();
+				if (logger.isDebugEnabled() && !StringUtils.isBlank(authDomainId)) {
+					logger.debug("authDomainId filled with the only enabled domain [{}]", authDomainId);
+				}
+			}
+			
 			// Create the right authenticationDomain according to the 
 			// authenticating user, this is needed for building the Principal
 			logger.debug("Creating the authentication domain...");
@@ -311,7 +320,7 @@ public class WTRealm extends AuthorizingRealm {
 				
 			} else {
 				checkMaintenance(wta); // Stop users if system in under maintenance!
-				String userDomainId = lookupAuthDomainId(wtMgr, authDomainId, authInternetDomain);
+				String userDomainId = lookupAuthDomainId(wtMgr, authInternetDomain, authDomainId);
 				Domain userDomain = null;
 				if (isSysAdminImpersonate(username)) {
 					if (!isImpersonateEnabled(userDomainId)) {

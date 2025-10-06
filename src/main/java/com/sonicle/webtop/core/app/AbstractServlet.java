@@ -110,17 +110,18 @@ public abstract class AbstractServlet extends HttpServlet {
 	
 	public static void fillPageVars(final Map vars, final Locale locale, final String titleDN, final String colorScheme, final String baseUrl) {
 		ServiceVersion version = WT.getManifest(CoreManifest.ID).getVersion();
-		String title = WT.getPlatformName() + " " + version.getMajor();
+		String title = WT.getPlatformName();
 		if (!StringUtils.isBlank(titleDN)) title += " [" + titleDN + "]";
 		vars.put("title", title);
 		vars.put("colorScheme", LangUtils.coalesceStrings(colorScheme, "light"));
-		vars.put("coreVersion", version);		
+		vars.put("coreVersion", version);
 		vars.put("versionString", buildVersion(version));
 		vars.put("baseUrl", baseUrl);
 		vars.put("coreResourcesCssUrl", "resources/com.sonicle.webtop.core/" + version.toString() + "/resources/css");
 		vars.put("coreResourcesFontsUrl", "resources/com.sonicle.webtop.core/" + version.toString() + "/resources/fonts");
 		vars.put("coreResourcesImagesUrl", "resources/com.sonicle.webtop.core/" + version.toString() + "/resources/images");
 		vars.put("coreResourcesVendorUrl", "resources/com.sonicle.webtop.core/0.0.0/resources/vendor");
+		vars.put("coreResourcesExtJSUrl", "resources/client/extjs");
 	}
 	
 	private static String buildVersion(ServiceVersion coreVersion) {
