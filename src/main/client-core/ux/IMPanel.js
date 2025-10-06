@@ -206,7 +206,7 @@ Ext.define('Sonicle.webtop.core.ux.IMPanel', {
 							xtype: 'soactioncolumn',
 							items: [
 								{
-									iconCls: 'fas fa-external-link-alt',
+									iconCls: 'wt-icon-open',
 									tooltip: WT.res('act-open.lbl'),
 									handler: function(g, ridx) {
 										var rec = g.getStore().getAt(ridx);
@@ -303,7 +303,7 @@ Ext.define('Sonicle.webtop.core.ux.IMPanel', {
 						xtype: 'soactioncolumn',
 						items: [
 							{
-								iconCls: 'fas fa-external-link-alt',
+								iconCls: 'wt-icon-open',
 								tooltip: WT.res('wtimpanel.act-openFriendChat.lbl'),
 								handler: function(g, ridx) {
 									var rec = g.getStore().getAt(ridx);
