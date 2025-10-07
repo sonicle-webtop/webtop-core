@@ -129,11 +129,18 @@ public class WTFormAuthFilter extends FormAuthenticationFilter {
 			// Legacy ClientID, in future this will be replaced by DeviceID!
 			prepareClientId(httpRequest, httpResponse, webtopSession.getSession());
 			
+			// Stores Client colorScheme as session's attribute
+			String colorScheme = ServletUtils.getStringParameter(request, "colorscheme", null);
+			if (colorScheme != null && !("light".equals(colorScheme) || "dark".equals(colorScheme))) colorScheme = null;
+			webtopSession.getSession().setAttribute(SessionManager.ATTRIBUTE_CLIENT_COLORSCHEME, StringUtils.defaultIfBlank(colorScheme, "light"));
+			if (LOGGER.isTraceEnabled()) LOGGER.trace("[{}] ColorScheme: {}", webtopSession.getId(), colorScheme);
+			
+			// Stores Client location as session's attribute
 			String location = ServletUtils.getStringParameter(request, "location", null);
 			if (location != null) {
 				String url = ServletHelper.sanitizeBaseUrl(location);
 				webtopSession.getSession().setAttribute(SessionManager.ATTRIBUTE_CLIENT_URL, url);
-				LOGGER.trace("[{}] Location: {}", webtopSession.getId(), url);
+				if (LOGGER.isTraceEnabled()) LOGGER.trace("[{}] Location: {}", webtopSession.getId(), url);
 			}
 			
 			doKnownDeviceVerification(profileId, httpRequest, webtopSession.getSession());

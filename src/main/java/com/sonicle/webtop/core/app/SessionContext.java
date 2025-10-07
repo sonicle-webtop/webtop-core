@@ -94,6 +94,10 @@ public class SessionContext {
 		return (session == null) ? null : (Locale)session.getAttribute(SessionManager.ATTRIBUTE_CLIENT_LOCALE);
 	}
 	
+	public static String getClientColorScheme(HttpSession session) {
+		return (session == null) ? null : (String)session.getAttribute(SessionManager.ATTRIBUTE_CLIENT_COLORSCHEME);
+	}
+	
 	public static String getClientPlainUserAgent(HttpSession session) {
 		return (session == null) ? null : (String)session.getAttribute(SessionManager.ATTRIBUTE_CLIENT_USERAGENT);
 	}

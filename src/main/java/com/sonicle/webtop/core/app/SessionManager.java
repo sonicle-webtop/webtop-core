@@ -96,6 +96,7 @@ public class SessionManager implements PushConnection.MessageStorage {
 	public static final String ATTRIBUTE_CLIENT_URL = "webtop.clientUrl";
 	public static final String ATTRIBUTE_REFERER_URI = "webtop.refererUri";
 	public static final String ATTRIBUTE_CLIENT_LOCALE = "webtop.clientLocale";
+	public static final String ATTRIBUTE_CLIENT_COLORSCHEME = "webtop.clientColorScheme";
 	public static final String ATTRIBUTE_CLIENT_USERAGENT = "webtop.clientUA";
 	public static final String ATTRIBUTE_WEBTOP_SESSION = "webtop.Session";
 	public static final String ATTRIBUTE_GUESSING_LOCALE = "Locale";
