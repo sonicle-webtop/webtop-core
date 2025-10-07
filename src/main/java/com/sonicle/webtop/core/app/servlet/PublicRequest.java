@@ -98,7 +98,7 @@ public class PublicRequest extends BaseRequest {
 		OutputStream os = null;
 
 		try {
-			String mimeType = ServletUtils.guessMimeType(resource.getFilename());
+			String mimeType = ServletUtils.guessMediaType(resource.getFilename());
 			ServletUtils.setContentTypeHeader(response, mimeType);
 			if (StringUtils.startsWith(mimeType, "image")) {
 				ServletUtils.setCacheControlPrivateMaxAge(response, 60*60*24);

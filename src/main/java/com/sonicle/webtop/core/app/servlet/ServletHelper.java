@@ -69,22 +69,21 @@ public class ServletHelper {
 		return (session != null) ? session.getId() : "";
 	}
 	
-	public static String guessMediaType(String filename) {
+	public static String guessMediaType(final String filename) {
 		return guessMediaType(filename, false);
 	}
 	
-	public static String guessMediaType(String filename, boolean fallback) {
-		String defaultMediaType=fallback?"application/octet-stream":null;
-		return guessMediaType(filename,defaultMediaType);
+	public static String guessMediaType(final String filename, final boolean fallback) {
+		return guessMediaType(filename, fallback ? "application/octet-stream" : null);
 	}
 	
-	public static String guessMediaType(String filename, String defaultMediaType) {
+	public static String guessMediaType(final String filename, final String defaultMediaType) {
 		String ext = FilenameUtils.getExtension(filename);
-		if(!StringUtils.isBlank(ext)) {
+		if (!StringUtils.isBlank(ext)) {
 			String mtype = WT.getOverriddenMediaType(ext);
-			if(mtype != null) return mtype;
+			if (mtype != null) return mtype;
 			mtype = ServletUtils.guessMediaType(filename);
-			if(mtype != null) return mtype;
+			if (mtype != null) return mtype;
 		}
 		return defaultMediaType;
 	}

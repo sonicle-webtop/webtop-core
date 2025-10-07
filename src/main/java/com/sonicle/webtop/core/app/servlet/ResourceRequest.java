@@ -345,7 +345,7 @@ public class ResourceRequest extends HttpServlet {
 			}
 			
 			Resource resFile = getFileResource(wta, resUrl);
-			StaticFile sf = new StaticFile(resUrl.toString(), getMimeType(targetPath), ClientCaching.NO, resFile);
+			StaticFile sf = new StaticFile(resUrl.toString(), getMediaType(resUrl.toString()), ClientCaching.NO, resFile);
 			sf.cacheLastModified = false;
 			return sf;
 			
@@ -673,6 +673,12 @@ public class ResourceRequest extends HttpServlet {
 
 	protected String getMimeType(String path) {
 		return LangUtils.coalesce(getServletContext().getMimeType(path), "application/octet-stream");
+	}
+	
+	protected String getMediaType(final String path) {
+		String mediaType = getServletContext().getMimeType(path);
+		if (StringUtils.isBlank(mediaType)) mediaType = ServletHelper.guessMediaType(FilenameUtils.getName(path));
+		return mediaType;
 	}
 
 	public static interface LookupResult {
