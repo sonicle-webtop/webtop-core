@@ -90,6 +90,7 @@ grep -l "#0E7490" * | while read fname; do echo "sedding $fname"; sed -i -e 's/#
     --wt-theme-menu-radius: 5px;
     --wt-theme-field-radius: 5px;
     --wt-theme-grid-radius: 5px;
+    --wt-theme-tab-radius: 5px;
     
     /* ---------- Ext.button.Button */
     --so-button-pressed-nostyle-color: var(--wt-theme-color-n1);

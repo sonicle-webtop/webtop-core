@@ -260,6 +260,24 @@ body > .x-mask {
 }
 
 /* ---------- Ext.tab.Panel */
+/* Add support to radius */
+.x-tab.x-tab-top {
+    border-top-left-radius: var(--wt-theme-tab-radius, 0px);
+    border-top-right-radius: var(--wt-theme-tab-radius, 0px);
+}
+.x-tab.x-tab-bottom {
+    border-bottom-left-radius: var(--wt-theme-tab-radius, 0px);
+    border-bottom-right-radius: var(--wt-theme-tab-radius, 0px);
+}
+.x-tab.x-tab-left {
+    border-top-left-radius: var(--wt-theme-tab-radius, 0px);
+    border-bottom-left-radius: var(--wt-theme-tab-radius, 0px);
+}
+.x-tab.x-tab-right {
+    border-top-right-radius: var(--wt-theme-tab-radius, 0px);
+    border-bottom-right-radius: var(--wt-theme-tab-radius, 0px);
+}
+
 /* Add bottom-line to selected tab */
 /* <-- USEFUL?
 .x-tab-active:before {
