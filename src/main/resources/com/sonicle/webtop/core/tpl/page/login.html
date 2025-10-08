@@ -138,20 +138,16 @@
                 const $form = $('form[name="login"]');
                 const $password = $('#wtpassword');
                 const $submit = $('#wtsubmit');
-                const syncSubmitState = () => { $submit.prop('disabled', !$form[0].checkValidity()); };
                 const guessLocation = () => { return window.location.href; };
                 const guessColorScheme = () => { return (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light'; };
                 
                 setTimeout(() => { $('#wtusername')[0].focus(); }, 100); // Initial focus
-                syncSubmitState(); // Initial submit state
                 
                 // Keep in sync password type and eye icon
                 $password.prev('i').on('click', function (e) {
                     $(e.target).toggleClass('fa-eye');
                     $password.attr('type', ($password.attr('type') === 'password') ? 'text' : 'password');
                 });
-                // Keep in sync submit button state
-                $('#wtusername, #wtpassword').on('input change', syncSubmitState);
                 // Track user interaction on :required inputs
                 $(':required').on('input blur keydown', function () {
                     const $el = $(this);
