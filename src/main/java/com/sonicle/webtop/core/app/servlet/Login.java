@@ -191,6 +191,7 @@ public class Login extends AbstractServlet {
 		vars.put("showDomain", showDomain);
 		vars.put("domains", showDomain ? domains : /* allow backward compatibility */ new ArrayList<>());
 		vars.put("showRememberMe", false);
+		vars.put("showPasswordReveal", false);
 		
 		Map i18n = new HashMap();
 		i18n.put("usernameLabel", wta.lookupResource(locale, CoreLocaleKey.TPL_LOGIN_USERNAME_LABEL, true));
