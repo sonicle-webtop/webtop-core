@@ -266,7 +266,7 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainLicenses', {
 					xtype: 'soactioncolumn',
 					items: [
 						{
-							iconCls: 'wtadm-glyph-user-add',
+							iconCls: 'wt-icon-useradd',
 							tooltip: me.mys.res('act-assignLicenseLease.lbl'),
 							handler: function(view, ridx, cidx, itm, e, rec) {
 								me.assignLicenseLeaseUI(rec);
@@ -280,7 +280,7 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainLicenses', {
 								return true;
 							}
 						}, {
-							iconCls: 'wtadm-glyph-licence-activate',
+							iconCls: 'wt-icon-lock',
 							tooltip: me.mys.res('act-activateLicense.lbl'),
 							handler: function(view, ridx, cidx, itm, e, rec) {
 								me.activateLicenseUI(rec);
@@ -290,12 +290,12 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainLicenses', {
 								return rec.isActivated();
 							},
 							getClass: function(v, meta, rec) {
-								var cls = 'wtadm-glyph-licence-activate ';
+								var cls = 'wt-icon-lock ';
 								if (rec.isActivated()) cls += (Ext.baseCSSPrefix + 'hidden-display');
 								return cls;
 							}
 						}, {
-							iconCls: 'wtadm-glyph-licence-deactivate',
+							iconCls: 'wt-icon-unlock',
 							tooltip: me.mys.res('act-deactivateLicense.lbl'),
 							handler: function(view, ridx, cidx, itm, e, rec) {
 								me.deactivateLicenseUI(rec);
@@ -305,12 +305,12 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainLicenses', {
 								return !rec.isActivated();
 							},
 							getClass: function(v, meta, rec) {
-								var cls = 'wtadm-glyph-licence-deactivate ';
+								var cls = 'wt-icon-unlock ';
 								if (!rec.isActivated()) cls += (Ext.baseCSSPrefix + 'hidden-display');
 								return cls;
 							}
 						}, {
-							iconCls: 'wt-glyph-edit',
+							iconCls: 'wt-icon-edit',
 							tooltip: me.mys.res('act-changeLicense.lbl'),
 							handler: function(view, ridx, cidx, itm, e, rec) {
 								me.changeLicenseUI(rec);
@@ -319,7 +319,7 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainLicenses', {
 								return rec.isBuiltIn();
 							}
 						}, {
-							iconCls: 'wt-glyph-delete',
+							iconCls: 'wt-icon-trash',
 							tooltip: WT.res('act-remove.lbl'),
 							handler: function(view, ridx, cidx, itm, e, rec) {
 								me.deleteLicenseUI(rec);
@@ -359,7 +359,7 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainLicenses', {
 								xtype: 'soactioncolumn',
 								items: [
 									{
-										iconCls: 'fas fa-user-times',
+										iconCls: 'wt-icon-userdel',
 										tooltip: me.mys.res('act-revokeLicenseLease.lbl'),
 										handler: function(g, ridx) {
 											var rec = g.getStore().getAt(ridx);

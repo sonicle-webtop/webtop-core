@@ -155,28 +155,28 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainDataSources', {
 					xtype: 'soactioncolumn',
 					items: [
 						{
-							iconCls: 'far fa-plus-square',
+							iconCls: 'wt-icon-add',
 							tooltip: me.res('domainDataSources.act-addDataSourceQuery.tip'),
 							handler: function(g, ridx) {
 								var rec = g.getStore().getAt(ridx);
 								me.addQueryUI(rec);
 							}
 						}, {
-							iconCls: 'fas fa-bolt',
+							iconCls: 'wt-icon-bolt',
 							tooltip: me.res('domainDataSources.act-testConnection.tip'),
 							handler: function(g, ridx) {
 								var rec = g.getStore().getAt(ridx);
 								me.testDataSourceUI(rec);
 							}
 						}, {
-							iconCls: 'fas fa-edit',
+							iconCls: 'wt-icon-edit',
 							tooltip: WT.res('act-edit.lbl'),
 							handler: function(g, ridx) {
 								var rec = g.getStore().getAt(ridx);
 								me.editDataSourceUI(rec);
 							}
 						}, {
-							iconCls: 'fas fa-trash',
+							iconCls: 'wt-icon-trash',
 							tooltip: WT.res('act-remove.lbl'),
 							handler: function(g, ridx) {
 								var rec = g.getStore().getAt(ridx);

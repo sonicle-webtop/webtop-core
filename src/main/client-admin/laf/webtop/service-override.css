@@ -1,0 +1,8 @@
+/* ---------- Icons (service) */
+.wtadm-icon-service,
+.wtadm-icon-service-sm { background-image: url('service-on@sm.svg') !important; background-size: contain; }
+.wtadm-icon-service-off-sm { background-image: url('service-off@sm.svg') !important; background-size: contain; }
+.wtadm-icon-service-md { background-image: url('service-on@md.svg') !important; background-size: contain; }
+.wtadm-icon-service-off-md { background-image: url('service-off@md.svg') !important; background-size: contain; }
+.wtadm-icon-service-lg { background-image: url('service-on@lg.svg') !important; background-size: contain; }
+.wtadm-icon-service-off-lg { background-image: url('service-off@lg.svg') !important; background-size: contain; }

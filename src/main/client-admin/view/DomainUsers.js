@@ -155,7 +155,7 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainUsers', {
 					xtype: 'soactioncolumn',
 					items: [
 						{
-							iconCls: 'fas fa-key',
+							iconCls: 'wt-icon-password',
 							tooltip: WT.res('act-changePassword.lbl'),
 							hidden: !me.dirCapPasswordWrite,
 							isActionDisabled: function(s, ridx, cidx, itm, rec) {
@@ -166,7 +166,7 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainUsers', {
 								me.changePasswordUI(rec);
 							}
 						}, {
-							iconCls: 'fas fa-user-plus',
+							iconCls: 'wt-icon-useradd',
 							tooltip: WT.res('act-add.lbl'),
 							isActionHidden: function(s, ridx, cidx, itm, rec) {
 								return rec.get('exist');
@@ -179,7 +179,7 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainUsers', {
 								me.addUserUI(rec);
 							}
 						}, {
-							iconCls: 'wt-glyph-edit',
+							iconCls: 'wt-icon-edit',
 							tooltip: WT.res('act-edit.lbl'),
 							isActionHidden: function(s, ridx, cidx, itm, rec) {
 								return !rec.get('exist');
@@ -192,7 +192,7 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainUsers', {
 								me.editUserUI(rec);
 							}
 						}, {
-							iconCls: 'fas fa-cog',
+							iconCls: 'wt-icon-settings',
 							tooltip: WT.res('opts.tit'),
 							isActionDisabled: function(s, ridx, cidx, itm, rec) {
 								return !rec.get('exist');
@@ -202,7 +202,7 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainUsers', {
 								me.editOptionsUI(rec);
 							}
 						}, {
-							iconCls: 'wt-glyph-delete',
+							iconCls: 'wt-icon-trash',
 							tooltip: WT.res('act-remove.lbl'),
 							isActionDisabled: function(s, ridx, cidx, itm, rec) {
 								return !rec.get('exist');

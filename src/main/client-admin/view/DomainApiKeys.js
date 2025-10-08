@@ -126,14 +126,14 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainApiKeys', {
 					xtype: 'soactioncolumn',
 					items: [
 						{
-							iconCls: 'fas fa-edit',
+							iconCls: 'wt-icon-edit',
 							tooltip: WT.res('act-edit.lbl'),
 							handler: function(g, ridx) {
 								var rec = g.getStore().getAt(ridx);
 								me.editApiKeyUI(rec);
 							}
 						}, {
-							iconCls: 'fas fa-trash',
+							iconCls: 'wt-icon-trash',
 							tooltip: WT.res('act-remove.lbl'),
 							handler: function(g, ridx) {
 								var rec = g.getStore().getAt(ridx);

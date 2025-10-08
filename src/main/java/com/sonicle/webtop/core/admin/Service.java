@@ -412,7 +412,7 @@ public class Service extends BaseService {
 							children.add(createDomainChildNode(nodeId, NID_SETTINGS, "dsettings", "wtadm-icon-settings", null, null, null));
 							children.add(createDomainChildNode(nodeId, NID_GROUPS, "dgroups", "wtadm-icon-groups", null, null, null));
 							children.add(createDomainChildNode(nodeId, NID_USERS, "dusers", "wtadm-icon-users", null, null, null));
-							children.add(createDomainChildNode(nodeId, NID_RESOURCES, "dresources", "wt-icon-resources", null, null, null));
+							children.add(createDomainChildNode(nodeId, NID_RESOURCES, "dresources", "wtadm-icon-resources", null, null, null));
 							children.add(createDomainChildNode(nodeId, NID_ROLES, "droles", "wtadm-icon-roles", null, null, null));
 							children.add(createDomainChildNode(nodeId, NID_LICENSES, "dlicenses", "wtadm-icon-licenses", null, null, null));
 							children.add(createDomainChildNode(nodeId, NID_DATASOURCES, "ddatasources", "wtadm-icon-dataSources", null, null, null));

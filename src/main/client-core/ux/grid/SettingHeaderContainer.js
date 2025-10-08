@@ -82,7 +82,7 @@ Ext.define('Sonicle.webtop.core.ux.grid.SettingHeaderContainer', {
 					xtype: 'soactioncolumn',
 					items: [
 						{
-							iconCls: 'wt-glyph-delete',
+							iconCls: 'wt-icon-trash',
 							tooltip: gp.removeText,
 							handler: function(view, ridx, cidx, itm, e, rec) {
 								WT.confirmRemove(Ext.String.format(gp.confirmRemoveText, rec.get(gp.keyField)), function(bid) {

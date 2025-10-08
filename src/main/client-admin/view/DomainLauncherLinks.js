@@ -140,7 +140,7 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainLauncherLinks', {
 					xtype: 'soactioncolumn',
 					items: [
 						{
-							iconCls: 'wt-glyph-delete',
+							iconCls: 'wt-icon-trash',
 							tooltip: WT.res('act-remove.lbl'),
 							handler: function(view, ridx, cidx, itm, e, rec) {
 								me.deleteLauncherLinkUI(rec);
