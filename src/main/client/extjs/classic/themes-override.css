@@ -157,6 +157,15 @@ body {
     cursor: pointer;
 }
 
+/* ---------- Ext.view.BoundList */
+/* Add style to emty list */
+.x-boundlist .x-list-plain:not(:has(li)) {
+    text-align: center;
+    color: var(--wt-theme-color-3);
+    padding-top: 5px;
+    padding-bottom: 5px;
+}
+
 /* ---------- Sonicle.fullcalendar.Panel */
 .so-fullcalendar-panel-toolbar-hdtext {
     font-weight: var(--wt-theme-fontweight-regular);
