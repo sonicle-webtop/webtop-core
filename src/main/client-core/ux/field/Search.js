@@ -89,6 +89,13 @@ Ext.define('Sonicle.webtop.core.ux.field.Search', {
 	 * @param {Object} queryObject queryObject Query exploded into components
      */
 	
+	/**
+	 * @cfg {String} [favoritesEmptyText]
+	 */
+	
+	favoritesButton: true,
+	favoritesIconCls: 'fas fa-star wt-opacity-70',
+	
 	constructor: function(cfg) {
 		var me = this;
 		
@@ -110,8 +117,20 @@ Ext.define('Sonicle.webtop.core.ux.field.Search', {
 		if (Ext.isEmpty(cfg.usageText)) {
 			cfg.usageText = WT.res('wtsearchfield.usage');
 		}
+		if (Ext.isEmpty(cfg.saveText)) {
+			cfg.saveText = WT.res('wtsearchfield.save.lbl');
+		}
 		if (Ext.isEmpty(cfg.saveTooltip)) {
-			cfg.saveTooltip = WT.res('wtsearchfield.save');
+			cfg.saveTooltip = WT.res('wtsearchfield.save.tip');
+		}
+		if (Ext.isEmpty(cfg.favoritesText)) {
+			cfg.favoritesText = WT.res('wtsearchfield.favorites');
+		}
+		if (Ext.isEmpty(cfg.favoritesResultsEmptyText)) {
+			cfg.favoritesResultsEmptyText = WT.res('wtsearchfield.favorites.results.emp');
+		}
+		if (Ext.isEmpty(cfg.queryResultsEmptyText)) {
+			cfg.queryResultsEmptyText = WT.res('wtsearchfield.query.results.emp');
 		}
 		me.callParent([cfg]);
 	},
@@ -156,17 +175,6 @@ Ext.define('Sonicle.webtop.core.ux.field.Search', {
 		
 		me.callParent(arguments);
 		//me.listConfig.disableFocusSaving = true;
-		if (save) {
-			me.on('save', me.onSaveQuery, me);
-		}
-	},
-	
-	destroy: function() {
-		var me = this;
-		if (me.saveQueryEnabled) {
-			me.un('save', me.onSaveQuery, me);
-		}
-		me.callParent();
 	},
 	
 	/**
@@ -271,30 +279,41 @@ Ext.define('Sonicle.webtop.core.ux.field.Search', {
 	},
 	
 	privates: {
-		onSaveQuery: function(s, value, qObj) {
-			var me = this;
-			me.suspendInputFocusing++;
-			if (Ext.isEmpty(value)) {
-				WT.warn(WT.res('wtsearchfield.error.query.save.empty'));
-			} else {
-				WT.prompt(WT.res('wtsearchfield.prompt.query.save.lbl'), {
-					title: WT.res('wtsearchfield.prompt.query.save.tit'),
-					value: '',
-					fn: function(bid, name, cfg) {
-						me.suspendInputFocusing--;
-						if (bid === 'ok') {
-							if (Ext.isEmpty(name)) {
-								Ext.MessageBox.show(Ext.apply({}, {msg: cfg.msg}, cfg));
-							} else {
-								me.saveQuery(name, value, {
-									callback: function(success, data, json) {
-										WT.handleError(success, json);
-									}
-								});
-							}	
+		fireSave: function(value, queryObject) {
+			var me = this,
+				// Note that .callParent(arguments) will not work in callbacks: dump its content here!
+				parentArguments = arguments,
+				parentMethod = me.getParentMethod();
+			
+			if (me.saveQueryEnabled) {
+				me.suspendInputFocusing++;
+				if (Ext.isEmpty(value)) {
+					WT.warn(WT.res('wtsearchfield.error.query.save.empty'));
+				} else {
+					WT.prompt(WT.res('wtsearchfield.prompt.query.save.lbl'), {
+						title: WT.res('wtsearchfield.prompt.query.save.tit'),
+						value: '',
+						fn: function(bid, name, cfg) {
+							me.suspendInputFocusing--;
+							if (bid === 'ok') {
+								if (Ext.isEmpty(name)) {
+									Ext.MessageBox.show(Ext.apply({}, {msg: cfg.msg}, cfg));
+								} else {
+									me.saveQuery(name, value, {
+										callback: function(success, data, json) {
+											WT.handleError(success, json);
+											if (success) {
+												parentMethod.apply(me, parentArguments);
+											}
+										}
+									});
+								}	
+							}
 						}
-					}
-				});
+					});
+				}
+			} else {
+				parentMethod.apply(me, parentArguments);
 			}
 		},
 		
