@@ -238,7 +238,7 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainAccessLog', {
 								xtype: 'soactioncolumn',
 								items: [
 									{
-										iconCls: 'wt-glyph-earth',
+										iconCls: 'wt-icon-internet',
 										tooltip: me.mys.res('domainAccessLog.gp.act-geolocateIp.tip'),
 										handler: function(g, ridx) {
 											var sto = g.getStore(),
@@ -262,7 +262,7 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainAccessLog', {
 											return !rec.get('isAddressPublic');
 										}
 									}, {
-										iconCls: 'wt-glyph-clipboard-copy',
+										iconCls: 'wt-icon-copy',
 										tooltip: me.mys.res('domainAccessLog.gp.act-copy.tip'),
 										handler: function(g, ridx) {
 											var rec = g.getStore().getAt(ridx);

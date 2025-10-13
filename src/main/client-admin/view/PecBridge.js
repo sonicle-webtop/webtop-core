@@ -152,7 +152,7 @@ Ext.define('Sonicle.webtop.core.admin.view.PecBridge', {
 						xtype: 'soactioncolumn',
 						items: [
 							{
-								iconCls: 'wt-glyph-delete',
+								iconCls: 'wt-icon-trash',
 								tooltip: WT.res('act-remove.lbl'),
 								handler: function(view, ridx, cidx, itm, e, rec) {
 									me.deleteFetcherUI(rec);
@@ -261,7 +261,7 @@ Ext.define('Sonicle.webtop.core.admin.view.PecBridge', {
 						xtype: 'soactioncolumn',
 						items: [
 							{
-								iconCls: 'wt-glyph-delete',
+								iconCls: 'wt-icon-trash',
 								tooltip: WT.res('act-remove.lbl'),
 								handler: function(view, ridx, cidx, itm, e, rec) {
 									me.deleteRelayUI(rec);

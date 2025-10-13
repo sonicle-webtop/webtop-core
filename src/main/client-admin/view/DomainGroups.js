@@ -107,14 +107,14 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainGroups', {
 					xtype: 'soactioncolumn',
 					items: [
 						{
-							iconCls: 'wt-glyph-edit',
+							iconCls: 'wt-icon-edit',
 							tooltip: WT.res('act-edit.lbl'),
 							handler: function(g, ridx) {
 								var rec = g.getStore().getAt(ridx);
 								me.editGroupUI(rec);
 							}
 						}, {
-							iconCls: 'wt-glyph-delete',
+							iconCls: 'wt-icon-trash',
 							tooltip: WT.res('act-remove.lbl'),
 							handler: function(g, ridx) {
 								var rec = g.getStore().getAt(ridx);

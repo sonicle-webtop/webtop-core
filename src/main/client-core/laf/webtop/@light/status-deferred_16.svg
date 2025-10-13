@@ -1,14 +1,9 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!-- Generator: Adobe Illustrator 19.0.0, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->
-<svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
-	 viewBox="-289 412.9 16 16" style="enable-background:new -289 412.9 16 16;" xml:space="preserve">
-<style type="text/css">
-	.st0{fill:#E9B665;}
-	.st1{fill:#FFFFFF;}
-</style>
-<g id="icon">
-	<path class="st0" d="M-281,413c-4.4,0-7.9,3.5-7.9,7.9c0,4.4,3.5,7.9,7.9,7.9s7.9-3.5,7.9-7.9C-273.1,416.5-276.6,413-281,413z"/>
-</g>
-<path class="st1" d="M-275.7,419.8h-4.1v-5c0-0.2-0.2-0.4-0.4-0.4h-1.4c-0.2,0-0.4,0.2-0.4,0.4v5.4v1.4v0c0,0.2,0.2,0.4,0.4,0.4h0
-	h1.4h4.6c0.2,0,0.4-0.2,0.4-0.4v-1.4C-275.3,419.9-275.5,419.8-275.7,419.8z"/>
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" width="16px" height="16px" viewBox="0 0 16 16" enable-background="new 0 0 16 16" xml:space="preserve">
+  <g id="icon">
+    <circle cx="8.5" cy="8.5" r="6" fill="#F5F5F5"/>
+    <path d="M8.5,15c-3.5841,0,-6.5,-2.9159,-6.5,-6.5s2.9159,-6.5,6.5,-6.5s6.5,2.9159,6.5,6.5S12.0841,15,8.5,15zM8.5,2.9909c-3.0377,0,-5.5091,2.4714,-5.5091,5.5091S5.4623,14.0091,8.5,14.0091S14.0091,11.5378,14.0091,8.5S11.5378,2.9909,8.5,2.9909z" fill="#F59E0B"/>
+    <path d="M8,4.6627c0,-0.2078,0.135,-0.3996,0.3369,-0.4489c0.2757,-0.0673,0.6244,0.1201,0.659,0.3751L9,4.65V8l2.2373,0c0.2078,0,0.3996,0.135,0.4488,0.3369c0.0673,0.2757,-0.12,0.6244,-0.3752,0.659L11.25,9h-2.8c-0.2277,0,-0.4161,-0.1694,-0.4459,-0.389L8,8.45L8,4.6627z" fill="#F59E0B"/>
+  </g>
 </svg>

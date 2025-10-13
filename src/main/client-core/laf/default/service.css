@@ -88,7 +88,7 @@
 .wt-icon-resources { background-image: url('resource_16.svg') !important; background-size: contain; }
 .wt-icon-resource { background-image: url('resource_16.svg') !important; background-size: contain; }
 .wt-icon-resource-room { background-image: url('resource-room_16.svg') !important; background-size: contain; }
-.wt-icon-resource-equipment { background-image: url('resource-room_16.svg') !important; background-size: contain; }
+.wt-icon-resource-equipment { background-image: url('resource-equipment_16.svg') !important; background-size: contain; }
 .wt-icon-tags { background-image: url('tags_16.svg') !important; background-size: contain; }
 .wt-icon-tag { background-image: url('tag_16.svg') !important; background-size: contain; }
 /* ---------- Icons (glyphs) */
@@ -134,6 +134,14 @@
 .wt-icon-edit { background-image: url('act-edit_16.svg') !important; background-size: contain; }
 .wt-icon-cancel { background-image: url('act-cancel_16.svg') !important; background-size: contain; }
 .wt-icon-trash { background-image: url('act-trash_16.svg') !important; background-size: contain; }
+.wt-icon-password { background-image: url('act-password_16.svg') !important; background-size: contain; }
+.wt-icon-useradd { background-image: url('act-useradd_16.svg') !important; background-size: contain; }
+.wt-icon-userdel { background-image: url('act-userdel_16.svg') !important; background-size: contain; }
+.wt-icon-settings { background-image: url('act-settings_16.svg') !important; background-size: contain; }
+.wt-icon-lock { background-image: url('act-lock_16.svg') !important; background-size: contain; }
+.wt-icon-unlock { background-image: url('act-unlock_16.svg') !important; background-size: contain; }
+.wt-icon-bolt { background-image: url('act-bolt_16.svg') !important; background-size: contain; }
+.wt-icon-internet { background-image: url('act-internet_16.svg') !important; background-size: contain; }
 .wt-icon-remove { background-image: url('act-remove_16.svg') !important; background-size: contain; }
 .wt-icon-delete { background-image: url('act-delete_16.svg') !important; background-size: contain; }
 .wt-icon-clone { background-image: url('act-clone_16.svg') !important; background-size: contain; }
@@ -151,8 +159,8 @@
 .wt-icon-attach { background-image: url('act-attach_16.svg') !important; background-size: contain; }
 .wt-icon-search { background-image: url('act-search_16.svg') !important; background-size: contain; }
 .wt-icon-block { background-image: url('act-block_16.svg') !important; background-size: contain; }
-.wt-icon-lock { background-image: url('padlock-close_16.svg') !important; background-size: contain; }
-.wt-icon-unlock { background-image: url('padlock-open_16.svg') !important; background-size: contain; }
+/*.wt-icon-lock { background-image: url('padlock-close_16.svg') !important; background-size: contain; }
+.wt-icon-unlock { background-image: url('padlock-open_16.svg') !important; background-size: contain; }*/
 .wt-icon-save { background-image: url('save_16.svg') !important; background-size: contain; }
 .wt-icon-saveClose { background-image: url('saveclose_16.svg') !important; background-size: contain; }
 .wt-icon-saveAdd { background-image: url('saveadd_16.svg') !important; background-size: contain; }

@@ -43,6 +43,7 @@
 .wtadm-icon-group { background-image: url('group_16.svg') !important; background-size: contain; }
 .wtadm-icon-users { background-image: url('user_16.svg') !important; background-size: contain; }
 .wtadm-icon-user { background-image: url('user_16.svg') !important; background-size: contain; }
+.wtadm-icon-resources { background-image: url('resource_16.svg') !important; background-size: contain; }
 .wtadm-icon-roles { background-image: url('role_16.svg') !important; background-size: contain; }
 .wtadm-icon-role { background-image: url('role_16.svg') !important; background-size: contain; }
 .wtadm-icon-launcherLinks { background-image: url('launcherLink_16.svg') !important; background-size: contain; }

@@ -104,13 +104,13 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainRoles', {
 					xtype: 'soactioncolumn',
 					items: [
 						{
-							iconCls: 'wt-glyph-edit',
+							iconCls: 'wt-icon-edit',
 							tooltip: WT.res('act-edit.lbl'),
 							handler: function(view, ridx, cidx, itm, e, rec) {
 								me.editRoleUI(rec);
 							}
 						}, {
-							iconCls: 'wt-glyph-delete',
+							iconCls: 'wt-icon-trash',
 							tooltip: WT.res('act-remove.lbl'),
 							handler: function(view, ridx, cidx, itm, e, rec) {
 								me.deleteRoleUI(rec);
