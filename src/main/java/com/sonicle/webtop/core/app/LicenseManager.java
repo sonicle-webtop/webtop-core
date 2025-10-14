@@ -461,8 +461,6 @@ public class LicenseManager extends AbstractAppManager<LicenseManager> {
 	}
 	
 	private LicenseExInfo doLicenseGetExtendedInfo(ServiceLicense serviceLicense, BaseServiceProduct serviceProduct, ProductLicense productLicense, final String hardwareID) {
-		BitFlags<LicenseComputedStatus> status = BitFlags.noneOf(LicenseComputedStatus.class);
-		
 		if (!StringUtils.isBlank(serviceProduct.getBuiltInLicenseString())) productLicense.setCustomHardwareId(serviceProduct.getBuiltInHardwareId());
 		productLicense.setLicenseString(serviceLicense.getLicenseString());
 		productLicense.setActivationCustomHardwareId(hardwareID);
@@ -470,6 +468,13 @@ public class LicenseManager extends AbstractAppManager<LicenseManager> {
 		
 		LicenseInfo li = productLicense.validate(true);
 		LicenseInfo ali = productLicense.validate(false);
+		BitFlags<LicenseComputedStatus> status = doGetLicenseComputedStatus(li, ali);
+		
+		return new LicenseExInfo(li.getHardwareID(), LicenseExInfo.buildRegisteredTo(li), status);
+	}
+	
+	private BitFlags<LicenseComputedStatus> doGetLicenseComputedStatus(final LicenseInfo li, final LicenseInfo ali) {
+		BitFlags<LicenseComputedStatus> status = BitFlags.noneOf(LicenseComputedStatus.class);
 		
 		///////////////////////////
 		//valid = (li.getLicenseID() == ali.getLicenseID()) && ali.isValid();
@@ -485,10 +490,17 @@ public class LicenseManager extends AbstractAppManager<LicenseManager> {
 				status.set(LicenseComputedStatus.PENDING_ACTIVATION);
 			}
 			if (li.isValid() && ali.isValid() && ali.isActivationCompleted() && li.getLicenseID() == ali.getLicenseID()) {
-				if (li.isValid()) status.set(LicenseComputedStatus.VALID);
+				status.set(LicenseComputedStatus.VALID);
+			}
+			if (!li.isValid() || !ali.isValid() || (li.getLicenseID() != ali.getLicenseID())) {
+				status.set(LicenseComputedStatus.VALIDATION_ERROR);
 			}
 		} else {
-			if (li.isValid()) status.set(LicenseComputedStatus.VALID);
+			if (li.isValid()) {
+				status.set(LicenseComputedStatus.VALID);
+			} else {
+				status.set(LicenseComputedStatus.VALIDATION_ERROR);
+			}
 		}
 		if (li.isExpired()) {
 			status.set(LicenseComputedStatus.EXPIRED);
@@ -497,7 +509,7 @@ public class LicenseManager extends AbstractAppManager<LicenseManager> {
 			status.set(LicenseComputedStatus.EXPIRE_SOON);
 		}
 		
-		return new LicenseExInfo(li.getHardwareID(), LicenseExInfo.buildRegisteredTo(li), status);
+		return status;
 	}
 	
 	public final BitFlags<LicenseComputedStatus> getLicenseStatus(final String domainId, final String productCode, final String hardwareID) throws WTException {
@@ -521,9 +533,6 @@ public class LicenseManager extends AbstractAppManager<LicenseManager> {
 		}
 		if (serviceLicense == null) throw new WTNotFoundException("Unknown product [{}]", productCode);
 		
-		// Analyze status...
-		BitFlags<LicenseComputedStatus> status = BitFlags.noneOf(LicenseComputedStatus.class);
-		
 		if (!StringUtils.isBlank(product.getBuiltInLicenseString())) productLicense.setCustomHardwareId(product.getBuiltInHardwareId());
 		productLicense.setLicenseString(serviceLicense.getLicenseString());
 		productLicense.setActivationCustomHardwareId(hardwareID);
@@ -532,33 +541,7 @@ public class LicenseManager extends AbstractAppManager<LicenseManager> {
 		LicenseInfo li = productLicense.validate(true);
 		LicenseInfo ali = productLicense.validate(false);
 		
-		///////////////////////////
-		//valid = (li.getLicenseID() == ali.getLicenseID()) && ali.isValid();
-		//activated = ali.isActivationCompleted();
-		//expired = li.isExpired();
-		//expireSoon = li.isExpiringSoon();
-		///////////////////////////
-		
-		if (li.isActivationRequired()) {
-			if (ali.isActivationCompleted()) {
-				status.set(LicenseComputedStatus.ACTIVATED);
-			} else {
-				status.set(LicenseComputedStatus.PENDING_ACTIVATION);
-			}
-			if (li.isValid() && ali.isValid() && ali.isActivationCompleted() && li.getLicenseID() == ali.getLicenseID()) {
-				if (li.isValid()) status.set(LicenseComputedStatus.VALID);
-			}
-		} else {
-			if (li.isValid()) status.set(LicenseComputedStatus.VALID);
-		}
-		if (li.isExpired()) {
-			status.set(LicenseComputedStatus.EXPIRED);
-		}
-		if (li.isExpiringSoon()) {
-			status.set(LicenseComputedStatus.EXPIRE_SOON);
-		}
-		
-		return status;
+		return doGetLicenseComputedStatus(li, ali);
 	}
 	
 	public void addLicense(final String domainId, final String productCode, final LicenseBase license, final boolean autoActivate) throws WTException {
@@ -661,6 +644,16 @@ public class LicenseManager extends AbstractAppManager<LicenseManager> {
 		}
 	}
 	
+	/**
+	 * Deletes the Licence for the specified Product Code.
+	 * An exception is thrown in case of invalid license status, 
+	 * use <code>force<code> param appropriately to ignore problems 
+	 * and proceed to deletion.
+	 * @param domainId The domain ID for which the licence is associated.
+	 * @param productCode The Product to which the License refers to.
+	 * @param force Set to `true` to skip validation and activations checks before deletion.
+	 * @throws WTException If the license is not valid or is still activated.
+	 */
 	public void deleteLicense(final String domainId, final String productCode, final boolean force) throws WTException {
 		Check.notEmpty(domainId, "domainId");
 		Check.notEmpty(productCode, "productCode");
@@ -672,8 +665,10 @@ public class LicenseManager extends AbstractAppManager<LicenseManager> {
 			ProductLicense productLicense = getProductLicenseOrThrow(product);
 			
 			LicenseInfo li = productLicense.validate(true);
-			if (li.isInvalid()) throw new WTLicenseValidationException(li);
 			if (!force) {
+				// License can be invalid if HwID does not match or is changed over the time.
+				// Since we are deleting, we can safely check validity only if forced = true
+				if (li.isInvalid()) throw new WTLicenseValidationException(li);
 				li = productLicense.validate(false);
 				if (li.isActivationCompleted()) throw new WTException("License is activated, deactivate it before proceed.");
 			}
@@ -682,8 +677,8 @@ public class LicenseManager extends AbstractAppManager<LicenseManager> {
 			licDao.delete(con, domainId, product.SERVICE_ID, productCode);
 			forgetProductLicense(domainId, product.SERVICE_ID, productCode);
 			
-		} catch(Throwable t) {
-			throw ExceptionUtils.wrapThrowable(t);
+		} catch (Exception ex) {
+			throw ExceptionUtils.wrapThrowable(ex);
 		} finally {
 			DbUtils.closeQuietly(con);
 		}

@@ -1138,7 +1138,7 @@ public class Service extends BaseService {
 				}
 				
 			} else if (crud.equals(Crud.DELETE)) {
-				admMgr.deleteLicense(prodId.getProductCode(), false);				
+				admMgr.deleteLicense(prodId.getProductCode(), true);		
 				new JsonResult().printTo(out);
 				
 			} else if ("actreqinfo".equals(crud)) {
