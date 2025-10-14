@@ -134,7 +134,7 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainLicenses', {
 								return 'wt-icon-ok';
 							}
 						} else if (rec.isActivationPening()) {
-							return 'wt-icon-ok-warning';
+							return 'wt-icon-ok-with-warning';
 						} else { // invalid...
 							return 'wt-icon-critical';
 						}
@@ -168,7 +168,7 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainLicenses', {
 							case 'valid-warn':
 								return 'wt-icon-ok-with-warning';
 							case 'pending':
-								return 'wt-icon-ok-warning';
+								return 'wt-icon-ok-with-warning';
 							default:
 								return 'wt-icon-critical';
 						}
