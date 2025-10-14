@@ -33,6 +33,7 @@
  */
 package com.sonicle.webtop.core.admin.bol.js;
 
+import com.sonicle.commons.time.DateTimeUtils;
 import com.sonicle.commons.time.JodaTimeUtils;
 import com.sonicle.webtop.core.app.ProductRegistry;
 import com.sonicle.webtop.core.model.ProductId;
@@ -56,6 +57,7 @@ public class JsGridDomainLicense {
 	public String productName;
 	public long status;
 	public String expiry;
+	public Boolean expired;
 	public String hwId;
 	public String regTo;
 	public Boolean autoLease;
@@ -85,8 +87,12 @@ public class JsGridDomainLicense {
 			regTo = license.getExtendedInfo().getRegisteredTo();
 		}
 		
+		expired = false;
 		LocalDate expiryDate = license.getExpirationDate();
-		if (expiryDate != null) expiry = JodaTimeUtils.createFormatterYMD(profileTz).print(expiryDate);
+		if (expiryDate != null) {
+			expiry = JodaTimeUtils.createFormatterYMD(profileTz).print(expiryDate);
+			expired = JodaTimeUtils.now().withTimeAtStartOfDay().toLocalDate().isAfter(expiryDate);
+		}
 		quantityTypeUsers = bsp.isLicenseQuantityTypeUsers();
 		quantityType = bsp.getLicenseQuantityType();
 		if (license.getQuantity() != null) maxLease = license.getQuantity();

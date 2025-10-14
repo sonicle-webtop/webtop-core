@@ -103,6 +103,11 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainLicenses', {
 					}
 				})
 			},
+			viewConfig: {
+				getRowClass: function(rec) {
+					return rec.get('expired') ? 'wt-color-error' : '';
+				}
+			},
 			columns: [
 				{
 					xtype: 'rownumberer'	
@@ -290,8 +295,8 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainLicenses', {
 								return rec.isActivated();
 							},
 							getClass: function(v, meta, rec) {
-								var cls = 'wt-icon-lock ';
-								if (rec.isActivated()) cls += (Ext.baseCSSPrefix + 'hidden-display');
+								var cls = 'wt-icon-lock';
+								if (rec.isActivated()) cls += (' ' + Ext.baseCSSPrefix + 'hidden-display');
 								return cls;
 							}
 						}, {

@@ -46,6 +46,7 @@ Ext.define('Sonicle.webtop.core.admin.model.GridDomainLicenses', {
 		WTF.roField('productName', 'string'),
 		WTF.roField('status', 'int'),
 		WTF.roField('expiry', 'date', false, {dateFormat: 'Y-m-d'}),
+		WTF.roField('expired', 'boolean'),
 		WTF.roField('maxLease', 'int'),
 		WTF.roField('hwId', 'string'),
 		WTF.roField('regTo', 'string'),
