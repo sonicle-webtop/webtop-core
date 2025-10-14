@@ -54,6 +54,7 @@ Ext.define('Sonicle.webtop.core.admin.view.ApiKey', {
 	},
 	focusField: {'new': 'fldname', 'edit': 'fldname'},
 	actionsResPrefix: 'apiKey',
+	autoToolbar: false,
 	
 	/**
 	 * @cfg {String} domainId
@@ -73,6 +74,11 @@ Ext.define('Sonicle.webtop.core.admin.view.ApiKey', {
 	
 	initComponent: function() {
 		var me = this;
+		Ext.apply(me, {
+			buttons: [
+				me.addAct('saveClose', me.createSaveCloseActionCfg())
+			]
+		});
 		me.callParent(arguments);
 		
 		me.add({
