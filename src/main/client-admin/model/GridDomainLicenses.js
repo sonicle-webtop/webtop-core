@@ -88,6 +88,10 @@ Ext.define('Sonicle.webtop.core.admin.model.GridDomainLicenses', {
 		return (this.get('status') & 16) === 16;
 	},
 	
+	isValidationError: function() {
+		return (this.get('status') & 32) === 32;
+	},
+	
 	/*
 	getStatus: function() {
 		var me = this;

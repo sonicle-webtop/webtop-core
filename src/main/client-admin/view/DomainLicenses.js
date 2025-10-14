@@ -132,7 +132,9 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainLicenses', {
 					dataIndex: 'status',
 					header: WTF.headerWithGlyphIcon('far fa-check-square'),
 					getIconCls: function(v, rec) {
-						if (rec.isValid()) {
+						if (rec.isValidationError()) {
+							return 'wt-icon-critical';
+						} else if (rec.isValid()) {
 							if (rec.isExpireSoon()) {
 								return 'wt-icon-ok-with-warning';
 							} else {
@@ -146,16 +148,18 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainLicenses', {
 					},
 					getTip: function(v, rec) {
 						var s = 'invalid';
-						if (rec.isValid()) {
-							if (rec.isExpireSoon()) {
-								s = 'valid-warn';
-							} else {
-								s = 'valid';
+						if (!rec.isValidationError()) {
+							if (rec.isValid()) {
+								if (rec.isExpireSoon()) {
+									s = 'valid-warn';
+								} else {
+									s = 'valid';
+								}
+							} else if (rec.isActivationPening()) {
+								s = 'pending';
+							} else if (rec.isExpired()) {
+								s = 'expired';
 							}
-						} else if (rec.isActivationPening()) {
-							s = 'pending';
-						} else if (rec.isExpired()) {
-							s = 'expired';
 						}
 						return me.res('domainLicenses.gp.status.'+s+'.tip');
 					},
