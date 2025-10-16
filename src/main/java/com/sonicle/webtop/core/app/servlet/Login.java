@@ -33,6 +33,7 @@
  */
 package com.sonicle.webtop.core.app.servlet;
 
+import com.sonicle.commons.LangUtils;
 import com.sonicle.commons.web.ServletUtils;
 import com.sonicle.commons.web.json.MapItem;
 import com.sonicle.webtop.core.CoreLocaleKey;
@@ -142,10 +143,10 @@ public class Login extends AbstractServlet {
 			if(failureAttribute != null) {
 				switch (failureAttribute) {
 					case Login.LOGINFAILURE_INVALID:
-						failureMessage = wta.lookupResource(locale, CoreLocaleKey.TPL_LOGIN_ERROR_FAILURE, true);
+						failureMessage = wta.lookupResource(locale, CoreLocaleKey.TPL_LOGIN_ERROR_FAILURE);
 						break;
 					case Login.LOGINFAILURE_MAINTENANCE:
-						failureMessage = wta.lookupResource(locale, CoreLocaleKey.TPL_LOGIN_ERROR_MAINTENANCE, true);
+						failureMessage = wta.lookupResource(locale, CoreLocaleKey.TPL_LOGIN_ERROR_MAINTENANCE);
 						break;
 				}
 			}
@@ -194,20 +195,20 @@ public class Login extends AbstractServlet {
 		vars.put("showPasswordReveal", false);
 		
 		Map i18n = new HashMap();
-		i18n.put("usernameLabel", wta.lookupResource(locale, CoreLocaleKey.TPL_LOGIN_USERNAME_LABEL, true));
-		i18n.put("usernamePlaceholder", wta.lookupResource(locale, CoreLocaleKey.TPL_LOGIN_USERNAME_PLACEHOLDER, true));
-		i18n.put("passwordLabel", wta.lookupResource(locale, CoreLocaleKey.TPL_LOGIN_PASSWORD_LABEL, true));
-		i18n.put("passwordPlaceholder", wta.lookupResource(locale, CoreLocaleKey.TPL_LOGIN_PASSWORD_PLACEHOLDER, true));
-		i18n.put("domainLabel", wta.lookupResource(locale, CoreLocaleKey.TPL_LOGIN_DOMAIN_LABEL, true));
-		i18n.put("rememberMeLabel", wta.lookupResource(locale, CoreLocaleKey.TPL_LOGIN_REMEMBERME_LABEL, true));
-		i18n.put("submitLabel", wta.lookupResource(locale, CoreLocaleKey.TPL_LOGIN_SUBMIT_LABEL, true));
-		vars.put("usernameLabel", i18n.get("usernameLabel")); // DEPRECATED leave for cbackward compatibility!
-		vars.put("usernamePlaceholder", i18n.get("usernamePlaceholder")); // DEPRECATED leave for cbackward compatibility!
-		vars.put("passwordLabel", i18n.get("passwordLabel")); // DEPRECATED leave for cbackward compatibility!
-		vars.put("passwordPlaceholder", i18n.get("passwordPlaceholder")); // DEPRECATED leave for cbackward compatibility!
-		vars.put("domainLabel", i18n.get("domainLabel")); // DEPRECATED leave for cbackward compatibility!
-		vars.put("rememberMeLabel", i18n.get("rememberMeLabel")); // DEPRECATED leave for cbackward compatibility!
-		vars.put("submitLabel", i18n.get("submitLabel")); // DEPRECATED leave for cbackward compatibility!
+		i18n.put("usernameLabel", wta.lookupResource(locale, CoreLocaleKey.TPL_LOGIN_USERNAME_LABEL));
+		i18n.put("usernamePlaceholder", wta.lookupResource(locale, CoreLocaleKey.TPL_LOGIN_USERNAME_PLACEHOLDER));
+		i18n.put("passwordLabel", wta.lookupResource(locale, CoreLocaleKey.TPL_LOGIN_PASSWORD_LABEL));
+		i18n.put("passwordPlaceholder", wta.lookupResource(locale, CoreLocaleKey.TPL_LOGIN_PASSWORD_PLACEHOLDER));
+		i18n.put("domainLabel", wta.lookupResource(locale, CoreLocaleKey.TPL_LOGIN_DOMAIN_LABEL));
+		i18n.put("rememberMeLabel", wta.lookupResource(locale, CoreLocaleKey.TPL_LOGIN_REMEMBERME_LABEL));
+		i18n.put("submitLabel", wta.lookupResource(locale, CoreLocaleKey.TPL_LOGIN_SUBMIT_LABEL));
+		vars.put("usernameLabel", LangUtils.encodeForHTMLContent((String)i18n.get("usernameLabel"))); // DEPRECATED leave for cbackward compatibility!
+		vars.put("usernamePlaceholder", LangUtils.encodeForHTMLContent((String)i18n.get("usernamePlaceholder"))); // DEPRECATED leave for cbackward compatibility!
+		vars.put("passwordLabel", LangUtils.encodeForHTMLContent((String)i18n.get("passwordLabel"))); // DEPRECATED leave for cbackward compatibility!
+		vars.put("passwordPlaceholder", LangUtils.encodeForHTMLContent((String)i18n.get("passwordPlaceholder"))); // DEPRECATED leave for cbackward compatibility!
+		vars.put("domainLabel", LangUtils.encodeForHTMLContent((String)i18n.get("domainLabel"))); // DEPRECATED leave for cbackward compatibility!
+		vars.put("rememberMeLabel", LangUtils.encodeForHTMLContent((String)i18n.get("rememberMeLabel"))); // DEPRECATED leave for cbackward compatibility!
+		vars.put("submitLabel", LangUtils.encodeForHTMLContent((String)i18n.get("submitLabel"))); // DEPRECATED leave for cbackward compatibility!
 		vars.put("i18n", i18n);
 		
 		ServletUtils.setHtmlContentType(response);

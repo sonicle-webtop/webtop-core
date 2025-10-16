@@ -208,17 +208,17 @@ public class Otp extends AbstractServlet {
 		vars.put("showTrustCheckbox", css.getOTPDeviceTrustEnabled());
 		
 		Map i18n = new HashMap();
-		i18n.put("boxTitle", wta.lookupResource(locale, CoreLocaleKey.TPL_OTP_HELPTITLE, true));
-		i18n.put("formTitle", wta.lookupResource(locale, CoreLocaleKey.TPL_OTP_DELIVERY_TITLE, true));
-		i18n.put("formText", wta.lookupResource(locale, MessageFormat.format(CoreLocaleKey.TPL_OTP_DELIVERY_INFO, deliveryMode), true));
-		i18n.put("trustLabel", wta.lookupResource(locale, CoreLocaleKey.TPL_OTP_TRUST_LABEL, true));
-		i18n.put("submitLabel", wta.lookupResource(locale, CoreLocaleKey.TPL_OTP_SUBMIT_LABEL, true));
-		vars.put("helpTitle", i18n.get("boxTitle")); // DEPRECATED leave for cbackward compatibility!
-		vars.put("deliveryTitle", i18n.get("formTitle")); // DEPRECATED leave for cbackward compatibility!
-		vars.put("deliveryInfo", i18n.get("formText")); // DEPRECATED leave for cbackward compatibility!
+		i18n.put("boxTitle", wta.lookupResource(locale, CoreLocaleKey.TPL_OTP_HELPTITLE));
+		i18n.put("formTitle", wta.lookupResource(locale, CoreLocaleKey.TPL_OTP_DELIVERY_TITLE));
+		i18n.put("formText", wta.lookupResource(locale, MessageFormat.format(CoreLocaleKey.TPL_OTP_DELIVERY_INFO, deliveryMode)));
+		i18n.put("trustLabel", wta.lookupResource(locale, CoreLocaleKey.TPL_OTP_TRUST_LABEL));
+		i18n.put("submitLabel", wta.lookupResource(locale, CoreLocaleKey.TPL_OTP_SUBMIT_LABEL));
+		vars.put("helpTitle", LangUtils.encodeForHTMLContent((String)i18n.get("boxTitle"))); // DEPRECATED leave for cbackward compatibility!
+		vars.put("deliveryTitle", LangUtils.encodeForHTMLContent((String)i18n.get("formTitle"))); // DEPRECATED leave for cbackward compatibility!
+		vars.put("deliveryInfo", LangUtils.encodeForHTMLContent((String)i18n.get("formText"))); // DEPRECATED leave for cbackward compatibility!
 		vars.put("codePlaceholder", wta.lookupResource(locale, CoreLocaleKey.TPL_OTP_CODE_PLACEHOLDER, true)); // DEPRECATED leave for cbackward compatibility!
-		vars.put("trustLabel", i18n.get("trustLabel")); // DEPRECATED leave for cbackward compatibility!
-		vars.put("submitLabel", i18n.get("submitLabel")); // DEPRECATED leave for cbackward compatibility!
+		vars.put("trustLabel", LangUtils.encodeForHTMLContent((String)i18n.get("trustLabel"))); // DEPRECATED leave for cbackward compatibility!
+		vars.put("submitLabel", LangUtils.encodeForHTMLContent((String)i18n.get("submitLabel"))); // DEPRECATED leave for cbackward compatibility!
 		vars.put("i18n", i18n);
 		
 		ServletUtils.setHtmlContentType(response);
