@@ -173,13 +173,11 @@
             </#if> 
             <div class="max-w-[400px] my-3 w-full">
                 <div class="p-3 pb-2 min-[400px]:rounded-md sm:pb-4 sm:p-8 sm:rounded-2xl dark:border shadow-md border-neutral-50 bg-neutral-50 dark:border-gray-800 dark:bg-gray-800">
-                    <div class="flex flex-col items-center justify-center">
-                        <picture class="mx-auto w-auto">
-                            <source srcset="${coreResourcesImagesUrl}/login@light" media="(prefers-color-scheme: light)"/>
-                            <source srcset="${coreResourcesImagesUrl}/login@dark" media="(prefers-color-scheme: dark)"/>
-                            <img src="${coreResourcesImagesUrl}/login@light" alt="logo" class="w-full h-full max-h-[200px]">
-                        </picture>
-                    </div>
+                    <picture class="flex flex-col items-center justify-center w-full">
+                        <source srcset="${coreResourcesImagesUrl}/login@light" media="(prefers-color-scheme: light)"/>
+                        <source srcset="${coreResourcesImagesUrl}/login@dark" media="(prefers-color-scheme: dark)"/>
+                        <img src="${coreResourcesImagesUrl}/login@light" alt="logo" class="h-auto w-auto max-h-[200px] max-w-[300px]">
+                    </picture>
                     <form name="login" method="post" action="login" role="form" novalidate class="mt-6 space-y-4">
                         <input id="colorscheme" name="colorscheme" type="hidden">
                         <input id="location" name="location" type="hidden">
