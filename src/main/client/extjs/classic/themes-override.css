@@ -120,14 +120,6 @@ body {
     background-size: 16px;
 }
 
-/* ---------- Ext.form.field.Text */
-.x-form-trigger {
-	/*line-height: inherit;*/ /* Fix icon vertical alignment a little in FF */
-    /* Restore orig. table-cell display, this fixes inputEl crushing (or icon falling) due to FontAwesomeX icons */
-    /* Please note that this restores visibility over hidden triggers, we need to impose none display using !important keyword (see Sonicle.form.trigger.Hideable) */
-    display: table-cell !important;
-}
-
 /* ---------- Ext.form.field.TextArea */
 /* Provide SW (south-west) handle for customized smart resizing */
 .x-form-textarea-resizable-smart {
@@ -155,6 +147,19 @@ body {
 /* Adds right mouse-pointer */
 .x-grid-checkcolumn {
     cursor: pointer;
+}
+
+/* ---------- Ext.form.trigger.Trigger */
+/* Support FA icons as triggers */
+.x-form-trigger.fas, .x-form-trigger.fa-solid,
+.x-form-trigger.far, .x-form-trigger.fa-regular {
+    /* Restore orig. table-cell display, this fixes inputEl crushing (or icon falling) due to FA icons */
+    /* Please note that this restores visibility over hidden triggers, so we need to impose none display using !important keyword (see Sonicle.form.trigger.Hideable) */
+    display: table-cell !important;
+    line-height: inherit;
+	vertical-align: middle;
+    align-content: center;
+    text-align: center;
 }
 
 /* ---------- Ext.view.BoundList */

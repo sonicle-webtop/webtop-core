@@ -94,7 +94,7 @@ Ext.define('Sonicle.webtop.core.ux.field.Search', {
 	 */
 	
 	favoritesButton: true,
-	favoritesIconCls: 'fas fa-star wt-opacity-70',
+	favoritesIconCls: 'fas fa-star',
 	
 	constructor: function(cfg) {
 		var me = this;

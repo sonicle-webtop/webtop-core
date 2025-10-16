@@ -23,12 +23,6 @@
 .x-tab-icon-el.far {
     opacity: 0.6;
 }
-.x-form-trigger.fas {
-    opacity: 0.4;
-}
-.x-form-trigger.far {
-    opacity: 0.4;
-}
 
 /* ---------- Ext.form.FieldSet */
 /* Provide better disabled style */
@@ -54,6 +48,16 @@
 	margin-left: 2px !important;
     margin-right: 4px !important;
 	padding-right: 2px !important;
+}
+
+/* ---------- Ext.form.trigger.Trigger */
+.x-form-trigger.fas, .x-form-trigger.fa-solid,
+.x-form-trigger.far, .x-form-trigger.fa-regular {
+    background-image: none; /* Drop ExtJS's default downarrow icon' */
+}
+.x-form-trigger.fas:before, .x-form-trigger.fa-solid:before,
+.x-form-trigger.far:before, .x-form-trigger.fa-regular:before {
+    opacity: 0.4;
 }
 
 /* ---------- Sonicle.form.field.Display */

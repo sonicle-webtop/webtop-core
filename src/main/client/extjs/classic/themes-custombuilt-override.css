@@ -103,6 +103,12 @@ body > .x-mask {
 }
 */
 
+/* ---------- Ext.form.trigger.Trigger */
+.x-form-trigger.fas, .x-form-trigger.fa-solid,
+.x-form-trigger.far, .x-form-trigger.fa-regular {
+    background-image: none; /* Drop ExtJS's default downarrow icon' */
+}
+
 /* ---------- Ext.form.trigger.Spinner  */
 /* Fix width, too large for field */
 /* <-- USEFUL?
