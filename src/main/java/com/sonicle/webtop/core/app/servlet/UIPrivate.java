@@ -45,6 +45,7 @@ import com.sonicle.webtop.core.app.PushEndpoint;
 import com.sonicle.webtop.core.app.RunContext;
 import com.sonicle.webtop.core.app.SessionContext;
 import com.sonicle.webtop.core.app.SettingsManager;
+import com.sonicle.webtop.core.app.UIBoot;
 import com.sonicle.webtop.core.app.WT;
 import com.sonicle.webtop.core.app.WebTopApp;
 import com.sonicle.webtop.core.app.WebTopProps;
@@ -230,7 +231,7 @@ public class UIPrivate extends AbstractServlet {
 		wts.fillStartup(jswts);
 		
 		Map tplMap = new HashMap();
-		AbstractServlet.fillPageVars(tplMap, wts.getLocale(), userTitle, AbstractServlet.guessColorScheme(jswts.lafName), null);
+		AbstractServlet.fillPageVars(tplMap, wts.getLocale(), userTitle, UIBoot.guessColorScheme(jswts.lafName), null);
 		tplMap.put("loadingMessage", wta.lookupResource(wts.getLocale(), "tpl.start.loading"));
 		tplMap.put("WTS", LangUtils.unescapeUnicodeBackslashes(jswts.toJson()));
 		

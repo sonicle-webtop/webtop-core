@@ -69,4 +69,17 @@ public class UIBoot {
 				return "neptune";
 		}
 	}
+	
+	public static String guessColorScheme(final String lafName) {
+		final String overlay = StringUtils.lowerCase(StringUtils.substringAfterLast(lafName, "@"));
+		return ("light".equals(overlay) || "dark".equals(overlay)) ? overlay : null;
+	}
+	
+	public static String getColorScheme(final String lafName) {
+		return getColorScheme(lafName, "light");
+	}
+	
+	public static String getColorScheme(final String lafName, final String defaultColorScheme) {
+		return StringUtils.defaultIfBlank(guessColorScheme(lafName), defaultColorScheme);
+	}
 }

@@ -103,11 +103,6 @@ public abstract class AbstractServlet extends HttpServlet {
 		vars.put("custom", propVars);
 	}
 	
-	public static String guessColorScheme(final String lafName) {
-		final String overlay = StringUtils.lowerCase(StringUtils.substringAfterLast(lafName, "@"));
-		return ("light".equals(overlay) || "dark".equals(overlay)) ? overlay : null;
-	}
-	
 	public static void fillPageVars(final Map vars, final Locale locale, final String titleDN, final String colorScheme, final String baseUrl) {
 		ServiceVersion version = WT.getManifest(CoreManifest.ID).getVersion();
 		String title = WT.getPlatformName();
