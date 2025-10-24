@@ -1,0 +1,155 @@
+/**************************************/
+/* This file should contain tweaks/fixes for specific theme.
+/**************************************/
+
+@import url("../themes-override.css");
+@import url("../themes-custombuilt-override.css");
+
+/*
+grep -l "#0E7490" * | while read fname; do echo "sedding $fname"; sed -i -e 's/#0E7490/#0891b2/g' $fname; done
+*/
+
+:root {
+    color-scheme: dark;
+    --wt-theme-color-surface-l0: #171717; /* Neutral/900 */
+    --wt-theme-color-surface-l1: #262626; /* Neutral/800 */
+    --wt-theme-color-surface-l2: #404040; /* Neutral/700 */
+    --wt-theme-color-surface-l2-inv: #171717; /* Neutral/900 */
+    --wt-theme-color-surface-l3: #525252; /* Neutral/600 */
+    --wt-theme-color-surface-l4: #737373; /* Neutral/500 */
+    --wt-theme-color-ct-1: #155e75; /* Cyan/800 */
+    --wt-theme-color-ct-2: #22274f; /* Indigo/500 @20% */
+	--wt-theme-color-n1: #f5f5f5; /* Neutral/100 */
+    --wt-theme-color-n1-inv: #171717; /* Neutral/900 */
+    --wt-theme-color-n2: #e5e5e5; /* Neutral/200 */
+    --wt-theme-color-n3: #d4d4d4; /* Neutral/300 */
+    --wt-theme-color-1: #06B6D4; /* Cyan/500 - Text/Icon 1st */
+    --wt-theme-color-2: #6366f1; /* Indigo/500 - Text/Icon 2nd */
+    --wt-theme-color-3: #737373; /* Neutral/500 - Text Placeholder/Icon Inactive */
+    --wt-theme-color-off: #a3a3a3; /* Neutral/400 */
+    --wt-theme-color-hyperlink: var(--wt-theme-color-1);
+    --wt-theme-color-ok: #6ee7b7; /* Emerald/300 */
+    --wt-theme-color-ok-on: #065f46; /* Emerald/800 */
+    --wt-theme-color-ok-ct: #064e3b; /* Emerald/900 */
+    --wt-theme-color-ok-ct-on: #a7f3d0; /* Emerald/200 */
+    --wt-theme-color-warn: #fcd34d; /* Amber/300 */
+    --wt-theme-color-warn-on: #92400e; /* Amber/800 */
+    --wt-theme-color-warn-ct: #78350f; /* Amber/900 */
+    --wt-theme-color-warn-ct-on: #fde68a; /* Amber/200 */
+    --wt-theme-color-error: #fda4af; /* Rose/300 */
+    --wt-theme-color-error-on: #9f1239; /* Rose/800 */
+    --wt-theme-color-error-ct: #881337; /* Rose/900 */
+    --wt-theme-color-error-ct-on: #fecdd3; /* Rose/200 */
+    --wt-theme-color-info: #a5b4fc; /* Indigo/300 */
+    --wt-theme-color-info-on: #3730a3; /* Indigo/800 */
+    --wt-theme-color-info-ct: #312e81; /* Indigo/900 */
+    --wt-theme-color-info-ct-on: #c7d2fe; /* Indigo/200 */
+    
+    --wt-theme-color-scrollbar-thumb: #a3a3a3; /* Neutral/400 */
+    --wt-theme-color-scrollbar-track: transparent;
+    --wt-theme-color-mask: rgba(64, 64, 64, 0.75); /* Neutral/700 @75% */
+    --wt-theme-color-field: var(--wt-theme-color-surface-l0);
+    --wt-theme-color-dialog: var(--wt-theme-color-surface-l1);
+    --wt-theme-color-dialog-on: var(--wt-theme-color-n1);
+    --wt-theme-color-dialog-hd: var(--wt-theme-color-surface-l2);
+    --wt-theme-color-dialog-hd-on: var(--wt-theme-color-n1);
+    --wt-theme-color-mbox: var(--wt-theme-color-surface-l1);
+    --wt-theme-color-mbox-on: var(--wt-theme-color-n1);
+    --wt-theme-color-mbox-hd: var(--wt-theme-color-surface-l1);
+    --wt-theme-color-mbox-hd-on: var(--wt-theme-color-n1);
+    --wt-theme-color-popup: #f5f5f5; /* Neutral/100 */
+    --wt-theme-color-popup-on: #a3a3a3; /* Neutral/400 */
+    --wt-theme-color-navbar: var(--wt-theme-color-surface-l0);
+    --wt-theme-color-topbar: var(--wt-theme-color-surface-l1);
+    --wt-theme-color-taskbar: var(--wt-theme-color-surface-l1);
+    
+    --wt-theme-fontfamily: Inter, helvetica, arial, verdana, sans-serif;
+    --wt-theme-fontsize-xs: 12px;
+    --wt-theme-fontsize-sm: 14px;
+    --wt-theme-fontsize-base: 16px;
+    --wt-theme-fontsize-lg: 18px;
+    --wt-theme-fontsize-xl: 20px;
+    --wt-theme-fontsize-2xl: 24px;
+    --wt-theme-fontsize-3xl: 30px;
+    --wt-theme-fontsize-4xl: 36px;
+    --wt-theme-fontsize-5xl: 48px;
+    --wt-theme-fontsize-6xl: 64px;
+    --wt-theme-lineheight-xs: 18px;
+    --wt-theme-lineheight-sm: 21px;
+    --wt-theme-lineheight-base: 24px;
+    --wt-theme-lineheight-lg: 27px;
+    --wt-theme-lineheight-xl: 30px;
+    --wt-theme-lineheight-2xl: 36px;
+    --wt-theme-lineheight-3xl: 45px;
+    --wt-theme-lineheight-4xl: 54px;
+    --wt-theme-lineheight-5xl: 72px;
+    --wt-theme-lineheight-6xl: 96px;
+    --wt-theme-fontweight-regular: 400;
+    --wt-theme-fontweight-medium: 500;
+    --wt-theme-fontweight-bold: 700;
+    
+    --wt-theme-dialog-radius: 5px;
+    --wt-theme-menu-radius: 5px;
+    --wt-theme-field-radius: 5px;
+    --wt-theme-grid-radius: 5px;
+    --wt-theme-tab-radius: 5px;
+    
+    /* ---------- Ext.button.Button */
+    --so-button-pressed-nostyle-color: var(--wt-theme-color-n1);
+    --so-button-toggle-indicator-color-off: var(--wt-theme-color-n3);
+    --so-button-toggle-indicator-color-on: var(--wt-theme-color-1);
+    /* ---------- Sonicle.ColorUtils */
+    --so-colorswatch-framed-border-color: #737373; /* Neutral/500 */
+    --so-colorswatch-darkmark-color: #404040; /* Neutral/700 */
+    --so-colorswatch-lightmark-color: #f5f5f5; /* Neutral/100 */
+    /* ---------- Sonicle.form.field.Display */
+    --so-displayfield-clickable-color: #0e7490; /* Cyan/700 */
+    --so-displayfield-clickable-hover-color: #164e63; /* Cyan/900 */
+    /* ---------- Sonicle.panel.CanbanColumn */
+    --so-kanbancolumn-border-radius: 4px;
+    /* ---------- Sonicle.plugin.DropMask */
+    --so-dropmask-border-color: var(--wt-theme-color-1);
+    --so-dropmask-text-color: var(--wt-theme-color-1);
+    --so-dropmask-text-size: var(--wt-theme-fontsize-3xl);
+    /* ---------- FullCalendar */
+    --fc-page-bg-color: var(--wt-theme-color-surface-l0) !important;
+    --fc-border-color: var(--wt-theme-color-surface-l3) !important;
+    --fc-neutral-bg-color: var(--wt-theme-color-surface-l1) !important;
+    --fc-now-indicator-color: var(--wt-theme-color-1) !important;
+    /*--fc-today-bg-color: rgba(99,102,241,.1) !important; *//* Indigo/500 @10% */
+    --fc-today-bg-color: var(--wt-theme-color-ct-2) !important;
+    --fc-day-other-color: rgba(64,64,64,.3) !important; /* Neutral/700 @30% */
+    --fc-non-business-color: rgba(51,65,85,.2) !important; /* Slate/700 @20% */
+    --fc-highlight-color: rgba(99,102,241,.2) !important; /* Indigo/500 @20% */
+    --fc-event-resizer-swatch-bg-color: #f5f5f5; /* Neutral/100 */
+    --fc-event-resizer-swatch-border-color: #f5f5f5; /* Neutral/100 */
+	--fc-event-style-shadow: rgba(0,0,0,.1);
+}
+
+/* ---------- Ext.Shadow */
+.x-css-shadow {
+    box-shadow: 0px 20px 40px 0px #00000099 !important;
+}
+
+/* ---------- Ext.panel.Panel */
+/* Force panel's body BG to base when using 'border' layout */
+.x-panel-body-default.x-border-layout-ct {
+	background-color: var(--wt-theme-color-surface-l0);
+}
+/* Force splitter BG to its original color, to avoid that the above override set it back to L0  */
+.x-splitter {
+    background-color: var(--wt-theme-color-surface-l1);
+}
+
+/* ---------- Sonicle.LoadMask */
+.so-mask-button-wrap {
+    padding-top: 15px;
+}
+
+/* ---------- Fullcalendar */
+/* Fix opacity: other-days daynum is too light and similar with bg */
+/*
+.fc .fc-day-other .fc-daygrid-day-top {
+    opacity: .5;
+}
+*/

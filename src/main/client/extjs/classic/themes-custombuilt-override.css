@@ -13,7 +13,7 @@ body > .x-mask {
 /* Highlight the row that activates the context-menu */
 .x-grid-view .so-contextmenu-owner,
 .x-tree-view .so-contextmenu-owner {
-    background-color: var(--wt-theme-color-ct-1) !important;
+    background-color: var(--wt-theme-color-ct-2) !important;
 }
 
 /* ---------- Ext.button.Button */
@@ -181,16 +181,6 @@ body > .x-mask {
 .x-menu-item-icon.far { top: 8px; }
 */
 
-/* ---------- Ext.panel.Panel */
-/* Force panel's body BG to base when using 'border' layout */
-.x-panel-body-default.x-border-layout-ct {
-	background-color: var(--wt-theme-color-surface-l0);
-}
-/* Force splitter BG to its original color, to avoid that the above override set it back to L0  */
-.x-splitter {
-    background-color: var(--wt-theme-color-surface-l3);
-}
-
 /* ---------- Ext.panel.Panel@panel-kanbancolumn */
 /* Add radius support to panel-kanbancolumn UI */
 .x-panel-panel-kanbancolumn {
@@ -234,7 +224,7 @@ body > .x-mask {
 }
 /* Style highlight and full dates */
 .x-datepicker-cell.so-datepicker-highlighted {
-    background-color: var(--wt-theme-color-ct-1);
+    background-color: var(--wt-theme-color-ct-2);
 }
 .x-datepicker-cell.so-datepicker-highlighted.so-datepicker-highlighted-begin {
     border-top-left-radius: 5px;
@@ -286,13 +276,59 @@ body > .x-mask {
 
 /* Add bottom-line to selected tab */
 /* <-- USEFUL?
+*/
 .x-tab-active:before {
     content: '';
     position: absolute;
-    bottom: 0px;
+    border-radius: 5px;
+    background-color: var(--wt-theme-color-1);
+}
+.x-tab-top.x-tab-active:before {
+    bottom: 2px;
     left: 5px;
     right: 5px;
-    border-bottom: 2px solid #C2410C;
+    height: 2.5px;
+}
+.x-tab-bottom.x-tab-active:before {
+    top: 2px;
+    left: 5px;
+    right: 5px;
+    height: 2.5px;
+}
+.x-tab-left.x-tab-active:before {
+    right: 2px;
+    top: 5px;
+    bottom: 5px;
+    width: 2.5px;
+}
+.x-tab-right.x-tab-active:before {
+    left: 2px;
+    top: 5px;
+    bottom: 5px;
+    width: 2.5px;
+}
+
+/*
+.x-tab-active:before {
+    content: '';
+    position: absolute;
+    border-radius: 6px;
+    border-bottom: 3px solid var(--wt-theme-color-1);
+}
+.x-tab-top.x-tab-active:before {
+    bottom: 2px;
+    left: 5px;
+    right: 5px;
+}
+.x-tab-bottom.x-tab-active:before {
+    top: 2px;
+    left: 5px;
+    right: 5px;
+}
+.x-tab-left.x-tab-active:before {
+    right: 2px;
+    top: 5px;
+    bottom: 5px;
 }
 */
 

@@ -33,24 +33,15 @@
 }
 
 /* ---------- Navbar */
-/* Set main backgrounds */
-.wt-viewport-navbar-watermark-right {
-    background-color: var(--wt-theme-color-surface-l4);
-    width: 1px;
-}
 /* Define 40x40 logo image */
-/* ---------- Navbar */
-/* Navbar: define 50x50 logo image */
 .wt-viewport-navbar-logo.so-tbimage { padding: 0px; }
 .wt-viewport-navbar-logo.so-tbimage .so-tbimage-image { background-image: url('logo-symbol.svg'); background-repeat: round; width: 40px !important; height: 40px !important; }
-
 /* Force button sizes */
 .wt-viewport-navbar .x-btn .x-btn-button { min-height: 24px; }
 .wt-viewport-navbar .x-btn .x-btn-icon-el { width: 24px; height: 24px; }
-/* Set specific color and radius to buttons */
+/* Set specific radius to buttons */
 .wt-viewport-navbar .x-btn.x-btn-pressed, .wt-viewport-navbar .x-btn.x-btn-over {
     border-radius: 100%;
-    background-color: var(--wt-theme-color-surface-l2);
 }
 /* Do NOT show focus outline/shadow on buttons */
 .wt-viewport-navbar .x-btn.x-btn-focus { box-shadow: none !important; }
@@ -59,28 +50,22 @@
 /* Hide ugly border when docking top */
 .wt-tool .x-panel-body { border-top: 0px; }
 /* Customize HD style */
-.wt-tool .wt-tool-bg { background-color: var(--wt-theme-color-surface-l3); }
-.wt-tool-hd-wrap { background-color: var(--wt-theme-color-surface-l3); padding-top: 4px }
+.wt-tool-hd-wrap { padding-top: 4px }
 .wt-tool-hd-title { font-size: var(--wt-theme-fontsize-lg); font-weight: 500; }
 .wt-tool-hd-separator { border-top-color: #e5e7eb !important; } /* Gray/200 FIXME: evaluate to change directly fieldset color in theme */
 .wt-tool-foo { padding-top: 10px; padding-bottom: 15px; }
 
 /* ---------- Content Body */
+/* Remove separation border with top-toolbar (use same tb color) */
+.wt-viewport-content.x-panel-body {
+    border-color: var(--wt-theme-color-topbar);
+}
 
 /*
 border-top-left-radius: 10px;
     border-bottom-left-radius: 10px;
 */
 
-
-/* Remove separation border with top-toolbar */
-.wt-viewport-content.x-panel-body {
-    border-color: var(--wt-theme-color-surface-l3);
-}
-/* Increase elevation of vertical splitter when hovered and dragging */
-.wt-viewport-content .x-splitter:hover, .wt-viewport-content .x-splitter-active {
-    background-color: var(--wt-theme-color-surface-l4);
-}
 
 /* ---------- AccountMenu */
 /* Pad user-info */

@@ -5525,57 +5525,57 @@
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-neutral/sass/var/panel/Panel.scss:842 */
 .x-panel-header-panel-kanbancolumn-horizontal {
-    padding: 11px 15px 12px;
+    padding: 10px 12px 9px 12px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-neutral/sass/var/panel/Panel.scss:846 */
 .x-panel-header-panel-kanbancolumn-horizontal .x-panel-header-panel-kanbancolumn-tab-bar {
-    margin-top: -11px;
-    margin-bottom: -12px;
+    margin-top: -10px;
+    margin-bottom: -9px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-neutral/sass/var/panel/Panel.scss:854 */
 .x-panel-header-panel-kanbancolumn-horizontal.x-header-noborder {
-    padding: 12px 16px 12px 16px;
+    padding: 11px 13px 9px 13px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-neutral/sass/var/panel/Panel.scss:858 */
 .x-panel-header-panel-kanbancolumn-horizontal.x-header-noborder .x-panel-header-panel-kanbancolumn-tab-bar {
-    margin-top: -12px;
-    margin-bottom: -12px;
+    margin-top: -11px;
+    margin-bottom: -9px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-neutral/sass/var/panel/Panel.scss:866 */
 .x-panel-header-panel-kanbancolumn-vertical {
-    padding: 15px 11px 15px 12px;
+    padding: 12px 10px 12px 9px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-neutral/sass/var/panel/Panel.scss:870 */
 .x-panel-header-panel-kanbancolumn-vertical .x-panel-header-panel-kanbancolumn-tab-bar {
-    margin-right: -11px;
-    margin-left: -12px;
+    margin-right: -10px;
+    margin-left: -9px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-neutral/sass/var/panel/Panel.scss:878 */
 .x-panel-header-panel-kanbancolumn-vertical.x-header-noborder {
-    padding: 16px 12px 16px 12px;
+    padding: 13px 11px 13px 9px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-neutral/sass/var/panel/Panel.scss:882 */
 .x-panel-header-panel-kanbancolumn-vertical.x-header-noborder .x-panel-header-panel-kanbancolumn-tab-bar {
-    margin-right: -12px;
-    margin-left: -12px;
+    margin-right: -11px;
+    margin-left: -9px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-neutral/sass/var/panel/Panel.scss:891 */
 .x-rtl.x-panel-header-panel-kanbancolumn-vertical {
-    padding: 15px 12px 15px 11px;
+    padding: 12px 9px 12px 10px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-neutral/sass/var/panel/Panel.scss:895 */
 .x-rtl.x-panel-header-panel-kanbancolumn-vertical .x-panel-header-panel-kanbancolumn-tab-bar {
-    margin-left: -11px;
-    margin-right: -12px;
+    margin-left: -10px;
+    margin-right: -9px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-neutral/sass/var/panel/Panel.scss:903 */
 .x-rtl.x-panel-header-panel-kanbancolumn-vertical.x-header-noborder {
-    padding: 16px 12px 16px 12px;
+    padding: 13px 9px 13px 11px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-neutral/sass/var/panel/Panel.scss:907 */
 .x-rtl.x-panel-header-panel-kanbancolumn-vertical.x-header-noborder .x-panel-header-panel-kanbancolumn-tab-bar {
-    margin-left: -12px;
-    margin-right: -12px;
+    margin-left: -11px;
+    margin-right: -9px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-neutral/sass/var/panel/Panel.scss:916 */
 .x-panel-header-title-panel-kanbancolumn {
@@ -5583,7 +5583,7 @@
     font-size: 16px;
     font-weight: 400;
     font-family: Inter, sans-serif;
-    line-height: 20px;
+    line-height: 18px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-neutral/sass/var/panel/Panel.scss:929 */
 .x-keyboard-mode .x-panel-header-title-panel-kanbancolumn.x-title-focus {

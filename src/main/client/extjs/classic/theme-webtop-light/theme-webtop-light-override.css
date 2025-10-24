@@ -16,8 +16,8 @@ grep -l "#0E7490" * | while read fname; do echo "sedding $fname"; sed -i -e 's/#
     --wt-theme-color-surface-l2-inv: #ffffff; /* White */
     --wt-theme-color-surface-l3: #e5e5e5; /* Neutral/200 */
     --wt-theme-color-surface-l4: #d4d4d4; /* Neutral/300 */
-    --wt-theme-color-ct-1: #e0f2fe; /* Sky/100 */
-    --wt-theme-color-ct-2: #fff7ed; /* Orange/50 */
+    --wt-theme-color-ct-1: #e0f2fe; /* Sky/100 */ /* !! we cannot use Cyan at light colors, is too warm !! */
+    --wt-theme-color-ct-2: #edf0fe; /* Indigo/300@ 20% */
 	--wt-theme-color-n1: #262626; /* Neutral/800 */
     --wt-theme-color-n1-inv: #f5f5f5; /* Neutral/100 */
     --wt-theme-color-n2: #525252; /* Neutral/600 */
@@ -47,6 +47,7 @@ grep -l "#0E7490" * | while read fname; do echo "sedding $fname"; sed -i -e 's/#
     --wt-theme-color-scrollbar-thumb: #d4d4d4; /* Neutral/300 */
     --wt-theme-color-scrollbar-track: transparent;
     --wt-theme-color-mask: rgba(107, 114, 128, 0.75); /* Gray/500 @75% */
+    -wt-theme-color-field: var(--wt-theme-color-surface-l0);
     --wt-theme-color-dialog: var(--wt-theme-color-surface-l0);
     --wt-theme-color-dialog-on: #404040; /* Neutral/700 */
     --wt-theme-color-dialog-hd: var(--wt-theme-color-surface-l2);
@@ -57,8 +58,8 @@ grep -l "#0E7490" * | while read fname; do echo "sedding $fname"; sed -i -e 's/#
     --wt-theme-color-mbox-hd-on: #404040; /* Neutral/700 */
     --wt-theme-color-popup: #737373; /* Neutral/500 */
     --wt-theme-color-popup-on: #e5e5e5; /* Neutral/200 */
-    --wt-theme-color-topbar: var(--wt-theme-color-surface-l3);
     --wt-theme-color-navbar: var(--wt-theme-color-surface-l3);
+    --wt-theme-color-topbar: var(--wt-theme-color-surface-l3);
     --wt-theme-color-taskbar: var(--wt-theme-color-surface-l3);
     
     --wt-theme-fontfamily: Inter, helvetica, arial, verdana, sans-serif;
@@ -121,6 +122,16 @@ grep -l "#0E7490" * | while read fname; do echo "sedding $fname"; sed -i -e 's/#
     --fc-event-resizer-swatch-bg-color: #171717; /* Neutral/900 */
     --fc-event-resizer-swatch-border-color: #171717; /* Neutral/900 */
 	--fc-event-style-shadow: rgba(0,0,0,.1);
+}
+
+/* ---------- Ext.panel.Panel */
+/* Force panel's body BG to base when using 'border' layout */
+.x-panel-body-default.x-border-layout-ct {
+	background-color: var(--wt-theme-color-surface-l0);
+}
+/* Force splitter BG to its original color, to avoid that the above override set it back to L0  */
+.x-splitter {
+    background-color: var(--wt-theme-color-surface-l3);
 }
 
 /* ---------- Sonicle.LoadMask */

@@ -9,8 +9,8 @@ Ext.define('Ext.theme.webtoplight.Component', {
 	Ext.namespace('Ext.theme.ui.button').toolbar = 'default-toolbar';
 	Ext.namespace('Ext.theme.ui.button').primary = 'default';
 	Ext.namespace('Ext.theme.ui.button').secondary = 'button-secondary';
-	Ext.namespace('Ext.theme.ui.button').segmented = 'button-segmented';
 	Ext.namespace('Ext.theme.ui.button').tertiary = 'button-tertiary';
+	Ext.namespace('Ext.theme.ui.button').segmented = 'button-segmented';
 	Ext.namespace('Ext.theme.ui.button').taskbar = 'button-taskbar';
 	Ext.namespace('Ext.theme.ui.panel').kanbancolumn = 'panel-kanbancolumn';
 });

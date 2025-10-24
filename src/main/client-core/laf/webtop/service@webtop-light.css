@@ -1,0 +1,22 @@
+
+/* ---------- Navbar */
+/* Set main backgrounds */
+.wt-viewport-navbar-watermark-right {
+    background-color: var(--wt-theme-color-surface-l4);
+    width: 1px;
+}
+/* Set specific color to buttons */
+.wt-viewport-navbar .x-btn.x-btn-pressed, .wt-viewport-navbar .x-btn.x-btn-over {
+    background-color: var(--wt-theme-color-surface-l2);
+}
+
+/* ---------- Tool HD/Body */
+/* Customize HD style */
+.wt-tool .wt-tool-bg { background-color: var(--wt-theme-color-surface-l3); }
+.wt-tool-hd-wrap { background-color: var(--wt-theme-color-surface-l3); }
+
+/* ---------- Content Body */
+/* Increase elevation of vertical splitter when hovered and dragging */
+.wt-viewport-content .x-splitter:hover, .wt-viewport-content .x-splitter-active {
+    background-color: var(--wt-theme-color-surface-l4);
+}

@@ -34,8 +34,6 @@
 body {
     background-color: light-dark(var(--wt-theme-color-surface-l0, #FFFFFF), var(--wt-theme-color-surface-l0, #000000));
     color: light-dark(var(--wt-theme-color-n1, #000000), var(--wt-theme-color-n1, #FFFFFF));
-    /*background-color: var(--wt-theme-color-surface-l0);*/
-    /*color: var(--wt-theme-color-n1);*/
     font-family: var(--wt-theme-fontfamily, 'helvetica, arial, verdana, sans-serif');
 }
 /* Make scrollbars modern */
@@ -124,7 +122,7 @@ body {
 /* Provide SW (south-west) handle for customized smart resizing */
 .x-form-textarea-resizable-smart {
     position: relative;
-	background: #fff url("data:image/svg+xml,%3Csvg%20width%3D%2213%22%20height%3D%2213%22%20viewBox%3D%220%200%2013%2013%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Cpath%20d%3D%22M10.2773%2011.7773L12.2773%209.77734M12.2773%206.77734L7.27734%2011.7773M12.2773%203.77734L4.27734%2011.7773M12.2773%200.777344L1.27734%2011.7773%22%20stroke%3D%22%239CA3AF%22%2F%3E%3C%2Fsvg%3E") 100% 100% no-repeat;
+	background: var(--wt-theme-color-field) url("data:image/svg+xml,%3Csvg%20width%3D%2213%22%20height%3D%2213%22%20viewBox%3D%220%200%2013%2013%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Cpath%20d%3D%22M10.2773%2011.7773L12.2773%209.77734M12.2773%206.77734L7.27734%2011.7773M12.2773%203.77734L4.27734%2011.7773M12.2773%200.777344L1.27734%2011.7773%22%20stroke%3D%22%239CA3AF%22%2F%3E%3C%2Fsvg%3E") 100% 100% no-repeat;
 	bottom: 1px;
 	right: 2px;
 }

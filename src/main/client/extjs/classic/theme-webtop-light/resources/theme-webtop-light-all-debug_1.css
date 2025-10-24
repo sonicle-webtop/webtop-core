@@ -15334,7 +15334,7 @@ div.x-border-layout-ct {
     -ms-border-radius: 0;
     -o-border-radius: 0;
     border-radius: 0;
-    padding: 8px 10px 8px 10px;
+    padding: 6px 8px 6px 8px;
     border-width: 0;
     border-style: solid;
     background-image: none;
@@ -15361,7 +15361,7 @@ div.x-border-layout-ct {
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:281 */
 .x-tab-default-top-frameInfo {
-    font-family: th-0-0-0-0-0-0-0-0-8-10-8-10;
+    font-family: th-0-0-0-0-0-0-0-0-6-8-6-8;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:347 */
 .x-tab-default-top-tl {
@@ -15433,7 +15433,7 @@ div.x-border-layout-ct {
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:464 */
 .x-tab-default-top-mc {
-    padding: 8px 10px 8px 10px;
+    padding: 6px 8px 6px 8px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:187 */
 .x-tab-default-bottom {
@@ -15449,7 +15449,7 @@ div.x-border-layout-ct {
     -moz-border-radius-bottomleft: 0;
     -webkit-border-bottom-left-radius: 0;
     border-bottom-left-radius: 0;
-    padding: 8px 10px 8px 10px;
+    padding: 6px 8px 6px 8px;
     border-width: 0 0 0 0;
     border-style: solid;
     background-image: none;
@@ -15476,7 +15476,7 @@ div.x-border-layout-ct {
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:281 */
 .x-tab-default-bottom-frameInfo {
-    font-family: th-0-0-0-0-0-0-0-0-8-10-8-10;
+    font-family: th-0-0-0-0-0-0-0-0-6-8-6-8;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:347 */
 .x-tab-default-bottom-tl {
@@ -15548,7 +15548,7 @@ div.x-border-layout-ct {
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:464 */
 .x-tab-default-bottom-mc {
-    padding: 8px 10px 8px 10px;
+    padding: 6px 8px 6px 8px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:187 */
 .x-tab-default-left {
@@ -15564,7 +15564,7 @@ div.x-border-layout-ct {
     -moz-border-radius-bottomleft: 0;
     -webkit-border-bottom-left-radius: 0;
     border-bottom-left-radius: 0;
-    padding: 8px 10px 8px 10px;
+    padding: 6px 8px 6px 8px;
     border-width: 0 0 0 0;
     border-style: solid;
     background-image: none;
@@ -15591,7 +15591,7 @@ div.x-border-layout-ct {
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:281 */
 .x-tab-default-left-frameInfo {
-    font-family: th-0-0-0-0-0-0-0-0-8-10-8-10;
+    font-family: th-0-0-0-0-0-0-0-0-6-8-6-8;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:347 */
 .x-tab-default-left-tl {
@@ -15663,7 +15663,7 @@ div.x-border-layout-ct {
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:464 */
 .x-tab-default-left-mc {
-    padding: 8px 10px 8px 10px;
+    padding: 6px 8px 6px 8px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:187 */
 .x-tab-default-right {
@@ -15679,7 +15679,7 @@ div.x-border-layout-ct {
     -moz-border-radius-bottomleft: 0;
     -webkit-border-bottom-left-radius: 0;
     border-bottom-left-radius: 0;
-    padding: 8px 10px 8px 10px;
+    padding: 6px 8px 6px 8px;
     border-width: 0 0 0 0;
     border-style: solid;
     background-image: none;
@@ -15706,7 +15706,7 @@ div.x-border-layout-ct {
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:281 */
 .x-tab-default-right-frameInfo {
-    font-family: th-0-0-0-0-0-0-0-0-8-10-8-10;
+    font-family: th-0-0-0-0-0-0-0-0-6-8-6-8;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:347 */
 .x-tab-default-right-tl {
@@ -15778,7 +15778,7 @@ div.x-border-layout-ct {
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-base/sass/etc/mixins/frame.scss:464 */
 .x-tab-default-right-mc {
-    padding: 8px 10px 8px 10px;
+    padding: 6px 8px 6px 8px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-neutral/sass/var/tab/Tab.scss:2672 */
 .x-tab-default {
@@ -15936,19 +15936,19 @@ div.x-border-layout-ct {
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-neutral/sass/var/tab/Tab.scss:3286 */
 .x-tab-text.x-tab-icon-left > .x-tab-icon-el-default {
-    margin-right: 6px;
+    margin-right: 4px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-neutral/sass/var/tab/Tab.scss:3297 */
 .x-tab-text.x-tab-icon-right > .x-tab-icon-el-default {
-    margin-left: 6px;
+    margin-left: 4px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-neutral/sass/var/tab/Tab.scss:3308 */
 .x-tab-text.x-tab-icon-top > .x-tab-icon-el-default {
-    margin-bottom: 6px;
+    margin-bottom: 4px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-neutral/sass/var/tab/Tab.scss:3312 */
 .x-tab-text.x-tab-icon-bottom > .x-tab-icon-el-default {
-    margin-top: 6px;
+    margin-top: 4px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-neutral/sass/var/tab/Tab.scss:3318 */
 .x-keyboard-mode .x-tab-focus.x-tab-default {

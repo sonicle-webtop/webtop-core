@@ -14,6 +14,9 @@ Use surface colors for elements like cards, buttons, modals, toolbars, and other
 --wt-theme-color-surface-l3       : Surface – Color for backgrounds at L3
 --wt-theme-color-surface-l4       : Surface – Color for backgrounds at L4
 
+--wt-theme-color-ct1 : Container Surface - High-emphasis primary surface
+--wt-theme-color-ct2 : Container Surface - High-emphasis secondary surface (eg. selections)
+
 --wt-theme-color-n1      : On color – Neutral primary text and icons against any base surface color
 --wt-theme-color-n1-inv  : On color – Inverted color of the above primary
 --wt-theme-color-n2      : On color – Neutral secondary text and icons with lower-emphasis against any base surface color
@@ -21,19 +24,11 @@ Use surface colors for elements like cards, buttons, modals, toolbars, and other
 
 --wt-theme-color-1         : Primary – High-emphasis fills, texts, and icons against surface
 --wt-theme-color-2         : Secondary – Less prominent fills, text, and icons against surface
---wt-theme-color-3         : Tertiary – Neutral fills, text, and icons against surface
+--wt-theme-color-3         : Tertiary – Neutral fills, text, and icons against surface (eg. placehoders)
 --wt-theme-color-off       : Off - Low-attention (indicating off/disabled status) fills, texts, and icons against surface 
 --wt-theme-color-hyperlink : Hyperlinks - Emphatized fills, text, and icons against surface
 
 Use primary roles for the most prominent components across the UI, such as the FAB, high-emphasis buttons, and active states.
-
---wt-theme-color-1-on    : On primary – Text and icons against primary
---wt-theme-color-1-ct    : Primary container – Standout fill color against surface, for key components like FAB
---wt-theme-color-1-ct-on : On primary container – Text and icons against primary container
-
---wt-theme-color-2-on    : On secondary – Text and icons against secondary
---wt-theme-color-ct-2    : Secondary container – Less prominent fill color against surface, for recessive components like tonal buttons
---wt-theme-color-ct-2-on : On secondary container – Text and icons against secondary container
 
 --wt-theme-color-ok          : Ok – Attention-grabbing color against surface for fills, icons, and text; indicating safe status
 --wt-theme-color-ok-on       : On ok – Text and icons against safe status
@@ -55,6 +50,7 @@ Use primary roles for the most prominent components across the UI, such as the F
 --wt-theme-color-scrollbar-thumb : Color for scrollbar thumb component
 --wt-theme-color-scrollbar-track : Color for scrollbar track component
 --wt-theme-color-mask            : Color for overlay masks
+--wt-theme-color-field           : Field - Color for field (body) backgrounds
 --wt-theme-color-dialog          : Dialog - Color for dialog (body) backgrounds
 --wt-theme-color-dialog-on       : On dialog - Text and icons against dialogs surface
 --wt-theme-color-dialog-hd       : Dialog Header - Color for dialog header backgrounds
