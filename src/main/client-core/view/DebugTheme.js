@@ -36,12 +36,19 @@ Ext.define('Sonicle.webtop.core.view.DebugTheme', {
 		
 	],
 	
+	dockableConfig: {
+		title: 'debugTheme',
+		iconCls: 'wt-icon-debugTheme',
+		width: 800,
+		height: 600
+	},
+	
 	initComponent: function() {
 		var me = this, gridStore;
 		me.callParent(arguments);
 		
 		gridStore = Ext.create('Ext.data.Store', {
-			fields:[ 'name', 'email', 'phone'],
+			fields: ['name', 'email', 'phone'],
 			data: [
 				{"id":1,"name":"Louise Campbell","email":"lcampbell0@google.com.au","phone":"1-(253)731-6972"},
 				{"id":2,"name":"Katherine Berry","email":"kberry1@cnet.com","phone":"1-(206)238-5084"},
@@ -95,7 +102,7 @@ Ext.define('Sonicle.webtop.core.view.DebugTheme', {
 			items: [
 				{
 					title: 'Tab 1',
-					glyph: 'xf0ce@FontAwesome',
+					iconCls: 'fa-solid fa-table',
 					layout: {
 						type: 'border'
 					},
@@ -118,7 +125,7 @@ Ext.define('Sonicle.webtop.core.view.DebugTheme', {
 										{
 											xtype: 'button',
 											text: 'Menu',
-											glyph: 'xf0c9@FontAwesome',
+											iconCls: 'fa-solid fa-bars',
 											menu: [{
 												text: 'Option 1'
 											}, {
@@ -138,6 +145,9 @@ Ext.define('Sonicle.webtop.core.view.DebugTheme', {
 												text: 'Three',
 												enableToggle: true
 											}]
+										}, {
+											xtype: 'button',
+											text: 'Four'
 										}, {
 											xtype: 'tbspacer',
 											flex: 1
@@ -241,6 +251,198 @@ Ext.define('Sonicle.webtop.core.view.DebugTheme', {
 					title: 'Tab 3',
 					bodyPadding: 10,
 					html: 'Nothing to see here.'
+				}, {
+					title: 'Tab Buttons',
+					bodyPadding: 10,
+					items: [
+						{
+							xtype: 'container',
+							layout: 'anchor',
+							defaults: {
+								labelWidth: 150
+							},
+							items: [
+								{
+									xtype: 'fieldcontainer',
+									layout: 'hbox',
+									defaults: {
+										margin: '0 0 0 10'
+									},
+									items: [
+										{
+											xtype: 'button',
+											text: 'normal',
+											iconCls: 'fa-solid fa-star'
+										}, {
+											xtype: 'button',
+											text: 'pressed',
+											iconCls: 'fa-solid fa-star',
+											pressed: true
+										}, {
+											xtype: 'button',
+											text: 'disabled',
+											iconCls: 'fa-solid fa-star',
+											disabled: true
+										}
+									],
+									fieldLabel: 'default',
+									anchor: '100%'
+								}, {
+									xtype: 'fieldcontainer',
+									layout: 'hbox',
+									defaults: {
+										ui: '{primary}',
+										margin: '0 0 0 10'
+									},
+									items: [
+										{
+											xtype: 'button',
+											text: 'normal',
+											iconCls: 'fa-solid fa-star'
+										}, {
+											xtype: 'button',
+											text: 'pressed',
+											iconCls: 'fa-solid fa-star',
+											pressed: true
+										}, {
+											xtype: 'button',
+											text: 'disabled',
+											iconCls: 'fa-solid fa-star',
+											disabled: true
+										}
+									],
+									fieldLabel: 'primary',
+									anchor: '100%'
+								}, {
+									xtype: 'fieldcontainer',
+									layout: 'hbox',
+									defaults: {
+										ui: '{secondary}',
+										margin: '0 0 0 10'
+									},
+									items: [
+										{
+											xtype: 'button',
+											text: 'normal',
+											iconCls: 'fa-solid fa-star'
+										}, {
+											xtype: 'button',
+											text: 'pressed',
+											iconCls: 'fa-solid fa-star',
+											pressed: true
+										}, {
+											xtype: 'button',
+											text: 'disabled',
+											iconCls: 'fa-solid fa-star',
+											disabled: true
+										}
+									],
+									fieldLabel: 'secondary',
+									anchor: '100%'
+								}, {
+									xtype: 'fieldcontainer',
+									layout: 'hbox',
+									defaults: {
+										ui: '{tertiary}',
+										margin: '0 0 0 10'
+									},
+									items: [
+										{
+											xtype: 'button',
+											text: 'normal',
+											iconCls: 'fa-solid fa-star'
+										}, {
+											xtype: 'button',
+											text: 'pressed',
+											iconCls: 'fa-solid fa-star',
+											pressed: true
+										}, {
+											xtype: 'button',
+											text: 'disabled',
+											iconCls: 'fa-solid fa-star',
+											disabled: true
+										}
+									],
+									fieldLabel: 'tertiary',
+									anchor: '100%'
+								}, {
+									xtype: 'fieldcontainer',
+									layout: 'hbox',
+									items: [
+										{
+											xtype: 'segmentedbutton',
+											defaults: {
+												ui: '{segmented}'
+											},
+											items: [
+												{
+													text: 'normal 1'
+												}, {
+													text: 'normal 2'
+												}, {
+													text: 'normal 3'
+												}, {
+													text: 'disabled',
+													disabled: true
+												}
+											]
+										}
+									],
+									fieldLabel: 'segmented',
+									anchor: '100%'
+								}, /*{
+									xtype: 'fieldcontainer',
+									layout: 'hbox',
+									defaults: {
+										ui: '{icon}',
+										margin: '0 0 0 10'
+									},
+									items: [
+										{
+											xtype: 'button',
+											iconCls: 'fa-solid fa-star'
+										}, {
+											xtype: 'button',
+											iconCls: 'fa-solid fa-star',
+											pressed: true
+										}, {
+											xtype: 'button',
+											iconCls: 'fa-solid fa-star',
+											disabled: true
+										}
+									],
+									fieldLabel: 'icon',
+									anchor: '100%'
+								},*/ {
+									xtype: 'fieldcontainer',
+									layout: 'hbox',
+									defaults: {
+										ui: '{taskbar}',
+										margin: '0 0 0 10'
+									},
+									items: [
+										{
+											xtype: 'button',
+											iconCls: 'fa-solid fa-star',
+											text: 'normal'
+										}, {
+											xtype: 'button',
+											text: 'pressed',
+											iconCls: 'fa-solid fa-star',
+											pressed: true
+										}, {
+											xtype: 'button',
+											text: 'disabled',
+											iconCls: 'fa-solid fa-star',
+											disabled: true
+										}
+									],
+									fieldLabel: 'taskbar',
+									anchor: '100%'
+								}
+							]
+						}	
+					]
 				}
 			]
 		});
