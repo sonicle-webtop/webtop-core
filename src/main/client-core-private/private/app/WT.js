@@ -77,74 +77,122 @@ Ext.define('Sonicle.webtop.core.private.app.WT', {
 	],
 	*/
 	
-	paletteDefault_oldmaterial: [ // 11 columns (from material colors 100 -> 900)
-		// Red | Pink | Purple | Indigo | Blue | Green | Light Green| Yellow | Orange | Brown | Grey (+ white)
-		// (each column dark->light bottom-up)
-		'FFCDD2', 'F8BBD0', 'E1BEE7', 'C5CAE9', 'BBDEFB', 'C8E6C9', 'DCEDC8', 'FFF9C4', 'FFE0B2', 'D7CCC8', 'FFFFFF'/*'F5F5F5'*/,
-		'EF9A9A', 'F48FB1', 'CE93D8', '9FA8DA', '90CAF9', 'A5D6A7', 'C5E1A5', 'FFF59D', 'FFCC80', 'BCAAA4', 'EEEEEE',
-		'E57373', 'F06292', 'BA68C8', '7986CB', '64B5F6', '81C784', 'AED581', 'FFF176', 'FFB74D', 'A1887F', 'E0E0E0',
-		'EF5350', 'EC407A', 'AB47BC', '5C6BC0', '42A5F5', '66BB6A', '9CCC65', 'FFEE58', 'FFA726', '8D6E63', 'BDBDBD',
-		'F44336', 'E91E63', '9C27B0', '3F51B5', '2196F3', '4CAF50', '8BC34A', 'FFEB3B', 'FF9800', '795548', '9E9E9E',
-		'E53935', 'D81B60', '8E24AA', '3949AB', '1E88E5', '43A047', '7CB342', 'FDD835', 'FB8C00', '6D4C41', '757575',
-		'D32F2F', 'C2185B', '7B1FA2', '303F9F', '1976D2', '388E3C', '689F38', 'FBC02D', 'F57C00', '5D4037', '616161',
-		'C62828', 'AD1457', '6A1B9A', '283593', '1565C0', '2E7D32', '558B2F', 'F9A825', 'EF6C00', '4E342E', '424242',
-		'B71C1C', '880E4F', '4A148C', '1A237E', '0D47A1', '1B5E20', '33691E', 'F57F17', 'E65100', '3E2723', '212121'
-	],
+	paletteDefault_oldmaterial: { // 11 columns (from material colors 100 -> 900)
+		columns: 11,
+		colors: [
+			// Red | Pink | Purple | Indigo | Blue | Green | Light Green| Yellow | Orange | Brown | Grey (+ white)
+			// (each column dark->light bottom-up)
+			'FFCDD2', 'F8BBD0', 'E1BEE7', 'C5CAE9', 'BBDEFB', 'C8E6C9', 'DCEDC8', 'FFF9C4', 'FFE0B2', 'D7CCC8', 'FFFFFF'/*'F5F5F5'*/,
+			'EF9A9A', 'F48FB1', 'CE93D8', '9FA8DA', '90CAF9', 'A5D6A7', 'C5E1A5', 'FFF59D', 'FFCC80', 'BCAAA4', 'EEEEEE',
+			'E57373', 'F06292', 'BA68C8', '7986CB', '64B5F6', '81C784', 'AED581', 'FFF176', 'FFB74D', 'A1887F', 'E0E0E0',
+			'EF5350', 'EC407A', 'AB47BC', '5C6BC0', '42A5F5', '66BB6A', '9CCC65', 'FFEE58', 'FFA726', '8D6E63', 'BDBDBD',
+			'F44336', 'E91E63', '9C27B0', '3F51B5', '2196F3', '4CAF50', '8BC34A', 'FFEB3B', 'FF9800', '795548', '9E9E9E',
+			'E53935', 'D81B60', '8E24AA', '3949AB', '1E88E5', '43A047', '7CB342', 'FDD835', 'FB8C00', '6D4C41', '757575',
+			'D32F2F', 'C2185B', '7B1FA2', '303F9F', '1976D2', '388E3C', '689F38', 'FBC02D', 'F57C00', '5D4037', '616161',
+			'C62828', 'AD1457', '6A1B9A', '283593', '1565C0', '2E7D32', '558B2F', 'F9A825', 'EF6C00', '4E342E', '424242',
+			'B71C1C', '880E4F', '4A148C', '1A237E', '0D47A1', '1B5E20', '33691E', 'F57F17', 'E65100', '3E2723', '212121'
+		]
+	},
 	
-	paletteDefault: [ // 11 columns (from tailwind colors 100 -> 900)
-		// Red | Pink | Purple | Blue | Cyan | Emerald | Lime| Yellow | Orange | Stone | Gray
-		// (each column dark->light bottom-up)
-		'FEE2E2', 'FCE7F3', 'F3E8FF', 'DBEAFE', 'CFFAFE', 'D1FAE5', 'ECFCCB', 'FEF3C7', 'FFEDD5', 'F5F5F4', 'F3F4F6',
-		'FECACA', 'FBCFE8', 'E9D5FF', 'BFDBFE', 'A5F3FC', 'A7F3D0', 'D9F99D', 'FDE68A', 'FED7AA', 'E5E7EB', 'E5E7EB',
-		'FCA5A5', 'F9A8D4', 'D8B4FE', '93C5FD', '67E8F9', '6EE7B7', 'BEF264', 'FCD34D', 'FDBA74', 'D6D3D1', 'D1D5DB',
-		'F87171', 'F472B6', 'C084FC', '60A5FA', '22D3EE', '34D399', 'A3E635', 'FBBF24', 'FB923C', 'A8A29E', '9CA3AF',
-		'EF4444', 'EC4899', 'A855F7', '3B82F6', '06B6D4', '10B981', '84CC16', 'F59E0B', 'F97316', '78716C', '6B7280',
-		'DC2626', 'DB2777', '9333EA', '2563EB', '0891B2', '059669', '65A30D', 'D97706', 'EA580C', '57534E', '4B5563',
-		'B91C1C', 'BE185D', '7E22CE', '1D4ED8', '0E7490', '047857', '4D7C0F', 'B45309', 'C2410C', '44403C', '374151',
-		'991B1B', '9D174D', '6B21A8', '1E40AF', '155E75', '065F46', '3F6212', '92400E', '9A3412', '292524', '1F2937',
-		'7F1D1D', '831843', '581C87', '1E3A8A', '164E63', '064E3B', '365314', '78350F', '7C2D12', '1C1917', '111827'
-	],
+	paletteDefault: { // 11 columns (from tailwind colors 100 -> 900)
+		columns: 11,
+		colors: [
+			// Red | Pink | Purple | Blue | Cyan | Emerald | Lime| Yellow | Orange | Stone | Gray
+			// (each column dark->light bottom-up)
+			'FEE2E2', 'FCE7F3', 'F3E8FF', 'DBEAFE', 'CFFAFE', 'D1FAE5', 'ECFCCB', 'FEF3C7', 'FFEDD5', 'F5F5F4', 'F3F4F6',
+			'FECACA', 'FBCFE8', 'E9D5FF', 'BFDBFE', 'A5F3FC', 'A7F3D0', 'D9F99D', 'FDE68A', 'FED7AA', 'E5E7EB', 'E5E7EB',
+			'FCA5A5', 'F9A8D4', 'D8B4FE', '93C5FD', '67E8F9', '6EE7B7', 'BEF264', 'FCD34D', 'FDBA74', 'D6D3D1', 'D1D5DB',
+			'F87171', 'F472B6', 'C084FC', '60A5FA', '22D3EE', '34D399', 'A3E635', 'FBBF24', 'FB923C', 'A8A29E', '9CA3AF',
+			'EF4444', 'EC4899', 'A855F7', '3B82F6', '06B6D4', '10B981', '84CC16', 'F59E0B', 'F97316', '78716C', '6B7280',
+			'DC2626', 'DB2777', '9333EA', '2563EB', '0891B2', '059669', '65A30D', 'D97706', 'EA580C', '57534E', '4B5563',
+			'B91C1C', 'BE185D', '7E22CE', '1D4ED8', '0E7490', '047857', '4D7C0F', 'B45309', 'C2410C', '44403C', '374151',
+			'991B1B', '9D174D', '6B21A8', '1E40AF', '155E75', '065F46', '3F6212', '92400E', '9A3412', '292524', '1F2937',
+			'7F1D1D', '831843', '581C87', '1E3A8A', '164E63', '064E3B', '365314', '78350F', '7C2D12', '1C1917', '111827'
+		]
+	},
 	
-	paletteLight: [ // 11 columns (from material colors 50, 100, 200)
-		// Red | Pink | Purple | Indigo | Blue | Green | Light Green| Yellow | Orange | Brown | Grey
-		// (each column dark->light bottom-up)
-		'FFEBEE', 'FCE4EC', 'F3E5F5', 'E8EAF6', 'E3F2FD', 'E8F5E9', 'F1F8E9', 'FFFDE7', 'FFF3E0', 'EFEBE9', 'FAFAFA',
-		'FFCDD2', 'F8BBD0', 'E1BEE7', 'C5CAE9', 'BBDEFB', 'C8E6C9', 'DCEDC8', 'FFF9C4', 'FFE0B2', 'D7CCC8', 'F5F5F5',
-		'EF9A9A', 'F48FB1', 'CE93D8', '9FA8DA', '90CAF9', 'A5D6A7', 'C5E1A5', 'FFF59D', 'FFCC80', 'BCAAA4', 'EEEEEE'
-	],
+	paletteLightMaterial: { // 11 columns (from material colors 50, 100, 200)
+		columns: 11,
+		colors: [
+			// Red | Pink | Purple | Indigo | Blue | Green | Light Green| Yellow | Orange | Brown | Grey
+			// (each column dark->light bottom-up)
+			'FFEBEE', 'FCE4EC', 'F3E5F5', 'E8EAF6', 'E3F2FD', 'E8F5E9', 'F1F8E9', 'FFFDE7', 'FFF3E0', 'EFEBE9', 'FAFAFA',
+			'FFCDD2', 'F8BBD0', 'E1BEE7', 'C5CAE9', 'BBDEFB', 'C8E6C9', 'DCEDC8', 'FFF9C4', 'FFE0B2', 'D7CCC8', 'F5F5F5',
+			'EF9A9A', 'F48FB1', 'CE93D8', '9FA8DA', '90CAF9', 'A5D6A7', 'C5E1A5', 'FFF59D', 'FFCC80', 'BCAAA4', 'EEEEEE'
+		]
+	},
 	
-	paletteHtml: [ // 8 columns
-		// Black to white (dark->light left-to-right)
-		'000000', '444444', '666666', '999999', 'CCCCCC', 'EEEEEE', 'F3F3F3', 'FFFFFF',
-		// Conventional colors
-		'FF0000', 'FF9900', 'FFFF00', '00FF00', '00FFFF', '0000FF', '9900FF', 'FF00FF',
-		// Color shades (each column dark->light bottom-up)
-		'F4CCCC', 'FCE5CD', 'FFF2CC', 'D9EAD3', 'D0E0E3', 'CFE2F3', 'D9D2E9', 'EAD1DC',
-		'EA9999', 'F9CB9C', 'FFE599', 'B6D7A8', 'A2C4C9', '9FC5E8', 'B4A7D6', 'D5A6BD',
-		'E06666', 'F6B26B', 'FFD996', '93C47D', '76A5AF', '6FA8DC', '8E7CC3', 'C27BA0',
-		'CC0000', 'E69138', 'F1C232', '6AA84F', '45818E', '3D85C6', '674EA7', 'A64D79',
-		'990000', 'B45F06', 'BF9000', '38761D', '134F5C', '0B5394', '351C75', '741B47',
-		'660000', '783F04', '7F6000', '274E13', '0C343D', '073763', '20124D', '4C1130'
-	],
+	paletteLight: { // 11 columns (from tailwind colors 50, 100, 200)
+		columns: 11,
+		colors: [
+			// Red | Pink | Purple | Blue | Cyan | Emerald | Lime | Yellow | Orange | Stone | Gray
+			// (each column light->dark top-down direction)
+			'fef2f2', 'fdf2f8', 'faf5ff', 'eff6ff', 'ecfeff', 'ecfdf5', 'f7fee7', 'fefce8', 'fff7ed', 'fafaf9', 'f9fafb',
+			'fee2e2', 'fce7f3', 'f3e8ff', 'dbeafe', 'cffafe', 'd1fae5', 'ecfccb', 'fef9c3', 'ffedd5', 'f5f5f4', 'f3f4f6',
+			'fecaca', 'fbcfe8', 'e9d5ff', 'bfdbfe', 'a5f3fc', 'a7f3d0', 'd9f99d', 'fef08a', 'fed7aa', 'e7e5e4', 'e5e7eb'
+		]
+	},
 	
-	paletteLegacy: [ // 8 columns
-		'AC725E','D06B64','F83A22','FA573C','FF7537','FFAD46','FAD165','FBE983',
-		'4986E7','9FC6E7','9FE1E7','92E1C0','42D692','16A765','7BD148','B3DC6C',
-		'9A9CFF','B99AFF','A47AE2','CD74E6','F691B2','CCA6AC','CABDBF','C2C2C2',
-		'FFFFFF'
-	],
+	paletteDark: { // 11 columns (from tailwind colors 950, 900, 800)
+		columns: 11,
+		colors: [
+			// Red | Pink | Purple | Blue | Cyan | Emerald | Lime | Yellow | Orange | Stone | Gray
+			// (each column dark->light top-down direction)
+			'450a0a', '500724', '3b0764', '172554', '083344', '022c22', '1a2e05', '422006', '431407', '0c0a09', '030712',
+			'7f1d1d', '831843', '581c87', '1e3a8a', '164e63', '064e3b', '365314', '713f12', '7c2d12', '1c1917', '111827',
+			'991b1b', '9d174d', '6b21a8', '1e40af', '155e75', '065f46', '3f6212', '854d0e', '9a3412', '292524', '1f2937'
+		]
+	},
 	
-	getColorPalette: function(name) {
+	paletteHtml: { // 8 columns
+		columns: 8,
+		colors: [
+			// Black to white (dark->light left-to-right)
+			'000000', '444444', '666666', '999999', 'CCCCCC', 'EEEEEE', 'F3F3F3', 'FFFFFF',
+			// Conventional colors
+			'FF0000', 'FF9900', 'FFFF00', '00FF00', '00FFFF', '0000FF', '9900FF', 'FF00FF',
+			// Color shades (each column dark->light bottom-up)
+			'F4CCCC', 'FCE5CD', 'FFF2CC', 'D9EAD3', 'D0E0E3', 'CFE2F3', 'D9D2E9', 'EAD1DC',
+			'EA9999', 'F9CB9C', 'FFE599', 'B6D7A8', 'A2C4C9', '9FC5E8', 'B4A7D6', 'D5A6BD',
+			'E06666', 'F6B26B', 'FFD996', '93C47D', '76A5AF', '6FA8DC', '8E7CC3', 'C27BA0',
+			'CC0000', 'E69138', 'F1C232', '6AA84F', '45818E', '3D85C6', '674EA7', 'A64D79',
+			'990000', 'B45F06', 'BF9000', '38761D', '134F5C', '0B5394', '351C75', '741B47',
+			'660000', '783F04', '7F6000', '274E13', '0C343D', '073763', '20124D', '4C1130'
+		]
+	},
+	
+	paletteLegacy: { // 8 columns
+		columns: 8,
+		colors: [
+			'AC725E','D06B64','F83A22','FA573C','FF7537','FFAD46','FAD165','FBE983',
+			'4986E7','9FC6E7','9FE1E7','92E1C0','42D692','16A765','7BD148','B3DC6C',
+			'9A9CFF','B99AFF','A47AE2','CD74E6','F691B2','CCA6AC','CABDBF','C2C2C2',
+			'FFFFFF'
+		]
+	},
+	
+	getColorPalette: function(name, extended) {
+		var me = this, palette;
 		switch (name) {
 			case 'html':
-				return this.paletteHtml;
+				palette = me.paletteHtml;
+				break;
+			case 'lightmaterial': /* deprecated */
+				palette = me.paletteLight;
+				break;
 			case 'light':
-				return this.paletteLight;
+				palette = me.paletteLight;
+				break;
+			case 'dark':
+				palette = me.paletteDark;
+				break;
 			case 'legacy':
-				return this.paletteLegacy;
+				palette = me.paletteLegacy;
+				break;
 			default:
-				return this.paletteDefault;
+				palette = me.paletteDefault;
 		}
+		return extended === true ? palette : palette.colors;
 	},
 	
 	logout: function() {
@@ -509,6 +557,10 @@ Ext.define('Sonicle.webtop.core.private.app.WT', {
 			}
 		}
 		return arr.length > 0 ? new RegExp('^(?:' + SoS.join('|', urls) + ')', 'i') : null;
+	},
+	
+	getUIColorScheme: function() {
+		return WT.getVar('colorScheme');
 	},
 	
 	/**

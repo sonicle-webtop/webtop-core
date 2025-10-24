@@ -58,6 +58,7 @@ import com.sonicle.webtop.core.app.RunContext;
 import com.sonicle.webtop.core.app.CorePrivateEnvironment;
 import com.sonicle.webtop.core.app.DocEditorManager;
 import com.sonicle.webtop.core.app.OTPManager;
+import com.sonicle.webtop.core.app.UIBoot;
 import com.sonicle.webtop.core.app.WT;
 import com.sonicle.webtop.core.app.WebTopSession;
 import com.sonicle.webtop.core.app.io.dbutils.FilterInfo;
@@ -138,6 +139,7 @@ import com.sonicle.webtop.core.app.model.UILookAndFeel;
 import com.sonicle.webtop.core.app.model.UIPreset;
 import com.sonicle.webtop.core.app.model.UITheme;
 import com.sonicle.webtop.core.app.sdk.WTUnsupportedOperationException;
+import com.sonicle.webtop.core.bol.js.JsUIPreset;
 import com.sonicle.webtop.core.products.TMCEPremiumProduct;
 import com.sonicle.webtop.core.util.AppLocale;
 import com.sonicle.webtop.core.sdk.BaseService;
@@ -360,6 +362,7 @@ public class Service extends BaseService implements EventListener {
 		vars.put("theme", us.getUITheme());
 		vars.put("laf", us.getUILookAndFeel());
 		vars.put("layout", us.getUILayout());
+		vars.put("colorScheme", UIBoot.getColorScheme(us.getUILookAndFeel()));
 		vars.put("viewportHeaderScale", EnumUtils.toSerializedName(us.getViewportHeaderScale()));
 		vars.put("startupService", us.getStartupService());
 		vars.put("desktopNotification", us.getDesktopNotification());
@@ -541,9 +544,9 @@ public class Service extends BaseService implements EventListener {
 	public void processLookupUIPresets(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
 		
 		try {
-			List<JsSimple> items = new ArrayList<>();
+			List<JsUIPreset> items = new ArrayList<>();
 			for (UIPreset ui : coreMgr.listUIPresets().values()) {
-				items.add(new JsSimple(ui.getId(), ui.getName()));
+				items.add(new JsUIPreset(ui.getId(), ui.getName(), UIBoot.getColorScheme(ui.getLookAndFeel())));
 			}
 			new JsonResult(items, items.size()).printTo(out);
 

@@ -38,6 +38,7 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 		'Sonicle.String',
 		'Sonicle.panel.Markdown',
 		'WTA.model.Simple',
+		'WTA.private.model.UIPreset',
 		'WTA.store.HeaderScale',
 		'WTA.store.DesktopNotification',
 		'WTA.store.OTPDelivery',
@@ -145,7 +146,7 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 				bind: '{record.ui}',
 				store: {
 					autoLoad: true,
-					model: 'WTA.model.Simple',
+					model: 'WTA.private.model.UIPreset',
 					proxy: WTF.proxy(me.ID, 'LookupUIPresets', 'data')
 				},
 				listeners: {

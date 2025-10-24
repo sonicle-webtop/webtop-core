@@ -924,6 +924,7 @@ public class WebTopSession {
 		String layout = applyRuntimeUILayout(cus);
 		UIPreset preset = applyRuntimeUIPreset(new CoreServiceSettings(CoreManifest.ID, profile.getDomainId()), cus);
 		String theme = preset.getTheme(), lookAndFeel = preset.getLookAndFeel();
+		String colorScheme = UIBoot.guessColorScheme(lookAndFeel);
 		
 		CoreSettings.TryMeBanner tmb = cus.getUITryMeBanner();
 		if (tmb != null) {
@@ -942,7 +943,7 @@ public class WebTopSession {
 		}
 		Locale locale = getLocale();
 		
-		fillAppReferences(js, locale, theme, lookAndFeel, false);
+		fillAppReferences(js, locale, colorScheme, theme, lookAndFeel, false);
 		js.layoutClassName = StringUtils.capitalize(layout);
 		
 		List<String> privateSids = getPrivateServices(true);
@@ -1089,6 +1090,7 @@ public class WebTopSession {
 		ServiceManager svcm = wta.getServiceManager();
 		String theme = WebTopProps.getUIPublicTheme(wta.getProperties());
 		String lookAndFeel = WebTopProps.getUIPublicLAF(wta.getProperties());
+		String colorScheme = UIBoot.guessColorScheme(lookAndFeel);
 		
 		ReadableUserAgent readableUa = WebTopApp.getUserAgentInfo(getClientPlainUserAgent());
 		ReadableDeviceCategory.Category deviceCategory = ReadableDeviceCategory.Category.UNKNOWN;
@@ -1097,7 +1099,7 @@ public class WebTopSession {
 			theme += "-touch";
 		}
 
-		fillAppReferences(js, locale, theme, lookAndFeel, false);
+		fillAppReferences(js, locale, colorScheme, theme, lookAndFeel, false);
 		
 		final List<String> publicSids = Arrays.asList(CoreManifest.ID, publicServiceId);
 		// Include services references
@@ -1144,10 +1146,11 @@ public class WebTopSession {
 		return is;
 	}
 	
-	private void fillAppReferences(final JsWTS js, final Locale locale, final String theme, final String lookAndFeel, final boolean rtl) {
+	private void fillAppReferences(final JsWTS js, final Locale locale, final String colorScheme, final String theme, final String lookAndFeel, final boolean rtl) {
 		js.appManifest.name = "Sonicle.webtop.core.app.App";
 		js.appManifest.id = "5ae25afe-182c-466c-a6ad-0a3af0ee74b5";
 		js.appManifest.theme = theme;
+		js.colorScheme = colorScheme;
 		js.themeName = theme; // Depsite the name, it's actually the theme identifier! (in lower-case form)
 		js.lafName = lookAndFeel;
 		js.platformName = wta.getPlatformName();

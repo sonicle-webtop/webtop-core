@@ -60,6 +60,7 @@ Ext.define('Sonicle.webtop.core.model.ServiceVars', {
 		WTF.field('theme', 'string'), // Also a user-option
 		WTF.field('layout', 'string'), // Also a user-option
 		WTF.field('laf', 'string'), // Also a user-option
+		WTF.roField('colorScheme', 'string'), // RO: only changed after a reload
 		WTF.field('viewportHeaderScale', 'string'), // Also a user-option
 		WTF.field('startupService', 'string'), // Also a user-option
 		WTF.field('desktopNotification', 'string'), // Also a user-option
