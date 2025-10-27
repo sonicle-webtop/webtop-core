@@ -30,8 +30,8 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2025 Sonicle S.r.l.".
  */
-Ext.define('Sonicle.webtop.core.private.model.UIPreset', {
-	alternateClassName: 'WTA.private.model.UIPreset',
+Ext.define('Sonicle.webtop.core.model.UIPreset', {
+	alternateClassName: 'WTA.model.UIPreset',
 	extend: 'WTA.ux.data.BaseModel',
 	
 	identifier: 'negative',
