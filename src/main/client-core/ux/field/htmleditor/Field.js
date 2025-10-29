@@ -43,7 +43,7 @@ Ext.define('Sonicle.webtop.core.ux.field.htmleditor.Field', {
 			icfg = Sonicle.Utils.getConstructorConfigs(me, cfg, [
 				{fonts: true}, {fontSizes: true}, {fontColors: true}, {fontColorsTilesPerRow: true}, {toolIcons: true}
 			]),
-			toolTexts = function(toolName) {
+			toolTexts = function(toolName, moreTexts) {
 				var prefix = 'htmleditor.tool.',
 						obj = {
 							tooltipTitle: WT.res(prefix + toolName + '.tip.tit'),
@@ -54,13 +54,17 @@ Ext.define('Sonicle.webtop.core.ux.field.htmleditor.Field', {
 				});
 				return obj;
 			},
-			toolIcons = function(toolName) {
+			toolIcons = function(toolName, moreIcons) {
 				var prefix = 'wt-icon-htmled-',
 						obj = {
 							toolIconCls: prefix + toolName
 						};
 				Ext.iterate(Ext.Array.slice(arguments, 1), function(icon) {
-					obj[icon+'IconCls'] = prefix + icon;
+					if (Ext.isString(icon)) {
+						obj[icon+'IconCls'] = prefix + icon;
+					} else if (Ext.isArray(icon) && Ext.isString(icon[0]) && Ext.isString(icon[1])) {
+						obj[icon[0]+'IconCls'] = prefix + icon[1];
+					}
 				});
 				return obj;
 			};
@@ -108,8 +112,8 @@ Ext.define('Sonicle.webtop.core.ux.field.htmleditor.Field', {
 			underline: toolIcons('underline'),
 			formattools: toolIcons('formattools', 'strikethrough', 'subscript', 'superscript', 'blockquote', 'code', 'pre', 'outdent', 'indent', 'clearformat', 'lowercase', 'uppercase', 'titlecase'),
 			alignselect: toolIcons('', 'alignLeft', 'alignCenter', 'alignRight', 'alignJustify'),
-			bulllistselect: toolIcons('bulletList'),
-			numlistselect: toolIcons('numberList'),
+			bulllistselect: toolIcons('bulletList', ['default', 'bulletList-default'], ['circle', 'bulletList-circle'], ['square', 'bulletList-square']),
+			numlistselect: toolIcons('numberList', ['default', 'numberList-default'], ['lowerAlpha', 'numberList-lowerAlpha'], ['lowerGreek', 'numberList-lowerGreek'], ['lowerRoman', 'numberList-lowerRoman'], ['upperAlpha', 'numberList-upperAlpha'], ['upperRoman', 'numberList-upperRoman']),
 			emoticons: toolIcons('emoticons'),
 			symbols: toolIcons('symbols'),
 			link: toolIcons('link'),

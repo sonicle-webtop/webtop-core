@@ -231,14 +231,6 @@
 .wt-icon-dock-bottom,
 .wt-icon-dock-bottom-on { background-image: url('dock-bottom_16.svg') !important; background-size: contain; }
 .wt-icon-dock-bottom-off { background-image: url('dock-bottom-off_16.svg') !important; background-size: contain; }
-.wt-icon-calDays-1 { background-image: url('cal-days-1_16.svg') !important; background-size: contain; }
-.wt-icon-calDays-5 { background-image: url('cal-days-5_16.svg') !important; background-size: contain; }
-.wt-icon-calDays-7 { background-image: url('cal-days-7_16.svg') !important; background-size: contain; }
-.wt-icon-calDays-14 { background-image: url('cal-days-14_16.svg') !important; background-size: contain; }
-.wt-icon-calDays-30 { background-image: url('cal-days-30_16.svg') !important; background-size: contain; }
-.wt-icon-calDays-31 { background-image: url('cal-days-31_16.svg') !important; background-size: contain; }
-.wt-icon-calDays-60 { background-image: url('cal-days-60_16.svg') !important; background-size: contain; }
-.wt-icon-calDays-90 { background-image: url('cal-days-90_16.svg') !important; background-size: contain; }
 .wt-icon-propView-sorted-on { background-image: url('propview-sorted-on_16.svg') !important; background-size: contain; }
 .wt-icon-propView-sorted-off { background-image: url('propview-sorted-off_16.svg') !important; background-size: contain; }
 .wt-icon-propView-hier-on { background-image: url('propview-hier-on_16.svg') !important; background-size: contain; }
@@ -274,7 +266,16 @@
 .wt-icon-htmled-alignLeft { background-image: url('htmleditor/align-left_16.svg') !important; background-size: contain; }
 .wt-icon-htmled-alignRight { background-image: url('htmleditor/align-right_16.svg') !important; background-size: contain; }
 .wt-icon-htmled-bulletList { background-image: url('htmleditor/list-bullets_16.svg') !important; background-size: contain; }
+.wt-icon-htmled-bulletList-default { background-image: url('htmleditor/list-bullets-default.svg') !important; }
+.wt-icon-htmled-bulletList-circle { background-image: url('htmleditor/list-bullets-circle.svg') !important; }
+.wt-icon-htmled-bulletList-square { background-image: url('htmleditor/list-bullets-square.svg') !important; }
 .wt-icon-htmled-numberList { background-image: url('htmleditor/list-numbers_16.svg') !important; background-size: contain; }
+.wt-icon-htmled-numberList-default { background-image: url('htmleditor/list-numbers-default.svg') !important; }
+.wt-icon-htmled-numberList-lowerAlpha { background-image: url('htmleditor/list-numbers-loweralpha.svg') !important; }
+.wt-icon-htmled-numberList-lowerGreek { background-image: url('htmleditor/list-numbers-lowergreek.svg') !important; }
+.wt-icon-htmled-numberList-lowerRoman { background-image: url('htmleditor/list-numbers-lowerroman.svg') !important; }
+.wt-icon-htmled-numberList-upperAlpha { background-image: url('htmleditor/list-numbers-upperalpha.svg') !important; }
+.wt-icon-htmled-numberList-upperRoman { background-image: url('htmleditor/list-numbers-upperroman.svg') !important; }
 .wt-icon-htmled-emoticons { background-image: url('htmleditor/emoticons_16.svg') !important; background-size: contain; }
 .wt-icon-htmled-symbols { background-image: url('htmleditor/symbols_16.svg') !important; background-size: contain; }
 .wt-icon-htmled-link { background-image: url('htmleditor/link_16.svg') !important; background-size: contain; }
