@@ -3,10 +3,12 @@
 /**************************************/
 
 @import url("../themes-override.css");
+@import url("../themes-istriton-override.css");
 @import url("../themes-custombuilt-override.css");
 
 /*
 grep -l "#0E7490" * | while read fname; do echo "sedding $fname"; sed -i -e 's/#0E7490/#0891b2/g' $fname; done
+grep -R -l -i "#212121" * | while read fname; do echo "sedding $fname"; sed -i -e 's/#212121/#404040/gi' $fname; done
 */
 
 :root {

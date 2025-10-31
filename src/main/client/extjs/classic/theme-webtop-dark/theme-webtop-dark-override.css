@@ -3,6 +3,7 @@
 /**************************************/
 
 @import url("../themes-override.css");
+@import url("../themes-istriton-override.css");
 @import url("../themes-custombuilt-override.css");
 
 /*
@@ -134,9 +135,9 @@ grep -l "#0E7490" * | while read fname; do echo "sedding $fname"; sed -i -e 's/#
 /* ---------- Ext.panel.Panel */
 /* Force panel's body BG to base when using 'border' layout */
 .x-panel-body-default.x-border-layout-ct {
-	background-color: var(--wt-theme-color-surface-l0);
+	background-color: var(--wt-theme-color-surface-l1);
 }
-/* Force splitter BG to its original color, to avoid that the above override set it back to L0  */
+/* Force splitter BG to its original color, to avoid that the above override set it back to L1  */
 .x-splitter {
     background-color: var(--wt-theme-color-surface-l1);
 }
