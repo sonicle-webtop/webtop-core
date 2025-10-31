@@ -1,0 +1,15 @@
+/**************************************/
+/* This file should contain tweaks/fixes for all "triton" themes.
+/* Only for pre-built themes (not customized one using Themer app).
+/**************************************/
+
+/* ---------- Ext.resizer.Resizer */
+/* Reduce resize-handle size (5px are enough) */
+.x-resizable-handle-north,
+.x-resizable-handle-south {
+    height: 5px;
+}
+.x-resizable-handle-east,
+.x-resizable-handle-west {
+    width: 5px;
+}

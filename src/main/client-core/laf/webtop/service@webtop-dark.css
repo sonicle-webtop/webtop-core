@@ -1,10 +1,14 @@
-
 /* ---------- Navbar */
-
-
 /* Set specific color to buttons */
-.wt-viewport-navbar .x-btn.x-btn-pressed, .wt-viewport-navbar .x-btn.x-btn-over {
-    background-color: var(--wt-theme-color-surface-l2);
+.wt-viewport-navbar .x-btn.x-btn-focus,
+.wt-viewport-navbar .x-btn {
+    background-color: var(--wt-theme-color-surface-l0);
+}
+.wt-viewport-navbar .x-btn.x-btn-focus.x-btn-pressed,
+.wt-viewport-navbar .x-btn.x-btn-focus.x-btn-over,
+.wt-viewport-navbar .x-btn.x-btn-pressed,
+.wt-viewport-navbar .x-btn.x-btn-over {
+    background-color: var(--wt-theme-color-surface-l1);
 }
 
 /* ---------- Tool HD/Body */

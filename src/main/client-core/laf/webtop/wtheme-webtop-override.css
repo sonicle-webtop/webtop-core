@@ -15,14 +15,6 @@
 .x-grid-item .x-grid-cell-inner-treecolumn .x-tree-icon:before { content: ''; }
 
 /* ---------- Topbar */
-/* Increase elevation of separator */
-.wt-viewport-topbar .x-toolbar-separator {
-    border-left-color: var(--wt-theme-color-surface-l4);
-}
-/* Increase elevation of hovered/pressed buttons */
-.wt-viewport-topbar .x-btn-default-toolbar-small.x-btn-pressed, .wt-viewport-topbar .x-btn-default-toolbar-small.x-btn-over {
-    background-color: var(--wt-theme-color-surface-l4);
-}
 /* Customize Avatar button BG color in Topbar */
 .wt-viewport-topbar .so-btn-avatar-wrap {
     background-color: var(--wt-theme-color-n2) !important;

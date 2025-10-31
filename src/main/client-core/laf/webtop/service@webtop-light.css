@@ -1,12 +1,24 @@
+/* ---------- Topbar */
+/* Increase elevation of separator */
+.wt-viewport-topbar .x-toolbar-separator {
+    border-left-color: var(--wt-theme-color-surface-l4);
+}
+/* Increase elevation of hovered buttons (pressed BG is enought) */
+.wt-viewport-topbar .x-btn-ui-button-secondary.x-btn-over,
+.wt-viewport-topbar .x-btn-ui-button-tertiary.x-btn-over,
+.wt-viewport-topbar .x-btn-ui-default-toolbar.x-btn-over {
+    background-color: var(--wt-theme-color-surface-l4);
+}
 
 /* ---------- Navbar */
-/* Set main backgrounds */
+/* Set watermark backgrounds */
 .wt-viewport-navbar-watermark-right {
     background-color: var(--wt-theme-color-surface-l4);
     width: 1px;
 }
 /* Set specific color to buttons */
-.wt-viewport-navbar .x-btn.x-btn-pressed, .wt-viewport-navbar .x-btn.x-btn-over {
+.wt-viewport-navbar .x-btn.x-btn-pressed,
+.wt-viewport-navbar .x-btn.x-btn-over {
     background-color: var(--wt-theme-color-surface-l2);
 }
 

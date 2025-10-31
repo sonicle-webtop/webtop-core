@@ -92,7 +92,7 @@
     
     /* ---------- Ext.button.Button */
     --so-button-pressed-nostyle-color: var(--wt-theme-color-n1);
-    --so-button-toggle-indicator-color-off: var(--wt-theme-color-n3);
+    --so-button-toggle-indicator-color-off: var(--wt-theme-color-off);
     --so-button-toggle-indicator-color-on: var(--wt-theme-color-1);
     /* ---------- FullCalendar */
     --fc-day-other-color: rgba(214,214,214,.2);
