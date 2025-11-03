@@ -171,6 +171,13 @@ Ext.define('Sonicle.webtop.core.private.app.WT', {
 		]
 	},
 	
+	/**
+	 * Returns a set of colors belonging to a Palette or an object with an 
+	 * extended set of properties. 
+	 * @param {String} name The name of the Palette to return.
+	 * @param {Boolean} extended Set to `true` to return an object instead of a plain array of colors.
+	 * @returns {Array[]|Object}
+	 */
 	getColorPalette: function(name, extended) {
 		var me = this, palette;
 		switch (name) {
@@ -193,6 +200,10 @@ Ext.define('Sonicle.webtop.core.private.app.WT', {
 				palette = me.paletteDefault;
 		}
 		return extended === true ? palette : palette.colors;
+	},
+	
+	showThemeDebug: function() {
+		WT.getApp().getService(WT.ID).showThemeDebug();
 	},
 	
 	logout: function() {
