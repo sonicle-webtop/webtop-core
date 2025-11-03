@@ -43,7 +43,7 @@ Ext.define('Sonicle.webtop.core.app.util.FoldersTree2', {
 	 */
 	
 	coloredBoxTreeRenderer: function(opts) {
-		return WTF.coloredBoxTreeRenderer(this.coloredBotTreeRendererCfg(opts));
+		return WTF.coloredBoxTreeRenderer(this.coloredBoxTreeRendererCfg(opts));
 	},
 	
 	coloredCheckboxTreeRenderer: function(opts) {
@@ -257,7 +257,7 @@ Ext.define('Sonicle.webtop.core.app.util.FoldersTree2', {
 	},
 	
 	privates: {
-		coloredBotTreeRendererCfg: function(opts) {
+		coloredBoxTreeRendererCfg: function(opts) {
 			opts = opts || {};
 			return {
 				shouldCustomize: function(val, node) {

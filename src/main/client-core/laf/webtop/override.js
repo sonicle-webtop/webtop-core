@@ -1,7 +1,7 @@
 Ext.define('Sonicle.overrides.webtop.core.app.util.FoldersTree2', {
 	override: 'Sonicle.webtop.core.app.util.FoldersTree2',
 	
-	coloredBotTreeRendererCfg: function(opts) {
+	coloredBoxTreeRendererCfg: function(opts) {
 		return Ext.apply(this.callParent(arguments), {
 			geometry: 'circle'
 		});
