@@ -142,17 +142,15 @@ border-top-left-radius: 10px;
 }
 
 /* ---------- Ext.panel.Tree (treecolumn colorswatch) */
-/* <-- USEFUL?
 .wt-tree-colorswatch.x-tree-icon {
-    margin-top: 4px;
+    margin-top: 1px;
 }
 .x-tree-view .x-tree-checkbox.wt-tree-colorswatch {
-    top: 10px;
+    top: 8px;
 }
 .x-tree-view .x-tree-icon.wt-tree-colorswatch {
    height: 16px;
 }
-*/
 
 
 
