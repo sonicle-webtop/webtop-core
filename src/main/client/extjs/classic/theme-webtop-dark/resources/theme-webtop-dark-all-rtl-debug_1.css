@@ -7875,7 +7875,7 @@ body > .x-mask {
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-neutral/sass/var/layout/container/Box.scss:200 */
 .x-box-scroller-toolbar-default {
     cursor: pointer;
-    color: #dcdcdc;
+    color: #a3a3a3;
     -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=60)";
     opacity: 0.6;
 }
@@ -8065,7 +8065,7 @@ body > .x-mask {
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-neutral/sass/var/layout/container/Box.scss:200 */
 .x-box-scroller-toolbar-footer {
     cursor: pointer;
-    color: #dcdcdc;
+    color: #a3a3a3;
     -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=60)";
     opacity: 0.6;
 }

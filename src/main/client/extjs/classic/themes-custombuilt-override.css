@@ -19,13 +19,13 @@ body > .x-mask {
 /* ---------- Ext.button.Button */
 /* Add default icon family to FA free */
 .x-btn-icon-el:empty { font-family: var(--fa-style-family-classic); }
-/* Buttons secondary: fix arrow-icon color (not customizable via SenchaThemer) */
+/* Buttons secondary|tertiary: fix arrow-icon color (not customizable via SenchaThemer) */
+.x-btn.x-btn-ui-button-tertiary .x-btn-arrow:after,
 .x-btn.x-btn-ui-button-secondary .x-btn-arrow:after {
     color: var(--wt-theme-color-1);
 }
-/* Buttons tertiary|taskbar: fix arrow-icon color (not customizable via SenchaThemer) */
-.x-btn.x-btn-ui-button-taskbar .x-btn-arrow:after,
-.x-btn.x-btn-ui-button-tertiary .x-btn-arrow:after {
+/* Buttons taskbar: fix arrow-icon color (not customizable via SenchaThemer) */
+.x-btn.x-btn-ui-button-taskbar .x-btn-arrow:after {
     color: var(--wt-theme-color-n1);
 }
 
@@ -42,11 +42,13 @@ body > .x-mask {
     /*top: -5%; for original lineheight */
     top: 0%;
 }
-/* Buttons secondary: fix line-separator color */
+/* Buttons secondary|tertiary: fix line-separator color */
+.x-btn.x-btn-ui-button-tertiary .x-btn-wrap.x-btn-split > .x-btn-button:after,
 .x-btn.x-btn-ui-button-secondary .x-btn-wrap.x-btn-split > .x-btn-button:after {
     border-color: var(--wt-theme-color-1);
 }
-/* Buttons secondary: fix split arrow-icon color */
+/* Buttons secondary|tertiary: fix split arrow-icon color */
+.x-btn.x-btn-ui-button-tertiary .x-btn-split:after,
 .x-btn.x-btn-ui-button-secondary .x-btn-split:after {
     color: var(--wt-theme-color-1);
 }
@@ -60,9 +62,8 @@ body > .x-mask {
 .x-btn.x-btn-ui-button-tertiary .x-btn-wrap.x-btn-split-right > .x-btn-button {
     padding-right: 0px;
 }
-/* Buttons tertiary|taskbar: fix split arrow-icon color */
-.x-btn.x-btn-ui-button-taskbar .x-btn-split:after,
-.x-btn.x-btn-ui-button-tertiary .x-btn-split:after {
+/* Buttons taskbar: fix split arrow-icon color */
+.x-btn.x-btn-ui-button-taskbar .x-btn-split:after {
     color: var(--wt-theme-color-n1);
 }
 

@@ -258,29 +258,30 @@
 
 /* ---------- WTA.ux.panel.Fields */
 .wt-fieldspanel-body-padding-t {
-	padding-top: 8px;
+	padding-top: 6px;
 }
 .wt-fieldspanel-body-padding-lr {
-	padding-left: 8px;
-	padding-right: 8px;
+	padding-left: 12px;
+	padding-right: 12px;
 }
 .wt-fieldspanel-body-padding-b {
-	padding-bottom: 8px;
+	padding-bottom: 12px;
 }
 
 /* ---------- WTA.ux.panel.Tab */
 .wt-tabpanel {
-	padding: 0px 6px 0px 0px;
+    /* Why 6px right padding??? */
+	/*padding: 0px 6px 0px 0px;*/
 }
 .wt-tabpanel-margin-t {
-	margin-top: 8px;
+	margin-top: 6px;
 }
 .wt-tabpanel-margin-lr {
-	margin-left: 8px;
-	margin-right: 8px;
+	margin-left: 12px;
+	margin-right: 12px;
 }
 .wt-tabpanel-margin-b {
-	margin-bottom: 8px;
+	margin-bottom: 12px;
 }
 
 /* ---------- Ext.tree.Panel@tree-toggle */

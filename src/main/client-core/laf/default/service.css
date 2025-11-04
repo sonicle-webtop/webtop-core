@@ -207,6 +207,8 @@
 .wt-icon-history { background-image: url('history_16.svg') !important; background-size: contain; }
 .wt-icon-public { background-image: url('public_16.svg') !important; background-size: contain; }
 .wt-icon-sms { background-image: url('sms_16.svg') !important; background-size: contain; }
+.wt-icon-toggle-on { background-image: url('toggle-on_16.svg') !important; background-size: contain; }
+.wt-icon-toggle-off { background-image: url('toggle-off_16.svg') !important; background-size: contain; }
 .wt-icon-permission-denied { background-image: url('permission-denied_16.svg') !important; background-size: contain; }
 .wt-icon-permission-allowed { background-image: url('permission-allowed_16.svg') !important; background-size: contain; }
 .wt-icon-permission-denied-off { background-image: url('permission-denied-off_16.svg') !important; background-size: contain; }

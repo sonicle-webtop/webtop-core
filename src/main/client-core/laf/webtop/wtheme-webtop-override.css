@@ -103,26 +103,26 @@ border-top-left-radius: 10px;
 
 /* ---------- WTA.ux.panel.Fields */
 .wt-fieldspanel-body-padding-t {
-	padding-top: 16px;
+	padding-top: 6px;
 }
 .wt-fieldspanel-body-padding-b {
-	padding-bottom: 16px;
+	padding-bottom: 12px;
 }
 .wt-fieldspanel-body-padding-lr {
-	padding-left: 16px;
-	padding-right: 16px;
+	padding-left: 12px;
+	padding-right: 12px;
 }
 
 /* ---------- WTA.ux.panel.Tab */
 .wt-tabpanel-margin-t {
-	margin-top: 16px;
+	margin-top: 6px;
 }
 .wt-tabpanel-margin-lr {
-	margin-left: 16px;
-	margin-right: 16px;
+	margin-left: 12px;
+	margin-right: 12px;
 }
 .wt-tabpanel-margin-b {
-	margin-bottom: 16px;
+	margin-bottom: 12px;
 }
 
 /* ---------- Ext.menu.Item */
@@ -134,11 +134,32 @@ border-top-left-radius: 10px;
 
 /* ---------- Ext.tree.Panel */
 /* Customize toggle color for both on/off states */
+/*
 .wt-tree-toggle.x-tree-checkbox:before {
 	color: var(--wt-theme-color-error);
 }
 .wt-tree-toggle.x-tree-checkbox-checked:before {
 	color: var(--wt-theme-color-1);
+}
+*/
+/* ---------- Ext.tree.Panel@tree-toggle */
+/* Support toggle checkbox style */
+.wt-tree-toggle {
+    background-image: none !important;
+    background-repeat: no-repeat;
+	background-size: contain;
+}
+.wt-tree-toggle.x-tree-checkbox {
+	background-image: url('toggle-off_16.svg') !important;
+}
+.wt-tree-toggle.x-tree-checkbox-checked {
+	background-image: url('toggle-on_16.svg') !important;
+}
+.wt-tree-toggle.x-tree-checkbox:before {
+	content: '';
+}
+.wt-tree-toggle.x-tree-checkbox-checked:before {
+	content: '';
 }
 
 /* ---------- Ext.panel.Tree (treecolumn colorswatch) */
@@ -151,7 +172,3 @@ border-top-left-radius: 10px;
 .x-tree-view .x-tree-icon.wt-tree-colorswatch {
    height: 16px;
 }
-
-
-
-
