@@ -44,8 +44,8 @@ Ext.define('Sonicle.webtop.core.admin.view.DataSourceQuery', {
 	dockableConfig: {
 		title: '{dataSourceQuery.tit}',
 		iconCls: 'wtadm-icon-dataSourceQuery',
-		width: 450,
-		height: 480
+		width: 500,
+		height: 600
 	},
 	
 	fieldTitle: 'name',
@@ -138,7 +138,7 @@ Ext.define('Sonicle.webtop.core.admin.view.DataSourceQuery', {
 							flex: 1
 						}, {
 							xtype: 'button',
-							ui: 'default-toolbar',
+							ui: '{secondary|toolbar}',
 							text: me.res('dataSourceQuery.act-openSqlQueryEditor.lbl'),
 							handler: function() {
 								me.openSqlEditorUI();

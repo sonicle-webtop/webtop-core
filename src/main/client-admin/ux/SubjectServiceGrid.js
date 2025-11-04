@@ -97,6 +97,7 @@ Ext.define('Sonicle.webtop.core.admin.ux.SubjectServiceGrid', {
 			me.tbar.push(
 				{
 					ui: '{tertiary}',
+					iconCls: 'wt-icon-add',
 					text: WT.res('act-add.lbl'),
 					handler: function() {
 						me.showPicker();

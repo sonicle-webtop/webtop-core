@@ -50,8 +50,8 @@ Ext.define('Sonicle.webtop.core.admin.view.User', {
 	dockableConfig: {
 		title: '{user.tit}',
 		iconCls: 'wtadm-icon-user',
-		width: 480,
-		height: 550
+		width: 500,
+		height: 600
 	},
 	fieldTitle: 'userId',
 	modelName: 'Sonicle.webtop.core.admin.model.User',
@@ -87,6 +87,7 @@ Ext.define('Sonicle.webtop.core.admin.view.User', {
 	
 	initComponent: function() {
 		var me = this;
+		me.initMoreTopToolbarItems();
 		me.callParent(arguments);
 		
 		me.groupSubjectStore = Ext.create('Ext.data.Store', {
@@ -201,11 +202,6 @@ Ext.define('Sonicle.webtop.core.admin.view.User', {
 							],
 							anchor: '100%'
 						}, {
-							xtype: 'checkbox',
-							bind: '{foEnabled}',
-							hideEmptyLabel: false,
-							boxLabel: me.res('user.fld-enabled.lbl')
-						}, {
 							xtype: 'sofieldhgroup',
 							items: [
 								{
@@ -310,6 +306,29 @@ Ext.define('Sonicle.webtop.core.admin.view.User', {
 	},
 	
 	privates: {
+		initMoreTopToolbarItems: function() {
+			var me = this;
+			me.moreTopToolbarItems = [
+				{
+					xtype: 'checkbox',
+					bind: '{foEnabled}',
+					hideEmptyLabel: true,
+					boxLabel: me.res('user.fld-enabled.lbl')
+					/*
+					xtype: 'sotogglebutton',
+					reference: 'btnenabledstatus',
+					bind: {
+						pressed: '{foEnabled}'
+					},
+					offIconCls: 'wt-icon-toggle-off',
+					onIconCls: 'wt-icon-toggle-on',
+					onText: me.res('user.btn-enabledstatus.on.lbl'),
+					offText: me.res('user.btn-enabledstatus.off.lbl')
+					*/
+				}
+			];
+		},
+		
 		onViewLoad: function(s, success) {
 			var me = this,
 				mo = me.getModel();

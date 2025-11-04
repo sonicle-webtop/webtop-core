@@ -116,6 +116,7 @@ Ext.define('Sonicle.webtop.core.admin.ux.SubjectPermissionGrid', {
 			me.tbar.push(
 				{
 					ui: '{tertiary}',
+					iconCls: 'wt-icon-add',
 					text: WT.res('act-add.lbl'),
 					handler: function() {
 						me.showPicker();

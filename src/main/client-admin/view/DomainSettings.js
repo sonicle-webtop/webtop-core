@@ -94,9 +94,9 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainSettings', {
 			tbar: [
 				{
 					xtype: 'splitbutton',
+					ui: '{secondary|toolbar}',
 					text: WT.res('act-add.lbl'),
 					iconCls: 'wt-icon-add',
-					ui: '{tertiary|toolbar}',
 					handler: function(s) {
 						s.maybeShowMenu();
 					},

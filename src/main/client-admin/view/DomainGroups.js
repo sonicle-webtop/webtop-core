@@ -126,9 +126,9 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainGroups', {
 			],
 			tbar: [
 				me.addAct('add', {
+					ui: '{secondary|toolbar}',
 					tooltip: null,
 					iconCls: 'wt-icon-add',
-					ui: '{tertiary|toolbar}',
 					handler: function() {
 						me.addGroupUI();
 					}

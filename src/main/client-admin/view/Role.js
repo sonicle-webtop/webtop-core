@@ -45,8 +45,8 @@ Ext.define('Sonicle.webtop.core.admin.view.Role', {
 	dockableConfig: {
 		title: '{role.tit}',
 		iconCls: 'wtadm-icon-role',
-		width: 480,
-		height: 480
+		width: 500,
+		height: 600
 	},
 	fieldTitle: 'name',
 	modelName: 'Sonicle.webtop.core.admin.model.Role',

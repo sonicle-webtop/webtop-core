@@ -47,8 +47,8 @@ Ext.define('Sonicle.webtop.core.admin.view.Resource', {
 	dockableConfig: {
 		title: '{resource.tit}',
 		iconCls: 'wt-icon-resource',
-		width: 450,
-		height: 550
+		width: 500,
+		height: 600
 	},
 	fieldTitle: 'name',
 	modelName: 'Sonicle.webtop.core.admin.model.Resource',
@@ -84,6 +84,7 @@ Ext.define('Sonicle.webtop.core.admin.view.Resource', {
 	
 	initComponent: function() {
 		var me = this;
+		me.initMoreTopToolbarItems();
 		me.callParent(arguments);
 		
 		me.aclSubjectStore = Ext.create('Ext.data.Store', {
@@ -160,13 +161,7 @@ Ext.define('Sonicle.webtop.core.admin.view.Resource', {
 					fieldLabel: me.res('resource.fld-type.lbl'),
 					emptyText: me.res('resource.fld-type.emp'),
 					anchor: '100%'
-				}),
-				{
-					xtype: 'checkbox',
-					bind: '{foAvailable}',
-					hideEmptyLabel: false,
-					boxLabel: me.res('resource.fld-available.lbl')
-				}, {
+				}), {
 					xtype: 'textfield',
 					bind: {
 						value: '{record.email}',
@@ -211,10 +206,24 @@ Ext.define('Sonicle.webtop.core.admin.view.Resource', {
 		me.on('viewload', me.onViewLoad);
 	},
 	
-	onViewLoad: function(s, success) {
-		var me = this,
-			mo = me.getModel();
+	privates: {
+		initMoreTopToolbarItems: function() {
+			var me = this;
+			me.moreTopToolbarItems = [
+				{
+					xtype: 'checkbox',
+					bind: '{foAvailable}',
+					hideEmptyLabel: true,
+					boxLabel: me.res('resource.fld-available.lbl')
+				}
+			];
+		},
 		
-		mo.getValidation(true);
+		onViewLoad: function(s, success) {
+			var me = this,
+				mo = me.getModel();
+
+			mo.getValidation(true);
+		}
 	}
 });

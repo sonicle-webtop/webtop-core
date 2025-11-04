@@ -145,9 +145,9 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainApiKeys', {
 			],
 			tbar: [
 				me.addAct('addApiKey', {
+					ui: '{secondary|toolbar}',
 					tooltip: null,
 					iconCls: 'wt-icon-add',
-					ui: '{tertiary|toolbar}',
 					handler: function() {
 						me.addApiKeyUI();
 					}
@@ -175,6 +175,7 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainApiKeys', {
 			vw = WT.createView(me.mys.ID, 'view.ApiKey', {
 				swapReturn: true,
 				viewCfg: {
+					dialogMode: true,
 					domainId: domainId,
 					title: me.res('domainApiKeys.act-addApiKey.lbl'),
 					saveActionText: me.res('domainApiKeys.act-addApiKey.saveAction.lbl'),

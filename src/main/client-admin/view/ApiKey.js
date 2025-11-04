@@ -35,14 +35,15 @@ Ext.define('Sonicle.webtop.core.admin.view.ApiKey', {
 	requires: [
 		'Sonicle.VMUtils',
 		'Sonicle.form.Separator',
+		'Sonicle.toolbar.DisplayValue',
 		'Sonicle.webtop.core.admin.model.DataSourceTypeLkp'
 	],
 	
 	dockableConfig: {
 		title: '{apiKey.tit}',
 		iconCls: 'wtadm-icon-apiKey',
-		width: 450,
-		height: 480
+		width: 500,
+		height: 400
 	},
 	
 	fieldTitle: 'name',
@@ -54,7 +55,11 @@ Ext.define('Sonicle.webtop.core.admin.view.ApiKey', {
 	},
 	focusField: {'new': 'fldname', 'edit': 'fldname'},
 	actionsResPrefix: 'apiKey',
-	autoToolbar: false,
+	
+	/**
+	 * @cfg {Boolean} [dialogMode=false]
+	 */
+	dialogMode: false,
 	
 	/**
 	 * @cfg {String} domainId
@@ -74,11 +79,26 @@ Ext.define('Sonicle.webtop.core.admin.view.ApiKey', {
 	
 	initComponent: function() {
 		var me = this;
-		Ext.apply(me, {
-			buttons: [
-				me.addAct('saveClose', me.createSaveCloseActionCfg())
-			]
-		});
+		if (me.dialogMode === true) {
+			me.autoToolbar = false;
+			Ext.apply(me, {
+				buttons: [
+					me.addAct('saveClose', me.createSaveCloseActionCfg())
+				]
+			});
+		} else {
+			me.moreTopToolbarItems = [
+				'->',
+				{
+					xtype: 'tbdisplayvalue',
+					bind: {
+						value: '{record.tokenPrefix}',
+						hidden: '{foIsNew}'
+					},
+					valueLabel: me.res('apiKey.fld-tokenPrefix.lbl')
+				}
+			];
+		}
 		me.callParent(arguments);
 		
 		me.add({
@@ -93,16 +113,6 @@ Ext.define('Sonicle.webtop.core.admin.view.ApiKey', {
 			},
 			items: [
 				{
-					xtype: 'textfield',
-					bind: {
-						value: '{record.tokenPrefix}',
-						hidden: '{foIsNew}'
-					},
-					disabled: true,
-					hidden: true,
-					fieldLabel: me.res('apiKey.fld-tokenPrefix.lbl'),
-					width: 130
-				}, {
 					xtype: 'textfield',
 					reference: 'fldname',
 					bind: '{record.name}',

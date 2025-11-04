@@ -215,13 +215,13 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainDataSources', {
 								xtype: 'soactioncolumn',
 								items: [
 									{
-										iconCls: 'wt-glyph-edit',
+										iconCls: 'wt-icon-edit',
 										tooltip: WT.res('act-edit.lbl'),
 										handler: function(view, ridx, cidx, itm, e, rec) {
 											me.editQueryUI(rec);
 										}
 									}, {
-										iconCls: 'wt-glyph-delete',
+										iconCls: 'wt-icon-trash',
 										tooltip: WT.res('act-remove.lbl'),
 										handler: function(view, ridx, cidx, itm, e, rec) {
 											me.deleteQueryUI(rec);
@@ -240,9 +240,9 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainDataSources', {
 			],
 			tbar: [
 				me.addAct('addDataSource', {
+					ui: '{secondary|toolbar}',
 					tooltip: null,
 					iconCls: 'wt-icon-add',
-					ui: '{tertiary|toolbar}',
 					handler: function() {
 						me.addDataSourceUI();
 					}

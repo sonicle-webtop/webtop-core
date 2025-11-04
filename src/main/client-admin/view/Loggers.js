@@ -186,10 +186,10 @@ Ext.define('Sonicle.webtop.core.admin.view.Loggers', {
 			],
 			tbar: [
 				me.addAct('add', {
+					ui: '{secondary|toolbar}',
 					text: WT.res('act-add.lbl'),
 					tooltip: null,
 					iconCls: 'wt-icon-add',
-					ui: '{tertiary|toolbar}',
 					handler: function() {
 						me.addLoggerUI();
 					}

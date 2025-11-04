@@ -121,9 +121,9 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainRoles', {
 			],
 			tbar: [
 				me.addAct('add', {
+					ui: '{secondary|toolbar}',
 					tooltip: null,
 					iconCls: 'wt-icon-add',
-					ui: '{tertiary|toolbar}',
 					handler: function() {
 						me.addRoleUI();
 					}

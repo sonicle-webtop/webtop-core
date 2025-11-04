@@ -143,9 +143,9 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainResources', {
 			],
 			tbar: [
 				me.addAct('add', {
+					ui: '{secondary|toolbar}',
 					tooltip: null,
 					iconCls: 'wt-icon-add',
-					ui: '{tertiary|toolbar}',
 					handler: function() {
 						me.addResourceUI();
 					}

@@ -48,8 +48,8 @@ Ext.define('Sonicle.webtop.core.admin.view.Group', {
 	dockableConfig: {
 		title: '{group.tit}',
 		iconCls: 'wtadm-icon-group',
-		width: 480,
-		height: 480
+		width: 500,
+		height: 600
 	},
 	fieldTitle: 'groupId',
 	modelName: 'Sonicle.webtop.core.admin.model.Group',

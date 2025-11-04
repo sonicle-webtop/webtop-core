@@ -41,8 +41,8 @@ Ext.define('Sonicle.webtop.core.admin.view.DataSource', {
 	dockableConfig: {
 		title: '{dataSource.tit}',
 		iconCls: 'wtadm-icon-dataSource',
-		width: 450,
-		height: 480
+		width: 500,
+		height: 600
 	},
 	
 	fieldTitle: 'name',
@@ -79,6 +79,7 @@ Ext.define('Sonicle.webtop.core.admin.view.DataSource', {
 	
 	initComponent: function() {
 		var me = this;
+		me.initMoreTopToolbarItems();
 		me.callParent(arguments);
 		
 		me.add({
@@ -229,19 +230,13 @@ Ext.define('Sonicle.webtop.core.admin.view.DataSource', {
 		});
 	},
 	
-	initTBar: function() {
-		var me = this;
-		me.dockedItems = Sonicle.Utils.mergeDockedItems(me.dockedItems, 'top', [
-			me.createTopToolbar1Cfg(me.prepareTopToolbarItems())
-		]);
-	},
-	
 	privates: {
-		prepareTopToolbarItems: function() {
+		initMoreTopToolbarItems: function() {
 			var me = this;
 			return [
 				{
 					xtype: 'button',
+					ui: '{tertiary|toolbar}',
 					bind: {
 						disabled: '{!foTestEnabled}'
 					},
