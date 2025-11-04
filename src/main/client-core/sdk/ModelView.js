@@ -125,6 +125,11 @@ Ext.define('Sonicle.webtop.core.sdk.ModelView', {
 	 */
 	
 	/**
+	 * @cfg {Object[]} moreTopToolbarItems
+	 * An array of child Components to be added to TopToolbar.
+	 */
+	
+	/**
 	 * @event viewload
 	 * @param {WTA.sdk.ModelView} this
 	 * @param {Boolean} success Whether the operation was successful or not.
@@ -198,8 +203,9 @@ Ext.define('Sonicle.webtop.core.sdk.ModelView', {
 			SoU = Sonicle.Utils;
 		
 		me.dockedItems = SoU.mergeDockedItems(me.dockedItems, 'top', [
-			me.createTopToolbar1Cfg()
+			me.createTopToolbar1Cfg(me.moreTopToolbarItems)
 		]);
+		delete me.moreTopToolbarItems;
 	},
 	
 	/**
