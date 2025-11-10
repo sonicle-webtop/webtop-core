@@ -132,6 +132,9 @@ Ext.define('Sonicle.webtop.core.ux.field.Search', {
 		if (Ext.isEmpty(cfg.queryResultsEmptyText)) {
 			cfg.queryResultsEmptyText = WT.res('wtsearchfield.query.results.emp');
 		}
+		if (Ext.isEmpty(cfg.listTopButtonText)) {
+			cfg.listTopButtonText = WT.res('wtsearchfield.topbutton.lbl');
+		}
 		me.callParent([cfg]);
 	},
 	
@@ -188,14 +191,21 @@ Ext.define('Sonicle.webtop.core.ux.field.Search', {
 			getInnerTpl: function(displayField) {
 				return '{label}&nbsp;<span class="wt-text-smaller-20 wt-opacity-50">{preview}</span>';
 			},
-			enableButton: true,
 			disableFocusSaving: true,
+			enableListTopButton: true,
+			listTopButtonExtraCls: 'wt-color-primary',
+			listTopButtonIconCls: 'fas fa-magnifying-glass',
+			listTopButtonText: me.formatListTopButtonText(null),
+			enableButton: true,
 			getButtonTooltip: function() {
 				return WT.res('wtsearchfield.suggestion.entry.button.tip');
 			},
 			buttonHandler: function(s, e, rec) {
 				rec.drop();
 				rec.store.sync();
+			},
+			listTopButtonHandler: function(s, e) {
+				me.fireQuery(me.getValue());
 			}
 		});
 	},
@@ -223,6 +233,13 @@ Ext.define('Sonicle.webtop.core.ux.field.Search', {
 		me.clearHighlight(el, querySelector);
 		if (keywords.length > 0) me.marked = me.mark(el.dom, querySelector, keywords);
 		return me.marked;
+	},
+	
+	refreshEmptyText: function() {
+		var me = this;
+		me.callParent(arguments);
+		var picker = me.getPicker();
+		if (picker) picker.setListTopButtonText(me.formatListTopButtonText(me.getValue()));
 	},
 	
 	/**
@@ -279,6 +296,12 @@ Ext.define('Sonicle.webtop.core.ux.field.Search', {
 	},
 	
 	privates: {
+		formatListTopButtonText: function(value) {
+			var arg = '';
+			if (!Ext.isEmpty(value)) arg = ' "' + value + '"'; 
+			return Ext.String.format(this.listTopButtonText, arg);
+		},
+		
 		fireSave: function(value, queryObject) {
 			var me = this,
 				// Note that .callParent(arguments) will not work in callbacks: dump its content here!

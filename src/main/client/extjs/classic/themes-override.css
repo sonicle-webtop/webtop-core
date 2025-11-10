@@ -202,6 +202,13 @@ body {
     padding-top: 5px;
     padding-bottom: 5px;
 }
+.x-boundlist .x-list-emptytext {
+    text-align: center;
+    color: var(--wt-theme-color-3);
+    margin-top: 5px;
+    margin-bottom: 5px;
+	padding-left: 10px;
+}
 
 /* ---------- Sonicle.fullcalendar.Panel */
 .so-fullcalendar-panel-toolbar-hdtext {
@@ -227,6 +234,23 @@ body {
 	left: 0;
 	right: 0;
 	bottom: 0;
+}
+
+/* ---------- Sonicle.view.BoundList */
+/* Style list top-button */
+.so-boundlist-listtopbutton {
+	color: var(--wt-theme-color-1);
+}
+.so-boundlist-listtopbutton i {
+	margin-right: 5px;
+}
+.so-boundlist-listtopbutton:after {
+	content: '';
+    position: absolute;
+    bottom: 0px;
+    left: 10px;
+    right: 10px;
+    border-bottom: 1px solid var(--wt-theme-color-1);
 }
 
 /* ---------- Fullcalendar */
