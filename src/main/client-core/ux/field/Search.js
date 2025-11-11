@@ -193,6 +193,7 @@ Ext.define('Sonicle.webtop.core.ux.field.Search', {
 			},
 			disableFocusSaving: true,
 			enableListTopButton: true,
+			listTopButtonHidden: true, // Start with button hidden: will be shown in refreshEmptyText
 			listTopButtonExtraCls: 'wt-color-primary',
 			listTopButtonIconCls: 'fas fa-magnifying-glass',
 			listTopButtonText: me.formatListTopButtonText(null),
@@ -235,11 +236,19 @@ Ext.define('Sonicle.webtop.core.ux.field.Search', {
 		return me.marked;
 	},
 	
+	/**
+	 * Overrides original {@link Ext.form.field.Text#refreshEmptyText}
+	 *  - Update list top-button text with current typed value
+	 */
 	refreshEmptyText: function() {
 		var me = this;
 		me.callParent(arguments);
-		var picker = me.getPicker();
-		if (picker) picker.setListTopButtonText(me.formatListTopButtonText(me.getValue()));
+		var picker = me.getPicker(), value;
+		if (picker) {
+			value = me.getValue();
+			picker.setListTopButtonVisible(!Ext.isEmpty(value));
+			picker.setListTopButtonText(me.formatListTopButtonText(value));
+		}
 	},
 	
 	/**
