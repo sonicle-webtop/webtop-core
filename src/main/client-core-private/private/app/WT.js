@@ -570,8 +570,22 @@ Ext.define('Sonicle.webtop.core.private.app.WT', {
 		return arr.length > 0 ? new RegExp('^(?:' + SoS.join('|', urls) + ')', 'i') : null;
 	},
 	
+	/**
+	 * Returns the current UI color-scheme.
+	 * @returns {light|dark}
+	 */
 	getUIColorScheme: function() {
 		return WT.getVar('colorScheme');
+	},
+	
+	/**
+	 * Evaluates current UI color-scheme and returns `ifLight` or `ifDark` params accordingly.
+	 * @param {Mixed} ifLight
+	 * @param {Mixed} ifDark
+	 * @returns {Mixed}
+	 */
+	evalUIColorScheme: function(ifLight, ifDark) {
+		return WT.getUIColorScheme() === 'dark' ? ifDark : ifLight;
 	},
 	
 	/**

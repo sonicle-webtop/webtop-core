@@ -127,7 +127,7 @@
 .wt-glyph-status:before { content: '\f624'; font: var(--fa-font-solid); } /* fa-gauge */
 .wt-glyph-stopwatch:before { content: '\f2f2'; font: var(--fa-font-solid); } /* fa-stopwatch */
 .wt-glyph-tag:before { content: '\f02b'; font: var(--fa-font-solid); } /* fa-tag */
-
+.wt-glyph-color-unset:before { content: '\f5c7'; font: var(--fa-font-solid); } /* fa-droplet-slash */
 /* ---------- Icons (actions) */
 .wt-icon-add { background-image: url('act-add_16.svg') !important; background-size: contain; }
 .wt-icon-open { background-image: url('act-open_16.svg') !important; background-size: contain; }
