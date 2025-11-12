@@ -7,7 +7,16 @@
 @import url("../themes-custombuilt-override.css");
 
 /*
-grep -l "#0E7490" * | while read fname; do echo "sedding $fname"; sed -i -e 's/#0E7490/#0891b2/g' $fname; done
+grep -R -l -i "#059669" * | while read fname; do echo "sedding $fname"; sed -i -e 's/#059669/#6ee7b7/gi' $fname; done
+grep -R -l -i "#0891b2" * | while read fname; do echo "sedding $fname"; sed -i -e 's/#0891b2/#06b6d4/gi' $fname; done
+grep -R -l -i "#404040" * | while read fname; do echo "sedding $fname"; sed -i -e 's/#404040/#d4d4d4/gi' $fname; done
+grep -R -l -i "#737373" * | while read fname; do echo "sedding $fname"; sed -i -e 's/#737373/#a3a3a3/gi' $fname; done
+grep -R -l -i "#be123c" * | while read fname; do echo "sedding $fname"; sed -i -e 's/#be123c/#fda4af/gi' $fname; done
+grep -R -l -i "#f59e0b" * | while read fname; do echo "sedding $fname"; sed -i -e 's/#f59e0b/#fcd34d/gi' $fname; done
+grep -R -l -i "#f5f5f5" * | while read fname; do echo "sedding $fname"; sed -i -e 's/#f5f5f5/#262626/gi' $fname; done
+grep -R -l -i "#3730A3" * | while read fname; do echo "sedding $fname"; sed -i -e 's/#3730A3/#e0e7ff/gi' $fname; done
+grep -R -l -i "#ffffff" * | while read fname; do echo "sedding $fname"; sed -i -e 's/#ffffff/#171717/gi' $fname; done
+grep -R -l -i "#e5e5e5" * | while read fname; do echo "sedding $fname"; sed -i -e 's/#e5e5e5/#404040/gi' $fname; done
 */
 
 :root {
@@ -106,6 +115,8 @@ grep -l "#0E7490" * | while read fname; do echo "sedding $fname"; sed -i -e 's/#
     /* ---------- Sonicle.form.field.Display */
     --so-displayfield-clickable-color: #0e7490; /* Cyan/700 */
     --so-displayfield-clickable-hover-color: #164e63; /* Cyan/900 */
+    /* ---------- Sonicle.form.field.Palette */
+    --so-palettefield-shadow-color: var(--wt-theme-color-n1);
     /* ---------- Sonicle.panel.CanbanColumn */
     --so-kanbancolumn-border-radius: 4px;
     /* ---------- Sonicle.plugin.DropMask */

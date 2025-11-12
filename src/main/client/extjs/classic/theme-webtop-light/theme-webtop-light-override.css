@@ -106,6 +106,8 @@ grep -R -l -i "#212121" * | while read fname; do echo "sedding $fname"; sed -i -
     /* ---------- Sonicle.form.field.Display */
     --so-displayfield-clickable-color: #0e7490; /* Cyan/700 */
     --so-displayfield-clickable-hover-color: #164e63; /* Cyan/900 */
+    /* ---------- Sonicle.form.field.Palette */
+    --so-palettefield-shadow-color: var(--wt-theme-color-n3);
     /* ---------- Sonicle.panel.CanbanColumn */
     --so-kanbancolumn-border-radius: 4px;
     /* ---------- Sonicle.plugin.DropMask */
