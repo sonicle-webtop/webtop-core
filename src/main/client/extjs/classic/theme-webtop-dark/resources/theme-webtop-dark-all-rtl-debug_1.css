@@ -647,7 +647,7 @@
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/packages/core/sass/src/list/TreeItem.scss:372 */
 .x-treelist-row-over {
-    background-color: #22274f;
+    background-color: #404040;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/packages/core/sass/src/list/TreeItem.scss:376 */
 .x-treelist-row-over > * > .x-treelist-item-icon {
@@ -13437,7 +13437,7 @@ a.x-color-picker-item:hover {
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-neutral/sass/src/view/Table.scss:40 */
 .x-grid-item-over {
     color: #f5f5f5;
-    background-color: #22274f;
+    background-color: #404040;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-neutral/sass/src/view/Table.scss:47 */
 .x-grid-item-focused {
