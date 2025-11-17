@@ -49,8 +49,8 @@ Ext.define('Sonicle.webtop.core.ux.panel.UploadedGrid', {
 				{
 					xtype: 'gridcolumn',
 					dataIndex: 'name',
-					header: WT.res('wtuploadedgrid.name'),
 					sortable: false,
+					header: WT.res('wtuploadedgrid.name'),
 					flex: 2
 				}, {
 					xtype: 'sobytescolumn',
@@ -61,15 +61,15 @@ Ext.define('Sonicle.webtop.core.ux.panel.UploadedGrid', {
 				}, {
 					xtype: 'widgetcolumn',
 					dataIndex: 'progress',
-					header: '&nbsp;',
 					widget: {
 						xtype: 'progressbarwidget',
 						textTpl: ['{percent:number("0")}%']
 					},
+					header: '&nbsp;',
 					sortable: false,
 					flex: 1
 				}/*, {
-					xtype: 'actioncolumn',
+					xtype: 'soactioncolumn',
 					header: '',
 					flex: 1,
 					items: [{
@@ -78,7 +78,8 @@ Ext.define('Sonicle.webtop.core.ux.panel.UploadedGrid', {
 							//var rec = s.getStore().getAt(rIndex), qsp;
 
 						}
-					}]
+					}],
+					menuText: WT.res('grid.actions.lbl')
 				}*/
 			]
 		});
