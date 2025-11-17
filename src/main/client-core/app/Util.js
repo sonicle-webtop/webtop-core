@@ -157,6 +157,9 @@ Ext.define('Sonicle.webtop.core.app.Util', {
         return extension;
 	},
     
+	/*
+	 * @deprecated Use {@link Sonicle.Date#humanReadableSize} instead (see {@link WTF#durationSymbols} for customize symbols)
+	 */
 	humanReadableDuration: function(seconds, opts) {
 		opts = opts || {};
 		opts.unitSeparator = opts.unitSeparator || ' ';

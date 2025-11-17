@@ -432,6 +432,23 @@ Ext.define('Sonicle.webtop.core.app.Factory', {
 	},
 	
 	/**
+	 * Returns a set of symbols to use within {@link Sonicle.Date#humanReadableDuration} 
+	 * function, according to the specified type.
+	 * @param {long|narrow} [type=narrow]
+	 * @returns {String[]}
+	 */
+	durationSymbols: function(type) {
+		if ('long' === type) {
+			var time = function(s) { return WT.res('word.time.'+s); },
+				date = function(s) { return WT.res('word.time.'+s); };
+			return [[date('year'), date('years')], [date('day'), date('days')], [time('hour'), time('hours')], [time('minute'), time('minutes')], [time('second'), time('seconds')]];
+		} else { // narrow
+			var dur = function(s) { return WT.res('word.dur.'+s); };
+			return [dur('y'), dur('d'), dur('h'), dur('m'), dur('s')];
+		}
+	},
+	
+	/**
 	 * Helper method for building a config object for {@link Ext.data.field.Field field}.
 	 * @param {String} name See {@link Ext.data.field.Field#name}
 	 * @param {String} type See {@link Ext.data.field.Field#type}
