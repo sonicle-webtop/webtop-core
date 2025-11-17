@@ -149,6 +149,7 @@
 .wt-icon-move { background-image: url('act-move_16.svg') !important; background-size: contain; }
 .wt-icon-clipboard-copy { background-image: url('clipboard-copy_16.svg') !important; background-size: contain; }
 .wt-icon-clipboard-paste { background-image: url('clipboard-paste_16.svg') !important; background-size: contain; }
+.wt-icon-generate { background-image: url('act-generate_16.svg') !important; background-size: contain; }
 .wt-icon-restore { background-image: url('act-restore_16.svg') !important; background-size: contain; }
 .wt-icon-refresh { background-image: url('act-refresh_16.svg') !important; background-size: contain; }
 .wt-icon-cleanup { background-image: url('act-cleanup_16.svg') !important; background-size: contain; }
