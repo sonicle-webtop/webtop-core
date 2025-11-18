@@ -37,6 +37,10 @@ Ext.define('Sonicle.webtop.core.view.ChangePassword', {
 		'Sonicle.form.field.Password',
 		'Sonicle.plugin.NoAutocomplete'
 	],
+	uses: [
+		'Sonicle.ClipboardMgr',
+		'Sonicle.PasswordGenerator'
+	],
 	mixins: [
 		'WTA.mixin.PwdPolicies'
 	],
@@ -54,6 +58,7 @@ Ext.define('Sonicle.webtop.core.view.ChangePassword', {
 	promptConfirm: false,
 	
 	showOldPassword: false,
+	showGeneratePassword: false,
 	profileId: null,
 	policies: null,
 	
@@ -96,17 +101,44 @@ Ext.define('Sonicle.webtop.core.view.ChangePassword', {
 					fieldLabel: WT.res('changePassword.fld-oldPassword.lbl'),
 					anchor: '100%'
 				}, {
-					xtype: 'sopasswordfield',
-					reference: 'fldnewpassword',
-					allowBlank: false,
-					maxLength: 128,
-					validator: function(val) {
-						var username = Sonicle.String.substrBefore(me.profileId, '@'),
-								oldPwd = me.showOldPassword ? me.lref('fldoldpassword').getValue() : null;
-						return me.checkPolicies(val, me.policies, username, oldPwd);
-					},
-					plugins: 'sonoautocomplete',
-					fieldLabel: WT.res('changePassword.fld-newPassword.lbl'),
+					xtype: 'sofieldhgroup',
+					items: Ext.Array.join(
+						[
+							{
+								xtype: 'sopasswordfield',
+								reference: 'fldnewpassword',
+								allowBlank: false,
+								maxLength: 128,
+								validator: function(val) {
+									var username = Sonicle.String.substrBefore(me.profileId, '@'),
+										oldPwd = me.showOldPassword ? me.lref('fldoldpassword').getValue() : null;
+									return me.checkPolicies(val, me.policies, username, oldPwd);
+								},
+								plugins: 'sonoautocomplete',
+								fieldLabel: WT.res('changePassword.fld-newPassword.lbl'),
+								flex: 1
+							}
+						],
+						me.showGeneratePassword !== true ? undefined : [
+							{
+								xtype: 'sohspacer',
+								ui: 'small'
+							}, {
+								xtype: 'button',
+								ui: '{secondary|toolbar}',
+								iconCls: 'wt-icon-generate',
+								tooltip: WT.res('changePassword.act-generate.tip'),
+								handler: function() {
+									var newPass = Sonicle.webtop.core.view.ChangePassword.generatePassword(me.policies);
+									me.lref('fldnewpassword').setValue(newPass);
+									me.lref('fldnewpassword').setShowPassword(true);
+									me.lref('fldnewpassword2').setValue(newPass);
+									Sonicle.ClipboardMgr.copy(newPass);
+									WT.toast(WT.res('changePassword.info.passwordgenerated'));
+								}
+							}
+						]
+					),
 					anchor: '100%'
 				}, {
 					xtype: 'sopasswordfield',
@@ -161,6 +193,16 @@ Ext.define('Sonicle.webtop.core.view.ChangePassword', {
 					}
 				}
 			});
+		}
+	},
+	
+	statics: {
+		generatePassword: function(policies) {
+			return Sonicle.PasswordGenerator.generatePassword({
+					length: policies.minLength,
+					specials: false,
+					specialChars: '!'
+				}) + '!';
 		}
 	}
 });

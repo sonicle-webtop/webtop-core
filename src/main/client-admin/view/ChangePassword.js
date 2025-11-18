@@ -35,9 +35,9 @@ Ext.define('Sonicle.webtop.core.admin.view.ChangePassword', {
 	extend: 'Sonicle.webtop.core.view.ChangePassword',
 	
 	privates: {
-		doPasswordChange: function(op, np) {
+		doPasswordChange: function(op, np, forceChange) {
 			var me = this;
-			me.mys.changeUserPassword(me.profileId, op, np, {
+			me.mys.changeUserPassword(me.profileId, op, np, forceChange, {
 				callback: function(success) {
 					if(success) {
 						me.closeView(false);

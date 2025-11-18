@@ -45,7 +45,8 @@ Ext.define('Sonicle.webtop.core.admin.view.User', {
 	],
 	uses: [
 		'Sonicle.ClipboardMgr',
-		'Sonicle.PasswordGenerator'
+		'Sonicle.PasswordGenerator',
+		'Sonicle.webtop.core.view.ChangePassword'
 	],
 	mixins: [
 		'WTA.mixin.PwdPolicies'
@@ -209,17 +210,13 @@ Ext.define('Sonicle.webtop.core.admin.view.User', {
 									xtype: 'button',
 									ui: '{secondary|toolbar}',
 									iconCls: 'wt-icon-generate',
-									tooltip: me.res('user.act-generate.tip'),
+									tooltip: WT.res('changePassword.act-generate.tip'),
 									handler: function() {
-										var newPass = Sonicle.PasswordGenerator.generatePassword({
-											length: me.policies.minLength,
-											specials: false,
-											specialChars: '!'
-										}) + '!';
+										var newPass = Sonicle.webtop.core.view.ChangePassword.generatePassword(me.policies);
 										me.getModel().set({password: newPass, password2: newPass});
-										Sonicle.ClipboardMgr.copy(newPass);
 										me.lref('fldpassword').setShowPassword(true);
-										WT.toast(me.res('user.info.passwordgenerated'));
+										Sonicle.ClipboardMgr.copy(newPass);
+										WT.toast(WT.res('changePassword.info.passwordgenerated'));
 									}
 								}
 							],

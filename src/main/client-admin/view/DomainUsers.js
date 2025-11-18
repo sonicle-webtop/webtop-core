@@ -676,6 +676,7 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainUsers', {
 					swapReturn: true,
 					viewCfg: {
 						showOldPassword: false,
+						showGeneratePassword: true,
 						policies: policies,
 						profileId: profileId
 					}
