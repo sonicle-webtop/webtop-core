@@ -177,8 +177,8 @@ Ext.define('Sonicle.webtop.core.view.ChangePassword', {
 	
 	onSaveClick: function() {
 		var me = this,
-				op = me.lref('fldoldpassword'),
-				np = me.lref('fldnewpassword');
+			op = me.lref('fldoldpassword'),
+			np = me.lref('fldnewpassword');
 		if (me.showOldPassword && !op.isValid()) return;
 		if (!np.isValid() || !me.lref('fldnewpassword2').isValid()) return;
 		me.doPasswordChange(me.showOldPassword ? op.getValue() : null, np.getValue(), me.lref('fldforcechange').getValue());
@@ -194,6 +194,7 @@ Ext.define('Sonicle.webtop.core.view.ChangePassword', {
 			me.mys.changeUserPassword(op, np, {
 				callback: function(success) {
 					if (success) {
+						WT.toast(WT.res('changePassword.info.passwordupdated'));
 						me.closeView(false);
 					} else {
 						WT.error(WT.res('changePassword.error'));

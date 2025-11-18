@@ -1201,13 +1201,13 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 		// itself. Parameters are so taken from the environment because they
 		// refers to the same user.
 		var me = this,
-				vct = WT.createView(me.ID, 'view.ChangePassword', {
-					viewCfg: {
-						showOldPassword: true,
-						profileId: me.profileId,
-						policies: Ext.JSON.decode(me.getModel().get('dirPasswordPolicies'), true)
-					}
-				});
+			vct = WT.createView(me.ID, 'view.ChangePassword', {
+				viewCfg: {
+					showOldPassword: true,
+					profileId: me.profileId,
+					policies: Ext.JSON.decode(me.getModel().get('dirPasswordPolicies'), true)
+				}
+			});
 		vct.show();
 	},
 	
@@ -1228,12 +1228,12 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 	
 	activateOTP: function(delivery) {
 		var me = this,
-				view = (delivery === 'email') ? 'view.OTPSetupEmail' : 'view.OTPSetupGoogleAuth',
-				vw = WT.createView(me.ID, view, {
-					viewCfg: {
-						profileId: me.profileId
-					}
-				});
+			view = (delivery === 'email') ? 'view.OTPSetupEmail' : 'view.OTPSetupGoogleAuth',
+			vw = WT.createView(me.ID, view, {
+				viewCfg: {
+					profileId: me.profileId
+				}
+			});
 		
 		vw.getView().on('wizardcompleted', function(s) {
 			me.loadModel();
