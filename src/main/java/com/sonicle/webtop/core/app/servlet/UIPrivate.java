@@ -107,6 +107,7 @@ public class UIPrivate extends AbstractServlet {
 							throw new PasswordMustBeDifferent();
 						}
 						wta.getWebTopManager().updateUserPassword(pid.getDomainId(), pid.getUserId(), RunContext.getPrincipal().getPassword(), password.toCharArray(), false);
+						wts.clearProperty(CoreManifest.ID, UIPrivate.WTSPROP_PASSWORD_CHANGEUPONLOGIN);
 						((com.sonicle.security.Principal)RunContext.getPrincipal()).setPassword(password.toCharArray());
 						writePage = false;
 					}
