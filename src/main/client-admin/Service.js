@@ -444,7 +444,7 @@ Ext.define('Sonicle.webtop.core.admin.Service', {
 				profileId: profileId,
 				oldPassword: oldPassword,
 				newPassword: newPassword,
-				forceChange
+				forceChange: forceChange
 			},
 			callback: function(success, json) {
 				Ext.callback(opts.callback, opts.scope || me, [success, json]);
