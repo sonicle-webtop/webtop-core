@@ -59,6 +59,7 @@ Ext.define('Sonicle.webtop.core.view.ChangePassword', {
 	
 	showOldPassword: false,
 	showGeneratePassword: false,
+	showForceChange: false,
 	profileId: null,
 	policies: null,
 	
@@ -153,6 +154,12 @@ Ext.define('Sonicle.webtop.core.view.ChangePassword', {
 					validator: function(v) {
 						return me.lref('fldnewpassword').getValue() === v ? true : WT.res('changePassword.error.confirmNoMatch');
 					}
+				}, {
+					xtype: 'checkbox',
+					reference: 'fldforcechange',
+					hideEmptyLabel: false,
+					boxLabel: WT.res('changePassword.fld-forceChangeUponLogin.lbl'),
+					hidden: !me.showForceChange
 				}
 			]
 		});
@@ -174,7 +181,7 @@ Ext.define('Sonicle.webtop.core.view.ChangePassword', {
 				np = me.lref('fldnewpassword');
 		if (me.showOldPassword && !op.isValid()) return;
 		if (!np.isValid() || !me.lref('fldnewpassword2').isValid()) return;
-		me.doPasswordChange(me.showOldPassword ? op.getValue() : null, np.getValue());
+		me.doPasswordChange(me.showOldPassword ? op.getValue() : null, np.getValue(), me.lref('fldforcechange').getValue());
 	},
 	
 	onCancelClick: function() {
@@ -182,7 +189,7 @@ Ext.define('Sonicle.webtop.core.view.ChangePassword', {
 	},
 	
 	privates: {
-		doPasswordChange: function(op, np) {
+		doPasswordChange: function(op, np, forceChange) {
 			var me = this;
 			me.mys.changeUserPassword(op, np, {
 				callback: function(success) {

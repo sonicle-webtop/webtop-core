@@ -106,7 +106,7 @@ public class UIPrivate extends AbstractServlet {
 						if (Arrays.equals(password.toCharArray(), RunContext.getPrincipal().getPassword())) {
 							throw new PasswordMustBeDifferent();
 						}
-						wta.getWebTopManager().updateUserPassword(pid.getDomainId(), pid.getUserId(), RunContext.getPrincipal().getPassword(), password.toCharArray());
+						wta.getWebTopManager().updateUserPassword(pid.getDomainId(), pid.getUserId(), RunContext.getPrincipal().getPassword(), password.toCharArray(), false);
 						((com.sonicle.security.Principal)RunContext.getPrincipal()).setPassword(password.toCharArray());
 						writePage = false;
 					}

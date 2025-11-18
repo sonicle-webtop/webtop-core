@@ -436,14 +436,15 @@ Ext.define('Sonicle.webtop.core.admin.Service', {
 		});
 	},
 	
-	changeUserPassword: function(profileId, oldPassword, newPassword, opts) {
+	changeUserPassword: function(profileId, oldPassword, newPassword, forceChange, opts) {
 		opts = opts || {};
 		var me = this;
 		WT.ajaxReq(me.ID, 'ChangeUserPassword', {
 			params: {
 				profileId: profileId,
 				oldPassword: oldPassword,
-				newPassword: newPassword
+				newPassword: newPassword,
+				forceChange
 			},
 			callback: function(success, json) {
 				Ext.callback(opts.callback, opts.scope || me, [success, json]);

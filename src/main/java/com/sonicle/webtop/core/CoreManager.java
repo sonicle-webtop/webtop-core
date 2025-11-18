@@ -814,7 +814,7 @@ public class CoreManager extends BaseManager {
 		try {
 			ensureProfile();
 			if (oldPassword == null) throw new WTException("Old password must be provided");
-			wtMgr.updateUserPassword(getTargetProfileId().getDomainId(), getTargetProfileId().getUserId(), oldPassword, newPassword);
+			wtMgr.updateUserPassword(getTargetProfileId().getDomainId(), getTargetProfileId().getUserId(), oldPassword, newPassword, false);
 			
 		} catch (Exception ex) {
 			throw new WTException(ex, "Unable to change user password [{0}]", getTargetProfileId().toString());

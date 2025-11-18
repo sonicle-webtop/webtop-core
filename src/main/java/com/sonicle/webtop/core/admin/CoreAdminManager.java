@@ -566,14 +566,14 @@ public class CoreAdminManager extends BaseManager {
 		return wtMgr.updateUser(domainId, userId, user, options);
 	}
 	
-	public void updateUserPassword(final String userId, final char[] newPassword) throws WTException {
+	public void updateUserPassword(final String userId, final char[] newPassword, final boolean forceChangeUponLogin) throws WTException {
 		Check.notEmpty(userId, "userId");
 		Check.notNull(newPassword, "newPassword");
 		WebTopManager wtMgr = wta.getWebTopManager();
 		String domainId = getTargetProfileId().getDomainId();
 		
 		RunContext.ensureIsWebTopDomainAdmin(domainId);
-		wtMgr.updateUserPassword(domainId, userId, null, newPassword);
+		wtMgr.updateUserPassword(domainId, userId, null, newPassword, forceChangeUponLogin);
 	}
 	
 	public void updateUserStatus(final String userId, final boolean enabled) throws WTException {

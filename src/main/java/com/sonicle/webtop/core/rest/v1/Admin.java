@@ -557,7 +557,7 @@ public class Admin extends AdminApi {
 		
 		try {
 			CoreAdminManager adminMgr = WT.getCoreAdminManager(RunContext.buildDomainAdminProfileId(domainId));
-			adminMgr.updateUserPassword(userId, LangUtils.value(body, (char[])null));
+			adminMgr.updateUserPassword(userId, LangUtils.value(body, (char[])null), false);
 			return respOk();
 			
 		} catch (WTPwdPolicyException ex) {

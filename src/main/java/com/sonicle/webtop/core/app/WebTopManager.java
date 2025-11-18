@@ -1465,7 +1465,7 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 		EventBus.PostResult postResult = fireEvent(new UserAvailabilityChangeEvent(enabled, userPid), false, true);
 	}
 	
-	public void updateUserPassword(final String domainId, final String userId, final char[] oldPassword, final char[] newPassword) throws WTException {
+	public void updateUserPassword(final String domainId, final String userId, final char[] oldPassword, final char[] newPassword, final boolean forceChangeUponLogin) throws WTException {
 		Check.notEmpty(domainId, "domainId");
 		Check.notEmpty(userId, "userId");
 		Check.notNull(newPassword, "newPassword");
@@ -1498,7 +1498,7 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 
 			CoreUserSettings cus = new CoreUserSettings(userPid);
 			cus.setPasswordLastChange(JodaTimeUtils.now());
-			cus.setPasswordForceChange(false);
+			cus.setPasswordForceChange(forceChangeUponLogin);
 			
 		} catch (DirectoryException ex) {
 			if (isDirectoryNameNotFoundException(ex)) {

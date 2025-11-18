@@ -793,10 +793,11 @@ public class Service extends BaseService {
 		try {
 			String profileId = ServletUtils.getStringParameter(request, "profileId", true);
 			char[] newPassword = ServletUtils.getStringParameter(request, "newPassword", true).toCharArray();
+			boolean forceChange = ServletUtils.getBooleanParameter(request, "forceChange", false);
 			
 			UserProfileId pid = new UserProfileId(profileId);
 			CoreAdminManager admMgr = WT.getCoreAdminManager(RunContext.buildDomainAdminProfileId(pid.getDomainId()));
-			admMgr.updateUserPassword(pid.getUserId(), newPassword);
+			admMgr.updateUserPassword(pid.getUserId(), newPassword, forceChange);
 			new JsonResult().printTo(out);
 			
 		} catch(Exception ex) {
