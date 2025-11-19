@@ -79,10 +79,19 @@ Ext.define('Sonicle.webtop.core.sdk.UIView', {
 			 * NB: The real applied value is affected by viewport's scaling.
 			 */
 			
+			//TODO: maybe support autoheight
 			/**
-			 * @cfg {Number} height
-			 * The width of this view.
+			 * @cfg {Number|auto} height
+			 * The height of this View.
+			 * A numeric value will be interpreted as the number of pixels; the 
+			 * string value `auto` will activate autosize base on content height.
 			 * NB: The real applied value is affected by viewport's scaling.
+			 */
+			
+			//TODO: maybe support autoheight
+			/**
+			 * @cfg {Number} maxHeight
+			 * The maximum value in pixels which this View will set its height to.
 			 */
 		
 			 /**
@@ -204,6 +213,23 @@ Ext.define('Sonicle.webtop.core.sdk.UIView', {
 		}, me, {single: true});
 		me.initFocusFieldHook();
 	},
+	
+	//TODO: maybe support autoheight, this NOT work
+	/*
+	afterRender: function() {
+		var me = this,
+			dockCfg = me.getDockableConfig(),
+			height = 0;
+		me.callParent(arguments);
+		console.log('UIView : afterRender');
+		if ('auto' === dockCfg.height) {
+			me.items.each(function(item) {
+				height += item.getHeight() || 0;
+			});
+			me.setHeight(height);
+		}
+	},
+	*/
 	
 	/**
 	 * @private

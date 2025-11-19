@@ -438,6 +438,8 @@ Ext.define('Sonicle.webtop.core.private.viewport.ViewController', {
 			dockCfg = view.getDockableConfig(),
 			autoScale = dockCfg.autoScale === true,
 			width = autoScale ? me.calcServiceViewWidth(dockCfg.width) : dockCfg.width,
+			//TODO: maybe support autoheight
+			//height = ('auto' === dockCfg.height) ? '100%' : (autoScale ? me.calcServiceViewHeight(dockCfg.height) : dockCfg.height),
 			height = autoScale ? me.calcServiceViewHeight(dockCfg.height) : dockCfg.height,
 			ctCfg = {};
 		
