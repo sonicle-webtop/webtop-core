@@ -389,11 +389,11 @@ public class WebTopProps {
 	}
 	
 	public static String getUIPublicTheme(Properties props) {
-		return PropUtils.getStringProperty(props, PROP_UI_PUBLIC_THEME, "crisp");
+		return PropUtils.getStringProperty(props, PROP_UI_PUBLIC_THEME, "webtop-light");
 	}
 	
 	public static String getUIPublicLAF(Properties props) {
-		return PropUtils.getStringProperty(props, PROP_UI_PUBLIC_LAF, "default");
+		return PropUtils.getStringProperty(props, PROP_UI_PUBLIC_LAF, "webtop@light");
 	}
 	
 	public static String getMailBridgeSMTPHost(Properties props) {

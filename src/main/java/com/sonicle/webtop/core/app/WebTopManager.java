@@ -478,6 +478,8 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 			
 		} else {
 			// Add built-in UI-Presets
+			uis.put("webtoplight", new UIPreset("webtoplight", "WebTop (light)", "webtop-light", "webtop@light"));
+			uis.put("webtopdark", new UIPreset("webtopdark", "WebTop (dark)", "webtop-dark", "webtop@dark"));
 			uis.put("office", new UIPreset("office", "Office", "crisp", "office2019"));
 			uis.put("outline", new UIPreset("outline", "Outline", "crisp", "webtop2023"));
 			uis.put("classicb", new UIPreset("classicb", "Classic (blue)", "classic", "webtop2023"));
@@ -514,6 +516,8 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 		
 		//TODO: maybe improve this of dynamic discovery using such sort of file descriptor
 		// Add built-in themes
+		themes.put("webtop-light", new UITheme("webtop-light", "WebTop (light)", false));
+		themes.put("webtop-dark", new UITheme("webtop-dark", "WebTop (dark)", false));
 		themes.put("crisp", new UITheme("crisp", "Crisp", true));
 		//themes.put("triton", new UITheme("triton", "Triton", false));
 		//themes.put("neptune", new UITheme("neptune", "Neptune", true));
@@ -546,7 +550,9 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 		
 		//TODO: maybe improve this of dynamic discovery using such sort of file descriptor
 		// Add built-in LAFs
-		lafs.put("default", new UILookAndFeel("default", WT.getPlatformName()));
+		lafs.put("webtop@light", new UILookAndFeel("webtop@light", "WebTop (light)"));
+		lafs.put("webtop@dark", new UILookAndFeel("webtop@dark", "WebTop (dark)"));
+		lafs.put("default", new UILookAndFeel("default", "Default"));
 		lafs.put("webtop2023", new UILookAndFeel("webtop2023", "WebTop 2023"));
 		lafs.put("office2019", new UILookAndFeel("office2019", "Office 2019"));
 

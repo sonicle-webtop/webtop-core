@@ -530,11 +530,11 @@ public class CoreServiceSettings extends BaseServiceSettings {
 	}
 	
 	public String getDefaultUITheme() {
-		return getString(DEFAULT_PREFIX + THEME, "crisp");
+		return getString(DEFAULT_PREFIX + THEME, "webtop-light");
 	}
 	
 	public String getDefaultUILaf() {
-		return getString(DEFAULT_PREFIX + LAF, "default");
+		return getString(DEFAULT_PREFIX + LAF, "webtop@light");
 	}
 	
 	public boolean getDefaultRtl() {
