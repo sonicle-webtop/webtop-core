@@ -169,16 +169,18 @@ Ext.define('Sonicle.webtop.core.admin.view.License', {
 			],
 			buttons: [
 				{
+					ui: '{tertiary}',
+					text: WT.res('act-cancel.lbl'),
+					handler: function() {
+						me.closeView(false);
+					}
+				}, {
 					reference: 'btnok',
+					ui: '{primary}',
 					formBind: true,
 					text: WT.res('act-ok.lbl'),
 					handler: function() {
 						me.addLicenseUI();
-					}
-				}, {
-					text: WT.res('act-cancel.lbl'),
-					handler: function() {
-						me.closeView(false);
 					}
 				}
 			]

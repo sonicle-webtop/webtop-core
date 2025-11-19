@@ -38,8 +38,8 @@ Ext.define('Sonicle.webtop.core.admin.view.LoggerEditor', {
 	
 	dockableConfig: {
 		title: '{loggerEditor.tit}',
-		width: 530,
-		height: 150,
+		width: 500,
+		height: 190,
 		modal: true,
 		minimizable: false,
 		maximizable: false
@@ -80,18 +80,20 @@ Ext.define('Sonicle.webtop.core.admin.view.LoggerEditor', {
 		Ext.apply(me, {
 			buttons: [
 				{
+					text: WT.res('act-cancel.lbl'),
+					ui: '{tertiary}',
+					handler: function() {
+						me.closeView(false);
+					}
+				}, {
 					reference: 'btnok',
+					ui: '{primary}',
 					bind: {
 						disabled: '{!isValid}'
 					},
 					text: WT.res('act-ok.lbl'),
 					handler: function() {
 						me.okView();
-					}
-				}, {
-					text: WT.res('act-cancel.lbl'),
-					handler: function() {
-						me.closeView(false);
 					}
 				}
 			]

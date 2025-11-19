@@ -56,15 +56,19 @@ Ext.define('Sonicle.webtop.core.view.Feedback', {
 	initComponent: function() {
 		var me = this;
 		Ext.apply(me, {
-			buttons: [{
-				text: WT.res('act-send.lbl'),
-				handler: me.onSendClick,
-				scope: me
-			}, {
-				text: WT.res('act-cancel.lbl'),
-				handler: me.onCancelClick,
-				scope: me
-			}]
+			buttons: [
+				{
+					ui: '{tertiary}',
+					text: WT.res('act-cancel.lbl'),
+					handler: me.onCancelClick,
+					scope: me
+				}, {
+					ui: '{primary}',
+					text: WT.res('act-send.lbl'),
+					handler: me.onSendClick,
+					scope: me
+				}
+			]
 		});
 		me.callParent(arguments);
 		

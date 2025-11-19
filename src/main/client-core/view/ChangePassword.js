@@ -69,13 +69,13 @@ Ext.define('Sonicle.webtop.core.view.ChangePassword', {
 		Ext.apply(me, {
 			buttons: [
 				{
-					text: WT.res('act-cancel.lbl'),
 					ui: '{tertiary}',
+					text: WT.res('act-cancel.lbl'),
 					handler: me.onCancelClick,
 					scope: me
 				}, {
-					text: WT.res('act-save.lbl'),
 					ui: '{primary}',
+					text: WT.res('act-save.lbl'),
 					handler: me.onSaveClick,
 					scope: me
 				}

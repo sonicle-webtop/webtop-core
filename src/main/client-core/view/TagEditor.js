@@ -98,7 +98,7 @@ Ext.define('Sonicle.webtop.core.view.TagEditor', {
 		Ext.merge(cfg || {}, {
             dockableConfig: {
 				// Keep WT.getVar: mys is NOT ready here in constructor
-				height: !!WT.getVar('auditUi') ? 180 : 150
+				height: !!WT.getVar('auditUi') ? 200 : 170
 			}
 		});
 		me.callParent([cfg]);
@@ -182,16 +182,18 @@ Ext.define('Sonicle.webtop.core.view.TagEditor', {
 			],
 			buttons: [
 				{
+					ui: '{tertiary}',
+					text: WT.res('act-cancel.lbl'),
+					handler: function() {
+						me.closeView(false);
+					}
+				}, {
 					reference: 'btnok',
+					ui: '{primary}',
 					formBind: true,
 					text: WT.res('act-ok.lbl'),
 					handler: function() {
 						me.okView();
-					}
-				}, {
-					text: WT.res('act-cancel.lbl'),
-					handler: function() {
-						me.closeView(false);
 					}
 				}
 			]

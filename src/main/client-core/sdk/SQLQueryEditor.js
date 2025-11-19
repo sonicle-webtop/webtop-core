@@ -214,15 +214,17 @@ Ext.define('Sonicle.webtop.core.sdk.SQLQueryEditor', {
 			tbar: tbar,
 			buttons: [
 				{
-					reference: 'btnok',
-					text: WT.res('act-ok.lbl'),
-					handler: function() {
-						me.okView();
-					}
-				}, {
+					ui: '{tertiary}',
 					text: WT.res('act-cancel.lbl'),
 					handler: function() {
 						me.closeView(false);
+					}
+				}, {
+					reference: 'btnok',
+					ui: '{primary}',
+					text: WT.res('act-ok.lbl'),
+					handler: function() {
+						me.okView();
 					}
 				}
 			]
