@@ -38,6 +38,7 @@
 .wtadm-icon-dbUpgrader { background-image: url('dbUpgrader_16.svg') !important; background-size: contain; }
 .wtadm-icon-domains { background-image: url('domains_16.svg') !important; background-size: contain; }
 .wtadm-icon-domain { background-image: url('domain_16.svg') !important; background-size: contain; }
+.wtadm-icon-domain-enabled { background-image: url('domain-enabled_16.svg') !important; background-size: contain; }
 .wtadm-icon-domain-disabled { background-image: url('domain-disabled_16.svg') !important; background-size: contain; }
 .wtadm-icon-groups { background-image: url('group_16.svg') !important; background-size: contain; }
 .wtadm-icon-group { background-image: url('group_16.svg') !important; background-size: contain; }

@@ -334,7 +334,7 @@ public class Service extends BaseService {
 	private ExtTreeNode createDomainNode(String parentId, Domain domain, String dirScheme, boolean dirCapPasswordWrite, boolean dirCapUsersWrite) {
 		CId cid = CId.build(parentId, domain.getDomainId());
 		ExtTreeNode node = new ExtTreeNode(cid.toString(), domain.getDisplayName(), false);
-		node.setIconClass(domain.getEnabled() ? "wtadm-icon-domain" : "wtadm-icon-domain-disabled");
+		node.setIconClass(domain.getEnabled() ? "wtadm-icon-domain-enabled" : "wtadm-icon-domain-disabled");
 		node.put("_type", "domain");
 		node.put("_domainId", domain.getDomainId());
 		node.put("_authDomainName", domain.getAuthDomainName());
