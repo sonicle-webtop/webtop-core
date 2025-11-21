@@ -1441,10 +1441,17 @@ Ext.define('Sonicle.webtop.core.app.WT', {
 					return WT._nlpRRule.strings[id];
 				},
 				dateFormat: function(y, month, d) {
-					var XD = Ext.Date,
-						zlpad = function(s, size) { return Ext.String.leftPad(s, size, '0'); },
-						m = WT._nlpRRule.language.monthNames.indexOf(month) +1;
-					return XD.format(XD.parse(zlpad(y, 4)+''+zlpad(m, 2)+''+zlpad(d, 2), 'Y-m-d'), dateFmt);
+					// In rrule.js dateFormat function is used only when formatting Until date.
+					// Due to time-zones the date info (y, month, d) is not enough to format until date correctly.
+					// For example UNTIL=20260520T220000Z, in GMT+1 timezone, would result in 20 May 2026 if we omit 
+					// the time part; the correct result is 21 May 2026.
+					// Due to the precise use of this dateFormat function, it's safe to ignore 
+					// current arguments (y, month, d) and access until directly.
+					//var XD = Ext.Date,
+					//	zlpad = function(s, size) { return Ext.String.leftPad(s, size, '0'); },
+					//	m = WT._nlpRRule.language.monthNames.indexOf(month) +1;
+					//return XD.format(XD.parse(zlpad(y, 4)+'-'+zlpad(m, 2)+'-'+zlpad(d, 2), 'Y-m-d'), dateFmt);
+					return Ext.Date.format(this.options.until, dateFmt);
 				}
 			};
 		}
