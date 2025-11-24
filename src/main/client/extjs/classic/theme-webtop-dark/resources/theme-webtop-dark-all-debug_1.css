@@ -11190,21 +11190,21 @@ body > .x-mask {
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-neutral/sass/var/form/field/Checkbox.scss:89 */
 .x-form-cb-wrap-default {
     height: 30px;
-    min-width: 18px;
+    min-width: 17px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-neutral/sass/var/form/field/Checkbox.scss:98 */
 .x-form-cb-default {
-    margin-top: 6px;
+    margin-top: 7px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-neutral/sass/var/form/field/Checkbox.scss:103 */
 .x-form-checkbox-default,
 .x-form-radio-default {
-    width: 18px;
-    height: 18px;
+    width: 17px;
+    height: 17px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-neutral/sass/var/form/field/Checkbox.scss:109 */
 .x-form-radio-default {
-    font: 18px/1 'Font Awesome 5 Free Regular';
+    font: 17px/1 'Font Awesome 5 Free Regular';
     color: #a3a3a3;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-neutral/sass/etc/mixins/font-icon.scss:132 */
@@ -11213,7 +11213,7 @@ body > .x-mask {
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-neutral/sass/var/form/field/Checkbox.scss:114 */
 .x-form-cb-checked .x-form-radio-default {
-    font: 18px/1 'Font Awesome 5 Free Regular';
+    font: 17px/1 'Font Awesome 5 Free Regular';
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-neutral/sass/etc/mixins/font-icon.scss:132 */
 .x-form-cb-checked .x-form-radio-default:before {
@@ -11260,11 +11260,11 @@ body > .x-mask {
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-neutral/sass/var/form/field/Checkbox.scss:190 */
 .x-form-cb-label-default.x-form-cb-label-before {
-    padding-right: 22px;
+    padding-right: 21px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-neutral/sass/var/form/field/Checkbox.scss:201 */
 .x-form-cb-label-default.x-form-cb-label-after {
-    padding-left: 22px;
+    padding-left: 21px;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-neutral/sass/var/form/field/Checkbox.scss:215 */
 .x-checkbox-default-cell > .x-grid-cell-inner {
@@ -12905,7 +12905,7 @@ a.x-color-picker-item:hover {
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-neutral/sass/src/grid/column/Check.scss:2 */
 .x-column-header-checkbox .x-column-header-inner,
 .x-grid-checkcolumn-cell-inner {
-    padding: 7px 4px 7px 4px;
+    padding: 8px 4px 7px 4px;
     text-overflow: clip;
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-neutral/sass/src/grid/column/Check.scss:20 */
@@ -13819,7 +13819,7 @@ a.x-color-picker-item:hover {
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-neutral/sass/var/menu/Menu.scss:1117 */
 .x-menu-item-checked .x-menu-item-icon-default.x-menu-group-icon {
-    font: 18px/16px 'Font Awesome 5 Free';
+    font: 17px/16px 'Font Awesome 5 Free';
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-neutral/sass/etc/mixins/font-icon.scss:132 */
 .x-menu-item-checked .x-menu-item-icon-default.x-menu-group-icon:before {
@@ -14086,7 +14086,7 @@ a.x-color-picker-item:hover {
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-neutral/sass/var/menu/Menu.scss:1117 */
 .x-menu-item-checked .x-menu-item-icon-default-menubar.x-menu-group-icon {
-    font: 18px/16px 'Font Awesome 5 Free';
+    font: 17px/16px 'Font Awesome 5 Free';
 }
 /* D:/Sonicle/Workspaces/wt5-workspace/extjs750/ext/classic/theme-neutral/sass/etc/mixins/font-icon.scss:132 */
 .x-menu-item-checked .x-menu-item-icon-default-menubar.x-menu-group-icon:before {
