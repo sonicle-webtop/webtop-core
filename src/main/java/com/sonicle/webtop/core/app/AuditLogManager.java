@@ -287,8 +287,8 @@ public class AuditLogManager extends AbstractAppManager<AuditLogManager> {
 			CoreServiceSettings css = new CoreServiceSettings(getWebTopApp().getSettingsManager(), CoreManifest.ID, profileId.getDomainId());
 
 			try {
-				UserProfile.Data ud = WT.getUserData(profileId);
-				if (ud == null) throw new WTException("User-data not found [{}]", profileId);
+				final UserProfile.Data pd = WT.getProfileData(profileId);
+				if (pd == null) throw new WTException("User-data not found [{}]", profileId);
 
 				String remoteIp = remoteIpAddress.toAddressString().toString();
 				ReadableUserAgent rua = WebTopApp.getUserAgentInfo(userAgent);
@@ -296,14 +296,14 @@ public class AuditLogManager extends AbstractAppManager<AuditLogManager> {
 				if (IPUtils.isPublicAddress(remoteIpAddress)) {
 					ipData = getIPGeolocationData(profileId.getDomainId(), remoteIp);
 				}
-
-				String subject = EmailNotification.buildSubject(ud.getLocale(), CoreManifest.ID, WT.lookupResource(CoreManifest.ID, ud.getLocale(), "tpl.email.newDevice.subject"));
-				String customBodyHtml = TplHelper.buildNewDeviceNoticeBody(ud.getProfileEmailAddress(), JodaTimeUtils.now(), rua, remoteIp, ipData, ud.getLocale(), ud.getTimeZone(), ud.getShortDateFormat(), ud.getShortTimeFormat());
-				String html = new EmailNotification.NoReplyBuilder()
+				
+				final String subject = EmailNotification.buildSubject(pd.getLocale(), CoreManifest.ID, WT.lookupResource(CoreManifest.ID, pd.getLocale(), "tpl.email.newDevice.subject"));
+				final String customBodyHtml = TplHelper.buildNewDeviceNoticeBody(pd.getProfileEmailAddress(), JodaTimeUtils.now(), rua, remoteIp, ipData, pd.getLocale(), pd.getTimeZone(), pd.getShortDateFormat(), pd.getShortTimeFormat());
+				final String html = new EmailNotification.NoReplyBuilder()
 					.withCustomBody(null, customBodyHtml)
-					.build(ud.getLocale(), EmailNotification.buildSource(ud.getLocale(), CoreManifest.ID)).write();
+					.build(pd.getLocale(), EmailNotification.buildSource(pd.getLocale(), CoreManifest.ID)).write();
 
-				InternetAddress from = WT.getNoReplyAddress(profileId.getDomainId());
+				final InternetAddress from = WT.getNoReplyAddress(profileId.getDomainId());
 				if (from == null) throw new WTException("Error getting no-reply address for '{}'", profileId.getDomainId());
 
 				ArrayList<InternetAddress> ccns = new ArrayList<>();
@@ -312,19 +312,19 @@ public class AuditLogManager extends AbstractAppManager<AuditLogManager> {
 				// the target profile is sysAdmin or during impersonation. This helps
 				// to keep connections private during some *special* activities.
 				if (!WebTopManager.isSysAdmin(profileId) && !profileIsImpersonated) {
-					tos.add(ud.getPersonalEmail());
+					tos.add(pd.getProfileEmail());
 					//TODO: evaluate how to treat domain admin when will be implemented!
 					for (String email : css.getSecurityKnownDeviceVerificationRecipients()) {
-						InternetAddress ia = InternetAddressUtils.toInternetAddress(email);
+						final InternetAddress ia = InternetAddressUtils.toInternetAddress(email);
 						if (ia != null) ccns.add(ia);
 					}
 				} else {
 					if (profileIsImpersonated) {
-						UserProfile.Data aud = WT.getUserData(WebTopManager.sysAdminProfileId());
-						if (aud == null) throw new WTException("User-data not found [{}]", WebTopManager.sysAdminProfileId());
-						tos.add(aud.getPersonalEmail());
+						final UserProfile.Data apd = WT.getProfileData(WebTopManager.sysAdminProfileId());
+						if (apd == null) throw new WTException("User-data not found [{}]", WebTopManager.sysAdminProfileId());
+						tos.add(apd.getPersonalEmail());
 					} else {
-						tos.add(ud.getPersonalEmail());
+						tos.add(pd.getPersonalEmail());
 					}
 				}
 
