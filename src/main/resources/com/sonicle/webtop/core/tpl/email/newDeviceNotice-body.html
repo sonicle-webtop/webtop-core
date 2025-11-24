@@ -11,34 +11,26 @@
                 <td style="padding:0 1em 10px 0;color:#888;white-space:nowrap" valign="top">
                     <div><i style="font-style:normal">${LangUtils.encodeForHTMLContent(i18n.time)}</i></div>
                 </td>
-                <td style="padding-bottom:10px;" valign="top">
-                    ${LangUtils.encodeForHTMLContent(access.time)} <span style="color:#888">${LangUtils.encodeForHTMLContent(access.timezone)}</span>
-                </td>
+                <td style="padding-bottom:10px;" valign="top">${LangUtils.encodeForHTMLContent(access.time)} <span style="color:#888">${LangUtils.encodeForHTMLContent(access.timezone)}</span></td>
             </tr>
             <tr>
                 <td style="padding:0 1em 10px 0;color:#888;white-space:nowrap" valign="top">
                     <div><i style="font-style:normal">${LangUtils.encodeForHTMLContent(i18n.device)}</i></div>
                 </td>
-                <td style="padding-bottom:10px;" valign="top">
-                    ${LangUtils.encodeForHTMLContent(access.device)}
-                </td>
+                <td style="padding-bottom:10px;" valign="top">${LangUtils.encodeForHTMLContent(access.device)}</td>
             </tr>
             <tr>
                 <td style="padding:0 1em 10px 0;color:#888;white-space:nowrap" valign="top">
                     <div><i style="font-style:normal">${LangUtils.encodeForHTMLContent(i18n.ipAddress)}</i></div>
                 </td>
-                <td style="padding-bottom:10px;" valign="top">
-                    ${LangUtils.encodeForHTMLContent(access.ipAddress)}
-                </td>
+                <td style="padding-bottom:10px;" valign="top">${LangUtils.encodeForHTMLContent(access.ipAddress)}</td>
             </tr>
             <#if access.location??>
             <tr>
                 <td style="padding:0 1em 10px 0;color:#888;white-space:nowrap" valign="top">
                     <div><i style="font-style:normal">${LangUtils.encodeForHTMLContent(i18n.location)}</i></div>
                 </td>
-                <td style="padding-bottom:10px;" valign="top">
-                    ${LangUtils.encodeForHTMLContent(access.location)}
-                </td>
+                <td style="padding-bottom:10px;" valign="top">${LangUtils.encodeForHTMLContent(access.location)} <span style="color:#888">${LangUtils.encodeForHTMLContent(i18n.locationDisclaimer)}</span></td>
             </tr>
             </#if>
         </table>

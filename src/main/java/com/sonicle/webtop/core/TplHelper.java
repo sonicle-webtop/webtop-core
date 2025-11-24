@@ -95,6 +95,7 @@ public class TplHelper {
 			.add("device", WT.lookupResource(CoreManifest.ID, locale, "tpl.email.newDevice.body.device"))
 			.add("ipAddress", WT.lookupResource(CoreManifest.ID, locale, "tpl.email.newDevice.body.ipAddress"))
 			.add("location", WT.lookupResource(CoreManifest.ID, locale, "tpl.email.newDevice.body.location"))
+			.add("locationDisclaimer", WT.lookupResource(CoreManifest.ID, locale, "tpl.email.newDevice.body.location.disclaimer"))
 			.add("action1", WT.lookupResource(CoreManifest.ID, locale, "tpl.email.newDevice.body.action1"))
 			.add("action2", WT.lookupResource(CoreManifest.ID, locale, "tpl.email.newDevice.body.action2"));
 		
