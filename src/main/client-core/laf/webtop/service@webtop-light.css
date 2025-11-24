@@ -26,6 +26,11 @@
 /* Customize HD style */
 .wt-tool .wt-tool-bg { background-color: var(--wt-theme-color-surface-l3); }
 .wt-tool-hd-wrap { background-color: var(--wt-theme-color-surface-l3); }
+/* Differentiate grid-items BG color */
+.wt-tool .wt-tool-tree .x-grid-item.x-grid-item-over,
+.wt-tool .wt-tool-tree .x-grid-item.x-grid-item-selected {
+    background-color: var(--wt-theme-color-surface-l2);
+}
 
 /* ---------- Content Body */
 /* Increase elevation of vertical splitter when hovered and dragging */
