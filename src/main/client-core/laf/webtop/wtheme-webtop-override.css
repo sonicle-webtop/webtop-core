@@ -52,6 +52,16 @@
 .wt-tool-hd-title { font-size: var(--wt-theme-fontsize-lg); font-weight: 500; }
 .wt-tool-hd-separator { border-top-color: #e5e7eb !important; } /* Gray/200 FIXME: evaluate to change directly fieldset color in theme */
 .wt-tool-foo { padding-top: 10px; padding-bottom: 15px; }
+/* Customize trees scroller shadow */
+.wt-tool-tree.x-grid .x-grid-body .x-scroller:not(.x-scroller-y-at-end):not(.x-scroller-y-at-start) {
+    box-shadow: inset 0px 8px 8px -8px var(--wt-theme-color-shadow), inset 0px -8px 8px -8px var(--wt-theme-color-shadow);
+}
+.wt-tool-tree.x-grid .x-grid-body .x-scroller:not(.x-scroller-y-at-end) {
+    box-shadow: inset 0px -8px 8px -8px var(--wt-theme-color-shadow);
+}
+.wt-tool-tree.x-grid .x-grid-body .x-scroller:not(.x-scroller-y-at-start) {
+    box-shadow: inset 0px 8px 8px -8px var(--wt-theme-color-shadow);
+}
 
 /* ---------- Content Body */
 /* Remove separation border with top-toolbar (use same tb color) */

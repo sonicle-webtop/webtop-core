@@ -50,6 +50,7 @@ Use primary roles for the most prominent components across the UI, such as the F
 --wt-theme-color-scrollbar-thumb : Color for scrollbar thumb component
 --wt-theme-color-scrollbar-track : Color for scrollbar track component
 --wt-theme-color-mask            : Color for overlay masks
+--wt-theme-color-shadow          : Color for shadow masks
 --wt-theme-color-field           : Field - Color for field (body) backgrounds
 --wt-theme-color-dialog          : Dialog - Color for dialog (body) backgrounds
 --wt-theme-color-dialog-on       : On dialog - Text and icons against dialogs surface

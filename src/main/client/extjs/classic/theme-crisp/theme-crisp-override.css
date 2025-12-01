@@ -45,6 +45,7 @@
     --wt-theme-color-scrollbar-thumb: #e0e0e0;
     --wt-theme-color-scrollbar-track: transparent;
     --wt-theme-color-mask: rgba(255, 255, 255, 0.7);
+    /*--wt-theme-color-shadow: */
     --wt-theme-color-field: var(--wt-theme-color-surface-l0);
     --wt-theme-color-dialog: #ffffff;
     --wt-theme-color-dialog-on: #000000;

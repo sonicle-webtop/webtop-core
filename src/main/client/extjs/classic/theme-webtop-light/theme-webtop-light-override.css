@@ -48,8 +48,10 @@ grep -R -l -i "#212121" * | while read fname; do echo "sedding $fname"; sed -i -
     
     --wt-theme-color-scrollbar-thumb: #d4d4d4; /* Neutral/300 */
     --wt-theme-color-scrollbar-track: transparent;
-    --wt-theme-color-mask: rgba(107, 114, 128, 0.75); /* Gray/500 @75% */
-    -wt-theme-color-field: var(--wt-theme-color-surface-l0);
+    --wt-theme-color-mask: #737373bf; /* Neutral/500 @75% */
+    --wt-theme-color-shadow: #d4d4d429; /* Neutral/300 @16% */
+    /*--wt-theme-color-shadow: #1e1f2129;*/
+    --wt-theme-color-field: var(--wt-theme-color-surface-l0);
     --wt-theme-color-dialog: var(--wt-theme-color-surface-l0);
     --wt-theme-color-dialog-on: #404040; /* Neutral/700 */
     --wt-theme-color-dialog-hd: var(--wt-theme-color-surface-l2);

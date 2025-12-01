@@ -3,6 +3,12 @@
 /* Only for pre-built themes (not customized one using Themer app).
 /**************************************/
 
+/* ---------- Ext.panel.Tool */
+/* Fix cropped tool icons */
+.x-panel .x-tool-tool-el {
+    overflow: visible;
+}
+
 /* ---------- Ext.resizer.Resizer */
 /* Reduce resize-handle size (5px are enough) */
 .x-resizable-handle-north,

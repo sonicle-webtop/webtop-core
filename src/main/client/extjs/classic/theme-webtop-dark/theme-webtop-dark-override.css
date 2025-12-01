@@ -57,7 +57,9 @@ grep -R -l -i "#e5e5e5" * | while read fname; do echo "sedding $fname"; sed -i -
     
     --wt-theme-color-scrollbar-thumb: #a3a3a3; /* Neutral/400 */
     --wt-theme-color-scrollbar-track: transparent;
-    --wt-theme-color-mask: rgba(64, 64, 64, 0.75); /* Neutral/700 @75% */
+    /*--wt-theme-color-mask: rgba(64, 64, 64, 0.75);*/ /* Neutral/700 @75% */
+    --wt-theme-color-mask: #404040bf; /* Neutral/700 @75% */
+    --wt-theme-color-shadow: #0a0a0a99; /* Neutral/950 @60% */
     --wt-theme-color-field: var(--wt-theme-color-surface-l0);
     --wt-theme-color-dialog: var(--wt-theme-color-surface-l1);
     --wt-theme-color-dialog-on: var(--wt-theme-color-n1);
@@ -140,7 +142,7 @@ grep -R -l -i "#e5e5e5" * | while read fname; do echo "sedding $fname"; sed -i -
 
 /* ---------- Ext.Shadow */
 .x-css-shadow {
-    box-shadow: 0px 20px 40px 0px #00000099 !important;
+    box-shadow: 0px 20px 40px 0px var(--wt-theme-color-shadow) !important;
 }
 
 /* ---------- Ext.panel.Panel */
