@@ -53,13 +53,13 @@
 .wt-tool-hd-separator { border-top-color: #e5e7eb !important; } /* Gray/200 FIXME: evaluate to change directly fieldset color in theme */
 .wt-tool-foo { padding-top: 10px; padding-bottom: 15px; }
 /* Customize trees scroller shadow */
-.wt-tool-tree.x-grid .x-grid-body .x-scroller:not(.x-scroller-y-at-end):not(.x-scroller-y-at-start) {
+.wt-tool-scroll-inset .x-scroller.x-scroller-y-pos-mid {
     box-shadow: inset 0px 8px 8px -8px var(--wt-theme-color-shadow), inset 0px -8px 8px -8px var(--wt-theme-color-shadow);
 }
-.wt-tool-tree.x-grid .x-grid-body .x-scroller:not(.x-scroller-y-at-end) {
+.wt-tool-scroll-inset .x-scroller.x-scroller-y-pos-begin {
     box-shadow: inset 0px -8px 8px -8px var(--wt-theme-color-shadow);
 }
-.wt-tool-tree.x-grid .x-grid-body .x-scroller:not(.x-scroller-y-at-start) {
+.wt-tool-scroll-inset .x-scroller.x-scroller-y-pos-end {
     box-shadow: inset 0px 8px 8px -8px var(--wt-theme-color-shadow);
 }
 
