@@ -4972,12 +4972,13 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 				LOGGER.debug("[DomainInfoCache] Cached {} domains", byDomainId.size());
 				
 			} catch (Exception ex) {
-				DbUtils.closeQuietly(con);
 				if (this.getInitCount() == 0) {
 					throw new WTRuntimeException(ex, "[DomainInfoCache] Unable to build cache");
 				} else {
 					LOGGER.error("[DomainInfoCache] Unable to build cache", ex);
 				}
+			} finally {
+				DbUtils.closeQuietly(con);
 			}
 		}
 		
