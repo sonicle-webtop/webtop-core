@@ -16,6 +16,12 @@ body > .x-mask {
     background-color: var(--wt-theme-color-ct-2) !important;
 }
 
+/* ---------- Ext.ProgressBar */
+/* Add support to radius */
+.x-progress.x-progress-default {
+    border-radius: var(--wt-theme-field-radius, 0px);
+}
+
 /* ---------- Ext.button.Button */
 /* Add default icon family to FA free */
 .x-btn-icon-el:empty { font-family: var(--fa-style-family-classic); }
