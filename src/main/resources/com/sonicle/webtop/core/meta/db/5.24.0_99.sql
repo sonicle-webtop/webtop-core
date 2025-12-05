@@ -15,3 +15,7 @@ WHERE "service_id" = 'com.sonicle.webtop.core' AND "key" = 'theme' AND "value" =
 UPDATE "core"."user_settings" 
 SET "value" = 'nethesis@light'
 WHERE "service_id" = 'com.sonicle.webtop.core' AND "key" = 'laf' AND "value" = 'nethesis';
+
+UPDATE "core"."user_settings"
+SET "value" = REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(VALUE, '"uiPreset":"nethesis"', '"uiPreset":"nethesislight"'), 'Theme":"nethesis"', 'Theme":"nethesis-light"'), 'Theme":"Nethesis"', 'Theme":"nethesis-light"'), 'Theme":"Nethesis (light)"', 'Theme":"nethesis-light"'), 'LookAndFeel":"nethesis"', 'LookAndFeel":"nethesis@light"')
+WHERE "service_id" = 'com.sonicle.webtop.core' AND "key" = 'ui.tryme.banner';

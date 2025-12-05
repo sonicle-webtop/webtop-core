@@ -896,7 +896,7 @@ public class WebTopSession {
 					}
 					if (trymeMode && overridden) {
 						userSettings.setUITryMeDisarmed(true);
-						userSettings.setUITryMeBanner(new CoreSettings.TryMeBanner(candidate.getId(), candidate.getName(), candidate.getLookAndFeel(), initialTheme, initialLookAndFeel));
+						userSettings.setUITryMeBanner(new CoreSettings.TryMeBanner(candidate.getId(), candidate.getTheme(), candidate.getLookAndFeel(), initialTheme, initialLookAndFeel));
 					}
 				}
 				return candidate;
