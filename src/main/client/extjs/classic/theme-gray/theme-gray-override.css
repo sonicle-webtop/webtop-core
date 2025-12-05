@@ -31,7 +31,7 @@
     --wt-theme-color-warn: #FFA000; /* Amber/700 (https://materialui.co/colors/) */
     --wt-theme-color-warn-on: #ffffff; /* White */
     --wt-theme-color-warn-ct: #FFF8E1; /* Amber/50 (https://materialui.co/colors/) */
-    --wt-theme-color-warn-ct-on: #FFCA28; /* Amber/400 (https://materialui.co/colors/) */
+    --wt-theme-color-warn-ct-on: #FFB300; /* Amber/600 (https://materialui.co/colors/) */
     --wt-theme-color-error: #D32F2F; /* Red/700 (https://materialui.co/colors/) */
     --wt-theme-color-error-on: #FAFAFA; /* Grey/50 (https://materialui.co/colors/) */
     --wt-theme-color-error-ct: #FFEBEE; /* Red/50 (https://materialui.co/colors/) */
@@ -60,7 +60,7 @@
     --wt-theme-color-navbar: #e6e6e6;
     --wt-theme-color-taskbar: #e6e6e6;
     
-    --wt-theme-fontfamily: 'helvetica, arial, verdana, sans-serif';
+    --wt-theme-fontfamily: helvetica, arial, verdana, sans-serif;
     --wt-theme-fontsize-xs: 8px;
     --wt-theme-fontsize-sm: 10px;
     --wt-theme-fontsize-base: 11px;
