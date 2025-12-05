@@ -8,6 +8,10 @@
 body > .x-mask {
     background-color: var(--wt-theme-color-mask);
 }
+/* Avoid ugly border color around masked panels */
+.x-keyboard-mode .x-mask.x-focus {
+    border-width: 0px;
+}
 
 /* ---------- ContextMenu */
 /* Highlight the row that activates the context-menu */
