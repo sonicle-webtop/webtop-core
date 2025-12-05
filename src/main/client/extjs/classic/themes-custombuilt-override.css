@@ -137,7 +137,7 @@ body > .x-mask {
 	border-bottom-right-radius: var(--wt-theme-grid-radius, 0px);
 }
 /* Add depth effect for rounded-style grids */
-.x-grid.x-grid-rounded .x-grid-item:not(.x-grid-item-selected) {
+.x-grid.x-grid-rounded .x-grid-item:not(.x-grid-item-selected):not(.x-grid-item-over) {
     background-color: var(--wt-theme-color-surface-l0);
 }
 /* Fix hide top border when x-grid-no-border (custom class) is explict */
