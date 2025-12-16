@@ -2387,6 +2387,7 @@ public class CoreManager extends BaseManager {
 				builder.withShareEmbedTexts(new Meeting.ShareEmbedTexts(
 					StringUtils.replace(WT.lookupResource(SERVICE_ID, targetLocale, "meeting.jitsi.share.info"), "$jitsi", dollarJitsi),
 					StringUtils.replace(WT.lookupResource(SERVICE_ID, targetLocale, "meeting.jitsi.share.subject"), "$jitsi", dollarJitsi),
+					WT.lookupFormattedResource(SERVICE_ID, targetLocale, StringUtils.isBlank(roomName) ? "meeting.jitsi.share.location" : "meeting.jitsi.share.location.roomed", roomName),
 					StringUtils.replace(WT.lookupResource(SERVICE_ID, targetLocale, "meeting.jitsi.share.unscheduled.description"), "$jitsi", dollarJitsi),
 					StringUtils.replace(WT.lookupResource(SERVICE_ID, targetLocale, "meeting.jitsi.share.scheduled.description"), "$jitsi", dollarJitsi)	
 				));
