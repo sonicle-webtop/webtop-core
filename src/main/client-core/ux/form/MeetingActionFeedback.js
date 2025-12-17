@@ -61,7 +61,7 @@ Ext.define('Sonicle.webtop.core.ux.form.MeetingActionFeedback', {
 			{
 				xtype: 'button',
 				itemId: 'btncopy',
-				ui: 'default-toolbar',
+				ui: '{icon|toolbar}',
 				iconCls: me.copyIconCls,
 				tooltip: WT.res('wtmeetingfield.copy'),
 				disabled: Ext.isEmpty(me.getMeetingUrl()),
@@ -73,7 +73,7 @@ Ext.define('Sonicle.webtop.core.ux.form.MeetingActionFeedback', {
 			}, {
 				xtype: 'button',
 				itemId: 'btnjoin',
-				ui: 'default-toolbar',
+				ui: '{icon|toolbar}',
 				iconCls: me.joinIconCls,
 				tooltip: WT.res('wtmeetingfield.join'),
 				disabled: Ext.isEmpty(me.getMeetingUrl()),

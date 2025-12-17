@@ -210,6 +210,24 @@ body {
 	padding-left: 10px;
 }
 
+/* ---------- Sonicle.form.ActionFeedback */
+/* Customize button style (base+over) when UI is button-icon */
+.so-formactionfeedback.so-formactionfeedback-info .so-formactionfeedback-button.x-btn-ui-button-icon.x-btn-over {
+    background-color: var(--wt-theme-color-surface-l1);
+}
+.so-formactionfeedback.so-formactionfeedback-info .so-formactionfeedback-button.x-btn-ui-button-icon .x-btn-icon-el {
+    color: var(--so-formfeedback-color-info);
+}
+.so-formactionfeedback.so-formactionfeedback-alert .so-formactionfeedback-button.x-btn-ui-button-icon .x-btn-icon-el {
+    color: var(--so-formfeedback-color-alert);
+}
+.so-formactionfeedback.so-formactionfeedback-warning .so-formactionfeedback-button.x-btn-ui-button-icon .x-btn-icon-el {
+    color: var(--so-formfeedback-color-warning);
+}
+.so-formactionfeedback.so-formactionfeedback-success .so-formactionfeedback-button.x-btn-ui-button-icon .x-btn-icon-el {
+    color: var(--so-formfeedback-color-success);
+}
+
 /* ---------- Sonicle.fullcalendar.Panel */
 .so-fullcalendar-panel-toolbar-hdtext {
     font-weight: var(--wt-theme-fontweight-regular);
