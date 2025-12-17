@@ -415,6 +415,15 @@ body > .x-mask {
     background-color: var(--wt-theme-color-surface-l0);
 }
 
+/* ---------- Sonicle.form.ActionFeedback */
+.so-formactionfeedback .x-form-item-body {
+    border-radius: 4px;
+}
+.so-formactionfeedback.so-formactionfeedback-info label {
+    font-size: var(--wt-theme-fontsize-sm, inherit);
+    font-weight: var(--wt-theme-fontweight-regular, normal);
+}
+
 /* ---------- Sonicle.form.Feedback */
 .so-formfeedback {
     font-size: var(--wt-theme-fontsize-xs, inherit);

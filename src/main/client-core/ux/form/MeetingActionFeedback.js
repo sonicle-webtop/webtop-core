@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2021 Sonicle S.r.l.
+ * Copyright (C) 2025 Sonicle S.r.l.
  *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by
@@ -30,10 +30,10 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2021 Sonicle S.r.l.".
  */
-Ext.define('Sonicle.webtop.core.ux.field.MeetingUrl', {
-	alternateClassName: 'WTA.ux.field.MeetingUrl',
-	extend: 'Ext.form.FieldContainer',
-	alias: ['widget.wtmeetingurlfield'],
+Ext.define('Sonicle.webtop.core.ux.form.MeetingActionFeedback', {
+	alternateClassName: 'WTA.ux.form.MeetingActionFeedback',
+	extend: 'Sonicle.form.ActionFeedback',
+	alias: ['widget.wtformmeetingactionfeedback'],
 	requires: [
 		'Sonicle.String'
 	],
@@ -41,14 +41,14 @@ Ext.define('Sonicle.webtop.core.ux.field.MeetingUrl', {
 		'Sonicle.URLMgr'
 	],
 	
-	componentCls: 'wt-'+'meetingurl-field',
-	hideEmptyLabel: false,
+	config: {
+		meetingUrl: null
+	},
 	
-	linkText: 'This contains a meeting link.',
+	copyIconCls: 'far fa-clone',
+	joinIconCls: 'fas fa-video',
 	
-	/**
-	 * @property {String} value
-	 */
+	text: 'This contains a meeting link.',
 	
 	initComponent: function() {
 		var me = this;
@@ -56,38 +56,46 @@ Ext.define('Sonicle.webtop.core.ux.field.MeetingUrl', {
 			type: 'hbox',
 			align: 'middle'
 		};
-		me.items = [
+		me.type = 'info';
+		me.buttons = [
 			{
-				xtype: 'displayfield',
-				value: me.linkText,
-				cls: 'wt-text-ellipsis',
-				margin: '0 5 0 0'
-			}, {
 				xtype: 'button',
+				itemId: 'btncopy',
 				ui: 'default-toolbar',
-				iconCls: 'far fa-clone',
+				iconCls: me.copyIconCls,
 				tooltip: WT.res('wtmeetingfield.copy'),
-				margin: '0 2 0 0',
+				disabled: Ext.isEmpty(me.getMeetingUrl()),
 				handler: function(s, e) {
-					Sonicle.ClipboardMgr.copy(me.value);
-					WT.toast(WT.res('toast.info.copied'));
-					me.fireEvent('copy', me, me.value);
+					var url = me.getMeetingUrl();
+					Sonicle.ClipboardMgr.copy(url);
+					me.fireEvent('copy', me, url);
 				}
 			}, {
 				xtype: 'button',
+				itemId: 'btnjoin',
 				ui: 'default-toolbar',
-				iconCls: 'fas fa-video',
+				iconCls: me.joinIconCls,
 				tooltip: WT.res('wtmeetingfield.join'),
+				disabled: Ext.isEmpty(me.getMeetingUrl()),
 				handler: function(s, e) {
-					Sonicle.URLMgr.open(me.value, true);
-					me.fireEvent('join', me, me.value);
+					var url = me.getMeetingUrl();
+					Sonicle.URLMgr.open(url, true);
+					me.fireEvent('join', me, url);
 				}
 			}
 		];
 		me.callParent(arguments);
 	},
 	
-	setValue: function(value) {
-		this.value = value;
+	updateMeetingUrl: function(nv, ov) {
+		var me = this,
+			urlValid = !Ext.isEmpty(nv), btn;
+		
+		if (!me.isConfiguring) {
+			btn = me.getComponent('btncopy');
+			if (btn) btn.setDisabled(!urlValid);
+			btn = me.getComponent('btnjoin');
+			if (btn) btn.setDisabled(!urlValid);
+		}
 	}
 });
