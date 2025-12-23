@@ -37,6 +37,7 @@ import com.sonicle.commons.LangUtils;
 import com.sonicle.commons.web.json.JsonResult;
 import com.sonicle.webtop.core.app.SettingsManager;
 import com.sonicle.webtop.core.app.WebTopApp;
+import com.sonicle.webtop.core.app.events.UserSettingUpdateEvent;
 import com.sonicle.webtop.core.bol.OUserSetting;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -64,6 +65,10 @@ public abstract class BaseUserSettings extends BaseSettings {
 		this.setm = settingsMgr;
 		this.serviceId = serviceId;
 		this.profileId = profileId;
+	}
+	
+	public void fireUpdateEvent(String key) {
+		setm.fireUpdateEvent(new UserSettingUpdateEvent(serviceId, key, profileId));
 	}
 	
 	@Override

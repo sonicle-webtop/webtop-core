@@ -404,7 +404,7 @@ public final class WebTopApp {
 		
 		this.eventBus = new EventBus();
 		this.conMgr = ConnectionManager.initialize(this); // Connection Manager
-		this.setMgr = SettingsManager.initialize(this); // Settings Manager
+		this.setMgr = new SettingsManager(this);
 		this.fileSystem = new FileSystem(findHomePath()); //TODO: Move this up until home reading from settings will be deprecated
 		this.auditLogMgr = new AuditLogManager(this);
 		this.sesMgr = SessionManager.initialize(this); // Session Manager
@@ -507,9 +507,7 @@ public final class WebTopApp {
 		otpMgr.cleanup();
 		otpMgr = null;
 		auditLogMgr = auditLogMgr.cleanup(); // AuditLog Manager
-		// Settings Manager
-		setMgr.cleanup();
-		setMgr = null;
+		setMgr = setMgr.cleanup();
 		// Auth Manager
 		//autm.cleanup();
 		//autm = null;

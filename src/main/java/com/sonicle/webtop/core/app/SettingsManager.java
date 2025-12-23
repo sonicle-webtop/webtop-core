@@ -39,6 +39,7 @@ import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 import com.sonicle.commons.db.DbUtils;
 import com.sonicle.commons.web.json.CId;
+import com.sonicle.webtop.core.app.sdk.EventSettingBase;
 import com.sonicle.webtop.core.sdk.interfaces.IServiceSettingReader;
 import com.sonicle.webtop.core.bol.ODomainSetting;
 import com.sonicle.webtop.core.bol.OSetting;
@@ -64,60 +65,55 @@ import java.util.stream.Collectors;
 import net.sf.qualitycheck.Check;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  *
  * @author malbinola
  */
-public final class SettingsManager implements IServiceSettingReader, IServiceSettingManager, IUserSettingManager, ISettingManager {
-	private static final Logger LOGGER = WT.getLogger(SettingsManager.class);
-	private static boolean initialized = false;
-	
-	/**
-	 * Initialization method. This method should be called once.
-	 * 
-	 * @param wta WebTopApp instance.
-	 * @return The instance.
-	 */
-	public static synchronized SettingsManager initialize(WebTopApp wta) {
-		if (initialized) throw new RuntimeException("Initialization already done");
-		SettingsManager setm = new SettingsManager(wta);
-		initialized = true;
-		LOGGER.info("Initialized");
-		return setm;
-	}
+public final class SettingsManager extends AbstractAppManager<SettingsManager> implements IServiceSettingReader, IServiceSettingManager, IUserSettingManager, ISettingManager {
+	private static final Logger LOGGER = (Logger)LoggerFactory.getLogger(SettingsManager.class);
 	
 	public static String[] asArray(String value) {
 		return StringUtils.split(value, ",");
 	}
 	
-	private WebTopApp wta = null;
 	private boolean cacheSettings = true;
 	private boolean cacheUserSettings = true;
 	private final LoadingCache<String, Optional<String>> settingsCache = Caffeine.newBuilder().build(new SettingsCacheLoader());
 	private final LoadingCache<String, Optional<String>> domainSettingsCache = Caffeine.newBuilder().build(new DomainSettingsCacheLoader());
 	private final LoadingCache<String, Optional<String>> userSettingsCache = Caffeine.newBuilder().build(new UserSettingsCacheLoader());
 	
-	/**
-	 * Private constructor.
-	 * Instances of this class must be created using static initialize method.
-	 * @param wta WebTopApp instance.
-	 */
-	private SettingsManager(WebTopApp wta) {
-		this.wta = wta;
+	SettingsManager(WebTopApp wta) {
+		super(wta, false);
+		initialize();
 	}
 	
-	/**
-	 * Performs cleanup process.
-	 */
-	void cleanup() {
-		wta = null;
+	@Override
+	protected Logger doGetLogger() {
+		return LOGGER;
+	}
+	
+	@Override
+	protected void doAppManagerInitialize() {
+		
+	}
+	
+	@Override
+	protected void doAppManagerCleanup() {
 		cacheSettings = false;
 		cacheUserSettings = false;
 		settingsCache.invalidateAll();
 		domainSettingsCache.invalidateAll();
 		userSettingsCache.invalidateAll();
-		LOGGER.info("Cleaned up");
+	}
+	
+	/**
+	 * Allow firing events from Service's settings management Class.
+	 * @param event 
+	 */
+	public void fireUpdateEvent(EventSettingBase event) {
+		fireEvent(event);
 	}
 	
 	/**
@@ -348,7 +344,7 @@ public final class SettingsManager implements IServiceSettingReader, IServiceSet
 		Connection con = null;
 		
 		try {
-			con = wta.getConnectionManager().getConnection(CoreManifest.ID);
+			con = getWebTopApp().getConnectionManager().getConnection(CoreManifest.ID);
 			return dao.selectByDomainServiceUserKeyLike(con, domainId, userId, serviceId, key);
 
 		} catch (Exception ex) {
@@ -365,7 +361,7 @@ public final class SettingsManager implements IServiceSettingReader, IServiceSet
 		
 		String svalue = valueToString(value);
 		try {
-			con = wta.getConnectionManager().getConnection(CoreManifest.ID);
+			con = getWebTopApp().getConnectionManager().getConnection(CoreManifest.ID);
 			ArrayList<UserProfileId> profiles = new ArrayList<>();
 			for (OUserSetting set : setDao.selectByServiceKeyValue(con, serviceId, key, svalue)) {
 				profiles.add(new UserProfileId(set.getDomainId(), set.getUserId()));
@@ -459,7 +455,7 @@ public final class SettingsManager implements IServiceSettingReader, IServiceSet
 		
 		try {
 			LOGGER.trace("Deleting UserSetting... [{}, {}, *, *]", domainId, userId);
-			con = wta.getConnectionManager().getConnection(CoreManifest.ID);
+			con = getWebTopApp().getConnectionManager().getConnection(CoreManifest.ID);
 			ret = setDao.deleteByDomainUser(con, domainId, userId) > 0;
 
 		} catch(Throwable t) {
@@ -479,7 +475,7 @@ public final class SettingsManager implements IServiceSettingReader, IServiceSet
 		Connection con = null;
 		
 		try {
-			con = wta.getConnectionManager().getConnection(CoreManifest.ID);
+			con = getWebTopApp().getConnectionManager().getConnection(CoreManifest.ID);
 			ArrayList<SettingEntry> items = new ArrayList<>();
 			for (VSetting vset : setDao.view(con, includeHidden)) {
 				 items.add(new SettingEntry(vset.getServiceId(), vset.getKey(), vset.getValue(), vset.getType(), vset.getHelp()));
@@ -500,7 +496,7 @@ public final class SettingsManager implements IServiceSettingReader, IServiceSet
 		Connection con = null;
 		
 		try {
-			con = wta.getConnectionManager().getConnection(CoreManifest.ID);
+			con = getWebTopApp().getConnectionManager().getConnection(CoreManifest.ID);
 			ArrayList<SettingEntry> items = new ArrayList<>();
 			for (VDomainSetting vdset : dsetDao.viewByDomain(con, domainId, includeHidden)) {
 				 items.add(new SettingEntry(vdset.getServiceId(), vdset.getKey(), vdset.getValue(), vdset.getType(), vdset.getHelp()));
@@ -520,7 +516,7 @@ public final class SettingsManager implements IServiceSettingReader, IServiceSet
 		Connection con = null;
 		
 		try {
-			con = wta.getConnectionManager().getConnection(CoreManifest.ID);
+			con = getWebTopApp().getConnectionManager().getConnection(CoreManifest.ID);
 			return dao.selectByServiceKey(con, serviceId, key);
 
 		} catch (Throwable t) {
@@ -541,7 +537,7 @@ public final class SettingsManager implements IServiceSettingReader, IServiceSet
 			
 			try {
 				if (LOGGER.isTraceEnabled()) LOGGER.trace("Looking-up Setting... [{}, {}]", serviceId, key);
-				con = wta.getConnectionManager().getConnection(CoreManifest.ID);
+				con = getWebTopApp().getConnectionManager().getConnection(CoreManifest.ID);
 				return doSettingGet(con, serviceId, key);
 				
 			} catch(Throwable t) {
@@ -563,7 +559,7 @@ public final class SettingsManager implements IServiceSettingReader, IServiceSet
 			
 			try {
 				if (LOGGER.isTraceEnabled()) LOGGER.trace("Looking-up DomainSetting... [{}, {}, {}]", domainId, serviceId, key);
-				con = wta.getConnectionManager().getConnection(CoreManifest.ID);
+				con = getWebTopApp().getConnectionManager().getConnection(CoreManifest.ID);
 				return doDomainSettingGet(con, domainId, serviceId, key);
 				
 			} catch(Throwable t) {
@@ -585,7 +581,7 @@ public final class SettingsManager implements IServiceSettingReader, IServiceSet
 			
 			try {
 				if (LOGGER.isTraceEnabled()) LOGGER.trace("Looking-up UserSetting... [{}, {}, {}, {}]", domainId, userId, serviceId, key);
-				con = wta.getConnectionManager().getConnection(CoreManifest.ID);
+				con = getWebTopApp().getConnectionManager().getConnection(CoreManifest.ID);
 				return doUserSettingGet(con, domainId, userId, serviceId, key);
 				
 			} catch(Throwable t) {
@@ -604,7 +600,7 @@ public final class SettingsManager implements IServiceSettingReader, IServiceSet
 		String svalue = valueToString(value);
 		try {
 			if (LOGGER.isTraceEnabled()) LOGGER.trace("Updating Setting... [{}, {}]", serviceId, key);
-			con = wta.getConnectionManager().getConnection(CoreManifest.ID);
+			con = getWebTopApp().getConnectionManager().getConnection(CoreManifest.ID);
 			ret = doSettingUpsert(con, serviceId, key, svalue);
 			
 		} catch(Throwable t) {
@@ -628,7 +624,7 @@ public final class SettingsManager implements IServiceSettingReader, IServiceSet
 		String svalue = valueToString(value);
 		try {
 			if (LOGGER.isTraceEnabled()) LOGGER.trace("Updating DomainSetting... [{}, {}, {}]", domainId, serviceId, key);
-			con = wta.getConnectionManager().getConnection(CoreManifest.ID);
+			con = getWebTopApp().getConnectionManager().getConnection(CoreManifest.ID);
 			ret = doDomainSettingUpsert(con, domainId, serviceId, key, svalue);
 			
 		} catch(Throwable t) {
@@ -652,7 +648,7 @@ public final class SettingsManager implements IServiceSettingReader, IServiceSet
 		String svalue = valueToString(value);
 		try {
 			if (LOGGER.isTraceEnabled()) LOGGER.trace("Updating UserSetting... [{}, {}, {}, {}]", domainId, userId, serviceId, key);
-			con = wta.getConnectionManager().getConnection(CoreManifest.ID);
+			con = getWebTopApp().getConnectionManager().getConnection(CoreManifest.ID);
 			ret = doUserSettingUpsert(con, domainId, userId, serviceId, key, svalue);
 		
 		} catch(Throwable t) {
@@ -674,7 +670,7 @@ public final class SettingsManager implements IServiceSettingReader, IServiceSet
 		
 		boolean ret = false;
 		try {
-			con = wta.getConnectionManager().getConnection(CoreManifest.ID);
+			con = getWebTopApp().getConnectionManager().getConnection(CoreManifest.ID);
 			ret = doSettingDelete(con, serviceId, key) > 0;
 
 		} catch(Throwable t) {
@@ -695,7 +691,7 @@ public final class SettingsManager implements IServiceSettingReader, IServiceSet
 		
 		boolean ret = false;
 		try {
-			con = wta.getConnectionManager().getConnection(CoreManifest.ID);
+			con = getWebTopApp().getConnectionManager().getConnection(CoreManifest.ID);
 			ret = doDomainSettingDelete(con, domainId, serviceId, key) > 0;
 
 		} catch(Throwable t) {
@@ -716,7 +712,7 @@ public final class SettingsManager implements IServiceSettingReader, IServiceSet
 		
 		boolean ret = false;
 		try {
-			con = wta.getConnectionManager().getConnection(CoreManifest.ID);
+			con = getWebTopApp().getConnectionManager().getConnection(CoreManifest.ID);
 			ret = doUserSettingDelete(con, domainId, userId, serviceId, key) > 0;
 
 		} catch(Throwable t) {
@@ -823,7 +819,7 @@ public final class SettingsManager implements IServiceSettingReader, IServiceSet
 			
 			try {
 				LOGGER.trace("[SettingsCache] Loading... [{}, {}]", cid.getToken(0), cid.getToken(1));
-				con = wta.getConnectionManager().getConnection(CoreManifest.ID);
+				con = getWebTopApp().getConnectionManager().getConnection(CoreManifest.ID);
 				return Optional.ofNullable(doSettingGet(con, cid.getToken(0), cid.getToken(1)));
 				
 			} catch(Throwable t) {
@@ -844,7 +840,7 @@ public final class SettingsManager implements IServiceSettingReader, IServiceSet
 			
 			try {
 				LOGGER.trace("[DomainSettingsCache] Loading... [{}, {}, {}]", cid.getToken(0), cid.getToken(1), cid.getToken(2));
-				con = wta.getConnectionManager().getConnection(CoreManifest.ID);
+				con = getWebTopApp().getConnectionManager().getConnection(CoreManifest.ID);
 				return Optional.ofNullable(doDomainSettingGet(con, cid.getToken(0), cid.getToken(1), cid.getToken(2)));
 				
 			} catch(Throwable t) {
@@ -865,7 +861,7 @@ public final class SettingsManager implements IServiceSettingReader, IServiceSet
 			
 			try {
 				LOGGER.trace("[UserSettingsCache] Loading... [{}, {}, {}, {}]", cid.getToken(0), cid.getToken(1), cid.getToken(2), cid.getToken(3));
-				con = wta.getConnectionManager().getConnection(CoreManifest.ID);
+				con = getWebTopApp().getConnectionManager().getConnection(CoreManifest.ID);
 				return Optional.ofNullable(doUserSettingGet(con, cid.getToken(0), cid.getToken(1), cid.getToken(2), cid.getToken(3)));
 				
 			} catch(Throwable t) {
