@@ -36,19 +36,19 @@ package com.sonicle.webtop.core.app.auth;
 import com.sonicle.commons.LangUtils;
 import com.sonicle.commons.RegexUtils;
 import com.sonicle.commons.db.DbUtils;
+import com.sonicle.security.AuthPrincipal;
 import com.sonicle.security.CredentialAlgorithm;
-import com.sonicle.security.Principal;
 import com.sonicle.security.auth.DirectoryException;
 import com.sonicle.security.auth.EntryException;
 import com.sonicle.security.auth.directory.AbstractDirectory;
 import com.sonicle.security.auth.directory.DirectoryCapability;
 import com.sonicle.security.auth.directory.DirectoryOptions;
-import com.sonicle.webtop.core.app.WebTopApp;
 import com.sonicle.webtop.core.bol.OLocalVaultEntry;
 import com.sonicle.webtop.core.dal.DAOException;
 import com.sonicle.webtop.core.dal.DAOIntegrityViolationException;
 import com.sonicle.webtop.core.dal.LocalVaultDAO;
 import com.sonicle.webtop.core.sdk.UserProfileId;
+import com.sonicle.webtop.core.sdk.interfaces.IConnectionProvider;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.sql.Connection;
@@ -100,24 +100,24 @@ public class WebTopDirectory extends AbstractDirectory {
 	}
 	
 	@Override
-	public URI buildUri(String host, Integer port, String path) throws URISyntaxException {
+	public URI buildUri(final String host, final Integer port, final String path) throws URISyntaxException {
 		// host, port and path can be ignored!
 		return new URI(SCHEME, null, "localhost", -1, null, null, null);
 	}
 	
 	@Override
-	public String sanitizeUsername(DirectoryOptions opts, String username) {
+	public String sanitizeUsername(final DirectoryOptions opts, final String username) {
 		WebTopConfigBuilder builder = getConfigBuilder();
 		return builder.getIsCaseSensitive(opts) ? username : StringUtils.lowerCase(username);
 	}
 
 	@Override
-	public boolean validateUsername(DirectoryOptions opts, String username) {
+	public boolean validateUsername(final DirectoryOptions opts, final String username) {
 		return PATTERN_USERNAME.matcher(username).matches();
 	}
 	
 	@Override
-	public int validatePasswordPolicy(DirectoryOptions opts, String username, char[] password) {
+	public int validatePasswordPolicy(final DirectoryOptions opts, final String username, final char[] password) {
 		WebTopConfigBuilder builder = getConfigBuilder();
 		final String s = new String(password);
 		
@@ -156,14 +156,14 @@ public class WebTopDirectory extends AbstractDirectory {
 	}
 	
 	@Override
-	public AuthUser exist(DirectoryOptions opts, Principal principal) throws DirectoryException {
+	public AuthUser exist(final DirectoryOptions opts, final AuthPrincipal principal) throws DirectoryException {
 		WebTopConfigBuilder builder = getConfigBuilder();
 		LocalVaultDAO lvdao = LocalVaultDAO.getInstance();
-		WebTopApp wta = builder.getWebTopApp(opts);
+		IConnectionProvider conProvider = builder.getDBConnectionProvider(opts);
 		Connection con = null;
 		
 		try {
-			con = wta.getConnectionManager().getConnection();
+			con = conProvider.getConnection();
 			
 			OLocalVaultEntry entry = lvdao.selectByDomainUser(con, principal.getDomainId(), principal.getUserId());
 			return entry != null ? createUserEntry(principal) : null;
@@ -176,14 +176,14 @@ public class WebTopDirectory extends AbstractDirectory {
 	}
 	
 	@Override
-	public AuthUser authenticate(DirectoryOptions opts, Principal principal) throws DirectoryException {
+	public AuthUser authenticate(final DirectoryOptions opts, final AuthPrincipal principal) throws DirectoryException {
 		WebTopConfigBuilder builder = getConfigBuilder();
 		LocalVaultDAO lvdao = LocalVaultDAO.getInstance();
-		WebTopApp wta = builder.getWebTopApp(opts);
+		IConnectionProvider conProvider = builder.getDBConnectionProvider(opts);
 		Connection con = null;
 		
 		try {
-			con = wta.getConnectionManager().getConnection();
+			con = conProvider.getConnection();
 			
 			OLocalVaultEntry entry = lvdao.selectByDomainUser(con, principal.getDomainId(), principal.getUserId());
 			if (entry == null) throw new DirectoryException("User not found [{0}]", new UserProfileId(principal.getDomainId(), principal.getUserId()).toString());
@@ -209,15 +209,15 @@ public class WebTopDirectory extends AbstractDirectory {
 	}
 	
 	@Override
-	public List<AuthUser> listUsers(DirectoryOptions opts, String domainId) throws DirectoryException {
+	public List<AuthUser> listUsers(final DirectoryOptions opts, final String domainId) throws DirectoryException {
 		throw new DirectoryException("Capability not supported");
 	}
 	
 	@Override
-	public void addUser(DirectoryOptions opts, String domainId, AuthUser entry) throws EntryException, DirectoryException {
+	public void addUser(final DirectoryOptions opts, final String domainId, final AuthUser entry) throws EntryException, DirectoryException {
 		WebTopConfigBuilder builder = getConfigBuilder();
 		LocalVaultDAO lvdao = LocalVaultDAO.getInstance();
-		WebTopApp wta = builder.getWebTopApp(opts);
+		IConnectionProvider conProvider = builder.getDBConnectionProvider(opts);
 		Connection con = null;
 		
 		try {
@@ -226,7 +226,7 @@ public class WebTopDirectory extends AbstractDirectory {
 			
 			String uid = sanitizeUsername(opts, entry.userId);
 			
-			con = wta.getConnectionManager().getConnection();
+			con = conProvider.getConnection();
 			OLocalVaultEntry olve = new OLocalVaultEntry();
 			olve.setDomainId(domainId);
 			olve.setUserId(uid);
@@ -243,24 +243,24 @@ public class WebTopDirectory extends AbstractDirectory {
 	}
 	
 	@Override
-	public void updateUser(DirectoryOptions opts, String domainId, AuthUser entry) throws DirectoryException {
+	public void updateUser(final DirectoryOptions opts, final String domainId, final AuthUser entry) throws DirectoryException {
 		// Nothing to update...
 	}
 	
 	@Override
-	public void updateUserPassword(DirectoryOptions opts, String domainId, String userId, char[] newPassword) throws DirectoryException {
+	public void updateUserPassword(final DirectoryOptions opts, final String domainId, final String userId, final char[] newPassword) throws DirectoryException {
 		updateUserPassword(opts, domainId, userId, null, newPassword);
 	}
 	
 	@Override
-	public void updateUserPassword(DirectoryOptions opts, String domainId, String userId, char[] oldPassword, char[] newPassword) throws EntryException, DirectoryException {
+	public void updateUserPassword(final DirectoryOptions opts, final String domainId, final String userId, final char[] oldPassword, final char[] newPassword) throws EntryException, DirectoryException {
 		WebTopConfigBuilder builder = getConfigBuilder();
 		LocalVaultDAO lvdao = LocalVaultDAO.getInstance();
-		WebTopApp wta = builder.getWebTopApp(opts);
+		IConnectionProvider conProvider = builder.getDBConnectionProvider(opts);
 		Connection con = null;
 		
 		try {
-			con = wta.getConnectionManager().getConnection();
+			con = conProvider.getConnection();
 			
 			CredentialAlgorithm algo = CredentialAlgorithm.SHA;
 			OLocalVaultEntry entry = lvdao.selectByDomainUser(con, domainId, userId);
@@ -286,17 +286,17 @@ public class WebTopDirectory extends AbstractDirectory {
 	}
 	
 	@Override
-	public void deleteUser(DirectoryOptions opts, String domainId, String userId) throws DirectoryException {
+	public void deleteUser(final DirectoryOptions opts, final String domainId, final String userId) throws DirectoryException {
 		WebTopConfigBuilder builder = getConfigBuilder();
 		LocalVaultDAO lvdao = LocalVaultDAO.getInstance();
-		WebTopApp wta = builder.getWebTopApp(opts);
+		IConnectionProvider conProvider = builder.getDBConnectionProvider(opts);
 		Connection con = null;
 		
 		try {
 			ensureCapability(DirectoryCapability.USERS_WRITE);
 			String uid = sanitizeUsername(opts, userId);
 			
-			con = wta.getConnectionManager().getConnection();
+			con = conProvider.getConnection();
 			lvdao.deleteByDomainUser(con, domainId, uid);
 			
 		} catch(SQLException | DAOException ex) {
@@ -307,7 +307,7 @@ public class WebTopDirectory extends AbstractDirectory {
 	}
 
 	@Override
-	public List<String> listGroups(DirectoryOptions opts, String domainId) throws DirectoryException {
+	public List<String> listGroups(final DirectoryOptions opts, final String domainId) throws DirectoryException {
 		throw new DirectoryException("Capability not supported");
 	}
 	
@@ -334,7 +334,7 @@ public class WebTopDirectory extends AbstractDirectory {
 		return olve;
 	}
 	
-	protected AuthUser createUserEntry(Principal principal) {
+	protected AuthUser createUserEntry(AuthPrincipal principal) {
 		AuthUser userEntry = new AuthUser();
 		userEntry.userId = principal.getUserId();
 		userEntry.firstName = null;

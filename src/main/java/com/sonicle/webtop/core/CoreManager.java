@@ -48,6 +48,7 @@ import com.sonicle.commons.web.json.CompositeId;
 import com.sonicle.commons.web.json.JsonResult;
 import com.sonicle.commons.web.json.JsonUtils;
 import com.sonicle.commons.web.json.ipstack.IPLookupResponse;
+import com.sonicle.security.AuthContext;
 import com.sonicle.security.auth.directory.AbstractDirectory;
 import com.sonicle.webtop.core.app.RunContext;
 import com.sonicle.webtop.core.app.CoreManifest;
@@ -354,7 +355,7 @@ public class CoreManager extends BaseManager {
 	 * @throws WTException 
 	 */
 	public AbstractDirectory getAuthDirectory() throws WTException {
-		UserProfileId pid = getTargetProfileId();
+		final UserProfileId pid = getTargetProfileId();
 		// SysAdmin can access all, others are locked on their domains
 		if (!RunContext.isSysAdmin()) ensureProfileDomain(pid.getDomainId());
 		return wta.getWebTopManager().getAuthDirectory(pid);
@@ -363,6 +364,12 @@ public class CoreManager extends BaseManager {
 	public String getAuthDirectoryScheme() throws WTException {
 		AbstractDirectory dir = getAuthDirectory();
 		return dir != null ? dir.getScheme() : null;
+	}
+	
+	public AuthContext getAuthenticationContext() {
+		final UserProfileId pid = getTargetProfileId();
+		if (!RunContext.isSysAdmin()) ensureProfileDomain(pid.getDomainId());
+		return wta.getWebTopManager().lookupAuthenticationContext(pid);
 	}
 	
 	@Deprecated

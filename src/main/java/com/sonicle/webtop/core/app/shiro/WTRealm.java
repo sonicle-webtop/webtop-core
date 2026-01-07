@@ -34,11 +34,11 @@ package com.sonicle.webtop.core.app.shiro;
 
 import com.sonicle.commons.concurrent.KeyedReentrantLocks;
 import com.sonicle.commons.flags.BitFlags;
+import com.sonicle.security.AuthContext;
+import com.sonicle.security.AuthPrincipal;
 import com.sonicle.security.Principal;
-import com.sonicle.security.AuthenticationDomain;
 import com.sonicle.security.DomainAccount;
 import com.sonicle.security.auth.DirectoryException;
-import com.sonicle.security.auth.DirectoryManager;
 import com.sonicle.security.auth.directory.AbstractDirectory;
 import com.sonicle.security.auth.directory.AbstractDirectory.AuthUser;
 import com.sonicle.security.auth.directory.DirectoryOptions;
@@ -47,6 +47,7 @@ import com.sonicle.webtop.core.app.CoreManifest;
 import com.sonicle.webtop.core.app.WebTopManager;
 import com.sonicle.webtop.core.app.WebTopApp;
 import com.sonicle.webtop.core.app.WebTopProps;
+import com.sonicle.webtop.core.app.auth.DirectoryUtils;
 import com.sonicle.webtop.core.app.model.Domain;
 import com.sonicle.webtop.core.app.model.DomainGetOption;
 import com.sonicle.webtop.core.app.model.User;
@@ -58,7 +59,6 @@ import com.sonicle.webtop.core.model.ServicePermission;
 import com.sonicle.webtop.core.bol.model.RoleWithSource;
 import com.sonicle.webtop.core.sdk.UserProfileId;
 import com.sonicle.webtop.core.sdk.WTException;
-import java.net.URISyntaxException;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
@@ -116,11 +116,11 @@ public class WTRealm extends AuthorizingRealm {
 			//logger.debug("isRememberMe={}",upt.isRememberMe());
 			
 			String sprincipal = (String)upt.getPrincipal();
-			String internetDomain = StringUtils.lowerCase(StringUtils.substringAfterLast(sprincipal, "@"));
+			String authInternetDomain = StringUtils.lowerCase(StringUtils.substringAfterLast(sprincipal, "@"));
 			String username = StringUtils.substringBeforeLast(sprincipal, "@");
-			logger.trace("doGetAuthenticationInfo [{}, {}, {}]", domainId, internetDomain, username);
+			logger.trace("doGetAuthenticationInfo [{}, {}, {}]", domainId, authInternetDomain, username);
 			
-			Principal principal = authenticateUser(domainId, internetDomain, username, upt.getPassword());
+			Principal principal = authenticateUser(authInternetDomain, domainId, username, upt.getPassword());
 			
 			// Update token with new values resulting from authentication
 			if (token instanceof UsernamePasswordDomainToken) {
@@ -155,27 +155,19 @@ public class WTRealm extends AuthorizingRealm {
 	private Principal authenticateApiUser(final String authInternetDomain, final String localUsername, final String token) throws AuthenticationException {
 		if (StringUtils.isBlank(token)) throw new AuthenticationException();
 		
+		final WebTopApp wta = WebTopApp.getInstance();
+		final WebTopManager wtMgr = wta.getWebTopManager();
+		
 		final String provisioningApiToken = WebTopProps.getProvisioningApiToken(WebTopApp.getInstanceProperties());
 		if (provisioningApiToken != null && provisioningApiToken.equals(token)) {
-			WebTopApp wta = WebTopApp.getInstance();
-			WebTopManager wtMgr = wta.getWebTopManager();
-			
 			// Support access leveraging on a pre-shared token, suitable for 
 			// provisioning application configuration through APIs.
-			try {
-				AuthenticationDomain priAd = wtMgr.createSysAdminAuthenticationDomain();
-				Principal principal = new Principal(priAd, false, priAd.getDomainId(), WebTopManager.SYSADMIN_USERID, null);
-				principal.setDisplayName(WebTopManager.SYSADMIN_USERID);
-				return principal;
-
-			} catch (URISyntaxException ex) {
-				throw new AuthenticationException(ex);
-			}
+			final AuthContext acontext = wtMgr.createSysAdminAuthenticationContext();
+			Principal principal = new Principal(false, acontext.getDomainId(), WebTopManager.SYSADMIN_USERID, null);
+			principal.setDisplayName(WebTopManager.SYSADMIN_USERID);
+			return principal;
 
 		} else {
-			WebTopApp wta = WebTopApp.getInstance();
-			WebTopManager wtMgr = wta.getWebTopManager();
-			
 			try {
 				checkMaintenance(wta); // Stop users if system in under maintenance!
 				
@@ -184,18 +176,13 @@ public class WTRealm extends AuthorizingRealm {
 				
 				String userDomainId = lookupAuthDomainId(wtMgr, authInternetDomain, null); // This will ensure to get a positive lookup or an exp!
 				
-				// Prepare authd
-				Domain userDomain = lookupAuthenticatingDomain(wtMgr, userDomainId);
-				AuthenticationDomain authd = wtMgr.createAuthenticationDomain(userDomain);
-				
 				// Prepare Directory
-				DirectoryManager dirManager = DirectoryManager.getManager();
-				DirectoryOptions opts = wta.createDirectoryOptions(authd);
-				AbstractDirectory directory = dirManager.getDirectory(authd.getDirUri().getScheme());
-				if (directory == null) throw new WTException("Directory not supported [{}]", authd.getDirUri().getScheme());
+				final AuthContext acontext = wtMgr.lookupAuthenticationContext(userDomainId);
+				final AbstractDirectory directory = WebTopManager.getAuthDirectory(acontext);
+				final DirectoryOptions opts = DirectoryUtils.createDirectoryOptions(acontext, wta.getConnectionManager());
 				
 				// Prepare principal for authentication
-				Principal authPrincipal = createAuthenticatingPrincipal(authd, opts, directory, false, localUsername, null);
+				final AuthPrincipal authPrincipal = createAuthenticatingPrincipal(acontext, directory, opts, false, localUsername, null);
 				
 				// Authenticate against directory
 				AuthUser authUser = null;
@@ -211,7 +198,7 @@ public class WTRealm extends AuthorizingRealm {
 				// If we are here, directory has successfully authenticated the user, provided credentials are valid!
 				
 				// Now build resulting principal...
-				Principal principal = new Principal(null, false, authd.getDomainId(), authUser.userId, null);
+				Principal principal = new Principal(false, acontext.getDomainId(), authUser.userId, null);
 				principal.setDisplayName(StringUtils.defaultIfBlank(authUser.displayName, authUser.userId));
 				return principal;
 				
@@ -266,7 +253,7 @@ public class WTRealm extends AuthorizingRealm {
 			}
 
 		} else if (!StringUtils.isBlank(authDomainId)) {
-			if (!wtMgr.isDomainIdEnabled(authDomainId)) {
+			if (!wtMgr.isDomainEnabled(authDomainId)) {
 				logger.debug("Required domain ID '{}' is disabled", authDomainId);
 				throw new AuthenticationException("Domain is not enabled");
 			}
@@ -283,20 +270,16 @@ public class WTRealm extends AuthorizingRealm {
 		return userDomainId;
 	}
 	
-	private Principal createAuthenticatingPrincipal(final AuthenticationDomain authd, final DirectoryOptions directoryOpts, final AbstractDirectory directory, final boolean impersonate, final String username, final char[] password) {
-		String authUsername = impersonate ? "admin" : directory.sanitizeUsername(directoryOpts, username);
-		return new Principal(null, impersonate, authd.getDomainId(), authUsername, password);
+	private AuthPrincipal createAuthenticatingPrincipal(final AuthContext context, final AbstractDirectory directory, final DirectoryOptions directoryOpts, final boolean impersonate, final String username, final char[] password) {
+		final String authUsername = impersonate ? "admin" : directory.sanitizeUsername(directoryOpts, username);
+		return new AuthPrincipal(impersonate, context.getDomainId(), authUsername, password);
 	}
 	
-	private Principal createAuthenticatingPrincipal_OLD(final AuthenticationDomain authd, final DirectoryOptions directoryOpts, final AbstractDirectory directory, final boolean impersonate, final String username, final char[] password) {
-		String authUsername = impersonate ? "admin" : directory.sanitizeUsername(directoryOpts, username);
-		return new Principal(authd, impersonate, authd.getDomainId(), authUsername, password);
-	}
-	
-	private Principal authenticateUser(String authDomainId, String authInternetDomain, final String username, final char[] password) throws AuthenticationException {
-		WebTopApp wta = WebTopApp.getInstance();
-		WebTopManager wtMgr = wta.getWebTopManager();
-		AuthenticationDomain authAd = null, priAd = null;
+	private Principal authenticateUser(final String authInternetDomain, String authDomainId, final String username, final char[] password) throws AuthenticationException {
+		final WebTopApp wta = WebTopApp.getInstance();
+		final WebTopManager wtMgr = wta.getWebTopManager();
+		AuthContext acontext = null;
+		String userDomainId = null;
 		boolean autoCreate = false, impersonate = false;
 		
 		try {
@@ -315,22 +298,21 @@ public class WTRealm extends AuthorizingRealm {
 			if (isSysAdmin(authInternetDomain, username)) {
 				// Do NOT check for maintenance here: SysAdmins are always allowed to access!
 				impersonate = false;
-				authAd = priAd = wtMgr.createSysAdminAuthenticationDomain();
+				acontext = wtMgr.createSysAdminAuthenticationContext();
+				userDomainId = acontext.getDomainId();
 				logger.debug("AuthenticationDomain for SysAdmin created");
 				
 			} else {
 				checkMaintenance(wta); // Stop users if system in under maintenance!
-				String userDomainId = lookupAuthDomainId(wtMgr, authInternetDomain, authDomainId);
-				Domain userDomain = null;
+				userDomainId = lookupAuthDomainId(wtMgr, authInternetDomain, authDomainId);
+				
 				if (isSysAdminImpersonate(username)) {
 					if (!isImpersonateEnabled(userDomainId)) {
 						logger.debug("Impersonating '{}' failed: impersonate is disabled!", sanitizeImpersonateUsername(username));
 						throw new AuthenticationException("Impersonation disabled");
 					}
 					impersonate = true;
-					userDomain = lookupAuthenticatingDomain(wtMgr, userDomainId);
-					authAd = wtMgr.createSysAdminAuthenticationDomain();
-					priAd = wtMgr.createAuthenticationDomain(userDomain);
+					acontext = wtMgr.createSysAdminAuthenticationContext();
 					logger.debug("AuthenticationDomain for User (with SysAdmin impersonate) created");
 					
 				} else if (isDomainAdminImpersonate(username)) {
@@ -339,28 +321,25 @@ public class WTRealm extends AuthorizingRealm {
 						throw new AuthenticationException("Impersonation disabled");
 					}
 					impersonate = true;
-					userDomain = lookupAuthenticatingDomain(wtMgr, userDomainId);
-					authAd = priAd = wtMgr.createAuthenticationDomain(userDomain);
+					acontext = wtMgr.lookupAuthenticationContext(userDomainId);
 					logger.debug("AuthenticationDomain for User (with DomainAdmin impersonate) created");
 					
 				} else {
 					impersonate = false;
-					userDomain = lookupAuthenticatingDomain(wtMgr, userDomainId);
-					authAd = priAd = wtMgr.createAuthenticationDomain(userDomain);
+					acontext = wtMgr.lookupAuthenticationContext(userDomainId);
 					logger.debug("AuthenticationDomain for User created");
 				}
-				autoCreate = userDomain.getUserAutoCreation();
+				autoCreate = wtMgr.isDomainUserAutoCreationEnabled(userDomainId);
 			}
 			
-			DirectoryManager dirManager = DirectoryManager.getManager();
-			DirectoryOptions opts = wta.createDirectoryOptions(authAd);
-			AbstractDirectory directory = dirManager.getDirectory(authAd.getDirUri().getScheme());
-			if (directory == null) throw new WTException("Directory not supported [{}]", authAd.getDirUri().getScheme());
+			if (acontext == null) throw new WTException("AuthenticationContext is null");
+			
+			// Prepare directory
+			final AbstractDirectory directory = WebTopManager.getAuthDirectory(acontext);
+			final DirectoryOptions opts = DirectoryUtils.createDirectoryOptions(acontext, wta.getConnectionManager());
 			
 			// Prepare principal for authentication
-			//String authUsername = impersonate ? "admin" : directory.sanitizeUsername(opts, username);
-			//Principal authPrincipal = new Principal(authAd, impersonate, authAd.getDomainId(), authUsername, password);
-			Principal authPrincipal = createAuthenticatingPrincipal_OLD(authAd, opts, directory, impersonate, username, password);
+			final AuthPrincipal authPrincipal = createAuthenticatingPrincipal(acontext, directory, opts, impersonate, username, password);
 			
 			logger.debug("Authenticating principal [{}, {}]", authPrincipal.getDomainId(), authPrincipal.getUserId());
 			AuthUser authUser = null;
@@ -377,7 +356,7 @@ public class WTRealm extends AuthorizingRealm {
 			Principal principal = null;
 			if (impersonate) { // User is impersonated
 				String impUsername = sanitizeImpersonateUsername(username);
-				principal = new Principal(priAd, impersonate, priAd.getDomainId(), impUsername, password);
+				principal = new Principal(impersonate, userDomainId, impUsername, password);
 				
 				// !!! Impersonation needs that the User is already present, otherwise we cannot continue!
 				// Yes, you cannot leverage on User auto-creation feature during impersonation.
@@ -388,32 +367,17 @@ public class WTRealm extends AuthorizingRealm {
 				principal.setDisplayName(user.getDisplayName());
 				
 			} else { // User NOT impersonated (authentication result points to the right userId)
-				principal = new Principal(priAd, impersonate, priAd.getDomainId(), authUser.userId, password);
+				principal = new Principal(impersonate, userDomainId, authUser.userId, password);
 				principal.setDisplayName(StringUtils.defaultIfBlank(authUser.displayName, authUser.userId));
 			}
 			
 			if (autoCreate) principal.pushDirectoryEntry(authUser);
 			return principal;
 			
-		} catch (URISyntaxException ex) {
-			logger.error("Error dealing with authentication URI", ex);
-			throw new AuthenticationException(ex);
 		} catch (WTException ex) {
 			logger.error("Error performing authentication", ex);
 			throw new AuthenticationException(ex);
 		}
-	}
-	
-	private Domain lookupAuthenticatingDomain(WebTopManager wtMgr, String domainId) throws WTException {
-		BitFlags<DomainGetOption> options = BitFlags.with(
-			DomainGetOption.DIRECTORY_DATA
-		);
-		Domain domain = wtMgr.getDomain(domainId, options);
-		if (domain == null) {
-			logger.debug("Unable to lookup Domain for '{}'", domainId);
-			throw new AuthenticationException("Domain not found");
-		}
-		return domain;
 	}
 	
 	private boolean isImpersonateEnabled(String domainId) {
@@ -426,7 +390,7 @@ public class WTRealm extends AuthorizingRealm {
 		WebTopManager wtMgr = wta.getWebTopManager();
 		AuthUser userEntry = principal.popDirectoryEntry();
 		
-		final String key = principal.getName();
+		final String key = principal.getID();
 		try {
 			lockCheckUser.tryLock(key, 60, TimeUnit.SECONDS);
 			WebTopManager.CheckUserResult chk = wtMgr.checkUser(principal.getDomainId(), principal.getUserId());

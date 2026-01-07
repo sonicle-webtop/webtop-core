@@ -98,6 +98,7 @@ import com.sonicle.webtop.core.admin.bol.js.JsGroup;
 import com.sonicle.webtop.core.admin.bol.js.JsRole;
 import com.sonicle.webtop.core.admin.bol.js.JsUser;
 import com.sonicle.webtop.core.app.RunContext;
+import com.sonicle.webtop.core.app.WebTopManager;
 import com.sonicle.webtop.core.app.WebTopProps;
 import com.sonicle.webtop.core.app.model.ApiKey;
 import com.sonicle.webtop.core.app.model.ApiKeyNew;
@@ -395,7 +396,7 @@ public class Service extends BaseService {
 						if (!cid.hasToken(1)) { // Domain nodes
 							for (Domain domain : coreadm.listDomains(EnabledCond.ANY_STATE).values()) {
 								final String scheme = domain.getDirScheme();
-								AbstractDirectory dir = coreadm.getAuthDirectoryByScheme(scheme);
+								AbstractDirectory dir = WebTopManager.getAuthDirectoryByScheme(scheme);
 								boolean dirCapPasswordWrite = dir.hasCapability(DirectoryCapability.PASSWORD_WRITE);
 								boolean dirCapUsersWrite = dir.hasCapability(DirectoryCapability.USERS_WRITE);
 								children.add(createDomainNode(nodeId, domain, scheme, dirCapPasswordWrite, dirCapUsersWrite));

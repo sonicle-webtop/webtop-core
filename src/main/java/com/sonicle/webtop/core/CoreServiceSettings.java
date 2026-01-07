@@ -18,6 +18,7 @@ import com.sonicle.security.otp.provider.SonicleAuth;
 import static com.sonicle.webtop.core.CoreSettings.*;
 import com.sonicle.webtop.core.app.CoreManifest;
 import com.sonicle.webtop.core.app.SettingsManager;
+import com.sonicle.webtop.core.app.WT;
 import com.sonicle.webtop.core.model.Meeting;
 import com.sonicle.webtop.core.sdk.BaseServiceSettings;
 import java.util.ArrayList;
@@ -137,7 +138,8 @@ public class CoreServiceSettings extends BaseServiceSettings {
 	
 	public TransportHostParams getTransportHostParams(final Principal principal) {
 		final char[] cpass = principal.getPassword();
-		return getTransportHostParams(principal.getFullInternetName(), (cpass != null) ? new String(cpass) : null);
+		final String username = principal.toFullyQualifiedUsername(WT.getAuthDomainName(principal.getDomainId()));
+		return getTransportHostParams(username, (cpass != null) ? new String(cpass) : null);
 	}
 	
 	public TransportHostParams getTransportHostParams(final String defaultUsername, final String defaultPassword) {

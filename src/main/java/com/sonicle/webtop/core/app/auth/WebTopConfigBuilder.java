@@ -35,7 +35,7 @@ package com.sonicle.webtop.core.app.auth;
 
 import com.sonicle.security.auth.directory.AbstractConfigBuilder;
 import com.sonicle.security.auth.directory.DirectoryOptions;
-import com.sonicle.webtop.core.app.WebTopApp;
+import com.sonicle.webtop.core.sdk.interfaces.IConnectionProvider;
 
 /**
  *
@@ -43,7 +43,7 @@ import com.sonicle.webtop.core.app.WebTopApp;
  */
 public class WebTopConfigBuilder extends AbstractConfigBuilder {
 	private static final WebTopConfigBuilder BUILDER = new WebTopConfigBuilder();
-	private static final String WTA = "wta";
+	private static final String DB_CONNECTION_PROVIDER = "dbConnectionProvider";
 	private static final String PASSWORD_POLICY_SIMILARITY_TOKENSIZE = "passwordPolicySimilarityTokenSize";
 	private static final String PASSWORD_POLICY_USERNAMESIMILARITY = "passwordPolicyUsernameSimilarity";
 	private static final String PASSWORD_POLICY_MINLENGTH = "passwordPolicyMinLength";
@@ -55,12 +55,12 @@ public class WebTopConfigBuilder extends AbstractConfigBuilder {
 		return BUILDER;
 	}
 	
-	public WebTopApp getWebTopApp(DirectoryOptions opts) {
-		return (WebTopApp)getParam(opts, WTA);
+	public IConnectionProvider getDBConnectionProvider(DirectoryOptions opts) {
+		return (IConnectionProvider)getParam(opts, DB_CONNECTION_PROVIDER);
 	}
 	
-	public void setWebTopApp(DirectoryOptions opts, WebTopApp wta) {
-		setParam(opts, WTA, wta);
+	public void setDBConnectionProvider(DirectoryOptions opts, IConnectionProvider dbConnectionProvider) {
+		setParam(opts, DB_CONNECTION_PROVIDER, dbConnectionProvider);
 	}
 	
 	public Short getPasswordPolicySimilarityLevenThres(DirectoryOptions opts) {

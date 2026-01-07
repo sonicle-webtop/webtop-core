@@ -36,7 +36,6 @@ package com.sonicle.webtop.core.sdk;
 import com.sonicle.commons.InternetAddressUtils;
 import com.sonicle.commons.LangUtils;
 import com.sonicle.commons.db.DbUtils;
-import com.sonicle.security.AuthenticationDomain;
 import com.sonicle.security.DomainAccount;
 import com.sonicle.security.Principal;
 import com.sonicle.webtop.core.CoreManager;
@@ -136,37 +135,32 @@ public final class UserProfile {
 		return principal.getDomainId();
 	}
 	
-	public String getMailcardId() {
-		AuthenticationDomain ad = principal.getAuthenticationDomain();
-		return MessageFormat.format("{0}@{1}", principal.getUserId(), ad.getInternetName());
-	}
-	
 	public String getSecret() {
 		return user.getSecret();
 	}
 	
 	public Data getData() {
-		return WT.getUserData(getId());
+		return WT.getProfileData(getId());
 	}
 	
 	public Locale getLocale() {
-		return WT.getUserData(getId()).getLocale();
+		return WT.getProfileData(getId()).getLocale();
 	}
 	
 	public String getLanguageTag() {
-		return WT.getUserData(getId()).getLanguageTag();
+		return WT.getProfileData(getId()).getLanguageTag();
 	}
 	
 	public DateTimeZone getTimeZone() {
-		return WT.getUserData(getId()).getTimeZone();
+		return WT.getProfileData(getId()).getTimeZone();
 	}
 	
 	public String getDisplayName() {
-		return WT.getUserData(getId()).getDisplayName();
+		return WT.getProfileData(getId()).getDisplayName();
 	}
 	
 	public String getProfileEmailAddress() {
-		return WT.getUserData(getId()).getProfileEmailAddress();
+		return WT.getProfileData(getId()).getProfileEmailAddress();
 	}
 	
 	/**
@@ -178,11 +172,11 @@ public final class UserProfile {
 	}
 	
 	public String getPersonalEmailAddress() {
-		return WT.getUserData(getId()).getPersonalEmailAddress();
+		return WT.getProfileData(getId()).getPersonalEmailAddress();
 	}
 	
 	public String getFullEmailAddress() {
-		return WT.getUserData(getId()).getFullEmailAddress();
+		return WT.getProfileData(getId()).getFullEmailAddress();
 	}
 	
 	public static class Data {

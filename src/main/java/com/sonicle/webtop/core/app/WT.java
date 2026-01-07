@@ -39,6 +39,7 @@ import com.sonicle.commons.PathUtils;
 import com.sonicle.commons.l4j.ProductLicense;
 import com.sonicle.mail.PropsBuilder;
 import com.sonicle.mail.email.EmailMessage;
+import com.sonicle.security.auth.directory.AbstractDirectory;
 import com.sonicle.webtop.core.CoreManager;
 import com.sonicle.webtop.core.admin.CoreAdminManager;
 import com.sonicle.webtop.core.app.model.EnabledCond;

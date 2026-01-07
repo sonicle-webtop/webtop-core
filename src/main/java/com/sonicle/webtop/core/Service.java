@@ -1981,8 +1981,9 @@ public class Service extends BaseService implements EventListener {
 						if (!xmppCli.isAuthenticated()) throw new WTException(ex1, lookupResource(CoreLocaleKey.XMPP_ERROR_AUTHENTICATION));
 						throw ex1;
 					}
-					Principal p = getEnv().getProfile().getPrincipal();
-					new JsonResult(new JsIMInit(ps, statusMessage, p.getUserId()+"@"+p.getAuthenticationDomain().getInternetName(), xmppCli.getUserJid().toString(), p.getPassword())).printTo(out);
+					final Principal p = getEnv().getProfile().getPrincipal();
+					final String authInternetName = WT.getAuthDomainName(getEnv().getProfile().getDomainId());
+					new JsonResult(new JsIMInit(ps, statusMessage, p.getUserId()+"@"+authInternetName, xmppCli.getUserJid().toString(), p.getPassword())).printTo(out);
 					
 				} else {
 					throw new WTException("XMPPClient not available");

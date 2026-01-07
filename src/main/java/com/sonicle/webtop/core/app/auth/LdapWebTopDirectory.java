@@ -85,14 +85,14 @@ public final class LdapWebTopDirectory extends AbstractLdapDirectory {
 	}
 	
 	@Override
-	public URI buildUri(String host, Integer port, String path) throws URISyntaxException {
+	public URI buildUri(final String host, final Integer port, final String path) throws URISyntaxException {
 		// path can be ignored!
 		int iport = (port == null) ? LdapWebTopConfigBuilder.DEFAULT_PORT : port;
 		return new URI(SCHEME, null, host, iport, null, null, null);
 	}
 	
 	@Override
-	public int validatePasswordPolicy(DirectoryOptions opts, String username, char[] password) {
+	public int validatePasswordPolicy(final DirectoryOptions opts, final String username, final char[] password) {
 		LdapWebTopConfigBuilder builder = getConfigBuilder();
 		final String s = new String(password);
 		

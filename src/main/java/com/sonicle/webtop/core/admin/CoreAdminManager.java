@@ -241,13 +241,6 @@ public class CoreAdminManager extends BaseManager {
 		setMgr.dumpCacheStats();
 	}
 	
-	public AbstractDirectory getAuthDirectoryByScheme(final String scheme) throws WTException {
-		Check.notEmpty(scheme, "scheme");
-		WebTopManager wtMgr = wta.getWebTopManager();
-		
-		return wtMgr.getAuthDirectoryByScheme(scheme);
-	}
-	
 	public Map<String, Domain> listDomains(final EnabledCond enabled) throws WTException {
 		Check.notNull(enabled, "scheme");
 		WebTopManager wtMgr = wta.getWebTopManager();

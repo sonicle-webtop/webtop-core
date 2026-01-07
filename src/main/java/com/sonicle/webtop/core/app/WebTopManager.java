@@ -51,7 +51,7 @@ import com.sonicle.commons.flags.BitFlags;
 import com.sonicle.commons.flags.BitFlagsEnum;
 import com.sonicle.commons.time.JavaTimeUtils;
 import com.sonicle.commons.time.JodaTimeUtils;
-import com.sonicle.security.AuthenticationDomain;
+import com.sonicle.security.AuthContext;
 import com.sonicle.security.ConnectionSecurity;
 import com.sonicle.security.DigestValue;
 import com.sonicle.security.DomainAccount;
@@ -69,6 +69,7 @@ import com.sonicle.security.auth.directory.LdapDirectory;
 import com.sonicle.security.auth.directory.LdapNethDirectory;
 import com.sonicle.webtop.core.CoreServiceSettings;
 import com.sonicle.webtop.core.CoreUserSettings;
+import com.sonicle.webtop.core.app.auth.DirectoryUtils;
 import com.sonicle.webtop.core.app.auth.LdapWebTopDirectory;
 import com.sonicle.webtop.core.app.auth.WebTopDirectory;
 import com.sonicle.webtop.core.app.events.DomainUpdateEvent;
@@ -236,6 +237,7 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 	public static final Set<String> BUILT_IN_GROUPS = Stream.of(GROUPID_USERS, GROUPID_PEC_ACCOUNTS).collect(Collectors.toSet());
 	
 	private final CacheDomainInfo domainCache;
+	private final LoadingCache<String, AuthContext> domainAuthenticationContextCache = Caffeine.newBuilder().build(new AuthenticationContextCacheLoader());
 	private final KeyedReentrantLocks<String> lockSecretGet = new KeyedReentrantLocks<>();
 	private final SubjectSidCache subjectSidCache;
 	private final LoadingCache<UserProfileId, UserProfile.PersonalInfo> profileToPersonalInfoCache = Caffeine.newBuilder().build(new ProfilePersonalInfoCacheLoader());
@@ -268,6 +270,7 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 	protected void doAppManagerCleanup() {
 		subjectSidCache.cleanup();
 		cleanupProfileCache();
+		domainAuthenticationContextCache.cleanUp();
 		domainCache.clear();
 	}
 	
@@ -588,51 +591,88 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 	 * @param profileId The profileId to check.
 	 * @return True if passed profileId is the SysAdmin.
 	 */
-	public static boolean isSysAdmin(UserProfileId profileId) {
+	public static boolean isSysAdmin(final UserProfileId profileId) {
 		return SYSADMIN_DOMAINID.equals(profileId.getDomainId()) && SYSADMIN_USERID.equals(profileId.getUserId());
 	}
 	
-	public AbstractDirectory getAuthDirectory(String authUri) throws WTException {
-		try {
-			return getAuthDirectoryByScheme(new URI(authUri).getScheme());
-		} catch(URISyntaxException ex) {
-			throw new WTException(ex, "Invalid authentication URI [{0}]", authUri);
-		}
-	}
-	
-	public AbstractDirectory getAuthDirectory(URI authUri) throws WTException {
-		return getAuthDirectoryByScheme(authUri.getScheme());
-	}
-	
-	public AbstractDirectory getAuthDirectoryByScheme(String scheme) throws WTException {
+	/**
+	 * Returns the AuthDirectory instance of the specified authentication scheme.
+	 * @param scheme The authentication scheme.
+	 * @return The Directory instance.
+	 * @throws WTException whether specified scheme is not supported
+	 */
+	public static AbstractDirectory getAuthDirectoryByScheme(final String scheme) throws WTException {
+		Check.notEmpty(scheme, "scheme");
 		DirectoryManager dirManager = DirectoryManager.getManager();
 		AbstractDirectory directory = dirManager.getDirectory(scheme);
 		if (directory == null) throw new WTException("Directory not supported [{}]", scheme);
 		return directory;
 	}
 	
-	public AbstractDirectory getAuthDirectory(UserProfileId profileId) throws WTException {
-		AuthenticationDomain ad = createAuthenticationDomain(profileId);
-		return getAuthDirectory(ad.getDirUri());
+	/**
+	 * Returns the AuthDirectory instance of the specified authentication URI.
+	 * @param authUri The authentication URI.
+	 * @return The Directory instance.
+	 * @throws WTException whether scheme, implied by specified URI, is not supported
+	 */
+	public static AbstractDirectory getAuthDirectory(final URI authUri) throws WTException {
+		Check.notNull(authUri, "authUri");
+		return getAuthDirectoryByScheme(authUri.getScheme());
 	}
 	
-	private AuthenticationDomain createAuthenticationDomain(UserProfileId profileId) throws WTException {
+	/**
+	 * Returns the AuthDirectory instance of the specified authentication URI.
+	 * @param authUri The authentication URI in String format.
+	 * @return The Directory instance.
+	 * @throws WTException whether scheme, implied by specified URI, is not supported
+	 */
+	public static AbstractDirectory getAuthDirectory(final String authUri) throws WTException {
+		Check.notEmpty(authUri, "authUri");
+		
 		try {
-			if (Principal.xisAdmin(profileId.getDomainId(), profileId.getUserId())) {
-				return createSysAdminAuthenticationDomain();
-
-			} else {
-				Domain domain = getDomain(profileId.getDomainId(), DomainGetOption.internalDefaultFlags());
-				if (domain == null) throw new WTNotFoundException("Domain not found [{}]", profileId.getDomainId());
-				return createAuthenticationDomain(domain);
-			}
+			return getAuthDirectoryByScheme(new URI(authUri).getScheme());
 		} catch(URISyntaxException ex) {
-			throw new WTException(ex, "Invalid URI");
+			throw new WTException(ex, "Invalid authentication URI [{}]", authUri);
 		}
 	}
 	
-	public AuthenticationDomain createAuthenticationDomain(Domain domain) {
-		return new AuthenticationDomain(domain.getDomainId(), 
+	/**
+	 * Returns the AuthDirectory instance of the specified AuthContext object.
+	 * @param authContext The AuthContext object.
+	 * @return The Directory instance.
+	 * @throws WTException whether scheme, implied by specified AuthContext, is not supported
+	 */
+	public static AbstractDirectory getAuthDirectory(final AuthContext authContext) throws WTException {
+		Check.notNull(authContext, "authContext");
+		return getAuthDirectory(authContext.getDirUri());
+	}
+	
+	public AbstractDirectory getAuthDirectory(final UserProfileId profileId) throws WTException {
+		final AuthContext context = lookupAuthenticationContext(profileId);
+		return getAuthDirectory(context);
+	}
+	
+	public AuthContext lookupAuthenticationContext(final UserProfileId profileId) {
+		Check.notNull(profileId, "profileId");
+		
+		if (Principal.xisAdmin(profileId.getDomainId(), profileId.getUserId())) {
+			return createSysAdminAuthenticationContext();
+		} else {
+			return lookupAuthenticationContext(profileId.getDomainId());
+		}
+	}
+	
+	public AuthContext lookupAuthenticationContext(final String domainId) {
+		Check.notEmpty(domainId, "domainId");
+		
+		if (Principal.xisAdminDomain(domainId)) {
+			throw new WTRuntimeException("Invalid domain [{}]", domainId);
+		}
+		return domainAuthenticationContextCache.get(domainId);
+	}
+	
+	private AuthContext createAuthenticationContext(Domain domain) {
+		return new AuthContext(domain.getDomainId(), 
 			domain.getAuthDomainName(), 
 			domain.getDirUri(), 
 			domain.getDirCaseSensitive(),
@@ -643,21 +683,13 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 		);
 	}
 	
-	public AuthenticationDomain createAuthenticationDomain(ODomain domain) throws URISyntaxException {
-		return new AuthenticationDomain(domain.getDomainId(), 
-				domain.getInternetName(), 
-				domain.getDirUri(), 
-				domain.getDirCaseSensitive(),
-				domain.getDirAdmin(), 
-				// When creating from ODomain, password needs to be decrypted!
-				(domain.getDirPassword() != null) ? decDirPassword(domain.getDirPassword()).toCharArray() : null, 
-				EnumUtils.getEnum(ConnectionSecurity.class, domain.getDirConnectionSecurity()),
-				domain.getDirParameters()
-		);
-	}
-	
-	public AuthenticationDomain createSysAdminAuthenticationDomain() throws URISyntaxException {
-		return new AuthenticationDomain("*", null, createSysAdminAuthDirectoryUri(), false, null, null, null, null);
+	public AuthContext createSysAdminAuthenticationContext() {
+		try {
+			return new AuthContext("*", null, createSysAdminAuthDirectoryUri(), false, null, null, null, null);
+		} catch (URISyntaxException ex) { // Should NOT happen!
+			LOGGER.error("Unable to create SysAdmin AuthenticationContext", ex);
+			return null;
+		}
 	}
 	
 	public String createSysAdminAuthDirectoryUri() throws URISyntaxException {
@@ -713,8 +745,12 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 		return domainCache.exists(domainId);
 	}
 	
-	public Boolean isDomainIdEnabled(final String domainId) {
+	public Boolean isDomainEnabled(final String domainId) {
 		return domainCache.isEnabled(domainId);
+	}
+	
+	public Boolean isDomainUserAutoCreationEnabled(final String domainId) {
+		return domainCache.isUserAutoCreationEnabled(domainId);
 	}
 	
 	public String domainIdToDomainPublicId(final String domainId) {
@@ -853,18 +889,16 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 	 */
 	public void updateSysAdminPassword(final char[] newPassword) throws WTException {
 		Check.notNull(newPassword, "newPassword");
-		DirectoryManager dirManager = DirectoryManager.getManager();
 		
 		try {
-			AuthenticationDomain authAd = createSysAdminAuthenticationDomain();
-				DirectoryOptions opts = getWebTopApp().createDirectoryOptions(authAd);
-			AbstractDirectory directory = dirManager.getDirectory(authAd.getDirUri().getScheme());
-			if (directory == null) throw new WTException("Directory not supported [{}]", authAd.getDirUri().getScheme());
-			if (!directory.hasCapability(DirectoryCapability.PASSWORD_WRITE)) throw new WTException("Password update not supported [{}]", authAd.getDirUri().getScheme());
+			final AuthContext acontext = createSysAdminAuthenticationContext();
+			final AbstractDirectory directory = getAuthDirectory(acontext);
+			final DirectoryOptions opts = DirectoryUtils.createDirectoryOptions(acontext, getWebTopApp().getConnectionManager());
 			
+			if (!directory.hasCapability(DirectoryCapability.PASSWORD_WRITE)) throw new WTException("Password update not supported [{}]", acontext.getDirUri().getScheme());
 			directory.updateUserPassword(opts, SYSADMIN_DOMAINID, SYSADMIN_USERID, newPassword);
 			
-		} catch (URISyntaxException | DirectoryException ex) {
+		} catch (DirectoryException ex) {
 			throw new WTException(ex);
 		}
 	}
@@ -1093,12 +1127,15 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 		Connection con = null;
 		
 		Domain oldDomain = null;
+		AuthContext oldAContext = null;
 		Set<String> oldUserIds = null;
 		Set<String> oldResourcesIds = null;
 		try {
 			con = getConnection(false);
 			oldDomain = doDomainGet(con, domainId, BitFlags.with(DomainProcessOpt.PROCESS_DIRECTORY));
 			if (oldDomain == null) throw new WTNotFoundException("Domain not found [{}]", domainId);
+			
+			oldAContext = lookupAuthenticationContext(domainId);
 			oldUserIds = useDao.selectIdsByDomainEnabled(con, domainId, EnabledCond.ANY_STATE);
 			oldResourcesIds = resDao.selectIdsByDomainEnabled(con, domainId, EnabledCond.ANY_STATE);
 			doDomainDelete(con, domainId);
@@ -1112,6 +1149,7 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 		}
 		
 		domainCache.init();
+		domainAuthenticationContextCache.invalidate(domainId);
 		subjectSidCache.cleanupByDomain(domainId);
 		cleanupProfileCache();
 		
@@ -1119,9 +1157,9 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 		if (oldUserIds != null) {
 			if (updateDirectory) {
 				try {
-					AuthenticationDomain ad = createAuthenticationDomain(oldDomain);
-					AbstractDirectory directory = getAuthDirectory(ad.getDirUri());
-					DirectoryOptions opts = getWebTopApp().createDirectoryOptions(ad);
+					final AbstractDirectory directory = getAuthDirectory(oldAContext);
+					final DirectoryOptions opts = DirectoryUtils.createDirectoryOptions(oldAContext, getWebTopApp().getConnectionManager());
+					
 					if (directory.hasCapability(DirectoryCapability.USERS_WRITE)) {
 						Set<String> notFounds = new LinkedHashSet<>();
 						for (String userId : oldUserIds) {
@@ -1175,23 +1213,20 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 	}
 	
 	public List<DirectoryUser> listDirectoryUsers(final String domainId) throws WTException {
+		Check.notEmpty(domainId, "domainId");
 		UserDAO useDao = UserDAO.getInstance();
 		Connection con = null;
 		
 		try {
+			final AuthContext acontext = lookupAuthenticationContext(domainId);
+			final AbstractDirectory directory = getAuthDirectory(acontext);
+			final DirectoryOptions opts = DirectoryUtils.createDirectoryOptions(acontext, getWebTopApp().getConnectionManager());
+			
 			con = getConnection(true);
-			
-			Domain domain = doDomainGet(con, domainId, BitFlags.allOf(DomainProcessOpt.class));
-			if (domain == null) throw new WTNotFoundException("Domain not found [{}]", domainId);
-			
-			AuthenticationDomain ad = createAuthenticationDomain(domain);
-			AbstractDirectory directory = getAuthDirectory(ad.getDirUri());
-			DirectoryOptions opts = getWebTopApp().createDirectoryOptions(ad);
-			
-			Map<String, VUser> vusers = useDao.selectByDomainEnabled(con, domain.getDomainId(), EnabledCond.ANY_STATE);
+			Map<String, VUser> vusers = useDao.selectByDomainEnabled(con, domainId, EnabledCond.ANY_STATE);
 			ArrayList<DirectoryUser> items = new ArrayList<>();
 			if (directory.hasCapability(DirectoryCapability.USERS_READ)) {
-				for (AuthUser authUser : directory.listUsers(opts, domain.getDomainId())) {
+				for (AuthUser authUser : directory.listUsers(opts, domainId)) {
 					items.add(new DirectoryUser(authUser, vusers.get(authUser.userId)));
 				}
 			} else {
@@ -1339,42 +1374,40 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 		Check.notEmpty(userId, "userId");
 		Check.notNull(user, "user");
 		Check.notNull(options, "options");
-		UserProfileId userPid = new UserProfileId(domainId, userId);
 		Connection con = null;
+		
+		final UserProfileId userPid = new UserProfileId(domainId, userId);
 		
 		User newUser = null;
 		try {
-			con = getConnection(false);
-			
-			Domain domain = doDomainGet(con, userPid.getDomainId(), BitFlags.allOf(DomainProcessOpt.class));
-			if (domain == null) throw new WTException("Domain not found [{}]", userPid.getDomainId());
-			AuthenticationDomain ad = createAuthenticationDomain(domain);
-			
 			String userSid = null; // Internally auto-generated
 			UserInsertResult result = null;
 			if (updateDirectory) {
-				AbstractDirectory directory = getAuthDirectory(ad.getDirUri());
-				DirectoryOptions opts = getWebTopApp().createDirectoryOptions(ad);
+				final AuthContext acontext = lookupAuthenticationContext(userPid);
+				final AbstractDirectory directory = getAuthDirectory(acontext);
+				final DirectoryOptions opts = DirectoryUtils.createDirectoryOptions(acontext, getWebTopApp().getConnectionManager());
 				
 				if (directory.hasCapability(DirectoryCapability.USERS_WRITE)) {
 					if (!directory.validateUsername(opts, userPid.getUserId())) {
-						throw new WTException("Username does not satisfy directory requirements [{}]", ad.getDirUri().getScheme());
+						throw new WTException("Username does not satisfy directory requirements [{}]", acontext.getDirUri().getScheme());
 					}
 				}
 				char[] appliedPassword = null;
 				if (setPassword && directory.hasCapability(DirectoryCapability.PASSWORD_WRITE)) {
-					getWebTopApp().setDirectoryOptionsPasswordPolicies(ad, opts, domain.getPasswordPolicies());
+					final DomainBase.PasswordPolicies pwdPolicies = getDomainPasswordPolicies(userPid.getDomainId());
+					DirectoryUtils.fillDirectoryOptionsPasswordPolicies(opts, acontext, pwdPolicies, getWebTopApp().getProperties());
 					if (password == null) {
 						appliedPassword = directory.generatePassword(opts);
 					} else {
 						appliedPassword = password;
 						int ret = directory.validatePasswordPolicy(opts, userPid.getUserId(), appliedPassword);
 						if (ret != 0) {
-							throw new WTPwdPolicyException(ret, "Password does not satisfy directory policy [{}, {}]", ad.getDirUri().getScheme(), ret);
+							throw new WTPwdPolicyException(ret, "Password does not satisfy directory policy [{}, {}]", acontext.getDirUri().getScheme(), ret);
 						}
 					}
 				}
 				
+				con = getConnection(false);
 				result = doUserInsert(con, userPid.getDomainId(), userPid.getUserId(), userSid, user, UserProcessOpt.fromUserUpdateOptions(options), defaultGroup);
 				
 				// Insert user in directory (if necessary)
@@ -1425,8 +1458,9 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 		Check.notEmpty(domainId, "domainId");
 		Check.notEmpty(userId, "userId");
 		Check.notNull(user, "user");
-		UserProfileId userPid = new UserProfileId(domainId, userId);
 		Connection con = null;
+		
+		final UserProfileId userPid = new UserProfileId(domainId, userId);
 		
 		try {
 			con = getConnection(false);
@@ -1452,9 +1486,10 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 	public void updateUserStatus(final String domainId, final String userId, final boolean enabled) throws WTException {
 		Check.notEmpty(domainId, "domainId");
 		Check.notEmpty(userId, "userId");
-		UserProfileId userPid = new UserProfileId(domainId, userId);
 		UserDAO useDao = UserDAO.getInstance();
 		Connection con = null;
+		
+		final UserProfileId userPid = new UserProfileId(domainId, userId);
 		
 		try {
 			con = getConnection(true);
@@ -1475,18 +1510,20 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 		Check.notEmpty(domainId, "domainId");
 		Check.notEmpty(userId, "userId");
 		Check.notNull(newPassword, "newPassword");
-		UserProfileId userPid = new UserProfileId(domainId, userId);
-		AuthenticationDomain ad = createAuthenticationDomain(userPid);
+		
+		final UserProfileId userPid = new UserProfileId(domainId, userId);
+		final AuthContext acontext = lookupAuthenticationContext(userPid);
 		
 		try {
-			AbstractDirectory directory = getAuthDirectory(ad.getDirUri());
+			final AbstractDirectory directory = getAuthDirectory(acontext);
 			if (!directory.hasCapability(DirectoryCapability.PASSWORD_WRITE)) {
 				throw new WTException("Directory has no write capability");
 			}
 			
-			DirectoryOptions opts = getWebTopApp().createDirectoryOptions(ad);
-			DomainBase.PasswordPolicies pwdPolicies = getDomainPasswordPolicies(userPid.getDomainId());
-			getWebTopApp().setDirectoryOptionsPasswordPolicies(ad, opts, pwdPolicies);
+			final DirectoryOptions opts = DirectoryUtils.createDirectoryOptions(acontext, getWebTopApp().getConnectionManager());
+			final DomainBase.PasswordPolicies pwdPolicies = getDomainPasswordPolicies(userPid.getDomainId());
+			DirectoryUtils.fillDirectoryOptionsPasswordPolicies(opts, acontext, pwdPolicies, getWebTopApp().getProperties());
+			
 			int ret = directory.validatePasswordPolicy(opts, userPid.getUserId(), newPassword);
 			if (ret == 0 && oldPassword != null && pwdPolicies.getAvoidOldSimilarity()) {
 				int similarityThres = 5;
@@ -1518,8 +1555,9 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 	public ResultVoid deleteUser(final String domainId, final String userId, final boolean updateDirectory) throws WTException {
 		Check.notEmpty(domainId, "domainId");
 		Check.notEmpty(userId, "userId");
-		UserProfileId userPid = new UserProfileId(domainId, userId);
 		Connection con = null;
+		
+		final UserProfileId userPid = new UserProfileId(domainId, userId);
 		
 		String userSid = subjectSidCache.getSid(userPid, GenericSubject.Type.USER);
 		if (userSid == null) throw new WTNotFoundException("User not found [{}]", userPid);
@@ -1534,11 +1572,9 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 			doUserDelete(con, userPid.getDomainId(), userPid.getUserId());
 			
 			if (updateDirectory) {
-				ODomain odomain = doODomainGet(con, userPid.getDomainId());
-				if (odomain == null) throw new WTException("Domain not found [{}]", userPid.getDomainId());
-				AuthenticationDomain ad = createAuthenticationDomain(odomain);
-				AbstractDirectory directory = getAuthDirectory(ad.getDirUri());
-				DirectoryOptions opts = getWebTopApp().createDirectoryOptions(ad);
+				final AuthContext acontext = lookupAuthenticationContext(userPid);
+				final AbstractDirectory directory = getAuthDirectory(acontext);
+				final DirectoryOptions opts = DirectoryUtils.createDirectoryOptions(acontext, getWebTopApp().getConnectionManager());
 				
 				if (directory.hasCapability(DirectoryCapability.USERS_WRITE)) {
 					directory.deleteUser(opts, userPid.getDomainId(), userPid.getUserId());
@@ -1580,18 +1616,19 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 	public boolean isUserPasswordChangeNeeded(final String domainId, final String userId, final char[] password) throws WTException {
 		Check.notEmpty(domainId, "domainId");
 		Check.notEmpty(userId, "userId");
-		UserProfileId userPid = new UserProfileId(domainId, userId);
+		
+		final UserProfileId userPid = new UserProfileId(domainId, userId);
 		if (Principal.xisAdmin(userPid.getDomainId(), userPid.getUserId())) return false;
 		
-		AuthenticationDomain ad = createAuthenticationDomain(userPid);
-		AbstractDirectory directory = getAuthDirectory(ad.getDirUri());
+		final AuthContext acontext = lookupAuthenticationContext(userPid);
+		final AbstractDirectory directory = getAuthDirectory(acontext);
 		if (!directory.hasCapability(DirectoryCapability.PASSWORD_WRITE)) return false;
 		
-		DomainBase.PasswordPolicies pwdPolicies = getDomainPasswordPolicies(userPid.getDomainId());
+		final DomainBase.PasswordPolicies pwdPolicies = getDomainPasswordPolicies(userPid.getDomainId());
 		if (pwdPolicies.getVerifyAtLogin() || pwdPolicies.getExpiration() != null) {
 			if (pwdPolicies.getVerifyAtLogin()) {
-				DirectoryOptions opts = getWebTopApp().createDirectoryOptions(ad);
-				getWebTopApp().setDirectoryOptionsPasswordPolicies(ad, opts, pwdPolicies);
+				final DirectoryOptions opts = DirectoryUtils.createDirectoryOptions(acontext, getWebTopApp().getConnectionManager());
+				DirectoryUtils.fillDirectoryOptionsPasswordPolicies(opts, acontext, pwdPolicies, getWebTopApp().getProperties());
 				int ret = directory.validatePasswordPolicy(opts, userPid.getUserId(), password);
 				if (ret != 0) return true;
 			}
@@ -4885,16 +4922,18 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 			public final String domainName;
 			public final String publicFqdn;
 			public final boolean enabled;
-			public final String label;
+			public final String displayName;
+			public final boolean userAutoCreation;
 			
-			public Data(String domainId, String publicId, String authDomainName, String domainName, String publicFqdn, boolean enabled, String label) {
+			public Data(String domainId, String publicId, String authDomainName, String domainName, String publicFqdn, boolean enabled, String displayName, boolean userAutoCreation) {
 				this.domainId = domainId;
 				this.publicId = publicId;
 				this.authDomainName = authDomainName;
 				this.domainName = domainName;
 				this.publicFqdn = publicFqdn;
 				this.enabled = enabled;
-				this.label = label;
+				this.displayName = displayName;
+				this.userAutoCreation = userAutoCreation;
 			}
 		}
 		
@@ -4936,7 +4975,8 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 						odomain.getDomainName(),
 						publicInternetName,
 						enabled,
-						odomain.getDescription()
+						odomain.getDescription(),
+						odomain.getUserAutoCreation()
 					);
 					
 					LOGGER.trace("[DomainInfoCache] Working on '{}'", data.domainId);
@@ -5022,7 +5062,7 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 			try {
 				LinkedHashMap<String, String> map = new LinkedHashMap<>();
 				for (Map.Entry<String, Data> entry : this.byDomainId.entrySet()) {
-					if (entry.getValue().enabled) map.put(entry.getValue().domainId, entry.getValue().label);
+					if (entry.getValue().enabled) map.put(entry.getValue().domainId, entry.getValue().displayName);
 				}
 				return map;
 			} finally {
@@ -5046,6 +5086,17 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 			try {
 				final Data data = this.byDomainId.get(domainId);
 				return data != null ? data.enabled : null;
+			} finally {
+				this.unlockRead(stamp);
+			}
+		}
+		
+		public Boolean isUserAutoCreationEnabled(final String domainId) {
+			this.internalCheckBeforeGetDoNotLockThis();
+			long stamp = this.readLock();
+			try {
+				final Data data = this.byDomainId.get(domainId);
+				return data != null ? data.userAutoCreation : null;
 			} finally {
 				this.unlockRead(stamp);
 			}
@@ -5443,6 +5494,23 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
         }
     }
 	*/
+	
+	private class AuthenticationContextCacheLoader implements CacheLoader<String, AuthContext> {
+		
+		@Override
+		public AuthContext load(String k) throws Exception {
+			try {
+				LOGGER.trace("[AuthenticationContext] Loading... [{}]", k);
+				Domain domain = getDomain(k, DomainGetOption.internalDefaultFlags());
+				if (domain == null) throw new WTNotFoundException("Domain not found [{}]", k);
+				return createAuthenticationContext(domain);
+				
+			} catch (Exception ex) {
+				LOGGER.error("[AuthenticationContext] Unable to lookup [{}]", k, ex);
+				return null;
+			}
+		}
+	}
 	
 	private void cleanupProfileCache() {
 		profileToDataCache.cleanUp();

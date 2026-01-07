@@ -34,7 +34,6 @@
 package com.sonicle.webtop.core.app;
 
 import com.mashape.unirest.http.Unirest;
-import com.sonicle.commons.AlgoUtils;
 import com.sonicle.commons.ClassUtils;
 import com.sonicle.commons.IdentifierUtils;
 import com.sonicle.webtop.core.app.util.OSInfo;
@@ -54,32 +53,12 @@ import com.sonicle.mail.TransportUtils;
 import com.sonicle.mail.email.EmailMessage;
 import com.sonicle.mail.email.Recipient;
 import com.sonicle.mail.producer.MimeMessageProducer;
-import com.sonicle.security.AuthenticationDomain;
 import com.sonicle.security.CryptoUtils;
 import com.sonicle.security.Principal;
-import com.sonicle.security.auth.directory.ADConfigBuilder;
-import com.sonicle.security.auth.directory.ADDirectory;
-import com.sonicle.security.auth.directory.DirectoryOptions;
-import com.sonicle.security.auth.directory.ImapConfigBuilder;
-import com.sonicle.security.auth.directory.ImapDirectory;
-import com.sonicle.security.auth.directory.LdapConfigBuilder;
-import com.sonicle.security.auth.directory.LdapDirectory;
-import com.sonicle.security.auth.directory.LdapNethConfigBuilder;
-import com.sonicle.security.auth.directory.LdapNethDirectory;
-import com.sonicle.security.auth.directory.SftpConfigBuilder;
-import com.sonicle.security.auth.directory.SftpDirectory;
-import com.sonicle.security.auth.directory.SmbConfigBuilder;
-import com.sonicle.security.auth.directory.SmbDirectory;
 import com.sonicle.webtop.core.CoreServiceSettings;
 import com.sonicle.webtop.core.CoreSettings;
-import com.sonicle.webtop.core.app.auth.LdapWebTopConfigBuilder;
-import com.sonicle.webtop.core.app.auth.LdapWebTopDirectory;
-import com.sonicle.webtop.core.app.auth.WebTopConfigBuilder;
-import com.sonicle.webtop.core.app.auth.WebTopDirectory;
-import com.sonicle.webtop.core.app.model.DomainBase;
 import com.sonicle.webtop.core.app.model.GenericSubject;
 import com.sonicle.webtop.core.app.sdk.WTEmailSendException;
-import com.sonicle.webtop.core.model.ParamsLdapDirectory;
 import com.sonicle.webtop.core.io.FileResource;
 import com.sonicle.webtop.core.io.JarFileResource;
 import com.sonicle.webtop.core.sdk.ServiceMessage;
@@ -1579,130 +1558,6 @@ public final class WebTopApp {
 	
 	public void notify(UserProfileId profileId, List<ServiceMessage> messages, boolean enqueueIfOffline) {
 		sesMgr.push(profileId, messages, enqueueIfOffline);
-	}
-	
-	public DirectoryOptions createDirectoryOptions(AuthenticationDomain ad) {
-		DirectoryOptions opts = new DirectoryOptions();
-		ParamsLdapDirectory params = null;
-		
-		URI authUri = ad.getDirUri();
-		switch(authUri.getScheme()) {
-			case WebTopDirectory.SCHEME:
-				WebTopConfigBuilder wt = new WebTopConfigBuilder();
-				wt.setIsCaseSensitive(opts, ad.getDirCaseSensitive());
-				wt.setWebTopApp(opts, this);
-				break;
-			case LdapWebTopDirectory.SCHEME:
-				LdapWebTopConfigBuilder ldapwt = new LdapWebTopConfigBuilder();
-				ldapwt.setIsCaseSensitive(opts, ad.getDirCaseSensitive());
-				ldapwt.setHost(opts, authUri.getHost());
-				ldapwt.setPort(opts, authUri.getPort());
-				ldapwt.setConnectionSecurity(opts, ad.getDirConnSecurity());
-				ldapwt.setSpecificAdminDn(opts, ad.getDirAdmin(), ad.getInternetName());
-				ldapwt.setAdminPassword(opts, ad.getDirPassword());
-				ldapwt.setSpecificLoginDn(opts, ad.getInternetName());
-				ldapwt.setSpecificUserDn(opts, ad.getInternetName());
-				break;
-			case LdapDirectory.SCHEME:
-				params = LangUtils.deserialize(ad.getDirParameters(), new ParamsLdapDirectory(), ParamsLdapDirectory.class);
-				LdapConfigBuilder ldap = new LdapConfigBuilder();
-				ldap.setIsCaseSensitive(opts, ad.getDirCaseSensitive());
-				ldap.setHost(opts, authUri.getHost());
-				ldap.setPort(opts, authUri.getPort());
-				ldap.setConnectionSecurity(opts, ad.getDirConnSecurity());
-				ldap.setAdminDn(opts, ad.getDirAdmin());
-				ldap.setAdminPassword(opts, ad.getDirPassword());
-				ldap.setIsCaseSensitive(opts, webappIsTheLatest);
-				if (!StringUtils.isBlank(params.loginDn)) ldap.setLoginDn(opts, params.loginDn);
-				if (!StringUtils.isBlank(params.loginFilter)) ldap.setLoginFilter(opts, params.loginFilter);
-				if (!StringUtils.isBlank(params.userDn)) ldap.setUserDn(opts, params.userDn);
-				if (!StringUtils.isBlank(params.userFilter)) ldap.setUserFilter(opts, params.userFilter);
-				if (!StringUtils.isBlank(params.userIdField)) ldap.setUserIdField(opts, params.userIdField);
-				if (!StringUtils.isBlank(params.userFirstnameField)) ldap.setUserFirstnameField(opts, params.userFirstnameField);
-				if (!StringUtils.isBlank(params.userLastnameField)) ldap.setUserLastnameField(opts, params.userLastnameField);
-				if (!StringUtils.isBlank(params.userDisplayNameField)) ldap.setUserDisplayNameField(opts, params.userDisplayNameField);
-				break;
-			case LdapNethDirectory.SCHEME:
-				params = LangUtils.deserialize(ad.getDirParameters(), new ParamsLdapDirectory(), ParamsLdapDirectory.class);
-				LdapNethConfigBuilder ldapnts = new LdapNethConfigBuilder();
-				ldapnts.setIsCaseSensitive(opts, ad.getDirCaseSensitive());
-				ldapnts.setHost(opts, authUri.getHost());
-				ldapnts.setPort(opts, authUri.getPort());
-				ldapnts.setConnectionSecurity(opts, ad.getDirConnSecurity());
-				ldapnts.setAdminDn(opts, ad.getDirAdmin());
-				ldapnts.setAdminPassword(opts, ad.getDirPassword());
-				if (!StringUtils.isBlank(params.loginDn)) ldapnts.setLoginDn(opts, params.loginDn);
-				if (!StringUtils.isBlank(params.loginFilter)) ldapnts.setLoginFilter(opts, params.loginFilter);
-				if (!StringUtils.isBlank(params.userDn)) ldapnts.setUserDn(opts, params.userDn);
-				if (!StringUtils.isBlank(params.userFilter)) ldapnts.setUserFilter(opts, params.userFilter);
-				if (!StringUtils.isBlank(params.userIdField)) ldapnts.setUserIdField(opts, params.userIdField);
-				if (!StringUtils.isBlank(params.userFirstnameField)) ldapnts.setUserFirstnameField(opts, params.userFirstnameField);
-				if (!StringUtils.isBlank(params.userLastnameField)) ldapnts.setUserLastnameField(opts, params.userLastnameField);
-				if (!StringUtils.isBlank(params.userDisplayNameField)) ldapnts.setUserDisplayNameField(opts, params.userDisplayNameField);
-				break;
-			case ADDirectory.SCHEME:
-				params = LangUtils.deserialize(ad.getDirParameters(), new ParamsLdapDirectory(), ParamsLdapDirectory.class);
-				ADConfigBuilder adir = new ADConfigBuilder();
-				adir.setIsCaseSensitive(opts, ad.getDirCaseSensitive());
-				adir.setHost(opts, authUri.getHost());
-				adir.setPort(opts, authUri.getPort());
-				adir.setConnectionSecurity(opts, ad.getDirConnSecurity());
-				adir.setAdminDn(opts, ad.getDirAdmin());
-				adir.setAdminPassword(opts, ad.getDirPassword());
-				if (!StringUtils.isBlank(params.loginDn)) adir.setLoginDn(opts, params.loginDn);
-				if (!StringUtils.isBlank(params.loginFilter)) adir.setLoginFilter(opts, params.loginFilter);
-				if (!StringUtils.isBlank(params.userDn)) adir.setUserDn(opts, params.userDn);
-				if (!StringUtils.isBlank(params.userFilter)) adir.setUserFilter(opts, params.userFilter);
-				if (!StringUtils.isBlank(params.userFirstnameField)) adir.setUserFirstnameField(opts, params.userFirstnameField);
-				if (!StringUtils.isBlank(params.userLastnameField)) adir.setUserLastnameField(opts, params.userLastnameField);
-				if (!StringUtils.isBlank(params.userDisplayNameField)) adir.setUserDisplayNameField(opts, params.userDisplayNameField);
-				break;
-			case ImapDirectory.SCHEME:
-				ImapConfigBuilder imap = new ImapConfigBuilder();
-				imap.setIsCaseSensitive(opts, ad.getDirCaseSensitive());
-				imap.setHost(opts, authUri.getHost());
-				imap.setPort(opts, authUri.getPort());
-				imap.setConnectionSecurity(opts, ad.getDirConnSecurity());
-				break;
-			case SmbDirectory.SCHEME:
-				SmbConfigBuilder smb = new SmbConfigBuilder();
-				smb.setIsCaseSensitive(opts, ad.getDirCaseSensitive());
-				smb.setHost(opts, authUri.getHost());
-				smb.setPort(opts, authUri.getPort());
-				break;
-			case SftpDirectory.SCHEME:
-				SftpConfigBuilder sftp = new SftpConfigBuilder();
-				sftp.setIsCaseSensitive(opts, ad.getDirCaseSensitive());
-				sftp.setHost(opts, authUri.getHost());
-				sftp.setPort(opts, authUri.getPort());
-				break;
-		}
-		return opts;
-	}
-	
-	public DirectoryOptions setDirectoryOptionsPasswordPolicies(AuthenticationDomain ad, DirectoryOptions opts, DomainBase.PasswordPolicies policies) {
-		URI authUri = ad.getDirUri();
-		switch(authUri.getScheme()) {
-			case WebTopDirectory.SCHEME:
-				WebTopConfigBuilder wtBuilder = new WebTopConfigBuilder();
-				wtBuilder.setPasswordPolicySimilarityLevenThres(opts, WebTopProps.getWTDirectorySimilarityLevenThres(this.properties));
-				wtBuilder.setPasswordPolicySimilarityTokenSize(opts, WebTopProps.getWTDirectorySimilarityTokenSize(this.properties));
-				wtBuilder.setPasswordPolicyComplexity(opts, policies.getComplexity());
-				wtBuilder.setPasswordPolicyMinLength(opts, policies.getMinLength());
-				wtBuilder.setPasswordPolicyNoConsecutiveChars(opts, policies.getAvoidConsecutiveChars());
-				wtBuilder.setPasswordPolicyUsernameSimilarity(opts, policies.getAvoidUsernameSimilarity());
-				break;
-			case LdapWebTopDirectory.SCHEME:
-				LdapWebTopConfigBuilder lwtBuilder = new LdapWebTopConfigBuilder();
-				lwtBuilder.setPasswordPolicySimilarityLevenThres(opts, WebTopProps.getWTDirectorySimilarityLevenThres(this.properties));
-				lwtBuilder.setPasswordPolicySimilarityTokenSize(opts, WebTopProps.getWTDirectorySimilarityTokenSize(this.properties));
-				lwtBuilder.setPasswordPolicyComplexity(opts, policies.getComplexity());
-				lwtBuilder.setPasswordPolicyMinLength(opts, policies.getMinLength());
-				lwtBuilder.setPasswordPolicyNoConsecutiveChars(opts, policies.getAvoidConsecutiveChars());
-				lwtBuilder.setPasswordPolicyUsernameSimilarity(opts, policies.getAvoidUsernameSimilarity());
-				break;
-		}
-		return opts;
 	}
 	
 	public static class FileSystem {
