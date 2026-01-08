@@ -163,20 +163,8 @@ public final class UserProfile {
 		return WT.getProfileData(getId()).getProfileEmailAddress();
 	}
 	
-	/**
-	 * @deprecated use getPersonalEmailAddress instead
-	 */
-	@Deprecated
-	public String getEmailAddress() {
-		return this.getPersonalEmailAddress();
-	}
-	
 	public String getPersonalEmailAddress() {
 		return WT.getProfileData(getId()).getPersonalEmailAddress();
-	}
-	
-	public String getFullEmailAddress() {
-		return WT.getProfileData(getId()).getFullEmailAddress();
 	}
 	
 	public static class Data {
@@ -301,15 +289,6 @@ public final class UserProfile {
 		@Deprecated
 		public InternetAddress getEmail() {
 			return getPersonalEmail();
-		}
-		
-		/**
-		 * @return 
-		 * @deprecated use {@link #getPersonalEmailAddress()} instead.
-		 */
-		@Deprecated
-		public String getEmailAddress() {
-			return getPersonalEmailAddress();
 		}
 		
 		/**
