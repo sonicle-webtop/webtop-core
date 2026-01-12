@@ -369,6 +369,24 @@ public class CoreManager extends BaseManager {
 		return wta.getWebTopManager().lookupAuthenticationContext(targetPid);
 	}
 	
+	/*
+	public void cacheSecretValue(final String key, final String value) {
+		final UserProfileId pid = getTargetProfileId();
+		ensureProfile(true);
+		wta.getWebTopManager().cacheSecretValue(pid, key, value);
+	}
+	*/
+	
+	/**
+	 * Lookup a value stored into the SecretStore for the current UserProfile.
+	 * @param key The key to retrieve.
+	 * @return The value at the key, if any
+	 */
+	public String lookupSecretValue(final String key) {
+		final UserProfileId targetPid = ensureProfile(RunContext.AdminScope.SYSADMIN);
+		return wta.getWebTopManager().lookupSecretValue(targetPid, key);
+	}
+	
 	public Set<String> listInstalledServices() {
 		ServiceManager svcMgr = wta.getServiceManager();
 		return svcMgr.listRegisteredServices();
@@ -2963,8 +2981,7 @@ public class CoreManager extends BaseManager {
 		String username=css.getSmsWebrestUser();
 		if (username==null) username=targetPid.getUserId();
 		String spassword=css.getSmsWebrestPassword();
-		char[] password=spassword!=null?spassword.toCharArray():RunContext.getPrincipal().getPassword();
-		//if (spassword == null) spassword = lookupSecretValue(WebTopManager.PSVKEY_PPW);
+		if (spassword == null) spassword = lookupSecretValue(WebTopManager.PSVKEY_PPW);
 		
 		String sender=css.getSmsSender();
 		String userSender=us.getSmsSender();
@@ -2975,8 +2992,7 @@ public class CoreManager extends BaseManager {
 		boolean isAlpha=StringUtils.isAlpha(sender);
 		String fromMobile=isAlpha?null:sender;
 		String fromName=isAlpha?sender:null;
-		sms.send(fromName, fromMobile, number, text, username, password);
-		//sms.send(fromName, fromMobile, number, text, username, spassword!=null ? spassword.toCharArray() : null);
+		sms.send(fromName, fromMobile, number, text, username, spassword!=null ? spassword.toCharArray() : null);
 	}
 	
 	/**
@@ -3017,12 +3033,8 @@ public class CoreManager extends BaseManager {
 		String username=us.getPbxUsername();
 		if (username==null) username=targetPid.getUserId();
 		String spassword=us.getPbxPassword();
-		char[] password=spassword!=null?spassword.toCharArray():RunContext.getPrincipal().getPassword();
-		
-		pbx.call(number, username, password);
-		
-		//if (spassword == null) spassword = lookupSecretValue(WebTopManager.PSVKEY_PPW);
-		//pbx.call(number, username, spassword!=null ? spassword.toCharArray() : null);
+		if (spassword == null) spassword = lookupSecretValue(WebTopManager.PSVKEY_PPW);
+		pbx.call(number, username, spassword!=null ? spassword.toCharArray() : null);
 	}
 	
 	/**

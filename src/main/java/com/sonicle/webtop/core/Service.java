@@ -60,6 +60,7 @@ import com.sonicle.webtop.core.app.DocEditorManager;
 import com.sonicle.webtop.core.app.OTPManager;
 import com.sonicle.webtop.core.app.UIBoot;
 import com.sonicle.webtop.core.app.WT;
+import com.sonicle.webtop.core.app.WebTopManager;
 import com.sonicle.webtop.core.app.WebTopSession;
 import com.sonicle.webtop.core.app.io.dbutils.FilterInfo;
 import com.sonicle.webtop.core.app.io.dbutils.RowsAndCols;
@@ -244,7 +245,7 @@ public class Service extends BaseService implements EventListener {
 			final String xmppResource = getWts().getId() + "@" + WT.getPlatformName();
 			final String authDomainName = WT.getAuthDomainName(pid.getDomainId());
 			//TODO: which domain-name is needed here?
-			XMPPTCPConnectionConfiguration.Builder builder = XMPPHelper.setupConfigBuilder(ss.getXMPPHost(), ss.getXMPPPort(), authDomainName, principal.getUserId(), new String(principal.getPassword()), xmppResource);
+			XMPPTCPConnectionConfiguration.Builder builder = XMPPHelper.setupConfigBuilder(ss.getXMPPHost(), ss.getXMPPPort(), authDomainName, principal.getUserId(), WT.lookupSecretStoreValue(pid, WebTopManager.PSVKEY_PPW), xmppResource);
 			final String nickname = profile.getDisplayName();
 			xmppCli = new XMPPClient(builder, ss.getXMPPMucSubdomain(), nickname, new XMPPServiceListenerImpl(), history);
 		}
@@ -1983,7 +1984,8 @@ public class Service extends BaseService implements EventListener {
 					}
 					final Principal p = getEnv().getProfile().getPrincipal();
 					final String authInternetName = WT.getAuthDomainName(getEnv().getProfile().getDomainId());
-					new JsonResult(new JsIMInit(ps, statusMessage, p.getUserId()+"@"+authInternetName, xmppCli.getUserJid().toString(), p.getPassword())).printTo(out);
+					final String secret = coreMgr.lookupSecretValue(WebTopManager.PSVKEY_PPW);
+					new JsonResult(new JsIMInit(ps, statusMessage, p.getUserId()+"@"+authInternetName, xmppCli.getUserJid().toString(), secret)).printTo(out);
 					
 				} else {
 					throw new WTException("XMPPClient not available");

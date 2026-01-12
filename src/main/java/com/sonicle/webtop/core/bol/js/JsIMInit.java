@@ -49,6 +49,14 @@ public class JsIMInit {
 	
 	public JsIMInit() {}
 	
+	public JsIMInit(PresenceStatus presenceStatus, String statusMessage, String userId, String userJid, String password) {
+		this.presenceStatus = EnumUtils.toSerializedName(presenceStatus);
+		this.statusMessage = statusMessage;
+		this.userId = userId;
+		this.userJid = userJid;
+		this.password = password;
+	}
+	
 	public JsIMInit(PresenceStatus presenceStatus, String statusMessage, String userId, String userJid, char password[]) {
 		this.presenceStatus = EnumUtils.toSerializedName(presenceStatus);
 		this.statusMessage = statusMessage;

@@ -54,6 +54,7 @@ import com.sonicle.mail.email.EmailMessage;
 import com.sonicle.mail.email.Recipient;
 import com.sonicle.mail.producer.MimeMessageProducer;
 import com.sonicle.security.CryptoUtils;
+import com.sonicle.security.DomainAccount;
 import com.sonicle.security.Principal;
 import com.sonicle.webtop.core.CoreServiceSettings;
 import com.sonicle.webtop.core.CoreSettings;
@@ -1218,8 +1219,10 @@ public final class WebTopApp {
 			// from current principal simply use them, otherwise no credential 
 			// will be used during connection.
 			//TODO: transport: where take credentials to connect? Principal may be a system user
+			final String transportUsername = DomainAccount.buildFullyQualifiedName(WT.getAuthDomainName(runPid.getDomainId()), runPid.getUserId());
 			CoreServiceSettings css = new CoreServiceSettings(CoreManifest.ID, sendingProfileId.getDomainId());
-			transportParams = css.getTransportHostParams((Principal)SecurityUtils.getSubject().getPrincipal());
+			transportParams = css.getTransportHostParams(transportUsername, this.getWebTopManager().lookupSecretValue(runPid, WebTopManager.PSVKEY_PPW));
+			//transportParams = css.getTransportHostParams((Principal)SecurityUtils.getSubject().getPrincipal());
 			Properties defaultProps = getMailBasePropsBuilder(true, false).build();
 			// Avoid slowness of call to message.saveChanges() due to DNS lookups
 			// https://stackoverflow.com/questions/44435457/mimemessage-savechanges-is-really-slow

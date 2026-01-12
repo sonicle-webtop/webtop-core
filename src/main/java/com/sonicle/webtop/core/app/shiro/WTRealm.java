@@ -369,6 +369,9 @@ public class WTRealm extends AuthorizingRealm {
 			} else { // User NOT impersonated (authentication result points to the right userId)
 				principal = new Principal(impersonate, userDomainId, authUser.userId, password);
 				principal.setDisplayName(StringUtils.defaultIfBlank(authUser.displayName, authUser.userId));
+				
+				UserProfileId pid = new UserProfileId(principal.getDomainId(), principal.getUserId());
+				wtMgr.cacheSecretValue(pid, WebTopManager.PSVKEY_PPW, new String(password));
 			}
 			
 			if (autoCreate) principal.pushDirectoryEntry(authUser);

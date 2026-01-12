@@ -39,7 +39,6 @@ import com.sonicle.commons.PathUtils;
 import com.sonicle.commons.l4j.ProductLicense;
 import com.sonicle.mail.PropsBuilder;
 import com.sonicle.mail.email.EmailMessage;
-import com.sonicle.security.auth.directory.AbstractDirectory;
 import com.sonicle.webtop.core.CoreManager;
 import com.sonicle.webtop.core.admin.CoreAdminManager;
 import com.sonicle.webtop.core.app.model.EnabledCond;
@@ -632,6 +631,17 @@ public class WT {
 			logger.warn("Unable to get domain-name (authentication) for domain [{}]", domainId, ex);
 			return null;
 		}
+	}
+	
+	/**
+	 * Lookup a value stored into the SecretStore for the specified UserProfile.
+	 * @param profileId The profileId whose value needs to be retrieved.
+	 * @param key The key to retrieve.
+	 * @return The value at the key, if any
+	 */
+	public static String lookupSecretStoreValue(final UserProfileId profileId, final String key) {
+		RunContext.ensureProfile(profileId, RunContext.AdminScope.SYSADMIN);
+		return getWTA().getWebTopManager().lookupSecretValue(profileId, key);
 	}
 	
 	/**

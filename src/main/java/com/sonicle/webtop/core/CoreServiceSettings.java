@@ -136,11 +136,13 @@ public class CoreServiceSettings extends BaseServiceSettings {
 		return getString(ADDON_NOTIFIER_URL, null);
 	}
 	
+	/*
 	public TransportHostParams getTransportHostParams(final Principal principal) {
 		final char[] cpass = principal.getPassword();
 		final String username = principal.toFullyQualifiedUsername(WT.getAuthDomainName(principal.getDomainId()));
 		return getTransportHostParams(username, (cpass != null) ? new String(cpass) : null);
 	}
+	*/
 	
 	public TransportHostParams getTransportHostParams(final String defaultUsername, final String defaultPassword) {
 		TransportHostParams thp = new TransportHostParams(getSMTPHost(), getSMTPPort(), TransportProtocol.parse("SMTP", isSMTPStartTLS()));

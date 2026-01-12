@@ -235,9 +235,11 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 	public static final String PECACCOUNT_ROLEID = "pec-account"; // Role for track users for PEC accounts
 	public static final Set<String> BUILT_IN_ROLES = Stream.of(DOMAINADMIN_ROLEID, PECACCOUNT_ROLEID).collect(Collectors.toSet());
 	public static final Set<String> BUILT_IN_GROUPS = Stream.of(GROUPID_USERS, GROUPID_PEC_ACCOUNTS).collect(Collectors.toSet());
+	public static final String PSVKEY_PPW = "ppw";
 	
 	private final CacheDomainInfo domainCache;
 	private final LoadingCache<String, AuthContext> domainAuthenticationContextCache = Caffeine.newBuilder().build(new AuthenticationContextCacheLoader());
+	private final Cache<String, String> profileSecretValueCache = Caffeine.newBuilder().build();
 	private final KeyedReentrantLocks<String> lockSecretGet = new KeyedReentrantLocks<>();
 	private final SubjectSidCache subjectSidCache;
 	private final LoadingCache<UserProfileId, UserProfile.PersonalInfo> profileToPersonalInfoCache = Caffeine.newBuilder().build(new ProfilePersonalInfoCacheLoader());
@@ -270,6 +272,7 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 	protected void doAppManagerCleanup() {
 		subjectSidCache.cleanup();
 		cleanupProfileCache();
+		profileSecretValueCache.cleanUp();
 		domainAuthenticationContextCache.cleanUp();
 		domainCache.clear();
 	}
@@ -828,6 +831,18 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 			}
 			return null;
 		}
+	}
+	
+	public void cacheSecretValue(final UserProfileId profileId, final String key, final String value) {
+		final String cacheKey = StringUtils.defaultIfBlank(key, "") + "_" + profileId.toString();
+		profileSecretValueCache.put(cacheKey, getWebTopApp().encryptData(value));
+	}
+
+	public String lookupSecretValue(final UserProfileId profileId, final String key) {
+		final String cacheKey = StringUtils.defaultIfBlank(key, "") + "_" + profileId.toString();
+		String value = profileSecretValueCache.getIfPresent(cacheKey);
+		if (value != null) value = getWebTopApp().decryptData(value);
+		return value;
 	}
 	
 	public String lookupSubjectSidQuietly(final UserProfileId subjectProfileId, final GenericSubject.Type... validTypes) {
@@ -4825,15 +4840,15 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 		UserProfile.PersonalInfo pinfo = lookupProfilePersonalInfo(profileId, true);
 		
 		DomainAccount internetAccount = new DomainAccount(authDomainName, profileId.getUserId());
-		InternetAddress profileIa = InternetAddressUtils.toInternetAddress(profileId.getUserId(), authDomainName, vuser.getDisplayName());
+		InternetAddress authIa = InternetAddressUtils.toInternetAddress(profileId.getUserId(), authDomainName, vuser.getDisplayName());
 		InternetAddress personalIa = InternetAddressUtils.toInternetAddress(pinfo.getEmail(), vuser.getDisplayName());
 		if (personalIa == null) {
-			personalIa = profileIa;
+			personalIa = authIa;
 			LOGGER.warn("User does not have a valid email in personal info. Check it! [{}]", profileId.toString());
 		}
 		return new UserProfile.Data(internetAccount, vuser.getDisplayName(), cus.getLanguageTag(), cus.getTimezone(), 
 			cus.getStartDay(), cus.getShortDateFormat(), cus.getLongDateFormat(), cus.getShortTimeFormat(), cus.getLongTimeFormat(), 
-			profileIa, personalIa);
+			authIa, personalIa);
 	}
 	
 	private OUserInfo createUserInfo(UserProfile.PersonalInfo upi) {
