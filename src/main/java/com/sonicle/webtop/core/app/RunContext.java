@@ -59,6 +59,10 @@ import org.apache.shiro.web.subject.WebSubject;
  */
 public class RunContext {
 	
+	public static enum AdminScope {
+		SYSADMIN, DOMAINADMIN, WTADMIN;
+	}
+	
 	public static UserProfileId getSysAdminProfileId() {
 		return new UserProfileId(WebTopManager.SYSADMIN_DOMAINID, WebTopManager.SYSADMIN_USERID);
 	}
@@ -348,50 +352,117 @@ public class RunContext {
 	}
 	
 	/**
-	 * Checks if executing Subject has role of WebTop Administrator 
-	 * and belongs to specified Domain.
-	 * @param domainId The Domain to be evaluated.
-	 * @return `true` if evaluation passed, `false` otherwise
+	 * Make sure that running Subject is an Admin of the specified domain.
+	 * @param matchDomainId The domain ID to match.
+	 * @return 
+	 * @throws AuthException When Subject's domain does not match.
 	 */
-	public static boolean isWebTopDomainAdmin(final String domainId) {
-		return isWebTopDomainAdmin(getSubject(), domainId);
+	public static boolean isWebTopDomainAdmin(final String matchDomainId) {
+		return isWebTopDomainAdmin(getSubject(), matchDomainId);
 	}
 	
 	/**
-	 * Checks if passed Subject has role of WebTop Administrator 
-	 * and belongs to specified Domain.
+	 * Checks if passed Subject has role of Admin of the specified domain.
 	 * @param subject The Subject to be evaluated.
-	 * @param domainId The Domain to be evaluated.
-	 * @return `true` if evaluation passed, `false` otherwise
+	 * @param matchDomainId The domain ID to match.
+	 * @return `true` if passed subject is a SysAdmin of an Admin of passed domain ID.
+	 * @throws AuthException When Subject's domain does not match.
 	 */
-	public static boolean isWebTopDomainAdmin(final Subject subject, final String domainId) {
+	public static boolean isWebTopDomainAdmin(final Subject subject, final String matchDomainId) {
 		Check.notNull(subject, "subject");
-		Check.notEmpty(domainId, "domainId");
-		return isSysAdmin(subject) || (isWebTopAdmin(subject) && getRunProfileId(subject).hasDomain(domainId));
+		Check.notEmpty(matchDomainId, "matchDomainId");
+		return isSysAdmin(subject) || (isWebTopAdmin(subject) && getPrincipal(subject).hasDomainId(matchDomainId));
 	}
 	
 	/**
-	 * Make sure that executing Subject has role of WebTop Administrator 
-	 * and belongs to specified Domain.
-	 * @param domainId The Domain to be evaluated.
-	 * @throws AuthException 
+	 * Make sure that running Subject is an Admin and its domain ID matches with the passed one.
+	 * @param matchDomainId The domain ID to match.
+	 * @throws AuthException When Subject's domain does not match.
 	 */
-	public static void ensureIsWebTopDomainAdmin(final String domainId) throws AuthException {
-		ensureIsWebTopDomainAdmin(getSubject(), domainId);
+	public static void ensureWebTopDomainAdmin(final String matchDomainId) throws AuthException {
+		ensureWebTopDomainAdmin(getSubject(), matchDomainId);
 	}
 	
 	/**
-	 * Make sure that specified Subject has role of WebTop Administrator 
-	 * and belongs to specified Domain.
+	 * Make sure that specified Subject is an Admin and its domain ID matches with the passed one.
 	 * @param subject The Subject to be evaluated.
-	 * @param domainId The Domain to be evaluated.
-	 * @throws AuthException 
+	 * @param matchDomainId The domain ID to match.
+	 * @throws AuthException When Subject's domain does not match.
 	 */
-	public static void ensureIsWebTopDomainAdmin(final Subject subject, final String domainId) throws AuthException {
+	public static void ensureWebTopDomainAdmin(final Subject subject, final String matchDomainId) throws AuthException {
+		ensureIsWebTopAdmin(subject);
+		ensureProfileDomain(subject, matchDomainId, RunContext.AdminScope.DOMAINADMIN);
+	}
+	
+	/**
+	 * Make sure that the running profile matches the specified one.
+	 * @param matchProfileId The profileId to match.
+	 * @param allowAdminScope The scope to use when checks should be ignored for Admin subjects.
+	 * @throws AuthException When profiles does not match.
+	 */
+	public static void ensureProfile(final UserProfileId matchProfileId, final AdminScope allowAdminScope) throws AuthException {
+		ensureProfile(getSubject(), matchProfileId, allowAdminScope);
+	}
+	
+	/**
+	 * Make sure that specified Subject profile matches the passed one.
+	 * @param subject The Subject to be evaluated.
+	 * @param matchProfileId The profileId to match.
+	 * @param allowAdminScope The scope to use when checks should be ignored for Admin subjects.
+	 * @throws AuthException When profiles does not match.
+	 */
+	public static void ensureProfile(final Subject subject, final UserProfileId matchProfileId, final AdminScope allowAdminScope) throws AuthException {
 		Check.notNull(subject, "subject");
-		Check.notEmpty(domainId, "domainId");
-		ensureIsWebTopAdmin(subject.getPrincipals());
-		if (!isSysAdmin(subject) && !getRunProfileId(subject).hasDomain(domainId)) throw new AuthException("WebTopAdmin must belong to '{}' domain", domainId);
+		Check.notNull(matchProfileId, "matchProfileId");
+		if (allowAdminScope != null) {
+			if (AdminScope.SYSADMIN.equals(allowAdminScope)) {
+				if (isSysAdmin(subject)) return;
+			} else if (AdminScope.DOMAINADMIN.equals(allowAdminScope)) {
+				if (isWebTopDomainAdmin(subject, matchProfileId.getDomainId())) return;
+				//if (isSysAdmin(subject)) return;
+				//if (isWebTopAdmin(subject) && principal.hasDomainId(matchProfileId.getDomainId())) return;
+			} else if (AdminScope.WTADMIN.equals(allowAdminScope)) {
+				if (isWebTopAdmin(subject)) return;
+			}
+		}
+		final Principal principal = getPrincipal(subject);
+		final UserProfileId runPid = new UserProfileId(principal.getDomainId(), principal.getUserId());
+		if (!runPid.equals(matchProfileId)) throw new AuthException("Running Subject [{}] does NOT match with required one [{}]", runPid, matchProfileId);
+	}
+	
+	/**
+	 * Make sure that the running profile's domain ID and passed profile's domain ID are the same.
+	 * @param matchDomainId The domain ID to match.
+	 * @param allowAdminScope The scope to use when checks should be ignored for Admin subjects.
+	 * @throws AuthException When profile's domain does not match.
+	 */
+	public static void ensureProfileDomain(final String matchDomainId, final AdminScope allowAdminScope) throws AuthException {
+		ensureProfileDomain(getSubject(), matchDomainId, allowAdminScope);
+	}
+	
+	/**
+	 * Make sure that specified Subject's domain ID matches the passed one.
+	 * @param subject The Subject to be evaluated.
+	 * @param matchDomainId The domain ID to match.
+	 * @param allowAdminScope The scope to use when checks should be ignored for Admin subjects.
+	 * @throws AuthException When Subject's domain does not match.
+	 */
+	public static void ensureProfileDomain(final Subject subject, final String matchDomainId, final AdminScope allowAdminScope) throws AuthException {
+		Check.notNull(subject, "subject");
+		Check.notEmpty(matchDomainId, "matchDomainId");
+		if (allowAdminScope != null) {
+			if (AdminScope.SYSADMIN.equals(allowAdminScope)) {
+				if (isSysAdmin(subject)) return;
+			} else if (AdminScope.DOMAINADMIN.equals(allowAdminScope)) {
+				if (isWebTopDomainAdmin(subject, matchDomainId)) return;
+				//if (isSysAdmin(subject)) return;
+				//if (isWebTopAdmin(subject) && principal.hasDomainId(matchDomainId)) return;
+			} else if (AdminScope.WTADMIN.equals(allowAdminScope)) {
+				if (isWebTopAdmin(subject)) return;
+			}
+		}
+		final Principal principal = getPrincipal(subject);
+		if (!principal.hasDomainId(matchDomainId)) throw new AuthException("Running Subject's domain [{}] does NOT match with required one [{}]", principal.getDomainId(), matchDomainId);
 	}
 	
 	public static boolean isPermitted(boolean strict, String ref) {

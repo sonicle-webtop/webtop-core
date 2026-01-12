@@ -355,10 +355,8 @@ public class CoreManager extends BaseManager {
 	 * @throws WTException 
 	 */
 	public AbstractDirectory getAuthDirectory() throws WTException {
-		final UserProfileId pid = getTargetProfileId();
-		// SysAdmin can access all, others are locked on their domains
-		if (!RunContext.isSysAdmin()) ensureProfileDomain(pid.getDomainId());
-		return wta.getWebTopManager().getAuthDirectory(pid);
+		final UserProfileId targetPid = ensureProfileDomain(RunContext.AdminScope.SYSADMIN);
+		return wta.getWebTopManager().getAuthDirectory(targetPid);
 	}
 	
 	public String getAuthDirectoryScheme() throws WTException {
@@ -367,27 +365,8 @@ public class CoreManager extends BaseManager {
 	}
 	
 	public AuthContext getAuthenticationContext() {
-		final UserProfileId pid = getTargetProfileId();
-		if (!RunContext.isSysAdmin()) ensureProfileDomain(pid.getDomainId());
-		return wta.getWebTopManager().lookupAuthenticationContext(pid);
-	}
-	
-	@Deprecated
-	public AbstractDirectory getAuthDirectory(String domainId) throws WTException {
-		ODomain domain = getDomain(domainId);
-		if(domain == null) throw new WTException("Domain not found [{0}]", domainId);
-		
-		return getAuthDirectory(domain);
-	}
-	
-	@Deprecated
-	public AbstractDirectory getAuthDirectory(ODomain domain) throws WTException {
-		if (RunContext.isSysAdmin()) {
-			return wta.getWebTopManager().getAuthDirectory(domain.getDirUri());
-		} else {
-			ensureUserDomain(domain.getDomainId());
-			return wta.getWebTopManager().getAuthDirectory(domain.getDirUri());
-		}
+		final UserProfileId targetPid = ensureProfileDomain(RunContext.AdminScope.SYSADMIN);
+		return wta.getWebTopManager().lookupAuthenticationContext(targetPid);
 	}
 	
 	public Set<String> listInstalledServices() {
@@ -476,21 +455,13 @@ public class CoreManager extends BaseManager {
 	public ODomain getDomain(String domainId) throws WTException {
 		WebTopManager wtmgr = wta.getWebTopManager();
 		
-		if (RunContext.isSysAdmin()) {
-			return wtmgr.OLD_getDomain(domainId);
-		} else {
-			ensureUserDomain(domainId);
-			return wtmgr.OLD_getDomain(domainId);
-		}
+		RunContext.ensureProfileDomain(domainId, RunContext.AdminScope.DOMAINADMIN);
+		return wtmgr.OLD_getDomain(domainId);
 	}
 	
 	public DomainBase.PasswordPolicies getDomainPasswordPolicies() throws WTException {
-		WebTopManager wtMgr = wta.getWebTopManager();
-		String domainId = getTargetProfileId().getDomainId();
-		
-		// SysAdmin can access all, others are locked on their domains
-		if (!RunContext.isSysAdmin()) ensureProfileDomain(domainId);
-		return wtMgr.getDomainPasswordPolicies(domainId);
+		final UserProfileId pid = ensureProfileDomain(RunContext.AdminScope.SYSADMIN);
+		return wta.getWebTopManager().getDomainPasswordPolicies(pid.getDomainId());
 	}
 	
 	public List<PublicImage> listDomainPublicImages() throws WTException {
@@ -507,11 +478,8 @@ public class CoreManager extends BaseManager {
 	 */
 	public Set<String> listResourceIds(final EnabledCond enabled) throws WTException {
 		Check.notNull(enabled, "enabled");
-		WebTopManager wtMgr = wta.getWebTopManager();
-		
-		String targetDomainId = getTargetProfileId().getDomainId();
-		ensureProfileDomain(targetDomainId);
-		return wtMgr.listResourceIds(targetDomainId, enabled);
+		final UserProfileId targetPid = ensureProfileDomain(RunContext.AdminScope.SYSADMIN);
+		return wta.getWebTopManager().listResourceIds(targetPid.getDomainId(), enabled);
 	}
 	
 	/**
@@ -522,11 +490,8 @@ public class CoreManager extends BaseManager {
 	 */
 	public Map<String, Resource> listResources(final EnabledCond enabled) throws WTException {
 		Check.notNull(enabled, "enabled");
-		WebTopManager wtMgr = wta.getWebTopManager();
-		
-		String targetDomainId = getTargetProfileId().getDomainId();
-		ensureProfileDomain(targetDomainId);
-		return wtMgr.listResources(targetDomainId, enabled);
+		final UserProfileId targetPid = ensureProfileDomain(RunContext.AdminScope.SYSADMIN);
+		return wta.getWebTopManager().listResources(targetPid.getDomainId(), enabled);
 	}
 	
 	/**
@@ -538,11 +503,8 @@ public class CoreManager extends BaseManager {
 	 */
 	public Resource getResource(final String resourceId, final BitFlags<ResourceGetOption> options) throws WTException {
 		Check.notEmpty(resourceId, "resourceId");
-		WebTopManager wtMgr = wta.getWebTopManager();
-		
-		String targetDomainId = getTargetProfileId().getDomainId();
-		ensureProfileDomain(targetDomainId);
-		return wtMgr.getResource(targetDomainId, resourceId, options);
+		final UserProfileId targetPid = ensureProfileDomain(RunContext.AdminScope.SYSADMIN);
+		return wta.getWebTopManager().getResource(targetPid.getDomainId(), resourceId, options);
 	}
 	
 	/**
@@ -553,11 +515,8 @@ public class CoreManager extends BaseManager {
 	 */
 	public boolean getResourceEnabled(final String resourceId) throws WTException {
 		Check.notEmpty(resourceId, "resourceId");
-		WebTopManager wtMgr = wta.getWebTopManager();
-		
-		String targetDomainId = getTargetProfileId().getDomainId();
-		ensureProfileDomain(targetDomainId);
-		return wtMgr.getResourceEnabled(targetDomainId, resourceId);
+		final UserProfileId targetPid = ensureProfileDomain(RunContext.AdminScope.SYSADMIN);
+		return wta.getWebTopManager().getResourceEnabled(targetPid.getDomainId(), resourceId);
 	}
 	
 	/**
@@ -569,11 +528,9 @@ public class CoreManager extends BaseManager {
 	 */
 	public ResourcePermissions getResourcePermissions(final String resourceId, final boolean subjectsAsSID) throws WTException {
 		Check.notEmpty(resourceId, "resourceId");
-		WebTopManager wtMgr = wta.getWebTopManager();
-		String domainId = getTargetProfileId().getDomainId();
-
-		RunContext.ensureIsWebTopDomainAdmin(domainId);
-		return wtMgr.getResourcePermissions(domainId, resourceId, subjectsAsSID);
+		
+		final UserProfileId targetPid = ensureWebTopDomainAdmin();
+		return wta.getWebTopManager().getResourcePermissions(targetPid.getDomainId(), resourceId, subjectsAsSID);
 	}
 	
 	/**
@@ -643,17 +600,14 @@ public class CoreManager extends BaseManager {
 	*/
 	
 	public Map<String, GenericSubject> listSubjects(final boolean users, final boolean resources, final boolean groups, final boolean roles, final boolean useProfileIdAsKey) throws WTException {
-		WebTopManager wtMgr = wta.getWebTopManager();
-		String domainId = getTargetProfileId().getDomainId();
-		
-		ensureProfileDomain();
+		final UserProfileId targetPid = ensureProfileDomain(RunContext.AdminScope.WTADMIN);
 		BitFlags<SubjectGetOption> options = new BitFlags<>(SubjectGetOption.class);
 		if (users) options.set(SubjectGetOption.USERS);
 		if (resources) options.set(SubjectGetOption.RESOURCES);
 		if (groups) options.set(SubjectGetOption.GROUPS);
 		if (roles) options.set(SubjectGetOption.ROLES);
 		if (useProfileIdAsKey) options.set(SubjectGetOption.PID_AS_KEY);
-		return wtMgr.listSubjects(domainId, options);
+		return wta.getWebTopManager().listSubjects(targetPid.getDomainId(), options);
 	}
 	
 	/**
@@ -678,49 +632,35 @@ public class CoreManager extends BaseManager {
 	
 	public Set<String> listUserIds(final EnabledCond enabled) throws WTException {
 		Check.notNull(enabled, "enabled");
-		WebTopManager wtMgr = wta.getWebTopManager();
-		String domainId = getTargetProfileId().getDomainId();
-		
-		ensureProfileDomain(domainId);
-		return wtMgr.listUserIds(domainId, enabled);
+		final UserProfileId targetPid = ensureProfileDomain(RunContext.AdminScope.SYSADMIN);
+		return wta.getWebTopManager().listUserIds(targetPid.getDomainId(), enabled);
 	}
 	
 	public Set<UserProfileId> listUserProfileIds(final EnabledCond enabled) throws WTException {
 		Check.notNull(enabled, "enabled");
-		WebTopManager wtMgr = wta.getWebTopManager();
-		String domainId = getTargetProfileId().getDomainId();
-		
-		ensureProfileDomain(domainId);
-		return wtMgr.listUserIds(domainId, enabled)
+		final UserProfileId targetPid = ensureProfileDomain(RunContext.AdminScope.SYSADMIN);
+		return wta.getWebTopManager().listUserIds(targetPid.getDomainId(), enabled)
 			.stream()
-			.map((userId) -> new UserProfileId(domainId, userId))
+			.map((userId) -> new UserProfileId(targetPid.getDomainId(), userId))
 			.collect(Collectors.toSet());
 	}
 	
 	public Map<String, User> listUsers(final EnabledCond enabled) throws WTException {
 		Check.notNull(enabled, "enabled");
-		WebTopManager wtMgr = wta.getWebTopManager();
-		String domainId = getTargetProfileId().getDomainId();
-		
-		ensureProfileDomain(domainId);
-		return wtMgr.listUsers(domainId, enabled);
+		final UserProfileId targetPid = ensureProfileDomain(RunContext.AdminScope.SYSADMIN);
+		return wta.getWebTopManager().listUsers(targetPid.getDomainId(), enabled);
 	}
 	
 	public User getUser(final BitFlags<UserGetOption> options) throws WTException {
 		Check.notNull(options, "options");
-		WebTopManager wtMgr = wta.getWebTopManager();
-		UserProfileId pid = getTargetProfileId();
-		
-		ensureProfileDomain(pid.getDomainId());
-		return wtMgr.getUser(pid.getDomainId(), pid.getUserId(), options);
+		final UserProfileId targetPid = ensureProfileDomain(RunContext.AdminScope.SYSADMIN);
+		return wta.getWebTopManager().getUser(targetPid.getDomainId(), targetPid.getUserId(), options);
 	}
 	
 	public Set<UserProfileId> expandSubjectsToUserProfiles(final Collection<String> subjects, final boolean subjectsAsSID) throws WTException {
-		WebTopManager wtMgr = wta.getWebTopManager();
-		String domainId = getTargetProfileId().getDomainId();
-		
-		RunContext.ensureIsWebTopDomainAdmin(domainId);
-		return wtMgr.expandSubjectsToUserProfiles(domainId, subjects, subjectsAsSID);
+		RunContext.ensureIsWebTopAdmin();
+		final UserProfileId targetPid = ensureProfileDomain(RunContext.AdminScope.SYSADMIN);
+		return wta.getWebTopManager().expandSubjectsToUserProfiles(targetPid.getDomainId(), subjects, subjectsAsSID);
 	}
 	
 	/**
@@ -730,13 +670,8 @@ public class CoreManager extends BaseManager {
 	@Deprecated public OUser getUser(UserProfileId pid) throws WTException {
 		WebTopManager wtmgr = wta.getWebTopManager();
 		
-		if(RunContext.isSysAdmin()) {
-			return wtmgr.getUser(pid);
-		} else {
-			//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
-			ensureUserDomain(pid.getDomainId());
-			return wtmgr.getUser(pid);
-		}
+		RunContext.ensureProfileDomain(pid.getDomainId(), RunContext.AdminScope.DOMAINADMIN);
+		return wtmgr.getUser(pid);
 	}
 	
 	/**
@@ -765,7 +700,7 @@ public class CoreManager extends BaseManager {
 	 */
 	public String lookupUserSid(final UserProfileId profileId) throws WTException {
 		Check.notNull(profileId, "profileId");
-		if (!RunContext.isSysAdmin()) ensureUserDomain(profileId.getDomainId());
+		RunContext.ensureProfileDomain(profileId.getDomainId(), RunContext.AdminScope.WTADMIN);
 		return wta.getWebTopManager().lookupSubjectSid(profileId, GenericSubject.Type.USER);
 	}
 	
@@ -778,7 +713,7 @@ public class CoreManager extends BaseManager {
 	public UserProfileId lookupUserProfileIdBySid(final String userSid) throws WTException {
 		Check.notNull(userSid, "userSid");
 		UserProfileId pid = wta.getWebTopManager().lookupSubjectProfile(userSid, GenericSubject.Type.USER);
-		if (pid != null) ensureUserDomain(pid.getDomainId());
+		if (pid != null) RunContext.ensureProfileDomain(pid.getDomainId(), RunContext.AdminScope.SYSADMIN);
 		return pid;
 	}
 	
@@ -787,39 +722,27 @@ public class CoreManager extends BaseManager {
 	}
 	
 	public UserProfile.PersonalInfo lookupProfilePersonalInfo(final UserProfileId profileId) throws WTException {
-		if (!RunContext.isSysAdmin()) ensureUserDomain(profileId.getDomainId());
+		RunContext.ensureProfileDomain(profileId.getDomainId(), RunContext.AdminScope.SYSADMIN);
 		return wta.getWebTopManager().lookupProfilePersonalInfo(profileId, true);
 	}
 	
 	public boolean updateUserDisplayName(String displayName) throws WTException {
 		WebTopManager wtmgr = wta.getWebTopManager();
-		
-		if(RunContext.isSysAdmin()) {
-			return wtmgr.updateUserDisplayName(getTargetProfileId(), displayName);
-		} else {
-			//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
-			ensureUser();
-			return wtmgr.updateUserDisplayName(getTargetProfileId(), displayName);
-		}
+		ensureProfile(RunContext.AdminScope.DOMAINADMIN);
+		return wtmgr.updateUserDisplayName(getTargetProfileId(), displayName);
 	}
 	
 	public boolean updateUserPersonalInfo(UserProfile.PersonalInfo userPersonalInfo) throws WTException {
 		WebTopManager wtmgr = wta.getWebTopManager();
-		
-		if(RunContext.isSysAdmin()) {
-			return wtmgr.updateUserPersonalInfo(getTargetProfileId(), userPersonalInfo);
-		} else {
-			//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
-			ensureProfile();
-			return wtmgr.updateUserPersonalInfo(getTargetProfileId(), userPersonalInfo);
-		}
+		ensureProfile(RunContext.AdminScope.DOMAINADMIN);
+		return wtmgr.updateUserPersonalInfo(getTargetProfileId(), userPersonalInfo);
 	}
 	
 	public void updateUserPassword(char[] oldPassword, char[] newPassword) throws WTException {
 		WebTopManager wtMgr = wta.getWebTopManager();
 		
 		try {
-			ensureProfile();
+			ensureProfile(RunContext.AdminScope.DOMAINADMIN);
 			if (oldPassword == null) throw new WTException("Old password must be provided");
 			wtMgr.updateUserPassword(getTargetProfileId().getDomainId(), getTargetProfileId().getUserId(), oldPassword, newPassword, false);
 			
@@ -1038,7 +961,7 @@ public class CoreManager extends BaseManager {
 		Connection con = null;
 		
 		try {
-			ensureProfileDomain(activity.getDomainId());
+			RunContext.ensureProfileDomain(activity.getDomainId(), RunContext.AdminScope.SYSADMIN);
 			RunContext.ensureIsPermitted(false, SERVICE_ID, "ACTIVITIES", "MANAGE");
 			
 			con = WT.getCoreConnection();
@@ -1066,7 +989,7 @@ public class CoreManager extends BaseManager {
 		Connection con = null;
 		
 		try {
-			ensureProfileDomain(activity.getDomainId());
+			RunContext.ensureProfileDomain(activity.getDomainId(), RunContext.AdminScope.SYSADMIN);
 			RunContext.ensureIsPermitted(false, SERVICE_ID, "ACTIVITIES", "MANAGE");
 			
 			con = WT.getCoreConnection();
@@ -1098,7 +1021,7 @@ public class CoreManager extends BaseManager {
 		try {
 			Activity act = getActivity(activityId);
 			if (act == null) throw new WTNotFoundException("Activity not found [{}]", activityId);
-			ensureProfileDomain(act.getDomainId());
+			RunContext.ensureProfileDomain(act.getDomainId(), RunContext.AdminScope.SYSADMIN);
 			RunContext.ensureIsPermitted(false, SERVICE_ID, "ACTIVITIES", "MANAGE");
 			
 			con = WT.getCoreConnection();
@@ -1183,7 +1106,7 @@ public class CoreManager extends BaseManager {
 		Connection con = null;
 		
 		try {
-			ensureProfileDomain(causal.getDomainId());
+			RunContext.ensureProfileDomain(causal.getDomainId(), RunContext.AdminScope.SYSADMIN);
 			RunContext.ensureIsPermitted(false, SERVICE_ID, "CAUSALS", "MANAGE");
 			
 			con = WT.getCoreConnection();
@@ -1211,7 +1134,7 @@ public class CoreManager extends BaseManager {
 		Connection con = null;
 		
 		try {
-			ensureProfileDomain(causal.getDomainId());
+			RunContext.ensureProfileDomain(causal.getDomainId(), RunContext.AdminScope.SYSADMIN);
 			RunContext.ensureIsPermitted(false, SERVICE_ID, "CAUSALS", "MANAGE");
 			
 			con = WT.getCoreConnection();
@@ -1243,7 +1166,7 @@ public class CoreManager extends BaseManager {
 		try {
 			Causal cau = getCausal(causalId);
 			if (cau == null) throw new WTNotFoundException("Causal not found [{}]", causalId);
-			ensureProfileDomain(cau.getDomainId());
+			RunContext.ensureProfileDomain(cau.getDomainId(), RunContext.AdminScope.SYSADMIN);
 			RunContext.ensureIsPermitted(false, SERVICE_ID, "CAUSALS", "MANAGE");
 			
 			con = WT.getCoreConnection();
@@ -1391,11 +1314,10 @@ public class CoreManager extends BaseManager {
 		Connection con = null;
 		
 		try {
-			String targetDomainId = getTargetProfileId().getDomainId();
-			ensureProfileDomain(targetDomainId);
+			final UserProfileId targetPid = ensureProfileDomain(RunContext.AdminScope.SYSADMIN);
 			
 			con = WT.getConnection(SERVICE_ID);
-			return tagDao.selectIdsByDomainOwners(con, targetDomainId, tagOptionsToUserIds(options));
+			return tagDao.selectIdsByDomainOwners(con, targetPid.getDomainId(), tagOptionsToUserIds(options));
 			
 		} catch (Throwable t) {
 			throw ExceptionUtils.wrapThrowable(t);
@@ -1413,11 +1335,10 @@ public class CoreManager extends BaseManager {
 		Connection con = null;
 		
 		try {
-			String targetDomainId = getTargetProfileId().getDomainId();
-			ensureProfileDomain(targetDomainId);
+			final UserProfileId targetPid = ensureProfileDomain(RunContext.AdminScope.SYSADMIN);
 			
 			con = WT.getConnection(SERVICE_ID);
-			return tagDao.groupIdsByDomainOwners(con, targetDomainId, tagOptionsToUserIds(options));
+			return tagDao.groupIdsByDomainOwners(con, targetPid.getDomainId(), tagOptionsToUserIds(options));
 			
 		} catch (Throwable t) {
 			throw ExceptionUtils.wrapThrowable(t);
@@ -1435,11 +1356,10 @@ public class CoreManager extends BaseManager {
 		Connection con = null;
 		
 		try {
-			String targetDomainId = getTargetProfileId().getDomainId();
-			ensureProfileDomain(targetDomainId);
+			final UserProfileId targetPid = ensureProfileDomain(RunContext.AdminScope.SYSADMIN);
 			
 			con = WT.getConnection(SERVICE_ID);
-			return tagDao.mapNamesByDomainOwners(con, targetDomainId, tagOptionsToUserIds(options));
+			return tagDao.mapNamesByDomainOwners(con, targetPid.getDomainId(), tagOptionsToUserIds(options));
 			
 		} catch (Throwable t) {
 			throw ExceptionUtils.wrapThrowable(t);
@@ -1468,12 +1388,11 @@ public class CoreManager extends BaseManager {
 		Connection con = null;
 		
 		try {
-			String targetDomainId = getTargetProfileId().getDomainId();
-			ensureProfileDomain(targetDomainId);
+			final UserProfileId targetPid = ensureProfileDomain(RunContext.AdminScope.SYSADMIN);
 			
 			con = WT.getConnection(SERVICE_ID);
 			LinkedHashMap<String, Tag> items = new LinkedHashMap<>();
-			for (OTag otag : tagDao.selectByDomainOwners(con, targetDomainId, tagOptionsToUserIds(options)).values()) {
+			for (OTag otag : tagDao.selectByDomainOwners(con, targetPid.getDomainId(), tagOptionsToUserIds(options)).values()) {
 				items.put(otag.getTagId(), ManagerUtils.fillTag(new Tag(), otag));
 			}
 			return items;
@@ -1490,11 +1409,10 @@ public class CoreManager extends BaseManager {
 		Connection con = null;
 		
 		try {
-			String targetDomainId = getTargetProfileId().getDomainId();
-			ensureProfileDomain(targetDomainId);
+			final UserProfileId targetPid = ensureProfileDomain(RunContext.AdminScope.SYSADMIN);
 			
 			con = WT.getConnection(SERVICE_ID);
-			OTag otag = tagDao.selectByDomainTag(con, targetDomainId, tagId);
+			OTag otag = tagDao.selectByDomainTag(con, targetPid.getDomainId(), tagId);
 			return otag == null ? null : ManagerUtils.fillTag(new Tag(), otag);
 			
 		} catch (Throwable t) {
@@ -1508,12 +1426,10 @@ public class CoreManager extends BaseManager {
 		Connection con = null;
 		
 		try {
-			// We just want to make sure alerting external code that domainId, if present, is consistent!
-			if (tag.getDomainId() != null) ensureTargetProfileDomain(tag.getDomainId());
 			tag.setDomainId(getTargetProfileId().getDomainId());
 			tag.setBuiltIn(false);
 			
-			ensureProfileDomain(tag.getDomainId());
+			RunContext.ensureProfileDomain(tag.getDomainId(), RunContext.AdminScope.SYSADMIN);
 			if (!Tag.Visibility.PRIVATE.equals(tag.getVisibility())) {
 				RunContext.ensureIsPermitted(false, SERVICE_ID, "TAGS", "MANAGE");
 			}
@@ -1549,11 +1465,8 @@ public class CoreManager extends BaseManager {
 		Connection con = null;
 		
 		try {
-			// We just want to make sure alerting external code that domainId, if present, is consistent!
-			if (tag.getDomainId() != null) ensureTargetProfileDomain(tag.getDomainId());
 			tag.setDomainId(getTargetProfileId().getDomainId());
-			
-			ensureProfileDomain(tag.getDomainId());
+			RunContext.ensureProfileDomain(tag.getDomainId(), RunContext.AdminScope.SYSADMIN);
 			
 			con = WT.getConnection(SERVICE_ID);
 			String oldOwnerId = tagDao.selectOwnerByDomainTag(con, tag.getDomainId(), tag.getTagId());
@@ -1596,16 +1509,15 @@ public class CoreManager extends BaseManager {
 		Connection con = null;
 		
 		try {	
-			String targetDomainId = getTargetProfileId().getDomainId();
-			ensureProfileDomain(targetDomainId);
+			final UserProfileId targetPid = ensureProfileDomain(RunContext.AdminScope.SYSADMIN);
 			
 			con = WT.getConnection(SERVICE_ID);
-			String oldOwnerId = tagDao.selectOwnerByDomainTag(con, targetDomainId, tagId);
+			String oldOwnerId = tagDao.selectOwnerByDomainTag(con, targetPid.getDomainId(), tagId);
 			if (OTag.isOwnerNone(oldOwnerId)) {
 				RunContext.ensureIsPermitted(false, SERVICE_ID, "TAGS", "MANAGE");
 			}
 			
-			boolean ret = doTagDelete(con, targetDomainId, tagId);
+			boolean ret = doTagDelete(con, targetPid.getDomainId(), tagId);
 			if (!ret) throw new WTNotFoundException("Tag not found [{}]", tagId);
 			
 			eventManager.fireEvent(new TagChangedEvent(this, ChangedEvent.Operation.DELETE));
@@ -1652,12 +1564,11 @@ public class CoreManager extends BaseManager {
 		Connection con = null;
 		
 		try {
-			String targetDomainId = getTargetProfileId().getDomainId();
-			ensureProfileDomain(targetDomainId);
+			final UserProfileId targetPid = ensureProfileDomain(RunContext.AdminScope.SYSADMIN);
 			
 			con = WT.getConnection(SERVICE_ID);
 			LinkedHashMap<String, CustomPanel> items = new LinkedHashMap<>();
-			for (VCustomPanel vcpanel : cupDao.viewByDomainService(con, targetDomainId, serviceId).values()) {
+			for (VCustomPanel vcpanel : cupDao.viewByDomainService(con, targetPid.getDomainId(), serviceId).values()) {
 				Set<String> fields = new LinkedHashSet(new CompositeId().parse(vcpanel.getCustomFieldIds()).getTokens());
 				Set<String> tags = new LinkedHashSet(new CompositeId().parse(vcpanel.getTagIds()).getTokens());
 				items.put(vcpanel.getCustomPanelId(), ManagerUtils.createCustomPanel(vcpanel, fields, tags));
@@ -1685,12 +1596,11 @@ public class CoreManager extends BaseManager {
 		Connection con = null;
 		
 		try {
-			String targetDomainId = getTargetProfileId().getDomainId();
-			ensureProfileDomain(targetDomainId);
+			final UserProfileId targetPid = ensureProfileDomain(RunContext.AdminScope.SYSADMIN);
 			
 			con = WT.getConnection(SERVICE_ID);
 			LinkedHashMap<String, CustomPanel> items = new LinkedHashMap<>();
-			for (VCustomPanel vcpanel : cupDao.viewUsedByDomainServiceTags(con, targetDomainId, serviceId, tagIds, null, null, getCustomFieldsMaxNo()).values()) {
+			for (VCustomPanel vcpanel : cupDao.viewUsedByDomainServiceTags(con, targetPid.getDomainId(), serviceId, tagIds, null, null, getCustomFieldsMaxNo()).values()) {
 				Set<String> fields = new LinkedHashSet(new CompositeId().parse(vcpanel.getCustomFieldIds()).getTokens());
 				Set<String> tags = new LinkedHashSet(new CompositeId().parse(vcpanel.getTagIds()).getTokens());
 				items.put(vcpanel.getCustomPanelId(), ManagerUtils.createCustomPanel(vcpanel, fields, tags));
@@ -1717,11 +1627,10 @@ public class CoreManager extends BaseManager {
 		Connection con = null;
 		
 		try {
-			String targetDomainId = getTargetProfileId().getDomainId();
-			ensureProfileDomain(targetDomainId);
+			final UserProfileId targetPid = ensureProfileDomain(RunContext.AdminScope.SYSADMIN);
 			
 			con = WT.getConnection(SERVICE_ID);
-			return doCustomPanelGet(con, targetDomainId, serviceId, panelId);
+			return doCustomPanelGet(con, targetPid.getDomainId(), serviceId, panelId);
 			
 		} catch (Throwable t) {
 			throw ExceptionUtils.wrapThrowable(t);
@@ -1743,12 +1652,11 @@ public class CoreManager extends BaseManager {
 		Connection con = null;
 		
 		try {
-			String domainId = getTargetProfileId().getDomainId();
-			ensureProfileDomain(domainId);
+			final UserProfileId targetPid = ensureProfileDomain(RunContext.AdminScope.SYSADMIN);
 			RunContext.ensureIsPermitted(false, SERVICE_ID, "CUSTOM_FIELDS", "MANAGE");
 			
 			con = WT.getCoreConnection();
-			CustomPanel ret = doCustomPanelUpdate(con, domainId, serviceId, null, customPanel);
+			CustomPanel ret = doCustomPanelUpdate(con, targetPid.getDomainId(), serviceId, null, customPanel);
 			
 			if (isAuditEnabled()) {
 				auditLogWrite(AuditContext.CUSTOMPANEL, AuditAction.CREATE, new CompositeId(ret.getServiceId(), ret.getPanelId()).toString(), null);
@@ -1777,12 +1685,11 @@ public class CoreManager extends BaseManager {
 		Connection con = null;
 		
 		try {
-			String domainId = getTargetProfileId().getDomainId();
-			ensureProfileDomain(domainId);
+			final UserProfileId targetPid = ensureProfileDomain(RunContext.AdminScope.SYSADMIN);
 			RunContext.ensureIsPermitted(false, SERVICE_ID, "CUSTOM_FIELDS", "MANAGE");
 			
 			con = WT.getCoreConnection();
-			CustomPanel ret = doCustomPanelUpdate(con, domainId, serviceId, panelId, customPanel);
+			CustomPanel ret = doCustomPanelUpdate(con, targetPid.getDomainId(), serviceId, panelId, customPanel);
 			if (ret == null) throw new WTNotFoundException("Custom-panel not found [{}, {}]", serviceId, panelId);
 			
 			if (isAuditEnabled()) {
@@ -1812,12 +1719,11 @@ public class CoreManager extends BaseManager {
 		Connection con = null;
 		
 		try {	
-			String targetDomainId = getTargetProfileId().getDomainId();
-			ensureProfileDomain(targetDomainId);
+			final UserProfileId targetPid = ensureProfileDomain(RunContext.AdminScope.SYSADMIN);
 			RunContext.ensureIsPermitted(false, SERVICE_ID, "CUSTOM_FIELDS", "MANAGE");
 			
 			con = WT.getCoreConnection();
-			boolean ret = cupDao.updateOrder(con, targetDomainId, serviceId, panelId, newOrder) == 1;
+			boolean ret = cupDao.updateOrder(con, targetPid.getDomainId(), serviceId, panelId, newOrder) == 1;
 			if (!ret) throw new WTNotFoundException("Custom-panel not found [{}, {}]", serviceId, panelId);
 			
 			if (isAuditEnabled()) {
@@ -1844,12 +1750,11 @@ public class CoreManager extends BaseManager {
 		Connection con = null;
 		
 		try {	
-			String targetDomainId = getTargetProfileId().getDomainId();
-			ensureProfileDomain(targetDomainId);
+			final UserProfileId targetPid = ensureProfileDomain(RunContext.AdminScope.SYSADMIN);
 			RunContext.ensureIsPermitted(false, SERVICE_ID, "CUSTOM_FIELDS", "MANAGE");
 			
 			con = WT.getCoreConnection();
-			boolean ret = cupDao.deleteByDomainServicePanel(con, targetDomainId, serviceId, panelId) == 1;
+			boolean ret = cupDao.deleteByDomainServicePanel(con, targetPid.getDomainId(), serviceId, panelId) == 1;
 			if (!ret) throw new WTNotFoundException("Custom-panel not found [{}, {}]", serviceId, panelId);
 			
 			if (isAuditEnabled()) {
@@ -1889,13 +1794,12 @@ public class CoreManager extends BaseManager {
 		
 		try {
 			if (options.has(CustomFieldListOption.PREVIEWABLE)) throw new IllegalArgumentException("Option PREVIEWABLE is not supported here");
-			String targetDomainId = getTargetProfileId().getDomainId();
-			ensureProfileDomain(targetDomainId);
+			final UserProfileId targetPid = ensureProfileDomain(RunContext.AdminScope.SYSADMIN);
 			
 			con = WT.getConnection(SERVICE_ID);
 			Boolean searchable = options.has(CustomFieldListOption.SEARCHABLE) ? true : null;
 			LinkedHashMap<String, CustomField.Type> items = new LinkedHashMap<>();
-			for (Map.Entry<String, String> entry : cufDao.viewOnlineTypeByDomainServiceSearchable(con, targetDomainId, serviceId, searchable).entrySet()) {
+			for (Map.Entry<String, String> entry : cufDao.viewOnlineTypeByDomainServiceSearchable(con, targetPid.getDomainId(), serviceId, searchable).entrySet()) {
 				CustomField.Type type = EnumUtils.forSerializedName(entry.getValue(), CustomField.Type.class);
 				if (type != null) items.put(entry.getKey(), type);
 			}
@@ -1923,12 +1827,11 @@ public class CoreManager extends BaseManager {
 		
 		try {
 			if (options.has(CustomFieldListOption.PREVIEWABLE)) throw new IllegalArgumentException("Option PREVIEWABLE is not supported here");
-			String targetDomainId = getTargetProfileId().getDomainId();
-			ensureProfileDomain(targetDomainId);
+			final UserProfileId targetPid = ensureProfileDomain(RunContext.AdminScope.SYSADMIN);
 			
 			con = WT.getConnection(SERVICE_ID);
 			Boolean searchable = options.has(CustomFieldListOption.SEARCHABLE) ? true : null;
-			return cufDao.mapOnlineNamesByDomainServiceSearchable(con, targetDomainId, serviceId, searchable);
+			return cufDao.mapOnlineNamesByDomainServiceSearchable(con, targetPid.getDomainId(), serviceId, searchable);
 			
 		} catch (Throwable t) {
 			throw ExceptionUtils.wrapThrowable(t);
@@ -1962,14 +1865,13 @@ public class CoreManager extends BaseManager {
 		Connection con = null;
 		
 		try {
-			String targetDomainId = getTargetProfileId().getDomainId();
-			ensureProfileDomain(targetDomainId);
+			final UserProfileId targetPid = ensureProfileDomain(RunContext.AdminScope.SYSADMIN);
 			
 			con = WT.getConnection(SERVICE_ID);
 			Boolean searchable = options.has(CustomFieldListOption.SEARCHABLE) ? true : null;
 			Boolean previewable = options.has(CustomFieldListOption.PREVIEWABLE) ? true : null;
 			LinkedHashMap<String, CustomFieldEx> items = new LinkedHashMap<>();
-			for (VCustomField vcfield : cufDao.viewOnlineByDomainServiceSearchablePreviewable(con, targetDomainId, serviceId, searchable, previewable, getCustomFieldsMaxNo()).values()) {
+			for (VCustomField vcfield : cufDao.viewOnlineByDomainServiceSearchablePreviewable(con, targetPid.getDomainId(), serviceId, searchable, previewable, getCustomFieldsMaxNo()).values()) {
 				//items.put(vcfield.getCustomFieldId(), ManagerUtils.createCustomField(vcfield));
 				items.put(vcfield.getCustomFieldId(), ManagerUtils.fillCustomFieldEx(new CustomFieldEx(), vcfield));
 			}
@@ -1996,13 +1898,12 @@ public class CoreManager extends BaseManager {
 		Connection con = null;
 		
 		try {
-			String targetDomainId = getTargetProfileId().getDomainId();
-			ensureProfileDomain(targetDomainId);
+			final UserProfileId targetPid = ensureProfileDomain(RunContext.AdminScope.SYSADMIN);
 			
 			con = WT.getConnection(SERVICE_ID);
 			Boolean searchable = options.has(CustomFieldListOption.SEARCHABLE) ? true : null;
 			Boolean previewable = options.has(CustomFieldListOption.PREVIEWABLE) ? true : null;
-			return cufDao.viewOnlineIdsByDomainServiceSearchablePreviewable(con, targetDomainId, serviceId, searchable, previewable, getCustomFieldsMaxNo());
+			return cufDao.viewOnlineIdsByDomainServiceSearchablePreviewable(con, targetPid.getDomainId(), serviceId, searchable, previewable, getCustomFieldsMaxNo());
 			
 		} catch (Throwable t) {
 			throw ExceptionUtils.wrapThrowable(t);
@@ -2025,11 +1926,10 @@ public class CoreManager extends BaseManager {
 		Connection con = null;
 		
 		try {
-			String targetDomainId = getTargetProfileId().getDomainId();
-			ensureProfileDomain(targetDomainId);
+			final UserProfileId targetPid = ensureProfileDomain(RunContext.AdminScope.SYSADMIN);
 			
 			con = WT.getConnection(SERVICE_ID);
-			OCustomField ofield = cufDao.selectByDomainService(con, targetDomainId, serviceId, fieldId);
+			OCustomField ofield = cufDao.selectByDomainService(con, targetPid.getDomainId(), serviceId, fieldId);
 			return ofield == null ? null : ManagerUtils.fillCustomField(new CustomField(), ofield);
 			
 		} catch (Throwable t) {
@@ -2053,11 +1953,10 @@ public class CoreManager extends BaseManager {
 		Connection con = null;
 		
 		try {
-			String domainId = getTargetProfileId().getDomainId();
-			ensureProfileDomain(domainId);
+			final UserProfileId targetPid = ensureProfileDomain(RunContext.AdminScope.SYSADMIN);
 			
 			con = WT.getCoreConnection();
-			return cufDao.nameIsAvailableByDomainService(con, domainId, serviceId, name);
+			return cufDao.nameIsAvailableByDomainService(con, targetPid.getDomainId(), serviceId, name);
 			
 		} catch (Throwable t) {
 			throw ExceptionUtils.wrapThrowable(t);
@@ -2079,12 +1978,11 @@ public class CoreManager extends BaseManager {
 		Connection con = null;
 		
 		try {
-			String domainId = getTargetProfileId().getDomainId();
-			ensureProfileDomain(domainId);
+			final UserProfileId targetPid = ensureProfileDomain(RunContext.AdminScope.SYSADMIN);
 			RunContext.ensureIsPermitted(false, SERVICE_ID, "CUSTOM_FIELDS", "MANAGE");
 			
 			con = WT.getCoreConnection();
-			CustomField ret = doCustomFieldUpdate(con, domainId, serviceId, null, customField);
+			CustomField ret = doCustomFieldUpdate(con, targetPid.getDomainId(), serviceId, null, customField);
 			
 			if (isAuditEnabled()) {
 				auditLogWrite(AuditContext.CUSTOMFIELD, AuditAction.CREATE, new CompositeId(ret.getServiceId(), ret.getFieldId()).toString(), null);
@@ -2114,12 +2012,11 @@ public class CoreManager extends BaseManager {
 		Connection con = null;
 		
 		try {
-			String domainId = getTargetProfileId().getDomainId();
-			ensureProfileDomain(domainId);
+			final UserProfileId targetPid = ensureProfileDomain(RunContext.AdminScope.SYSADMIN);
 			RunContext.ensureIsPermitted(false, SERVICE_ID, "CUSTOM_FIELDS", "MANAGE");
 			
 			con = WT.getCoreConnection();
-			CustomField ret = doCustomFieldUpdate(con, domainId, serviceId, fieldId, customField);
+			CustomField ret = doCustomFieldUpdate(con, targetPid.getDomainId(), serviceId, fieldId, customField);
 			if (ret == null) throw new WTNotFoundException("Custom-field not found [{}, {}]", serviceId, fieldId);
 			
 			if (isAuditEnabled()) {
@@ -2149,12 +2046,11 @@ public class CoreManager extends BaseManager {
 		Connection con = null;
 		
 		try {	
-			String targetDomainId = getTargetProfileId().getDomainId();
-			ensureProfileDomain(targetDomainId);
+			final UserProfileId targetPid = ensureProfileDomain(RunContext.AdminScope.SYSADMIN);
 			RunContext.ensureIsPermitted(false, SERVICE_ID, "CUSTOM_FIELDS", "MANAGE");
 			
 			con = WT.getCoreConnection(false);
-			boolean ret = cufDao.logicDeleteByDomainServiceId(con, targetDomainId, serviceId, fieldId, BaseDAO.createRevisionTimestamp()) == 1;
+			boolean ret = cufDao.logicDeleteByDomainServiceId(con, targetPid.getDomainId(), serviceId, fieldId, BaseDAO.createRevisionTimestamp()) == 1;
 			if (!ret) throw new WTNotFoundException("Custom-field not found [{}, {}]", serviceId, fieldId);
 			cupfDao.deleteByField(con, fieldId);
 			
@@ -2223,12 +2119,11 @@ public class CoreManager extends BaseManager {
 		Check.notEmpty(dataSourceQueryId, "dataSourceQueryId");
 		
 		try {
-			String targetDomainId = getTargetProfileId().getDomainId();
-			ensureProfileDomain(targetDomainId);
+			final UserProfileId targetPid = ensureProfileDomain(RunContext.AdminScope.SYSADMIN);
 			
 			DataSourcesManager dsMgr = wta.getDataSourcesManager();
-			DataSourcesManager.QueryPlaceholders placeholders = new DataSourcesManager.QueryPlaceholders(targetDomainId, getTargetProfileId().getUserId());
-			return dsMgr.executeQuery(targetDomainId, dataSourceQueryId, placeholders, pagination, debugReport, new FilterableArrayListHandler(), null, !cfieldsLicensed ? 10 : null);
+			DataSourcesManager.QueryPlaceholders placeholders = new DataSourcesManager.QueryPlaceholders(targetPid.getDomainId(), getTargetProfileId().getUserId());
+			return dsMgr.executeQuery(targetPid.getDomainId(), dataSourceQueryId, placeholders, pagination, debugReport, new FilterableArrayListHandler(), null, !cfieldsLicensed ? 10 : null);
 			
 		} catch (Throwable t) {
 			throw ExceptionUtils.wrapThrowable(t);
@@ -2245,12 +2140,11 @@ public class CoreManager extends BaseManager {
 		Check.notEmpty(dataSourceQueryId, "dataSourceQueryId");
 		
 		try {
-			String targetDomainId = getTargetProfileId().getDomainId();
-			ensureProfileDomain(targetDomainId);
+			final UserProfileId targetPid = ensureProfileDomain(RunContext.AdminScope.SYSADMIN);
 			
 			DataSourcesManager dsMgr = wta.getDataSourcesManager();
-			DataSourcesManager.QueryPlaceholders placeholders = new DataSourcesManager.QueryPlaceholders(targetDomainId, getTargetProfileId().getUserId());
-			return dsMgr.guessQueryColumns(targetDomainId, dataSourceQueryId, placeholders);
+			DataSourcesManager.QueryPlaceholders placeholders = new DataSourcesManager.QueryPlaceholders(targetPid.getDomainId(), getTargetProfileId().getUserId());
+			return dsMgr.guessQueryColumns(targetPid.getDomainId(), dataSourceQueryId, placeholders);
 			
 		} catch (Throwable t) {
 			throw ExceptionUtils.wrapThrowable(t);
@@ -2267,11 +2161,10 @@ public class CoreManager extends BaseManager {
 		Check.notEmpty(dataSourceQueryId, "dataSourceQueryId");
 		
 		try {
-			String targetDomainId = getTargetProfileId().getDomainId();
-			ensureProfileDomain(targetDomainId);
+			final UserProfileId targetPid = ensureProfileDomain(RunContext.AdminScope.SYSADMIN);
 			
 			DataSourcesManager dsMgr = wta.getDataSourcesManager();
-			return dsMgr.extractQueryPlaceholders(targetDomainId, dataSourceQueryId);
+			return dsMgr.extractQueryPlaceholders(targetPid.getDomainId(), dataSourceQueryId);
 			
 		} catch (Throwable t) {
 			throw ExceptionUtils.wrapThrowable(t);
@@ -2285,11 +2178,10 @@ public class CoreManager extends BaseManager {
 	 */
 	public Map<String, DataSourcePooled> listDataSources() throws WTException {
 		try {
-			String targetDomainId = getTargetProfileId().getDomainId();
-			ensureProfileDomain(targetDomainId);
+			final UserProfileId targetPid = ensureProfileDomain(RunContext.AdminScope.SYSADMIN);
 			
 			DataSourcesManager dsMgr = wta.getDataSourcesManager();
-			return dsMgr.listDataSources(targetDomainId);
+			return dsMgr.listDataSources(targetPid.getDomainId());
 			
 		} catch (Throwable t) {
 			throw ExceptionUtils.wrapThrowable(t);
@@ -2303,11 +2195,10 @@ public class CoreManager extends BaseManager {
 	 */
 	public Map<String, DataSourceQuery> listDataSourceQueries() throws WTException {
 		try {
-			String targetDomainId = getTargetProfileId().getDomainId();
-			ensureProfileDomain(targetDomainId);
+			final UserProfileId targetPid = ensureProfileDomain(RunContext.AdminScope.SYSADMIN);
 			
 			DataSourcesManager dsMgr = wta.getDataSourcesManager();
-			return dsMgr.listDataSourceQueries(targetDomainId);
+			return dsMgr.listDataSourceQueries(targetPid.getDomainId());
 			
 		} catch (Throwable t) {
 			throw ExceptionUtils.wrapThrowable(t);
@@ -2324,11 +2215,10 @@ public class CoreManager extends BaseManager {
 		Check.notEmpty(dataSourceId, "dataSourceId");
 		
 		try {
-			String targetDomainId = getTargetProfileId().getDomainId();
-			ensureProfileDomain(targetDomainId);
+			final UserProfileId targetPid = ensureProfileDomain(RunContext.AdminScope.SYSADMIN);
 			
 			DataSourcesManager dsMgr = wta.getDataSourcesManager();
-			return dsMgr.borrowDataSourceConnection(targetDomainId, dataSourceId);
+			return dsMgr.borrowDataSourceConnection(targetPid.getDomainId(), dataSourceId);
 			
 		} catch (Throwable t) {
 			throw ExceptionUtils.wrapThrowable(t);
@@ -2345,11 +2235,10 @@ public class CoreManager extends BaseManager {
 		Check.notEmpty(dataSourceFriendlyId, "dataSourceFriendlyId");
 		
 		try {
-			String targetDomainId = getTargetProfileId().getDomainId();
-			ensureProfileDomain(targetDomainId);
+			final UserProfileId targetPid = ensureProfileDomain(RunContext.AdminScope.SYSADMIN);
 			
 			DataSourcesManager dsMgr = wta.getDataSourcesManager();
-			return dsMgr.borrowDataSourceConnectionByFriendlyId(targetDomainId, dataSourceFriendlyId);
+			return dsMgr.borrowDataSourceConnectionByFriendlyId(targetPid.getDomainId(), dataSourceFriendlyId);
 			
 		} catch (Throwable t) {
 			throw ExceptionUtils.wrapThrowable(t);
@@ -2760,36 +2649,31 @@ public class CoreManager extends BaseManager {
 	
 	public OTPManager.EmailConfig otpConfigureUsingEmail(String emailAddress) throws WTException {
 		//TODO: controllo accessi
-		ensureUser();
-		OTPManager otp = getOTPManager();
-		return otp.configureEmail(getTargetProfileId(), emailAddress);
+		final UserProfileId targetPid = ensureProfile(RunContext.AdminScope.SYSADMIN);
+		return getOTPManager().configureEmail(targetPid, emailAddress);
 	}
 	
 	public OTPManager.GoogleAuthConfig otpConfigureUsingGoogleAuth(int qrCodeSize) throws WTException {
 		//TODO: controllo accessi
-		ensureUser();
-		OTPManager otp = getOTPManager();
-		return otp.configureGoogleAuth(getTargetProfileId(), qrCodeSize);
+		final UserProfileId targetPid = ensureProfile(RunContext.AdminScope.SYSADMIN);
+		return getOTPManager().configureGoogleAuth(targetPid, qrCodeSize);
 	}
 	
 	public boolean otpActivate(OTPManager.Config config, String code) throws WTException {
 		//TODO: controllo accessi
-		ensureUser();
-		OTPManager otp = getOTPManager();
-		return otp.activate(getTargetProfileId(), config, code);
+		final UserProfileId targetPid = ensureProfile(RunContext.AdminScope.SYSADMIN);
+		return getOTPManager().activate(targetPid, config, code);
 	}
 	
 	public void otpDeactivate() throws WTException {
 		//TODO: controllo accessi
-		ensureUser();
-		OTPManager otp = getOTPManager();
-		otp.deactivate(getTargetProfileId());
+		final UserProfileId targetPid = ensureProfile(RunContext.AdminScope.SYSADMIN);
+		getOTPManager().deactivate(targetPid);
 	}
 	
 	public OTPManager.Config otpPrepareVerifyCode() throws WTException {
 		ensureCallerService(SERVICE_ID, "otpPrepareVerifyCode");
-		OTPManager otp = getOTPManager();
-		return otp.prepareCheckCode(getTargetProfileId());
+		return getOTPManager().prepareCheckCode(getTargetProfileId());
 	}
 	
 	public boolean otpVerifyCode(OTPManager.Config params, String code) throws WTException {
@@ -3080,6 +2964,7 @@ public class CoreManager extends BaseManager {
 		if (username==null) username=targetPid.getUserId();
 		String spassword=css.getSmsWebrestPassword();
 		char[] password=spassword!=null?spassword.toCharArray():RunContext.getPrincipal().getPassword();
+		//if (spassword == null) spassword = lookupSecretValue(WebTopManager.PSVKEY_PPW);
 		
 		String sender=css.getSmsSender();
 		String userSender=us.getSmsSender();
@@ -3091,6 +2976,7 @@ public class CoreManager extends BaseManager {
 		String fromMobile=isAlpha?null:sender;
 		String fromName=isAlpha?sender:null;
 		sms.send(fromName, fromMobile, number, text, username, password);
+		//sms.send(fromName, fromMobile, number, text, username, spassword!=null ? spassword.toCharArray() : null);
 	}
 	
 	/**
@@ -3134,6 +3020,9 @@ public class CoreManager extends BaseManager {
 		char[] password=spassword!=null?spassword.toCharArray():RunContext.getPrincipal().getPassword();
 		
 		pbx.call(number, username, password);
+		
+		//if (spassword == null) spassword = lookupSecretValue(WebTopManager.PSVKEY_PPW);
+		//pbx.call(number, username, spassword!=null ? spassword.toCharArray() : null);
 	}
 	
 	/**
@@ -3614,8 +3503,8 @@ public class CoreManager extends BaseManager {
 	public Map<String, String> listMetaEntriesValuesByQuery(final String serviceId, final String context, final String keyQuery, final int maxResults, final boolean caseInsensitiveKey) throws WTException {
 		WebTopManager wtMgr = wta.getWebTopManager();
 		
-		ensureProfileDomain(getTargetProfileId().getDomainId());
-		return wtMgr.listMetaEntriesValuesByQuery(getTargetProfileId(), serviceId, context, keyQuery, maxResults, caseInsensitiveKey);
+		final UserProfileId targetPid = ensureProfileDomain(RunContext.AdminScope.SYSADMIN);
+		return wtMgr.listMetaEntriesValuesByQuery(targetPid, serviceId, context, keyQuery, maxResults, caseInsensitiveKey);
 	}
 	
 	/**
@@ -3630,8 +3519,8 @@ public class CoreManager extends BaseManager {
 	public boolean existMetaEntryKey(final String serviceId, final String context, final String key, final boolean caseInsensitiveKey) throws WTException {
 		WebTopManager wtMgr = wta.getWebTopManager();
 		
-		ensureProfileDomain(getTargetProfileId().getDomainId());
-		return wtMgr.existMetaEntryKey(getTargetProfileId(), serviceId, context, key, caseInsensitiveKey);
+		final UserProfileId targetPid = ensureProfileDomain(RunContext.AdminScope.SYSADMIN);
+		return wtMgr.existMetaEntryKey(targetPid, serviceId, context, key, caseInsensitiveKey);
 	}
 	
 	/**
@@ -3647,8 +3536,8 @@ public class CoreManager extends BaseManager {
 	public boolean saveMetaEntry(final String serviceId, final String context, final String key, final String value, final boolean forceKeyCaseInsensitive) throws WTException {
 		WebTopManager wtMgr = wta.getWebTopManager();
 		
-		ensureProfileDomain(getTargetProfileId().getDomainId());
-		return wtMgr.addOrUpdateMetaEntry(getTargetProfileId(), serviceId, context, key, value, forceKeyCaseInsensitive);
+		final UserProfileId targetPid = ensureProfileDomain(RunContext.AdminScope.SYSADMIN);
+		return wtMgr.addOrUpdateMetaEntry(targetPid, serviceId, context, key, value, forceKeyCaseInsensitive);
 	}
 	
 	/**
@@ -3663,8 +3552,8 @@ public class CoreManager extends BaseManager {
 	public int deleteMetaEntry(final String serviceId, final String context, final String key, final boolean caseInsensitiveKey) throws WTException {
 		WebTopManager wtMgr = wta.getWebTopManager();
 		
-		ensureProfileDomain(getTargetProfileId().getDomainId());
-		return wtMgr.deleteMetaEntry(getTargetProfileId(), serviceId, context, key, caseInsensitiveKey);
+		final UserProfileId targetPid = ensureProfileDomain(RunContext.AdminScope.SYSADMIN);
+		return wtMgr.deleteMetaEntry(targetPid, serviceId, context, key, caseInsensitiveKey);
 	}
 	
 	/**
@@ -4149,12 +4038,11 @@ public class CoreManager extends BaseManager {
 	}
 	
 	public String getZPushDetailedInfo(String deviceId, String lineSep) throws WTException {
-		UserProfileId targetPid = getTargetProfileId();
 		
 		try {
 			WebTopManager wtMgr = wta.getWebTopManager();
 			ZPushManager zpush = createZPushManager();
-			ensureProfile(true);
+			final UserProfileId targetPid = ensureProfile(RunContext.AdminScope.SYSADMIN);
 			return zpush.getDetailedInfo(deviceId, wtMgr.toAuthProfileId(targetPid).toString(), lineSep);
 			
 		} catch(Exception ex) {

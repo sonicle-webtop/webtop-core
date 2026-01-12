@@ -179,12 +179,12 @@ public final class UserProfile {
 		private String longDateFormat;
 		private String shortTimeFormat;
 		private String longTimeFormat;
-		private InternetAddress profileEmail;
+		private InternetAddress authEmail;
 		private InternetAddress personalEmail;
 		
 		public Data() {}
 		
-		public Data(DomainAccount internetAccount, String displayName, String languageTag, String timezone, int startDay, String shortDateFormat, String longDateFormat, String shortTimeFormat, String longTimeFormat, InternetAddress profileEmail, InternetAddress personalEmail) {
+		public Data(DomainAccount internetAccount, String displayName, String languageTag, String timezone, int startDay, String shortDateFormat, String longDateFormat, String shortTimeFormat, String longTimeFormat, InternetAddress authEmail, InternetAddress personalEmail) {
 			this.internetAccount = internetAccount;
 			this.displayName = displayName;
 			this.languageTag = languageTag;
@@ -196,7 +196,7 @@ public final class UserProfile {
 			this.longDateFormat = longDateFormat;
 			this.shortTimeFormat = shortTimeFormat;
 			this.longTimeFormat = longTimeFormat;
-			this.profileEmail = profileEmail;
+			this.authEmail = authEmail;
 			this.personalEmail = personalEmail;
 		}
 		
@@ -245,16 +245,28 @@ public final class UserProfile {
 		}
 		
 		public InternetAddress getProfileEmail() {
-			return profileEmail;
+			return getAuthEmail();
 		}
 		
 		public String getProfileEmailAddress() {
-			if (profileEmail == null) return null;
-			return profileEmail.getAddress();
+			return getAuthEmailAddress();
 		}
 		
 		public String getProfileFullEmailAddress() {
-			return InternetAddressUtils.toFullAddress(profileEmail);
+			return getAuthFullEmailAddress();
+		}
+		
+		public InternetAddress getAuthEmail() {
+			return authEmail;
+		}
+		
+		public String getAuthEmailAddress() {
+			if (authEmail == null) return null;
+			return authEmail.getAddress();
+		}
+		
+		public String getAuthFullEmailAddress() {
+			return InternetAddressUtils.toFullAddress(authEmail);
 		}
 		
 		public InternetAddress getPersonalEmail() {

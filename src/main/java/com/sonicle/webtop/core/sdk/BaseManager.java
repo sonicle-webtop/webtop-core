@@ -33,9 +33,7 @@
  */
 package com.sonicle.webtop.core.sdk;
 
-import com.sonicle.webtop.core.CoreServiceSettings;
 import com.sonicle.webtop.core.app.AuditLogManager;
-import com.sonicle.webtop.core.app.CoreManifest;
 import com.sonicle.webtop.core.app.RunContext;
 import com.sonicle.webtop.core.app.SessionContext;
 import com.sonicle.webtop.core.app.WT;
@@ -85,8 +83,7 @@ public abstract class BaseManager {
 	/**
 	 * @deprecated Use ExceptionUtils.wrapThrowable(t) instead
 	 */
-	@Deprecated
-	protected WTException wrapException(Exception ex) {
+	@Deprecated protected WTException wrapException(Exception ex) {
 		if (ex instanceof WTException) {
 			return (WTException)ex;
 		} else if ((ex instanceof SQLException) || (ex instanceof DAOException)) {
@@ -97,27 +94,17 @@ public abstract class BaseManager {
 	}
 	
 	/**
-	 * @deprecated use ensureProfile instead
+	 * @deprecated use ensureProfile with allowAdminScope instead
 	 */
-	@Deprecated
-	public void ensureUser() throws AuthException {
-		ensureProfile();
+	@Deprecated public void ensureUser() throws AuthException {
+		ensureProfile(RunContext.AdminScope.WTADMIN);
 	}
 	
 	/**
-	 * @deprecated use ensureProfileDomain instead
+	 * @deprecated use ensureProfileDomain with allowAdminScope instead
 	 */
-	@Deprecated
-	public void ensureUserDomain() throws AuthException {
-		ensureProfileDomain();
-	}
-	
-	/**
-	 * @deprecated use ensureProfileDomain instead
-	 */
-	@Deprecated
-	public void ensureUserDomain(String domainId) throws AuthException {
-		ensureProfileDomain(domainId);
+	@Deprecated public void ensureUserDomain(String domainId) throws AuthException {
+		ensureProfileDomain(true, domainId);
 	}
 	
 	protected final Locale guessLocale() {
@@ -243,53 +230,45 @@ public abstract class BaseManager {
 	
 	/**
 	 * Checks if the running profile (see runContext) and target profile are the same.
-	 * This security check is skipped for WebTop admin.
-	 * @throws AuthException When profiles not match.
+	 * @param allowAdminScope The scope to use when checks should be ignored for Admin subjects.
+	 * @return The target profile checked (the current one).
+	 * @throws AuthException When profile's domain does not match.
 	 */
-	public void ensureProfile() throws AuthException {
-		ensureProfile(true);
-	}
-	
-	/**
-	 * Checks if the running profile (see runContext) and target profile are the same.
-	 * @param skipIfAdmin True to skip check if running profile is a WebTop admin.
-	 * @throws AuthException When profiles not match.
-	 */
-	public void ensureProfile(boolean skipIfAdmin) throws AuthException {
-		UserProfileId runPid = RunContext.getRunProfileId();
-		if (skipIfAdmin && RunContext.isWebTopAdmin(runPid)) return;
-		if (!runPid.equals(getTargetProfileId())) throw new AuthException("Running profile [{0}] does not match with target profile [{1}]", runPid, getTargetProfileId());
+	public UserProfileId ensureProfile(final RunContext.AdminScope allowAdminScope) throws AuthException {
+		final UserProfileId targetPid = getTargetProfileId();
+		RunContext.ensureProfile(targetPid, allowAdminScope);
+		return targetPid;
 	}
 	
 	/**
 	 * Checks if the running profile's domain ID (see runContext) and target profile's domain ID are the same.
-	 * This security check is skipped for WebTop admin.
-	 * @throws AuthException When profile's domain not match.
+	 * @param allowAdminScope The scope to use when checks should be ignored for Admin subjects.
+	 * @return The target profile checked (the current one).
+	 * @throws AuthException When profile's domain does not match.
 	 */
-	public void ensureProfileDomain() throws AuthException {
-		ensureProfileDomain(true);
+	public UserProfileId ensureProfileDomain(final RunContext.AdminScope allowAdminScope) throws AuthException {
+		final UserProfileId targetPid = getTargetProfileId();
+		RunContext.ensureProfileDomain(targetPid.getDomainId(), allowAdminScope);
+		return targetPid;
 	}
 	
 	/**
-	 * Checks if the running profile's domain ID (see runContext) and target profile's domain ID are the same.
-	 * @param skipIfAdmin True to skip check if running profile is a WebTop admin.
-	 * @throws AuthException When profile's domain not match.
+	 * Checks if the running profile's (see runContext) is an Admin for the target profile's domain ID.
+	 * @return The target profile checked (the current one).
+	 * @throws AuthException When profile's domain does not match.
 	 */
-	public void ensureProfileDomain(boolean skipIfAdmin) throws AuthException {
-		UserProfileId runPid = RunContext.getRunProfileId();
-		if (skipIfAdmin && RunContext.isWebTopAdmin(runPid)) return;
-		if (!runPid.hasDomain(getTargetProfileId().getDomainId())) throw new AuthException("Running profile's domain [{0}] does not match with target's domain [{1}]", runPid.getDomainId(), getTargetProfileId().getDomainId());
+	public UserProfileId ensureWebTopDomainAdmin() throws AuthException {
+		final UserProfileId targetPid = getTargetProfileId();
+		RunContext.ensureWebTopDomainAdmin(targetPid.getDomainId());
+		return targetPid;
 	}
 	
-	/**
-	 * Checks if the running profile's domain ID (see runContext) and passed one are the same.
-	 * This security check is skipped for WebTop admin.
-	 * @param domainId Desired domain ID.
-	 * @throws AuthException When profile's domain do not match.
-	 */
-	public void ensureProfileDomain(String domainId) throws AuthException {
-		ensureProfileDomain(true, domainId);
-	}
+	
+	
+	
+	
+	
+	
 	
 	/**
 	 * Checks if the running profile's domain ID (see runContext) and passed one are the same.
@@ -302,15 +281,6 @@ public abstract class BaseManager {
 		UserProfileId runPid = RunContext.getRunProfileId();
 		if (skipIfAdmin && RunContext.isWebTopAdmin(runPid)) return;
 		if (!runPid.hasDomain(domainId)) throw new AuthException("Running profile's domain [{0}] does not match with passed one [{1}]", runPid.getDomainId(), domainId);
-	}
-	
-	/**
-	 * Checks if target profile's domain ID and passed one are the same.
-	 * @param domainId Desired domain ID.
-	 * @throws AuthException When profile's domain do not match.
-	 */
-	public void ensureTargetProfileDomain(String domainId) throws AuthException {
-		if (!getTargetProfileId().hasDomain(domainId)) throw new AuthException("Target profile's domain [{}] should match with [{}]", getTargetProfileId().getDomainId(), domainId);
 	}
 	
 	/**
