@@ -833,16 +833,17 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 		}
 	}
 	
-	public void cacheSecretValue(final UserProfileId profileId, final String key, final String value) {
+	public void cacheSecretValue(final UserProfileId profileId, final String key, final char[] value) {
 		final String cacheKey = StringUtils.defaultIfBlank(key, "") + "_" + profileId.toString();
-		profileSecretValueCache.put(cacheKey, getWebTopApp().encryptData(value));
+		profileSecretValueCache.put(cacheKey, getWebTopApp().encryptData(PasswordUtils.asString(value)));
 	}
 
-	public String lookupSecretValue(final UserProfileId profileId, final String key) {
+	public char[] lookupSecretValue(final UserProfileId profileId, final String key) {
 		final String cacheKey = StringUtils.defaultIfBlank(key, "") + "_" + profileId.toString();
 		String value = profileSecretValueCache.getIfPresent(cacheKey);
-		if (value != null) value = getWebTopApp().decryptData(value);
-		return value;
+		char[] ret = null;
+		if (value != null) ret = PasswordUtils.asCharArray(getWebTopApp().decryptData(value));
+		return ret;
 	}
 	
 	public String lookupSubjectSidQuietly(final UserProfileId subjectProfileId, final GenericSubject.Type... validTypes) {
@@ -1553,6 +1554,7 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 			} else {
 				directory.updateUserPassword(opts, userPid.getDomainId(), userPid.getUserId(), newPassword);
 			}
+			cacheSecretValue(userPid, WebTopManager.PSVKEY_PPW, newPassword);
 
 			CoreUserSettings cus = new CoreUserSettings(userPid);
 			cus.setPasswordLastChange(JodaTimeUtils.now());

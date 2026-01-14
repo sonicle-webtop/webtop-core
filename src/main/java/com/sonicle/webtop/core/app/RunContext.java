@@ -178,7 +178,7 @@ public class RunContext {
 	 */
 	public static UserProfileId getRunProfileId(final Subject subject) {
 		Principal principal = getPrincipal(subject);
-		return (principal == null) ? null : new UserProfileId(principal.getName());
+		return (principal == null) ? null : UserProfileId.from(principal);
 	}
 	
 	/**
@@ -426,7 +426,7 @@ public class RunContext {
 			}
 		}
 		final Principal principal = getPrincipal(subject);
-		final UserProfileId runPid = new UserProfileId(principal.getDomainId(), principal.getUserId());
+		final UserProfileId runPid = UserProfileId.from(principal);
 		if (!runPid.equals(matchProfileId)) throw new AuthException("Running Subject [{}] does NOT match with required one [{}]", runPid, matchProfileId);
 	}
 	

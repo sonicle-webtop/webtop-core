@@ -55,6 +55,7 @@ import com.sonicle.mail.email.Recipient;
 import com.sonicle.mail.producer.MimeMessageProducer;
 import com.sonicle.security.CryptoUtils;
 import com.sonicle.security.DomainAccount;
+import com.sonicle.security.PasswordUtils;
 import com.sonicle.security.Principal;
 import com.sonicle.webtop.core.CoreServiceSettings;
 import com.sonicle.webtop.core.CoreSettings;
@@ -1221,7 +1222,7 @@ public final class WebTopApp {
 			//TODO: transport: where take credentials to connect? Principal may be a system user
 			final String transportUsername = DomainAccount.buildFullyQualifiedName(WT.getAuthDomainName(runPid.getDomainId()), runPid.getUserId());
 			CoreServiceSettings css = new CoreServiceSettings(CoreManifest.ID, sendingProfileId.getDomainId());
-			transportParams = css.getTransportHostParams(transportUsername, this.getWebTopManager().lookupSecretValue(runPid, WebTopManager.PSVKEY_PPW));
+			transportParams = css.getTransportHostParams(transportUsername, PasswordUtils.asString(this.getWebTopManager().lookupSecretValue(runPid, WebTopManager.PSVKEY_PPW)));
 			//transportParams = css.getTransportHostParams((Principal)SecurityUtils.getSubject().getPrincipal());
 			Properties defaultProps = getMailBasePropsBuilder(true, false).build();
 			// Avoid slowness of call to message.saveChanges() due to DNS lookups

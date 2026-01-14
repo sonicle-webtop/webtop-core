@@ -37,6 +37,7 @@ import com.sonicle.commons.LangUtils;
 import com.sonicle.commons.PathUtils;
 import com.sonicle.commons.web.ServletUtils;
 import com.sonicle.commons.web.json.CId;
+import com.sonicle.security.PasswordUtils;
 import com.sonicle.webtop.core.CoreLocaleKey;
 import com.sonicle.webtop.core.CoreSettings;
 import com.sonicle.webtop.core.app.AbstractServlet;
@@ -48,6 +49,7 @@ import com.sonicle.webtop.core.app.SettingsManager;
 import com.sonicle.webtop.core.app.UIBoot;
 import com.sonicle.webtop.core.app.WT;
 import com.sonicle.webtop.core.app.WebTopApp;
+import com.sonicle.webtop.core.app.WebTopManager;
 import com.sonicle.webtop.core.app.WebTopProps;
 import com.sonicle.webtop.core.app.WebTopSession;
 import com.sonicle.webtop.core.app.model.DomainBase;
@@ -96,19 +98,18 @@ public class UIPrivate extends AbstractServlet {
 			UserProfileId pid = wts.getUserProfile().getId();
 			
 			if (wts.hasProperty(CoreManifest.ID, UIPrivate.WTSPROP_PASSWORD_CHANGEUPONLOGIN)) {
-				String password = ServletUtils.getStringParameter(request, "password", null);
+				char[] password = PasswordUtils.asCharArray(ServletUtils.getStringParameter(request, "password", null));
 				
 				boolean writePage = true;
 				String failureMessage = null;
 				
 				try {
-					if (!StringUtils.isBlank(password)) {
-						if (Arrays.equals(password.toCharArray(), RunContext.getPrincipal().getPassword())) {
-							throw new PasswordMustBeDifferent();
-						}
-						wta.getWebTopManager().updateUserPassword(pid.getDomainId(), pid.getUserId(), RunContext.getPrincipal().getPassword(), password.toCharArray(), false);
+					if (!PasswordUtils.isBlank(password)) {
+						char[] oldppw = wta.getWebTopManager().lookupSecretValue(pid, WebTopManager.PSVKEY_PPW);
+						if (PasswordUtils.equals(password, oldppw)) throw new PasswordMustBeDifferent();
+						
+						wta.getWebTopManager().updateUserPassword(pid.getDomainId(), pid.getUserId(), oldppw, password, false);
 						wts.clearProperty(CoreManifest.ID, UIPrivate.WTSPROP_PASSWORD_CHANGEUPONLOGIN);
-						((com.sonicle.security.Principal)RunContext.getPrincipal()).setPassword(password.toCharArray());
 						writePage = false;
 					}
 				} catch (PasswordMustBeDifferent ex) {

@@ -639,7 +639,7 @@ public class WT {
 	 * @param key The key to retrieve.
 	 * @return The value at the key, if any
 	 */
-	public static String lookupSecretStoreValue(final UserProfileId profileId, final String key) {
+	public static char[] lookupSecretStoreValue(final UserProfileId profileId, final String key) {
 		RunContext.ensureProfile(profileId, RunContext.AdminScope.SYSADMIN);
 		return getWTA().getWebTopManager().lookupSecretValue(profileId, key);
 	}

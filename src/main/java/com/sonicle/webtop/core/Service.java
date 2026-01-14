@@ -49,6 +49,7 @@ import com.sonicle.commons.web.json.MapItem;
 import com.sonicle.commons.web.json.Payload;
 import com.sonicle.commons.web.json.bean.StringMap;
 import com.sonicle.commons.web.json.ipstack.IPLookupResponse;
+import com.sonicle.security.PasswordUtils;
 import com.sonicle.security.Principal;
 import com.sonicle.webtop.core.CoreSettings.OtpDeliveryMode;
 import com.sonicle.webtop.core.admin.CoreAdminManager;
@@ -245,7 +246,7 @@ public class Service extends BaseService implements EventListener {
 			final String xmppResource = getWts().getId() + "@" + WT.getPlatformName();
 			final String authDomainName = WT.getAuthDomainName(pid.getDomainId());
 			//TODO: which domain-name is needed here?
-			XMPPTCPConnectionConfiguration.Builder builder = XMPPHelper.setupConfigBuilder(ss.getXMPPHost(), ss.getXMPPPort(), authDomainName, principal.getUserId(), WT.lookupSecretStoreValue(pid, WebTopManager.PSVKEY_PPW), xmppResource);
+			XMPPTCPConnectionConfiguration.Builder builder = XMPPHelper.setupConfigBuilder(ss.getXMPPHost(), ss.getXMPPPort(), authDomainName, principal.getUserId(), PasswordUtils.asString(WT.lookupSecretStoreValue(pid, WebTopManager.PSVKEY_PPW)), xmppResource);
 			final String nickname = profile.getDisplayName();
 			xmppCli = new XMPPClient(builder, ss.getXMPPMucSubdomain(), nickname, new XMPPServiceListenerImpl(), history);
 		}
@@ -1984,8 +1985,7 @@ public class Service extends BaseService implements EventListener {
 					}
 					final Principal p = getEnv().getProfile().getPrincipal();
 					final String authInternetName = WT.getAuthDomainName(getEnv().getProfile().getDomainId());
-					final String secret = coreMgr.lookupSecretValue(WebTopManager.PSVKEY_PPW);
-					new JsonResult(new JsIMInit(ps, statusMessage, p.getUserId()+"@"+authInternetName, xmppCli.getUserJid().toString(), secret)).printTo(out);
+					new JsonResult(new JsIMInit(ps, statusMessage, p.getUserId()+"@"+authInternetName, xmppCli.getUserJid().toString(), PasswordUtils.asString(coreMgr.lookupSecretValue(WebTopManager.PSVKEY_PPW)))).printTo(out);
 					
 				} else {
 					throw new WTException("XMPPClient not available");

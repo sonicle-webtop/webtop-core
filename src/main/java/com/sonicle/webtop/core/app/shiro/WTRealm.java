@@ -163,7 +163,7 @@ public class WTRealm extends AuthorizingRealm {
 			// Support access leveraging on a pre-shared token, suitable for 
 			// provisioning application configuration through APIs.
 			final AuthContext acontext = wtMgr.createSysAdminAuthenticationContext();
-			Principal principal = new Principal(false, acontext.getDomainId(), WebTopManager.SYSADMIN_USERID, null);
+			Principal principal = new Principal(false, acontext.getDomainId(), WebTopManager.SYSADMIN_USERID);
 			principal.setDisplayName(WebTopManager.SYSADMIN_USERID);
 			return principal;
 
@@ -198,7 +198,7 @@ public class WTRealm extends AuthorizingRealm {
 				// If we are here, directory has successfully authenticated the user, provided credentials are valid!
 				
 				// Now build resulting principal...
-				Principal principal = new Principal(false, acontext.getDomainId(), authUser.userId, null);
+				Principal principal = new Principal(false, acontext.getDomainId(), authUser.userId);
 				principal.setDisplayName(StringUtils.defaultIfBlank(authUser.displayName, authUser.userId));
 				return principal;
 				
@@ -356,22 +356,22 @@ public class WTRealm extends AuthorizingRealm {
 			Principal principal = null;
 			if (impersonate) { // User is impersonated
 				String impUsername = sanitizeImpersonateUsername(username);
-				principal = new Principal(impersonate, userDomainId, impUsername, password);
+				principal = new Principal(impersonate, userDomainId, impUsername);
 				
 				// !!! Impersonation needs that the User is already present, otherwise we cannot continue!
 				// Yes, you cannot leverage on User auto-creation feature during impersonation.
 				
-				UserProfileId pid = new UserProfileId(principal.getDomainId(), principal.getUserId());
+				UserProfileId pid = UserProfileId.from(principal);
 				User user = wtMgr.getUser(pid.getDomainId(), pid.getUserId(), BitFlags.noneOf(UserGetOption.class));
 				if (user == null) throw new WTException("User not found [{}]", pid.toString());
 				principal.setDisplayName(user.getDisplayName());
 				
 			} else { // User NOT impersonated (authentication result points to the right userId)
-				principal = new Principal(impersonate, userDomainId, authUser.userId, password);
+				principal = new Principal(impersonate, userDomainId, authUser.userId);
 				principal.setDisplayName(StringUtils.defaultIfBlank(authUser.displayName, authUser.userId));
 				
-				UserProfileId pid = new UserProfileId(principal.getDomainId(), principal.getUserId());
-				wtMgr.cacheSecretValue(pid, WebTopManager.PSVKEY_PPW, new String(password));
+				UserProfileId pid = UserProfileId.from(principal);
+				wtMgr.cacheSecretValue(pid, WebTopManager.PSVKEY_PPW, password);
 			}
 			
 			if (autoCreate) principal.pushDirectoryEntry(authUser);
@@ -445,7 +445,7 @@ public class WTRealm extends AuthorizingRealm {
 	private WTAuthorizationInfo loadAuthorizationInfo(Principal principal) throws Exception {
 		WebTopApp wta = WebTopApp.getInstance();
 		WebTopManager wtMgr = wta.getWebTopManager();
-		UserProfileId pid = new UserProfileId(principal.getDomainId(), principal.getUserId());
+		UserProfileId pid = UserProfileId.from(principal);
 		
 		if (logger.isTraceEnabled()) logger.trace("Getting AuthorizationInfo for '{}'", principal.toString());
 		

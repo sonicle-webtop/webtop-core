@@ -38,6 +38,7 @@ import com.sonicle.commons.time.JodaTimeUtils;
 import com.sonicle.commons.web.json.JsonResult;
 import com.sonicle.commons.web.json.MapItem;
 import com.sonicle.mail.StoreUtils;
+import com.sonicle.security.PasswordUtils;
 import com.sonicle.webtop.core.sdk.UserProfile;
 import com.sonicle.security.Principal;
 import com.sonicle.webtop.core.CoreLocaleKey;
@@ -412,7 +413,7 @@ public class WebTopSession {
 	
 	private void internalInitPrivate(HttpServletRequest request) throws WTException {
 		// Synchronization on caller method!
-		ServiceManager svcm = wta.getServiceManager();
+		ServiceManager svcMgr = wta.getServiceManager();
 		Principal principal = (Principal)SecurityUtils.getSubject().getPrincipal();
 		
 		Subject subject = RunContext.getSubject();
@@ -421,16 +422,19 @@ public class WebTopSession {
 		
 		emptyServiceManagers();
 		
-		CoreManager core = svcm.instantiateCoreManager(false, profileId);
+		CoreManager core = svcMgr.instantiateCoreManager(false, profileId);
 		cacheServiceManager(CoreManifest.ID, core);
-		CoreAdminManager coreadmin = svcm.instantiateCoreAdminManager(false, profileId);
+		CoreAdminManager coreadmin = svcMgr.instantiateCoreAdminManager(false, profileId);
 		cacheServiceManager(CoreAdminManifest.ID, coreadmin);
 		
 		// Defines useful instances (NB: keep code assignment order!!!)
 		profile = new UserProfile(core, principal);
 		
-		boolean passwordChangeNeeded = wta.getWebTopManager().isUserPasswordChangeNeeded(profileId.getDomainId(), profile.getUserId(), principal.getPassword());
-		if (passwordChangeNeeded && !principal.isImpersonated()) setProperty(CoreManifest.ID, UIPrivate.WTSPROP_PASSWORD_CHANGEUPONLOGIN, true);
+		if (!principal.isImpersonated()) {
+			char[] oldppw = wta.getWebTopManager().lookupSecretValue(profileId, WebTopManager.PSVKEY_PPW);
+			boolean passwordChangeNeeded = wta.getWebTopManager().isUserPasswordChangeNeeded(profileId.getDomainId(), profile.getUserId(), oldppw);
+			if (passwordChangeNeeded) setProperty(CoreManifest.ID, UIPrivate.WTSPROP_PASSWORD_CHANGEUPONLOGIN, true);
+		}
 		
 		boolean otpEnabled = wta.getOTPManager().isEnabled(profile.getId());
 		if (!otpEnabled || principal.isImpersonated()) {
@@ -664,11 +668,10 @@ public class WebTopSession {
 					authenticator=new Authenticator() {
 						@Override
 						protected PasswordAuthentication getPasswordAuthentication() {
-							Principal principal = (Principal)SecurityUtils.getSubject().getPrincipal();
-							String login=principal.toFullyQualifiedUsername(WT.getAuthDomainName(principal.getDomainId()));
-							String password=new String(principal.getPassword());
+							final Principal principal = (Principal)SecurityUtils.getSubject().getPrincipal();
+							final String login = principal.toFullyQualifiedUsername(WT.getAuthDomainName(principal.getDomainId()));
 							//logger.info("getPasswordAuthentication: "+login+" / *****");
-							return new PasswordAuthentication(login,password);
+							return new PasswordAuthentication(login, PasswordUtils.asString(wta.getWebTopManager().lookupSecretValue(UserProfileId.from(principal), WebTopManager.PSVKEY_PPW)));
 						}
 
 					};

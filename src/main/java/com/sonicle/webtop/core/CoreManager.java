@@ -49,6 +49,7 @@ import com.sonicle.commons.web.json.JsonResult;
 import com.sonicle.commons.web.json.JsonUtils;
 import com.sonicle.commons.web.json.ipstack.IPLookupResponse;
 import com.sonicle.security.AuthContext;
+import com.sonicle.security.PasswordUtils;
 import com.sonicle.security.auth.directory.AbstractDirectory;
 import com.sonicle.webtop.core.app.RunContext;
 import com.sonicle.webtop.core.app.CoreManifest;
@@ -382,7 +383,7 @@ public class CoreManager extends BaseManager {
 	 * @param key The key to retrieve.
 	 * @return The value at the key, if any
 	 */
-	public String lookupSecretValue(final String key) {
+	public char[] lookupSecretValue(final String key) {
 		final UserProfileId targetPid = ensureProfile(RunContext.AdminScope.SYSADMIN);
 		return wta.getWebTopManager().lookupSecretValue(targetPid, key);
 	}
@@ -2980,8 +2981,8 @@ public class CoreManager extends BaseManager {
 		//use common service settings or webtop username/password
 		String username=css.getSmsWebrestUser();
 		if (username==null) username=targetPid.getUserId();
-		String spassword=css.getSmsWebrestPassword();
-		if (spassword == null) spassword = lookupSecretValue(WebTopManager.PSVKEY_PPW);
+		char[] password = PasswordUtils.asCharArray(css.getSmsWebrestPassword());
+		if (password == null) password = lookupSecretValue(WebTopManager.PSVKEY_PPW);
 		
 		String sender=css.getSmsSender();
 		String userSender=us.getSmsSender();
@@ -2992,7 +2993,7 @@ public class CoreManager extends BaseManager {
 		boolean isAlpha=StringUtils.isAlpha(sender);
 		String fromMobile=isAlpha?null:sender;
 		String fromName=isAlpha?sender:null;
-		sms.send(fromName, fromMobile, number, text, username, spassword!=null ? spassword.toCharArray() : null);
+		sms.send(fromName, fromMobile, number, text, username, password);
 	}
 	
 	/**
@@ -3032,9 +3033,9 @@ public class CoreManager extends BaseManager {
 		//use webtop username/password or from user settings
 		String username=us.getPbxUsername();
 		if (username==null) username=targetPid.getUserId();
-		String spassword=us.getPbxPassword();
-		if (spassword == null) spassword = lookupSecretValue(WebTopManager.PSVKEY_PPW);
-		pbx.call(number, username, spassword!=null ? spassword.toCharArray() : null);
+		char[] password = PasswordUtils.asCharArray(us.getPbxPassword());
+		if (password == null) password = lookupSecretValue(WebTopManager.PSVKEY_PPW);
+		pbx.call(number, username, password);
 	}
 	
 	/**
