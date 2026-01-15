@@ -1392,7 +1392,7 @@ Ext.define('Sonicle.webtop.core.app.WT', {
 						WT.res('rrule.nlp.days.saturday')
 					],
 					monthNames: [
-						WT.res('rrule.nlp.months.januray'),
+						WT.res('rrule.nlp.months.january'),
 						WT.res('rrule.nlp.months.february'),
 						WT.res('rrule.nlp.months.march'),
 						WT.res('rrule.nlp.months.april'),
