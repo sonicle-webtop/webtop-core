@@ -39,6 +39,8 @@ import com.sonicle.commons.PathUtils;
 import com.sonicle.commons.l4j.ProductLicense;
 import com.sonicle.mail.PropsBuilder;
 import com.sonicle.mail.email.EmailMessage;
+import com.sonicle.mail.email.EmailMessageBuilder;
+import com.sonicle.mail.email.Recipient;
 import com.sonicle.webtop.core.CoreManager;
 import com.sonicle.webtop.core.admin.CoreAdminManager;
 import com.sonicle.webtop.core.app.model.EnabledCond;
@@ -845,6 +847,20 @@ public class WT {
 	}
 	
 	public static void sendEmailMessage(final UserProfileId sendingProfileId, final EmailMessage message, final String moveToFolderAfterSent) throws WTEmailSendException {
+		getWTA().sendEmailMessage(sendingProfileId, message, moveToFolderAfterSent);
+	}
+	
+	public static void sendEmailMessage(final UserProfileId sendingProfileId, final InternetAddress from, final Collection<Recipient> recipients, final String subject, final String htmlBody) throws WTEmailSendException {
+		sendEmailMessage(sendingProfileId, from, recipients, subject, htmlBody, null);
+	}
+	
+	public static void sendEmailMessage(final UserProfileId sendingProfileId, final InternetAddress from, final Collection<Recipient> recipients, final String subject, final String htmlBody, final String moveToFolderAfterSent) throws WTEmailSendException {
+		final EmailMessage message = EmailMessageBuilder.startingBlank()
+			.from(from)
+			.to(recipients)
+			.withSubject(subject)
+			.withHTMLText(htmlBody)
+			.build();
 		getWTA().sendEmailMessage(sendingProfileId, message, moveToFolderAfterSent);
 	}
 	
