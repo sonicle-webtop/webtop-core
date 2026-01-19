@@ -37,6 +37,7 @@ import com.sonicle.mail.email.CalendarMethod;
 import com.sonicle.mail.email.ContentTransferEncoding;
 import com.sonicle.mail.email.EmailMessage;
 import com.sonicle.mail.email.EmailMessageBuilder;
+import com.sonicle.mail.email.EmailPopulatingBuilder;
 import com.sonicle.webtop.core.TplHelper;
 import com.sonicle.webtop.core.app.WT;
 import com.sonicle.webtop.core.app.sdk.WTParseException;
@@ -49,6 +50,7 @@ import java.text.ParseException;
 import java.util.Locale;
 import net.fortuna.ical4j.model.Calendar;
 import net.fortuna.ical4j.model.parameter.PartStat;
+import net.sf.qualitycheck.Check;
 
 /**
  * https://stackoverflow.com/questions/51516325/sending-calendar-events-invitations-using-ical4j-library-java-spring
@@ -57,12 +59,11 @@ import net.fortuna.ical4j.model.parameter.PartStat;
  */
 public class ICalendarHelper {
 	
-	public static EmailMessage prepareICalendarReply(final String prodId, final Calendar icalRequest, final InternetAddress forAddress, final InternetAddress organizerAddress, final PartStat response, final Locale locale) throws WTException {
-		//final String prodId = ICalendarUtils.buildProdId(WT.getPlatformName() + " Mail");
+	public static EmailMessage prepareICalendarReply(final String prodId, final Calendar icalRequest, final InternetAddress replyForAddress, final InternetAddress organizerAddress, final PartStat response, final Locale locale) throws WTException {
 		// Prepare reply
 		final Calendar icalReply;
 		try {
-			icalReply = ICalendarUtils.buildInvitationReply(icalRequest, prodId, forAddress, response);
+			icalReply = ICalendarUtils.buildInvitationReply(icalRequest, prodId, replyForAddress, response);
 		} catch (URISyntaxException | ParseException | IOException ex) {
 			throw new WTParseException(ex, "Unable to build reply from source request");
 		}
@@ -86,10 +87,41 @@ public class ICalendarHelper {
 		
 		final String summary = ICalendarUtils.getSummary(ICalendarUtils.getVEvent(icalRequest));
 		return EmailMessageBuilder.startingBlank()
-			.from(forAddress)
+			.from(replyForAddress)
 			.to(organizerAddress)
 			.withSubject(TplHelper.buildEventInvitationReplyEmailSubject(locale, response, summary))
 			.withCalendarText(CalendarMethod.REPLY, calendarText)
+			.withAttachment(attData, attFilename, ContentTransferEncoding.BASE_64)
+			.build();
+	}
+	
+	public static EmailMessage prepareICalendarMessage(final CalendarMethod method, final Calendar icalRequest, final InternetAddress from, final InternetAddress to, final String subject, final String html) throws WTException {
+		Check.notNull(method, "method");
+		Check.notNull(icalRequest, "icalRequest");
+		
+		// Converts prepared reply into text
+		final String calendarText;
+		try {
+			calendarText = ICalendarUtils.print(icalRequest);
+		} catch (IOException ex) {
+			throw new WTException(ex, "Unable to generate reply text");
+		}
+		
+		// Prepare iCalendar attachment
+		final String attFilename = ICalendarUtils.buildICalendarAttachmentFilename(WT.getPlatformName());
+		final ByteArrayDataSource attData;
+		try {
+			attData = new ByteArrayDataSource(calendarText, MimeUtils.CTYPE_APPLICATION_ICS);
+		} catch (IOException ex) {
+			throw new WTException(ex, "Unable to generate reply attachment");
+		}
+		
+		return EmailMessageBuilder.startingBlank()
+			.from(from)
+			.to(to)
+			.withSubject(subject)
+			.withHTMLText(html)
+			.withCalendarText(method, calendarText)
 			.withAttachment(attData, attFilename, ContentTransferEncoding.BASE_64)
 			.build();
 	}
