@@ -52,12 +52,20 @@ public class BaseRestApiUtils {
 		return fields2set == null || fields2set.contains(name);
 	}
 	
-	public static Set<String> parseSet(final String s) {
+	@Deprecated public static Set<String> parseSet(final String s) {
 		return (s == null) ? null : LangUtils.parseStringAsSet(s, ",", true);
 	}
 	
+	public static Set<String> parseStringSet(final String s) {
+		return (s == null) ? null : LangUtils.parseStringAsSet(s, ",", true);
+	}
+	
+	public static Set<Integer> parseIntegerSet(final String s) {
+		return (s == null) ? null : LangUtils.parseStringAsSet(s, ",", true, Integer.class);
+	}
+	
 	public static Set<SortInfo> parseSortInfo(final String s) throws ParseException {
-		return SortInfo.parseCollection(parseSet(s));
+		return SortInfo.parseCollection(parseStringSet(s));
 	}
 	
 	public static DateTime parseETag(final String etag) {
