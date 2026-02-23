@@ -239,7 +239,7 @@ public class UIPrivate extends AbstractServlet {
 		tplMap.put("WTS", LangUtils.unescapeUnicodeBackslashes(jswts.toJson()));
 		
 		ServletUtils.setHtmlContentType(response);
-		ServletUtils.setCacheControlPrivateNoCache(response);
+		ServletUtils.setCachingNotAllowed(response);
 		
 		WT.writeTemplate(CoreManifest.ID, "tpl/page/private.html", tplMap, response.getWriter());
 	}

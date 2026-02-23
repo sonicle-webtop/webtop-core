@@ -100,7 +100,7 @@ public abstract class BaseRequest extends AbstractServlet {
 				invokeArgs.add(response);
 				if (!methodInfo.nowriter) {
 					ServletUtils.setJsonContentType(response);
-					ServletUtils.setCacheControlPrivateNoCache(response);
+					ServletUtils.setCachingNotAllowed(response);
 					out = response.getWriter();
 					invokeArgs.add(out);
 				}

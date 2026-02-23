@@ -103,7 +103,7 @@ public class PublicRequest extends BaseRequest {
 			if (StringUtils.startsWith(mimeType, "image")) {
 				ServletUtils.setCacheControlPrivateMaxAge(response, 60*60*24);
 			} else {
-				ServletUtils.setCacheControlPrivateNoCache(response);
+				ServletUtils.setCachingNotAllowed(response);
 			}
 			os = ServletUtils.prepareForStreamCopy(request, response, mimeType, (int)resource.getSize(), ServletUtils.GZIP_MIN_THRESHOLD);
 			is = resource.getInputStream();
