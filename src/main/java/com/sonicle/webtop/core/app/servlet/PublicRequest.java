@@ -66,7 +66,7 @@ import org.slf4j.Logger;
  */
 public class PublicRequest extends BaseRequest {
 	public static final String URL = "/public"; // Shiro.ini must reflect this URI!
-	private static final Logger logger = WT.getLogger(PublicRequest.class);
+	private static final Logger LOGGER = WT.getLogger(PublicRequest.class);
 	public static final String PUBLIC_RESOURCES = "publicresources";
 	
 	public Resource getPublicFile(WebTopApp wta, String serviceId, String relativePath) {
@@ -115,9 +115,9 @@ public class PublicRequest extends BaseRequest {
 	}
 	
 	@Override
-	protected void processRequest(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+	protected void processGetOrPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		WebTopApp wta = WebTopApp.get(request);
-		WebTopSession wts = SessionContext.getCurrent(true);
+		WebTopSession wts = SessionContext.getCurrentWTSession(true);
 		
 		try {
 			String serviceId = ServletUtils.getStringParameter(request, "service", null);
@@ -158,7 +158,7 @@ public class PublicRequest extends BaseRequest {
 			}
 			
 		} catch(Exception ex) {
-			logger.warn("Error processing publicService request", ex);
+			LOGGER.warn("Error processing publicService request", ex);
 			throw new ServletException(ex.getMessage());
 		}
 	}

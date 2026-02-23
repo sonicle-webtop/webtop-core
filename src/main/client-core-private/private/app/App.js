@@ -208,7 +208,7 @@ Ext.define('Sonicle.webtop.core.private.app.App', {
 				servererror: function(s, status) {
 					if (status === 401) {
 						WT.confirm(WT.res('warn.conn.forbidden'), function(bid) {
-							if (bid === 'ok') WT.logout();
+							if (bid === 'ok') WT.reload();
 						}, me, {
 							itemId: 'pushservererror',
 							title: WT.res('warning'),

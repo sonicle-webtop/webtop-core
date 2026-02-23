@@ -75,7 +75,7 @@ public class RestApiDocs extends AssetsServlet {
 			
 		} else if (!StringUtils.equals(pathInfo, "/") && StringUtils.countMatches(pathInfo, "/") < 2) {
 			final String redirectUrl = ServletUtils.getRequestURLString(req) + "/" + RESOURCE_INDEX;
-			ServletUtils.redirectRequest(req, resp, redirectUrl);
+			ServletUtils.redirectRequest(req, resp, redirectUrl, true);
 			
 		} else if (StringUtils.endsWithIgnoreCase(pathInfo, "/" + RESOURCE_SWAGGERCONFIG)) {
 			ServiceManager svcMgr = getServiceManager(WebTopApp.get(req));

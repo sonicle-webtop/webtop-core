@@ -55,7 +55,7 @@ import org.slf4j.LoggerFactory;
  * @author malbinola
  */
 @ManagedService(
-		path = PushEndpoint.URL + "/{sessionId}",
+		path = com.sonicle.webtop.core.app.atmosphere.AtmosphereServlet.URL + "/{sessionId}",
 		broadcasterCache = com.sonicle.webtop.core.app.atmosphere.UUIDBroadcasterCache.class,
 		interceptors = {
 			// See defaults at: https://github.com/Atmosphere/atmosphere/blob/atmosphere-project-2.4.20/modules/cpr/src/main/java/org/atmosphere/annotation/AnnotationUtil.java
@@ -72,7 +72,6 @@ import org.slf4j.LoggerFactory;
 )
 public class PushEndpoint {
 	private static final Logger LOGGER = LoggerFactory.getLogger(PushEndpoint.class);
-	public static final String URL = "/push"; // This must reflect web.xml!
 	
 	@PathParam("sessionId")
 	private String sessionId;

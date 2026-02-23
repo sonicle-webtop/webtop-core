@@ -381,7 +381,7 @@ public abstract class BaseManager {
 	}
 	
 	public Session getMailSession() {
-		WebTopSession wts = SessionContext.getCurrent(false);
+		WebTopSession wts = SessionContext.getCurrentWTSession(false);
 		Session s=(wts != null) ? wts.getMailSession() : null;
 		if (s==null) s=WT.getGlobalMailSession(getTargetProfileId());
 		return s;

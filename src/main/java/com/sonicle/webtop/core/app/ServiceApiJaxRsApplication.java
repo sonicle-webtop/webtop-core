@@ -152,7 +152,7 @@ public class ServiceApiJaxRsApplication extends ResourceConfig {
 				register(ahoar);
 			}
 		} catch (Exception ex) {
-			LOGGER.error("[{}] Unable to configure JAX-RS Spec resource", ex, servletConfig.getServletName());
+			LOGGER.error("[{}] Unable to configure JAX-RS Spec resource", servletConfig.getServletName(), ex);
 		}
 	}
 	

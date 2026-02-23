@@ -35,12 +35,12 @@ package com.sonicle.webtop.core.app;
 
 import com.sonicle.commons.EnumUtils;
 import com.sonicle.commons.InternetAddressUtils;
-import com.sonicle.commons.LangUtils;
 import com.sonicle.commons.URIUtils;
+import com.sonicle.commons.db.DbUtils;
 import com.sonicle.commons.net.IPUtils;
-import com.sonicle.commons.web.json.JsonResult;
-import com.sonicle.commons.web.ServletUtils;
-import com.sonicle.security.DomainAccount;
+import com.sonicle.commons.time.JodaTimeUtils;
+import com.sonicle.security.CryptoUtils;
+import com.sonicle.security.MacAlgorithm;
 import com.sonicle.security.Principal;
 import com.sonicle.security.otp.OTPKey;
 import com.sonicle.security.otp.OTPProviderFactory;
@@ -53,71 +53,52 @@ import com.sonicle.webtop.core.CoreSettings;
 import com.sonicle.webtop.core.CoreSettings.OtpDeliveryMode;
 import com.sonicle.webtop.core.CoreUserSettings;
 import com.sonicle.webtop.core.TplHelper;
+import com.sonicle.webtop.core.app.model.TDTokenInfo;
+import com.sonicle.webtop.core.app.model.TDTokenIssued;
+import com.sonicle.webtop.core.app.sdk.Result;
 import com.sonicle.webtop.core.app.util.EmailNotification;
+import com.sonicle.webtop.core.app.util.ExceptionUtils;
 import com.sonicle.webtop.core.bol.ODomain;
-import com.sonicle.webtop.core.bol.OUserSetting;
-import com.sonicle.webtop.core.bol.js.JsTrustedDevice;
-import com.sonicle.webtop.core.bol.js.TrustedDeviceCookie;
+import com.sonicle.webtop.core.bol.OTrustedDevice;
+import com.sonicle.webtop.core.dal.BaseDAO;
+import com.sonicle.webtop.core.dal.TrustedDeviceDAO;
 import com.sonicle.webtop.core.sdk.UserProfile;
 import com.sonicle.webtop.core.sdk.UserProfileId;
 import com.sonicle.webtop.core.sdk.WTException;
 import freemarker.template.TemplateException;
 import java.io.IOException;
 import java.text.MessageFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
 import java.util.Locale;
-import java.util.UUID;
-import java.util.concurrent.TimeUnit;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.InternetAddress;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import java.security.NoSuchAlgorithmException;
+import java.sql.Connection;
 import net.glxn.qrgen.javase.QRCode;
-import org.apache.commons.codec.digest.DigestUtils;
+import net.sf.qualitycheck.Check;
 import org.apache.commons.lang3.StringUtils;
+import org.joda.time.DateTime;
+import org.joda.time.Duration;
 import org.slf4j.Logger;
 
 /**
  *
  * @author malbinola
  */
-public class OTPManager {
-	private static final Logger logger = WT.getLogger(OTPManager.class);
-	private static boolean initialized = false;
+public class OTPManager extends AbstractAppManager<OTPManager> {
+	private static final Logger LOGGER = WT.getLogger(OTPManager.class);
 	
-	/**
-	 * Initialization method. This method should be called once.
-	 * 
-	 * @param wta WebTopApp instance.
-	 * @return The instance.
-	 */
-	static synchronized OTPManager initialize(WebTopApp wta) {
-		if (initialized) throw new RuntimeException("Initialization already done");
-		OTPManager otpm = new OTPManager(wta);
-		initialized = true;
-		logger.info("Initialized");
-		return otpm;
+	OTPManager(WebTopApp wta) {
+		super(wta);
 	}
 	
-	private WebTopApp wta = null;
-	
-	/**
-	 * Private constructor.
-	 * Instances of this class must be created using static initialize method.
-	 * @param wta WebTopApp instance.
-	 */
-	private OTPManager(WebTopApp wta) {
-		this.wta = wta;
+	@Override
+	protected Logger doGetLogger() {
+		return LOGGER;
 	}
 	
-	/**
-	 * Performs cleanup process.
-	 */
-	void cleanup() {
-		wta = null;
-		logger.info("Cleaned up");
+	@Override
+	protected void doAppManagerCleanup() {
+		
 	}
 	
 	public boolean isEnabled(UserProfileId pid) {
@@ -151,7 +132,7 @@ public class OTPManager {
 	
 	public EmailConfig configureEmail(UserProfileId pid, String emailAddress) throws WTException {
 		SonicleAuth sa = (SonicleAuth)OTPProviderFactory.getInstance("SonicleAuth");
-		UserProfile.Data ud = wta.getWebTopManager().lookupProfileData(pid, true);
+		UserProfile.Data ud = getWebTopApp().getWebTopManager().lookupProfileData(pid, true);
 		
 		InternetAddress to = InternetAddressUtils.toInternetAddress(emailAddress);
 		if (to == null) throw new WTException("Invalid destination address [{}]", emailAddress);
@@ -215,7 +196,7 @@ public class OTPManager {
 			else throw new WTException("Email not present for admin user");
 		} else {
 			//normal user composes email from user id and internet domain
-			ODomain domain = wta.getWebTopManager().OLD_getDomain(pid.getDomainId());
+			ODomain domain = getWebTopApp().getWebTopManager().OLD_getDomain(pid.getDomainId());
 			if (domain == null) throw new WTException("Domain not found [{}]", pid.getDomainId());
 			internetName=domain.getInternetName();
 		}
@@ -225,7 +206,7 @@ public class OTPManager {
 		if (ia == null) throw new WTException("Unable to build account address");
 		
 		String uri = GoogleAuthOTPKey.buildAuthenticatorURI(issuer, otp.getSecretKey(), ia.getAddress());
-		logger.debug("Generating OPT QRCode for {}", uri);
+		LOGGER.debug("Generating OPT QRCode for {}", uri);
 		return QRCode.from(uri).withSize(size, size).stream().toByteArray();
 	}
 	
@@ -233,7 +214,7 @@ public class OTPManager {
 		OtpDeliveryMode deliveryMode = getDeliveryMode(pid);
 		if (OtpDeliveryMode.EMAIL.equals(deliveryMode)) {
 			SonicleAuth te = (SonicleAuth)OTPProviderFactory.getInstance("SonicleAuth");
-			UserProfile.Data ud = wta.getWebTopManager().lookupProfileData(pid, true);
+			UserProfile.Data ud = getWebTopApp().getWebTopManager().lookupProfileData(pid, true);
 			
 			String emailAddress = getEmailAddress(pid);
 			InternetAddress to = InternetAddressUtils.toInternetAddress(emailAddress);
@@ -261,69 +242,195 @@ public class OTPManager {
 		}
 	}
 	
-	public void registerTrustedDevice(UserProfileId pid, JsTrustedDevice td) {
-		SettingsManager sm = wta.getSettingsManager();
-		String key = CoreSettings.OTP_TRUSTED_DEVICE + "@" + td.deviceId;
-		sm.setUserSetting(pid.getDomainId(), pid.getUserId(), CoreManifest.ID, key, JsonResult.gson().toJson(td));
+	private TDTokenIssued createToken(String domainId, String userId, DateTime creationInstant, int daysDuration, byte[] secretKey) throws NoSuchAlgorithmException {
+		Duration ttl = (daysDuration > 0) ? Duration.standardDays(daysDuration) : null;
+		String token = CryptoUtils.generateBase64RandomToken(32); // 32 bytes -> 256 bit
+			
+		return new TDTokenIssued(
+			new UserProfileId(domainId, userId),
+			token,
+			createTokenHash(token, secretKey),
+			creationInstant,
+			(ttl != null) ? creationInstant.plus(ttl) : null,
+			ttl,
+			null
+		);
 	}
 	
-	public boolean removeTrustedDevice(UserProfileId pid, String deviceId) {
-		SettingsManager sm = wta.getSettingsManager();
-		String key = CoreSettings.OTP_TRUSTED_DEVICE + "@" + deviceId;
-		return sm.deleteUserSetting(pid.getDomainId(), pid.getUserId(), CoreManifest.ID, key);
+	private String createTokenHash(String token, byte[] secretKey) {
+		return CryptoUtils.computeMac(token.toCharArray(), MacAlgorithm.HMAC_SHA256, secretKey);
 	}
 	
-	public JsTrustedDevice getTrustedDevice(UserProfileId pid, String deviceId) {
-		SettingsManager sm = wta.getSettingsManager();
-		String key = CoreSettings.OTP_TRUSTED_DEVICE + "@" + deviceId;
-		return LangUtils.value(sm.getUserSetting(pid.getDomainId(), pid.getUserId(), CoreManifest.ID, key), null, JsTrustedDevice.class);
-	}
-	
-	public ArrayList<JsTrustedDevice> listTrustedDevices(UserProfileId pid) {
-		SettingsManager sm = wta.getSettingsManager();
-		List<OUserSetting> items = sm.getUserSettings(pid.getDomainId(), pid.getUserId(), CoreManifest.ID, CoreSettings.OTP_TRUSTED_DEVICE+"%");
-		return JsTrustedDevice.asList(items);
-	}
-	
-	public JsTrustedDevice trustThisDevice(UserProfileId pid, String userAgentHeader) {
-		String deviceId = DigestUtils.shaHex(UUID.randomUUID().toString() + userAgentHeader);
-		long now = new Date().getTime();
-		JsTrustedDevice td = new JsTrustedDevice(deviceId, DomainAccount.buildName(pid.getDomainId(), pid.getUserId()), now, userAgentHeader);
-		registerTrustedDevice(pid, td);
-		return td;
-	}
-	
-	public boolean isThisDeviceTrusted(UserProfileId pid, TrustedDeviceCookie tdc) {
-		if (tdc == null) return false;
-		CoreServiceSettings css = new CoreServiceSettings(CoreManifest.ID, pid.getDomainId());
+	public TDTokenIssued trustThisDevice(final UserProfileId profileId, final String clientIdentifier, final String clientIpAddress, final String clientUserAgentString) throws WTException {
+		Check.notNull(profileId, "profileId");
+		TrustedDeviceDAO tdeDao = TrustedDeviceDAO.getInstance();
+		CoreServiceSettings css = new CoreServiceSettings(CoreManifest.ID, profileId.getDomainId());
+		Connection con = null;
 		
-		// Checks (if enabled) cookie duration
-		int duration = css.getOTPDeviceTrustDuration();
-		if (duration > 0) {
-			long now = new Date().getTime();
-			long expires = tdc.timestamp + TimeUnit.DAYS.toMillis(duration);
-			if (now > expires) {
-				logger.trace("Device cookie expired [{}days, {} > {}]", duration, now, expires);
-				return false;
+		try {
+			byte[] key = getWebTopApp().getSecretKey();
+			DateTime issueNow = JodaTimeUtils.now();
+			int daysDuration = css.getOTPDeviceTrustDuration();
+			TDTokenIssued newToken = createToken(profileId.getDomainId(), profileId.getUserId(), issueNow, daysDuration, key);
+			
+			OTrustedDevice ormt = new OTrustedDevice();
+			ormt.setDomainId(profileId.getDomainId());
+			ormt.setUserId(profileId.getUserId());
+			ormt.setToken(newToken.getTokenHash());
+			ormt.setClientIdentifier(clientIdentifier);
+			ormt.setExpiresAt(newToken.getExpiry());
+			ormt.setRevoked(false);
+			ormt.setClientIpAddress(clientIpAddress);
+			ormt.setClientUserAgent(StringUtils.isBlank(clientUserAgentString) ? null : Integer.toHexString(clientUserAgentString.hashCode()));
+			
+			con = getConnection(true);
+			tdeDao.insert(con, ormt, BaseDAO.createRevisionTimestamp());
+			LOGGER.debug("TDToken created successfully [{}]", newToken.getTokenPlain());
+			
+			return newToken;
+			
+		} catch (Exception ex) {
+			throw ExceptionUtils.wrapThrowable(ex);
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
+	public String getTrustedDeviceCookieNameSuffix(final UserProfileId profileId) {
+		String secret = lookupUserSecret(profileId);
+		return (secret == null) ? null : CryptoUtils.computeMac(profileId.toString().toCharArray(), MacAlgorithm.HMAC_SHA256, CryptoUtils.toUTF8ByteArray(secret));
+	}
+	
+	public Result<TDTokenInfo> isDeviceTrusted(final UserProfileId profileId, final String token, final String clientIdentifier, final boolean updateLastUsed) {
+		Check.notNull(profileId, "profileId");
+		Check.notEmpty(token, "token");
+		Check.notEmpty(clientIdentifier, "clientIdentifier");
+		TrustedDeviceDAO tdeDao = TrustedDeviceDAO.getInstance();
+		Connection con = null;
+		
+		try {
+			byte[] key = getWebTopApp().getSecretKey();
+			DateTime now = JodaTimeUtils.now();
+			boolean alwaysEnforceDuration = false;
+			String tokenHash = createTokenHash(token, key);
+			
+			con = getConnection(true);
+			OTrustedDevice ormt = tdeDao.selectByToken(con, tokenHash);
+			if (ormt == null) {
+				LOGGER.debug("TDToken not found [{}]", token);
+				return new Result<>(null);
+
+			} else {
+				if (ormt.getRevoked()) {
+					LOGGER.debug("TDToken is revoked [{}]", ormt.getToken());
+					return new Result<>(null);
+
+				} else if (!profileId.equals(ormt.getProfileId())) {
+					LOGGER.debug("TDToken user association mismatch, revoking... [{}]", ormt.getToken());
+					doTDTokenRevoke(con, ormt);
+					return new Result<>(null);
+
+				} else if ((ormt.getExpiresAt() != null) && now.isAfter(ormt.getExpiresAt())) {
+					LOGGER.debug("TDToken is expired, revoking... [{}]", ormt.getToken());
+					doTDTokenRevoke(con, ormt);
+					return new Result<>(null);
+					
+				} else if (!clientIdentifier.equals(ormt.getClientIdentifier())) {
+					LOGGER.debug("TDToken clientID mismatch, revoking... [{}, {} != {}]", ormt.getToken(), clientIdentifier, ormt.getClientIdentifier());
+					doTDTokenRevoke(con, ormt);
+					return new Result<>(null);
+					
+				} else if (alwaysEnforceDuration) { // Finally, checks if
+					CoreServiceSettings css = new CoreServiceSettings(CoreManifest.ID, profileId.getDomainId());
+					int daysDuration = css.getOTPDeviceTrustDuration();
+					
+					if (now.isAfter(ormt.getCreationTimestamp().plusDays(daysDuration))) {
+						LOGGER.debug("TDToken is expired (enforce duration), revoking... [{}]", ormt.getToken());
+						doTDTokenRevoke(con, ormt);
+						return new Result<>(null);
+					}
+				}
 			}
+			
+			if (updateLastUsed && tdeDao.updateUsageById(con, ormt.getTrustedDeviceId(), now) != 1) {
+				LOGGER.warn("TDToken: usage update failure [{}, {}]", ormt.getTrustedDeviceId(), ormt.getToken());
+			}
+			
+			return new Result<>(new TDTokenInfo(
+				ormt.getProfileId(),
+				tokenHash,
+				ormt.getCreationTimestamp(),
+				ormt.getExpiresAt(),
+				ormt.getLastUsedAt() // Do NOT return now at last-used
+			));
+			
+		} catch (Exception ex) {
+			return new Result<>(null);
+		} finally {
+			DbUtils.closeQuietly(con);
 		}
-		
-		// Checks if device is registered
-		JsTrustedDevice td = getTrustedDevice(pid, tdc.deviceId);
-		if (td == null) {
-			logger.trace("Device ID not registered before [{}]", tdc.deviceId);
-			return false;
-		}
-		
-		// Checks account match
-		if (!td.account.equals(tdc.account)) {
-			logger.trace("Device ID not bound to the right account [{} != {}]", tdc.account, td.account);
-			return false;
-		}
-		return true;
 	}
 	
-	public boolean isTrusted(UserProfileId pid, String remoteIp) {
+	public boolean revokeThisTrustedDevice(final UserProfileId profileId, final String thisClientIdentifier) {
+		Check.notNull(profileId, "profileId");
+		Check.notEmpty(thisClientIdentifier, "thisClientIdentifier");
+		TrustedDeviceDAO tdeDao = TrustedDeviceDAO.getInstance();
+		Connection con = null;
+		
+		try {
+			con = getConnection(true);
+			int ret = tdeDao.revokeThisByPidClient(con, profileId.getDomainId(), profileId.getUserId(), thisClientIdentifier, BaseDAO.createRevisionTimestamp());
+			return ret > 0;
+			
+		} catch (Exception ex) {
+			return false;
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
+	public boolean revokeOtherTrustedDevices(final UserProfileId profileId, final String thisClientIdentifier) {
+		Check.notNull(profileId, "profileId");
+		Check.notEmpty(thisClientIdentifier, "thisClientIdentifier");
+		TrustedDeviceDAO tdeDao = TrustedDeviceDAO.getInstance();
+		Connection con = null;
+		
+		try {
+			con = getConnection(true);
+			int ret = tdeDao.revokeOthersByPidClient(con, profileId.getDomainId(), profileId.getUserId(), thisClientIdentifier, BaseDAO.createRevisionTimestamp());
+			return ret > 0;
+			
+		} catch (Exception ex) {
+			return false;
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
+	private boolean doTDTokenRevoke(Connection con, OTrustedDevice ormt) {
+		TrustedDeviceDAO tdeDao = TrustedDeviceDAO.getInstance();
+		
+		int ret = tdeDao.revokeById(con, ormt.getTrustedDeviceId(), BaseDAO.createRevisionTimestamp());
+		if (ret != 1) {
+			LOGGER.error("TDToken: revoke failure [{}, {}]", ormt.getTrustedDeviceId(), ormt.getToken());
+			return false;
+		} else {
+			return true;
+		}
+	}
+	
+	private String lookupUserSecret(final UserProfileId profileId) {
+		try {
+			return getWebTopApp().getWebTopManager()
+				.getUserSecret(profileId.getDomainId(), profileId.getUserId());
+
+		} catch (Exception ex) {
+			LOGGER.error("[DeviceId] Unable to get secret for '{}'", profileId, ex);
+			return null;
+		}
+	}
+	
+	public boolean isIPTrusted(UserProfileId pid, String remoteIp) {
 		CoreServiceSettings css = new CoreServiceSettings(CoreManifest.ID, pid.getDomainId());
 		String addresses = css.getOTPTrustedAddresses();
 		if (addresses != null) {
@@ -332,37 +439,10 @@ public class OTPManager {
 				boolean inRange = IPUtils.isIPInRange(cidrs, remoteIp);
 				if (inRange) return true;
 			} catch(Exception ex) {
-				logger.error("Problem performing IP range check", ex);
+				LOGGER.error("Problem performing IP range check", ex);
 			}
 		}
 		return false;
-	}
-	
-	public void clearTrustedDeviceCookie(UserProfileId pid, HttpServletResponse response) {
-		String name = MessageFormat.format("TD_{0}", Principal.buildHashedName(pid.getDomainId(), pid.getUserId()));
-		ServletUtils.eraseCookie(response, name);
-	}
-	
-	public TrustedDeviceCookie readTrustedDeviceCookie(UserProfileId pid, HttpServletRequest request) {
-		String secret = getSecret(pid);
-		if (StringUtils.isBlank(secret)) {
-			logger.warn("Missing OTP secret for user '{}'", pid.toString());
-			return null;
-		}
-		String name = MessageFormat.format("TD_{0}", Principal.buildHashedName(pid.getDomainId(), pid.getUserId()));
-		return ServletUtils.getEncryptedCookie(secret, request, name, TrustedDeviceCookie.class);
-	}
-	
-	public boolean writeTrustedDeviceCookie(UserProfileId pid, HttpServletResponse response, TrustedDeviceCookie tdc) {
-		String secret = getSecret(pid);
-		if (StringUtils.isBlank(secret)) {
-			logger.warn("Missing OTP secret for user '{}'", pid.toString());
-			return false;
-		}
-		String name = MessageFormat.format("TD_{0}", Principal.buildHashedName(pid.getDomainId(), pid.getUserId()));
-		int duration = 60*60*24*365*2; // 2 years
-		ServletUtils.setEncryptedCookie(secret, response, name, tdc, TrustedDeviceCookie.class, duration);
-		return true;
 	}
 	
 	private void sendCodeEmail(UserProfileId pid, Locale locale, InternetAddress to, String code) throws WTException {
@@ -383,9 +463,9 @@ public class OTPManager {
 			WT.sendEmail(WT.getGlobalMailSession(pid), true, from, to, subject, html);
 
 		} catch(IOException | TemplateException ex) {
-			logger.error("Unable to build email template", ex);
+			LOGGER.error("Unable to build email template", ex);
 		} catch(MessagingException ex) {
-			logger.error("Unable to send email", ex);
+			LOGGER.error("Unable to send email", ex);
 		}
 	}
 	

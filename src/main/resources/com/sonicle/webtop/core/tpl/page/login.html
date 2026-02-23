@@ -209,7 +209,7 @@
                         <#if showRememberMe>
                         <div class="flex flex-wrap items-center justify-between gap-4">
                             <div class="flex items-center">
-                                <input name="wtrememberme" type="checkbox" class="ui-input-checkbox" />
+                                <input name="wtrememberme" type="checkbox" value="true" class="ui-input-checkbox" <#if showMaintenance>disabled</#if> />
                                 <label for="wtrememberme" class="ui-input-checkbox-label ml-3">${LangUtils.encodeForHTMLContent(i18n.rememberMeLabel)}</label>
                             </div>
                         </div>

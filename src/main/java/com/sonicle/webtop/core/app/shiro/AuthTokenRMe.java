@@ -1,6 +1,5 @@
 /*
- * WebTop Services is a Web Application framework developed by Sonicle S.r.l.
- * Copyright (C) 2014 Sonicle S.r.l.
+ * Copyright (C) 2026 Sonicle S.r.l.
  *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by
@@ -11,7 +10,7 @@
  *
  * This program is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
+ * FOR A PARTICULAR PURPOSE. See the GNU Affero General Public License for more
  * details.
  *
  * You should have received a copy of the GNU Affero General Public License
@@ -19,7 +18,7 @@
  * the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
  * MA 02110-1301 USA.
  *
- * You can contact Sonicle S.r.l. at email address sonicle@sonicle.com
+ * You can contact Sonicle S.r.l. at email address sonicle[at]sonicle[dot]com
  *
  * The interactive user interfaces in modified source and object code versions
  * of this program must display Appropriate Legal Notices, as required under
@@ -29,50 +28,45 @@
  * version 3, these Appropriate Legal Notices must retain the display of the
  * Sonicle logo and Sonicle copyright notice. If the display of the logo is not
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
- * display the words "Copyright (C) 2014 Sonicle S.r.l.".
+ * display the words "Copyright (C) 2026 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core.bol.js;
+package com.sonicle.webtop.core.app.shiro;
 
-import com.sonicle.commons.web.json.JsonResult;
-import com.sonicle.webtop.core.bol.OUserSetting;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
+import org.apache.shiro.authc.HostAuthenticationToken;
 
 /**
  *
  * @author malbinola
  */
-public class JsTrustedDevice {
+public class AuthTokenRMe implements HostAuthenticationToken {
+	private final String username;
+	private final String host;
 	
-	public String deviceId = null;
-	public String account = null;
-	public Long timestamp = null;
-	public String userAgent = null;
-	
-	public JsTrustedDevice(String deviceId, String account, long timestamp, String userAgent) {
-		this.deviceId = deviceId;
-		this.account = account;
-		this.timestamp = timestamp;
-		this.userAgent = userAgent;
+	public AuthTokenRMe(String username) {
+		this(username, null);
 	}
 	
-	public static JsTrustedDevice fromJson(String value) {
-		if(value == null) return null;
-		return JsonResult.gson().fromJson(value, JsTrustedDevice.class);
+	public AuthTokenRMe(String username, String host) {
+		this.username = username;
+		this.host = host;
 	}
 	
-	public static ArrayList<JsTrustedDevice> asList(List<OUserSetting> items) {
-		ArrayList<JsTrustedDevice> values = new ArrayList<>();
-		JsTrustedDevice valueof = null;
-		for(OUserSetting item: items) {
-			valueof = JsTrustedDevice.fromJson(item.getValue());
-			if(valueof != null) values.add(valueof);
-		}
-		return values;
+	public String getUsername() {
+		return username;
 	}
-	
-	public String getISOTimestamp() {
-		return JsonResult.gson().toJson(new Date(this.timestamp)).replace("\"", "");
+
+	@Override
+	public String getHost() {
+		return host;
+	}
+
+	@Override
+	public Object getPrincipal() {
+		return username;
+	}
+
+	@Override
+	public Object getCredentials() {
+		return username;
 	}
 }

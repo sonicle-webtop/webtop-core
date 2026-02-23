@@ -52,9 +52,11 @@ import com.sonicle.commons.flags.BitFlagsEnum;
 import com.sonicle.commons.time.JavaTimeUtils;
 import com.sonicle.commons.time.JodaTimeUtils;
 import com.sonicle.security.AuthContext;
-import com.sonicle.security.ConnectionSecurity;
+import com.sonicle.security.CryptoUtils;
+import com.sonicle.security.DigestAlgorithm;
 import com.sonicle.security.DigestValue;
 import com.sonicle.security.DomainAccount;
+import com.sonicle.security.MacAlgorithm;
 import com.sonicle.security.PasswordUtils;
 import com.sonicle.security.Principal;
 import com.sonicle.security.auth.DirectoryException;
@@ -82,6 +84,7 @@ import com.sonicle.webtop.core.app.model.ApiKey;
 import com.sonicle.webtop.core.app.model.ApiKeyBase;
 import com.sonicle.webtop.core.app.model.ApiKeyLive;
 import com.sonicle.webtop.core.app.model.ApiKeyNew;
+import com.sonicle.webtop.core.app.model.CIDTokenIssued;
 import com.sonicle.webtop.core.app.model.DirectoryUser;
 import com.sonicle.webtop.core.app.model.Domain;
 import com.sonicle.webtop.core.app.model.DomainBase;
@@ -141,6 +144,8 @@ import com.sonicle.webtop.core.app.model.GroupGetOption;
 import com.sonicle.webtop.core.app.model.GroupUpdateOption;
 import com.sonicle.webtop.core.app.model.HomedThrowable;
 import com.sonicle.webtop.core.app.model.PermissionString;
+import com.sonicle.webtop.core.app.model.RMeTokenInfo;
+import com.sonicle.webtop.core.app.model.RMeTokenIssued;
 import com.sonicle.webtop.core.app.model.ResourceGetOption;
 import com.sonicle.webtop.core.app.model.ResourcePermissions;
 import com.sonicle.webtop.core.app.model.ResourceUpdateOption;
@@ -163,6 +168,7 @@ import com.sonicle.webtop.core.app.model.UserUpdateOption;
 import com.sonicle.webtop.core.app.shiro.ShiroUtils;
 import com.sonicle.webtop.core.app.shiro.WTRealm;
 import com.sonicle.webtop.core.bol.OApiKey;
+import com.sonicle.webtop.core.bol.ORememberMeToken;
 import com.sonicle.webtop.core.bol.VUser;
 import com.sonicle.webtop.core.dal.ApiKeyDAO;
 import com.sonicle.webtop.core.dal.BaseDAO;
@@ -173,7 +179,9 @@ import com.sonicle.webtop.core.dal.IMChatDAO;
 import com.sonicle.webtop.core.dal.IMMessageDAO;
 import com.sonicle.webtop.core.dal.LicenseDAO;
 import com.sonicle.webtop.core.dal.MasterDataDAO;
+import com.sonicle.webtop.core.dal.RememberMeTokenDAO;
 import com.sonicle.webtop.core.dal.TagDAO;
+import com.sonicle.webtop.core.dal.TrustedDeviceDAO;
 import com.sonicle.webtop.core.model.ServicePermission;
 import com.sonicle.webtop.core.sdk.AuthException;
 import com.sonicle.webtop.core.sdk.UserProfile;
@@ -210,6 +218,7 @@ import org.apache.commons.collections4.multimap.ArrayListValuedHashMap;
 import org.apache.commons.lang3.StringUtils;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
+import org.joda.time.Duration;
 import org.slf4j.Logger;
 
 /**
@@ -241,6 +250,7 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 	private final LoadingCache<String, AuthContext> domainAuthenticationContextCache = Caffeine.newBuilder().build(new AuthenticationContextCacheLoader());
 	private final Cache<String, String> profileSecretValueCache = Caffeine.newBuilder().build();
 	private final KeyedReentrantLocks<String> lockSecretGet = new KeyedReentrantLocks<>();
+	private final KeyedReentrantLocks<String> lockRMEValidation = new KeyedReentrantLocks<>();
 	private final SubjectSidCache subjectSidCache;
 	private final LoadingCache<UserProfileId, UserProfile.PersonalInfo> profileToPersonalInfoCache = Caffeine.newBuilder().build(new ProfilePersonalInfoCacheLoader());
 	private final LoadingCache<UserProfileId, UserProfile.Data> profileToDataCache = Caffeine.newBuilder().build(new ProfileDataCacheLoader());
@@ -372,28 +382,6 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 		try {
 			con = getConnection(true);
 			return dao.selectByDomainUser(con, pid.getDomainId(), pid.getUserId());
-			
-		} catch(SQLException | DAOException ex) {
-			throw new WTException(ex, "DB error");
-		} finally {
-			DbUtils.closeQuietly(con);
-		}
-	}
-	
-	@Deprecated
-	public CheckUserResult checkUser(UserProfileId pid) throws WTException {
-		return checkUser(pid.getDomainId(), pid.getUserId());
-	}
-	
-	@Deprecated
-	public CheckUserResult checkUser(String domainId, String userId) throws WTException {
-		UserDAO dao = UserDAO.getInstance();
-		Connection con = null;
-		
-		try {
-			con = getConnection(true);
-			OUser o = dao.selectByDomainUser(con, domainId, userId);
-			return new CheckUserResult(o != null, o != null ? o.getEnabled() : false);
 			
 		} catch(SQLException | DAOException ex) {
 			throw new WTException(ex, "DB error");
@@ -1200,7 +1188,7 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 						}
 					}
 				} catch (Exception ex) {
-					LOGGER.error("[{}] Error on bulk-cleaning users from Directory", ex, domainId);
+					LOGGER.error("[{}] Error on bulk-cleaning users from Directory", domainId, ex);
 					errors.add(new HomedThrowable(CoreManifest.ID, new WTException(ex, "Error during bulk-cleaning users from Directory")));
 				}
 			}
@@ -1443,6 +1431,7 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 				}
 				
 			} else {
+				con = getConnection(false);
 				result = doUserInsert(con, userPid.getDomainId(), userPid.getUserId(), userSid, user, UserProcessOpt.fromUserUpdateOptions(options), defaultGroup);
 			}
 			
@@ -1555,7 +1544,12 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 				directory.updateUserPassword(opts, userPid.getDomainId(), userPid.getUserId(), newPassword);
 			}
 			cacheSecretValue(userPid, WebTopManager.PSVKEY_PPW, newPassword);
-
+			try {
+				revokeRememberMeTokens(userPid.getDomainId(), userPid.getUserId());
+			} catch (WTException ex1) {
+				LOGGER.warn("Cannot revoke RMe tokens for user [{}]", userPid, ex1);
+			}
+			
 			CoreUserSettings cus = new CoreUserSettings(userPid);
 			cus.setPasswordLastChange(JodaTimeUtils.now());
 			cus.setPasswordForceChange(forceChangeUponLogin);
@@ -1689,6 +1683,259 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 		for (String userId : userIds) clearProfileCache(new UserProfileId(domainId, userId));
 		
 		return ret;
+	}
+	
+	public static class UserStateResult {
+		public final boolean exist;
+		public final boolean enabled;
+		
+		public UserStateResult(boolean exist, boolean enabled) {
+			this.exist = exist;
+			this.enabled = enabled;
+		}
+	}
+	
+	public UserStateResult checkUserState(final String domainId, final String userId) throws WTException {
+		Check.notEmpty(domainId, "domainId");
+		Check.notEmpty(userId, "userId");
+		UserDAO useDao = UserDAO.getInstance();
+		Connection con = null;
+		
+		// Given that this method is used only in realm to check the availability 
+		// of a user and it's no subject to frequent calls, a cache is not needed for now!
+		
+		try {
+			con = getConnection(true);
+			Boolean enabled = useDao.selectEnabledStatusByProfile(con, domainId, userId);
+			return new UserStateResult(enabled != null, enabled != null ? enabled : false);
+			
+		} catch (Exception ex) {
+			throw ExceptionUtils.wrapThrowable(ex);
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
+	private CIDTokenIssued createCIDToken(String domainId, String userId, String version, byte[] secretKey) throws NoSuchAlgorithmException {
+		String cid = CryptoUtils.generateBase64RandomToken(24); // 24 bytes -> 192 bit
+		return new CIDTokenIssued(
+			new UserProfileId(domainId, userId),
+			version,
+			cid,
+			CryptoUtils.computeMac(CIDTokenIssued.plainSignature(version, cid).toCharArray(), MacAlgorithm.HMAC_SHA256, secretKey)
+		);
+	}
+	
+	public CIDTokenIssued issueClientIDToken(final String domainId, final String userId, final String version) throws WTException {
+		Check.notEmpty(domainId, "domainId");
+		Check.notEmpty(userId, "userId");
+		Check.notEmpty(version, "version");
+		
+		try {
+			return createCIDToken(domainId, userId, version, getWebTopApp().getSecretKey());
+			
+		} catch (Exception ex) {
+			throw ExceptionUtils.wrapThrowable(ex);
+		}
+	}
+	
+	public boolean validateClientIDToken(final String version, final String clientIdentifier, final String signature) throws WTException {
+		Check.notEmpty(version, "version");
+		Check.notEmpty(clientIdentifier, "clientIdentifier");
+		Check.notEmpty(signature, "signature");
+		
+		try {
+			return CryptoUtils.verifyMac(CIDTokenIssued.plainSignature(version, clientIdentifier), signature, MacAlgorithm.HMAC_SHA256, getWebTopApp().getSecretKey());
+			
+		} catch (Exception ex) {
+			throw ExceptionUtils.wrapThrowable(ex);
+		}
+	}
+	
+	private RMeTokenIssued createRememberMeToken(String domainId, String userId, String selector, DateTime issueInstant, int daysDuration) throws NoSuchAlgorithmException {
+		Duration ttl = Duration.standardDays(Check.greaterThan(0, daysDuration, "daysDuration"));
+		if (StringUtils.isBlank(selector)) selector = CryptoUtils.generateBase64RandomToken(16); // 16 bytes -> 128 bit
+		String validatorPlain = CryptoUtils.generateBase64RandomToken(32); // 32 bytes -> 256 bit
+		final CryptoUtils.HashOptions hashOpts = new CryptoUtils.HashOptions()
+			.withPseudoRandomFunctionName("SHA256")
+			.withNumOfIterations(10000)
+			.withSaltSize(128); // 128 bit -> 16 bytes
+		
+		String validatorHash = CryptoUtils.hash(validatorPlain, DigestAlgorithm.PBKDF2, hashOpts);
+		return new RMeTokenIssued(
+			new UserProfileId(domainId, userId),
+			selector,
+			validatorHash,
+			validatorPlain,
+			issueInstant,
+			issueInstant.plus(ttl),
+			ttl
+		);
+	}
+	
+	public Result<RMeTokenIssued> issueRememberMeToken(final String domainId, final String userId, final String clientIdentifier, final String clientIpAddress, final String clientUserAgentString) throws WTException {
+		Check.notEmpty(domainId, "domainId");
+		Check.notEmpty(userId, "userId");
+		CoreServiceSettings css = new CoreServiceSettings(CoreManifest.ID, domainId);
+		RememberMeTokenDAO rmeDao = RememberMeTokenDAO.getInstance();
+		Connection con = null;
+		
+		try {
+			DateTime issueNow = JodaTimeUtils.now();
+			RMeTokenIssued newToken = createRememberMeToken(domainId, userId, null, issueNow, css.getLoginRememberMeMaxAge());
+			
+			ORememberMeToken ormt = new ORememberMeToken();
+			ormt.setDomainId(domainId);
+			ormt.setUserId(userId);
+			ormt.setSelector(newToken.getSelector());
+			ormt.setValidator(newToken.getValidatorHash());
+			ormt.setIssuedAt(issueNow);
+			ormt.setExpiresAt(newToken.getExpiry());
+			ormt.setRevoked(false);
+			ormt.setClientIdentifier(clientIdentifier);
+			ormt.setClientIpAddress(clientIpAddress);
+			ormt.setClientUserAgent(StringUtils.isBlank(clientUserAgentString) ? null : Integer.toHexString(clientUserAgentString.hashCode()));
+			
+			con = getConnection(true);
+			rmeDao.insert(con, ormt, BaseDAO.createRevisionTimestamp());
+			
+			return new Result<>(newToken);
+			
+		} catch (Exception ex) {
+			throw ExceptionUtils.wrapThrowable(ex);
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
+	public boolean revokeRememberMeToken(final String selector) throws WTException {
+		Check.notEmpty(selector, "selector");
+		RememberMeTokenDAO rmeDao = RememberMeTokenDAO.getInstance();
+		Connection con = null;
+		
+		try {
+			lockRMEValidation.lock(selector);
+			try {
+				con = getConnection(true);
+				int ret = rmeDao.revokeBySelector(con, selector, BaseDAO.createRevisionTimestamp());
+				if (ret != 1) LOGGER.debug("RMeToken not found [{}]", selector);
+				return ret == 1;
+				
+			} catch (Exception ex) {
+				throw ExceptionUtils.wrapThrowable(ex);
+			} finally {
+				DbUtils.closeQuietly(con);
+			}
+			
+		} finally {
+			lockRMEValidation.unlock(selector);
+		}
+	}
+	
+	public Result<RMeTokenInfo> validateRememberMeToken(final String selector, final String validator, final String deviceId) throws WTException {
+		Check.notEmpty(selector, "selector");
+		Check.notEmpty(validator, "validator");
+		RememberMeTokenDAO rmeDao = RememberMeTokenDAO.getInstance();
+		Connection con = null;
+		
+		try {
+			lockRMEValidation.lock(selector);
+			try {
+				DateTime now = JodaTimeUtils.now();
+				con = getConnection(true);
+				ORememberMeToken ormt = rmeDao.selectBySelector(con, selector);
+				if (ormt == null) {
+					LOGGER.debug("RMeToken not found [{}]", selector);
+					return new Result<>(null);
+
+				} else {
+					if (ormt.getRevoked()) {
+						LOGGER.debug("RMeToken is revoked [{}]", ormt.getSelector());
+						return new Result<>(null);
+						
+					} else if (now.isAfter(ormt.getExpiresAt())) {
+						LOGGER.debug("RMeToken is expired [{}]", ormt.getSelector());
+						int ret = rmeDao.revokeById(con, ormt.getRemembermeTokenId(), BaseDAO.createRevisionTimestamp());
+						if (ret != 1) LOGGER.error("Unable to revoke RMeToken [{}, {}]", ormt.getRemembermeTokenId(), ormt.getSelector());
+						return new Result<>(null);
+					}
+				}
+
+				// Verify validator digest
+				boolean gracefulWindow = false;
+				boolean valid = CryptoUtils.verifyDigest(validator, ormt.getValidator());
+				if (!valid) {
+					LOGGER.debug("RMeToken digest verification failure for '{}' [{}, {}]", validator, ormt.getSelector(), ormt.getValidator());
+					if (!StringUtils.isBlank(ormt.getValidatorPrev()) && !now.isAfter(ormt.getIssuedAt().plusSeconds(30))) {
+						LOGGER.debug("RMeToken rotated in graceful period, checking PREV... [{}, {}]", ormt.getSelector(), ormt.getValidatorPrev());
+						valid = CryptoUtils.verifyDigest(validator, ormt.getValidatorPrev());
+						gracefulWindow = true;
+					}
+				}
+				if (!valid) {
+					// Probable stealing/replay: for safety, revoke all tokens of the user!
+					LOGGER.debug("RMeToken digest verification failure, revoking tokens for '{}'...", ormt.getProfileId());
+					int ret = rmeDao.revokeByPid(con, ormt.getDomainId(), ormt.getUserId(), BaseDAO.createRevisionTimestamp());
+					if (ret >= 1) {
+						LOGGER.warn("RMeToken(s) for '{}' has been revoked due to suspicious activity [{}]", ormt.getProfileId(), ormt.getSelector());
+					} else {
+						LOGGER.error("RMeToken: error revoking tokens for '{}' [{}]", ormt.getProfileId(), ormt.getSelector());
+					}
+					return new Result<>(null);
+				}
+				
+				CoreServiceSettings css = new CoreServiceSettings(CoreManifest.ID, ormt.getDomainId());
+				final int maxHoursBeforeRotate = css.getLoginRememberMeMaxAgeBeforeRotate();
+
+				// OK token is valid, rotate if necessary!
+				if (!gracefulWindow && (maxHoursBeforeRotate > 0 && now.isAfter(ormt.getIssuedAt().plusHours(maxHoursBeforeRotate)))) {
+					LOGGER.debug("RMeToken OK, let's rotate it [{}]", ormt.getSelector());
+					RMeTokenIssued newToken = createRememberMeToken(ormt.getDomainId(), ormt.getUserId(), ormt.getSelector(), now, css.getLoginRememberMeMaxAge());
+					int ret = rmeDao.updateValidatorById(con, ormt.getRemembermeTokenId(), newToken.getValidatorHash(), now, newToken.getExpiry(), BaseDAO.createRevisionTimestamp());
+					if (ret != 1) LOGGER.error("RMeToken: rotation failure [{}]", ormt.getSelector());
+					return new Result<>(newToken);
+					
+				} else {
+					int ret = rmeDao.updateUsageById(con, ormt.getRemembermeTokenId(), BaseDAO.createRevisionTimestamp());
+					if (ret != 1) LOGGER.error("RMeToken: usage update failure [{}]", ormt.getSelector());
+					LOGGER.debug("RMeToken OK, returning as is... [{}]", ormt.getSelector());
+					return new Result<>(new RMeTokenInfo(
+						ormt.getProfileId(),
+						ormt.getSelector(),
+						ormt.getValidator(),
+						ormt.getValidatorPrev(),
+						ormt.getIssuedAt(),
+						ormt.getExpiresAt()
+					));
+				}
+
+			} catch (Exception ex) {
+				throw ExceptionUtils.wrapThrowable(ex);
+			} finally {
+				DbUtils.closeQuietly(con);
+			}
+			
+		} finally {
+			lockRMEValidation.unlock(selector);
+		}
+	}
+	
+	public boolean revokeRememberMeTokens(final String domainId, final String userId) throws WTException {
+		Check.notEmpty(domainId, "domainId");
+		Check.notEmpty(userId, "userId");
+		RememberMeTokenDAO rmeDao = RememberMeTokenDAO.getInstance();
+		Connection con = null;
+		
+		try {
+			con = getConnection(true);
+			int ret = rmeDao.revokeByPid(con, domainId, userId, BaseDAO.createRevisionTimestamp());
+			return ret > 0;
+			
+		} catch (Exception ex) {
+			throw ExceptionUtils.wrapThrowable(ex);
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
 	}
 	
 	public Set<String> listResourceIds(final String domainId, final EnabledCond enabled) throws WTException {
@@ -3313,6 +3560,10 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 		LOGGER.debug("[{}] Deleting sharing data...", domainId);
 		ShareDataDAO.getInstance().deleteByDomain(con, domainId);
 		ShareDAO.getInstance().deleteByDomain(con, domainId);
+		LOGGER.debug("[{}] Deleting OTP trusted devices...", domainId);
+		TrustedDeviceDAO.getInstance().deleteByDomain(con, domainId);
+		LOGGER.debug("[{}] Deleting rme tokens...", domainId);
+		RememberMeTokenDAO.getInstance().deleteByDomain(con, domainId);
 		LOGGER.debug("[{}] Deleting permissions...", domainId);
 		RolePermissionDAO.getInstance().deleteByDomain(con, domainId);
 		LOGGER.debug("[{}] Deleting roles...", domainId);
@@ -4492,7 +4743,7 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 		WTRealm realm = (WTRealm)ShiroUtils.getRealmByName(WTRealm.NAME);
 		for (UserProfileId profileId : expandSubjectsToUserProfiles(domainId, subjects, subjectsAsSID)) {
 			if (LOGGER.isTraceEnabled()) LOGGER.trace("[{}] Clearing authz-info for profile '{}'", domainId, profileId);
-			RunContext.clearCachedAuthorizationInfo(realm, RunContext.buildPrincipalCollection(profileId.getDomainId(), profileId.getUserId()));
+			RunContext.clearCachedAuthorizationInfo(realm, WTRealm.createPrincipalCollection(profileId.getDomainId(), profileId.getUserId()));
 		}
 	}
 		
@@ -5812,12 +6063,16 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 						doAdd(oapk.getDomainId(), oapk.getApiKeyId(), apiKeyDigested, oapk.getExpiresAt());
 						
 					} catch (Exception ex) {
-						LOGGER.error("[ApiKey Cache] Unable to load ApiKey '{}'", ex, oapk.getApiKeyId());
+						LOGGER.error("[ApiKey Cache] Unable to load ApiKey '{}'", oapk.getApiKeyId(), ex);
 					}
 				}
 				
 			} catch (Throwable t) {
+				//if (StringUtils.equals(getWebTopApp().getAppReleaseVersion(), "")) {
+				//	
+				//} else {
 				LOGGER.error("[ApiKey Cache] Unable to load all", t);
+				//}
 			} finally {
 				DbUtils.closeQuietly(con);
 			}
@@ -5909,6 +6164,7 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 		}
 	}
 	
+	/*
 	public static class CheckUserResult {
 		public boolean exist;
 		public boolean enabled;
@@ -5918,6 +6174,7 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 			this.enabled = enabled;
 		}
 	}
+	*/
 	
 	public static class EntityPermissions {
 		public ArrayList<ORolePermission> others;

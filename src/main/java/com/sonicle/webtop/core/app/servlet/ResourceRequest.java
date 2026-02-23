@@ -266,7 +266,7 @@ public class ResourceRequest extends HttpServlet {
 	}
 	
 	private boolean isJsDebug() {
-		WebTopSession wts = SessionContext.getCurrent();
+		WebTopSession wts = SessionContext.getCurrentWTSession();
 		return (wts != null) ? wts.isJsDebugEnabled() : false;
 	}
 	

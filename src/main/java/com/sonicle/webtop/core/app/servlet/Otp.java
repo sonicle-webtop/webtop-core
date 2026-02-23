@@ -46,12 +46,14 @@ import com.sonicle.webtop.core.app.AuditLogManager;
 import com.sonicle.webtop.core.app.OTPManager;
 import com.sonicle.webtop.core.app.WebTopApp;
 import com.sonicle.webtop.core.app.WebTopSession;
-import com.sonicle.webtop.core.bol.js.JsTrustedDevice;
-import com.sonicle.webtop.core.bol.js.TrustedDeviceCookie;
 import com.sonicle.webtop.core.sdk.UserProfileId;
 import com.sonicle.webtop.core.app.RunContext;
 import com.sonicle.webtop.core.app.SessionContext;
 import com.sonicle.webtop.core.app.WT;
+import com.sonicle.webtop.core.app.model.TDTokenInfo;
+import com.sonicle.webtop.core.app.model.TDTokenIssued;
+import com.sonicle.webtop.core.app.sdk.Result;
+import com.sonicle.webtop.core.app.shiro.filter.Logout;
 import com.sonicle.webtop.core.app.util.LogbackHelper;
 import com.sonicle.webtop.core.app.util.LoggerUtils;
 import freemarker.template.TemplateException;
@@ -72,24 +74,28 @@ import org.slf4j.Logger;
  */
 public class Otp extends AbstractServlet {
 	public static final String URL = "/otp"; // Shiro.ini must reflect this URI!
-	private static final Logger logger = WT.getLogger(Otp.class);
+	private static final Logger LOGGER = WT.getLogger(Otp.class);
 	public static final String WTSPROP_OTP_CONFIG = "OTPCONFIG";
 	public static final String WTSPROP_OTP_TRIES = "OTPTRIES";
 	public static final String WTSPROP_OTP_VERIFIED = "OTPVERIFIED";
 	public static final String WTSPROP_OTP_PENDING = "OTPPENDING";
 	
 	@Override
-	protected void processRequest(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+	protected void processGetOrPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		LoggerUtils.setContextDC(RunContext.getRunProfileId());
 		WebTopApp wta = getWebTopApp(request);
-		WebTopSession wts = SessionContext.getCurrent(false);
+		WebTopSession wts = SessionContext.getCurrentWTSession(false);
 		
 		try {
+			if (LOGGER.isTraceEnabled()) {
+				LOGGER.trace("[{}] processGetOrPost [{}]", ServletUtils.getRequestID(request), ServletHelper.getSessionID(request));
+			}
+			
 			UserProfileId pid = wts.getUserProfile().getId();
 			CoreServiceSettings css = new CoreServiceSettings(CoreManifest.ID, pid.getDomainId());
 			Locale locale = wts.getLocale();
 			
-			boolean skip = skipOTP(wta, pid, request);
+			boolean skip = skipOTP(wta, pid, request, response);
 			if (skip) throw new SkipException();
 			
 			OTPManager otpm = wta.getOTPManager();
@@ -113,9 +119,19 @@ public class Otp extends AbstractServlet {
 					if (css.getOTPDeviceTrustEnabled()) {
 						boolean trustThis = ServletUtils.getBooleanParameter(request, "wttrust", false);
 						if (trustThis) {
-							String userAgent = ServletUtils.getUserAgent(request);
-							JsTrustedDevice js = otpm.trustThisDevice(pid, userAgent);
-							otpm.writeTrustedDeviceCookie(pid, response, new TrustedDeviceCookie(js));
+							String clientIdentifier = SessionContext.getWTClientID(wts.getSession());
+							String clientIp = ServletUtils.getClientIP(request);
+							String clientUserAgent = ServletUtils.getUserAgent(request);
+							
+							try {
+								TDTokenIssued token = otpm.trustThisDevice(pid, clientIdentifier, clientIp, clientUserAgent);
+								if (token != null) {
+									ServletHelper.writeTrustedDeviceCookie(otpm.getTrustedDeviceCookieNameSuffix(pid), response, token);
+								}
+								
+							} catch (Exception ex) {
+								LOGGER.error("Error remembering device", ex);
+							}
 						}
 					}
 					wts.clearProperty(CoreManifest.ID, WTSPROP_OTP_CONFIG);
@@ -134,7 +150,7 @@ public class Otp extends AbstractServlet {
 		} catch (NoMoreTriesException ex) {
 			if (wts != null) wts.clearProperty(CoreManifest.ID, WTSPROP_OTP_VERIFIED);
 			writeOTPLog(wta, wts, request, false);
-			ServletUtils.forwardRequest(request, response, Logout.URL);
+			ServletUtils.redirectRequest(request, response, Logout.URL, true, true);
 			
 		} catch (SkipException ex) {
 			if (wts != null) {
@@ -142,13 +158,13 @@ public class Otp extends AbstractServlet {
 				wts.clearProperty(CoreManifest.ID, WTSPROP_OTP_PENDING);
 				writeOTPLog(wta, wts, request, true);
 			}
-			ServletUtils.forwardRequest(request, response, UIPrivate.URL);
+			ServletUtils.redirectRequest(request, response, "/", true, true);
 			
 		} catch (Exception ex) {
-			logger.error("Unexpected Error", ex);
+			LOGGER.error("Unexpected Error", ex);
 			//TODO: error page??
 			if (wts != null) wts.clearProperty(CoreManifest.ID, WTSPROP_OTP_VERIFIED);
-			ServletUtils.forwardRequest(request, response, Logout.URL);
+			ServletUtils.redirectRequest(request, response, Logout.URL, true, true);
 		}
 	}
 	
@@ -163,36 +179,39 @@ public class Otp extends AbstractServlet {
 		wta.getAuditLogManager().write(profileId, null, sessionId, CoreManifest.ID, "AUTH", action, null, JsonResult.gson().toJson(new MapItem().add("ip", clientIp)));
 	}
 	
-	private boolean skipOTP(WebTopApp wta, UserProfileId pid, HttpServletRequest request) {
+	private boolean skipOTP(WebTopApp wta, UserProfileId pid, HttpServletRequest request, HttpServletResponse response) {
 		OTPManager otpm = wta.getOTPManager();
 		CoreServiceSettings css = new CoreServiceSettings(CoreManifest.ID, pid.getDomainId());
 		
 		// Tests enabling parameters
 		boolean sysEnabled = css.getOTPEnabled(), profileEnabled = otpm.isEnabled(pid);
 		if (!sysEnabled || !profileEnabled) { //TODO: valutare se escludere admin
-			logger.debug("OTP check skipped [{}, {}]", sysEnabled, profileEnabled);
+			LOGGER.debug("OTP check skipped [{}, {}]", sysEnabled, profileEnabled);
 			return true;
 		}
 		
 		String remoteIP = ServletUtils.getClientIP(request);
-		logger.debug("Checking OTP from remote address {}", remoteIP);
+		LOGGER.debug("Checking OTP from remote address {}", remoteIP);
 		
 		// Checks if request comes from a configured trusted network and skip check
-		if (otpm.isTrusted(pid, remoteIP)) {
-			logger.debug("OTP check skipped: request comes from a trusted address.");
+		if (otpm.isIPTrusted(pid, remoteIP)) {
+			LOGGER.debug("OTP check skipped: request comes from a trusted address.");
 			return true;
 		}
 		
 		// Checks cookie that marks a trusted device
-		JsTrustedDevice td = null;
-		TrustedDeviceCookie cookie = otpm.readTrustedDeviceCookie(pid, request);
-		if ((cookie != null) && otpm.isThisDeviceTrusted(pid, cookie)) {
-			td = otpm.getTrustedDevice(pid, cookie.deviceId);
-		}
-		
-		if (td != null) {
-			logger.debug("OTP check skipped: request comes from a trusted device [{}]", td.deviceId);
-			return true;
+		String clientIdentifier = SessionContext.getWTClientID(request.getSession());
+		String cookieSuffix = otpm.getTrustedDeviceCookieNameSuffix(pid);
+		String token = ServletHelper.readTrustedDeviceCookie(cookieSuffix, request);
+		if (!StringUtils.isBlank(token)) {
+			Result<TDTokenInfo> result = otpm.isDeviceTrusted(pid, token, clientIdentifier, true);
+			if (result.getObject() != null) {
+				LOGGER.debug("OTP check skipped: request comes from a trusted device [{}]", token);
+				return true;
+				
+			} else {
+				ServletUtils.eraseCookie(response, ServletHelper.buildTrustedDeviceCookieName(cookieSuffix));
+			}
 		}
 		
 		return false;
@@ -222,7 +241,8 @@ public class Otp extends AbstractServlet {
 		vars.put("i18n", i18n);
 		
 		ServletUtils.setHtmlContentType(response);
-		ServletUtils.setCacheControlPrivate(response);
+		ServletUtils.setCachingNotAllowed(response);
+		
 		WT.writeTemplate(CoreManifest.ID, "page/otp.html", vars, response.getWriter());
 	}
 	

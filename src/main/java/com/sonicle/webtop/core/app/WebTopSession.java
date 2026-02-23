@@ -204,7 +204,7 @@ public class WebTopSession {
 	 * @return WebTop client identifier
 	 */
 	public String getClientTrackingID() {
-		return SessionContext.getWebTopClientID(session);
+		return SessionContext.getWTClientID(session);
 	}
 	
 	/**
@@ -216,19 +216,11 @@ public class WebTopSession {
 	}
 	
 	/**
-	 * Convenience method to get client's browser URL.
-	 * @return The network address
-	 */
-	public String getClientUrl() {
-		return SessionContext.getClientUrl(session);
-	}
-	
-	/**
 	 * Convenience method to get client's plain user-agent info.
 	 * @return user-agent info
 	 */
 	public String getClientPlainUserAgent() {
-		return SessionContext.getClientPlainUserAgent(session);
+		return SessionContext.getClientPlainUA(session);
 	}
 	
 	/**

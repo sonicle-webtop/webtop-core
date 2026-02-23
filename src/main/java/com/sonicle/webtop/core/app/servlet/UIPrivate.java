@@ -34,7 +34,6 @@
 package com.sonicle.webtop.core.app.servlet;
 
 import com.sonicle.commons.LangUtils;
-import com.sonicle.commons.PathUtils;
 import com.sonicle.commons.web.ServletUtils;
 import com.sonicle.commons.web.json.CId;
 import com.sonicle.security.PasswordUtils;
@@ -42,7 +41,6 @@ import com.sonicle.webtop.core.CoreLocaleKey;
 import com.sonicle.webtop.core.CoreSettings;
 import com.sonicle.webtop.core.app.AbstractServlet;
 import com.sonicle.webtop.core.app.CoreManifest;
-import com.sonicle.webtop.core.app.PushEndpoint;
 import com.sonicle.webtop.core.app.RunContext;
 import com.sonicle.webtop.core.app.SessionContext;
 import com.sonicle.webtop.core.app.SettingsManager;
@@ -52,6 +50,7 @@ import com.sonicle.webtop.core.app.WebTopApp;
 import com.sonicle.webtop.core.app.WebTopManager;
 import com.sonicle.webtop.core.app.WebTopProps;
 import com.sonicle.webtop.core.app.WebTopSession;
+import com.sonicle.webtop.core.app.atmosphere.AtmosphereServlet;
 import com.sonicle.webtop.core.app.model.DomainBase;
 import com.sonicle.webtop.core.app.sdk.WTPwdPolicyException;
 import com.sonicle.webtop.core.bol.js.JsWTSPrivate;
@@ -61,7 +60,6 @@ import com.sonicle.webtop.core.sdk.WTException;
 import com.sonicle.webtop.core.app.util.LoggerUtils;
 import freemarker.template.TemplateException;
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
@@ -78,18 +76,20 @@ import org.slf4j.Logger;
  */
 public class UIPrivate extends AbstractServlet {
 	public static final String URL = "/ui-private"; // Shiro.ini must reflect this URI!
-	private static final Logger logger = WT.getLogger(UIPrivate.class);
+	private static final Logger LOGGER = WT.getLogger(UIPrivate.class);
 	public static final String WTSPROP_PASSWORD_CHANGEUPONLOGIN = "PASSWORD_CHANGEUPONLOGIN";
 
 	@Override
-	protected void processRequest(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+	protected void processGetOrPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		LoggerUtils.setContextDC(RunContext.getRunProfileId());
 		WebTopApp wta = getWebTopApp(request);
 		SettingsManager setm = wta.getSettingsManager();
-		WebTopSession wts = SessionContext.getCurrent(false);
+		WebTopSession wts = SessionContext.getCurrentWTSession(false);
 		
 		try {
-			logger.trace("Servlet: ui [{}]", ServletHelper.getSessionID(request));
+			if (LOGGER.isTraceEnabled()) {
+				LOGGER.trace("[{}] processGetOrPost [{}]", ServletUtils.getRequestID(request), ServletHelper.getSessionID(request));
+			}
 			
 			boolean maintenance = LangUtils.value(setm.getServiceSetting(CoreManifest.ID, CoreSettings.MAINTENANCE), false);
 			if (maintenance && false) throw new MaintenanceException();
@@ -113,15 +113,15 @@ public class UIPrivate extends AbstractServlet {
 						writePage = false;
 					}
 				} catch (PasswordMustBeDifferent ex) {
-					logger.debug("Password change failure: password matches the current one");
+					LOGGER.debug("Password change failure: password matches the current one");
 					failureMessage = wta.lookupResource(wts.getLocale(), CoreLocaleKey.TPL_PWCHANGE_ERROR_MUSTBEDIFFERENT);
 				} catch (WTPwdPolicyException ex) {
-					logger.debug("Password change failure: password does not satisfy password policies [{}]", ex.getCode(), ex);
+					LOGGER.debug("Password change failure: password does not satisfy password policies [{}]", ex.getCode(), ex);
 					DomainBase.PasswordPolicies policies = wta.getWebTopManager().getDomainPasswordPolicies(pid.getDomainId());
 					failureMessage = lookupPolicyExceptionCodeMessage(wta, wts.getLocale(), ex.getCode(), policies);
 				} catch (WTException ex) {
 					//TODO: display a centralized error page (like Throwable catch below)
-					logger.error("Unable to update password", ex);
+					LOGGER.error("Unable to update password", ex);
 					failureMessage = wta.lookupResource(wts.getLocale(), CoreLocaleKey.TPL_PWCHANGE_ERROR_UNEXPECTED);
 				}
 				
@@ -142,13 +142,13 @@ public class UIPrivate extends AbstractServlet {
 				writePrivatePage(wta, wts, WT.getPublicContextPath(pid.getDomainId()), request, response);
 			}
 			
-		} catch(MaintenanceException ex) {
+		} catch (MaintenanceException ex) {
 			SecurityUtils.getSubject().logout();
 			request.setAttribute(Login.ATTRIBUTE_LOGINFAILURE, Login.LOGINFAILURE_MAINTENANCE);
 			ServletUtils.forwardRequest(request, response, "login");
 			
-		} catch(Throwable t) {
-			logger.error("Error", t);
+		} catch (Throwable t) {
+			LOGGER.error("Error", t);
 			//TODO: pagina di errore
 		}
 	}
@@ -206,7 +206,7 @@ public class UIPrivate extends AbstractServlet {
 		vars.put("i18n", i18n);
 		
 		ServletUtils.setHtmlContentType(response);
-		ServletUtils.setCacheControlPrivate(response);
+		ServletUtils.setCachingNotAllowed(response);
 		
 		WT.writeTemplate(CoreManifest.ID, "tpl/page/password.html", vars, response.getWriter());
 	}
@@ -225,7 +225,8 @@ public class UIPrivate extends AbstractServlet {
 		jswts.sessionId = wts.getId();
 		jswts.securityToken = wts.getCSRFToken();
 		jswts.contextPath = baseUrl;
-		jswts.pushUrl = PathUtils.concatPaths(wts.getClientUrl(), PushEndpoint.URL);
+		jswts.pushUrl = AtmosphereServlet.URL;
+		//jswts.pushUrl = PathUtils.concatPaths(wts.getClientUrl(), AtmosphereServlet.URL);
 		jswts.miniServiceName=ServletUtils.getStringParameter(request, "service", null);
 		jswts.miniServiceAction=ServletUtils.getStringParameter(request, "action", null);
 		jswts.miniServiceArgs=ServletUtils.getStringParameter(request, "args", null);

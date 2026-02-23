@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2025 Sonicle S.r.l.
+ * Copyright (C) 2026 Sonicle S.r.l.
  *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by
@@ -28,19 +28,49 @@
  * version 3, these Appropriate Legal Notices must retain the display of the
  * Sonicle logo and Sonicle copyright notice. If the display of the logo is not
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
- * display the words "Copyright (C) 2025 Sonicle S.r.l.".
+ * display the words "Copyright (C) 2026 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core.app.shiro;
+package com.sonicle.webtop.core.app.servlet;
 
-import org.apache.shiro.authc.UsernamePasswordToken;
+import net.sf.qualitycheck.Check;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  *
  * @author malbinola
  */
-public class ApiKeyToken extends UsernamePasswordToken {
+public class CIDCookieValue {
+	public static final String VERSION = "v1";
+	private final String version;
+	private final String clientIdentifier;
+	private final String signature;
 	
-	public ApiKeyToken(String username, String apiKey, String host) {
-		super(username, apiKey, false, host);
+	public CIDCookieValue(String version, String clientIdentifier, String signature) {
+		this.version = Check.notEmpty(version, "version");
+		this.clientIdentifier = Check.notEmpty(clientIdentifier, "clientIdentifier");
+		this.signature = Check.notEmpty(signature, "signature");
+	}
+	
+	public String getVersion() {
+		return version;
+	}
+
+	public String getClientIdentifier() {
+		return clientIdentifier;
+	}
+
+	public String getSignature() {
+		return signature;
+	}
+	
+	public String print() {
+		return version + "." + clientIdentifier + "." + signature;
+	}
+	
+	public static CIDCookieValue parse(final String value) {
+		String tokens[] = StringUtils.splitByWholeSeparator(value, ".", 3);
+		if (tokens == null || tokens.length != 3) return null;
+		if (StringUtils.isEmpty(tokens[0]) || StringUtils.isEmpty(tokens[1]) || StringUtils.isEmpty(tokens[2])) return null;
+		return new CIDCookieValue(tokens[0], tokens[1], tokens[2]);
 	}
 }

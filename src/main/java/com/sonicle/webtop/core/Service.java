@@ -59,6 +59,7 @@ import com.sonicle.webtop.core.app.RunContext;
 import com.sonicle.webtop.core.app.CorePrivateEnvironment;
 import com.sonicle.webtop.core.app.DocEditorManager;
 import com.sonicle.webtop.core.app.OTPManager;
+import com.sonicle.webtop.core.app.SessionContext;
 import com.sonicle.webtop.core.app.UIBoot;
 import com.sonicle.webtop.core.app.WT;
 import com.sonicle.webtop.core.app.WebTopManager;
@@ -111,9 +112,7 @@ import com.sonicle.webtop.core.bol.js.JsSVMeetingProviderConfig;
 import com.sonicle.webtop.core.bol.js.JsServicePermissionLkp;
 import com.sonicle.webtop.core.bol.js.JsTagGrid;
 import com.sonicle.webtop.core.bol.model.UserOptionsServiceData;
-import com.sonicle.webtop.core.bol.js.JsTrustedDevice;
 import com.sonicle.webtop.core.bol.js.JsWhatsnewTab;
-import com.sonicle.webtop.core.bol.js.TrustedDeviceCookie;
 import com.sonicle.webtop.core.model.Recipient;
 import com.sonicle.webtop.core.model.ServicePermission;
 import com.sonicle.webtop.core.model.Activity;
@@ -141,6 +140,7 @@ import com.sonicle.webtop.core.app.model.UILookAndFeel;
 import com.sonicle.webtop.core.app.model.UIPreset;
 import com.sonicle.webtop.core.app.model.UITheme;
 import com.sonicle.webtop.core.app.sdk.WTUnsupportedOperationException;
+import com.sonicle.webtop.core.app.servlet.ServletHelper;
 import com.sonicle.webtop.core.bol.js.JsUIPreset;
 import com.sonicle.webtop.core.products.TMCEPremiumProduct;
 import com.sonicle.webtop.core.util.AppLocale;
@@ -1506,7 +1506,7 @@ public class Service extends BaseService implements EventListener {
 		try {
 			String id = ServletUtils.getStringParameter(request, "id", true);
 			boolean full = ServletUtils.getBooleanParameter(request, "full", false);
-			String baseUrl=PathUtils.concatPaths(wts.getClientUrl(), "resources/"+id+"/whatsnew/");
+			String baseUrl = PathUtils.concatPaths(WT.getPublicBaseUrl(wts.getProfileDomainId()), "/resources/"+id+"/whatsnew/");
 			String html = 
 					"<html><head><base href=\""+baseUrl+"\"><style>"+WHATSNEW_STYLES+"</style></head><body>"+
 					wts.getWhatsnewHtml(id, getEnv().getProfile(), full)+
@@ -1650,23 +1650,21 @@ public class Service extends BaseService implements EventListener {
 				}
 			} else if (operation.equals("untrustthis")) {
 				// This works only on current session user!
-				OTPManager otpm = coreMgr.getOTPManager();
-				TrustedDeviceCookie tdc = otpm.readTrustedDeviceCookie(pid, request);
-				if (tdc != null) {
-					otpm.removeTrustedDevice(pid, tdc.deviceId);
-					otpm.clearTrustedDeviceCookie(pid, response);
+				OTPManager otpMgr = coreMgr.getOTPManager();
+				
+				String clientIdentifier = SessionContext.getWTClientID(request.getSession());
+				String cookieSuffix = otpMgr.getTrustedDeviceCookieNameSuffix(pid);
+				if (otpMgr.revokeThisTrustedDevice(pid, clientIdentifier)) {
+					ServletUtils.eraseCookie(response, ServletHelper.buildTrustedDeviceCookieName(cookieSuffix));
 				}
 				new JsonResult().printTo(out);
 				
 			} else if (operation.equals("untrustothers")) {
 				// This works only on current session user!
-				OTPManager otpm = coreMgr.getOTPManager();
-				TrustedDeviceCookie thistdc = otpm.readTrustedDeviceCookie(pid, request);
-				List<JsTrustedDevice> tds = otpm.listTrustedDevices(pid);
-				for(JsTrustedDevice td: tds) {
-					if ((thistdc != null) && (td.deviceId.equals(thistdc.deviceId))) continue;
-					otpm.removeTrustedDevice(pid, td.deviceId);
-				}
+				OTPManager otpMgr = coreMgr.getOTPManager();
+				
+				String clientIdentifier = SessionContext.getWTClientID(request.getSession());
+				otpMgr.revokeOtherTrustedDevices(pid, clientIdentifier);
 				new JsonResult().printTo(out);
 			}
 			

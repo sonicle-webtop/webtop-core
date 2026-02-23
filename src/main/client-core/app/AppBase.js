@@ -114,23 +114,26 @@ Ext.define('Sonicle.webtop.core.app.AppBase', {
 	maskCount: 0,
 	
 	constructor: function() {
-		var me = this;
+		var me = this,
+			SoS = Sonicle.String;
 		Ext.themeName = WTS.themeName;
 		WT.app = me;
 		WT.plTags = Ext.platformTags;
 		me.initPlatformTags();
 		me.uiid = Sonicle.Crypto.randomString(10);
 		me.platformName = WTS.platformName;
-		me.contextPath = WTS.contextPath;
+		me.contextPath = SoS.removeEnd(WTS.contextPath, '/', false);
 		me.baseUrl = window.location.origin + me.contextPath;
-		me.pushUrl = WTS.pushUrl;
+		//me.pushUrl = me.baseUrl + WTS.pushUrl; // Alternative computation dependent by publicUrl in settings
+		me.pushUrl = window.location.origin + SoS.removeEnd(window.location.pathname, '/', false) + WTS.pushUrl;
 		me.miniMode = WTS.miniMode;
-		if (me.miniMode)
+		if (me.miniMode) {
 			me.miniCfg = {
 				service: WTS.miniServiceName,
 				action: WTS.miniServiceAction,
 				args: WTS.miniServiceArgs
-			}
+			};
+		}
 		me.locales = Ext.create('Ext.util.HashMap');
 		me.descriptors = Ext.create('Ext.util.HashMap');
 		me.services = [];

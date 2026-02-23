@@ -33,10 +33,13 @@
  */
 package com.sonicle.webtop.core.app.shiro.filter;
 
-import com.sonicle.webtop.core.app.util.LoggerUtils;
+import com.sonicle.commons.web.ServletUtils;
+import com.sonicle.webtop.core.app.util.DCHelper;
+import javax.servlet.FilterChain;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import org.apache.shiro.web.filter.PathMatchingFilter;
+import org.apache.shiro.web.util.WebUtils;
 
 /**
  *
@@ -45,9 +48,20 @@ import org.apache.shiro.web.filter.PathMatchingFilter;
 public class LoggerDC extends PathMatchingFilter {
 
 	@Override
-	protected boolean preHandle(ServletRequest request, ServletResponse response) throws Exception {
+	protected boolean onPreHandle(ServletRequest request, ServletResponse response, Object mappedValue) throws Exception {
 		//LoggerUtils.initDC(ContextLoader.getWabappName(request.getServletContext()));
-		LoggerUtils.initDC();
+		DCHelper.initDC();
 		return true;
+	}
+
+	@Override
+	protected void executeChain(ServletRequest request, ServletResponse response, FilterChain chain) throws Exception {
+		try {
+			DCHelper.setRequestDC(ServletUtils.getRequestID(WebUtils.toHttp(request)));
+			super.executeChain(request, response, chain);
+			
+		} finally {
+			DCHelper.clearDC();
+		}
 	}
 }

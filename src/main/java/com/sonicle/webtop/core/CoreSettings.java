@@ -326,6 +326,34 @@ public class CoreSettings {
 	public static final String LOGIN_HIDE_WEBAPPNAME = "login.webappname.hide";
 	
 	/**
+	 * [system]
+	 * [boolean]
+	 * Indicates whether show-password feature is enabled.
+	 */
+	public static final String LOGIN_PASSSORDREVEAL_ENABLED = "login.passwordreveal.enabled";
+	
+	/**
+	 * [system]
+	 * [boolean]
+	 * Indicates whether remember-me feature is enabled.
+	 */
+	public static final String LOGIN_REMEMBERME_ENABLED = "login.rememberme.enabled";
+	
+	/**
+	 * [system+domain]
+	 * [integer]
+	 * Max age in hours before perform validator token rotation. Must be greater than 0 or -1 to disable the rotation.
+	 */
+	public static final String LOGIN_REMEMBERME_MAXAGEBEFOREROTATE = "login.rememberme.maxagebeforerotate";
+	
+	/**
+	 * [system+domain]
+	 * [integer]
+	 * Max age in days of the remember-me session. Must be greater than 0.
+	 */
+	public static final String LOGIN_REMEMBERME_MAXAGE = "login.rememberme.maxage";
+	
+	/**
 	 * [system+domain]
 	 * [boolean]
 	 * Indicates wether remote-device reporting is active: an email notice will be

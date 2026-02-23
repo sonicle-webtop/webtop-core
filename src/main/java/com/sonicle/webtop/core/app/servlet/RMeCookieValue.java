@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 Sonicle S.r.l.
+ * Copyright (C) 2026 Sonicle S.r.l.
  *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by
@@ -28,40 +28,42 @@
  * version 3, these Appropriate Legal Notices must retain the display of the
  * Sonicle logo and Sonicle copyright notice. If the display of the logo is not
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
- * display the words "Copyright (C) 2019 Sonicle S.r.l.".
+ * display the words "Copyright (C) 2026 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core.app.shiro.filter;
+package com.sonicle.webtop.core.app.servlet;
 
-import com.sonicle.webtop.core.app.shiro.MaintenanceException;
-import java.io.IOException;
-import javax.servlet.ServletRequest;
-import javax.servlet.ServletResponse;
-import javax.servlet.http.HttpServletResponse;
-import org.apache.shiro.authc.AuthenticationException;
-import org.apache.shiro.authc.AuthenticationToken;
-import org.apache.shiro.web.filter.authc.BasicHttpAuthenticationFilter;
-import org.apache.shiro.web.util.WebUtils;
+import net.sf.qualitycheck.Check;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  *
  * @author malbinola
  */
-public class BasicAuth extends BasicHttpAuthenticationFilter {
+public class RMeCookieValue {
+	private final String selector;
+	private final String validator;
 
-	@Override
-	protected boolean onLoginFailure(AuthenticationToken token, AuthenticationException e, ServletRequest request, ServletResponse response) {
-		// Breaks the default flow in case of MaintenanceException:
-		// in this case send a SERVICE_UNAVAILABLE (503) error in order to allow 
-		// clients to get informed to the temporary condition.
-		if (e instanceof MaintenanceException) {
-			try {
-				WebUtils.toHttp(response).sendError(HttpServletResponse.SC_SERVICE_UNAVAILABLE, e.getMessage());
-				return false;
-			} catch(IOException ex) {
-				return super.onLoginFailure(token, e, request, response);
-			}
-		} else {
-			return super.onLoginFailure(token, e, request, response);
-		}
+	public RMeCookieValue(String selector, String validator) {
+		this.selector = Check.notEmpty(selector, "selector");
+		this.validator = Check.notEmpty(validator, "validator");
+	}
+
+	public String getSelector() {
+		return selector;
+	}
+
+	public String getValidator() {
+		return validator;
+	}
+	
+	public String print() {
+		return selector + "." + validator;
+	}
+	
+	public static RMeCookieValue parse(final String value) {
+		String tokens[] = StringUtils.splitByWholeSeparator(value, ".", 2);
+		if (tokens == null || tokens.length != 2) return null;
+		if (StringUtils.isEmpty(tokens[0]) || StringUtils.isEmpty(tokens[1])) return null;
+		return new RMeCookieValue(tokens[0], tokens[1]);
 	}
 }

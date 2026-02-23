@@ -52,6 +52,7 @@ public class CoreLocaleKey {
 	public static final String TPL_LOGIN_MAINTENANCE = "tpl.login.maintenance";
 	public static final String TPL_LOGIN_ERROR_MAINTENANCE = "tpl.login.error.maintenance";
 	public static final String TPL_LOGIN_ERROR_FAILURE = "tpl.login.error.failure";
+	public static final String TPL_LOGIN_ERROR_DISABLED = "tpl.login.error.disabled";
 	
 	public static final String TPL_PWCHANGE_MAIN_TITLE = "tpl.password.main.title";
 	public static final String TPL_PWCHANGE_MAIN_TEXT = "tpl.password.main.text";

@@ -86,7 +86,7 @@ public class JWTSignatureVerifier extends PathMatchingFilter {
 			return true;
 			
 		} catch(JwtException ex) {
-			logger.trace("Unable to parse JWT string [{}]", ex, jwts);
+			logger.trace("Unable to parse JWT string [{}]", jwts, ex);
 			WebUtils.toHttp(response).sendError(HttpServletResponse.SC_FORBIDDEN, "JWT token not signed correctly");
 			return false;
 		}

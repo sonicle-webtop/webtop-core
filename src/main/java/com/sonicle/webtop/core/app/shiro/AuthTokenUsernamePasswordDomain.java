@@ -1,6 +1,5 @@
 /*
- * WebTop Services is a Web Application framework developed by Sonicle S.r.l.
- * Copyright (C) 2014 Sonicle S.r.l.
+ * Copyright (C) 2019 Sonicle S.r.l.
  *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by
@@ -11,7 +10,7 @@
  *
  * This program is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
+ * FOR A PARTICULAR PURPOSE. See the GNU Affero General Public License for more
  * details.
  *
  * You should have received a copy of the GNU Affero General Public License
@@ -19,7 +18,7 @@
  * the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
  * MA 02110-1301 USA.
  *
- * You can contact Sonicle S.r.l. at email address sonicle@sonicle.com
+ * You can contact Sonicle S.r.l. at email address sonicle[at]sonicle[dot]com
  *
  * The interactive user interfaces in modified source and object code versions
  * of this program must display Appropriate Legal Notices, as required under
@@ -29,41 +28,29 @@
  * version 3, these Appropriate Legal Notices must retain the display of the
  * Sonicle logo and Sonicle copyright notice. If the display of the logo is not
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
- * display the words "Copyright (C) 2014 Sonicle S.r.l.".
+ * display the words "Copyright (C) 2019 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core.bol.js;
+package com.sonicle.webtop.core.app.shiro;
 
-import com.sonicle.commons.web.json.JsonResult;
+import org.apache.shiro.authc.UsernamePasswordToken;
 
 /**
  *
  * @author malbinola
  */
-public class TrustedDeviceCookie {
+public class AuthTokenUsernamePasswordDomain extends UsernamePasswordToken {
+	private String domain;
 	
-	public String deviceId = null;
-	public String account = null;
-	public Long timestamp = null;
-	
-	public TrustedDeviceCookie(JsTrustedDevice td) {
-		this.account = td.account;
-		this.deviceId = td.deviceId;
-		this.timestamp = td.timestamp;
+	public AuthTokenUsernamePasswordDomain(String username, String password, String domain, boolean rememberMe, String host) {
+		super(username, password, rememberMe, host);
+		this.domain = domain;
 	}
 	
-	public TrustedDeviceCookie(String deviceId, String account, long timestamp) {
-		this.account = account;
-		this.deviceId = deviceId;
-		this.timestamp = timestamp;
+	public String getDomain() {
+		return this.domain;
 	}
 	
-	public static TrustedDeviceCookie fromJson(String value) {
-		if(value == null) return null;
-		return JsonResult.gson().fromJson(value, TrustedDeviceCookie.class);
-	}
-	
-	public static String toJson(TrustedDeviceCookie value) {
-		if(value == null) return null;
-		return JsonResult.gson().toJson(value, TrustedDeviceCookie.class).replace("\"", "");
+	public void setDomain(String value) {
+		this.domain = value;
 	}
 }

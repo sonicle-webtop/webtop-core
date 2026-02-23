@@ -402,7 +402,7 @@ public class WT {
 	}
 	
 	public static CoreManager getCoreManager() {
-		WebTopSession wts = SessionContext.getCurrent(false);
+		WebTopSession wts = SessionContext.getCurrentWTSession(false);
 		CoreManager manager = null;
 		if (wts != null) {
 			manager = (CoreManager)wts.getServiceManager(CoreManifest.ID);
@@ -441,7 +441,7 @@ public class WT {
 	}
 	
 	public static BaseManager getServiceManager(String serviceId) {
-		WebTopSession wts = SessionContext.getCurrent(false);
+		WebTopSession wts = SessionContext.getCurrentWTSession(false);
 		BaseManager manager = null;
 		if (wts != null) {
 			manager = wts.getServiceManager(serviceId);

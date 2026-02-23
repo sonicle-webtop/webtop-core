@@ -48,22 +48,21 @@ import com.sonicle.security.auth.directory.DirectoryCapability;
 import com.sonicle.webtop.core.app.RunContext;
 import com.sonicle.webtop.core.app.CoreManifest;
 import com.sonicle.webtop.core.app.OTPManager;
+import com.sonicle.webtop.core.app.SessionContext;
 import com.sonicle.webtop.core.app.WT;
-import com.sonicle.webtop.core.app.WebTopApp;
 import com.sonicle.webtop.core.app.WebTopProps;
+import com.sonicle.webtop.core.app.model.TDTokenInfo;
 import com.sonicle.webtop.core.app.model.User;
 import com.sonicle.webtop.core.app.model.UserGetOption;
-import com.sonicle.webtop.core.bol.ODomain;
-import com.sonicle.webtop.core.bol.OUser;
 import com.sonicle.webtop.core.bol.js.JsDomainPwdPolicies;
 import com.sonicle.webtop.core.bol.js.JsGridSync;
 import com.sonicle.webtop.core.bol.js.JsSimple;
-import com.sonicle.webtop.core.bol.js.JsTrustedDevice;
 import com.sonicle.webtop.core.bol.js.JsUserOptions;
-import com.sonicle.webtop.core.bol.js.TrustedDeviceCookie;
 import com.sonicle.webtop.core.bol.model.SyncDevice;
 import com.sonicle.webtop.core.model.ServicePermission;
 import com.sonicle.webtop.core.app.model.UIPreset;
+import com.sonicle.webtop.core.app.sdk.Result;
+import com.sonicle.webtop.core.app.servlet.ServletHelper;
 import com.sonicle.webtop.core.sdk.BaseService;
 import com.sonicle.webtop.core.sdk.BaseUserOptionsService;
 import com.sonicle.webtop.core.sdk.UserProfile;
@@ -75,7 +74,7 @@ import java.util.List;
 import java.util.Locale;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.joda.time.format.DateTimeFormatter;
 import org.slf4j.Logger;
 
@@ -165,19 +164,22 @@ public class UserOptionsService extends BaseUserOptionsService {
 				jso.upiCustom3 = upi.getCustom03();
 				
 				// OTP
-				OTPManager otpm = coreMgr.getOTPManager();
-				jso.otpEnabled = otpm.isEnabled(getTargetProfileId());
-				jso.otpDelivery = EnumUtils.toSerializedName(otpm.getDeliveryMode(getTargetProfileId()));
-				jso.otpEmailAddress = otpm.getEmailAddress(getTargetProfileId());
+				OTPManager otpMgr = coreMgr.getOTPManager();
+				jso.otpEnabled = otpMgr.isEnabled(getTargetProfileId());
+				jso.otpDelivery = EnumUtils.toSerializedName(otpMgr.getDeliveryMode(getTargetProfileId()));
+				jso.otpEmailAddress = otpMgr.getEmailAddress(getTargetProfileId());
 				
 				boolean isTrusted = false;
 				String trustedOn = null;
-				TrustedDeviceCookie tdc = otpm.readTrustedDeviceCookie(getTargetProfileId(), request);
-				if (otpm.isThisDeviceTrusted(getTargetProfileId(), tdc)) {
-					JsTrustedDevice td = otpm.getTrustedDevice(getTargetProfileId(), tdc.deviceId);
-					if (td != null) {
+				
+				String clientIdentifier = SessionContext.getWTClientID(request.getSession());
+				String cookieSuffix = otpMgr.getTrustedDeviceCookieNameSuffix(getTargetProfileId());
+				String token = ServletHelper.readTrustedDeviceCookie(cookieSuffix, request);
+				if (!StringUtils.isBlank(token)) {
+					Result<TDTokenInfo> result = otpMgr.isDeviceTrusted(getTargetProfileId(), token, clientIdentifier, false);
+					if (result.getObject() != null) {
 						isTrusted = true;
-						trustedOn = td.getISOTimestamp();
+						trustedOn = JsonResult.gson().toJson(result.getObject().getIssued().toDate()).replace("\"", "");
 					}
 				}
 				

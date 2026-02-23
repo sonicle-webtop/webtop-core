@@ -34,6 +34,7 @@
 package com.sonicle.webtop.core.app;
 
 import com.sonicle.commons.web.json.JsonResult;
+import com.sonicle.webtop.core.app.atmosphere.AtmosphereServlet;
 import com.sonicle.webtop.core.sdk.ServiceMessage;
 import com.sonicle.webtop.core.sdk.UserProfileId;
 import java.util.ArrayList;
@@ -59,7 +60,7 @@ class PushConnection {
 		this.messageStorage = messageStorage;
 		this.sessionId = sessionId;
 		this.profileId = profileId;
-		this.broadcasterPath = PushEndpoint.URL + "/" + sessionId;
+		this.broadcasterPath = AtmosphereServlet.URL + "/" + sessionId;
 		this.hasBeenReady = false;
 	}
 	

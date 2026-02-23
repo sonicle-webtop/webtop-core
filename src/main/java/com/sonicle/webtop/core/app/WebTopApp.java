@@ -410,7 +410,7 @@ public final class WebTopApp {
 				};
 				freemarkerHasOverrideSource = true;
 			} catch (IOException ex) {
-				logger.warn("[TemplateEngine] Unable to configure '{}' folder as template source", ex, templatesDir.getAbsolutePath());
+				logger.warn("[TemplateEngine] Unable to configure '{}' folder as template source", templatesDir.getAbsolutePath(), ex);
 			}
 		}
 		if (templateLoaders == null){
@@ -448,7 +448,7 @@ public final class WebTopApp {
 		this.wtMgr = new WebTopManager(this);
 		
 		this.systemLocale = CoreServiceSettings.getSystemLocale(setMgr); // System locale
-		this.otpMgr = OTPManager.initialize(this);
+		this.otpMgr = new OTPManager(this);
 		this.rptMgr = ReportManager.initialize(this);
 		this.docEditorMgr = new DocEditorManager(this, 30*1000);
 		this.svcMgr = ServiceManager.initialize(this, this.scheduler); // Service Manager
@@ -485,8 +485,7 @@ public final class WebTopApp {
 		rptMgr.cleanup();
 		rptMgr = null;
 		// OTP Manager
-		otpMgr.cleanup();
-		otpMgr = null;
+		otpMgr = otpMgr.cleanup();
 		auditLogMgr = auditLogMgr.cleanup(); // AuditLog Manager
 		setMgr = setMgr.cleanup();
 		// Auth Manager
@@ -747,6 +746,15 @@ public final class WebTopApp {
 		try {
 			return ContextUtils.getManifest(servletContext);
 		} catch (IOException ex) {
+			return null;
+		}
+	}
+	
+	public String getAppReleaseVersion() {
+		Manifest appManifest = getAppManifest();
+		if (appManifest != null) {
+			return appManifest.getMainAttributes().getValue("Implementation-Version");
+		} else {
 			return null;
 		}
 	}

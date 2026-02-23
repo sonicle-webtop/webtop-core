@@ -174,10 +174,6 @@ public class ContextLoader {
 			loginServlet.setLoadOnStartup(1);
 			loginServlet.addMapping(com.sonicle.webtop.core.app.servlet.Login.URL + "/*");
 			
-			Dynamic logoutServlet = servletContext.addServlet("LogoutServlet", com.sonicle.webtop.core.app.servlet.Logout.class);
-			logoutServlet.setLoadOnStartup(1);
-			logoutServlet.addMapping(com.sonicle.webtop.core.app.servlet.Logout.URL + "/*");
-			
 			Dynamic otpServlet = servletContext.addServlet("OtpServlet", com.sonicle.webtop.core.app.servlet.Otp.class);
 			otpServlet.setLoadOnStartup(1);
 			otpServlet.addMapping(com.sonicle.webtop.core.app.servlet.Otp.URL + "/*");

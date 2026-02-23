@@ -59,13 +59,13 @@ import org.slf4j.Logger;
 public class PrivateRequest extends BaseRequest {
 	public static final String URL = "/service-request"; // Shiro.ini must reflect this URI!
 	public static final String URL_LEGACY = "/ServiceRequest";
-	private static final Logger logger = WT.getLogger(PrivateRequest.class);
+	private static final Logger LOGGER = WT.getLogger(PrivateRequest.class);
 	
 	@Override
-	protected void processRequest(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+	protected void processGetOrPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		LoggerUtils.setContextDC(RunContext.getRunProfileId());
 		WebTopApp wta = getWebTopApp(request);
-		WebTopSession wts = SessionContext.getCurrent(true);
+		WebTopSession wts = SessionContext.getCurrentWTSession(false);
 		
 		try {
 			String service = ServletUtils.getStringParameter(request, "service", true);
@@ -73,8 +73,8 @@ public class PrivateRequest extends BaseRequest {
 			Boolean nowriter = ServletUtils.getBooleanParameter(request, "nowriter", false);
 			String optionsProfile = ServletUtils.getStringParameter(request, "optionsProfile", false);
 			
-			if (logger.isTraceEnabled()) {
-				logger.trace("processRequest [{}, {}, {}, {}, {}, {}, {}]", request.getMethod(), wts.getId(), wts.getProfileId(), service, action, nowriter, optionsProfile);
+			if (LOGGER.isTraceEnabled()) {
+				LOGGER.trace("[{}] processGetOrPost [{}, {}, {}, {}, {}, {}]", ServletUtils.getRequestID(request), wts.getId(), wts.getProfileId(), service, action, nowriter, optionsProfile);
 			}
 			
 			if (StringUtils.isBlank(optionsProfile)) {
@@ -98,18 +98,18 @@ public class PrivateRequest extends BaseRequest {
 			}
 			
 		} catch(Throwable t) {
-			logger.warn("Error in serviceRequest servlet", t);
+			LOGGER.warn("Error in serviceRequest servlet", t);
 			throw new ServletException(LangUtils.getDeepestCause(t));
 		}
 	}
-
+	
 	@Override
-	protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-		processRequest(req, resp);
+	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+		processGetOrPost(request, response);
 	}
 
 	@Override
-	protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-		processRequest(req, resp);
+	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+		processGetOrPost(request, response);
 	}
 }

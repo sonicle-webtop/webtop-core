@@ -404,7 +404,7 @@ public class LicenseManager extends AbstractAppManager<LicenseManager> {
 						ProductLicense productLicense = getProductLicenseOrThrow(product);
 						serviceLicense.setExtendedInfo(doLicenseGetExtendedInfo(serviceLicense, product, productLicense, ativationHwID));
 					} catch (Exception ex2) {
-						LOGGER.error("Unable to build extended info for '{}'", ex2, serviceLicense.getProductCode());
+						LOGGER.error("Unable to build extended info for '{}'", serviceLicense.getProductCode(), ex2);
 					}
 				}
 				items.add(serviceLicense);
@@ -425,7 +425,7 @@ public class LicenseManager extends AbstractAppManager<LicenseManager> {
 								ProductLicense productLicense = getProductLicenseOrThrow(product);
 								serviceLicense.setExtendedInfo(doLicenseGetExtendedInfo(serviceLicense, product, productLicense, ativationHwID));
 							} catch (Exception ex2) {
-								LOGGER.error("Unable to build extended info for '{}'", ex2, serviceLicense.getProductCode());
+								LOGGER.error("Unable to build extended info for '{}'", serviceLicense.getProductCode(), ex2);
 							}
 						}
 						items.add(serviceLicense);

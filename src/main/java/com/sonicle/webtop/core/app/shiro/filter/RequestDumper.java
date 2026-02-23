@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2025 Sonicle S.r.l.
+ * Copyright (C) 2026 Sonicle S.r.l.
  *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by
@@ -28,34 +28,33 @@
  * version 3, these Appropriate Legal Notices must retain the display of the
  * Sonicle logo and Sonicle copyright notice. If the display of the logo is not
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
- * display the words "Copyright (C) 2025 Sonicle S.r.l.".
+ * display the words "Copyright (C) 2026 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core.app.shiro;
+package com.sonicle.webtop.core.app.shiro.filter;
 
-import org.apache.shiro.authc.BearerToken;
+import com.sonicle.commons.web.ServletUtils;
+import javax.servlet.FilterChain;
+import javax.servlet.ServletRequest;
+import javax.servlet.ServletResponse;
+import javax.servlet.http.HttpServletRequest;
+import org.apache.shiro.web.filter.PathMatchingFilter;
+import org.apache.shiro.web.util.WebUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  *
  * @author malbinola
  */
-public class BearerAuthUsernameToken extends BearerToken {
-	private final String authUsername;
-	
-	public BearerAuthUsernameToken(String token, String authUsername) {
-		this(token, authUsername, null);
-	}
-	
-	public BearerAuthUsernameToken(String token, String authUsername, String host) {
-		super(token, host);
-		this.authUsername = authUsername;
-	}
-	
-	public String getAuthUsername() {
-		return this.authUsername;
-	}
+public class RequestDumper extends PathMatchingFilter {
+	private static final Logger LOGGER = (Logger) LoggerFactory.getLogger(RequestDumper.class);
 	
 	@Override
-	public Object getPrincipal() {
-		return this.getAuthUsername();
+	protected void executeChain(ServletRequest request, ServletResponse response, FilterChain chain) throws Exception {
+		if (LOGGER.isTraceEnabled()) {
+			final HttpServletRequest httpRequest = WebUtils.toHttp(request);
+			LOGGER.trace("[{}] -> executeChain [{}]", ServletUtils.getRequestID(httpRequest), httpRequest.getRequestURI());
+		}
+		super.executeChain(request, response, chain);
 	}
 }

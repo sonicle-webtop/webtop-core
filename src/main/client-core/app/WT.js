@@ -103,7 +103,7 @@ Ext.define('Sonicle.webtop.core.app.WT', {
 	 * @returns {String}
 	 */
 	getPublicImagesUrl: function() {
-		return WT.getAppBaseUrl() + 'resources/' + WT.getVar('domainInternetName') + '/images';
+		return WT.getAppBaseUrl() + '/resources/' + WT.getVar('domainInternetName') + '/images';
 	},
 	
 	/**

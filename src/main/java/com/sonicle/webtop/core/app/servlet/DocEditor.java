@@ -73,7 +73,7 @@ public class DocEditor extends AbstractServlet {
 	public static final String EDITING_ID_PARAM = "eid";
 	
 	@Override
-	protected void processRequest(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+	protected void processGetOrPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		WebTopApp wta = WebTopApp.get(request);
 		
 		ThreadState threadState = new SubjectThreadState(wta.getAdminSubject());

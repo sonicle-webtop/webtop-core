@@ -44,69 +44,152 @@ import org.apache.shiro.subject.Subject;
  */
 public class SessionContext {
 	
-	public static WebTopSession getCurrent() {
-		return getCurrent(false);
-	}
-	
-	public static WebTopSession getCurrent(boolean createIfNotAvail) {
-		Session session = getShiroSession(RunContext.getSubject(), createIfNotAvail);
-		return getWebTopSession(session);
-	}
-	
-	public static String getCurrentId() {
-		Session session = getShiroSession(RunContext.getSubject(), false);
-		return (session != null) ? session.getId().toString() : null;
-	}
-	
-	public static Session getShiroSession() {
-		return getShiroSession(false);
-	}
-	
-	public static Session getShiroSession(boolean createIfNotAvail) {
-		return getShiroSession(RunContext.getSubject(), createIfNotAvail);
-	}
-	
-	public static Session getShiroSession(Subject subject, boolean createIfNotAvail) {
-		return (subject == null) ? null : (Session)subject.getSession(createIfNotAvail);
-	}
-	
-	public static String getWebTopDeviceID(HttpSession session) {
-		return (session == null) ? null : (String)session.getAttribute(SessionManager.ATTRIBUTE_WEBTOP_DEVICEID);
-	}
-	
-	public static String getWebTopClientID(HttpSession session) {
-		return (session == null) ? null : (String)session.getAttribute(SessionManager.ATTRIBUTE_WEBTOP_CLIENTID);
+	public static String getClientRemoteIP(Session session) {
+		return (session == null) ? null : (String)session.getAttribute(SessionManager.ATTRIBUTE_CLIENT_IP);
 	}
 	
 	public static String getClientRemoteIP(HttpSession session) {
 		return (session == null) ? null : (String)session.getAttribute(SessionManager.ATTRIBUTE_CLIENT_IP);
 	}
 	
-	public static String getClientUrl(HttpSession session) {
-		return (session == null) ? null : (String)session.getAttribute(SessionManager.ATTRIBUTE_CLIENT_URL);
-	}
-	
-	public static String getRefererUri(HttpSession session) {
-		return (session == null) ? null : (String)session.getAttribute(SessionManager.ATTRIBUTE_REFERER_URI);
-	}
-	
-	public static Locale getClientLocale(HttpSession session) {
-		return (session == null) ? null : (Locale)session.getAttribute(SessionManager.ATTRIBUTE_CLIENT_LOCALE);
-	}
-	
-	public static String getClientColorScheme(HttpSession session) {
-		return (session == null) ? null : (String)session.getAttribute(SessionManager.ATTRIBUTE_CLIENT_COLORSCHEME);
-	}
-	
-	public static String getClientPlainUserAgent(HttpSession session) {
+	public static String getClientPlainUA(final Session session) {
 		return (session == null) ? null : (String)session.getAttribute(SessionManager.ATTRIBUTE_CLIENT_USERAGENT);
 	}
 	
-	public static WebTopSession getWebTopSession(HttpSession session) {
+	public static String getClientPlainUA(final HttpSession session) {
+		return (session == null) ? null : (String)session.getAttribute(SessionManager.ATTRIBUTE_CLIENT_USERAGENT);
+	}
+	
+	public static Locale getClientLocale(final Session session) {
+		return (session == null) ? null : (Locale)session.getAttribute(SessionManager.ATTRIBUTE_CLIENT_LOCALE);
+	}
+	
+	public static Locale getClientLocale(final HttpSession session) {
+		return (session == null) ? null : (Locale)session.getAttribute(SessionManager.ATTRIBUTE_CLIENT_LOCALE);
+	}
+	
+	public static String getClientColorScheme(final Session session) {
+		return (session == null) ? null : (String)session.getAttribute(SessionManager.ATTRIBUTE_CLIENT_COLORSCHEME);
+	}
+	
+	public static String getClientColorScheme(final HttpSession session) {
+		return (session == null) ? null : (String)session.getAttribute(SessionManager.ATTRIBUTE_CLIENT_COLORSCHEME);
+	}
+	
+	public static String getClientLocation(final Session session) {
+		return (session == null) ? null : (String)session.getAttribute(SessionManager.ATTRIBUTE_CLIENT_LOCATION);
+	}
+	
+	public static String getClientLocation(final HttpSession session) {
+		return (session == null) ? null : (String)session.getAttribute(SessionManager.ATTRIBUTE_CLIENT_LOCATION);
+	}
+	
+	public static String getRefererUri(final HttpSession session) {
+		return (session == null) ? null : (String)session.getAttribute(SessionManager.ATTRIBUTE_REFERER_URI);
+	}
+	
+	public static String getRefererUri(final Session session) {
+		return (session == null) ? null : (String)session.getAttribute(SessionManager.ATTRIBUTE_REFERER_URI);
+	}
+	
+	public static String getWTClientID(final Session session) {
+		return (session == null) ? null : (String)session.getAttribute(SessionManager.ATTRIBUTE_WEBTOP_CLIENTID);
+	}
+	
+	public static String getWTClientID(final HttpSession session) {
+		return (session == null) ? null : (String)session.getAttribute(SessionManager.ATTRIBUTE_WEBTOP_CLIENTID);
+	}
+	
+	public static WebTopSession getWTSession(final HttpSession session) {
 		return (session == null) ? null : (WebTopSession)session.getAttribute(SessionManager.ATTRIBUTE_WEBTOP_SESSION);
 	}
 	
-	public static WebTopSession getWebTopSession(Session session) {
+	public static WebTopSession getWTSession(final Session session) {
 		return (session == null) ? null : (WebTopSession)session.getAttribute(SessionManager.ATTRIBUTE_WEBTOP_SESSION);
+	}
+	
+	/**
+	 * Returns the Session object associated to the current executing Subject.
+	 * @return the Shiro session object, or null
+	 */
+	public static Session getSubjectSession() {
+		return getSubjectSession(RunContext.getSubject());
+	}
+	
+	/**
+	 * Returns the Session object associated to the passed Subject.
+	 * No session will be created if there is no existing one.
+	 * @param subject The Subject whose session to return to.
+	 * @return the Shiro session object, or null
+	 */
+	public static Session getSubjectSession(final Subject subject) {
+		return getSubjectSession(subject, false);
+	}
+	
+	/**
+	 * Returns the Session object associated to the current executing Subject.
+	 * If there is no existing session a new one will be created according to 
+	 * the dedicated boolean parameter.
+	 * @param createIfNotAvail Set to `true` to create a new session if not existing.
+	 * @return the Shiro session object, or null
+	 */
+	public static Session getSubjectSession(final boolean createIfNotAvail) {
+		return getSubjectSession(RunContext.getSubject(), createIfNotAvail);
+	}
+	
+	/**
+	 * Returns the Session object associated to the passed Subject.
+	 * If there is no existing session a new one will be created according to 
+	 * the dedicated boolean parameter.
+	 * @param subject The Subject whose session to return to.
+	 * @param createIfNotAvail Set to `true` to create a new session if not existing.
+	 * @return the Shiro session object, or null
+	 */
+	public static Session getSubjectSession(final Subject subject, final boolean createIfNotAvail) {
+		return (subject == null) ? null : (Session)subject.getSession(createIfNotAvail);
+	}
+	
+	/**
+	 * Returns the Session ID associated to the current executing Subject.
+	 * @return the Shiro session ID or null not already there
+	 */
+	public static String getCurrentId() {
+		Session session = getSubjectSession();
+		return (session != null) ? session.getId().toString() : null;
+	}
+	
+	/**
+	 * Returns the current WebTop Session object.
+	 * @return WebTop Session
+	 */
+	public static WebTopSession getCurrentWTSession() {
+		return getCurrentWTSession(false);
+	}
+	
+	/**
+	 * Returns the current WebTop Session object.
+	 * If there is no existing session a new one will be created according to 
+	 * the dedicated boolean parameter.
+	 * @param createIfNotAvail Set to `true` to create a new session if not existing.
+	 * @return WebTop Session
+	 */
+	public static WebTopSession getCurrentWTSession(final boolean createIfNotAvail) {
+		Session session = getSubjectSession(createIfNotAvail);
+		return getWTSession(session);
+	}
+	
+	/**
+	 * @deprecated use getCurrentWTSession() instead
+	 */
+	@Deprecated public static WebTopSession getCurrent() {
+		return getCurrent(false);
+	}
+	
+	/**
+	 * @deprecated use getCurrentWTSession(boolean) instead
+	 */
+	@Deprecated public static WebTopSession getCurrent(boolean createIfNotAvail) {
+		Session session = getSubjectSession(RunContext.getSubject(), createIfNotAvail);
+		return getWTSession(session);
 	}
 }

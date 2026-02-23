@@ -39,8 +39,8 @@ import com.sonicle.commons.db.DbUtils;
 import com.sonicle.commons.web.ServletUtils;
 import com.sonicle.commons.web.json.JsonResult;
 import com.sonicle.commons.web.json.MapItem;
-import static com.sonicle.webtop.core.app.servlet.Logout.WTSPROP_LOGOUT_DONE;
 import static com.sonicle.webtop.core.app.servlet.Otp.WTSPROP_OTP_PENDING;
+import static com.sonicle.webtop.core.app.shiro.filter.Logout.WTSPROP_LOGOUT_DONE;
 import com.sonicle.webtop.core.app.util.LogbackHelper;
 import com.sonicle.webtop.core.bol.OMessageQueue;
 import com.sonicle.webtop.core.dal.MessageQueueDAO;
@@ -93,7 +93,7 @@ public class SessionManager implements PushConnection.MessageStorage {
 	public static final String ATTRIBUTE_WEBTOP_DEVICEID = "webtop.deviceId";
 	public static final String ATTRIBUTE_WEBTOP_CLIENTID = "webtop.clientId";
 	public static final String ATTRIBUTE_CLIENT_IP = "webtop.clientIp";
-	public static final String ATTRIBUTE_CLIENT_URL = "webtop.clientUrl";
+	public static final String ATTRIBUTE_CLIENT_LOCATION = "webtop.clientLocation";
 	public static final String ATTRIBUTE_REFERER_URI = "webtop.refererUri";
 	public static final String ATTRIBUTE_CLIENT_LOCALE = "webtop.clientLocale";
 	public static final String ATTRIBUTE_CLIENT_COLORSCHEME = "webtop.clientColorScheme";
@@ -137,7 +137,7 @@ public class SessionManager implements PushConnection.MessageStorage {
 	}
 	
 	public void onContainerSessionDestroyed(HttpSession session) {
-		WebTopSession webtopSession = SessionContext.getWebTopSession(session);
+		WebTopSession webtopSession = SessionContext.getWTSession(session);
 		if (webtopSession != null) {
 			String sessionId = session.getId(); // webtopSession.getId();
 			String clientTrackingId = webtopSession.getClientTrackingID();

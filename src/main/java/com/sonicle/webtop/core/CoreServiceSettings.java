@@ -13,12 +13,10 @@ import com.sonicle.commons.RegexUtils;
 import com.sonicle.commons.web.json.JsonResult;
 import com.sonicle.mail.TransportHostParams;
 import com.sonicle.mail.TransportProtocol;
-import com.sonicle.security.Principal;
 import com.sonicle.security.otp.provider.SonicleAuth;
 import static com.sonicle.webtop.core.CoreSettings.*;
 import com.sonicle.webtop.core.app.CoreManifest;
 import com.sonicle.webtop.core.app.SettingsManager;
-import com.sonicle.webtop.core.app.WT;
 import com.sonicle.webtop.core.model.Meeting;
 import com.sonicle.webtop.core.sdk.BaseServiceSettings;
 import java.util.ArrayList;
@@ -29,7 +27,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.regex.Pattern;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.shiro.SecurityUtils;
 import org.joda.time.LocalTime;
 
 /**
@@ -239,6 +236,28 @@ public class CoreServiceSettings extends BaseServiceSettings {
 	
 	public Boolean getHideLoginWebappName() {
 		return getBoolean(LOGIN_HIDE_WEBAPPNAME, false);
+	}
+	
+	public Boolean getLoginPasswordRevealEnabled() {
+		return getBoolean(LOGIN_PASSSORDREVEAL_ENABLED, false);
+	}
+	
+	public Boolean getLoginRememberMeEnabled() {
+		return getBoolean(LOGIN_REMEMBERME_ENABLED, false);
+	}
+	
+	public int getLoginRememberMeMaxAgeBeforeRotate() {
+		int ret = 24;
+		Integer v = getInteger(LOGIN_REMEMBERME_MAXAGEBEFOREROTATE, null);
+		if ((v != null) && (v == -1 || v > 0)) ret = v;
+		return ret;
+	}
+	
+	public int getLoginRememberMeMaxAge() {
+		int ret = 365;
+		Integer v = getInteger(LOGIN_REMEMBERME_MAXAGE, null);
+		if (v != null && v > 0) ret = v;
+		return ret;
 	}
 	
 	public Boolean isImpersonateEnabled() {

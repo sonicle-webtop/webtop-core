@@ -73,7 +73,7 @@ public class RunContext {
 	
 	public static Subject buildSubject(final SecurityManager securityManager, final UserProfileId profileId) {
 		return new Subject.Builder(securityManager)
-			.principals(buildPrincipalCollection(profileId.getDomainId(), profileId.getUserId()))
+			.principals(WTRealm.createPrincipalCollection(profileId.getDomainId(), profileId.getUserId()))
 			.buildSubject();
 	}
 	
@@ -82,25 +82,19 @@ public class RunContext {
 		if ((subject != null) && profileId.equals(getRunProfileId(subject))) {
 			return subject.getPrincipals();
 		} else {
-			return buildPrincipalCollection(profileId.getDomainId(), profileId.getUserId());
+			return WTRealm.createPrincipalCollection(profileId.getDomainId(), profileId.getUserId());
 		}
-	}
-	
-	static SimplePrincipalCollection buildPrincipalCollection(final String domainId, final String userId) {
-		Principal principal = new Principal(domainId, userId);
-		return new SimplePrincipalCollection(principal, WTRealm.NAME);
-		//return new SimplePrincipalCollection(principal, "com.sonicle.webtop.core.shiro.WTRealm");
 	}
 	
 	public static WebSubject buildWebSubject(final SecurityManager securityManager, final ServletRequest request, final ServletResponse response, final UserProfileId profileId) {
 		WebSubject.Builder builder = new WebSubject.Builder(securityManager, request, response);
-		builder.principals(buildPrincipalCollection(profileId.getDomainId(), profileId.getUserId()));
+		builder.principals(WTRealm.createPrincipalCollection(profileId.getDomainId(), profileId.getUserId()));
 		return builder.buildWebSubject();
 	}
 	
 	public static void clearCachedAuthorizationInfo(final UserProfileId profileId) {
 		Check.notNull(profileId, "profileId");
-		PrincipalCollection principals = buildPrincipalCollection(profileId.getDomainId(), profileId.getUserId());
+		PrincipalCollection principals = WTRealm.createPrincipalCollection(profileId.getDomainId(), profileId.getUserId());
 		clearCachedAuthorizationInfo((WTRealm)ShiroUtils.getRealmByName(WTRealm.NAME), principals);
 	}
 	

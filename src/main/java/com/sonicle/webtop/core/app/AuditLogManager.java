@@ -36,7 +36,6 @@ import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.sonicle.commons.EnumUtils;
 import com.sonicle.commons.InternetAddressUtils;
-import com.sonicle.commons.concurrent.KeyedReentrantLocks;
 import com.sonicle.commons.db.DbUtils;
 import com.sonicle.commons.http.HttpClientUtils;
 import com.sonicle.commons.net.IPUtils;
@@ -56,6 +55,7 @@ import com.sonicle.webtop.core.bol.OIPGeoCache;
 import com.sonicle.webtop.core.dal.AuditKnownDeviceDAO;
 import com.sonicle.webtop.core.dal.AuditLogDAO;
 import com.sonicle.webtop.core.dal.BaseDAO;
+import com.sonicle.webtop.core.dal.DAOIntegrityViolationException;
 import com.sonicle.webtop.core.dal.IPGeoCacheDao;
 import com.sonicle.webtop.core.sdk.UserProfile;
 import com.sonicle.webtop.core.sdk.UserProfileId;
@@ -80,6 +80,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.impl.client.HttpClientBuilder;
+import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -95,7 +96,6 @@ public class AuditLogManager extends AbstractAppManager<AuditLogManager> {
 		.expireAfterWrite(10, TimeUnit.MINUTES)
 		.maximumSize(100)
 		.build();
-	private final KeyedReentrantLocks<String> lockKnownDevice = new KeyedReentrantLocks<>();
 	
 	AuditLogManager(WebTopApp wta) {
 		super(wta);
@@ -276,11 +276,11 @@ public class AuditLogManager extends AbstractAppManager<AuditLogManager> {
 		return css.getSecurityKnownDeviceVerificationNetWhiletist();
 	}
 	
-	public void sendDeviceVerificationNotice(final UserProfileId profileId, final boolean profileIsImpersonated, final String deviceId, final String userAgent, final IPAddress remoteIpAddress) throws WTException {
+	public void sendUnknownDeviceNotice(final UserProfileId profileId, final boolean profileIsImpersonated, final String clientIdentifier, final IPAddress clientIpAddress, final String clientUserAgentString) throws WTException {
 		Check.notNull(profileId, "profileId");
-		Check.notNull(deviceId, "deviceId");
-		Check.notNull(userAgent, "userAgent");
-		Check.notNull(remoteIpAddress, "remoteIpAddress");
+		Check.notEmpty(clientIdentifier, "clientIdentifier");
+		Check.notNull(clientIpAddress, "clientIpAddress");
+		Check.notNull(clientUserAgentString, "clientUserAgentString");
 		
 		long stamp = readyLock();
 		try {
@@ -290,10 +290,10 @@ public class AuditLogManager extends AbstractAppManager<AuditLogManager> {
 				final UserProfile.Data pd = WT.getProfileData(profileId);
 				if (pd == null) throw new WTException("User-data not found [{}]", profileId);
 
-				String remoteIp = remoteIpAddress.toAddressString().toString();
-				ReadableUserAgent rua = WebTopApp.getUserAgentInfo(userAgent);
+				String remoteIp = clientIpAddress.toAddressString().toString();
+				ReadableUserAgent rua = WebTopApp.getUserAgentInfo(clientUserAgentString);
 				IPLookupResponse ipData = null;
-				if (IPUtils.isPublicAddress(remoteIpAddress)) {
+				if (IPUtils.isPublicAddress(clientIpAddress)) {
 					ipData = getIPGeolocationData(profileId.getDomainId(), remoteIp);
 				}
 				
@@ -335,68 +335,54 @@ public class AuditLogManager extends AbstractAppManager<AuditLogManager> {
 			} catch (MessagingException ex) {
 				LOGGER.error("Unable to send email", ex);
 			}
+			
 		} finally {
 			readyUnlock(stamp);
 		}
 	}
 	
-	public void addKnownDevice(final UserProfileId profileId, final String deviceId) throws WTException {
-		Check.notNull(profileId, "profileId");
-		Check.notNull(deviceId, "deviceId");
-		
-		long stamp = readyLock();
-		try {
-			AuditKnownDeviceDAO akdDao = AuditKnownDeviceDAO.getInstance();
-			Connection con = null;
-
-			try {
-				con = WT.getCoreConnection();
-				akdDao.insert(con, profileId.getDomainId(), profileId.getUserId(), deviceId, BaseDAO.createRevisionTimestamp());
-
-			} catch (Throwable t) {
-				throw ExceptionUtils.wrapThrowable(t);
-			} finally {
-				DbUtils.closeQuietly(con);
-			}
-		} finally {
-			readyUnlock(stamp);
-		}
+	public static enum KnownDeviceEvalResult {
+		UNKNOWN, KNOWN, FAILURE;
 	}
 	
-	public boolean testAndSaveKnownDevice(final UserProfileId profileId, final String deviceId) throws WTException {
+	public KnownDeviceEvalResult evalAndRememberKnownDevice(final UserProfileId profileId, final String clientIdentifier, final String clientIpAddress, final String clientUserAgentString) {
 		Check.notNull(profileId, "profileId");
-		Check.notNull(deviceId, "deviceId");
+		Check.notEmpty(clientIdentifier, "clientIdentifier");
+		AuditKnownDeviceDAO akdDao = AuditKnownDeviceDAO.getInstance();
+		Connection con = null;
 		
-		long stamp = readyLock();
 		try {
-			final String key = profileId.toString() + deviceId;
+			con = WT.getCoreConnection();
+			DateTime seenNow = JodaTimeUtils.now();
+			String clientUA = StringUtils.isBlank(clientUserAgentString) ? null : Integer.toHexString(clientUserAgentString.hashCode());
+			
 			try {
-				lockKnownDevice.tryLock(key, 60, TimeUnit.SECONDS);
-
-				AuditKnownDeviceDAO akdDao = AuditKnownDeviceDAO.getInstance();
-				Connection con = null;
-
-				try {
-					con = WT.getCoreConnection();
-					int ret = akdDao.updateLastSeenByProfileDevice(con, profileId.getDomainId(), profileId.getUserId(), deviceId, BaseDAO.createRevisionTimestamp());
-					if (ret == 0) { // Device is not present yet: adds it...
-						akdDao.insert(con, profileId.getDomainId(), profileId.getUserId(), deviceId, BaseDAO.createRevisionTimestamp());
-					}
-					return ret == 1;
-
-				} catch (Throwable t) {
-					throw ExceptionUtils.wrapThrowable(t);
-				} finally {
-					DbUtils.closeQuietly(con);
+				int ret = akdDao.insert(con, profileId.getDomainId(), profileId.getUserId(), clientIdentifier, clientIpAddress, clientUA, seenNow);
+				if (ret == 1) {
+					return KnownDeviceEvalResult.UNKNOWN;
+					
+				} else {
+					LOGGER.warn("Unable to create KnownDevice entry [{}, {}]", profileId, clientIdentifier);
+					return KnownDeviceEvalResult.FAILURE;
 				}
-
-			} catch (InterruptedException ex) {
-				return false;
-			} finally {
-				lockKnownDevice.unlock(key);
+				
+			} catch (DAOIntegrityViolationException ex1) {
+				int ret = akdDao.updateLastSeenByProfileDevice(con, profileId.getDomainId(), profileId.getUserId(), clientIdentifier, clientIpAddress, clientUA, seenNow);
+				if (ret == 1) {
+					return KnownDeviceEvalResult.KNOWN;
+					
+				} else {
+					LOGGER.warn("Unable to update KnownDevice entry [{}, {}]", profileId, clientIdentifier);
+					return KnownDeviceEvalResult.FAILURE;
+				}
 			}
+			
+		} catch (Exception ex) {
+			LOGGER.error("Error while creating/updating DB entry [{}, {}]", profileId, clientIdentifier, ex);
+			return KnownDeviceEvalResult.FAILURE;
+			
 		} finally {
-			readyUnlock(stamp);
+			DbUtils.closeQuietly(con);
 		}
 	}
 	

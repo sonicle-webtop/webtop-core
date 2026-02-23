@@ -33,8 +33,8 @@
  */
 package com.sonicle.webtop.core.app.shiro.filter;
 
+import com.sonicle.commons.web.ServletUtils;
 import com.sonicle.webtop.core.app.SessionContext;
-import com.sonicle.webtop.core.app.SessionManager;
 import com.sonicle.webtop.core.app.WebTopSession;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
@@ -43,25 +43,34 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import org.apache.shiro.web.filter.PathMatchingFilter;
 import org.apache.shiro.web.util.WebUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  *
  * @author malbinola
  */
 public class CSRFCheck extends PathMatchingFilter {
+	private static final Logger LOGGER = (Logger) LoggerFactory.getLogger(CSRFCheck.class);
 
 	@Override
 	protected boolean onPreHandle(ServletRequest request, ServletResponse response, Object mappedValue) throws Exception {
-		HttpServletRequest httpRequest = (HttpServletRequest)request;
+		final HttpServletRequest httpRequest = WebUtils.toHttp(request);
+		
+		if (LOGGER.isTraceEnabled()) LOGGER.trace("[{}] onPreHandle", ServletUtils.getRequestID(httpRequest));
+		
 		HttpSession session = httpRequest.getSession(false);
 		if (session == null) return true;
-		
-		WebTopSession webtopSession = SessionContext.getWebTopSession(session);
+		WebTopSession webtopSession = SessionContext.getWTSession(session);
 		if (webtopSession == null) return true;
 		
-		if (webtopSession.getCSRFToken().equals(request.getParameter("csrf"))) {
+		String token = ServletUtils.getStringParameter(request, "csrf", null);
+		if (webtopSession.getCSRFToken().equals(token)) {
+			if (LOGGER.isTraceEnabled()) LOGGER.trace("[{}] CSRF token is valid [{}]", ServletUtils.getRequestID(httpRequest), token);
 			return true;
+			
 		} else {
+			if (LOGGER.isTraceEnabled()) LOGGER.trace("[{}] CSRF token is invalid, sending error... [{}]", ServletUtils.getRequestID(httpRequest), token);
 			WebUtils.toHttp(response).sendError(HttpServletResponse.SC_FORBIDDEN, "CSRF security token not valid");
 			return false;
 		}
