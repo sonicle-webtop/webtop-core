@@ -243,7 +243,7 @@ public class CoreServiceSettings extends BaseServiceSettings {
 	}
 	
 	public Boolean getLoginRememberMeEnabled() {
-		return getBoolean(LOGIN_REMEMBERME_ENABLED, false);
+		return getBoolean(LOGIN_REMEMBERME_ENABLED, true);
 	}
 	
 	public int getLoginRememberMeMaxAgeBeforeRotate() {
