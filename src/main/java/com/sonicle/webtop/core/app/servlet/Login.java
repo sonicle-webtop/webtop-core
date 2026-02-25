@@ -130,10 +130,11 @@ public class Login extends AbstractServlet {
 				// using the RMe cookie, the browser simply point to 
 				// prefetched page and session restoration won't start.
 				ServletUtils.setCachingNotAllowed(response);
-				response.setStatus(HttpServletResponse.SC_MOVED_TEMPORARILY);
-				response.setHeader("Vary", "Purpose, Sec-Purpose, Sec-Fetch-User, Accept");
+				ServletUtils.setStatus(response, 425); // TOO_EARLY
+				ServletUtils.setHeader(response, "Vary", "Purpose", "Sec-Purpose", "Sec-Fetch-User", "Accept");
 				
 			} else {
+				ServletUtils.setHeader(response, "Vary", "Cookie");
 				writePage(wta, css, locale, domains, maintenanceMessage, failureMessage, response);
 			}
 			
