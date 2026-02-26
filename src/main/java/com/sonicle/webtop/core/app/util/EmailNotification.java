@@ -50,6 +50,22 @@ import org.apache.commons.lang3.StringUtils;
 public class EmailNotification {
 	protected AbstractBuilder builder;
 	
+	public static final int TYPE_SECURITY_NOTICE = 1;
+	public static final String HEADER_NOTIFICATION_TYPE = "X-WT-Notification-Type";
+	public static final String HEADER_CLIENT_IDENTIFIER = "X-WT-Client-Identifier";
+	public static final String HEADER_CLIENT_IP_ADDRESS = "X-WT-Client-IP-Address";
+	public static final String HEADER_CLIENT_UA_NAME = "X-WT-Client-UA-Name"; // ->name (Chrome)
+	public static final String HEADER_CLIENT_UA_TYPE = "X-WT-Client-UA-Type"; // ->typeName (Browser)
+	public static final String HEADER_CLIENT_UA_DEVICECATEGORY = "X-WT-Client-UA-DeviceCategory"; // deviceCategory->name (Personal Computer)
+	public static final String HEADER_CLIENT_UA_OSNAME = "X-WT-Client-UA-OSName"; // operatingSystem->name (Windows)
+	public static final String HEADER_CLIENT_UA_OSPRODUCER = "X-WT-Client-UA-OSProducer"; // operatingSystem->producer (MS...)
+	public static final String HEADER_CLIENT_GEO_CONTINENT_CODE = "X-WT-Client-Geo-ContinentCode";
+	public static final String HEADER_CLIENT_GEO_COUNTRY_CODE = "X-WT-Client-Geo-CountryCode";
+	public static final String HEADER_CLIENT_GEO_CITY = "X-WT-Client-Geo-City";
+	public static final String HEADER_CLIENT_GEO_ZIP = "X-WT-Client-Geo-Zip";
+	public static final String HEADER_CLIENT_GEO_LATITUDE = "X-WT-Client-Geo-Latitude";
+	public static final String HEADER_CLIENT_GEO_LONGITUDE = "X-WT-Client-Geo-Longitude";
+	
 	protected EmailNotification(AbstractBuilder builder) {
 		this.builder = builder;
 	}

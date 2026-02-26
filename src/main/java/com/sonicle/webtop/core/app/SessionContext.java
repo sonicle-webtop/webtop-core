@@ -100,6 +100,14 @@ public class SessionContext {
 		return (session == null) ? null : (String)session.getAttribute(SessionManager.ATTRIBUTE_WEBTOP_CLIENTID);
 	}
 	
+	public static boolean isWTClientIDNew(final Session session) {
+		if (session != null) {
+			Boolean bool = (Boolean)session.getAttribute(SessionManager.ATTRIBUTE_WEBTOP_CLIENTID_ISNEW);
+			if (bool != null && bool == true) return true;
+		}
+		return false;
+	}
+	
 	public static WebTopSession getWTSession(final HttpSession session) {
 		return (session == null) ? null : (WebTopSession)session.getAttribute(SessionManager.ATTRIBUTE_WEBTOP_SESSION);
 	}

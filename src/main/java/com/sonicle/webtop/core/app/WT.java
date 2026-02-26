@@ -40,6 +40,7 @@ import com.sonicle.commons.l4j.ProductLicense;
 import com.sonicle.mail.PropsBuilder;
 import com.sonicle.mail.email.EmailMessage;
 import com.sonicle.mail.email.EmailMessageBuilder;
+import com.sonicle.mail.email.EmailPopulatingBuilder;
 import com.sonicle.mail.email.Recipient;
 import com.sonicle.webtop.core.CoreManager;
 import com.sonicle.webtop.core.admin.CoreAdminManager;
@@ -388,6 +389,7 @@ public class WT {
 	 * @param runnable 
 	 */
 	public static void runPrivileged(Runnable runnable) {
+		Check.notNull(runnable, "runnable");
 		getWTA().getAdminSubject().execute(runnable);
 	}
 	
@@ -398,6 +400,7 @@ public class WT {
 	 * @return Return object
 	 */
 	public static <V> V runPrivileged(Callable<V> callable) {
+		Check.notNull(callable, "callable");
 		return getWTA().getAdminSubject().execute(callable);
 	}
 	
@@ -851,17 +854,17 @@ public class WT {
 	}
 	
 	public static void sendEmailMessage(final UserProfileId sendingProfileId, final InternetAddress from, final Collection<Recipient> recipients, final String subject, final String htmlBody) throws WTEmailSendException {
-		sendEmailMessage(sendingProfileId, from, recipients, subject, htmlBody, null);
+		sendEmailMessage(sendingProfileId, from, recipients, subject, htmlBody, null, null);
 	}
 	
-	public static void sendEmailMessage(final UserProfileId sendingProfileId, final InternetAddress from, final Collection<Recipient> recipients, final String subject, final String htmlBody, final String moveToFolderAfterSent) throws WTEmailSendException {
-		final EmailMessage message = EmailMessageBuilder.startingBlank()
+	public static void sendEmailMessage(final UserProfileId sendingProfileId, final InternetAddress from, final Collection<Recipient> recipients, final String subject, final String htmlBody, final Map<String, Collection<Object>> headers, final String moveToFolderAfterSent) throws WTEmailSendException {
+		EmailPopulatingBuilder builder = EmailMessageBuilder.startingBlank()
 			.from(from)
 			.to(recipients)
 			.withSubject(subject)
-			.withHTMLText(htmlBody)
-			.build();
-		getWTA().sendEmailMessage(sendingProfileId, message, moveToFolderAfterSent);
+			.withHTMLText(htmlBody);
+		if (headers != null && !headers.isEmpty()) builder.withHeaders(headers);
+		getWTA().sendEmailMessage(sendingProfileId, builder.build(), moveToFolderAfterSent);
 	}
 	
 	@Deprecated

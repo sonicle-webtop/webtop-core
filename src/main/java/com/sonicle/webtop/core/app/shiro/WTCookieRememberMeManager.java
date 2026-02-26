@@ -157,6 +157,7 @@ public class WTCookieRememberMeManager implements RememberMeManager {
 			if (value == null/* && StringUtils.isBlank(legacyValue)*/) {
 				value = generateNewCIDCookieValue(subjectPid);
 				ServletHelper.writeClientIDCookie(response, value);
+				subjectSession.setAttribute(SessionManager.ATTRIBUTE_WEBTOP_CLIENTID_ISNEW, true);
 				valueIsNew = true;
 			}
 			
@@ -167,6 +168,7 @@ public class WTCookieRememberMeManager implements RememberMeManager {
 					}
 					value = generateNewCIDCookieValue(subjectPid);
 					ServletHelper.writeClientIDCookie(response, value);
+					subjectSession.setAttribute(SessionManager.ATTRIBUTE_WEBTOP_CLIENTID_ISNEW, true);
 				}
  				subjectSession.setAttribute(SessionManager.ATTRIBUTE_WEBTOP_CLIENTID, value.getClientIdentifier());
 			}/* else if (legacyValue != null) {

@@ -39,6 +39,7 @@ import com.sonicle.commons.web.json.JsonResult;
 import com.sonicle.commons.web.json.MapItem;
 import com.sonicle.security.Principal;
 import com.sonicle.webtop.core.app.AuditLogManager;
+import com.sonicle.webtop.core.app.AuditLogManager.KnownDeviceEvalResult;
 import com.sonicle.webtop.core.app.CoreManifest;
 import com.sonicle.webtop.core.app.RunContext;
 import com.sonicle.webtop.core.app.SessionContext;
@@ -258,12 +259,14 @@ public class AuthForm extends FormAuthenticationFilter {
 		boolean enabled = audMgr.isKnownDeviceVerificationEnabled(subjectPid);
 		if (enabled) {
 			final String clientIdentifier = SessionContext.getWTClientID(subjectSession);
+			final boolean isCIDJustGenerated = SessionContext.isWTClientIDNew(subjectSession);
 			final String[] clientParams = ServletHelper.lookupClientParams(subject, request);
 			final IPAddress ip = IPUtils.toIPAddress(clientParams[0]);
 			
 			if (LOGGER.isDebugEnabled()) LOGGER.debug("Checking known device... [{}, {}] ", subjectPid, clientIdentifier);
 			AuditLogManager.KnownDeviceEvalResult result = audMgr.evalAndRememberKnownDevice(subjectPid, clientIdentifier, clientParams[0], clientParams[1]);
-			if (AuditLogManager.KnownDeviceEvalResult.UNKNOWN.equals(result)) {
+			if (KnownDeviceEvalResult.UNKNOWN.equals(result) || (KnownDeviceEvalResult.UNKNOWN_INITIAL.equals(result) && !isCIDJustGenerated)) {
+				//TODO: run in new thread to decouple login flow
 				WT.runPrivileged(() -> {
 					try {
 						if (LOGGER.isDebugEnabled()) LOGGER.debug("Verifying whitelist... [{}, {}] ", subjectPid, clientIdentifier);

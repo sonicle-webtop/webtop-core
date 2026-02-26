@@ -42,10 +42,13 @@ import com.sonicle.commons.net.IPUtils;
 import com.sonicle.commons.time.JodaTimeUtils;
 import com.sonicle.commons.web.json.JsonResult;
 import com.sonicle.commons.web.json.ipstack.IPLookupResponse;
+import com.sonicle.mail.email.Headers;
+import com.sonicle.mail.email.Recipients;
 import com.sonicle.webtop.core.CoreServiceSettings;
 import com.sonicle.webtop.core.CoreSettings;
 import com.sonicle.webtop.core.TplHelper;
 import com.sonicle.webtop.core.app.sdk.AuditReferenceDataEntry;
+import com.sonicle.webtop.core.app.sdk.WTEmailSendException;
 import com.sonicle.webtop.core.app.util.EmailNotification;
 import com.sonicle.webtop.core.app.util.ExceptionUtils;
 import com.sonicle.webtop.core.app.util.LogbackHelper;
@@ -297,6 +300,27 @@ public class AuditLogManager extends AbstractAppManager<AuditLogManager> {
 					ipData = getIPGeolocationData(profileId.getDomainId(), remoteIp);
 				}
 				
+				Headers.Builder bHeaders = new Headers.Builder()
+					.addHeader(EmailNotification.HEADER_NOTIFICATION_TYPE, EmailNotification.TYPE_SECURITY_NOTICE)
+					.addHeader(EmailNotification.HEADER_CLIENT_IDENTIFIER, clientIdentifier)
+					.addHeader(EmailNotification.HEADER_CLIENT_IP_ADDRESS, remoteIp);
+				
+				if (ipData != null) {
+					bHeaders.addHeader(EmailNotification.HEADER_CLIENT_GEO_CONTINENT_CODE, ipData.getContinentCode());
+					bHeaders.addHeader(EmailNotification.HEADER_CLIENT_GEO_COUNTRY_CODE, ipData.getCountryCode());
+					bHeaders.addHeader(EmailNotification.HEADER_CLIENT_GEO_CITY, ipData.getCity());
+					bHeaders.addHeader(EmailNotification.HEADER_CLIENT_GEO_ZIP, ipData.getZip());
+					bHeaders.addHeader(EmailNotification.HEADER_CLIENT_GEO_LATITUDE, ipData.getLatitude());
+					bHeaders.addHeader(EmailNotification.HEADER_CLIENT_GEO_LONGITUDE, ipData.getLongitude());
+				}
+				if (rua != null) {
+					bHeaders.addHeader(EmailNotification.HEADER_CLIENT_UA_NAME, rua.getName());
+					bHeaders.addHeader(EmailNotification.HEADER_CLIENT_UA_TYPE, rua.getTypeName());
+					bHeaders.addHeader(EmailNotification.HEADER_CLIENT_UA_DEVICECATEGORY, rua.getDeviceCategory().getName());
+					bHeaders.addHeader(EmailNotification.HEADER_CLIENT_UA_OSNAME, rua.getOperatingSystem().getName());
+					bHeaders.addHeader(EmailNotification.HEADER_CLIENT_UA_OSPRODUCER, rua.getOperatingSystem().getProducer());
+				}
+				
 				final String subject = EmailNotification.buildSubject(pd.getLocale(), CoreManifest.ID, WT.lookupResource(CoreManifest.ID, pd.getLocale(), "tpl.email.newDevice.subject"));
 				final String customBodyHtml = TplHelper.buildNewDeviceNoticeBody(pd.getProfileEmailAddress(), JodaTimeUtils.now(), rua, remoteIp, ipData, pd.getLocale(), pd.getTimeZone(), pd.getShortDateFormat(), pd.getShortTimeFormat());
 				final String html = new EmailNotification.NoReplyBuilder()
@@ -305,34 +329,33 @@ public class AuditLogManager extends AbstractAppManager<AuditLogManager> {
 
 				final InternetAddress from = WT.getNoReplyAddress(profileId.getDomainId());
 				if (from == null) throw new WTException("Error getting no-reply address for '{}'", profileId.getDomainId());
-
-				ArrayList<InternetAddress> ccns = new ArrayList<>();
-				ArrayList<InternetAddress> tos = new ArrayList<>();
+				
+				Recipients.Builder bRcpts = new Recipients.Builder();
 				// Do not include additional recipients (defined in settings) when 
 				// the target profile is sysAdmin or during impersonation. This helps
 				// to keep connections private during some *special* activities.
 				if (!WebTopManager.isSysAdmin(profileId) && !profileIsImpersonated) {
-					tos.add(pd.getProfileEmail());
+					bRcpts.to(pd.getProfileEmail());
 					//TODO: evaluate how to treat domain admin when will be implemented!
 					for (String email : css.getSecurityKnownDeviceVerificationRecipients()) {
 						final InternetAddress ia = InternetAddressUtils.toInternetAddress(email);
-						if (ia != null) ccns.add(ia);
+						if (ia != null) bRcpts.bcc(pd.getProfileEmail());/*ccns.add(ia);*/
 					}
 				} else {
 					if (profileIsImpersonated) {
 						final UserProfile.Data apd = WT.getProfileData(WebTopManager.sysAdminProfileId());
 						if (apd == null) throw new WTException("User-data not found [{}]", WebTopManager.sysAdminProfileId());
-						tos.add(apd.getPersonalEmail());
+						bRcpts.to(pd.getPersonalEmail());
 					} else {
-						tos.add(pd.getPersonalEmail());
+						bRcpts.to(pd.getPersonalEmail());
 					}
 				}
-
-				WT.sendEmail(WT.getGlobalMailSession(profileId), true, from, tos, null, ccns, subject, html, null);
+				
+				WT.sendEmailMessage(RunContext.getSysAdminProfileId(), from, bRcpts.asList(), subject, html, bHeaders.build(), null);
 
 			} catch (IOException | TemplateException ex) {
 				LOGGER.error("Unable to build email template", ex);
-			} catch (MessagingException ex) {
+			} catch (WTEmailSendException ex) {
 				LOGGER.error("Unable to send email", ex);
 			}
 			
@@ -342,7 +365,7 @@ public class AuditLogManager extends AbstractAppManager<AuditLogManager> {
 	}
 	
 	public static enum KnownDeviceEvalResult {
-		UNKNOWN, KNOWN, FAILURE;
+		UNKNOWN, UNKNOWN_INITIAL, KNOWN, FAILURE;
 	}
 	
 	public KnownDeviceEvalResult evalAndRememberKnownDevice(final UserProfileId profileId, final String clientIdentifier, final String clientIpAddress, final String clientUserAgentString) {
@@ -359,7 +382,9 @@ public class AuditLogManager extends AbstractAppManager<AuditLogManager> {
 			try {
 				int ret = akdDao.insert(con, profileId.getDomainId(), profileId.getUserId(), clientIdentifier, clientIpAddress, clientUA, seenNow);
 				if (ret == 1) {
-					return KnownDeviceEvalResult.UNKNOWN;
+					int count = akdDao.countByProfile(con, profileId.getDomainId(), profileId.getUserId());
+					return (count == 1) ? KnownDeviceEvalResult.UNKNOWN_INITIAL : KnownDeviceEvalResult.UNKNOWN;
+					//return KnownDeviceEvalResult.UNKNOWN;
 					
 				} else {
 					LOGGER.warn("Unable to create KnownDevice entry [{}, {}]", profileId, clientIdentifier);
