@@ -1,6 +1,6 @@
 <#assign LangUtils=statics['com.sonicle.commons.LangUtils']>
-<div style="font-size:13px;color:#222;">
-    <div style="padding: 0 0 15px 0;border-bottom:thin solid #dadce0;text-align:center;word-break:break-word;">
+<div style="font-size:13px;color:#262626;">
+    <div style="padding: 0 0 15px 0;border-bottom:thin solid #d4d4d4;text-align:center;word-break:break-word;">
         <p style="margin:0;margin-bottom:15px;font-size:1.8em;">${LangUtils.encodeForHTMLContent(i18n.title)}</p>
         <p style="margin:0;font-size:1.2em;">${LangUtils.encodeForHTMLContent(access.account)}</p>
     </div>
@@ -8,29 +8,29 @@
         <p style="margin:0;margin-bottom:15px;">${LangUtils.encodeForHTMLContent(i18n.message)}</p>
         <table style="font-size:inherit;color:inherit;margin-left:auto;margin-right:auto;" cellpadding="0" cellspacing="0" border="0" summary="">
             <tr>
-                <td style="padding:0 1em 10px 0;color:#888;white-space:nowrap" valign="top">
+                <td style="padding:0 1em 10px 0;color:#a3a3a3;white-space:nowrap" valign="top">
                     <div><i style="font-style:normal">${LangUtils.encodeForHTMLContent(i18n.time)}</i></div>
                 </td>
-                <td style="padding-bottom:10px;" valign="top">${LangUtils.encodeForHTMLContent(access.time)} <span style="color:#888">${LangUtils.encodeForHTMLContent(access.timezone)}</span></td>
+                <td style="padding-bottom:10px;" valign="top">${LangUtils.encodeForHTMLContent(access.time)} <span style="color:#a3a3a3">${LangUtils.encodeForHTMLContent(access.timezone)}</span></td>
             </tr>
             <tr>
-                <td style="padding:0 1em 10px 0;color:#888;white-space:nowrap" valign="top">
+                <td style="padding:0 1em 10px 0;color:#a3a3a3;white-space:nowrap" valign="top">
                     <div><i style="font-style:normal">${LangUtils.encodeForHTMLContent(i18n.device)}</i></div>
                 </td>
                 <td style="padding-bottom:10px;" valign="top">${LangUtils.encodeForHTMLContent(access.device)}</td>
             </tr>
             <tr>
-                <td style="padding:0 1em 10px 0;color:#888;white-space:nowrap" valign="top">
+                <td style="padding:0 1em 10px 0;color:#a3a3a3;white-space:nowrap" valign="top">
                     <div><i style="font-style:normal">${LangUtils.encodeForHTMLContent(i18n.ipAddress)}</i></div>
                 </td>
-                <td style="padding-bottom:10px;" valign="top">${LangUtils.encodeForHTMLContent(access.ipAddress)}<#if data.findMyIPUrl??> (<a href="${LangUtils.encodeForHTMLAttribute(data.findMyIPUrl)}" style="color:#20c;white-space:nowrap" itemprop="url">${LangUtils.encodeForHTMLContent(i18n.findMyIP)})</a></#if></td>
+                <td style="padding-bottom:10px;" valign="top">${LangUtils.encodeForHTMLContent(access.ipAddress)}<#if data.findMyIPUrl??> (<a href="${LangUtils.encodeForHTMLAttribute(data.findMyIPUrl)}" style="color:#0891b2;white-space:nowrap" itemprop="url">${LangUtils.encodeForHTMLContent(i18n.findMyIP)})</a></#if></td>
             </tr>
             <#if access.location??>
             <tr>
-                <td style="padding:0 1em 10px 0;color:#888;white-space:nowrap" valign="top">
+                <td style="padding:0 1em 10px 0;color:#a3a3a3;white-space:nowrap" valign="top">
                     <div><i style="font-style:normal">${LangUtils.encodeForHTMLContent(i18n.location)}</i></div>
                 </td>
-                <td style="padding-bottom:10px;" valign="top">${LangUtils.encodeForHTMLContent(access.location)} <span style="color:#888">${LangUtils.encodeForHTMLContent(i18n.locationDisclaimer)}</span></td>
+                <td style="padding-bottom:10px;" valign="top">${LangUtils.encodeForHTMLContent(access.location)} <span style="color:#a3a3a3">${LangUtils.encodeForHTMLContent(i18n.locationDisclaimer)}</span></td>
             </tr>
             </#if>
         </table>

@@ -1,24 +1,24 @@
 <br>
-<table cellspacing="0" cellpadding="8" border="0" summary="" style="width:100%;font-family:Arial,Sans-serif;border:1px Solid #ccc;border-width:1px 1px 1px 1px;border-radius:2px;background-color:#fff;">
+<table cellspacing="0" cellpadding="8" border="0" summary="" style="width:100%;font-family:Arial,Sans-serif;border:1px solid #d4d4d4;border-width:1px 1px 1px 1px;border-radius:5px;background-color:#ffffff;color:#262626;">
     <tbody>
         <tr>
             <td>
                 <div style="padding:2px;">
                     <#if notification.greyMessage??>
-                    <h4 style="padding:6px 10px;margin:0 0 10px 0;font-family:Arial,Sans-serif;font-size:13px;line-height:1.4;border:1px Solid #ccc;background:#f6f6f6;color:#383d41;font-weight:bold;">${notification.greyMessage}</h4>
+                    <h4 style="padding:6px 10px;margin:0 0 10px 0;font-family:Arial,Sans-serif;font-size:13px;line-height:1.4;border:1px solid #e0e7ff;border-radius:5px;background:#e0e7ff;color:#4338ca;font-weight:bold;">${notification.greyMessage}</h4>
                     </#if>
                     <#if notification.greenMessage??>
-                    <h4 style="padding:6px 10px;margin:0 0 10px 0;font-family:Arial,Sans-serif;font-size:13px;line-height:1.4;border:1px Solid #aed581;background:#dcedc8;color:#155724;font-weight:bold;">${notification.greenMessage}</h4>
+                    <h4 style="padding:6px 10px;margin:0 0 10px 0;font-family:Arial,Sans-serif;font-size:13px;line-height:1.4;border:1px solid #d1fae5;border-radius:5px;background:#d1fae5;color:#059669;font-weight:bold;">${notification.greenMessage}</h4>
                     </#if>
                     <#if notification.yellowMessage??>
-                    <h4 style="padding:6px 10px;margin:0 0 10px 0;font-family:Arial,Sans-serif;font-size:13px;line-height:1.4;border:1px Solid #fbc02d;background:#ffecb3;color:#856404;font-weight:bold;">${notification.yellowMessage}</h4>
+                    <h4 style="padding:6px 10px;margin:0 0 10px 0;font-family:Arial,Sans-serif;font-size:13px;line-height:1.4;border:1px solid #fde68a;border-radius:5px;background:#fde68a;color:#d97706;font-weight:bold;">${notification.yellowMessage}</h4>
                     </#if>
                     <#if notification.redMessage??>
-                    <h4 style="padding:6px 10px;margin:0 0 10px 0;font-family:Arial,Sans-serif;font-size:13px;line-height:1.4;border:1px Solid #ff8a65;background:#ffccbc;color:#721c24;font-weight:bold;">${notification.redMessage}</h4>
+                    <h4 style="padding:6px 10px;margin:0 0 10px 0;font-family:Arial,Sans-serif;font-size:13px;line-height:1.4;border:1px solid #ffe4e6;border-radius:5px;background:#ffe4e6;color:#9f1239;font-weight:bold;">${notification.redMessage}</h4>
                     </#if>
-                    <h3 style="padding:0 0 6px 0;margin:0;font-family:Arial,Sans-serif;font-size:16px;font-weight:bold;color:#222">${notification.bodyHeader}</h3>
+                    <h3 style="padding:0 0 6px 0;margin:0;font-family:Arial,Sans-serif;font-size:16px;font-weight:bold;color:#262626">${notification.bodyHeader}</h3>
                     <#if notification.bodyMessage??>
-                    <p style="padding: 0 0 6px 0;margin:0;font-family:Arial,Sans-serif;font-size:12px;color:#222;">${notification.bodyMessage}</p>
+                    <p style="padding: 0 0 6px 0;margin:0;font-family:Arial,Sans-serif;font-size:12px;color:#262626;">${notification.bodyMessage}</p>
                     </#if>
                     <#if notification.customBody??>
                     ${notification.customBody}
@@ -27,7 +27,7 @@
             </td>
         </tr>
         <tr>
-            <td style="background-color:#f6f6f6;color:#888;border-top:1px Solid #ccc;font-family:Arial,Sans-serif;font-size:10px;padding:8px 8px 0 8px;">
+            <td style="padding:8px 8px 0 8px;border-top:1px solid #d4d4d4;border-radius:0 0 5px 5px;font-family:Arial,Sans-serif;font-size:10px;background-color:#f5f5f5;color:#737373;">
                 <p style="margin:0 0 8px 0;">${notification.footerHeader}</p>
                 <p style="margin:0 0 8px 0;">${notification.footerMessage}</p>
             </td>
