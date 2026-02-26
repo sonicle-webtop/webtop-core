@@ -33,6 +33,9 @@
  */
 package com.sonicle.webtop.core.app;
 
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
+import com.github.benmanes.caffeine.cache.LoadingCache;
 import com.mashape.unirest.http.Unirest;
 import com.sonicle.commons.ClassUtils;
 import com.sonicle.commons.IdentifierUtils;
@@ -114,15 +117,16 @@ import java.io.InputStream;
 import java.net.InetAddress;
 import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
+import java.util.concurrent.TimeUnit;
 import java.util.jar.Manifest;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
+import net.sf.qualitycheck.Check;
 import net.sf.uadetector.ReadableUserAgent;
 import net.sf.uadetector.UserAgentStringParser;
 import net.sf.uadetector.service.UADetectorServiceFactory;
 import org.apache.commons.codec.binary.Hex;
-import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.httpclient.contrib.ssl.EasySSLProtocolSocketFactory;
 import org.apache.commons.httpclient.protocol.Protocol;
 import org.apache.commons.io.IOUtils;
@@ -133,7 +137,6 @@ import org.apache.commons.vfs2.FileSystemException;
 import org.apache.commons.vfs2.VFS;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
-import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.cache.MemoryConstrainedCacheManager;
 import org.apache.shiro.mgt.DefaultSecurityManager;
 import org.apache.shiro.session.mgt.DefaultSessionManager;
@@ -250,7 +253,13 @@ public final class WebTopApp {
 	private DocEditorManager docEditorMgr = null;
 	private Scheduler scheduler = null;
 	private final HashMap<String, Session> cacheMailSessionByDomain = new HashMap<>();
-	private static final HashMap<String, ReadableUserAgent> cacheUserAgents =  new HashMap<>(); //TODO: decidere politica conservazion
+	private static final LoadingCache<String, ReadableUserAgent> cacheUserAgents = Caffeine.newBuilder()
+		.expireAfterWrite(24, TimeUnit.HOURS)
+		.maximumSize(5_000)
+		.build((uaString) -> {
+			UserAgentStringParser parser = UADetectorServiceFactory.getResourceModuleParser();
+			return parser.parse(uaString);
+		});
 	
 	WebTopApp(ServletContext servletContext, Properties properties) {
 		WebTopApp.webappName = ContextUtils.getWebappFullName(servletContext, false);
@@ -917,18 +926,8 @@ public final class WebTopApp {
 	 * @param userAgentHeader HTTP Header string.
 	 * @return Object representation of the parsed string.
 	 */
-	public static ReadableUserAgent getUserAgentInfo(String userAgentHeader) {
-		String hash = DigestUtils.md5Hex(userAgentHeader);
-		synchronized(cacheUserAgents) {
-			if(cacheUserAgents.containsKey(hash)) {
-				return cacheUserAgents.get(hash);
-			} else {
-				UserAgentStringParser parser = UADetectorServiceFactory.getResourceModuleParser();
-				ReadableUserAgent rua = parser.parse(userAgentHeader);
-				cacheUserAgents.put(hash, rua);
-				return rua;
-			}
-		}
+	public static ReadableUserAgent getUserAgentInfo(final String userAgentHeader) {
+		return cacheUserAgents.get(userAgentHeader);
 	}
 	
 	public String getContextResourcePath(String resource) {
@@ -1189,6 +1188,8 @@ public final class WebTopApp {
 	}
 	
 	private void sendEmailMessage(final UserProfileId sendingProfileId, final Object message, final String moveToFolderAfterSent) throws WTEmailSendException {
+		Check.notNull(sendingProfileId, "sendingProfileId");
+		Check.notNull(message, "message");
 		
 		// Checks if the running profile (see runContext) and sending profile are the same.
 		UserProfileId runPid = RunContext.getRunProfileId();
