@@ -23,7 +23,7 @@
                 <td style="padding:0 1em 10px 0;color:#888;white-space:nowrap" valign="top">
                     <div><i style="font-style:normal">${LangUtils.encodeForHTMLContent(i18n.ipAddress)}</i></div>
                 </td>
-                <td style="padding-bottom:10px;" valign="top">${LangUtils.encodeForHTMLContent(access.ipAddress)}</td>
+                <td style="padding-bottom:10px;" valign="top">${LangUtils.encodeForHTMLContent(access.ipAddress)}<#if data.findMyIPUrl??> (<a href="${LangUtils.encodeForHTMLAttribute(data.findMyIPUrl)}" style="color:#20c;white-space:nowrap" itemprop="url">${LangUtils.encodeForHTMLContent(i18n.findMyIP)})</a></#if></td>
             </tr>
             <#if access.location??>
             <tr>

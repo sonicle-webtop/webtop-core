@@ -133,119 +133,21 @@
         <link rel="stylesheet" type="text/css" href="${coreResourcesFontsUrl}/inter/4.1/inter.css" />
         <link rel="stylesheet" type="text/css" href="${coreResourcesExtJSUrl}/packages/font-awesome/resources/vendor/6.4.2/css/fontawesome.min.css" />
         <link rel="stylesheet" type="text/css" href="${coreResourcesExtJSUrl}/packages/font-awesome/resources/vendor/6.4.2/css/solid.min.css" />
-        
-        <script type="text/javascript">//# sourceURL=inline-script.js
-            $(function () {
-                const $form = $('form[name="otp"]');
-                const $submit = $('#wtsubmit');
-                const syncSubmitState = () => { $submit.prop('disabled', !$form[0].checkValidity()); };
-                const inputs = $('input[type="text"]').get(); // Array of DOM nodes
-                
-                setTimeout(() => { $('input[type="text"]')[0].focus(); }, 100); // Initial focus
-                syncSubmitState(); // Initial submit state
-                
-                // Keep in sync submit button state
-                $(inputs).on('input change', syncSubmitState);
-                // Support navigation/paste etc.. on codes
-                const handleKeyDown = (e) => {
-                    if (!/^[0-9]{1}$/.test(e.key) &&
-                            e.key !== 'Backspace' &&
-                            e.key !== 'Delete' &&
-                            e.key !== 'Enter' &&
-                            e.key !== 'Tab' &&
-                            !e.metaKey) {
-                        e.preventDefault();
-                    }
-                    if (e.key === 'Delete' || e.key === 'Backspace') {
-                        const index = inputs.indexOf(e.target);
-                        if (index > 0) {
-                            inputs[index].value = '';
-                            inputs[index - 1].value = '';
-                            inputs[index - 1].focus();
-                        }
-                    }
-                };
-                const handleInput = (e) => {
-                    const { target } = e;
-                    const index = inputs.indexOf(target);
-                    if (target.value) {
-                        if (index < inputs.length - 1) {
-                            inputs[index + 1].focus();
-                        } else {
-                            $submit[0].focus();
-                        }
-                    }
-                };
-                const handleFocus = (e) => {
-                    e.target.select();
-                };
-                const handlePaste = (e) => {
-                    e.preventDefault();
-                    const text = e.clipboardData.getData('text');
-                    if (!new RegExp('^[0-9]{6}$').test(text)) {
-                        return;
-                    }
-                    const digits = text.split('');
-                    inputs.forEach((input, index) => (input.value = digits[index]));
-                    submit[0].focus();
-                };
-                $(inputs)
-                    .on('input', handleInput)
-                    .on('keydown', handleKeyDown)
-                    .on('focus', handleFocus)
-                    .on('paste', handlePaste);
-                // Handle form submit
-                $form.on('submit', function (e) {
-                    $submit.prop('disabled', true);
-                });
-            });
-        </script>
     </head>
     <body class="bg-neutral-100 dark:bg-neutral-900 text-neutral-900 dark:text-neutral-50">
         <div class="min-h-screen flex flex-col items-center justify-center">
             <#if serverInfo??>
             <div class="grow"></div>
             </#if> 
-            <div class="max-w-[400px] my-3 w-full">
+            <div class="max-w-[800px] my-3 w-full">
                 <div class="p-3 pb-2 rmin-[400px]:rounded-md sm:pb-4 sm:p-8 sm:rounded-2xl dark:border shadow-md border-neutral-50 bg-neutral-50 dark:border-neutral-800 dark:bg-neutral-800">
-                    <div class="w-full mb-6 text-xl font-bold text-center">${LangUtils.encodeForHTMLContent(i18n.boxTitle)}</div>
-                    <picture class="flex flex-col items-center justify-center w-full">
-                        <source srcset="${coreResourcesImagesUrl}/otp-${deliveryMode}@light.svg" media="(prefers-color-scheme: light)"/>
-                        <source srcset="${coreResourcesImagesUrl}/otp-${deliveryMode}@dark.svg" media="(prefers-color-scheme: dark)"/>
-                        <img src="${coreResourcesImagesUrl}/otp-${deliveryMode}@light.svg" alt="deliverymode-${deliveryMode}" class="w-full h-full max-h-[150px]">
-                    </picture>
-                    <form name="otp" method="post" role="form" autocomplete="off" novalidate class="mt-6 space-y-4">
-                        <#if showFailure>
-                        <div class="w-full ui-messagebox ui-messagebox-error ui-text-error">
-                            <i class="ui-messagebox-icon fa-solid fa-circle-exclamation"></i>
-                            <div class="ui-messagebox-text">${LangUtils.encodeForHTMLContent(failureMessage)}</div>
+                    <div class="w-full mb-6 text-2xl font-bold text-center">${LangUtils.encodeForHTMLContent(i18n.boxTitle)}</div>
+                    <div>
+                        <div class="relative flex flex-col">
+                            <p class="ui-input-field w-full font-mono text-center text-2xl md:text-3xl lg:text-5xl">${LangUtils.encodeForHTMLContent(data.ipAddress)}</p>
                         </div>
-                        </#if>
-                        <div class="w-full text-base font-bold">${LangUtils.encodeForHTMLContent(i18n.formTitle)}</div>
-                        <div class="w-full text-sm">${LangUtils.encodeForHTMLContent(i18n.formText)}</div>
-                        <div>
-                            <div class="relative flex gap-2 items-center">
-                                <input name="wtcode" type="text" autocomplete="new-code" required maxlength="1" class="flex-1 ui-input-codedigit" />
-                                <input name="wtcode" type="text" autocomplete="new-code" required maxlength="1" class="flex-1 ui-input-codedigit" />
-                                <input name="wtcode" type="text" autocomplete="new-code" required maxlength="1" class="flex-1 ui-input-codedigit" />
-                                <input name="wtcode" type="text" autocomplete="new-code" required maxlength="1" class="flex-1 ui-input-codedigit" />
-                                <input name="wtcode" type="text" autocomplete="new-code" required maxlength="1" class="flex-1 ui-input-codedigit" />
-                                <input name="wtcode" type="text" autocomplete="new-code" required maxlength="1" class="flex-1 ui-input-codedigit" />
-                            </div>
-                        </div>
-                        <#if showTrustCheckbox>
-                        <div class="flex flex-wrap items-center justify-between gap-4">
-                            <div class="flex items-center">
-                                <input name="wttrust" type="checkbox" value="true" class="ui-input-checkbox" />
-                                <label for="wttrust" class="ui-input-checkbox-label ml-3">${LangUtils.encodeForHTMLContent(i18n.trustLabel)}</label>
-                            </div>
-                        </div>
-                        </#if>
-                        <div class="!mt-8">
-                            <button id="wtsubmit" type="submit" class="ui-button-primary w-full">${LangUtils.encodeForHTMLContent(i18n.submitLabel)}</button>
-                        </div>
-                    </form>
-                    <div class="mt-4 flex items-end">
+                    </div>
+                    <div class="mt-10 flex items-end">
                         <picture>
                             <source srcset="${coreResourcesImagesUrl}/poweredby@light.svg" media="(prefers-color-scheme: light)"/>
                             <source srcset="${coreResourcesImagesUrl}/poweredby@dark.svg" media="(prefers-color-scheme: dark)"/>

@@ -383,12 +383,19 @@ public class CoreSettings {
 	/**
 	 * [system+domain]
 	 * [boolean]
-	 * Indicates wether remote-device reporting's learning mode is active. 
+	 * Indicates whether remote-device reporting's learning mode is active. 
 	 * Useful only when SECURITY_KNOWNDEVICEVERIFICATION_ENABLED is false, this 
 	 * enables a learning period in which device registration is enabled, 
 	 * helping to build an initial set of known-devices.
 	 */
 	public static final String SECURITY_KNOWNDEVICEVERIFICATION_LEARNING = "security.knowndeviceverification.learning";
+	
+	/**
+	 * [system+domain]
+	 * [boolean]
+	 * Indicates whether to include a findMyIP link in the unknown-device notice message. Defaults to `true`.
+	 */
+	public static final String SECURITY_KNOWNDEVICEVERIFICATION_UNKNOWNNOTICE_FINDMYIP_ENABLED = "security.knowndeviceverification.unknownnotice.findmyip.enabled";
 	
 	/**
 	 * [user+domain+system]

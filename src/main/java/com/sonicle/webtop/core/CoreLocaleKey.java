@@ -79,6 +79,8 @@ public class CoreLocaleKey {
 	public static final String TPL_OTP_TRUST_LABEL = "tpl.otp.trust.label";
 	public static final String TPL_OTP_ERROR_FAILURE = "tpl.otp.error.failure";
 	
+	public static final String TPL_MYIP_HELPTITLE = "tpl.myip.helptitle";
+	
 	public static final String TPL_NOTIFICATION_NOREPLY_FOOTER_HEADER = "tpl.notification.noreply.footer.header";
 	public static final String TPL_NOTIFICATION_NOREPLY_FOOTER_MESSAGE = "tpl.notification.noreply.footer.message";
 	public static final String TPL_NOTIFICATION_FOOTER_HEADER = "tpl.notification.footer.header";

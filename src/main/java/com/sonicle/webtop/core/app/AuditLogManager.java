@@ -36,6 +36,7 @@ import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.sonicle.commons.EnumUtils;
 import com.sonicle.commons.InternetAddressUtils;
+import com.sonicle.commons.PathUtils;
 import com.sonicle.commons.db.DbUtils;
 import com.sonicle.commons.http.HttpClientUtils;
 import com.sonicle.commons.net.IPUtils;
@@ -49,6 +50,7 @@ import com.sonicle.webtop.core.CoreSettings;
 import com.sonicle.webtop.core.TplHelper;
 import com.sonicle.webtop.core.app.sdk.AuditReferenceDataEntry;
 import com.sonicle.webtop.core.app.sdk.WTEmailSendException;
+import com.sonicle.webtop.core.app.servlet.MyIP;
 import com.sonicle.webtop.core.app.util.EmailNotification;
 import com.sonicle.webtop.core.app.util.ExceptionUtils;
 import com.sonicle.webtop.core.app.util.LogbackHelper;
@@ -321,8 +323,13 @@ public class AuditLogManager extends AbstractAppManager<AuditLogManager> {
 					bHeaders.addHeader(EmailNotification.HEADER_CLIENT_UA_OSPRODUCER, rua.getOperatingSystem().getProducer());
 				}
 				
+				String findMyIPUrl = null;
+				if (css.getSecurityKDVerificationNoticeFindMyIPEnabled()) {
+					findMyIPUrl = PathUtils.concatPaths(WT.getPublicBaseUrl(profileId.getDomainId()), MyIP.URL);
+				}
+				
 				final String subject = EmailNotification.buildSubject(pd.getLocale(), CoreManifest.ID, WT.lookupResource(CoreManifest.ID, pd.getLocale(), "tpl.email.newDevice.subject"));
-				final String customBodyHtml = TplHelper.buildNewDeviceNoticeBody(pd.getProfileEmailAddress(), JodaTimeUtils.now(), rua, remoteIp, ipData, pd.getLocale(), pd.getTimeZone(), pd.getShortDateFormat(), pd.getShortTimeFormat());
+				final String customBodyHtml = TplHelper.buildNewDeviceNoticeBody(pd.getProfileEmailAddress(), JodaTimeUtils.now(), rua, remoteIp, ipData, findMyIPUrl, pd.getLocale(), pd.getTimeZone(), pd.getShortDateFormat(), pd.getShortTimeFormat());
 				final String html = new EmailNotification.NoReplyBuilder()
 					.withCustomBody(null, customBodyHtml)
 					.build(pd.getLocale(), EmailNotification.buildSource(pd.getLocale(), CoreManifest.ID)).write();
@@ -384,7 +391,6 @@ public class AuditLogManager extends AbstractAppManager<AuditLogManager> {
 				if (ret == 1) {
 					int count = akdDao.countByProfile(con, profileId.getDomainId(), profileId.getUserId());
 					return (count == 1) ? KnownDeviceEvalResult.UNKNOWN_INITIAL : KnownDeviceEvalResult.UNKNOWN;
-					//return KnownDeviceEvalResult.UNKNOWN;
 					
 				} else {
 					LOGGER.warn("Unable to create KnownDevice entry [{}, {}]", profileId, clientIdentifier);

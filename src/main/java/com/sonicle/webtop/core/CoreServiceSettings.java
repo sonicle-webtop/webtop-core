@@ -222,6 +222,10 @@ public class CoreServiceSettings extends BaseServiceSettings {
 		return LangUtils.parseStringAsList(getString(SECURITY_KNOWNDEVICEVERIFICATION_NETWHITELIST, null), String.class);
 	}
 	
+	public boolean getSecurityKDVerificationNoticeFindMyIPEnabled() {
+		return getBoolean(SECURITY_KNOWNDEVICEVERIFICATION_UNKNOWNNOTICE_FINDMYIP_ENABLED, true);
+	}
+	
 	public boolean getOTPEnabled() {
 		return getBoolean(OTP_ENABLED, false);
 	}

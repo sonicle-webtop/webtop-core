@@ -80,7 +80,7 @@ public class TplHelper {
 		return WT.buildTemplate(CoreManifest.ID, "tpl/email/otpCode-body.html", vars);
 	}
 	
-	public static String buildNewDeviceNoticeBody(String account, DateTime timestamp, ReadableUserAgent userAgent, String ipAddress, IPLookupResponse ipLookup, Locale locale, DateTimeZone timezone, String dateFormat, String timeFormat) throws IOException, TemplateException {
+	public static String buildNewDeviceNoticeBody(String account, DateTime timestamp, ReadableUserAgent userAgent, String ipAddress, IPLookupResponse ipLookup, String findMyIPUrl, Locale locale, DateTimeZone timezone, String dateFormat, String timeFormat) throws IOException, TemplateException {
 		DateTimeFormatter fmt = JodaTimeUtils.createFormatter(dateFormat + " " + timeFormat, timezone);
 		
 		String location = null;
@@ -94,6 +94,7 @@ public class TplHelper {
 			.add("time", WT.lookupResource(CoreManifest.ID, locale, "tpl.email.newDevice.body.time"))
 			.add("device", WT.lookupResource(CoreManifest.ID, locale, "tpl.email.newDevice.body.device"))
 			.add("ipAddress", WT.lookupResource(CoreManifest.ID, locale, "tpl.email.newDevice.body.ipAddress"))
+			.add("findMyIP", WT.lookupResource(CoreManifest.ID, locale, "tpl.email.newDevice.body.findMyIP"))
 			.add("location", WT.lookupResource(CoreManifest.ID, locale, "tpl.email.newDevice.body.location"))
 			.add("locationDisclaimer", WT.lookupResource(CoreManifest.ID, locale, "tpl.email.newDevice.body.location.disclaimer"))
 			.add("action1", WT.lookupResource(CoreManifest.ID, locale, "tpl.email.newDevice.body.action1"))
@@ -107,7 +108,10 @@ public class TplHelper {
 			.add("ipAddress", ipAddress)
 			.add("location", location);
 		
-		return WT.buildTemplate(CoreManifest.ID, "tpl/email/newDeviceNotice-body.html", new MapItem().add("i18n", i18n).add("access", access));
+		MapItem data = new MapItem()
+			.add("findMyIPUrl", findMyIPUrl);
+		
+		return WT.buildTemplate(CoreManifest.ID, "tpl/email/newDeviceNotice-body.html", new MapItem().add("i18n", i18n).add("data", data).add("access", access));
 	}
 	
 	public static String buildDeviceSyncCheckEmail(Locale locale) throws IOException, TemplateException {
