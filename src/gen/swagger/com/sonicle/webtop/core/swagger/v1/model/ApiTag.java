@@ -1,11 +1,9 @@
 package com.sonicle.webtop.core.swagger.v1.model;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import com.sonicle.webtop.core.swagger.v1.model.ApiUserBase;
+import com.sonicle.webtop.core.swagger.v1.model.ApiTagBase;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
-import java.util.ArrayList;
-import java.util.List;
 import javax.validation.constraints.*;
 import javax.validation.Valid;
 
@@ -17,55 +15,53 @@ import com.fasterxml.jackson.annotation.JsonValue;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 
 /**
- * The user data for insertion.
+ * Represents a tag object.
  **/
-@ApiModel(description = "The user data for insertion.")
-@JsonTypeName("UserAdd")
+@ApiModel(description = "Represents a tag object.")
+@JsonTypeName("Tag")
 @javax.annotation.Generated(value = "org.openapitools.codegen.languages.JavaJAXRSSpecServerCodegen", date = "2026-02-27T16:20:59.935+01:00[Europe/Berlin]")
-public class ApiUserAdd extends ApiUserBase  {
-  private @Valid String userId;
-  private @Valid String password;
+public class ApiTag extends ApiTagBase  {
+  private @Valid String id;
+  private @Valid Boolean builtIn;
 
   /**
-   * User ID, actually its name.
    **/
-  public ApiUserAdd userId(String userId) {
-    this.userId = userId;
+  public ApiTag id(String id) {
+    this.id = id;
     return this;
   }
 
   
-  @ApiModelProperty(required = true, value = "User ID, actually its name.")
-  @JsonProperty("userId")
+  @ApiModelProperty(required = true, value = "")
+  @JsonProperty("id")
   @NotNull
-  public String getUserId() {
-    return userId;
+  public String getId() {
+    return id;
   }
 
-  @JsonProperty("userId")
-  public void setUserId(String userId) {
-    this.userId = userId;
+  @JsonProperty("id")
+  public void setId(String id) {
+    this.id = id;
   }
 
   /**
-   * Secret string for logging the user in.
    **/
-  public ApiUserAdd password(String password) {
-    this.password = password;
+  public ApiTag builtIn(Boolean builtIn) {
+    this.builtIn = builtIn;
     return this;
   }
 
   
-  @ApiModelProperty(required = true, value = "Secret string for logging the user in.")
-  @JsonProperty("password")
+  @ApiModelProperty(required = true, value = "")
+  @JsonProperty("builtIn")
   @NotNull
-  public String getPassword() {
-    return password;
+  public Boolean getBuiltIn() {
+    return builtIn;
   }
 
-  @JsonProperty("password")
-  public void setPassword(String password) {
-    this.password = password;
+  @JsonProperty("builtIn")
+  public void setBuiltIn(Boolean builtIn) {
+    this.builtIn = builtIn;
   }
 
 
@@ -77,24 +73,24 @@ public class ApiUserAdd extends ApiUserBase  {
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
-    ApiUserAdd userAdd = (ApiUserAdd) o;
-    return Objects.equals(this.userId, userAdd.userId) &&
-        Objects.equals(this.password, userAdd.password) &&
+    ApiTag tag = (ApiTag) o;
+    return Objects.equals(this.id, tag.id) &&
+        Objects.equals(this.builtIn, tag.builtIn) &&
         super.equals(o);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(userId, password, super.hashCode());
+    return Objects.hash(id, builtIn, super.hashCode());
   }
 
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();
-    sb.append("class ApiUserAdd {\n");
+    sb.append("class ApiTag {\n");
     sb.append("    ").append(toIndentedString(super.toString())).append("\n");
-    sb.append("    userId: ").append(toIndentedString(userId)).append("\n");
-    sb.append("    password: ").append(toIndentedString(password)).append("\n");
+    sb.append("    id: ").append(toIndentedString(id)).append("\n");
+    sb.append("    builtIn: ").append(toIndentedString(builtIn)).append("\n");
     sb.append("}");
     return sb.toString();
   }

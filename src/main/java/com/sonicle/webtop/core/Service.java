@@ -39,6 +39,7 @@ import com.sonicle.commons.LangUtils;
 import com.sonicle.commons.PathUtils;
 import com.sonicle.commons.beans.PageInfo;
 import com.sonicle.commons.db.DbUtils;
+import com.sonicle.commons.flags.BitFlags;
 import com.sonicle.commons.time.JodaTimeUtils;
 import com.sonicle.commons.web.Crud;
 import com.sonicle.commons.web.json.JsonResult;
@@ -129,7 +130,6 @@ import com.sonicle.webtop.core.app.model.GenericSubject;
 import com.sonicle.webtop.core.bol.js.JsSubjectLkp;
 import com.sonicle.webtop.core.model.IMChat;
 import com.sonicle.webtop.core.model.IMMessage;
-import com.sonicle.webtop.core.model.ListTagsOpt;
 import com.sonicle.webtop.core.model.MasterData;
 import com.sonicle.webtop.core.model.Meeting;
 import com.sonicle.webtop.core.model.PublicImage;
@@ -340,7 +340,7 @@ public class Service extends BaseService implements EventListener {
 		
 		try {
 			JsTagGrid.List items = new JsTagGrid.List();
-			for (Tag tag : coreMgr.listTags(ListTagsOpt.ALL).values()) {
+			for (Tag tag : coreMgr.listTags().values()) {
 				items.add(new JsTagGrid(tag));
 			}
 			vars.put("wtTags", JsTagGrid.List.toJson(items));
@@ -1049,7 +1049,7 @@ public class Service extends BaseService implements EventListener {
 			String crud = ServletUtils.getStringParameter(request, "crud", true);
 			if (crud.equals(Crud.READ)) {
 				List<JsTagGrid> items = new ArrayList<>();
-				for (Tag tag : coreMgr.listTags(ListTagsOpt.ALL).values()) {
+				for (Tag tag : coreMgr.listTags().values()) {
 					items.add(new JsTagGrid(tag));
 				}
 				new JsonResult(items, items.size()).printTo(out);
@@ -1058,7 +1058,7 @@ public class Service extends BaseService implements EventListener {
 				PayloadAsList<JsTagGrid.List> pl = ServletUtils.getPayloadAsList(request, JsTagGrid.List.class);
 				List<JsTagGrid> items = new ArrayList<>();
 				for (JsTagGrid jstag : pl.data) {
-					Tag tag = coreMgr.addTag(jstag.toTag());
+					Tag tag = coreMgr.addTag(jstag.createTagForInsert());
 					if (tag != null) items.add(new JsTagGrid(tag));
 				}
 				new JsonResult(items, items.size()).printTo(out);
@@ -1066,7 +1066,7 @@ public class Service extends BaseService implements EventListener {
 			} else if (crud.equals(Crud.UPDATE)) {
 				PayloadAsList<JsTagGrid.List> pl = ServletUtils.getPayloadAsList(request, JsTagGrid.List.class);
 				for (JsTagGrid jstag : pl.data) {
-					coreMgr.updateTag(jstag.toTag());
+					coreMgr.updateTag(jstag.id, jstag.createTagForUpdate());
 				}
 				new JsonResult().printTo(out);
 				
@@ -1762,9 +1762,9 @@ public class Service extends BaseService implements EventListener {
 		ArrayList<JsSimple> items = new ArrayList<>();
 		
 		try {
-			for(String soid : coreMgr.listRecipientProviderSourceIds()) {
-				RecipientsProviderBase provider = coreMgr.getProfileRecipientsProvider(soid);
-				items.add(new JsSimple(soid, provider.getDescription()));
+			for(String providerId : coreMgr.listRecipientsProviderIDs()) {
+				RecipientsProviderBase provider = coreMgr.getRecipientsProvider(providerId);
+				items.add(new JsSimple(providerId, provider.getName()));
 			}
 			new JsonResult("sources", items, items.size()).printTo(out);
 			
@@ -1791,9 +1791,13 @@ public class Service extends BaseService implements EventListener {
 				if (limit==0) limit=Integer.MAX_VALUE;
 
 				if (sources.isEmpty()) {
-					items = coreMgr.listProviderRecipients(rft, query, limit, builtInAtTheEnd, includeAuto, includeWebTop);
+					BitFlags<CoreManager.ListRecipientsOption> opts = BitFlags.noneOf(CoreManager.ListRecipientsOption.class);
+					if (builtInAtTheEnd) opts.set(CoreManager.ListRecipientsOption.BUILTIN_PROVIDERS_LAST);
+					if (includeAuto) opts.set(CoreManager.ListRecipientsOption.INCLUDE_BUILTIN_PROVIDER_AUTO);
+					if (includeWebTop) opts.set(CoreManager.ListRecipientsOption.INCLUDE_BUILTIN_PROVIDER_WEBTOP);
+					items = coreMgr.listRecipients(rft, query, limit, opts);
 				} else {
-					items = coreMgr.listProviderRecipients(rft, sources, query, limit);
+					items = coreMgr.listRecipients(sources, rft, query, limit);
 				}
 				
 				if (rft.equals(RecipientFieldType.FAX)) {
@@ -1821,7 +1825,7 @@ public class Service extends BaseService implements EventListener {
 				
 			} else if (crud.equals(Crud.DELETE)) {
 				Payload<MapItem, JsInternetAddress> pl = ServletUtils.getPayload(request, JsInternetAddress.class);
-				if (CoreManager.RECIPIENT_PROVIDER_AUTO_SOURCE_ID.equals(pl.data.source)) {
+				if (CoreManager.RECIPIENT_PROVIDER_BUILTIN_AUTO.equals(pl.data.source)) {
 					String fullAddress = InternetAddressUtils.toFullAddress(pl.data.address, pl.data.personal);
 					if (fullAddress != null) {
 						coreMgr.deleteServiceStoreEntry(SERVICE_ID, "recipients", fullAddress.toUpperCase());

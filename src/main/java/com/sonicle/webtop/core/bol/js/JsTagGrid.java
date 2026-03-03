@@ -35,6 +35,7 @@ package com.sonicle.webtop.core.bol.js;
 import com.sonicle.commons.EnumUtils;
 import com.sonicle.commons.web.json.JsonResult;
 import com.sonicle.webtop.core.model.Tag;
+import com.sonicle.webtop.core.model.TagBase;
 import java.util.ArrayList;
 
 /**
@@ -54,6 +55,18 @@ public class JsTagGrid {
 		builtIn = tag.getBuiltIn();
 		name = tag.getName();
 		color = tag.getColor();
+	}
+	
+	public TagBase createTagForInsert() {
+		return createTagForUpdate();
+	}
+	
+	public TagBase createTagForUpdate() {
+		TagBase item = new TagBase();
+		item.setVisibility(EnumUtils.forSerializedName(visibility,  Tag.Visibility.PRIVATE, Tag.Visibility.class));
+		item.setName(name);
+		item.setColor(color);
+		return item;
 	}
 	
 	public Tag toTag() {

@@ -44,7 +44,7 @@ import javax.validation.Valid;
 
 @Path("/admin")
 @Api(description = "the admin API")
-@javax.annotation.Generated(value = "org.openapitools.codegen.languages.JavaJAXRSSpecServerCodegen", date = "2025-06-04T10:11:41.988+02:00[Europe/Berlin]")
+@javax.annotation.Generated(value = "org.openapitools.codegen.languages.JavaJAXRSSpecServerCodegen", date = "2026-02-27T16:20:59.935+01:00[Europe/Berlin]")
 public abstract class AdminApi extends com.sonicle.webtop.core.sdk.BaseRestApiResource {
 
     @POST
@@ -221,7 +221,7 @@ public abstract class AdminApi extends com.sonicle.webtop.core.sdk.BaseRestApiRe
     }
 
     @DELETE
-    @Path("/api-key/{apikey_id}")
+    @Path("/api-keys/{apikey_id}")
     @Produces({ "application/json" })
     @ApiOperation(value = "Deletes an API key for a domain", notes = "Deletes the specified API key given its ID.", response = Void.class, authorizations = {
         
@@ -392,7 +392,7 @@ public abstract class AdminApi extends com.sonicle.webtop.core.sdk.BaseRestApiRe
     }
 
     @GET
-    @Path("/api-key/{apikey_id}")
+    @Path("/api-keys/{apikey_id}")
     @Produces({ "application/json" })
     @ApiOperation(value = "Gets an API key for a domain", notes = "Gets the specified API key given its ID.", response = ApiApiKey.class, authorizations = {
         
@@ -745,7 +745,7 @@ public abstract class AdminApi extends com.sonicle.webtop.core.sdk.BaseRestApiRe
     }
 
     @PUT
-    @Path("/api-key/{apikey_id}")
+    @Path("/api-keys/{apikey_id}")
     @Consumes({ "application/json" })
     @Produces({ "application/json" })
     @ApiOperation(value = "Updates an API key for a domain", notes = "Updates the specified API key given its ID: only few fields can be updated.", response = Void.class, authorizations = {

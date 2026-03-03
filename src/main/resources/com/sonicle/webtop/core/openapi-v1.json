@@ -2771,7 +2771,7 @@
         "x-codegen-request-body-name": "body"
       }
     },
-    "/admin/api-key/{apikey_id}": {
+    "/admin/api-keys/{apikey_id}": {
       "parameters": [
         {
           "schema": {
@@ -3200,6 +3200,512 @@
         "x-codegen-request-body-name": "body",
         "tags": [
           "mail-bridge-fetchers"
+        ]
+      }
+    },
+    "/me/platform/services": {
+      "get": {
+        "summary": "Get platform services",
+        "tags": [
+          "me"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PlatformService"
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        },
+        "operationId": "getPlatformServices"
+      }
+    },
+    "/me/tags": {
+      "get": {
+        "summary": "List tags",
+        "tags": [
+          "me"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Tag"
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        },
+        "operationId": "listTags",
+        "description": "Returns a list of Tags.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "private",
+                "shared"
+              ]
+            },
+            "in": "query",
+            "name": "visibility"
+          }
+        ]
+      },
+      "post": {
+        "summary": "",
+        "operationId": "addTag",
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Tag"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "description": "Adds new Tag.",
+        "x-codegen-request-body-name": "body",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TagBase"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/me/tags/{tag_id}": {
+      "parameters": [
+        {
+          "schema": {
+            "type": "string"
+          },
+          "name": "tag_id",
+          "in": "path",
+          "required": true
+        }
+      ],
+      "get": {
+        "summary": "Get a tag",
+        "tags": [
+          "me"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Tag"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "operationId": "getTag",
+        "description": "Gets the specified Tag given its ID."
+      },
+      "put": {
+        "summary": "Update tag",
+        "operationId": "updateTag",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {}
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "description": "Updates the specified Tag given its ID.",
+        "x-codegen-request-body-name": "body",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TagBase"
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete tag",
+        "operationId": "deleteTag",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "description": "Deletes the specified Tag given its ID."
+      }
+    },
+    "/me/recipients-providers/sources": {
+      "get": {
+        "summary": "Get recipients-provider sources",
+        "tags": [
+          "me"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "x-stoplight": {
+                      "id": "ql9g53zwn183i"
+                    },
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "operationId": "getRecipientsProviderSources",
+        "description": "Returns the recipients-provider IDs avaiable."
+      }
+    },
+    "/me/recipients-providers/recipients": {
+      "get": {
+        "summary": "Get recipients-provider recipients",
+        "tags": [
+          "me"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Recipient"
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "operationId": "listRecipientsOfSources",
+        "description": "Returns a list of recipients belonging to the specified set of sources.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "query",
+            "name": "source_providers",
+            "description": "A collection of provider IDs in which look for",
+            "required": true
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "telephone",
+                "telephone2",
+                "fax",
+                "mobile",
+                "pager",
+                "email",
+                "list",
+                "im"
+              ]
+            },
+            "in": "query",
+            "name": "address_type",
+            "required": true,
+            "description": "The Recipient's field type to return as address"
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "query",
+            "name": "query",
+            "description": "The query text to match"
+          },
+          {
+            "schema": {
+              "type": "integer"
+            },
+            "in": "query",
+            "name": "max_results",
+            "description": "The max number of results to return"
+          }
+        ]
+      }
+    },
+    "/me/recipients": {
+      "get": {
+        "summary": "Get recipients-provider recipients",
+        "tags": [
+          "me"
+        ],
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Recipient"
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "operationId": "listRecipients",
+        "description": "Returns a list of recipients belonging the ",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "telephone",
+                "telephone2",
+                "fax",
+                "mobile",
+                "pager",
+                "email",
+                "list",
+                "im"
+              ]
+            },
+            "in": "query",
+            "name": "address_type",
+            "required": true,
+            "description": "The Recipient's field type to return as address"
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "query",
+            "name": "query",
+            "description": "The query text to match"
+          },
+          {
+            "schema": {
+              "type": "integer"
+            },
+            "in": "query",
+            "name": "max_results",
+            "description": "The max number of results to return"
+          },
+          {
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "minimum": 0,
+              "maximum": 512
+            },
+            "in": "query",
+            "name": "list_options",
+            "description": "One of the following values, or a sum of multiple values: 1 - BuiltInProvidersLast, 2 - IncludeBuiltInProviderAuto, 8 - IncludeBuiltInProviderWebTop."
+          }
         ]
       }
     }
@@ -4350,6 +4856,169 @@
           "name"
         ],
         "description": "Represents an apiKey object with base updateable fields."
+      },
+      "Tag": {
+        "title": "Tag",
+        "x-stoplight": {
+          "id": "lpy7sf7204fc8"
+        },
+        "allOf": [
+          {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "builtIn": {
+                "type": "boolean",
+                "x-stoplight": {
+                  "id": "jiy1r72vwtv36"
+                }
+              }
+            },
+            "required": [
+              "id",
+              "builtIn"
+            ]
+          },
+          {
+            "$ref": "#/components/schemas/TagBase"
+          }
+        ],
+        "description": "Represents a tag object."
+      },
+      "TagBase": {
+        "title": "TagBase",
+        "x-stoplight": {
+          "id": "br7sx1f9un3cx"
+        },
+        "type": "object",
+        "properties": {
+          "builtIn": {
+            "type": "boolean",
+            "x-stoplight": {
+              "id": "rza20rwu6snlx"
+            }
+          },
+          "visibility": {
+            "type": "string",
+            "x-stoplight": {
+              "id": "luxq8t52vqy7e"
+            },
+            "enum": [
+              "private",
+              "shared"
+            ]
+          },
+          "name": {
+            "type": "string",
+            "x-stoplight": {
+              "id": "rcstz0wgksdnf"
+            }
+          },
+          "color": {
+            "type": "string",
+            "x-stoplight": {
+              "id": "bz1nsns7zxug5"
+            }
+          },
+          "externalId": {
+            "type": "string",
+            "x-stoplight": {
+              "id": "7z99egcljn217"
+            }
+          }
+        },
+        "required": [
+          "visibility",
+          "name",
+          "color"
+        ],
+        "description": "Represent a tag with base updateable fields."
+      },
+      "PlatformService": {
+        "title": "PlatformService",
+        "x-stoplight": {
+          "id": "nsnv2ciu5ydbg"
+        },
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "The platform Service ID."
+          }
+        },
+        "required": [
+          "id"
+        ],
+        "description": "Represents a Service object."
+      },
+      "Recipient": {
+        "title": "Recipient",
+        "x-stoplight": {
+          "id": "yd10hffap156e"
+        },
+        "type": "object",
+        "properties": {
+          "sourceId": {
+            "type": "string",
+            "x-stoplight": {
+              "id": "3h6r5ymeflvu4"
+            },
+            "description": "The RecipientsProvider's ID."
+          },
+          "sourceName": {
+            "type": "string",
+            "x-stoplight": {
+              "id": "vamemho3380wn"
+            },
+            "description": "The RecipientsProvider's name."
+          },
+          "origin": {
+            "type": "string",
+            "x-stoplight": {
+              "id": "muy2na1s2ei9f"
+            }
+          },
+          "recipientId": {
+            "type": "string",
+            "x-stoplight": {
+              "id": "1qgwwprnmywsj"
+            },
+            "description": "Provider's local ID of the recipient entry, if any."
+          },
+          "personal": {
+            "type": "string",
+            "x-stoplight": {
+              "id": "ddhgckdufii9b"
+            },
+            "description": "The recipient personal name."
+          },
+          "address": {
+            "type": "string",
+            "x-stoplight": {
+              "id": "rbwuakanlq30b"
+            },
+            "description": "The recipient address (eg. email, number, etc...)"
+          },
+          "rcptType": {
+            "type": "string",
+            "x-stoplight": {
+              "id": "ogekctrrgh86l"
+            },
+            "enum": [
+              "to",
+              "cc",
+              "bcc"
+            ],
+            "description": "The recipient destination type, only useful for email recipient."
+          }
+        },
+        "required": [
+          "sourceId",
+          "sourceName"
+        ],
+        "description": "Represents a recipient for communications."
       }
     },
     "securitySchemes": {
@@ -4473,5 +5142,63 @@
       }
     },
     "responses": {}
-  }
+  },
+  "tags": [
+    {
+      "name": "principals",
+      "description": ""
+    },
+    {
+      "name": "dav-principals",
+      "description": ""
+    },
+    {
+      "name": "admin-password",
+      "description": ""
+    },
+    {
+      "name": "admin-settings",
+      "description": "Admin endpoints for managing Settings"
+    },
+    {
+      "name": "admin-domains",
+      "description": "Admin endpoints for managing Domains"
+    },
+    {
+      "name": "admin-groups",
+      "description": "Admin endpoints for managing Groups"
+    },
+    {
+      "name": "admin-users",
+      "description": "Admin endpoints for managing Users"
+    },
+    {
+      "name": "admin-resources",
+      "description": "Admin endpoints for managing Resources"
+    },
+    {
+      "name": "admin-roles",
+      "description": "Admin endpoints for managing Roles"
+    },
+    {
+      "name": "admin-licenses",
+      "description": "Endpoints for managing Licenses"
+    },
+    {
+      "name": "admin-apikeys",
+      "description": "Admin endpoints for managing ApiKeys"
+    },
+    {
+      "name": "mail-bridge-relays",
+      "description": ""
+    },
+    {
+      "name": "mail-bridge-fetchers",
+      "description": ""
+    },
+    {
+      "name": "me",
+      "description": "User-centric endpoints for managing user-data"
+    }
+  ]
 }

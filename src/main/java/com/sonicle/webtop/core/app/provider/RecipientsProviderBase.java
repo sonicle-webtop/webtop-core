@@ -43,21 +43,21 @@ import java.util.List;
  */
 public abstract class RecipientsProviderBase {
 	private final String id;
-	private final String description;
+	private final String name;
 	
-	public RecipientsProviderBase(String id, String description) {
+	public RecipientsProviderBase(String id, String name) {
 		this.id = id;
-		this.description = description;
+		this.name = name;
 	}
 	
 	public String getId() {
 		return id;
 	}
 	
-	public String getDescription() {
-		return description;
+	public String getName() {
+		return name;
 	}
 	
-	public abstract List<Recipient> getRecipients(RecipientFieldType fieldType, String queryText, int max);
-	public abstract List<Recipient> expandToRecipients(String virtualRecipient);
+	public abstract List<Recipient> getRecipients(final RecipientFieldType fieldType, final String queryText, final int max);
+	public abstract List<Recipient> expandToRecipients(final String virtualRecipient);
 }

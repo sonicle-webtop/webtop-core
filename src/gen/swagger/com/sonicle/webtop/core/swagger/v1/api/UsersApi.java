@@ -16,7 +16,7 @@ import javax.validation.Valid;
 
 @Path("/users")
 @Api(description = "the users API")
-@javax.annotation.Generated(value = "org.openapitools.codegen.languages.JavaJAXRSSpecServerCodegen", date = "2025-06-04T10:11:41.988+02:00[Europe/Berlin]")
+@javax.annotation.Generated(value = "org.openapitools.codegen.languages.JavaJAXRSSpecServerCodegen", date = "2026-02-27T16:20:59.935+01:00[Europe/Berlin]")
 public abstract class UsersApi extends com.sonicle.webtop.core.sdk.BaseRestApiResource {
 
     @GET

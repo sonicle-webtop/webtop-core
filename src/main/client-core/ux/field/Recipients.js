@@ -168,7 +168,7 @@ Ext.define('Sonicle.webtop.core.ux.field.Recipients', {
 				return WT.res('wtrecipientsfield.entry.button.tip');
 			},
 			shouldShowButton: function(values) {
-				return 'auto' === values.source;
+				return (WT.ID+'|'+'auto') === values.source;
 			},
 			buttonHandler: function(s, e, rec) {
 				rec.drop();

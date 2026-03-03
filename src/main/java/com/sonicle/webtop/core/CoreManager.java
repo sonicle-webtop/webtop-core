@@ -40,10 +40,12 @@ import com.sonicle.commons.LangUtils;
 import com.sonicle.commons.URIUtils;
 import com.sonicle.commons.beans.PageInfo;
 import com.sonicle.commons.beans.VirtualAddress;
+import com.sonicle.commons.cache.AbstractBulkCache;
 import com.sonicle.commons.db.DbUtils;
 import com.sonicle.commons.flags.BitFlags;
 import com.sonicle.commons.flags.BitFlagsEnum;
 import com.sonicle.commons.time.JodaTimeUtils;
+import com.sonicle.commons.web.json.CId;
 import com.sonicle.commons.web.json.CompositeId;
 import com.sonicle.commons.web.json.JsonResult;
 import com.sonicle.commons.web.json.JsonUtils;
@@ -142,7 +144,6 @@ import com.sonicle.webtop.core.app.model.FolderShare;
 import com.sonicle.webtop.core.app.model.FolderShareOriginFolders;
 import com.sonicle.webtop.core.model.IMChat;
 import com.sonicle.webtop.core.model.IMMessage;
-import com.sonicle.webtop.core.model.ListTagsOpt;
 import com.sonicle.webtop.core.model.MasterData;
 import com.sonicle.webtop.core.model.MasterDataLookup;
 import com.sonicle.webtop.core.model.Meeting;
@@ -164,6 +165,8 @@ import com.sonicle.webtop.core.app.model.UIPreset;
 import com.sonicle.webtop.core.app.model.UILayout;
 import com.sonicle.webtop.core.app.model.UILookAndFeel;
 import com.sonicle.webtop.core.app.model.UITheme;
+import com.sonicle.webtop.core.model.TagBase;
+import com.sonicle.webtop.core.model.TagListOption;
 import com.sonicle.webtop.core.products.CustomFieldsProduct;
 import com.sonicle.webtop.core.sdk.BaseManager;
 import com.sonicle.webtop.core.sdk.EventManager;
@@ -180,8 +183,6 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.EnumSet;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -207,14 +208,14 @@ import org.slf4j.Logger;
 public class CoreManager extends BaseManager {
 	private static final Logger logger = WT.getLogger(CoreManager.class);
 	
-	public static final String RECIPIENT_PROVIDER_AUTO_SOURCE_ID = "auto";
-	public static final String RECIPIENT_PROVIDER_WEBTOP_SOURCE_ID = "webtop";
+	public static final String RECIPIENT_PROVIDER_BUILTIN_AUTO_SUFFIX = "auto";
+	public static final String RECIPIENT_PROVIDER_BUILTIN_AUTO = CId.build("com.sonicle.webtop.core", RECIPIENT_PROVIDER_BUILTIN_AUTO_SUFFIX).toString();
+	public static final String RECIPIENT_PROVIDER_BUILTIN_WEBTOP_SUFFIX = "webtop";
+	public static final String RECIPIENT_PROVIDER_BUILTIN_WEBTOP = CId.build("com.sonicle.webtop.core", RECIPIENT_PROVIDER_BUILTIN_WEBTOP_SUFFIX).toString();
 
 	private static final EventManager eventManager = new EventManager();
 	private WebTopApp wta = null;
-	private final HashSet<String> cacheReady = new HashSet<>();
-	private final ArrayList<String> cacheAllowedServices = new ArrayList<>();
-	private final LinkedHashMap<String, RecipientsProviderBase> cacheProfileRecipientsProvider = new LinkedHashMap<>();
+	private final CacheRecipientsProvider cacheRecipientsProvider = new CacheRecipientsProvider();
 	
 	private PbxProvider pbx=null;
 	private SmsProvider sms=null;
@@ -862,38 +863,10 @@ public class CoreManager extends BaseManager {
 	
 	
 	
-	
-
-	
-	
 
 	
 	
 	
-	private void buildProfileRecipientsProviderCache() {
-		for(String serviceId : listAllowedServices()) {
-			BaseManager manager = WT.getServiceManager(serviceId, true, getTargetProfileId());
-			if(manager instanceof IRecipientsProvidersSource) {
-				List<RecipientsProviderBase> providers = ((IRecipientsProvidersSource)manager).returnRecipientsProviders();
-				if(providers == null) continue;
-				
-				for(RecipientsProviderBase provider : providers) {
-					final CompositeId cid = new CompositeId().setTokens(serviceId, provider.getId());
-					cacheProfileRecipientsProvider.put(cid.toString(), provider);
-				}
-			}
-		}
-	}
-	
-	private LinkedHashMap<String, RecipientsProviderBase> getProfileRecipientsProviders() {
-		synchronized(cacheProfileRecipientsProvider) {
-			if(!cacheReady.contains("cacheProfileRecipientsProvider")) {
-				buildProfileRecipientsProviderCache();
-				cacheReady.add("cacheProfileRecipientsProvider");
-			}
-			return cacheProfileRecipientsProvider;
-		}
-	}
 	
 	
 	
@@ -1325,10 +1298,10 @@ public class CoreManager extends BaseManager {
 	}
 	
 	public Set<String> listTagIds() throws WTException {
-		return listTagIds(ListTagsOpt.ALL);
+		return listTagIds(BitFlags.with(TagListOption.VISIBILITY_PRIVATE, TagListOption.VISIBILITY_SHARED));
 	}
 	
-	public Set<String> listTagIds(final EnumSet<ListTagsOpt> options) throws WTException {
+	public Set<String> listTagIds(final BitFlags<TagListOption> options) throws WTException {
 		TagDAO tagDao = TagDAO.getInstance();
 		Connection con = null;
 		
@@ -1346,10 +1319,10 @@ public class CoreManager extends BaseManager {
 	}
 	
 	public Map<String, List<String>> listTagIdsByName() throws WTException {
-		return listTagIdsByName(ListTagsOpt.ALL);
+		return listTagIdsByName(BitFlags.with(TagListOption.VISIBILITY_PRIVATE, TagListOption.VISIBILITY_SHARED));
 	}
 	
-	public Map<String, List<String>> listTagIdsByName(final EnumSet<ListTagsOpt> options) throws WTException {
+	public Map<String, List<String>> listTagIdsByName(final BitFlags<TagListOption> options) throws WTException {
 		TagDAO tagDao = TagDAO.getInstance();
 		Connection con = null;
 		
@@ -1367,10 +1340,10 @@ public class CoreManager extends BaseManager {
 	}
 	
 	public Map<String, String> listTagNamesById() throws WTException {
-		return listTagNamesById(ListTagsOpt.ALL);
+		return listTagNamesById(BitFlags.with(TagListOption.VISIBILITY_PRIVATE, TagListOption.VISIBILITY_SHARED));
 	}
 	
-	public Map<String, String> listTagNamesById(final EnumSet<ListTagsOpt> options) throws WTException {
+	public Map<String, String> listTagNamesById(final BitFlags<TagListOption> options) throws WTException {
 		TagDAO tagDao = TagDAO.getInstance();
 		Connection con = null;
 		
@@ -1387,22 +1360,11 @@ public class CoreManager extends BaseManager {
 		}
 	}
 	
-	private Collection<String> tagOptionsToUserIds(EnumSet<ListTagsOpt> options) {
-		ArrayList<String> owners = new ArrayList<>();
-		if (options.contains(ListTagsOpt.SHARED)) {
-			owners.add(OTag.OWNER_NONE);
-		}
-		if (options.contains(ListTagsOpt.PRIVATE)) {
-			owners.add(getTargetProfileId().getUserId());
-		}
-		return owners;
-	}
-	
 	public Map<String, Tag> listTags() throws WTException {
-		return listTags(ListTagsOpt.ALL);
+		return listTags(BitFlags.with(TagListOption.VISIBILITY_PRIVATE, TagListOption.VISIBILITY_SHARED));
 	}
 	
-	public Map<String, Tag> listTags(final EnumSet<ListTagsOpt> options) throws WTException {
+	public Map<String, Tag> listTags(final BitFlags<TagListOption> options) throws WTException {
 		TagDAO tagDao = TagDAO.getInstance();
 		Connection con = null;
 		
@@ -1423,6 +1385,17 @@ public class CoreManager extends BaseManager {
 		}
 	}
 	
+	private Collection<String> tagOptionsToUserIds(BitFlags<TagListOption> options) {
+		ArrayList<String> owners = new ArrayList<>();
+		if (options.has(TagListOption.VISIBILITY_SHARED)) {
+			owners.add(OTag.OWNER_NONE);
+		}
+		if (options.has(TagListOption.VISIBILITY_PRIVATE)) {
+			owners.add(getTargetProfileId().getUserId());
+		}
+		return owners;
+	}
+	
 	public Tag getTag(final String tagId) throws WTException {
 		TagDAO tagDao = TagDAO.getInstance();
 		Connection con = null;
@@ -1441,6 +1414,91 @@ public class CoreManager extends BaseManager {
 		}
 	}
 	
+	public Tag addTag(final TagBase tag) throws WTException {
+		Check.notNull(tag, "tag");
+		Connection con = null;
+		
+		try {
+			final UserProfileId targetPid = ensureProfileDomain(RunContext.AdminScope.SYSADMIN);
+			if (!Tag.Visibility.PRIVATE.equals(tag.getVisibility())) {
+				RunContext.ensureIsPermitted(false, SERVICE_ID, "TAGS", "MANAGE");
+			}
+			tag.setBuiltIn(false);
+			
+			con = WT.getConnection(SERVICE_ID);
+			Tag ret = doTagInsert(con, targetPid, tag);
+			
+			eventManager.fireEvent(new TagChangedEvent(this, ChangedEvent.Operation.CREATE));
+			HashMap<String, String> tagDetails = new HashMap<>();
+			tagDetails.put("description", ret.getName());
+			tagDetails.put("color", ret.getColor());
+			
+			if (isAuditEnabled()) {
+				auditLogWrite(
+					AuditContext.TAG,
+					AuditAction.CREATE,
+					ret.getTagId(),
+					JsonResult.gson().toJson(tagDetails)
+				);
+			}
+			
+			return ret;
+			
+		} catch (Exception t) {
+			throw ExceptionUtils.wrapThrowable(t);
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
+	public Tag updateTag(final String tagId, final TagBase tag) throws WTException {
+		Check.notEmpty(tagId, "tagId");
+		Check.notNull(tag, "tag");
+		TagDAO tagDao = TagDAO.getInstance();
+		Connection con = null;
+		
+		try {
+			final UserProfileId targetPid = ensureProfileDomain(RunContext.AdminScope.SYSADMIN);
+			RunContext.ensureProfileDomain(targetPid.getDomainId(), RunContext.AdminScope.SYSADMIN);
+			
+			con = WT.getConnection(SERVICE_ID);
+			String oldOwnerId = tagDao.selectOwnerByDomainTag(con, targetPid.getDomainId(), tagId);
+			if (OTag.isOwnerNone(oldOwnerId)) {
+				RunContext.ensureIsPermitted(false, SERVICE_ID, "TAGS", "MANAGE");
+			}
+			
+			//TODO: eval whether to move 
+			if (OTag.isOwnerNone(oldOwnerId) && Tag.Visibility.PRIVATE.equals(tag.getVisibility())) {
+				throw new WTException("Public tag '{}' cannot become private", tagId);
+			}
+			
+			Tag ret = doTagUpdate(con, targetPid, tagId, tag);
+			if (ret == null) throw new WTNotFoundException("Tag not found [{}]", tagId);
+			
+			eventManager.fireEvent(new TagChangedEvent(this, ChangedEvent.Operation.UPDATE));
+			HashMap<String, String> tagDetails = new HashMap<>();
+			tagDetails.put("description", ret.getName());
+			tagDetails.put("color", ret.getColor());
+			
+			if (isAuditEnabled()) {
+				auditLogWrite(
+					AuditContext.TAG,
+					AuditAction.UPDATE,
+					ret.getTagId(),
+					JsonResult.gson().toJson(tagDetails)
+				);
+			}
+			
+			return ret;
+			
+		} catch (Throwable t) {
+			throw ExceptionUtils.wrapThrowable(t);
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
+	/*
 	public Tag addTag(final Tag tag) throws WTException {
 		Connection con = null;
 		
@@ -1522,6 +1580,7 @@ public class CoreManager extends BaseManager {
 			DbUtils.closeQuietly(con);
 		}
 	}
+	*/
 	
 	public void deleteTag(final String tagId) throws WTException {
 		TagDAO tagDao = TagDAO.getInstance();
@@ -3846,74 +3905,68 @@ public class CoreManager extends BaseManager {
 		addServiceStoreEntry(SERVICE_ID, "recipients", email, email);
 	}
 	
-	public RecipientsProviderBase getProfileRecipientsProvider(String sourceId) {
-		return getProfileRecipientsProviders().get(sourceId);
+	/**
+	 * Return a list of available RecipientsProviders.
+	 * Any source RecipientsProvider is identified by a unique ID.
+	 * @return A set of RecipientsProvider IDs.
+	 * @throws WTException 
+	 */
+	public Set<String> listRecipientsProviderIDs() throws WTException {
+		return cacheRecipientsProvider.getIDs();
 	}
 	
 	/**
-	 * Returns the available source IDs.
+	 * Gets a RecipientsProvider by its ID.
+	 * @param providerId The provider ID to retrieve.
 	 * @return
 	 * @throws WTException 
 	 */
-	public List<String> listRecipientProviderSourceIds() throws WTException {
-		return new ArrayList<>(getProfileRecipientsProviders().keySet());
+	public RecipientsProviderBase getRecipientsProvider(final String providerId) throws WTException {
+		return cacheRecipientsProvider.getProvider(providerId);
 	}
 	
 	/**
-	 * Returns a list of recipients beloging to a specified type.
-	 * The search will include all available sources; including also the 
-	 * automatic ({@link #RECIPIENT_PROVIDER_AUTO_SOURCE_ID}) one used to store
-	 * the auto-learn texts, and the ({@link #RECIPIENT_PROVIDER_WEBTOP_SOURCE_ID})
-	 * one containing internal webtop users
-	 * @param fieldType The desired recipient type.
-	 * @param queryText A text to filter out returned results.
-	 * @param max Max number of results.
-	 * @param builtInProvidersAtTheEnd True add built-in providers (AUTO and WEBTOP) results at the end, false otherwise.
+	 * 
+	 * @param sourceRecipientsProviders A collection of provider IDs in which look for.
+	 * @param fieldType The desired value to be returned for each recipient.
+	 * @param queryText The query text to filter out recipients values.
+	 * @param max The max number of results to return.
 	 * @return
 	 * @throws WTException 
 	 */
-	public List<Recipient> listProviderRecipients(RecipientFieldType fieldType, String queryText, int max, boolean builtInProvidersAtTheEnd, boolean includeAuto, boolean includeWebTop) throws WTException {
-		final ArrayList<String> ids = new ArrayList<>();
-		if (!builtInProvidersAtTheEnd) {
-			if (autoRcptProviderEnabled && includeAuto) ids.add(RECIPIENT_PROVIDER_AUTO_SOURCE_ID);
-			if (webtopRcptProviderEnabled && includeWebTop) ids.add(RECIPIENT_PROVIDER_WEBTOP_SOURCE_ID);
-		}
-		ids.addAll(listRecipientProviderSourceIds());
-		if (builtInProvidersAtTheEnd) {
-			if (autoRcptProviderEnabled && includeAuto) ids.add(RECIPIENT_PROVIDER_AUTO_SOURCE_ID);
-			if (webtopRcptProviderEnabled && includeWebTop) ids.add(RECIPIENT_PROVIDER_WEBTOP_SOURCE_ID);
-		}
-		return listProviderRecipients(fieldType, ids, queryText, max);
-	}
-	
-	/**
-	 * Returns a list of recipients beloging to a specified type.
-	 * @param fieldType The desired recipient type.
-	 * @param sourceIds A collection of sources in which look for.
-	 * @param queryText A text to filter out returned results.
-	 * @param max Max number of results.
-	 * @return
-	 * @throws WTException 
-	 */
-	public List<Recipient> listProviderRecipients(RecipientFieldType fieldType, Collection<String> sourceIds, String queryText, int max) throws WTException {
+	public List<Recipient> listRecipients(final Collection<String> sourceRecipientsProviders, final RecipientFieldType fieldType, final String queryText, final int max) throws WTException {
+		Check.notNull(sourceRecipientsProviders, "sourceRecipientsProviders");
+		Check.notNull(fieldType, "fieldType");
 		ArrayList<Recipient> items = new ArrayList<>();
 		
 		int remaining = max;
-		for (String soId : sourceIds) {
+		for (String providerId : sourceRecipientsProviders) {
 			List<Recipient> recipients = null;
-			if (RECIPIENT_PROVIDER_AUTO_SOURCE_ID.equals(soId)) {
+			if (RECIPIENT_PROVIDER_BUILTIN_AUTO.equals(providerId)) { // Built-in provider AUTO(matic) recipients
 				if (!fieldType.equals(RecipientFieldType.LIST)) {
 					recipients = new ArrayList<>();
 					//TODO: Find a way to handle other RecipientFieldTypes
 					if (fieldType.equals(RecipientFieldType.EMAIL)) {
-						final List<OServiceStoreEntry> entries = listServiceStoreEntriesByQuery(SERVICE_ID, "recipients", queryText, remaining);
-						for(OServiceStoreEntry entry: entries) {
-							final InternetAddress ia = InternetAddressUtils.toInternetAddress(entry.getValue());
-							if (ia!=null) recipients.add(new Recipient(RECIPIENT_PROVIDER_AUTO_SOURCE_ID, lookupResource(getLocale(), CoreLocaleKey.INTERNETRECIPIENT_AUTO), RECIPIENT_PROVIDER_AUTO_SOURCE_ID, ia.getPersonal(), ia.getAddress()));
+						String keyQuery = StringUtils.isBlank(queryText) ? queryText : "%" + queryText + "%";
+						for (String value : listMetaEntriesValuesByQuery(SERVICE_ID, "recipients", keyQuery, remaining, true).values()) {
+							final InternetAddress ia = InternetAddressUtils.toInternetAddress(value);
+							if (ia != null) {
+								recipients.add(
+									new Recipient(
+										providerId,
+										lookupResource(getLocale(), CoreLocaleKey.INTERNETRECIPIENT_AUTO),
+										null,
+										null,
+										ia.getAddress(),
+										ia.getPersonal()
+									)
+								);
+							}
 						}
 					}
 				}
-			} else if (RECIPIENT_PROVIDER_WEBTOP_SOURCE_ID.equals(soId)) {
+				
+			} else if (RECIPIENT_PROVIDER_BUILTIN_WEBTOP.equals(providerId)) { // Built-in provider domain users recipients
 				if (!fieldType.equals(RecipientFieldType.LIST)) {
 					WebTopManager wtMgr = wta.getWebTopManager();
 					recipients = new ArrayList<>();
@@ -3921,16 +3974,17 @@ public class CoreManager extends BaseManager {
 					if (fieldType.equals(RecipientFieldType.EMAIL)) {
 						final String domainId = getTargetProfileId().getDomainId();
 						for (String userId : wtMgr.listUserIds(domainId, EnabledCond.ENABLED_ONLY)) {
-							final UserProfile.Data userData = WT.getUserData(new UserProfileId(domainId, userId));
-							if (userData != null) {
-								if (StringUtils.containsIgnoreCase(userData.getDisplayName(), queryText) || StringUtils.containsIgnoreCase(userData.getPersonalEmailAddress(), queryText)) {
+							final UserProfile.Data upd = WT.getProfileData(new UserProfileId(domainId, userId));
+							if (upd != null) {
+								if (StringUtils.containsIgnoreCase(upd.getDisplayName(), queryText) || StringUtils.containsIgnoreCase(upd.getPersonalEmailAddress(), queryText)) {
 									recipients.add(
 										new Recipient(
-											RECIPIENT_PROVIDER_WEBTOP_SOURCE_ID, 
+											providerId,
 											lookupResource(getLocale(), CoreLocaleKey.INTERNETRECIPIENT_WEBTOP), 
-											RECIPIENT_PROVIDER_AUTO_SOURCE_ID, 
-											userData.getDisplayName(), 
-											userData.getPersonalEmailAddress()
+											null,
+											null,
+											upd.getPersonalEmailAddress(),
+											upd.getDisplayName()
 										)
 									);
 								}
@@ -3938,23 +3992,23 @@ public class CoreManager extends BaseManager {
 						}
 					}
 				}
+				
 			} else {
-				final RecipientsProviderBase provider = getProfileRecipientsProviders().get(soId);
+				final RecipientsProviderBase provider = getRecipientsProvider(providerId);
 				if (provider == null) continue;
 				
 				try {
 					recipients = provider.getRecipients(fieldType, queryText, remaining);
-				} catch(Throwable t) {
-					logger.error("Error calling RecipientProvider [{}]", t, soId);
+				} catch (Throwable t) {
+					logger.error("Error calling RecipientProvider [{}]", t, providerId);
 				}
 				if (recipients == null) continue;
 			}
 			
-			if (recipients!=null)
-				for(Recipient recipient : recipients) {
+			if (recipients != null)
+				for (Recipient recipient : recipients) {
 					remaining--;
 					if (remaining < 0) break; 
-					recipient.setSource(soId); // Force composed id!
 					items.add(recipient);
 				}
 			if (remaining <= 0) break;
@@ -3962,32 +4016,72 @@ public class CoreManager extends BaseManager {
 		return items;
 	}
 	
+	public static enum ListRecipientsOption implements BitFlagsEnum<ListRecipientsOption> {
+		BUILTIN_PROVIDERS_LAST(1<<0), INCLUDE_BUILTIN_PROVIDER_AUTO(1<<1), INCLUDE_BUILTIN_PROVIDER_WEBTOP(1<<2);
+		
+		private int mask = 0;
+		private ListRecipientsOption(int mask) { this.mask = mask; }
+		@Override
+		public long mask() { return this.mask; }
+	}
+	
 	/**
-	 * Expands a virtualRecipient address into a real set of recipients.
-	 * @param virtualRecipientAddress
+	 * 
+	 * @param fieldType The desired value to be returned for each recipient.
+	 * @param queryText The query text to filter out recipients values.
+	 * @param max The max number of results to return.
+	 * @param options Options to customize results.
 	 * @return
 	 * @throws WTException 
 	 */
-	public List<Recipient> expandVirtualProviderRecipient(String virtualRecipientAddress) throws WTException {
+	public List<Recipient> listRecipients(final RecipientFieldType fieldType, final String queryText, final int max, final BitFlags<ListRecipientsOption> options) throws WTException {
+		Check.notNull(fieldType, "fieldType");
+		Check.notNull(options, "options");
+		
+		final boolean includeAuto = options.has(ListRecipientsOption.INCLUDE_BUILTIN_PROVIDER_AUTO);
+		final boolean includeWebTop = options.has(ListRecipientsOption.INCLUDE_BUILTIN_PROVIDER_WEBTOP);
+		final boolean builtInProvidersAtTheEnd = options.has(ListRecipientsOption.BUILTIN_PROVIDERS_LAST);
+		
+		final ArrayList<String> sources = new ArrayList<>();
+		if (!builtInProvidersAtTheEnd) {
+			if (autoRcptProviderEnabled && includeAuto) sources.add(RECIPIENT_PROVIDER_BUILTIN_AUTO);
+			if (webtopRcptProviderEnabled && includeWebTop) sources.add(RECIPIENT_PROVIDER_BUILTIN_WEBTOP);
+		}
+		sources.addAll(listRecipientsProviderIDs());
+		if (builtInProvidersAtTheEnd) {
+			if (autoRcptProviderEnabled && includeAuto) sources.add(RECIPIENT_PROVIDER_BUILTIN_AUTO);
+			if (webtopRcptProviderEnabled && includeWebTop) sources.add(RECIPIENT_PROVIDER_BUILTIN_WEBTOP);
+		}
+		return listRecipients(sources, fieldType, queryText, max);
+	}
+	
+	@Deprecated public List<Recipient> listRecipients(final RecipientFieldType fieldType, final String queryText, final int max, boolean builtInProvidersAtTheEnd, boolean includeAuto, boolean includeWebTop) throws WTException {
+		BitFlags<ListRecipientsOption> opts = BitFlags.noneOf(ListRecipientsOption.class);
+		if (builtInProvidersAtTheEnd) opts.set(ListRecipientsOption.BUILTIN_PROVIDERS_LAST);
+		if (includeAuto) opts.set(ListRecipientsOption.INCLUDE_BUILTIN_PROVIDER_AUTO);
+		if (includeWebTop) opts.set(ListRecipientsOption.INCLUDE_BUILTIN_PROVIDER_WEBTOP);
+		return listRecipients(fieldType, queryText, max, opts);
+	}
+	
+	public List<Recipient> expandVirtualRecipient(final String virtualRecipientAddress) throws WTException {
 		ArrayList<Recipient> items = new ArrayList<>();
 		VirtualAddress va = new VirtualAddress(virtualRecipientAddress);
 		
-		for (String soId : listRecipientProviderSourceIds()) {
-			final RecipientsProviderBase provider = getProfileRecipientsProviders().get(soId);
+		for (String providerId : listRecipientsProviderIDs()) {
+			final RecipientsProviderBase provider = getRecipientsProvider(providerId);
 			if (provider == null) continue;
-			if (!StringUtils.isBlank(va.getDomain()) && !StringUtils.startsWith(soId, va.getDomain())) {
+			if (!StringUtils.isBlank(va.getDomain()) && !StringUtils.startsWith(providerId, va.getDomain())) {
 				continue;
 			}
 			
 			List<Recipient> recipients = null;
 			try {
 				recipients = provider.expandToRecipients(va.getLocal());
-			} catch(Throwable t) {
-				logger.error("Error calling RecipientProvider [{}]", t, soId);
+			} catch (Throwable t) {
+				logger.error("Error calling RecipientProvider [{}]", t, providerId);
 			}
 			if (recipients == null) continue;
 			for (Recipient recipient : recipients) {
-				recipient.setSource(soId);
 				items.add(recipient);
 			}
 		}
@@ -4130,6 +4224,28 @@ public class CoreManager extends BaseManager {
 		}
 		
 		return (ret == 1) ? ManagerUtils.createCausal(ocau) : null;
+	}
+	
+	private Tag doTagInsert(Connection con, UserProfileId profileId, TagBase tag) throws WTException {
+		TagDAO tagDao = TagDAO.getInstance();
+		
+		OTag otag = ManagerUtils.fillOTag(new OTag(), tag, profileId.getUserId());
+		otag.setTagId(tagDao.generateTagId());
+		otag.setDomainId(profileId.getDomainId());
+		
+		int ret = tagDao.insert(con, otag);
+		return (ret == 1) ? ManagerUtils.fillTag(new Tag(), otag) : null;
+	}
+	
+	private Tag doTagUpdate(Connection con, UserProfileId profileId, String tagId, TagBase tag) throws WTException {
+		TagDAO tagDao = TagDAO.getInstance();
+		
+		OTag otag = ManagerUtils.fillOTag(new OTag(), tag, profileId.getUserId());
+		otag.setTagId(tagId);
+		otag.setDomainId(profileId.getDomainId());
+		
+		int ret = tagDao.update(con, otag);
+		return (ret == 1) ? ManagerUtils.fillTag(new Tag(), otag) : null;
 	}
 	
 	private Tag doTagUpdate(boolean insert, Connection con, Tag tag) throws WTException {
@@ -4317,7 +4433,51 @@ public class CoreManager extends BaseManager {
 		} finally {
 			DbUtils.closeQuietly(con);
 		}
-	}	
+	}
+	
+	private class CacheRecipientsProvider extends AbstractBulkCache {
+		private final Map<String, RecipientsProviderBase> providersById = new LinkedHashMap<>();
+		
+		@Override
+		protected void internalBuildCache() {
+			for (String serviceId : listAllowedServices()) {
+				BaseManager manager = WT.getServiceManager(serviceId, true, getTargetProfileId());
+				if (manager instanceof IRecipientsProvidersSource) {
+					List<RecipientsProviderBase> providers = ((IRecipientsProvidersSource)manager).returnRecipientsProviders();
+					if (providers != null) {
+						for (RecipientsProviderBase provider : providers) {
+							providersById.put(provider.getId(), provider);
+						}
+					}
+				}
+			}
+		}
+
+		@Override
+		protected void internalCleanupCache() {
+			providersById.clear();
+		}
+		
+		public Set<String> getIDs() {
+			this.internalCheckBeforeGetDoNotLockThis();
+			long stamp = this.readLock();
+			try {
+				return providersById.keySet();
+			} finally {
+				this.unlockRead(stamp);
+			}
+		}
+		
+		public RecipientsProviderBase getProvider(final String id) {
+			this.internalCheckBeforeGetDoNotLockThis();
+			long stamp = this.readLock();
+			try {
+				return providersById.get(id);
+			} finally {
+				this.unlockRead(stamp);
+			}
+		}
+	}
 
 	private DateTime createRevisionTimestamp() {
 		return DateTime.now(DateTimeZone.UTC);

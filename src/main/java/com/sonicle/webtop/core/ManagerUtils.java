@@ -54,6 +54,7 @@ import com.sonicle.webtop.core.model.CustomPanelBase;
 import com.sonicle.webtop.core.model.MasterData;
 import com.sonicle.webtop.core.model.MasterDataLookup;
 import com.sonicle.webtop.core.model.Tag;
+import com.sonicle.webtop.core.model.TagBase;
 import com.sonicle.webtop.core.sdk.WTException;
 import java.util.LinkedHashSet;
 import java.util.Set;
@@ -146,6 +147,7 @@ public class ManagerUtils {
 		return tgt;
 	}
 	
+	/*
 	static <T extends Tag> T fillTag(T tgt, OTag src) {
 		if ((tgt != null) && (src != null)) {
 			tgt.setTagId(src.getTagId());
@@ -158,6 +160,7 @@ public class ManagerUtils {
 		}
 		return tgt;
 	}
+	*/
 	
 	static OTag createOTag(Tag src, String ownerIdIfPersonal) {
 		if (src == null) return null;
@@ -168,6 +171,38 @@ public class ManagerUtils {
 		if ((tgt != null) && (src != null)) {
 			tgt.setTagId(src.getTagId());
 			tgt.setDomainId(src.getDomainId());
+			tgt.setUserId(Tag.Visibility.SHARED.equals(src.getVisibility()) ? OTag.OWNER_NONE : ownerIdIfPrivate);
+			tgt.setBuiltIn(src.getBuiltIn());
+			tgt.setName(src.getName());
+			tgt.setColor(src.getColor());
+			tgt.setExternalId(src.getExternalId());
+		}
+		return tgt;
+	}
+	
+	
+	static <T extends Tag> T fillTag(T tgt, OTag src) {
+		if ((tgt != null) && (src != null)) {
+			tgt.setTagId(src.getTagId());
+			tgt.setDomainId(src.getDomainId());
+		}
+		fillTag((TagBase)tgt, src);
+		return tgt;
+	}
+	
+	static <T extends TagBase> T fillTag(T tgt, OTag src) {
+		if ((tgt != null) && (src != null)) {
+			tgt.setVisibility(src.isOwnerNone() ? Tag.Visibility.SHARED : Tag.Visibility.PRIVATE);
+			tgt.setBuiltIn(src.getBuiltIn());
+			tgt.setName(src.getName());
+			tgt.setColor(src.getColor());
+			tgt.setExternalId(src.getExternalId());
+		}
+		return tgt;
+	}
+	
+	static <T extends OTag> T fillOTag(T tgt, TagBase src, String ownerIdIfPrivate) {
+		if ((tgt != null) && (src != null)) {
 			tgt.setUserId(Tag.Visibility.SHARED.equals(src.getVisibility()) ? OTag.OWNER_NONE : ownerIdIfPrivate);
 			tgt.setBuiltIn(src.getBuiltIn());
 			tgt.setName(src.getName());

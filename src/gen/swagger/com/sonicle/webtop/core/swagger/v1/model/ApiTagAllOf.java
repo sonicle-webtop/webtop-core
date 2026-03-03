@@ -15,52 +15,50 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 
 
 
-@JsonTypeName("User_allOf")
+@JsonTypeName("Tag_allOf")
 @javax.annotation.Generated(value = "org.openapitools.codegen.languages.JavaJAXRSSpecServerCodegen", date = "2026-02-27T16:20:59.935+01:00[Europe/Berlin]")
-public class ApiUserAllOf   {
-  private @Valid String userId;
-  private @Valid String userSid;
+public class ApiTagAllOf   {
+  private @Valid String id;
+  private @Valid Boolean builtIn;
 
   /**
-   * User ID, actually its name.
    **/
-  public ApiUserAllOf userId(String userId) {
-    this.userId = userId;
+  public ApiTagAllOf id(String id) {
+    this.id = id;
     return this;
   }
 
   
-  @ApiModelProperty(required = true, value = "User ID, actually its name.")
-  @JsonProperty("userId")
+  @ApiModelProperty(required = true, value = "")
+  @JsonProperty("id")
   @NotNull
-  public String getUserId() {
-    return userId;
+  public String getId() {
+    return id;
   }
 
-  @JsonProperty("userId")
-  public void setUserId(String userId) {
-    this.userId = userId;
+  @JsonProperty("id")
+  public void setId(String id) {
+    this.id = id;
   }
 
   /**
-   * User SID (internal Subject IDentifier), auto-generated GUID.
    **/
-  public ApiUserAllOf userSid(String userSid) {
-    this.userSid = userSid;
+  public ApiTagAllOf builtIn(Boolean builtIn) {
+    this.builtIn = builtIn;
     return this;
   }
 
   
-  @ApiModelProperty(required = true, value = "User SID (internal Subject IDentifier), auto-generated GUID.")
-  @JsonProperty("userSid")
+  @ApiModelProperty(required = true, value = "")
+  @JsonProperty("builtIn")
   @NotNull
-  public String getUserSid() {
-    return userSid;
+  public Boolean getBuiltIn() {
+    return builtIn;
   }
 
-  @JsonProperty("userSid")
-  public void setUserSid(String userSid) {
-    this.userSid = userSid;
+  @JsonProperty("builtIn")
+  public void setBuiltIn(Boolean builtIn) {
+    this.builtIn = builtIn;
   }
 
 
@@ -72,23 +70,23 @@ public class ApiUserAllOf   {
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
-    ApiUserAllOf userAllOf = (ApiUserAllOf) o;
-    return Objects.equals(this.userId, userAllOf.userId) &&
-        Objects.equals(this.userSid, userAllOf.userSid);
+    ApiTagAllOf tagAllOf = (ApiTagAllOf) o;
+    return Objects.equals(this.id, tagAllOf.id) &&
+        Objects.equals(this.builtIn, tagAllOf.builtIn);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(userId, userSid);
+    return Objects.hash(id, builtIn);
   }
 
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();
-    sb.append("class ApiUserAllOf {\n");
+    sb.append("class ApiTagAllOf {\n");
     
-    sb.append("    userId: ").append(toIndentedString(userId)).append("\n");
-    sb.append("    userSid: ").append(toIndentedString(userSid)).append("\n");
+    sb.append("    id: ").append(toIndentedString(id)).append("\n");
+    sb.append("    builtIn: ").append(toIndentedString(builtIn)).append("\n");
     sb.append("}");
     return sb.toString();
   }
