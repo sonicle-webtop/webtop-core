@@ -37,7 +37,7 @@ Ext.define('Sonicle.webtop.core.admin.model.GridUser', {
 	idProperty: 'userId',
 	fields: [
 		WTF.field('userId', 'string', false),
-		WTF.roField('userSid', 'boolean'),
+		WTF.roField('userSid', 'string'),
 		WTF.roField('exist', 'boolean'),
 		WTF.roField('displayName', 'string'),
 		WTF.roField('enabled', 'boolean'),

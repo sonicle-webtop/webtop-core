@@ -101,7 +101,14 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainUsers', {
 					}
 				}),
 				listeners: {
+					load: function(s, recs, success) {
+						if (success) me.updateInfo();
+					},
+					update: function(s, rec) {
+						me.updateInfo();
+					},
 					remove: function(s, recs) {
+						me.updateInfo();
 						// Fix for updating selection
 						me.lref('gp').getSelectionModel().deselect(recs);
 					}
@@ -131,7 +138,7 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainUsers', {
 					flex: 2
 				}, {
 					dataIndex: 'userSid',
-					header: me.res('domainUsers.gp.userSid.lbl'),
+					header: me.mys.res('domainUsers.gp.userSid.lbl'),
 					tdCls: 'x-selectable',
 					hidden: true,
 					flex: 1
@@ -262,6 +269,13 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainUsers', {
 						me.lref('gp').getStore().load();
 					}
 				})
+			],
+			bbar: [
+				'->',
+				{
+					xtype: 'tbtext',
+					reference: 'tbactivecount'
+				}
 			],
 			listeners: {
 				rowdblclick: function(s, rec) {
@@ -455,6 +469,23 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainUsers', {
 		
 		getSelectedUsers: function() {
 			return this.lref('gp').getSelection();
+		},
+		
+		updateInfo: function() {
+			var me = this,
+				sto = me.lref('gp').getStore(),
+				enabled = 0, total = 0;
+
+			sto.each(function(rec) {
+				if (rec.get('exist') === true) {
+					total++;
+					if (rec.get('enabled') === true) {
+						enabled++;
+					}
+				}
+			}, me, {filtered: true});
+
+			me.lref('tbactivecount').setHtml(me.mys.res('domainUsers.tbi-activecount.lbl', enabled, total));
 		},
 	
 		updateDisabled: function(action) {

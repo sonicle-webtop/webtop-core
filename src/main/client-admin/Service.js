@@ -162,6 +162,8 @@ Ext.define('Sonicle.webtop.core.admin.Service', {
 							me.showDomainGroupsUI(rec.parentNode, rec);
 						} else if (type === 'dusers') {
 							me.showDomainUsersUI(rec.parentNode, rec);
+						} else if (type === 'dusers2') {
+							me.showDomainUsersUI2(rec.parentNode, rec);
 						} else if (type === 'droles') {
 							me.showDomainRolesUI(rec.parentNode, rec);
 						} else if (type === 'dresources') {
