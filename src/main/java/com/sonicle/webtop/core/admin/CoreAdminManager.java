@@ -40,7 +40,6 @@ import com.sonicle.commons.flags.BitFlags;
 import com.sonicle.commons.l4j.ProductLicense;
 import com.sonicle.commons.qbuilders.conditions.Condition;
 import com.sonicle.commons.time.DateTimeRange;
-import com.sonicle.security.auth.directory.AbstractDirectory;
 import com.sonicle.webtop.core.app.CoreManifest;
 import com.sonicle.webtop.core.app.DataSourcesManager;
 import com.sonicle.webtop.core.app.LicenseManager;
@@ -55,11 +54,9 @@ import com.sonicle.webtop.core.app.WebTopApp;
 import com.sonicle.webtop.core.app.WebTopProps;
 import com.sonicle.webtop.core.app.io.dbutils.FilterableArrayListHandler;
 import com.sonicle.webtop.core.app.io.dbutils.RowsAndCols;
-import com.sonicle.webtop.core.app.model.AclSubjectGetOption;
 import com.sonicle.webtop.core.app.model.ApiKey;
 import com.sonicle.webtop.core.app.model.ApiKeyBase;
 import com.sonicle.webtop.core.app.model.ApiKeyNew;
-import com.sonicle.webtop.core.app.model.DirectoryUser;
 import com.sonicle.webtop.core.app.model.Domain;
 import com.sonicle.webtop.core.app.model.DomainBase;
 import com.sonicle.webtop.core.app.model.DomainGetOption;
@@ -76,8 +73,6 @@ import com.sonicle.webtop.core.config.bol.OPecBridgeFetcher;
 import com.sonicle.webtop.core.config.bol.OPecBridgeRelay;
 import com.sonicle.webtop.core.bol.OSettingDb;
 import com.sonicle.webtop.core.bol.OUpgradeStatement;
-import com.sonicle.webtop.core.bol.OUser;
-import com.sonicle.webtop.core.model.DomainEntity;
 import com.sonicle.webtop.core.dal.DAOException;
 import com.sonicle.webtop.core.config.dal.PecBridgeFetcherDAO;
 import com.sonicle.webtop.core.config.dal.PecBridgeRelayDAO;
@@ -94,11 +89,9 @@ import com.sonicle.webtop.core.model.DataSourceType;
 import com.sonicle.webtop.core.model.DomainAccessLog;
 import com.sonicle.webtop.core.model.DomainAccessLogDetail;
 import com.sonicle.webtop.core.model.DomainAccessLogQuery;
-import com.sonicle.webtop.core.model.License;
 import com.sonicle.webtop.core.model.ListDomainAccessLogDetailResult;
 import com.sonicle.webtop.core.model.ListDomainAccessLogResult;
 import com.sonicle.webtop.core.model.LoggerEntry;
-import com.sonicle.webtop.core.model.ProductId;
 import com.sonicle.webtop.core.model.PublicImage;
 import com.sonicle.webtop.core.app.model.Resource;
 import com.sonicle.webtop.core.app.model.ResourceBase;
@@ -110,6 +103,7 @@ import com.sonicle.webtop.core.app.model.GroupUpdateOption;
 import com.sonicle.webtop.core.app.model.LicenseBase;
 import com.sonicle.webtop.core.app.model.LicenseComputedStatus;
 import com.sonicle.webtop.core.app.model.LicenseListOption;
+import com.sonicle.webtop.core.app.model.PlatformUser;
 import com.sonicle.webtop.core.app.model.ResourceGetOption;
 import com.sonicle.webtop.core.app.model.ResourceUpdateOption;
 import com.sonicle.webtop.core.app.model.Role;
@@ -129,15 +123,12 @@ import com.sonicle.webtop.core.sdk.BaseServiceProduct;
 import com.sonicle.webtop.core.sdk.UserProfile;
 import com.sonicle.webtop.core.sdk.UserProfileId;
 import com.sonicle.webtop.core.sdk.WTException;
-import com.sonicle.webtop.vfs.IVfsManager;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -485,13 +476,11 @@ public class CoreAdminManager extends BaseManager {
 		return wtMgr.deleteGroup(targetPid.getDomainId(), groupId);
 	}
 	
-	public List<DirectoryUser> listDirectoryUsers() throws WTException {
+	public Map<String, PlatformUser> listPlatformUsers(final WebTopManager.PlatformUsersPerspective perspective) throws WTException {
 		WebTopManager wtMgr = wta.getWebTopManager();
-
+		
 		final UserProfileId targetPid = ensureWebTopDomainAdmin();
-		List<DirectoryUser> items = wtMgr.listDirectoryUsers(targetPid.getDomainId());
-		Collections.sort(items, (DirectoryUser du1, DirectoryUser du2) -> du1.getDirectoryUser().userId.compareTo(du2.getDirectoryUser().userId));
-		return items;
+		return wtMgr.listPlatformUsers(targetPid.getDomainId(), perspective);
 	}
 	
 	public Map<String, User> listUsers(final EnabledCond enabled) throws WTException {

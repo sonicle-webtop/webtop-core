@@ -85,7 +85,6 @@ import com.sonicle.webtop.core.app.model.ApiKeyBase;
 import com.sonicle.webtop.core.app.model.ApiKeyLive;
 import com.sonicle.webtop.core.app.model.ApiKeyNew;
 import com.sonicle.webtop.core.app.model.CIDTokenIssued;
-import com.sonicle.webtop.core.app.model.DirectoryUser;
 import com.sonicle.webtop.core.app.model.Domain;
 import com.sonicle.webtop.core.app.model.DomainBase;
 import com.sonicle.webtop.core.app.model.DomainGetOption;
@@ -144,6 +143,7 @@ import com.sonicle.webtop.core.app.model.GroupGetOption;
 import com.sonicle.webtop.core.app.model.GroupUpdateOption;
 import com.sonicle.webtop.core.app.model.HomedThrowable;
 import com.sonicle.webtop.core.app.model.PermissionString;
+import com.sonicle.webtop.core.app.model.PlatformUser;
 import com.sonicle.webtop.core.app.model.RMeTokenInfo;
 import com.sonicle.webtop.core.app.model.RMeTokenIssued;
 import com.sonicle.webtop.core.app.model.ResourceGetOption;
@@ -210,6 +210,7 @@ import java.util.LinkedHashMap;
 import java.util.Locale;
 import java.util.Map.Entry;
 import java.util.Optional;
+import java.util.TreeMap;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 import net.sf.qualitycheck.Check;
@@ -1216,8 +1217,13 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 		return new ResultVoid(errors);
 	}
 	
-	public List<DirectoryUser> listDirectoryUsers(final String domainId) throws WTException {
+	public static enum PlatformUsersPerspective {
+		DIRECTORY, LOCAL; 
+	}
+	
+	public Map<String, PlatformUser> listPlatformUsers(final String domainId, final PlatformUsersPerspective perspective) throws WTException {
 		Check.notEmpty(domainId, "domainId");
+		Check.notNull(perspective, "perspective");
 		UserDAO useDao = UserDAO.getInstance();
 		Connection con = null;
 		
@@ -1225,17 +1231,23 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 			final AuthContext acontext = lookupAuthenticationContext(domainId);
 			final AbstractDirectory directory = getAuthDirectory(acontext);
 			final DirectoryOptions opts = DirectoryUtils.createDirectoryOptions(acontext, getWebTopApp().getConnectionManager());
+			if (!directory.hasCapability(DirectoryCapability.USERS_READ)) throw new WTException("Directory not readable");
 			
 			con = getConnection(true);
-			Map<String, VUser> vusers = useDao.selectByDomainEnabled(con, domainId, EnabledCond.ANY_STATE);
-			ArrayList<DirectoryUser> items = new ArrayList<>();
-			if (directory.hasCapability(DirectoryCapability.USERS_READ)) {
-				for (AuthUser authUser : directory.listUsers(opts, domainId)) {
-					items.add(new DirectoryUser(authUser, vusers.get(authUser.userId)));
+			Map<String, PlatformUser> items = new TreeMap<>();
+			if (PlatformUsersPerspective.DIRECTORY.equals(perspective)) {
+				Map<String, VUser> localUsers = useDao.selectByDomainEnabled(con, domainId, EnabledCond.ANY_STATE);
+				for (AuthUser authUser : directory.listUsers(opts, domainId).values()) {
+					items.put(authUser.userId, new PlatformUser(authUser, localUsers.get(authUser.userId)));
 				}
-			} else {
-				throw new WTException("Directory not readable");
+				
+			} else if (PlatformUsersPerspective.LOCAL.equals(perspective)) {
+				Map<String, AuthUser> authUsers = directory.listUsers(opts, domainId);
+				for (VUser localUser : useDao.selectByDomainEnabled(con, domainId, EnabledCond.ANY_STATE).values()) {
+					items.put(localUser.getUserId(), new PlatformUser(authUsers.get(localUser.getUserId()), localUser));
+				}
 			}
+			
 			return items;
 			
 		} catch(DirectoryException ex) {
@@ -5786,7 +5798,7 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 	}
 	
 	private class ProfileDataCacheLoader implements CacheLoader<UserProfileId, UserProfile.Data> {
-
+		
 		@Override
 		public UserProfile.Data load(UserProfileId k) throws Exception {
 			try {

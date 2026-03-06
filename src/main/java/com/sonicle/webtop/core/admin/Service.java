@@ -102,7 +102,6 @@ import com.sonicle.webtop.core.app.WebTopManager;
 import com.sonicle.webtop.core.app.WebTopProps;
 import com.sonicle.webtop.core.app.model.ApiKey;
 import com.sonicle.webtop.core.app.model.ApiKeyNew;
-import com.sonicle.webtop.core.app.model.DirectoryUser;
 import com.sonicle.webtop.core.app.model.Domain;
 import com.sonicle.webtop.core.app.model.DomainGetOption;
 import com.sonicle.webtop.core.app.model.DomainUpdateOption;
@@ -113,6 +112,7 @@ import com.sonicle.webtop.core.app.model.GroupGetOption;
 import com.sonicle.webtop.core.app.model.GroupUpdateOption;
 import com.sonicle.webtop.core.app.model.LicenseBase;
 import com.sonicle.webtop.core.app.model.LicenseListOption;
+import com.sonicle.webtop.core.app.model.PlatformUser;
 import com.sonicle.webtop.core.app.sdk.Result;
 import com.sonicle.webtop.core.app.sdk.ResultVoid;
 import com.sonicle.webtop.core.app.sdk.WTConnectionException;
@@ -759,10 +759,10 @@ public class Service extends BaseService {
 			CoreAdminManager admMgr = WT.getCoreAdminManager(RunContext.buildDomainAdminProfileId(domainId));
 			if (Crud.READ.equals(crud)) {
 				List<JsGridUser> items = new ArrayList<>();
-				for (DirectoryUser directoryUser : admMgr.listDirectoryUsers()) {
-					items.add(new JsGridUser(directoryUser));
+				for (Map.Entry<String, PlatformUser> entry : admMgr.listPlatformUsers(WebTopManager.PlatformUsersPerspective.DIRECTORY).entrySet()) {
+					items.add(new JsGridUser(entry.getKey(), entry.getValue()));
 				}
-				new JsonResult(items).printTo(out);
+				new JsonResult(items).printTo(out);	
 				
 			} else if ("enable".equals(crud) || "disable".equals(crud)) {
 				ServletUtils.StringArray userIds = ServletUtils.getObjectParameter(request, "ids", ServletUtils.StringArray.class, true);

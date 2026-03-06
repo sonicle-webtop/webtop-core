@@ -32,7 +32,7 @@
  */
 package com.sonicle.webtop.core.admin.bol.js;
 
-import com.sonicle.webtop.core.app.model.DirectoryUser;
+import com.sonicle.webtop.core.app.model.PlatformUser;
 
 /**
  *
@@ -48,20 +48,27 @@ public class JsGridUser {
 	public String dirLastName;
 	public String dirDisplayName;
 	
-	public JsGridUser(DirectoryUser directoryUser) {
-		this.userId = directoryUser.getDirectoryUser().userId;
-		this.exist = directoryUser.existsPlatformUser();
-		if (directoryUser.existsPlatformUser()) {
-			this.userSid = directoryUser.getPlatformUser().getUserSid();
-			this.displayName = directoryUser.getPlatformUser().getDisplayName();
-			this.enabled =  directoryUser.getPlatformUser().getEnabled();
+	public JsGridUser(String userId, PlatformUser platformUser) {
+		this.userId = userId;
+		this.exist = platformUser.hasLocalUser();
+		if (platformUser.hasLocalUser()) {
+			this.enabled = platformUser.getLocalUser().getEnabled();
+			this.userSid = platformUser.getLocalUser().getUserSid();
+			this.displayName = platformUser.getLocalUser().getDisplayName();
 		} else {
+			this.enabled = null;
 			this.userSid = null;
 			this.displayName = null;
-			this.enabled = false;
 		}
-		this.dirFirstName = directoryUser.getDirectoryUser().firstName;
-		this.dirLastName = directoryUser.getDirectoryUser().lastName;
-		this.dirDisplayName = directoryUser.getDirectoryUser().displayName;
+		if (platformUser.hasDirectoryUser()) {
+			
+			this.dirDisplayName = platformUser.getDirectoryUser().displayName;
+			this.dirFirstName = platformUser.getDirectoryUser().firstName;
+			this.dirLastName = platformUser.getDirectoryUser().lastName;
+		} else {
+			this.dirDisplayName = null;
+			this.dirFirstName = null;
+			this.dirLastName = null;
+		}
 	}
 }

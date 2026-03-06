@@ -57,6 +57,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Pattern;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -209,7 +210,7 @@ public class WebTopDirectory extends AbstractDirectory {
 	}
 	
 	@Override
-	public List<AuthUser> listUsers(final DirectoryOptions opts, final String domainId) throws DirectoryException {
+	public Map<String, AuthUser> listUsers(final DirectoryOptions opts, final String domainId) throws DirectoryException {
 		throw new DirectoryException("Capability not supported");
 	}
 	
