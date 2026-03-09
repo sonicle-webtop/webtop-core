@@ -250,16 +250,23 @@ public class CoreServiceSettings extends BaseServiceSettings {
 		return getBoolean(LOGIN_REMEMBERME_ENABLED, true);
 	}
 	
-	public int getLoginRememberMeMaxAgeBeforeRotate() {
+	public int getLoginRememberMeRotationIntervalHours() {
 		int ret = 24;
-		Integer v = getInteger(LOGIN_REMEMBERME_MAXAGEBEFOREROTATE, null);
+		Integer v = getInteger(LOGIN_REMEMBERME_ROTATIONINTERVAL, null);
 		if ((v != null) && (v == -1 || v > 0)) ret = v;
 		return ret;
 	}
 	
-	public int getLoginRememberMeMaxAge() {
-		int ret = 365;
-		Integer v = getInteger(LOGIN_REMEMBERME_MAXAGE, null);
+	public int getLoginRememberMeIdleTimeoutDays() {
+		int ret = 14;
+		Integer v = getInteger(LOGIN_REMEMBERME_IDLETIMEOUT, null);
+		if (v != null && v > 0) ret = v;
+		return ret;
+	}
+	
+	public int getLoginRememberMeAbsoluteLifetimeDays() {
+		int ret = 90;
+		Integer v = getInteger(LOGIN_REMEMBERME_ABSOLUTELIFETIME, null);
 		if (v != null && v > 0) ret = v;
 		return ret;
 	}

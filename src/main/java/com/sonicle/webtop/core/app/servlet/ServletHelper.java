@@ -53,6 +53,7 @@ import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.shiro.session.Session;
 import org.apache.shiro.subject.Subject;
+import org.joda.time.Duration;
 
 /**
  *
@@ -116,7 +117,11 @@ public class ServletHelper {
 	}
 	
 	public static void writeRememberMeCookie(final HttpServletResponse response, final RMeTokenIssued token) {
-		writeRememberMeCookie(response, new RMeCookieValue(token.getSelector(), token.getValidatorPlain()), token.getTtl().toStandardSeconds().getSeconds());
+		writeRememberMeCookie(response, new RMeCookieValue(token.getSelector(), token.getValidatorPlain()), token.getTTL());
+	}
+	
+	public static void writeRememberMeCookie(final HttpServletResponse response, final RMeCookieValue value, final Duration duration) {
+		writeRememberMeCookie(response, value, duration.toStandardSeconds().getSeconds());
 	}
 	
 	public static void writeRememberMeCookie(final HttpServletResponse response, final RMeCookieValue value, final int duration) {

@@ -49,6 +49,7 @@ import com.sonicle.commons.concurrent.KeyedReentrantLocks;
 import com.sonicle.commons.db.DbUtils;
 import com.sonicle.commons.flags.BitFlags;
 import com.sonicle.commons.flags.BitFlagsEnum;
+import com.sonicle.commons.time.DurationParser;
 import com.sonicle.commons.time.JavaTimeUtils;
 import com.sonicle.commons.time.JodaTimeUtils;
 import com.sonicle.security.AuthContext;
@@ -146,6 +147,7 @@ import com.sonicle.webtop.core.app.model.PermissionString;
 import com.sonicle.webtop.core.app.model.PlatformUser;
 import com.sonicle.webtop.core.app.model.RMeTokenInfo;
 import com.sonicle.webtop.core.app.model.RMeTokenIssued;
+import com.sonicle.webtop.core.app.model.RMeTokenConsumed;
 import com.sonicle.webtop.core.app.model.ResourceGetOption;
 import com.sonicle.webtop.core.app.model.ResourcePermissions;
 import com.sonicle.webtop.core.app.model.ResourceUpdateOption;
@@ -1794,7 +1796,7 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 		
 		try {
 			DateTime issueNow = JodaTimeUtils.now();
-			RMeTokenIssued newToken = createRememberMeToken(domainId, userId, null, issueNow, css.getLoginRememberMeMaxAge());
+			RMeTokenIssued newToken = createRememberMeToken(domainId, userId, null, issueNow, css.getLoginRememberMeIdleTimeoutDays());
 			
 			ORememberMeToken ormt = new ORememberMeToken();
 			ormt.setDomainId(domainId);
@@ -1803,6 +1805,7 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 			ormt.setValidator(newToken.getValidatorHash());
 			ormt.setIssuedAt(issueNow);
 			ormt.setExpiresAt(newToken.getExpiry());
+			ormt.setLastUsedAt(issueNow);
 			ormt.setRevoked(false);
 			ormt.setClientIdentifier(clientIdentifier);
 			ormt.setClientIpAddress(clientIpAddress);
@@ -1853,6 +1856,7 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 		try {
 			lockRMEValidation.lock(selector);
 			try {
+				CoreServiceSettings css = null;
 				DateTime now = JodaTimeUtils.now();
 				con = getConnection(true);
 				ORememberMeToken ormt = rmeDao.selectBySelector(con, selector);
@@ -1861,12 +1865,19 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 					return new Result<>(null);
 
 				} else {
+					css = new CoreServiceSettings(CoreManifest.ID, ormt.getDomainId());
 					if (ormt.getRevoked()) {
 						LOGGER.debug("RMeToken is revoked [{}]", ormt.getSelector());
 						return new Result<>(null);
 						
 					} else if (now.isAfter(ormt.getExpiresAt())) {
 						LOGGER.debug("RMeToken is expired [{}]", ormt.getSelector());
+						int ret = rmeDao.revokeById(con, ormt.getRemembermeTokenId(), BaseDAO.createRevisionTimestamp());
+						if (ret != 1) LOGGER.error("Unable to revoke RMeToken [{}, {}]", ormt.getRemembermeTokenId(), ormt.getSelector());
+						return new Result<>(null);
+						
+					} else if (now.isAfter(ormt.getIssuedAt().plusDays(css.getLoginRememberMeAbsoluteLifetimeDays()))) {
+						LOGGER.debug("RMeToken exceed max-lifetime [{}]", ormt.getSelector());
 						int ret = rmeDao.revokeById(con, ormt.getRemembermeTokenId(), BaseDAO.createRevisionTimestamp());
 						if (ret != 1) LOGGER.error("Unable to revoke RMeToken [{}, {}]", ormt.getRemembermeTokenId(), ormt.getSelector());
 						return new Result<>(null);
@@ -1896,16 +1907,34 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 					return new Result<>(null);
 				}
 				
-				CoreServiceSettings css = new CoreServiceSettings(CoreManifest.ID, ormt.getDomainId());
-				final int maxHoursBeforeRotate = css.getLoginRememberMeMaxAgeBeforeRotate();
-
-				// OK token is valid, rotate if necessary!
-				if (!gracefulWindow && (maxHoursBeforeRotate > 0 && now.isAfter(ormt.getIssuedAt().plusHours(maxHoursBeforeRotate)))) {
+				// If we are here token is OK!
+				
+				final int rotationItervalHours = css.getLoginRememberMeRotationIntervalHours();
+				final int idleTimeoutDays = css.getLoginRememberMeIdleTimeoutDays();
+				
+				if (!gracefulWindow && (rotationItervalHours > 0 && now.isAfter(ormt.getIssuedAt().plusHours(rotationItervalHours)))) {
+					// Rotate token if we aren't in the rotation-window (token was just rotated in other check)
 					LOGGER.debug("RMeToken OK, let's rotate it [{}]", ormt.getSelector());
-					RMeTokenIssued newToken = createRememberMeToken(ormt.getDomainId(), ormt.getUserId(), ormt.getSelector(), now, css.getLoginRememberMeMaxAge());
+					RMeTokenIssued newToken = createRememberMeToken(ormt.getDomainId(), ormt.getUserId(), ormt.getSelector(), now, idleTimeoutDays);
 					int ret = rmeDao.updateValidatorById(con, ormt.getRemembermeTokenId(), newToken.getValidatorHash(), now, newToken.getExpiry(), BaseDAO.createRevisionTimestamp());
 					if (ret != 1) LOGGER.error("RMeToken: rotation failure [{}]", ormt.getSelector());
 					return new Result<>(newToken);
+					
+				} else if (!gracefulWindow) {
+					Duration ttl = Duration.standardDays(idleTimeoutDays);
+					DateTime expiresAt = now.plus(ttl);
+					int ret = rmeDao.updateUsageById(con, ormt.getRemembermeTokenId(), expiresAt, BaseDAO.createRevisionTimestamp());
+					if (ret != 1) LOGGER.error("RMeToken: usage update failure [{}]", ormt.getSelector());
+					LOGGER.debug("RMeToken OK, expiration renewed... [{}]", ormt.getSelector());
+					return new Result<>(new RMeTokenConsumed(
+						ormt.getProfileId(),
+						ormt.getSelector(),
+						ormt.getValidator(),
+						ormt.getValidatorPrev(),
+						ormt.getIssuedAt(),
+						expiresAt,
+						ttl
+					));
 					
 				} else {
 					int ret = rmeDao.updateUsageById(con, ormt.getRemembermeTokenId(), BaseDAO.createRevisionTimestamp());

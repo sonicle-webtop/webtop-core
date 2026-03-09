@@ -342,16 +342,28 @@ public class CoreSettings {
 	/**
 	 * [system+domain]
 	 * [integer]
-	 * Max age in hours before perform validator token rotation. Must be greater than 0 or -1 to disable the rotation.
+	 * Defines how often the remember-me token is rotated.
+	 * When the configured interval (in hours) has elapsed, a new remember-me token is generated and sent to the client, replacing the previous one. This reduces the risk associated with long-lived tokens.
+	 * Must be greater than 0; -1 to disable the rotation.
 	 */
-	public static final String LOGIN_REMEMBERME_MAXAGEBEFOREROTATE = "login.rememberme.maxagebeforerotate";
+	public static final String LOGIN_REMEMBERME_ROTATIONINTERVAL = "login.rememberme.rotationinterval";
 	
 	/**
 	 * [system+domain]
 	 * [integer]
-	 * Max age in days of the remember-me session. Must be greater than 0.
+	 * Maximum inactivity period in days for remember-me authentication.
+	 * If the user does not access the application within this time, the remember-me cookie expires and a full login is required.
+	 * Must be greater than 0.
 	 */
-	public static final String LOGIN_REMEMBERME_MAXAGE = "login.rememberme.maxage";
+	public static final String LOGIN_REMEMBERME_IDLETIMEOUT = "login.rememberme.idletimeout";
+	
+	/**
+	 * [system+domain]
+	 * [integer]
+	 * Defines the maximum total lifetime of a remember-me authentication. Once this limit is reached, the remember-me session expires regardless of user activity and a full login is required.
+	 * Must be greater than 0.
+	 */
+	public static final String LOGIN_REMEMBERME_ABSOLUTELIFETIME = "login.rememberme.absolutelifetime";
 	
 	/**
 	 * [system+domain]

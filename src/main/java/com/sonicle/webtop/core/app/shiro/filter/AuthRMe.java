@@ -35,6 +35,7 @@ package com.sonicle.webtop.core.app.shiro.filter;
 import com.sonicle.commons.web.ServletUtils;
 import com.sonicle.webtop.core.app.WebTopApp;
 import com.sonicle.webtop.core.app.WebTopManager;
+import com.sonicle.webtop.core.app.model.RMeTokenConsumed;
 import com.sonicle.webtop.core.app.model.RMeTokenInfo;
 import com.sonicle.webtop.core.app.model.RMeTokenIssued;
 import com.sonicle.webtop.core.app.sdk.Result;
@@ -91,7 +92,6 @@ public class AuthRMe extends PathMatchingFilter {
 					RMeCookieValue rmeCookie = ServletHelper.readRememberMeCookie(httpRequest);
 					if (rmeCookie != null) {
 						if (LOGGER.isTraceEnabled()) LOGGER.trace("[{}] Validating RMe cookie... [{}]", ServletUtils.getRequestID(httpRequest), rmeCookie.getSelector());
-						//TODO: when
 						Result<RMeTokenInfo> result = wtMgr.validateRememberMeToken(rmeCookie.getSelector(), rmeCookie.getValidator(), null);
 						if (result.getObject() == null) {
 							if (LOGGER.isTraceEnabled()) LOGGER.trace("[{}] Invalid RMe cookie, erasing it... [{}]", ServletUtils.getRequestID(httpRequest), rmeCookie.getSelector());
@@ -103,6 +103,9 @@ public class AuthRMe extends PathMatchingFilter {
 								if (result.getObject() instanceof RMeTokenIssued) {
 									if (LOGGER.isTraceEnabled()) LOGGER.trace("[{}] Login done, writing RMe cookie... [{}]", ServletUtils.getRequestID(httpRequest), rmeCookie.getSelector());
 									ServletHelper.writeRememberMeCookie(httpResponse, (RMeTokenIssued)result.getObject());
+								} else if (result.getObject() instanceof RMeTokenConsumed) {
+									if (LOGGER.isTraceEnabled()) LOGGER.trace("[{}] Login done, updating RMe cookie expiration [{}]", ServletUtils.getRequestID(httpRequest), rmeCookie.getSelector());
+									ServletHelper.writeRememberMeCookie(httpResponse, rmeCookie, ((RMeTokenConsumed)result.getObject()).getTTL());
 								} else {
 									if (LOGGER.isTraceEnabled()) LOGGER.trace("[{}] Login done [{}]", ServletUtils.getRequestID(httpRequest), rmeCookie.getSelector());
 								}
