@@ -42,6 +42,7 @@ Ext.define('Sonicle.webtop.core.model.ServiceVars', {
 		WTF.field('wtAddonNotifier', 'string'),
 		WTF.field('wtWhatsnewEnabled', 'boolean'),
 		WTF.field('wtOtpEnabled', 'boolean'),
+		WTF.field('wtRMeEnabled', 'boolean'),
 		WTF.roField('wtLauncherLinks', 'string'),
 		WTF.roField('wtEditorFonts', 'string'),
 		WTF.roField('wtEditorFontSizes', 'string'),

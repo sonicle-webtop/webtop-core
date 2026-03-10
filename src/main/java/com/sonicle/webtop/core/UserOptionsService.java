@@ -50,7 +50,9 @@ import com.sonicle.webtop.core.app.CoreManifest;
 import com.sonicle.webtop.core.app.OTPManager;
 import com.sonicle.webtop.core.app.SessionContext;
 import com.sonicle.webtop.core.app.WT;
+import com.sonicle.webtop.core.app.WebTopApp;
 import com.sonicle.webtop.core.app.WebTopProps;
+import com.sonicle.webtop.core.app.model.RMeToken;
 import com.sonicle.webtop.core.app.model.TDTokenInfo;
 import com.sonicle.webtop.core.app.model.User;
 import com.sonicle.webtop.core.app.model.UserGetOption;
@@ -63,6 +65,7 @@ import com.sonicle.webtop.core.model.ServicePermission;
 import com.sonicle.webtop.core.app.model.UIPreset;
 import com.sonicle.webtop.core.app.sdk.Result;
 import com.sonicle.webtop.core.app.servlet.ServletHelper;
+import com.sonicle.webtop.core.bol.js.JsRMeSessionGrid;
 import com.sonicle.webtop.core.sdk.BaseService;
 import com.sonicle.webtop.core.sdk.BaseUserOptionsService;
 import com.sonicle.webtop.core.sdk.UserProfile;
@@ -70,11 +73,15 @@ import com.sonicle.webtop.core.sdk.WTException;
 import java.io.PrintWriter;
 import java.sql.Connection;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
+import java.util.Optional;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import net.sf.uadetector.ReadableUserAgent;
 import org.apache.commons.lang3.StringUtils;
+import org.joda.time.DateTimeZone;
 import org.joda.time.format.DateTimeFormatter;
 import org.slf4j.Logger;
 
@@ -334,6 +341,33 @@ public class UserOptionsService extends BaseUserOptionsService {
 			
 		} catch(Exception ex) {
 			LOGGER.error("Error in LookupStartupServices", ex);
+		}
+	}
+	
+	public void processManageRMeSessions(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
+		CoreManager coreMgr = WT.getCoreManager(true, getTargetProfileId());
+		
+		try {
+			String crud = ServletUtils.getStringParameter(request, "crud", true);
+			if (Crud.READ.equals(crud)) {
+				DateTimeZone profileTz = coreMgr.getUserData().getTimeZone();
+				Collection<RMeToken> rmeTokens = coreMgr.listRememberMeSessions(Optional.of(false)).values();
+				ArrayList<JsRMeSessionGrid> items = new ArrayList<>(rmeTokens.size());
+				for (RMeToken rmeToken : rmeTokens) {
+					ReadableUserAgent rua = WebTopApp.getUserAgentInfo(rmeToken.getClientUserAgent());
+					items.add(new JsRMeSessionGrid(rmeToken, rua, profileTz));
+				}
+				new JsonResult(items).printTo(out);
+				
+			} else if (Crud.DELETE.equals(crud)) {
+				Payload<MapItem, JsRMeSessionGrid> pl = ServletUtils.getPayload(request, JsRMeSessionGrid.class);
+				coreMgr.revokeRememberMeSession(pl.data.selector);
+				new JsonResult().printTo(out);
+			}
+			
+		} catch (Exception ex) {
+			LOGGER.error("Error in ManageRMeSessions", ex);
+			new JsonResult(false, "Error in ManageRMeSessions").printTo(out);
 		}
 	}
 	

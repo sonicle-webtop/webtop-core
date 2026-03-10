@@ -21,8 +21,8 @@ CREATE TABLE "core"."rememberme_tokens" (
 "last_used_at" timestamptz,
 "revoked" bool NOT NULL DEFAULT false,
 "client_identifier" varchar(43),
-"client_ip_address" varchar(255),
-"client_user_agent" varchar(255)
+"client_ip_address" varchar(45),
+"client_user_agent" varchar(512)
 );
 
 ALTER TABLE "core"."rememberme_tokens" ADD PRIMARY KEY ("rememberme_token_id");
@@ -47,8 +47,8 @@ CREATE TABLE "core"."trusted_devices" (
 "expires_at" timestamptz,
 "last_used_at" timestamptz,
 "revoked" bool NOT NULL DEFAULT false,
-"client_ip_address" varchar(255),
-"client_user_agent" varchar(255)
+"client_ip_address" varchar(45),
+"client_user_agent" varchar(512)
 );
 
 ALTER TABLE "core"."trusted_devices" ADD PRIMARY KEY ("trusted_device_id");
@@ -59,11 +59,13 @@ CREATE UNIQUE INDEX "trusted_devices_ak2" ON "core"."trusted_devices" ("token");
 -- Edit table: audit_known_devices
 -- ----------------------------
 ALTER TABLE "core"."audit_known_devices" 
-ADD COLUMN "first_client_ip_address" varchar(255),
-ADD COLUMN "last_client_ip_address" varchar(255),
-ADD COLUMN "first_client_user_agent" varchar(255),
-ADD COLUMN "last_client_user_agent" varchar(255),
+ADD COLUMN "first_client_ip_address" varchar(45),
+ADD COLUMN "last_client_ip_address" varchar(45),
+ADD COLUMN "first_client_user_agent" varchar(512),
+ADD COLUMN "last_client_user_agent" varchar(512),
 ALTER COLUMN "device_id" TYPE varchar(43);
+
+--COMMENT ON COLUMN "core"."audit_known_devices"."device_id" IS 'aka client_identifier';
 
 DROP INDEX "core"."audit_known_devices_ak1";
 CREATE UNIQUE INDEX "audit_known_devices_ak1" ON "core"."audit_known_devices" ("domain_id", "user_id", "device_id");

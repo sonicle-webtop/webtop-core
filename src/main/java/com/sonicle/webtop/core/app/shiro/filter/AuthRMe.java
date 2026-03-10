@@ -33,6 +33,8 @@
 package com.sonicle.webtop.core.app.shiro.filter;
 
 import com.sonicle.commons.web.ServletUtils;
+import com.sonicle.webtop.core.CoreServiceSettings;
+import com.sonicle.webtop.core.app.CoreManifest;
 import com.sonicle.webtop.core.app.WebTopApp;
 import com.sonicle.webtop.core.app.WebTopManager;
 import com.sonicle.webtop.core.app.model.RMeTokenConsumed;
@@ -85,41 +87,51 @@ public class AuthRMe extends PathMatchingFilter {
 			
 			try {
 				final WebTopApp wta = WebTopApp.getInstance();
-				final WebTopManager wtMgr = wta.getWebTopManager();
-				
 				if (!wta.isInMaintenance()) {
 					if (LOGGER.isTraceEnabled()) LOGGER.trace("[{}] Subject NOT authenticated, try reading RMe cookie...", ServletUtils.getRequestID(httpRequest));
 					RMeCookieValue rmeCookie = ServletHelper.readRememberMeCookie(httpRequest);
 					if (rmeCookie != null) {
-						if (LOGGER.isTraceEnabled()) LOGGER.trace("[{}] Validating RMe cookie... [{}]", ServletUtils.getRequestID(httpRequest), rmeCookie.getSelector());
-						Result<RMeTokenInfo> result = wtMgr.validateRememberMeToken(rmeCookie.getSelector(), rmeCookie.getValidator(), null);
-						if (result.getObject() == null) {
-							if (LOGGER.isTraceEnabled()) LOGGER.trace("[{}] Invalid RMe cookie, erasing it... [{}]", ServletUtils.getRequestID(httpRequest), rmeCookie.getSelector());
-							ServletUtils.eraseCookie(httpResponse, ServletHelper.COOKIE_REMEMBERME);
-
-						} else {
-							if (LOGGER.isTraceEnabled()) LOGGER.trace("[{}] RMe cookie OK, performing login... [{}]", ServletUtils.getRequestID(httpRequest), rmeCookie.getSelector());
-							if (executeLogin(httpRequest, httpResponse, result.getObject())) {
-								if (result.getObject() instanceof RMeTokenIssued) {
-									if (LOGGER.isTraceEnabled()) LOGGER.trace("[{}] Login done, writing RMe cookie... [{}]", ServletUtils.getRequestID(httpRequest), rmeCookie.getSelector());
-									ServletHelper.writeRememberMeCookie(httpResponse, (RMeTokenIssued)result.getObject());
-								} else if (result.getObject() instanceof RMeTokenConsumed) {
-									if (LOGGER.isTraceEnabled()) LOGGER.trace("[{}] Login done, updating RMe cookie expiration [{}]", ServletUtils.getRequestID(httpRequest), rmeCookie.getSelector());
-									ServletHelper.writeRememberMeCookie(httpResponse, rmeCookie, ((RMeTokenConsumed)result.getObject()).getTTL());
-								} else {
-									if (LOGGER.isTraceEnabled()) LOGGER.trace("[{}] Login done [{}]", ServletUtils.getRequestID(httpRequest), rmeCookie.getSelector());
-								}
-								ServletUtils.forwardRequest(httpRequest, httpResponse, UIPrivate.URL);
-								return false;
+						final WebTopManager wtMgr = wta.getWebTopManager();
+						final CoreServiceSettings css = new CoreServiceSettings(CoreManifest.ID, "*");
+						
+						if (css.getLoginRememberMeEnabled()) {
+							if (LOGGER.isTraceEnabled()) LOGGER.trace("[{}] Validating RMe cookie... [{}]", ServletUtils.getRequestID(httpRequest), rmeCookie.getSelector());
+							Result<RMeTokenInfo> result = wtMgr.validateRememberMeToken(rmeCookie.getSelector(), rmeCookie.getValidator(), null);
+							if (result.getObject() == null) {
+								if (LOGGER.isTraceEnabled()) LOGGER.trace("[{}] Invalid RMe cookie, erasing it... [{}]", ServletUtils.getRequestID(httpRequest), rmeCookie.getSelector());
+								ServletUtils.eraseCookie(httpResponse, ServletHelper.COOKIE_REMEMBERME);
 
 							} else {
-								if (LOGGER.isTraceEnabled()) LOGGER.trace("[{}] Login failed, erasing RMe cookie... [{}]", ServletUtils.getRequestID(httpRequest), rmeCookie.getSelector());
-								ServletUtils.eraseCookie(httpResponse, ServletHelper.COOKIE_REMEMBERME);
+								if (LOGGER.isTraceEnabled()) LOGGER.trace("[{}] RMe cookie OK, performing login... [{}]", ServletUtils.getRequestID(httpRequest), rmeCookie.getSelector());
+								if (executeLogin(httpRequest, httpResponse, result.getObject())) {
+									if (result.getObject() instanceof RMeTokenIssued) {
+										if (LOGGER.isTraceEnabled()) LOGGER.trace("[{}] Login done, writing RMe cookie... [{}]", ServletUtils.getRequestID(httpRequest), rmeCookie.getSelector());
+										ServletHelper.writeRememberMeCookie(httpResponse, (RMeTokenIssued)result.getObject());
+									} else if (result.getObject() instanceof RMeTokenConsumed) {
+										if (LOGGER.isTraceEnabled()) LOGGER.trace("[{}] Login done, updating RMe cookie expiration [{}]", ServletUtils.getRequestID(httpRequest), rmeCookie.getSelector());
+										ServletHelper.writeRememberMeCookie(httpResponse, rmeCookie, ((RMeTokenConsumed)result.getObject()).getTTL());
+									} else {
+										if (LOGGER.isTraceEnabled()) LOGGER.trace("[{}] Login done [{}]", ServletUtils.getRequestID(httpRequest), rmeCookie.getSelector());
+									}
+									ServletUtils.forwardRequest(httpRequest, httpResponse, UIPrivate.URL);
+									return false;
+
+								} else {
+									if (LOGGER.isTraceEnabled()) LOGGER.trace("[{}] Login failed, erasing RMe cookie... [{}]", ServletUtils.getRequestID(httpRequest), rmeCookie.getSelector());
+									ServletUtils.eraseCookie(httpResponse, ServletHelper.COOKIE_REMEMBERME);
+								}
 							}
+							
+						} else {
+							if (LOGGER.isTraceEnabled()) LOGGER.trace("[{}] RMe disabled, erasing RMe cookie... [{}]", ServletUtils.getRequestID(httpRequest), rmeCookie.getSelector());
+							ServletUtils.eraseCookie(httpResponse, ServletHelper.COOKIE_REMEMBERME);
+							wtMgr.revokeRememberMeToken(rmeCookie.getSelector());
 						}
+						
 					} else {
 						if (LOGGER.isTraceEnabled()) LOGGER.trace("[{}] No RMe cookie found!", ServletUtils.getRequestID(httpRequest));
 					}
+					
 				} else {
 					if (LOGGER.isTraceEnabled()) LOGGER.trace("[{}] Maintenance detected", ServletUtils.getRequestID(httpRequest));
 				}	

@@ -156,7 +156,9 @@ Ext.define('Sonicle.webtop.core.sdk.UserOptionsView', {
 	
 	privates: {
 		createGridCfg: function(cfg) {
-			return cfg;
+			return Ext.apply({
+				xtype: 'gridpanel'
+			}, cfg);
 		},
 		
 		createPermissionFeedbackCfg: function(cfg) {

@@ -315,6 +315,7 @@ public class Service extends BaseService implements EventListener {
 		vars.put("wtWhatsnewEnabled", ss.getWhatsnewEnabled());
 		//co.put("wtForcePasswordChange", ss.getOTPEnabled());
 		vars.put("wtOtpEnabled", ss.getOTPEnabled());
+		vars.put("wtRMeEnabled", ss.getLoginRememberMeEnabled());
 		vars.put("wtLauncherLinks", ss.getLauncherLinksAsString());
 		
 		// HTMLEditor configuration

@@ -145,6 +145,7 @@ import com.sonicle.webtop.core.app.model.GroupUpdateOption;
 import com.sonicle.webtop.core.app.model.HomedThrowable;
 import com.sonicle.webtop.core.app.model.PermissionString;
 import com.sonicle.webtop.core.app.model.PlatformUser;
+import com.sonicle.webtop.core.app.model.RMeToken;
 import com.sonicle.webtop.core.app.model.RMeTokenInfo;
 import com.sonicle.webtop.core.app.model.RMeTokenIssued;
 import com.sonicle.webtop.core.app.model.RMeTokenConsumed;
@@ -1766,6 +1767,28 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 		}
 	}
 	
+	public Map<String, RMeToken> listRememberMeTokens(final String domainId, final String userId, final Optional<Boolean> revoked) throws WTException {
+		Check.notEmpty(domainId, "domainId");
+		Check.notEmpty(userId, "userId");
+		Check.notNull(revoked, "revoked");
+		RememberMeTokenDAO rmeDao = RememberMeTokenDAO.getInstance();
+		Connection con = null;
+		
+		try {
+			con = getConnection(true);
+			Map<String, RMeToken> items = new LinkedHashMap<>();
+			for (ORememberMeToken rme : rmeDao.selectByProfileRevoked(con, domainId, userId, revoked)) {
+				items.put(rme.getValidator(), AppManagerUtils.fillRMeToken(new RMeToken(), rme));
+			}
+			return items;
+			
+		} catch (Exception ex) {
+			throw ExceptionUtils.wrapThrowable(ex);
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
 	private RMeTokenIssued createRememberMeToken(String domainId, String userId, String selector, DateTime issueInstant, int daysDuration) throws NoSuchAlgorithmException {
 		Duration ttl = Duration.standardDays(Check.greaterThan(0, daysDuration, "daysDuration"));
 		if (StringUtils.isBlank(selector)) selector = CryptoUtils.generateBase64RandomToken(16); // 16 bytes -> 128 bit
@@ -1809,7 +1832,7 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 			ormt.setRevoked(false);
 			ormt.setClientIdentifier(clientIdentifier);
 			ormt.setClientIpAddress(clientIpAddress);
-			ormt.setClientUserAgent(StringUtils.isBlank(clientUserAgentString) ? null : Integer.toHexString(clientUserAgentString.hashCode()));
+			ormt.setClientUserAgent(clientUserAgentString);
 			
 			con = getConnection(true);
 			rmeDao.insert(con, ormt, BaseDAO.createRevisionTimestamp());
@@ -1820,30 +1843,6 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 			throw ExceptionUtils.wrapThrowable(ex);
 		} finally {
 			DbUtils.closeQuietly(con);
-		}
-	}
-	
-	public boolean revokeRememberMeToken(final String selector) throws WTException {
-		Check.notEmpty(selector, "selector");
-		RememberMeTokenDAO rmeDao = RememberMeTokenDAO.getInstance();
-		Connection con = null;
-		
-		try {
-			lockRMEValidation.lock(selector);
-			try {
-				con = getConnection(true);
-				int ret = rmeDao.revokeBySelector(con, selector, BaseDAO.createRevisionTimestamp());
-				if (ret != 1) LOGGER.debug("RMeToken not found [{}]", selector);
-				return ret == 1;
-				
-			} catch (Exception ex) {
-				throw ExceptionUtils.wrapThrowable(ex);
-			} finally {
-				DbUtils.closeQuietly(con);
-			}
-			
-		} finally {
-			lockRMEValidation.unlock(selector);
 		}
 	}
 	
@@ -1898,7 +1897,7 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 				if (!valid) {
 					// Probable stealing/replay: for safety, revoke all tokens of the user!
 					LOGGER.debug("RMeToken digest verification failure, revoking tokens for '{}'...", ormt.getProfileId());
-					int ret = rmeDao.revokeByPid(con, ormt.getDomainId(), ormt.getUserId(), BaseDAO.createRevisionTimestamp());
+					int ret = rmeDao.revokeByProfile(con, ormt.getDomainId(), ormt.getUserId(), BaseDAO.createRevisionTimestamp());
 					if (ret >= 1) {
 						LOGGER.warn("RMeToken(s) for '{}' has been revoked due to suspicious activity [{}]", ormt.getProfileId(), ormt.getSelector());
 					} else {
@@ -1961,6 +1960,44 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 		}
 	}
 	
+	public boolean revokeRememberMeToken(final String selector) throws WTException {
+		Check.notEmpty(selector, "selector");
+		RememberMeTokenDAO rmeDao = RememberMeTokenDAO.getInstance();
+		Connection con = null;
+		
+		try {
+			con = getConnection(true);
+			int ret = rmeDao.revokeBySelector(con, selector, BaseDAO.createRevisionTimestamp());
+			if (ret != 1) LOGGER.debug("RMeToken not found [{}]", selector);
+			return ret == 1;
+
+		} catch (Exception ex) {
+			throw ExceptionUtils.wrapThrowable(ex);
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
+	public boolean revokeRememberMeToken(final String domainId, final String userId, final String selector) throws WTException {
+		Check.notEmpty(domainId, "domainId");
+		Check.notEmpty(userId, "userId");
+		Check.notEmpty(selector, "selector");
+		RememberMeTokenDAO rmeDao = RememberMeTokenDAO.getInstance();
+		Connection con = null;
+		
+		try {
+			con = getConnection(true);
+			int ret = rmeDao.revokeByProfileSelector(con, domainId, userId, selector, BaseDAO.createRevisionTimestamp());
+			if (ret != 1) LOGGER.debug("RMeToken not found [{}]", selector);
+			return ret == 1;
+
+		} catch (Exception ex) {
+			throw ExceptionUtils.wrapThrowable(ex);
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
 	public boolean revokeRememberMeTokens(final String domainId, final String userId) throws WTException {
 		Check.notEmpty(domainId, "domainId");
 		Check.notEmpty(userId, "userId");
@@ -1969,7 +2006,7 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 		
 		try {
 			con = getConnection(true);
-			int ret = rmeDao.revokeByPid(con, domainId, userId, BaseDAO.createRevisionTimestamp());
+			int ret = rmeDao.revokeByProfile(con, domainId, userId, BaseDAO.createRevisionTimestamp());
 			return ret > 0;
 			
 		} catch (Exception ex) {

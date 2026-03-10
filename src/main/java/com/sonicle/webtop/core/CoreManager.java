@@ -151,6 +151,7 @@ import com.sonicle.webtop.core.model.PublicImage;
 import com.sonicle.webtop.core.model.RecipientFieldType;
 import com.sonicle.webtop.core.app.model.FolderSharing;
 import com.sonicle.webtop.core.app.model.Group;
+import com.sonicle.webtop.core.app.model.RMeToken;
 import com.sonicle.webtop.core.app.model.Resource;
 import com.sonicle.webtop.core.app.model.ResourceGetOption;
 import com.sonicle.webtop.core.app.model.ResourcePermissions;
@@ -191,6 +192,7 @@ import java.util.Map;
 import java.util.Set;
 import jakarta.mail.internet.InternetAddress;
 import java.util.HashMap;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import net.sf.qualitycheck.Check;
 import org.apache.commons.lang3.StringUtils;
@@ -4155,6 +4157,42 @@ public class CoreManager extends BaseManager {
 		} catch(Exception ex) {
 			throw new WTException(ex);
 		}	
+	}
+	
+	public Map<String, RMeToken> listRememberMeSessions(Optional<Boolean> revoked) throws WTException {
+		WebTopManager wtMgr = wta.getWebTopManager();
+		
+		try {
+			final UserProfileId targetPid = ensureProfile(RunContext.AdminScope.SYSADMIN);
+			return wtMgr.listRememberMeTokens(targetPid.getDomainId(), targetPid.getUserId(), revoked);
+			
+		} catch(Exception ex) {
+			throw new WTException(ex);
+		}
+	}
+	
+	public boolean revokeRememberMeSession(final String tokenSelector) throws WTException {
+		WebTopManager wtMgr = wta.getWebTopManager();
+		
+		try {
+			final UserProfileId targetPid = ensureProfile(RunContext.AdminScope.SYSADMIN);
+			return wtMgr.revokeRememberMeToken(targetPid.getDomainId(), targetPid.getUserId(), tokenSelector);
+			
+		} catch(Exception ex) {
+			throw new WTException(ex);
+		}
+	}
+	
+	public boolean revokeRememberMeSessions() throws WTException {
+		WebTopManager wtMgr = wta.getWebTopManager();
+		
+		try {
+			final UserProfileId targetPid = ensureProfile(RunContext.AdminScope.SYSADMIN);
+			return wtMgr.revokeRememberMeTokens(targetPid.getDomainId(), targetPid.getUserId());
+			
+		} catch(Exception ex) {
+			throw new WTException(ex);
+		}
 	}
 	
 	public void eraseData(boolean deep) throws WTException {

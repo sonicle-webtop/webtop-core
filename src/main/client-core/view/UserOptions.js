@@ -39,6 +39,7 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 		'Sonicle.panel.Markdown',
 		'WTA.model.Simple',
 		'WTA.model.UIPreset',
+		'WTA.model.RMeSessionGrid',
 		'WTA.store.HeaderScale',
 		'WTA.store.DesktopNotification',
 		'WTA.store.OTPDelivery',
@@ -901,18 +902,117 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 			}]
 		}, {
 			xtype: 'wtopttabsection',
+			title: WT.res('opts.rmesessions.section.tit'),
+			disabled: !WT.getVar('wtRMeEnabled'),
+			layout: 'vbox',
+			defaults: {
+				width: '100%'
+			},
+			items: [
+				{
+					xtype: 'soformseparator',
+					title: WT.res('opts.rmesessions.tit')
+				}, {
+					xtype: 'label',
+					text: WT.res('opts.rmesessions.txt')
+				},
+				me.createGridCfg({
+					reference: 'gprmesessions',
+					border: true,
+					store: {
+						autoSync: true,
+						model: 'Sonicle.webtop.core.model.RMeSessionGrid',
+						proxy: WTF.apiProxy(me.ID, 'ManageRMeSessions', 'data', {
+							extraParams: {
+								optionsProfile: me.profileId
+							}
+						})
+					},
+					viewConfig: {
+						deferEmptyText: false,
+						emptyText: WT.res('opts.rmesessions.gp.emp')
+					},
+					columns: [
+						{
+							dataIndex: 'device',
+							header: WT.res('opts.rmesessions.gp.device.lbl'),
+							flex: 1
+						}, {
+							dataIndex: 'created',
+							xtype: 'datecolumn',
+							format: WT.getShortDateTimeFmt(),
+							header: WT.res('opts.rmesessions.gp.created.lbl'),
+							maxWidth: 130,
+							flex: 1
+						}, {
+							dataIndex: 'lastSeen',
+							xtype: 'datecolumn',
+							format: WT.getShortDateTimeFmt(),
+							header: WT.res('opts.rmesessions.gp.lastSeen.lbl'),
+							maxWidth: 130,
+							flex: 1
+						}, {
+							xtype: 'soactioncolumn',
+							items: [
+								{
+									iconCls: 'fas fa-info-circle',
+									tooltip: WT.res('opts.rmesessions.btn-showDetails.tip'),
+									handler: function(view, ridx, cidx, itm, e, rec) {
+										me.showRMeSessionInfoUI(rec);
+									}
+								}, {
+									iconCls: 'wt-glyph-delete',
+									tooltip: WT.res('act-delete.lbl'),
+									handler: function(view, ridx, cidx, itm, e, rec) {
+										me.revokeRMeSessionUI(rec);
+									}
+								}
+							]
+						}
+					],
+					tbar: {
+						border: false,
+						items: [
+							'->',
+							me.addAct('refreshRMeSessions', {
+								ui: '{secondary|default}',
+								text: null,
+								tooltip: WT.res('act-refresh.lbl'),
+								iconCls: 'wt-icon-refresh',
+								handler: function() {
+									me.refreshRMeSessions();
+								}
+							})
+						]
+					},
+					flex: 1,
+					width: '100%'
+				})
+			],
+			listeners: {
+				activate: {
+					fn: function() {
+						me.refreshRMeSessions();
+					},
+					single: true
+				}
+			}
+		}, {
+			xtype: 'wtopttabsection',
 			title: WT.res('opts.sync.tit'),
 			hidden: me.isProfileSysAdmin(),
 			bind: {
 				permStatus: '{record.permSyncDevicesAccess}'
 			},
-			plugins: [{
-				ptype: 'wttabpermstatus',
-				//enabled: !WT.isSysAdmin() || me.isAdminOnBehalf(),
-				enabled: !me.isProfileSysAdmin(),
-				isAdmin: WT.isAdmin() || me.isAdminOnBehalf(),
-				info: 'DEVICES_SYNC:ACCESS'
-			}],
+			plugins: [
+				{
+					ptype: 'wttabpermstatus',
+					//enabled: !WT.isSysAdmin() || me.isAdminOnBehalf(),
+					enabled: !me.isProfileSysAdmin(),
+					isAdmin: WT.isAdmin() || me.isAdminOnBehalf(),
+					info: 'DEVICES_SYNC:ACCESS'
+				}
+			],
 			layout: 'vbox',
 			items: [
 				{
@@ -1282,6 +1382,28 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 		});
 	},
 	
+	refreshRMeSessions: function() {
+		this.lref('gprmesessions').getStore().load();
+	},
+	
+	revokeRMeSessionUI: function(rec) {
+		var me = this,
+			sto = me.lref('gprmesessions').getStore();
+		WT.confirm(WT.res(WT.ID, 'opts.rmesessions.confirm.delete', rec.get('device')), function(bid) {
+			if (bid === 'yes') {
+				sto.remove(rec);
+			}
+		}, me);
+	},
+	
+	showRMeSessionInfoUI: function(rec) {
+		var dateFmt = function(dt) { return Ext.Date.format(dt, WT.getShortDateTimeFmt()); },
+			msg = WT.res(WT.ID, 'opts.rmesessions.details.data', rec.get('clientId'), rec.get('selector'), dateFmt(rec.get('created')), dateFmt(rec.get('expires')), dateFmt(rec.get('lastSeen')));
+		WT.msg(Sonicle.String.htmlEncodeLineBreaks(msg), {
+			title: WT.res('opts.rmesessions.details.tit')
+		});
+	},
+	
 	refreshSyncDevices: function() {
 		this.lref('gpsync').getStore().load();
 	},
@@ -1309,7 +1431,6 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 	deleteSyncDeviceUI: function(rec) {
 		var me = this,
 			sto = me.lref('gpsync').getStore();
-		
 		WT.confirm(WT.res(WT.ID, 'opts.sync.eas.confirm.delete', rec.get('device')), function(bid) {
 			if (bid === 'yes') {
 				sto.remove(rec);

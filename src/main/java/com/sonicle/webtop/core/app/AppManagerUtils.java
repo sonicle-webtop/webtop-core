@@ -50,6 +50,8 @@ import com.sonicle.webtop.core.app.model.DomainBase;
 import com.sonicle.webtop.core.app.model.Group;
 import com.sonicle.webtop.core.app.model.GroupBase;
 import com.sonicle.webtop.core.app.model.LicenseBase;
+import com.sonicle.webtop.core.app.model.RMeToken;
+import com.sonicle.webtop.core.app.model.RMeTokenBase;
 import com.sonicle.webtop.core.app.model.Resource;
 import com.sonicle.webtop.core.app.model.ResourceBase;
 import com.sonicle.webtop.core.app.model.Role;
@@ -62,6 +64,7 @@ import com.sonicle.webtop.core.bol.OGroup;
 import com.sonicle.webtop.core.bol.OLicense;
 import com.sonicle.webtop.core.bol.OLicenseLease;
 import com.sonicle.webtop.core.bol.OMessageQueue;
+import com.sonicle.webtop.core.bol.ORememberMeToken;
 import com.sonicle.webtop.core.bol.ORole;
 import com.sonicle.webtop.core.bol.OUser;
 import com.sonicle.webtop.core.bol.OUserInfo;
@@ -516,6 +519,29 @@ public class AppManagerUtils {
 			tgt.setUserId(src.getUserId());
 			tgt.setLeaseTimestamp(src.getLeaseTimestamp());
 			tgt.setLeaseOrigin(EnumUtils.forSerializedName(src.getLeaseOrigin(), ServiceLicenseLease.LeaseOrigin.class));
+		}
+		return tgt;
+	}
+	
+	static <T extends RMeToken> T fillRMeToken(T tgt, ORememberMeToken src) {
+		fillRMeToken((RMeTokenBase)tgt, src);
+		if ((tgt != null) && (src != null)) {
+			tgt.setId(src.getRemembermeTokenId());
+		}
+		return tgt;
+	}
+	
+	static <T extends RMeTokenBase> T fillRMeToken(T tgt, ORememberMeToken src) {
+		if ((tgt != null) && (src != null)) {
+			tgt.setSelector(src.getSelector());
+			tgt.setValidator(src.getValidator());
+			tgt.setIssuedAt(src.getIssuedAt());
+			tgt.setExpiresAt(src.getExpiresAt());
+			tgt.setLastUsedAt(src.getLastUsedAt());
+			tgt.setRevoked(src.getRevoked());
+			tgt.setClientId(src.getClientIdentifier());
+			tgt.setClientIpAddress(src.getClientIpAddress());
+			tgt.setClientUserAgent(src.getClientUserAgent());
 		}
 		return tgt;
 	}
