@@ -35,6 +35,8 @@ package com.sonicle.webtop.core.app.shiro;
 import com.sonicle.commons.web.CommonHttpServletRequest;
 import com.sonicle.commons.web.RequestId;
 import com.sonicle.commons.web.ServletUtils;
+import com.sonicle.webtop.core.app.ContextLoader;
+import com.sonicle.webtop.core.app.WebTopApp;
 import com.sonicle.webtop.core.app.shiro.filter.RequestDumper;
 import java.io.IOException;
 import javax.servlet.FilterChain;
@@ -45,6 +47,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.shiro.web.servlet.ShiroFilter;
+import org.apache.shiro.web.util.WebUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -54,6 +57,16 @@ import org.slf4j.LoggerFactory;
  */
 public class WTShiroFilter extends ShiroFilter {
 	private static final Logger LOGGER_REQDUMP = (Logger) LoggerFactory.getLogger(RequestDumper.class);
+
+	@Override
+	protected void executeChain(ServletRequest request, ServletResponse response, FilterChain origChain) throws IOException, ServletException {
+		WebTopApp wta = ContextLoader.getWebTopApp(request.getServletContext());
+		if (wta == null || !wta.isStateReady()) {
+			ServletUtils.sendError(WebUtils.toHttp(response), 503, "Application not ready");
+			return;
+		}
+		super.executeChain(request, response, origChain);
+	}
 	
 	@Override
 	protected ServletRequest wrapServletRequest(HttpServletRequest orig) {

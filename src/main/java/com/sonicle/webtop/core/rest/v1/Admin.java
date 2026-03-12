@@ -67,11 +67,11 @@ import com.sonicle.webtop.core.app.model.UserGetOption;
 import com.sonicle.webtop.core.app.model.UserUpdateOption;
 import com.sonicle.webtop.core.app.sdk.Result;
 import com.sonicle.webtop.core.app.sdk.ResultVoid;
-import com.sonicle.webtop.core.app.sdk.WTLicenseActivationException;
-import com.sonicle.webtop.core.app.sdk.WTLicenseMismatchException;
-import com.sonicle.webtop.core.app.sdk.WTLicenseValidationException;
+import com.sonicle.webtop.core.app.exc.WTLicenseActivationException;
+import com.sonicle.webtop.core.app.exc.WTLicenseMismatchException;
+import com.sonicle.webtop.core.app.exc.WTLicenseValidationException;
 import com.sonicle.webtop.core.app.sdk.WTNotFoundException;
-import com.sonicle.webtop.core.app.sdk.WTPwdPolicyException;
+import com.sonicle.webtop.core.app.exc.PwdPolicyException;
 import com.sonicle.webtop.core.model.ServiceLicense;
 import com.sonicle.webtop.core.sdk.WTException;
 import com.sonicle.webtop.core.swagger.v1.api.AdminApi;
@@ -128,7 +128,7 @@ public class Admin extends AdminApi {
 			adminMgr.updateSysAdminPassword(LangUtils.value(body, (char[])null));
 			return respOk();
 			
-		} catch (WTPwdPolicyException ex) {
+		} catch (PwdPolicyException ex) {
 			return respErrorBadRequest(ex.getMessage());
 		} catch (Throwable t) {
 			if (shouldLogError(t)) LOGGER.error("[{}] setAdminPassword()", RunContext.getRunProfileId(), t);
@@ -560,7 +560,7 @@ public class Admin extends AdminApi {
 			adminMgr.updateUserPassword(userId, LangUtils.value(body, (char[])null), false);
 			return respOk();
 			
-		} catch (WTPwdPolicyException ex) {
+		} catch (PwdPolicyException ex) {
 			return respErrorBadRequest(ex.getMessage());
 		} catch (Throwable t) {
 			if (shouldLogError(t)) LOGGER.error("[{}] setUserPassword({}, {}, {})", RunContext.getRunProfileId(), domainId, userId, t);

@@ -89,7 +89,7 @@ public class FileTypes {
 					}
 				}
 			}
-		} catch(SQLException | DAOException ex) {
+		} catch (Exception ex) {
 			throw new WTRuntimeException(ex, "Unable to load fileTypes");
 		} finally {
 			DbUtils.closeQuietly(con);

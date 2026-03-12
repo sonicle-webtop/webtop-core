@@ -42,6 +42,7 @@ import com.sonicle.commons.db.DbUtils;
 import com.sonicle.security.PasswordUtils;
 import com.sonicle.webtop.core.CoreServiceSettings;
 import com.sonicle.webtop.core.CoreSettings.DataSourceTypeObj;
+import com.sonicle.webtop.core.app.exc.ManagerLifecycleException;
 import com.sonicle.webtop.core.app.io.dbutils.FilterInfo;
 import com.sonicle.webtop.core.app.io.dbutils.FilterableArrayListHandler;
 import com.sonicle.webtop.core.app.io.dbutils.LongScalarHandler;
@@ -131,7 +132,7 @@ public class DataSourcesManager extends AbstractAppManager<DataSourcesManager> {
 	}
 	
 	DataSourcesManager(WebTopApp wta) {
-		super(wta, true);
+		super(wta);
 		
 		// Preload included drivers
 		// Due to internal usage of "org.postgresql.Driver" we can safely skip it!

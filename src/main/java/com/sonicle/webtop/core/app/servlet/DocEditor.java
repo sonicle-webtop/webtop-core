@@ -42,7 +42,7 @@ import com.sonicle.webtop.core.app.AbstractServlet;
 import com.sonicle.webtop.core.app.DocEditorManager;
 import com.sonicle.webtop.core.app.WT;
 import com.sonicle.webtop.core.app.WebTopApp;
-import com.sonicle.webtop.core.app.sdk.WTServletException;
+import com.sonicle.webtop.core.app.exc.WTServletException;
 import com.sonicle.webtop.core.app.servlet.js.DocEditorCallbackPayload;
 import com.sonicle.webtop.core.app.servlet.js.DocEditorCallbackResponse;
 import com.sonicle.webtop.core.sdk.DomainURIPath;

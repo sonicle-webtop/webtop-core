@@ -475,12 +475,12 @@ public class WT {
 		}
 	}
 	
-	public static DataSource getCoreDataSource() throws SQLException {
+	public static DataSource getCoreDataSource() throws WTException {
 		ConnectionManager conm = getWTA().getConnectionManager();
 		return conm.getDataSource();
 	}
 	
-	public static DataSource getDataSource(String serviceId) throws SQLException {
+	public static DataSource getDataSource(String serviceId) throws WTException {
 		ConnectionManager conm = getWTA().getConnectionManager();
 		if (conm.isRegistered(serviceId, ConnectionManager.DEFAULT_DATASOURCE)) {
 			return conm.getDataSource(serviceId, ConnectionManager.DEFAULT_DATASOURCE);
@@ -489,7 +489,7 @@ public class WT {
 		}
 	}
 	
-	public static DataSource getDataSource(String serviceId, String dataSourceName) throws SQLException {
+	public static DataSource getDataSource(String serviceId, String dataSourceName) throws WTException {
 		return getWTA().getConnectionManager().getDataSource(serviceId, dataSourceName);
 	}
 	

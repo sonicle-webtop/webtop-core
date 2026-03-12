@@ -36,12 +36,10 @@ package com.sonicle.webtop.core.app;
 import com.sonicle.commons.db.DbUtils;
 import com.sonicle.commons.web.json.JsonResult;
 import com.sonicle.webtop.core.bol.OMediaType;
-import com.sonicle.webtop.core.dal.DAOException;
 import com.sonicle.webtop.core.dal.MediaTypeDAO;
 import com.sonicle.webtop.core.sdk.WTRuntimeException;
 import com.sonicle.webtop.core.sdk.interfaces.IConnectionProvider;
 import java.sql.Connection;
-import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -113,7 +111,7 @@ public class MediaTypes {
 			}
 			LOGGER.debug("[MediaTypes] Cached {} mappings", extToMediaType.size());
 			
-		} catch(SQLException | DAOException ex) {
+		} catch (Exception ex) {
 			throw new WTRuntimeException(ex, "Unable to load fileTypes");
 		} finally {
 			DbUtils.closeQuietly(con);

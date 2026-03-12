@@ -62,8 +62,12 @@ public class ContextLoader {
 	public static final String WEBAPPNAME_ATTRIBUTE_KEY = "wtwebappname";
 	public static final String WEBTOPAPP_ATTRIBUTE_KEY = "wtapp";
 	
-	public static String getWabappName(ServletContext servletContext) {
+	public static String getWabappName(final ServletContext servletContext) {
 		return (String)servletContext.getAttribute(WEBAPPNAME_ATTRIBUTE_KEY);
+	}
+	
+	public static WebTopApp getWebTopApp(final ServletContext servletContext) {
+		return (WebTopApp)servletContext.getAttribute(WEBTOPAPP_ATTRIBUTE_KEY);
 	}
 	
 	public void initLogging(ServletContext servletContext, String webappFullName, Properties properties) {
@@ -251,8 +255,8 @@ public class ContextLoader {
 		try {
 			WebTopApp.get(servletContext).shutdown();
 			
-		} catch(Throwable t) {
-			logger.error("Error destroying WTA [{}]", appname, t);
+		} catch (Throwable t) {
+			logger.error("Error destroying '{}'", appname, t);
 		} finally {
 			servletContext.removeAttribute(WEBTOPAPP_ATTRIBUTE_KEY);
 		}

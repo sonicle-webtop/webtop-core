@@ -55,41 +55,20 @@ import org.slf4j.Logger;
  *
  * @author malbinola
  */
-public class ReportManager {
-	private static final Logger logger = WT.getLogger(ReportManager.class);
-	private static boolean initialized = false;
+public class ReportManager extends AbstractAppManager<ReportManager> {
+	private static final Logger LOGGER = WT.getLogger(ReportManager.class);
 	
-	/**
-	 * Initialization method. This method should be called once.
-	 * @param wta WebTopApp instance.
-	 * @return The instance.
-	 */
-	public static synchronized ReportManager initialize(WebTopApp wta) {
-		if (initialized) throw new RuntimeException("Initialization already done");
-		ReportManager rptm = new ReportManager(wta);
-		initialized = true;
-		logger.info("Initialized");
-		return rptm;
+	ReportManager(WebTopApp wta) {
+		super(wta);
 	}
 	
-	private WebTopApp wta = null;
-	
-	/**
-	 * Private constructor.
-	 * Instances of this class must be created using static initialize method.
-	 * @param wta WebTopApp instance.
-	 */
-	private ReportManager(WebTopApp wta) {
-		this.wta = wta;
+	@Override
+	protected Logger doGetLogger() {
+		return LOGGER;
 	}
 	
-	/**
-	 * Performs cleanup process.
-	 */
-	void cleanup() {
-		wta = null;
-		logger.info("Cleaned up");
-	}
+	@Override
+	protected void doAppManagerCleanup() {}
 	
 	private void exportReportToPdfStream(JasperPrint jasperPrint, OutputStream outputStream) throws JRException {
 		JasperExportManager.exportReportToPdfStream(jasperPrint, outputStream);
@@ -99,7 +78,7 @@ public class ReportManager {
 		File temp = null;
 		FileInputStream fis = null;
 		try {
-			temp = wta.getFileSystem().createTempFile(domainId);
+			temp = getWebTopApp().getFileSystem().createTempFile(domainId);
 			JasperExportManager.exportReportToHtmlFile(jasperPrint, temp.getAbsolutePath());
 			fis = new FileInputStream(temp);
 			IOUtils.copy(fis, outputStream);
@@ -109,7 +88,7 @@ public class ReportManager {
 			IOUtils.closeQuietly(fis);
 			if (temp != null) {
 				try {
-					wta.getFileSystem().deleteTempFile(domainId, temp.getName());
+					getWebTopApp().getFileSystem().deleteTempFile(domainId, temp.getName());
 				} catch (IOException ex1) {
 					throw new WTException(ex1);
 				}

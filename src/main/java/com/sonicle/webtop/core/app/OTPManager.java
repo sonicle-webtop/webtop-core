@@ -97,9 +97,7 @@ public class OTPManager extends AbstractAppManager<OTPManager> {
 	}
 	
 	@Override
-	protected void doAppManagerCleanup() {
-		
-	}
+	protected void doAppManagerCleanup() {}
 	
 	public boolean isEnabled(UserProfileId pid) {
 		CoreUserSettings cus = new CoreUserSettings(pid);

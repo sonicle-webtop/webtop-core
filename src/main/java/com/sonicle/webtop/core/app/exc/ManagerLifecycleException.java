@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Sonicle S.r.l.
+ * Copyright (C) 2026 Sonicle S.r.l.
  *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by
@@ -28,37 +28,28 @@
  * version 3, these Appropriate Legal Notices must retain the display of the
  * Sonicle logo and Sonicle copyright notice. If the display of the logo is not
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
- * display the words "Copyright (C) 2018 Sonicle S.r.l.".
+ * display the words "Copyright (C) 2026 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core.app.sdk;
+package com.sonicle.webtop.core.app.exc;
 
-import com.sonicle.commons.LangUtils;
-import javax.servlet.ServletException;
-import org.slf4j.helpers.MessageFormatter;
+import com.sonicle.webtop.core.sdk.WTException;
+import com.sonicle.webtop.core.sdk.WTRuntimeException;
 
 /**
  *
  * @author malbinola
  */
-public class WTServletException extends ServletException {
+public class ManagerLifecycleException extends WTRuntimeException {
 	
-	public WTServletException() {
-		super();
-	}
-	
-	public WTServletException(Throwable cause) {
+	public ManagerLifecycleException(Throwable cause) {
 		super(cause);
 	}
 	
-	public WTServletException(String message, Object... arguments) {
-		super(LangUtils.escapeSingleQuote(formatMessage(message, arguments)));
+	public ManagerLifecycleException(String message, Object... arguments) {
+		super(message, arguments);
 	}
 	
-	public WTServletException(Throwable cause, String message, Object... arguments) {
-		super(LangUtils.escapeSingleQuote(formatMessage(message, arguments)), cause);
-	}
-	
-	private static String formatMessage(String message, Object... arguments) {
-		return MessageFormatter.arrayFormat(message, arguments).getMessage();
+	public ManagerLifecycleException(Throwable cause, String message, Object... arguments) {
+		super(cause, message, arguments);
 	}
 }

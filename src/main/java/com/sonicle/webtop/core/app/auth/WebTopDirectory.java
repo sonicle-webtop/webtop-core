@@ -169,7 +169,7 @@ public class WebTopDirectory extends AbstractDirectory {
 			OLocalVaultEntry entry = lvdao.selectByDomainUser(con, principal.getDomainId(), principal.getUserId());
 			return entry != null ? createUserEntry(principal) : null;
 			
-		} catch(SQLException | DAOException ex) {
+		} catch (Exception ex) {
 			throw new DirectoryException(ex, "DB error");
 		} finally {
 			DbUtils.closeQuietly(con);
@@ -202,7 +202,7 @@ public class WebTopDirectory extends AbstractDirectory {
 			
 			return createUserEntry(principal);
 			
-		} catch(SQLException | DAOException ex) {
+		} catch (Exception ex) {
 			throw new DirectoryException(ex, "DB error");
 		} finally {
 			DbUtils.closeQuietly(con);
@@ -234,9 +234,9 @@ public class WebTopDirectory extends AbstractDirectory {
 			olve.setPasswordType(CredentialAlgorithm.PLAIN.name());
 			lvdao.insert(con, olve);
 			
-		} catch(DAOIntegrityViolationException ex) { 
+		} catch (DAOIntegrityViolationException ex) { 
 			throw new EntryException(ex);
-		} catch(SQLException | DAOException ex) {
+		} catch (Exception ex) {
 			throw new DirectoryException(ex, "DB error");
 		} finally {
 			DbUtils.closeQuietly(con);
@@ -279,7 +279,7 @@ public class WebTopDirectory extends AbstractDirectory {
 			int ret = doUpdatePassword(false, con, domainId, userId, algo, new String(newPassword));
 			if (ret == 0) doUpdatePassword(true, con, domainId, userId, algo, new String(newPassword));
 			
-		} catch(SQLException | DAOException ex) {
+		} catch (Exception ex) {
 			throw new DirectoryException(ex, "DB error");
 		} finally {
 			DbUtils.closeQuietly(con);
@@ -300,7 +300,7 @@ public class WebTopDirectory extends AbstractDirectory {
 			con = conProvider.getConnection();
 			lvdao.deleteByDomainUser(con, domainId, uid);
 			
-		} catch(SQLException | DAOException ex) {
+		} catch (Exception ex) {
 			throw new DirectoryException(ex, "DB error");
 		} finally {
 			DbUtils.closeQuietly(con);

@@ -30,17 +30,27 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2020 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core.app.sdk;
-
-import com.sonicle.webtop.core.sdk.WTException;
+package com.sonicle.webtop.core.app.exc;
 
 /**
  *
  * @author malbinola
  */
-public abstract class WTLicenseException extends WTException {
+public class WTLicenseMismatchException extends WTLicenseException {
+	private final long baseLicenseID;
+	private final long activatedLicenseID;
 	
-	public WTLicenseException(String message, Object... arguments) {
-		super(message, arguments);
+	public WTLicenseMismatchException(long baseLicenseID, long activatedLicenseID) {
+		super("License ID mismatch [{} != {}]", baseLicenseID, activatedLicenseID);
+		this.baseLicenseID = baseLicenseID;
+		this.activatedLicenseID = activatedLicenseID;
+	}
+	
+	public long getBaseLicenseID() {
+		return baseLicenseID;
+	}
+	
+	public long getActivatedLicenseID() {
+		return activatedLicenseID;
 	}
 }

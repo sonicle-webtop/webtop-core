@@ -33,7 +33,6 @@
  */
 package com.sonicle.webtop.core.app;
 
-import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 import com.mashape.unirest.http.Unirest;
@@ -59,9 +58,9 @@ import com.sonicle.mail.producer.MimeMessageProducer;
 import com.sonicle.security.CryptoUtils;
 import com.sonicle.security.DomainAccount;
 import com.sonicle.security.PasswordUtils;
-import com.sonicle.security.Principal;
 import com.sonicle.webtop.core.CoreServiceSettings;
 import com.sonicle.webtop.core.CoreSettings;
+import com.sonicle.webtop.core.app.exc.LifecycleException;
 import com.sonicle.webtop.core.app.model.GenericSubject;
 import com.sonicle.webtop.core.app.sdk.WTEmailSendException;
 import com.sonicle.webtop.core.io.FileResource;
@@ -155,10 +154,8 @@ import org.slf4j.Logger;
  */
 public final class WebTopApp {
 	public static final Logger logger = WT.getLogger(WebTopApp.class);
-	private static WebTopApp instance = null;
+	private static volatile WebTopApp instance = null;
 	private static String webappName = null;
-	private static boolean isStartingUp = false;
-	private static boolean isShuttingDown = false;
 	
 	/**
 	 * Gets WebTopApp object stored as context's attribute.
@@ -181,8 +178,8 @@ public final class WebTopApp {
 	 * @throws java.lang.IllegalStateException
 	 */
 	public static WebTopApp get(ServletContext context) throws IllegalStateException {
-		WebTopApp wta = (WebTopApp)context.getAttribute(ContextLoader.WEBTOPAPP_ATTRIBUTE_KEY);
-		if (wta == null) throw new IllegalStateException("WebTop environment is not correctly loaded. Please see log files for more details.");
+		WebTopApp wta = ContextLoader.getWebTopApp(context);
+		if (wta == null) throw new IllegalStateException("WebTop NOT correctly loaded. Please see log files for more details.");
 		return wta;
 	}
 	
@@ -204,12 +201,24 @@ public final class WebTopApp {
 		return webappName;
 	}
 	
-	public static boolean isStartingUp() {
-		return isStartingUp;
+	public AppState getState() {
+		return state;
 	}
 	
-	public static boolean isShuttingDown() {
-		return isShuttingDown;
+	public boolean isStateReady() {
+		return AppState.READY.equals(state);
+	}
+	
+	public boolean isStateFailed() {
+		return AppState.FAILED.equals(state);
+	}
+	
+	public boolean isShuttingDown() {
+		return AppState.STOPPING.equals(state) || AppState.STOPPED.equals(state);
+	}
+	
+	public Throwable getBootFailureCause() {
+		return bootFailureCause;
 	}
 	
 	public static final String DATASOURCES_CONFIG_PATH_PARAM = "dataSourcesConfigPath";
@@ -220,6 +229,8 @@ public final class WebTopApp {
 	public static final String IMAGES_DOMAIN_FOLDER = "images";
 	public static final String SYSADMIN_DOMAIN_FOLDER = "_";
 	
+	private volatile AppState state = AppState.NEW;
+	private volatile Throwable bootFailureCause;
 	private final ServletContext servletContext;
 	private final Properties properties;
 	private final String osInfo;
@@ -291,20 +302,50 @@ public final class WebTopApp {
 		}
 		this.shiroSecurityManager = buildSecurityManager();
 		this.adminSubject = buildSysAdminSubject(shiroSecurityManager);
+		
+		//TODO: evaluate to assign instance here!
+		//instance = this;
 	}
 	
 	void boot() {
-		isStartingUp = true;
+		if (state == AppState.READY) return;
+		if (state == AppState.STARTING) return;
+		if (state == AppState.STOPPING) {
+			throw new IllegalStateException("Cannot boot application while stopping");
+		}
+		
+		state = AppState.STARTING;
+		bootFailureCause = null;
+		
+		long start = System.currentTimeMillis();
 		ThreadState threadState = new SubjectThreadState(adminSubject);
 		try {
 			threadState.bind();
-			instance = this;
+			instance = this; //TODO: valuate to move this in constructor!
+			logger.info("[{}] WTA initialization started", webappName);
 			internalInit();
+			logger.info("[{}] WTA initialization completed in {} ms", webappName, System.currentTimeMillis() - start);
+			state = AppState.READY;
+			scheduleOnReady();
+			
+		} catch (Throwable t) {
+			bootFailureCause = t;
+			state = AppState.FAILED;
+			logger.error("[{}] WTA initialization failed", webappName, t);
+			internalDestroy();
+			
+			if (t instanceof RuntimeException) {
+				throw (RuntimeException)t;
+			} else {
+				throw new WTRuntimeException(t, "Error booting WebTopApp");
+			}
+			
 		} finally {
 			threadState.clear();
-			isStartingUp = false;
 		}
-		
+	}
+	
+	private void scheduleOnReady() {
 		new Timer("onAppReady").schedule(new TimerTask() {
 			@Override
 			public void run() {
@@ -323,15 +364,25 @@ public final class WebTopApp {
 	}
 	
 	void shutdown() {
-		isShuttingDown = true;
+		if (state == AppState.STOPPING || state == AppState.STOPPED) return;
+		state = AppState.STOPPING;
+		
+		long start = System.currentTimeMillis();
 		ThreadState threadState = new SubjectThreadState(adminSubject);
 		try {
 			threadState.bind();
+			logger.info("[{}] WTA shutdown started", webappName);
 			internalDestroy();
+			logger.info("[{}] WTA shutdown completed in {} ms", webappName, System.currentTimeMillis() - start);
+			state = AppState.STOPPED;
+			
+		} catch (Throwable t) {
+			logger.error("[{}] WTA shutdown failure", webappName, t);
+			state = AppState.STOPPED;
+			
 		} finally {
 			threadState.clear();
 			instance = null;
-			isShuttingDown = false;
 		}
 	}
 	
@@ -357,10 +408,18 @@ public final class WebTopApp {
 		return RunContext.buildSubject(securityManager, new UserProfileId(WebTopManager.SYSADMIN_DOMAINID, WebTopManager.SYSADMIN_USERID));
 	}
 	
-	private void internalInit() {
+	private void internalInit() throws LifecycleException {
 		this.webappIsTheLatest = false;
-		logger.info("WTA initialization started [{}]", webappName);
-		
+		doInitPreInfrastructure();
+		doInitInfrastructure();
+		doInitCoreManagers();
+		doInitEnvironment();
+		doInitTemplateEngine(this.fileSystem.getTemplatesPath());
+		doInitScheduler(); // Scheduler (services manager requires this component for jobs)
+		doInitManagers();
+	}
+	
+	private void doInitPreInfrastructure() throws LifecycleException {
 		if (!WebTopProps.getDevMode(properties)) {
 			Thread engine = new Thread( new Runnable() {
 				public void run() {
@@ -382,56 +441,59 @@ public final class WebTopApp {
 				}
 			});
 			engine.start();		
-		} 
-		//configure accept all for ssl on Unirest
+		}
+	}
+	
+	private void doInitInfrastructure() throws LifecycleException {
 		Unirest.setHttpClient(HttpClientUtils.configureSSLAcceptAll().build());
 		
 		try {
 			initVFSManager();
-		} catch(FileSystemException ex) {
-			throw new WTRuntimeException(ex, "Error initializing VFS");
+		} catch (FileSystemException ex) {
+			throw new LifecycleException(ex, "Error initializing VFS");
 		}
-		
-		this.eventBus = new EventBus();
-		this.conMgr = ConnectionManager.initialize(this); // Connection Manager
-		this.setMgr = new SettingsManager(this);
-		this.fileSystem = new FileSystem(findHomePath()); //TODO: Move this up until home reading from settings will be deprecated
-		this.auditLogMgr = new AuditLogManager(this);
-		this.sesMgr = SessionManager.initialize(this); // Session Manager
-		
-		// Checks home directory
+	}
+	
+	private void doInitEnvironment() throws LifecycleException {
 		logger.info("Checking home structure...");
 		checkHomeStructure();
 		checkSecretKey();
-		
-		// Template Engine
+	}
+	
+	private void doInitTemplateEngine(String externalTemplatePath) throws LifecycleException {
 		logger.info("[TemplateEngine] Initializing...");
-		this.freemarkerCfg = new Configuration();
 		
+		Configuration configInstance = new Configuration();
 		TemplateLoader[] templateLoaders = null;
-		File templatesDir = new File(this.fileSystem.getTemplatesPath());
-		if (templatesDir.canRead()) {
-			logger.info("[TemplateEngine] Using '{}' folder as external template source", templatesDir.getAbsolutePath());
+		File dirTemplates = new File(externalTemplatePath);
+		if (dirTemplates.canRead()) {
+			logger.info("[TemplateEngine] Using '{}' folder as external template source", dirTemplates.getAbsolutePath());
 			try {
 				templateLoaders = new TemplateLoader[] {
-					new FileTemplateLoader(templatesDir),
+					new FileTemplateLoader(dirTemplates),
 					new ClassTemplateLoader(this.getClass(), "/")
 				};
 				freemarkerHasOverrideSource = true;
 			} catch (IOException ex) {
-				logger.warn("[TemplateEngine] Unable to configure '{}' folder as template source", templatesDir.getAbsolutePath(), ex);
+				logger.warn("[TemplateEngine] Unable to configure '{}' folder as template source", dirTemplates.getAbsolutePath(), ex);
 			}
 		}
-		if (templateLoaders == null){
+		if (templateLoaders == null) { // Fallback on classpath
 			templateLoaders = new TemplateLoader[] {
 				new ClassTemplateLoader(this.getClass(), "/")
 			};
 		}
-		this.freemarkerCfg.setTemplateLoader(new MultiTemplateLoader(templateLoaders));
-		this.freemarkerCfg.setObjectWrapper(new DefaultObjectWrapper());
-		this.freemarkerCfg.setDefaultEncoding(getSystemCharset().name());
+		configInstance.setTemplateLoader(new MultiTemplateLoader(templateLoaders));
+		configInstance.setObjectWrapper(new DefaultObjectWrapper());
+		configInstance.setDefaultEncoding(getSystemCharset().name());
 		
-		// Scheduler (services manager requires this component for jobs)
+		this.freemarkerCfg = configInstance;
+	}
+	
+	private void doInitScheduler() throws LifecycleException {
+		logger.info("WTA initializing scheduler [{}]", webappName);
+		
+		Scheduler schedulerInstance = null;
 		try {
 			Properties quartzProps = new Properties();
 			quartzProps.put("org.quartz.scheduler.instanceName", webappName);
@@ -442,86 +504,100 @@ public final class WebTopApp {
 			quartzProps.put("org.quartz.jobStore.class", "org.quartz.simpl.RAMJobStore");
 			
 			// NB: System props will be added to the properties above internally in the factory!
-			this.scheduler = new StdSchedulerFactory(quartzProps).getScheduler();
-			if (WebTopProps.getSchedulerDisabled(properties)) {
+			schedulerInstance = new StdSchedulerFactory(quartzProps).getScheduler();
+			if (WebTopProps.getSchedulerDisabled(this.properties)) {
 				logger.warn("Scheduler startup forcibly disabled");
 			} else {
-				this.scheduler.start();
+				schedulerInstance.start();
 			}
-		} catch(SchedulerException ex) {
-			throw new WTRuntimeException(ex, "Unable to start scheduler");
+			
+		} catch (SchedulerException ex) {
+			throw new LifecycleException(ex, "Unable to start scheduler");
 		}
 		
+		this.scheduler = schedulerInstance;
+	}
+	
+	private void doInitCoreManagers() throws LifecycleException {
+		this.eventBus = new EventBus();
+		this.conMgr = new ConnectionManager(this).initialize();
+		this.setMgr = new SettingsManager(this).initialize();
+		this.fileSystem = new FileSystem(findHomePath()); //TODO: Move this up until home reading from settings will be deprecated
+		//this.auditLogMgr = new AuditLogManager(this).initialize(); // --> Moved down...
+		//this.sesMgr = new SessionManager(this).initialize(); // --> Moved down...
+	}
+	
+	private void doInitManagers() throws LifecycleException {
+		logger.info("WTA initializing managers [{}]", webappName);
+		
+		this.auditLogMgr = new AuditLogManager(this).initialize(); // --> Moved down from above section (around conMgr)
+		this.sesMgr = new SessionManager(this).initialize(); // --> Moved down from above section (around conMgr)
 		//comm = ComponentsManager.initialize(this); // Components Manager
-		this.licMgr = new LicenseManager(this, this.scheduler);
-		this.wtMgr = new WebTopManager(this);
+		this.licMgr = new LicenseManager(this, this.scheduler).initialize();
+		this.wtMgr = new WebTopManager(this).initialize();
 		
-		this.systemLocale = CoreServiceSettings.getSystemLocale(setMgr); // System locale
-		this.otpMgr = new OTPManager(this);
-		this.rptMgr = ReportManager.initialize(this);
-		this.docEditorMgr = new DocEditorManager(this, 30*1000);
-		this.svcMgr = ServiceManager.initialize(this, this.scheduler); // Service Manager
-		this.dsMgr = new DataSourcesManager(this);
+		this.systemLocale = CoreServiceSettings.getSystemLocale(this.setMgr); // System locale
+		this.otpMgr = new OTPManager(this).initialize();
+		this.rptMgr = new ReportManager(this).initialize();
+		this.docEditorMgr = new DocEditorManager(this, 30*1000).initialize();
+		this.svcMgr = new ServiceManager(this, this.scheduler).initialize();
+		this.dsMgr = new DataSourcesManager(this); // Initialization later...
 		
-		this.mediaTypes = MediaTypes.init(conMgr);
-		this.fileTypes = FileTypes.init(conMgr);
-		this.i18nMgr = I18nManager.initialize(this);
-		
-		logger.info("WTA initialization completed [{}]", webappName);
+		this.mediaTypes = MediaTypes.init(this.conMgr);
+		this.fileTypes = FileTypes.init(this.conMgr);
+		this.i18nMgr = new I18nManager(this).initialize();
 	}
 	
 	private void internalDestroy() {
-		logger.info("WTA shutdown started [{}]", webappName);
-		
 		clearWebappVersionCheckTask();
-		tomcat = null;
+		this.tomcat = null;
 		
-		// Scheduler
 		try {
-			scheduler.shutdown(true);
+			if (this.scheduler != null) this.scheduler.shutdown(true);
 		} catch (SchedulerException ex) {
 			logger.error("Error shutting-down scheduler", ex);
 		}
 		
-		// Service Manager
-		svcMgr.cleanup();
-		svcMgr = null;
-		// Session Manager
-		sesMgr.cleanup();
-		sesMgr = null;
-		docEditorMgr = docEditorMgr.cleanup(); // DocEditor Manager
-		// Report Manager
-		rptMgr.cleanup();
-		rptMgr = null;
-		// OTP Manager
-		otpMgr = otpMgr.cleanup();
-		auditLogMgr = auditLogMgr.cleanup(); // AuditLog Manager
-		setMgr = setMgr.cleanup();
-		// Auth Manager
-		//autm.cleanup();
-		//autm = null;
-		// User Manager
-		dsMgr = dsMgr.cleanup(); // DataSources Manager
-		wtMgr = wtMgr.cleanup();
-		licMgr = licMgr.cleanup();
-		// Connection Manager
-		conMgr.cleanup();
-		conMgr = null;
-		eventBus.shutdown();
-		// I18nManager Manager
-		i18nMgr.cleanup();
-		i18nMgr = null;
+		this.svcMgr = quietlyDestroyManager(this.svcMgr);
+		this.sesMgr = quietlyDestroyManager(this.sesMgr);
+		this.docEditorMgr = quietlyDestroyManager(this.docEditorMgr);
+		this.rptMgr = quietlyDestroyManager(this.rptMgr);
+		this.otpMgr = quietlyDestroyManager(this.otpMgr);
+		this.auditLogMgr = quietlyDestroyManager(this.auditLogMgr);
+		this.setMgr = quietlyDestroyManager(this.setMgr);
+		this.dsMgr = quietlyDestroyManager(this.dsMgr);
+		this.wtMgr = quietlyDestroyManager(this.wtMgr);
+		this.licMgr = quietlyDestroyManager(this.licMgr);
+		this.conMgr = quietlyDestroyManager(this.conMgr);
+		this.i18nMgr = quietlyDestroyManager(this.i18nMgr);
 		
-		scheduler = null;
+		if (this.eventBus != null) {
+			this.eventBus.shutdown();
+			this.eventBus = null;
+		}
+		this.scheduler = null;
 		
-		// Shutdown Unirest
 		try {
 			Unirest.shutdown();
-		} catch(IOException exc) {
+		} catch (IOException exc) {
 			logger.error("Unirest.shutdown()",exc);
 		}
 		
-		logger.info("WTA shutdown completed [{}]", webappName);
+		this.fileTypes = null;
+		this.mediaTypes = null;
+	}
+	
+	private <T extends AbstractAppManager<T>> T quietlyDestroyManager(T manager) {
+		String name = null;
+		try {
+			if (manager != null) {
+				name = ClassUtils.getSimpleClassName(manager.getClass());
+				manager.cleanup();
+			}
+		} catch (Throwable t) {
+			logger.error("Error cleaning manager '{}'", name, t);
+		}
+		return null;
 	}
 	
 	private void onAppReady() throws InterruptedException {
@@ -1705,5 +1781,14 @@ public final class WebTopApp {
 			}
 			return name;
 		}
+	}
+	
+	public static enum AppState {
+		NEW,
+		STARTING,
+		READY,
+		FAILED,
+		STOPPING,
+		STOPPED;
 	}
 }

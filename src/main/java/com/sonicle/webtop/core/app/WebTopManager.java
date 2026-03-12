@@ -80,6 +80,7 @@ import com.sonicle.webtop.core.app.events.ResourceAvailabilityChangeEvent;
 import com.sonicle.webtop.core.app.events.ResourceUpdateEvent;
 import com.sonicle.webtop.core.app.events.UserAvailabilityChangeEvent;
 import com.sonicle.webtop.core.app.events.UserUpdateEvent;
+import com.sonicle.webtop.core.app.exc.ManagerLifecycleException;
 import com.sonicle.webtop.core.app.model.ApiKey;
 import com.sonicle.webtop.core.app.model.ApiKeyBase;
 import com.sonicle.webtop.core.app.model.ApiKeyLive;
@@ -94,7 +95,7 @@ import com.sonicle.webtop.core.app.sdk.Result;
 import com.sonicle.webtop.core.app.sdk.ResultVoid;
 import com.sonicle.webtop.core.app.sdk.WTMultiCauseWarnException;
 import com.sonicle.webtop.core.app.sdk.WTNotFoundException;
-import com.sonicle.webtop.core.app.sdk.WTPwdPolicyException;
+import com.sonicle.webtop.core.app.exc.PwdPolicyException;
 import com.sonicle.webtop.core.app.util.ExceptionUtils;
 import com.sonicle.webtop.core.bol.ODomain;
 import com.sonicle.webtop.core.bol.OGroup;
@@ -262,11 +263,10 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 	private final Object foldersLock = new Object();
 	
 	WebTopManager(WebTopApp wta) {
-		super(wta, true);
+		super(wta);
 		this.domainCache = new CacheDomainInfo();
 		this.subjectSidCache = new SubjectSidCache();
 		this.apiKeyCache = new ApiKeyCache();
-		initialize();
 	}
 	
 	@Override
@@ -1420,7 +1420,7 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 						appliedPassword = password;
 						int ret = directory.validatePasswordPolicy(opts, userPid.getUserId(), appliedPassword);
 						if (ret != 0) {
-							throw new WTPwdPolicyException(ret, "Password does not satisfy directory policy [{}, {}]", acontext.getDirUri().getScheme(), ret);
+							throw new PwdPolicyException(ret, "Password does not satisfy directory policy [{}, {}]", acontext.getDirUri().getScheme(), ret);
 						}
 					}
 				}
@@ -1549,7 +1549,7 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 				if (StringUtils.getLevenshteinDistance(new String(oldPassword), new String(newPassword)) < similarityThres) ret = 41;
 			}
 			if (ret != 0) {
-				throw new WTPwdPolicyException(ret, "Password does not satisfy directory policy [{}]", ret);
+				throw new PwdPolicyException(ret, "Password does not satisfy directory policy [{}]", ret);
 			}
 			
 			if (oldPassword != null) {

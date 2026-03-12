@@ -158,7 +158,7 @@ public class CoreAdminManager extends BaseManager {
 	}
 	
 	public boolean isOnlineSession(String sessionId) {
-		return wta.getSessionManager().isOnline(sessionId);
+		return wta.getSessionManager().isOnlineQuietly(sessionId);
 	}
 	
 	public OSettingDb getSettingInfo(String serviceId, String key) {

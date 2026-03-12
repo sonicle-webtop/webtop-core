@@ -47,15 +47,16 @@ import com.sonicle.webtop.core.app.model.LicenseBase;
 import com.sonicle.webtop.core.app.model.LicenseComputedStatus;
 import com.sonicle.webtop.core.app.model.LicenseExInfo;
 import com.sonicle.webtop.core.app.model.LicenseListOption;
-import com.sonicle.webtop.core.app.sdk.WTLicenseActivationException;
-import com.sonicle.webtop.core.app.sdk.WTLicenseMismatchException;
-import com.sonicle.webtop.core.app.sdk.WTLicenseValidationException;
+import com.sonicle.webtop.core.app.exc.WTLicenseActivationException;
+import com.sonicle.webtop.core.app.exc.WTLicenseMismatchException;
+import com.sonicle.webtop.core.app.exc.WTLicenseValidationException;
 import com.sonicle.webtop.core.app.sdk.WTNotFoundException;
 import com.sonicle.webtop.core.app.util.ExceptionUtils;
 import com.sonicle.webtop.core.bol.OLicense;
 import com.sonicle.webtop.core.bol.OLicenseLease;
 import com.sonicle.webtop.core.bol.VLicense;
 import com.sonicle.webtop.core.app.events.LicenseUpdateEvent;
+import com.sonicle.webtop.core.app.exc.ManagerLifecycleException;
 import com.sonicle.webtop.core.dal.DAOException;
 import com.sonicle.webtop.core.dal.LicenseDAO;
 import com.sonicle.webtop.core.dal.LicenseLeaseDAO;
@@ -67,7 +68,6 @@ import com.sonicle.webtop.core.sdk.BaseServiceProduct;
 import com.sonicle.webtop.core.sdk.ServiceManifest;
 import com.sonicle.webtop.core.sdk.UserProfileId;
 import com.sonicle.webtop.core.sdk.WTException;
-import com.sonicle.webtop.core.sdk.WTRuntimeException;
 import java.sql.Connection;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -111,11 +111,10 @@ public class LicenseManager extends AbstractAppManager<LicenseManager> {
 	private final Map<String, Integer> lastTrackedLeaseValue = new ConcurrentHashMap<>();
 	
 	LicenseManager(WebTopApp wta, Scheduler scheduler) {
-		super(wta, true);
+		super(wta);
 		this.scheduler = scheduler;
 		this.dailyCleanupJobKey = JobKey.jobKey(CacheCleanupJob.class.getCanonicalName(), "webtop");
 		this.dailyCheckJobKey = JobKey.jobKey(CheckJob.class.getCanonicalName(), "webtop");
-		initialize();
 	}
 	
 	@Override
@@ -139,7 +138,7 @@ public class LicenseManager extends AbstractAppManager<LicenseManager> {
 			);
 			
 		} catch (SchedulerException ex) {
-			throw new WTRuntimeException(ex, "Unable to schedule CacheCleanupJob");
+			throw new ManagerLifecycleException(ex, "Unable to schedule CacheCleanupJob");
 		}
 		
 		try {
@@ -158,7 +157,7 @@ public class LicenseManager extends AbstractAppManager<LicenseManager> {
 			);
 			
 		} catch (SchedulerException ex) {
-			throw new WTRuntimeException(ex, "Unable to schedule CheckJob");
+			throw new ManagerLifecycleException(ex, "Unable to schedule CheckJob");
 		}
 	}
 

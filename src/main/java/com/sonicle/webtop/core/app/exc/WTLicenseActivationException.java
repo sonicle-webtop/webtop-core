@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 Sonicle S.r.l.
+ * Copyright (C) 2020 Sonicle S.r.l.
  *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by
@@ -28,45 +28,30 @@
  * version 3, these Appropriate Legal Notices must retain the display of the
  * Sonicle logo and Sonicle copyright notice. If the display of the logo is not
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
- * display the words "Copyright (C) 2021 Sonicle S.r.l.".
+ * display the words "Copyright (C) 2020 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core.app.sdk.interfaces;
+package com.sonicle.webtop.core.app.exc;
 
-import com.sonicle.webtop.core.CoreManager;
-import com.sonicle.webtop.core.app.ConnectionManager;
-import com.sonicle.webtop.core.app.RunContext;
-import com.sonicle.webtop.core.app.ServiceManager;
-import com.sonicle.webtop.core.sdk.WTException;
-import com.zaxxer.hikari.HikariConfig;
+import com.license4j.ActivationStatus;
+import com.sonicle.commons.l4j.ProductLicense;
 
 /**
  *
  * @author malbinola
  */
-public interface IControllerInitHooks {
-	public void initDataSources(IControllerInitHooks.Context context);
+public class WTLicenseActivationException extends WTLicenseException {
+	private ActivationStatus activationStatus;
 	
-	public static class Context {
-		private final ServiceManager svcMgr;
-		private final ConnectionManager conMgr;
-		private final String serviceId;
-		
-		public Context(ServiceManager svcMgr, ConnectionManager conMgr, String serviceId) {
-			this.svcMgr = svcMgr;
-			this.conMgr = conMgr;
-			this.serviceId = serviceId;
-		}
-		
-		public CoreManager getCoreManager() {
-			return svcMgr.instantiateCoreManager(true, RunContext.getRunProfileId());
-		}
-		
-		public void registerDataSource(final String dataSourceName, final HikariConfig config) throws WTException {
-			conMgr.registerDataSource(serviceId, dataSourceName, config);
-		}
-		
-		public void unregisterDataSource(final String dataSourceName) throws WTException {
-			conMgr.unregisterDataSource(serviceId, dataSourceName);
-		}
+	public WTLicenseActivationException(ProductLicense.LicenseInfo info) {
+		this(info.getProductCode(), info.getActivationStatus());
+	}
+	
+	public WTLicenseActivationException(String productCode, ActivationStatus activationStatus) {
+		super("Invalid activation status for '{}' [{}]", productCode, activationStatus);
+		this.activationStatus = activationStatus;
+	}
+	
+	public ActivationStatus getActivationStatus() {
+		return activationStatus;
 	}
 }

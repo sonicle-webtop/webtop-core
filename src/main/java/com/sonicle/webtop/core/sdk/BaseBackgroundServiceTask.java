@@ -58,7 +58,7 @@ public abstract class BaseBackgroundServiceTask implements Job {
 
 	@Override
 	public void execute(JobExecutionContext jec) throws JobExecutionException {
-		if (!WebTopApp.isShuttingDown()) {
+		if (!shouldStop()) {
 			if (WebTopApp.isWebappTheLatest()) {
 				if (running.compareAndSet(false, true)) {
 					try {
@@ -102,7 +102,8 @@ public abstract class BaseBackgroundServiceTask implements Job {
 	}
 	
 	protected final boolean shouldStop() {
-		return WebTopApp.isShuttingDown();
+		WebTopApp wta = WebTopApp.getInstance();
+		return wta == null ? true : wta.isShuttingDown();
 	}
 	
 	public static class TaskContext {

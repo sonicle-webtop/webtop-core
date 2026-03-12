@@ -35,6 +35,8 @@ package com.sonicle.webtop.core.app;
 import com.sonicle.commons.ClassUtils;
 import com.sonicle.commons.PathUtils;
 import com.sonicle.webtop.core.app.DataSourcesConfig.HikariConfigMap;
+import com.sonicle.webtop.core.app.exc.ManagerLifecycleException;
+import com.sonicle.webtop.core.sdk.WTException;
 import com.sonicle.webtop.core.sdk.WTRuntimeException;
 import com.sonicle.webtop.core.sdk.interfaces.IConnectionProvider;
 import com.zaxxer.hikari.HikariConfig;
@@ -45,7 +47,8 @@ import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.concurrent.locks.StampedLock;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 import javax.sql.DataSource;
 import net.sf.qualitycheck.Check;
 import org.apache.commons.lang3.StringUtils;
@@ -55,66 +58,31 @@ import org.slf4j.Logger;
  *
  * @author malbinola
  */
-public class ConnectionManager implements IConnectionProvider {
-	private static final Logger logger = WT.getLogger(ConnectionManager.class);
-	private static boolean initialized = false;
-	
-	/**
-	 * Initialization method. This method should be called once.
-	 * 
-	 * @param wta WebTopApp instance.
-	 * @return The instance.
-	 */
-	public static synchronized ConnectionManager initialize(WebTopApp wta) {
-		if (initialized) throw new RuntimeException("Initialization already done");
-		ConnectionManager conm = new ConnectionManager(wta);
-		initialized = true;
-		logger.info("Initialized");
-		return conm;
-	}
+public class ConnectionManager extends AbstractAppManager<ConnectionManager> implements IConnectionProvider {
+	private static final Logger LOGGER = WT.getLogger(ConnectionManager.class);
 	
 	public static final String CONFIG_NAME = "data-sources.xml";
 	public static final String DEFAULT_CONFIG_RESOURCE_PATH = "/META-INF/" + CONFIG_NAME;
 	public static final String DEFAULT_DATASOURCE = "default";
-	private boolean shuttingDown = false;
-	private WebTopApp wta = null;
+	
+	private final ReentrantReadWriteLock poolsLock = new ReentrantReadWriteLock(true);
+	private final Lock poolsReadLock = poolsLock.readLock();
+	private final Lock poolsWriteLock = poolsLock.writeLock();
+	
 	private DataSourcesConfig config = null;
-	private final StampedLock lock = new StampedLock();
 	private final HashMap<String, HikariDataSource> pools = new HashMap<>();
 	
-	/**
-	 * Private constructor.
-	 * Instances of this class must be created using static initialize method.
-	 * @param wta WebTopApp instance.
-	 */
-	private ConnectionManager(WebTopApp wta) {
-		this.wta = wta;
-		init();
+	ConnectionManager(WebTopApp wta) {
+		super(wta);
 	}
 	
-	/**
-	 * Performs cleanup process.
-	 */
-	void cleanup() {
-		long stamp = lock.writeLock();
-		try {
-			shuttingDown = true;
-			for (Map.Entry<String, HikariDataSource> entry : pools.entrySet()) {
-				try {
-					entry.getValue().close();
-				} catch(Throwable t) {
-					logger.error("Unable to close pool [{}]", entry.getKey(), t);
-				}
-			}
-			pools.clear();
-		} finally {
-			lock.unlockWrite(stamp);
-		}
-		wta = null;
-		logger.info("Cleaned up");
+	@Override
+	protected Logger doGetLogger() {
+		return LOGGER;
 	}
 	
-	private void init() {
+	@Override
+	protected void doAppManagerInitialize() {
 		String path = null;
 		File file = null;
 		
@@ -125,78 +93,88 @@ public class ConnectionManager implements IConnectionProvider {
 		// 2 - fallback on default configuration inside webapp
 		//   2.1 look for '../META-INF/data-sources.xml'
 		
-		if (!StringUtils.isBlank(wta.getEtcPath())) {
-			path = PathUtils.concatPathParts(wta.getEtcPath(), CONFIG_NAME);
+		if (!StringUtils.isBlank(getWebTopApp().getEtcPath())) {
+			path = PathUtils.concatPathParts(getWebTopApp().getEtcPath(), CONFIG_NAME);
 			file = new File(path);
 		}
 		if ((file == null) || !file.exists()) {
-			String etcDir = WebTopProps.getEtcDir(wta.getProperties());
+			String etcDir = WebTopProps.getEtcDir(getWebTopApp().getProperties());
 			if (!StringUtils.isBlank(etcDir)) {
 				path = PathUtils.concatPathParts(etcDir, CONFIG_NAME);
 				file = new File(path);
 			}
 		}
 		if ((file == null) || !file.exists()) {
-			path = wta.getContextResourcePath(DEFAULT_CONFIG_RESOURCE_PATH);
+			path = getWebTopApp().getContextResourcePath(DEFAULT_CONFIG_RESOURCE_PATH);
 			file = new File(path);
 		}
-		if (file == null) throw new WTRuntimeException("Configuration file not found [{}]", path);
+		if (file == null) {
+			throw new WTRuntimeException("Configuration file not found [{}]", path);
+		}
 		
-		config = new DataSourcesConfig();
+		DataSourcesConfig loadedConfig = new DataSourcesConfig();
 		try {
-			logger.debug("Loading dataSources configuration at [{}]", path);
-			config.parseConfiguration(file);
-		} catch(Exception ex) {
-			throw new RuntimeException("Unable to load dataSources configuration file", ex);
+			LOGGER.debug("Loading dataSources configuration at [{}]", path);
+			loadedConfig.parseConfiguration(file);
+			
+		} catch (Exception ex) {
+			throw new WTRuntimeException(ex, "Unable to load dataSources configuration file");
 		}
 		
-		// Setup core sources
-		logger.debug("Setting-up core dataSources...");
-		HikariConfigMap coreSources = config.getSources(CoreManifest.ID);
-		if (!coreSources.containsKey(DEFAULT_DATASOURCE)) {
-			throw new RuntimeException("No core default dataSource defined");
+		HikariConfigMap coreSources = loadedConfig.getSources(CoreManifest.ID);
+		if ((coreSources == null) || !coreSources.containsKey(DEFAULT_DATASOURCE)) {
+			throw new WTRuntimeException("No core default dataSource defined");
 		}
-		for (Entry<String, HikariConfig> entry : coreSources.entrySet()) {
-			registerDataSource(CoreManifest.ID, entry.getKey(), entry.getValue());
+		
+		poolsWriteLock.lock();
+		try {
+			this.config = loadedConfig;
+			LOGGER.debug("Setting-up core dataSources...");
+			for (Entry<String, HikariConfig> entry : coreSources.entrySet()) {
+				internalRegisterDataSource(CoreManifest.ID, entry.getKey(), entry.getValue());
+			}
+			
+		} finally {
+			poolsWriteLock.unlock();
 		}
 	}
 	
-	public final void registerDataSource(final String namespace, final String dataSourceName, final HikariConfig config) {
-		Check.notEmpty(namespace, "namespace");
-		Check.notEmpty(dataSourceName, "dataSourceName");
-		Check.notNull(config, "config");
-		if (shuttingDown) throw new WTRuntimeException("Manager is coming down");
-		if (!ClassUtils.hasStrictlyType(config, HikariConfig.class)) throw new IllegalArgumentException("You cannot use a subclass of HikariConfig here");
-		String poolName = poolName(namespace, dataSourceName);
-		
-		long stamp = lock.writeLock();
-		try {	
-			logger.debug("Registering dataSource '{}' into namespace '{}' [{}]", dataSourceName, namespace);
-			internalAddPool(poolName, config);
-			logger.debug("DataSource '{}' successfully added", dataSourceName);
+	@Override
+	protected void doAppManagerCleanup() {
+		poolsWriteLock.lock();
+		try {
+			for (Map.Entry<String, HikariDataSource> entry : pools.entrySet()) {
+				try {
+					entry.getValue().close();
+				} catch (Throwable t) {
+					LOGGER.error("Unable to close pool [{}]", entry.getKey(), t);
+				}
+			}
+			pools.clear();
+			config = null;
+			
 		} finally {
-			lock.unlockWrite(stamp);
+			poolsWriteLock.unlock();
 		}
 	}
 	
-	public final void unregisterDataSource(final String namespace, final String dataSourceName) {
-		Check.notEmpty(namespace, "namespace");
-		Check.notEmpty(dataSourceName, "dataSourceName");
-		if (shuttingDown) throw new WTRuntimeException("Manager is coming down");
-		String poolName = poolName(namespace, dataSourceName);
-		
-		long stamp = lock.writeLock();
-		try {	
-			logger.debug("Unregistering dataSource '{}' into namespace '{}' [{}]", dataSourceName, namespace);
-			internalRemovePool(poolName);
-			logger.debug("DataSource '{}' successfully removed", dataSourceName);
-		} finally {
-			lock.unlockWrite(stamp);
+	
+	private void ensureReadyRuntime() {
+		try {
+			ensureStateReady();
+		} catch (Exception ex) {
+			throw new WTRuntimeException(ex);
 		}
 	}
 	
 	public DataSourcesConfig getConfiguration() {
-		return config;
+		ensureReadyRuntime();
+		poolsReadLock.lock();
+		try {
+			return config;
+		} finally {
+			poolsReadLock.unlock();
+		}
 	}
 	
 	/**
@@ -209,11 +187,58 @@ public class ConnectionManager implements IConnectionProvider {
 		return Check.notNull(namespace, "namespace") + "." + Check.notNull(dataSourceName, "dataSourceName");
 	}
 	
+	public final void registerDataSource(final String namespace, final String dataSourceName, final HikariConfig config) throws WTException {
+		Check.notEmpty(namespace, "namespace");
+		Check.notEmpty(dataSourceName, "dataSourceName");
+		Check.notNull(config, "config");
+		
+		ensureStateReady();
+		if (!ClassUtils.hasStrictlyType(config, HikariConfig.class)) {
+			throw new IllegalArgumentException("You cannot use a subclass of HikariConfig here");
+		}
+		
+		poolsWriteLock.lock();
+		try {
+			ensureStateReady();
+			internalRegisterDataSource(namespace, dataSourceName, config);
+			
+		} finally {
+			poolsWriteLock.unlock();
+		}
+	}
+	
+	private void internalRegisterDataSource(String namespace, String dataSourceName, final HikariConfig config) {
+		String poolName = poolName(namespace, dataSourceName);
+		LOGGER.debug("Registering dataSource '{}' into namespace '{}' [{}]", dataSourceName, namespace);
+		internalAddPool(poolName, config);
+		LOGGER.debug("DataSource '{}' successfully added", dataSourceName);
+	}
+	
+	public final void unregisterDataSource(final String namespace, final String dataSourceName) throws WTException {
+		Check.notEmpty(namespace, "namespace");
+		Check.notEmpty(dataSourceName, "dataSourceName");
+		
+		ensureStateReady();
+		
+		final String poolName = poolName(namespace, dataSourceName);
+		poolsWriteLock.lock();
+		try {
+			ensureStateReady();
+			LOGGER.debug("Unregistering dataSource '{}' into namespace '{}' [{}]", dataSourceName, namespace);
+			internalRemovePool(poolName);
+			LOGGER.debug("DataSource '{}' successfully removed", dataSourceName);
+			
+		} finally {
+			poolsWriteLock.unlock();
+		}
+	}
+	
 	/**
 	 * Returns the default Core DataSource.
 	 * @return DataSource object.
+	 * @throws WTException
 	 */
-	public DataSource getDataSource() {
+	public DataSource getDataSource() throws WTException {
 		return getDataSource(CoreManifest.ID, DEFAULT_DATASOURCE);
 	}
 	
@@ -221,8 +246,9 @@ public class ConnectionManager implements IConnectionProvider {
 	 * Returns the default DataSource from desired namespace.
 	 * @param namespace The pool namespace.
 	 * @return DataSource object.
+	 * @throws WTException
 	 */
-	public DataSource getDataSource(final String namespace) {
+	public DataSource getDataSource(final String namespace) throws WTException {
 		Check.notEmpty(namespace, "namespace");
 		return getDataSource(namespace, DEFAULT_DATASOURCE);
 	}
@@ -232,18 +258,22 @@ public class ConnectionManager implements IConnectionProvider {
 	 * @param namespace The pool namespace.
 	 * @param dataSourceName The dataSource name.
 	 * @return DataSource object.
+	 * @throws WTException
 	 */
-	public DataSource getDataSource(final String namespace, final String dataSourceName) {
+	public DataSource getDataSource(final String namespace, final String dataSourceName) throws WTException {
 		Check.notEmpty(namespace, "namespace");
 		Check.notEmpty(dataSourceName, "dataSourceName");
-		if (shuttingDown) throw new WTRuntimeException("Manager is coming down");
-		String poolName = poolName(namespace, dataSourceName);
 		
-		long stamp = lock.readLock();
+		ensureStateReady();
+		
+		final String poolName = poolName(namespace, dataSourceName);
+		poolsReadLock.lock();
 		try {
+			ensureStateReady();
 			return internalGetPool(poolName);
+			
 		} finally {
-			lock.unlockRead(stamp);
+			poolsReadLock.unlock();
 		}
 	}
 	
@@ -263,6 +293,7 @@ public class ConnectionManager implements IConnectionProvider {
 	 * @return A ready Connection object.
 	 * @throws SQLException 
 	 */
+	@Override
 	public Connection getConnection(final boolean autoCommit) throws SQLException {
 		return getConnection(CoreManifest.ID, autoCommit);
 	}
@@ -285,6 +316,7 @@ public class ConnectionManager implements IConnectionProvider {
 	 * @return A ready Connection object.
 	 * @throws SQLException 
 	 */
+	@Override
 	public Connection getConnection(final String namespace, final boolean autoCommit) throws SQLException {
 		return getConnection(namespace, DEFAULT_DATASOURCE, autoCommit);
 	}
@@ -312,14 +344,17 @@ public class ConnectionManager implements IConnectionProvider {
 	public Connection getConnection(final String namespace, final String dataSourceName, final boolean autoCommit) throws SQLException {
 		Check.notEmpty(namespace, "namespace");
 		Check.notEmpty(dataSourceName, "dataSourceName");
-		if (shuttingDown) throw new WTRuntimeException("Manager is coming down");
-		String poolName = poolName(namespace, dataSourceName);
 		
-		long stamp = lock.readLock();
+		ensureReadyForConnection();
+		
+		final String poolName = poolName(namespace, dataSourceName);
+		poolsReadLock.lock();
 		try {
+			ensureReadyForConnection();
 			return internalGetPoolConnection(poolName, autoCommit);
+			
 		} finally {
-			lock.unlockRead(stamp);
+			poolsReadLock.unlock();
 		}
 	}
 	
@@ -366,57 +401,80 @@ public class ConnectionManager implements IConnectionProvider {
 	public Connection getFallbackConnection(final String namespace, final String dataSourceName, final boolean autoCommit) throws SQLException {
 		Check.notEmpty(namespace, "namespace");
 		Check.notEmpty(dataSourceName, "dataSourceName");
-		if (shuttingDown) throw new WTRuntimeException("Manager is coming down");
-		String poolName = poolName(namespace, dataSourceName);
 		
-		long stamp = lock.readLock();
+		ensureReadyForConnection();
+		
+		String poolName = poolName(namespace, dataSourceName);
+		poolsReadLock.lock();
 		try {
-			if (!internalIsRegistered(poolName)) poolName = poolName(CoreManifest.ID, DEFAULT_DATASOURCE);
+			ensureReadyForConnection();
+			if (!internalIsRegistered(poolName)) {
+				poolName = poolName(CoreManifest.ID, DEFAULT_DATASOURCE);
+			}
 			return internalGetPoolConnection(poolName, autoCommit);
+			
 		} finally {
-			lock.unlockRead(stamp);
+			poolsReadLock.unlock();
 		}
 	}
 	
-	public boolean isRegistered(final String namespace, final String dataSourceName) {
+	public boolean isRegistered(final String namespace, final String dataSourceName) throws WTException {
 		Check.notEmpty(namespace, "namespace");
 		Check.notEmpty(dataSourceName, "dataSourceName");
-		if (shuttingDown) throw new WTRuntimeException("Manager is coming down");
-		String poolName = poolName(namespace, dataSourceName);
 		
-		long stamp = lock.readLock();
+		ensureStateReady();
+		
+		final String poolName = poolName(namespace, dataSourceName);
+		poolsReadLock.lock();
 		try {
+			ensureStateReady();
 			return internalIsRegistered(poolName);
+			
 		} finally {
-			lock.unlockRead(stamp);
+			poolsReadLock.unlock();
 		}
 	}
 	
-	private boolean internalIsRegistered(String poolName) {
+	private boolean internalIsRegistered(final String poolName) {
 		return pools.containsKey(poolName);
 	}
 	
-	private void internalAddPool(String poolName, HikariConfig config) {
-		if (pools.containsKey(poolName)) throw new WTRuntimeException("Pool for already defined. [{}]", poolName);
+	private void internalAddPool(final String poolName, final HikariConfig config) {
+		if (pools.containsKey(poolName)) {
+			throw new WTRuntimeException("Pool '{}' already defined", poolName);
+		}
+		//FIXME: make a copy of passed HikariConfig before forcing poolName value!
 		config.setPoolName(poolName); // Make sure name is poolName!
 		pools.put(poolName, new HikariDataSource(config));
 	}
 	
-	private HikariDataSource internalGetPool(String poolName) {
-		if (!pools.containsKey(poolName)) throw new WTRuntimeException("Pool not found. [{}]", poolName);
+	private HikariDataSource internalGetPool(final String poolName) {
+		if (!pools.containsKey(poolName)) {
+			throw new WTRuntimeException("Pool '{}' not found", poolName);
+		}
 		return pools.get(poolName);
 	}
 	
-	private Connection internalGetPoolConnection(String poolName, boolean autoCommit) throws SQLException {
+	private Connection internalGetPoolConnection(final String poolName, final boolean autoCommit) throws SQLException {
 		Connection con = internalGetPool(poolName).getConnection();
 		con.setAutoCommit(autoCommit);
 		return con;
 	}
 	
-	private void internalRemovePool(String poolName) {
+	private void internalRemovePool(final String poolName) {
 		HikariDataSource pool = pools.remove(poolName);
-		if (pool == null) throw new WTRuntimeException("Pool not found. [{}]", poolName);
+		if (pool == null) {
+			throw new WTRuntimeException("Pool '{}' not found", poolName);
+		}
 		pool.close();
+	}
+	
+	private void ensureReadyForConnection() throws SQLException {
+		try {
+			ensureStateReady();
+		} catch (WTException ex) {
+			throw new SQLException("Connection manager is not available", ex);
+		}
 	}
 	
 	/*

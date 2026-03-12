@@ -69,23 +69,8 @@ import org.slf4j.LoggerFactory;
  *
  * @author malbinola
  */
-public class SessionManager implements PushConnection.MessageStorage {
+public class SessionManager extends AbstractAppManager<SessionManager> implements PushConnection.MessageStorage {
 	private final static Logger LOGGER = LoggerFactory.getLogger(SessionManager.class);
-	private static boolean initialized = false;
-	
-	/**
-	 * Initialization method. This method should be called once.
-	 * 
-	 * @param wta WebTopApp instance.
-	 * @return The instance.
-	 */
-	public static synchronized SessionManager initialize(WebTopApp wta) {
-		if (initialized) throw new RuntimeException("Initialization already done");
-		SessionManager sesm = new SessionManager(wta);
-		initialized = true;
-		LOGGER.info("Initialized");
-		return sesm;
-	}
 	
 	public static final String ATTRIBUTE_REQUEST_DUMPED = "webtop.REQUEST_DUMPED";
 	public static final String ATTRIBUTE_CONTEXT_NAME = "webtop.ContextName";
@@ -103,7 +88,6 @@ public class SessionManager implements PushConnection.MessageStorage {
 	public static final String ATTRIBUTE_GUESSING_LOCALE = "Locale";
 	public static final String ATTRIBUTE_GUESSING_USERNAME = "UserName";
 	
-	private WebTopApp wta = null;
 	private final StampedLock lock = new StampedLock();
 	private final LinkedHashMap<String, WebTopSession> onlineSessions = new LinkedHashMap<>();
 	private final HashSet<String> onlineClienTrackingIds = new HashSet<>();
@@ -111,85 +95,108 @@ public class SessionManager implements PushConnection.MessageStorage {
 	private final HashMap<String, String> uuidToSessionId = new HashMap<>();
 	private final HashMap<String, PushConnection> pushConnections = new HashMap<>();
 	
-	/**
-	 * Private constructor.
-	 * Instances of this class must be created using static initialize method.
-	 * @param wta WebTopApp instance.
-	 */
-	private SessionManager(WebTopApp wta) {
-		this.wta = wta;
+	SessionManager(WebTopApp wta) {
+		super(wta);
 	}
 	
-	/**
-	 * Performs cleanup process.
-	 */
-	void cleanup() {
-		onlineSessions.clear();
-		onlineClienTrackingIds.clear();
-		profileSidsCache.clear();
-		uuidToSessionId.clear();
-		pushConnections.clear();
-		wta = null;
-		LOGGER.info("Cleaned up");
+	@Override
+	protected Logger doGetLogger() {
+		return LOGGER;
+	}
+	
+	@Override
+	protected void doAppManagerCleanup() {
+		long stamp = lock.writeLock();
+		try {
+			for (PushConnection pushCon : pushConnections.values()) {
+				try {
+					if (pushCon != null) pushCon.cleanup();
+				} catch (Throwable t) {
+					LOGGER.error("Error cleaning push connection", t);
+				}
+			}
+			onlineSessions.clear();
+			onlineClienTrackingIds.clear();
+			profileSidsCache.clear();
+			uuidToSessionId.clear();
+			pushConnections.clear();
+			
+		} finally {
+			lock.unlockWrite(stamp);
+		}
 	}
 	
 	public void onContainerSessionCreated(HttpSession session) {
-		session.setAttribute(SessionManager.ATTRIBUTE_WEBTOP_SESSION, new WebTopSession(wta, session));
+		if (!isStateReady()) return;
+		
+		session.setAttribute(SessionManager.ATTRIBUTE_WEBTOP_SESSION, new WebTopSession(getWebTopApp(), session));
 	}
 	
 	public void onContainerSessionDestroyed(HttpSession session) {
+		if (!isStateReady()) return;
+		
 		WebTopSession webtopSession = SessionContext.getWTSession(session);
-		if (webtopSession != null) {
-			String sessionId = session.getId(); // webtopSession.getId();
-			String clientTrackingId = webtopSession.getClientTrackingID();
-			UserProfileId profileId = webtopSession.getProfileId(); // Extract userProfile info before cleaning session!
+		if (webtopSession == null) return;
+		
+		String sessionId = session.getId(); // webtopSession.getId();
+		String clientTrackingId = webtopSession.getClientTrackingID();
+		UserProfileId profileId = webtopSession.getProfileId(); // Extract userProfile info before cleaning session!
+
+		long stamp = lock.writeLock();
+		try {
+			if (!isStateReady()) return; // Avoid race condition...
 			
-			long stamp = lock.writeLock();
-			try {
-				onlineSessions.remove(sessionId);
-				PushConnection pushCon = pushConnections.remove(sessionId);
-				if (pushCon != null) pushCon.cleanup();
-				if (profileId != null) {
-					if (profileSidsCache.containsKey(profileId)) {
-						// List at key may have not been prepared. In case of 
-						// active OPT configuration session is effectively 
-						// only after code validation.
-						profileSidsCache.get(profileId).remove(sessionId);
-					}
-					onlineClienTrackingIds.remove(profileId.toString() + "|" + clientTrackingId);
+			onlineSessions.remove(sessionId);
+			PushConnection pushCon = pushConnections.remove(sessionId);
+			if (pushCon != null) {
+				try {
+					pushCon.cleanup();
+				} catch (Throwable t) {
+					LOGGER.error("Error cleaning push connection [{}]", sessionId, t);
 				}
-				if (LOGGER.isTraceEnabled()) LOGGER.trace("Session unregistered [{}, {}]", sessionId, profileId);
-				
-			} finally {
-				lock.unlockWrite(stamp);
 			}
-			
-			try {
-				webtopSession.cleanup();
-			} catch(Throwable t) {
-				LOGGER.error("Error destroying session", t);
-			}
-			
 			if (profileId != null) {
-				AuditLogManager auditLogMgr = wta.getAuditLogManager();
-				if (auditLogMgr != null) {
-					Boolean otpPending = webtopSession.hasProperty(CoreManifest.ID, WTSPROP_OTP_PENDING);
-					Boolean logoutDone = webtopSession.hasProperty(CoreManifest.ID, WTSPROP_LOGOUT_DONE);
-					String action;
-					if (otpPending) {
-						action = "OTP_ABANDONED";
-					} else {
-						action = logoutDone ? "LOGOUT" : "SESSION_EXPIRED";
-					}
-					String clientIp = SessionContext.getClientRemoteIP(session);
-					AuditLogManager.logAuth(LogbackHelper.Level.DEBUG, clientIp, sessionId, profileId, action);
-					auditLogMgr.write(profileId, null, sessionId, CoreManifest.ID, "AUTH", action, null, JsonResult.gson().toJson(new MapItem().add("ip", clientIp)));
+				if (profileSidsCache.containsKey(profileId)) {
+					// List at key may have not been prepared. In case of 
+					// active OPT configuration session is effectively 
+					// only after code validation.
+					profileSidsCache.get(profileId).remove(sessionId);
 				}
+				onlineClienTrackingIds.remove(profileId.toString() + "|" + clientTrackingId);
+			}
+			if (LOGGER.isTraceEnabled()) LOGGER.trace("Session unregistered [{}, {}]", sessionId, profileId);
+			
+		} finally {
+			lock.unlockWrite(stamp);
+		}
+
+		try {
+			webtopSession.cleanup();
+		} catch(Throwable t) {
+			LOGGER.error("Error destroying session", t);
+		}
+
+		if (profileId != null) {
+			AuditLogManager auditLogMgr = getWebTopApp().getAuditLogManager();
+			if (auditLogMgr != null) {
+				Boolean otpPending = webtopSession.hasProperty(CoreManifest.ID, WTSPROP_OTP_PENDING);
+				Boolean logoutDone = webtopSession.hasProperty(CoreManifest.ID, WTSPROP_LOGOUT_DONE);
+				String action;
+				if (otpPending) {
+					action = "OTP_ABANDONED";
+				} else {
+					action = logoutDone ? "LOGOUT" : "SESSION_EXPIRED";
+				}
+				String clientIp = SessionContext.getClientRemoteIP(session);
+				AuditLogManager.logAuth(LogbackHelper.Level.DEBUG, clientIp, sessionId, profileId, action);
+				auditLogMgr.write(profileId, null, sessionId, CoreManifest.ID, "AUTH", action, null, JsonResult.gson().toJson(new MapItem().add("ip", clientIp)));
 			}
 		}
 	}
 	
 	public void onPushResourceHeartbeat(String sessionId, AtmosphereResource resource) {
+		if (!isStateReady()) return;
+		
 		long stamp = lock.readLock();
 		try {
 			if (onlineSessions.containsKey(sessionId)) {
@@ -209,6 +216,8 @@ public class SessionManager implements PushConnection.MessageStorage {
 	}
 	
 	public void onPushResourceReady(String sessionId, AtmosphereResource resource) {
+		if (!isStateReady()) return;
+		
 		long stamp = lock.readLock();
 		try {
 			PushConnection pushCon = pushConnections.get(sessionId);
@@ -220,8 +229,9 @@ public class SessionManager implements PushConnection.MessageStorage {
 	}
 	
 	void registerWebTopSession(WebTopSession webtopSession) throws WTException {
-		String sessionId = webtopSession.getId();
+		ensureStateReady();
 		
+		String sessionId = webtopSession.getId();
 		long stamp = lock.writeLock();
 		try {
 			UserProfileId profileId = webtopSession.getProfileId();
@@ -240,7 +250,9 @@ public class SessionManager implements PushConnection.MessageStorage {
 		}
 	}
 	
-	public WebTopSession getWebTopSession(String sessionId) {
+	public WebTopSession getWebTopSession(final String sessionId) throws WTException {
+		ensureStateReady();
+		
 		long stamp = lock.readLock();
 		try {
 			return onlineSessions.get(sessionId);
@@ -250,9 +262,10 @@ public class SessionManager implements PushConnection.MessageStorage {
 		}
 	}
 	
-	public List<WebTopSession> getWebTopSessions(UserProfileId profileId) {
-		List<WebTopSession> list = new ArrayList<>();
+	public List<WebTopSession> getWebTopSessions(final UserProfileId profileId) throws WTException {
+		ensureStateReady();
 		
+		List<WebTopSession> list = new ArrayList<>();
 		long stamp = lock.readLock();
 		try {
 			if (profileSidsCache.get(profileId) != null) {
@@ -267,7 +280,17 @@ public class SessionManager implements PushConnection.MessageStorage {
 		return list;
 	}
 	
-	public boolean isOnline(String sessionId) {
+	public boolean isOnlineQuietly(final String sessionId) {
+		try {
+			return isOnline(sessionId);
+		} catch (WTException ex) {
+			return false;
+		}
+	}
+	
+	public boolean isOnline(final String sessionId) throws WTException {
+		ensureStateReady();
+		
 		long stamp = lock.readLock();
 		try {
 			return onlineSessions.containsKey(sessionId);
@@ -276,7 +299,17 @@ public class SessionManager implements PushConnection.MessageStorage {
 		}
 	}
 	
-	public boolean isOnline(UserProfileId profileId) {
+	public boolean isOnlineQuietly(final UserProfileId profileId) {
+		try {
+			return isOnlineNew(profileId);
+		} catch (WTException ex) {
+			return false;
+		}
+	}
+	
+	public boolean isOnlineNew(final UserProfileId profileId) throws WTException {
+		ensureStateReady();
+		
 		long stamp = lock.readLock();
 		try {
 			return profileSidsCache.containsKey(profileId);
@@ -285,7 +318,29 @@ public class SessionManager implements PushConnection.MessageStorage {
 		}
 	}
 	
-	public boolean isOnline(UserProfileId profileId, String webtopClientId) {
+	/**
+	 * @deprecated use isOnlineQuietly instead
+	 */
+	@Deprecated public boolean isOnline(UserProfileId profileId) {
+		long stamp = lock.readLock();
+		try {
+			return profileSidsCache.containsKey(profileId);
+		} finally {
+			lock.unlockRead(stamp);
+		}
+	}
+	
+	public boolean isOnlineQuietly(final UserProfileId profileId, final String webtopClientId) {
+		try {
+			return isOnline(profileId, webtopClientId);
+		} catch (WTException ex) {
+			return false;
+		}
+	}
+	
+	public boolean isOnline(final UserProfileId profileId, final String webtopClientId) throws WTException {
+		ensureStateReady();
+		
 		long stamp = lock.readLock();
 		try {
 			return onlineClienTrackingIds.contains(profileId.toString() + "|" + webtopClientId);
@@ -307,6 +362,7 @@ public class SessionManager implements PushConnection.MessageStorage {
 			@Override
 			public void run() {
 				try {
+					ensureStateReady();
 					long stamp = lock.tryReadLock(10, TimeUnit.SECONDS);
 					if (stamp == 0) throw new InterruptedException("tryReadLock timeouts");
 					try {
@@ -314,7 +370,14 @@ public class SessionManager implements PushConnection.MessageStorage {
 					} finally {
 						lock.unlockRead(stamp);
 					}
-				} catch(InterruptedException ex) {
+					
+				} catch (WTException ex) {
+					LOGGER.warn("SessionManager not available [{}]", sessionId, ex);
+					if (important) {
+						LOGGER.warn("Cannot detect the user for session '{}', {} messages lost!", sessionId, messages.size());
+					}
+					
+				} catch (InterruptedException ex) {
 					LOGGER.error("Unable to acquire readLock [{}]", sessionId, ex);
 					if (important) {
 						LOGGER.warn("Cannot detect the user for session '{}', {} messages lost!", sessionId, messages.size());
@@ -330,6 +393,7 @@ public class SessionManager implements PushConnection.MessageStorage {
 			@Override
 			public void run() {
 				try {
+					ensureStateReady();
 					long stamp = lock.tryReadLock(10, TimeUnit.SECONDS);
 					if (stamp == 0) throw new InterruptedException("tryReadLock timeouts");
 					try {
@@ -337,6 +401,13 @@ public class SessionManager implements PushConnection.MessageStorage {
 					} finally {
 						lock.unlockRead(stamp);
 					}
+					
+				} catch (WTException ex) {
+					LOGGER.warn("SessionManager not available [{}]", profileId, ex);
+					if (important) {
+						persistMessages(profileId, messages);
+					}
+					
 				} catch (InterruptedException ex) {
 					LOGGER.error("Unable to acquire readLock [{}]", profileId, ex);
 					if (important) {

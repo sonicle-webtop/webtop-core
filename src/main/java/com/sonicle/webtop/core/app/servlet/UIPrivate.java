@@ -52,7 +52,7 @@ import com.sonicle.webtop.core.app.WebTopProps;
 import com.sonicle.webtop.core.app.WebTopSession;
 import com.sonicle.webtop.core.app.atmosphere.AtmosphereServlet;
 import com.sonicle.webtop.core.app.model.DomainBase;
-import com.sonicle.webtop.core.app.sdk.WTPwdPolicyException;
+import com.sonicle.webtop.core.app.exc.PwdPolicyException;
 import com.sonicle.webtop.core.bol.js.JsWTSPrivate;
 import com.sonicle.webtop.core.sdk.UserProfile;
 import com.sonicle.webtop.core.sdk.UserProfileId;
@@ -115,7 +115,7 @@ public class UIPrivate extends AbstractServlet {
 				} catch (PasswordMustBeDifferent ex) {
 					LOGGER.debug("Password change failure: password matches the current one");
 					failureMessage = wta.lookupResource(wts.getLocale(), CoreLocaleKey.TPL_PWCHANGE_ERROR_MUSTBEDIFFERENT);
-				} catch (WTPwdPolicyException ex) {
+				} catch (PwdPolicyException ex) {
 					LOGGER.debug("Password change failure: password does not satisfy password policies [{}]", ex.getCode(), ex);
 					DomainBase.PasswordPolicies policies = wta.getWebTopManager().getDomainPasswordPolicies(pid.getDomainId());
 					failureMessage = lookupPolicyExceptionCodeMessage(wta, wts.getLocale(), ex.getCode(), policies);

@@ -84,10 +84,9 @@ public class DocEditorManager extends AbstractAppManager<DocEditorManager> {
 	private final Map<String, Long> expirationCandidates = new HashMap();
 	
 	DocEditorManager(WebTopApp wta, final long timeToLiveMillis) {
-		super(wta, true);
+		super(wta);
 		this.timeToLiveMillis = timeToLiveMillis;
 		LOGGER.debug("timeToLive: {}", timeToLiveMillis);
-		initialize();
 	}
 
 	@Override

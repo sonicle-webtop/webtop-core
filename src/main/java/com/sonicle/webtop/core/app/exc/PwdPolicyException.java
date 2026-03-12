@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020 Sonicle S.r.l.
+ * Copyright (C) 2021 Sonicle S.r.l.
  *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by
@@ -28,30 +28,25 @@
  * version 3, these Appropriate Legal Notices must retain the display of the
  * Sonicle logo and Sonicle copyright notice. If the display of the logo is not
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
- * display the words "Copyright (C) 2020 Sonicle S.r.l.".
+ * display the words "Copyright (C) 2021 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core.app.sdk;
+package com.sonicle.webtop.core.app.exc;
 
-import com.license4j.ValidationStatus;
-import com.sonicle.commons.l4j.ProductLicense;
+import com.sonicle.webtop.core.sdk.WTException;
 
 /**
  *
  * @author malbinola
  */
-public class WTLicenseValidationException extends WTLicenseException {
-	private ValidationStatus validationStatus;
+public class PwdPolicyException extends WTException {
+	protected int code;
 	
-	public WTLicenseValidationException(ProductLicense.LicenseInfo info) {
-		this(info.getProductCode(), info.getValidationStatus());
+	public PwdPolicyException(int code, String message, Object... arguments) {
+		super(message, arguments);
+		this.code = code;
 	}
 	
-	public WTLicenseValidationException(String productCode, ValidationStatus validationStatus) {
-		super("Invalid validation status for '{}' [{}]", productCode, validationStatus);
-		this.validationStatus = validationStatus;
-	}
-	
-	public ValidationStatus getValidationStatus() {
-		return validationStatus;
+	public int getCode() {
+		return this.code;
 	}
 }

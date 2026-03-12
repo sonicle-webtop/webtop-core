@@ -45,6 +45,7 @@ import com.sonicle.webtop.core.CoreSettings;
 import com.sonicle.webtop.core.CoreUserSettings;
 import com.sonicle.webtop.core.admin.CoreAdminManager;
 import com.sonicle.webtop.core.app.ServiceDescriptor.OpenApiDefinition;
+import com.sonicle.webtop.core.app.exc.ManagerLifecycleException;
 import com.sonicle.webtop.core.app.sdk.interfaces.IControllerInitHooks;
 import com.sonicle.webtop.core.app.sdk.interfaces.IControllerUserEvents;
 import com.sonicle.webtop.core.bol.OUpgradeStatement;
@@ -115,30 +116,12 @@ import org.joda.time.DateTimeZone;
  *
  * @author malbinola
  */
-public class ServiceManager {
-	private static final Logger logger = WT.getLogger(ServiceManager.class);
-	private static boolean initialized = false;
-	
-	/**
-	 * Initialization method. This method should be called once.
-	 * 
-	 * @param wta WebTopApp instance.
-	 * @param scheduler Scheduler instance.
-	 * @return The instance.
-	 */
-	public static synchronized ServiceManager initialize(WebTopApp wta, Scheduler scheduler) {
-		if (initialized) throw new RuntimeException("Initialization already done");
-		ServiceManager svcm = new ServiceManager(wta, scheduler);
-		initialized = true;
-		logger.info("Initialized");
-		return svcm;
-	}
+public class ServiceManager extends AbstractAppManager<ServiceManager> {
+	private static final Logger LOGGER = WT.getLogger(ServiceManager.class);
 	
 	public static final String SERVICES_DESCRIPTOR_RESOURCE = "META-INF/webtop-services.xml";
-	private WebTopApp wta = null;
 	private Scheduler scheduler = null;
 	private final Object lock1 = new Object();
-	private final Object lock2 = new Object();
 	private final KeyedReentrantLocks<String> prepareProfileLocks = new KeyedReentrantLocks<>();
 	
 	private final LinkedHashMap<String, ServiceDescriptor> descriptors = new LinkedHashMap<>();
@@ -149,66 +132,20 @@ public class ServiceManager {
 	private final HashMap<String, String> publicNameToServiceId = new HashMap<>();
 	private final LinkedHashMap<String, BaseBackgroundService> backgroundServices = new LinkedHashMap<>();
 	
-	/**
-	 * Private constructor.
-	 * Instances of this class must be created using static initialize method.
-	 * @param wta WebTopApp instance.
-	 */
-	private ServiceManager(WebTopApp wta, Scheduler scheduler) {
-		this.wta = wta;
+	ServiceManager(WebTopApp wta, Scheduler scheduler) {
+		super(wta);
 		this.scheduler = scheduler;
-		init();
 	}
 	
-	/**
-	 * Performs cleanup process.
-	 */
-	public void cleanup() {
-		
-		// Cleanup public/job services
-		BasePublicService publicInst = null;
-		for(String serviceId : listPrivateServices()) {
-			// Cleanup job service
-			//TODO: effettuare lo shutdown dei task
-			final BaseBackgroundService bgInst = backgroundServices.get(serviceId);
-			if (bgInst != null) cleanupBackgroundService(bgInst);
-		}
-		
-		backgroundServices.clear();
-		descriptors.clear();
-		xidToServiceId.clear();
-		serviceIdToJsPath.clear();
-		serviceIdToPublicName.clear();
-		publicNameToServiceId.clear();
-		scheduler = null;
-		wta = null;
-		logger.info("Cleaned up");
+	@Override
+	protected Logger doGetLogger() {
+		return LOGGER;
 	}
 	
-	private String getUpgradeTag() {
-		UpgradeStatementDAO upgdao = UpgradeStatementDAO.getInstance();
-		Connection con = null;
-		
-		try {
-			con = wta.getConnectionManager().getConnection();
-			String lastTag = upgdao.selectLastTag(con);
-			int pendingUpgrades = upgdao.countPendingByTagType(con, lastTag, OUpgradeStatement.STATEMENT_TYPE_SQL);
-			if (pendingUpgrades == 0) {
-				return String.valueOf(JodaTimeUtils.now(true).getMillis());
-			} else {
-				return lastTag;
-			}
-		} catch(SQLException | DAOException ex) {
-			logger.error("Unable to determine upgrade-tag", ex);
-			return null;
-		} finally {
-			DbUtils.closeQuietly(con);
-		}
-	}
-	
-	private void init() {
+	@Override
+	protected void doAppManagerInitialize() {
 		// Loads services' manifest files from classpath
-		logger.debug("Starting services discovery...");
+		LOGGER.debug("Starting services discovery...");
 		Map<String, ServiceManifest> manifests = null;
 		try {
 			manifests = discoverServices();
@@ -228,7 +165,7 @@ public class ServiceManager {
 		boolean requireAdmin = false;
 		
 		if (maintenanceDisabled) {
-			logger.warn("Special key [{}] is active. Maintenance will be forcedly disabled!", CoreSettings.MAINTENANCE_ENABLED);
+			LOGGER.warn("Special key [{}] is active. Maintenance will be forcedly disabled!", CoreSettings.MAINTENANCE_ENABLED);
 		}
 		
 		// Always insert the maintenance flag. If useless 
@@ -240,7 +177,7 @@ public class ServiceManager {
 		
 		// Defines a proper upgrade-tag
 		String upgradeTag = getUpgradeTag();
-		logger.info("Database upgrades will be appended to {}", upgradeTag);
+		LOGGER.info("Database upgrades will be appended to {}", upgradeTag);
 		
 		// Upgrade database (core)
 		if (coreDesc.isUpgraded()) {
@@ -279,7 +216,7 @@ public class ServiceManager {
 		
 		boolean newMaintenance = true;
 		if (requireAdmin) {
-			logger.info("SysAdmin intervention is needed!");
+			LOGGER.info("SysAdmin intervention is needed!");
 		} else {
 			// Admin support is not needed. Restore the maintenance value 
 			// read before startup. This prevents from overriding changes made 
@@ -292,7 +229,7 @@ public class ServiceManager {
 		}
 		
 		if (!newMaintenance) setMaintenance(CoreManifest.ID, false);
-		logger.info("Maintenance mode: {}", newMaintenance);
+		LOGGER.info("Maintenance mode: {}", newMaintenance);
 		
 		// Instantiate job services
 		int okJobs = 0, failJobs = 0;
@@ -304,8 +241,49 @@ public class ServiceManager {
 				}
 			}
 		}
-		logger.debug("Instantiated {} of {} job services", okJobs, (okJobs+failJobs));
-		logger.debug("Instantiated {} of {} background services", okBgs, (okBgs+failBgs));
+		LOGGER.debug("Instantiated {} of {} job services", okJobs, (okJobs+failJobs));
+		LOGGER.debug("Instantiated {} of {} background services", okBgs, (okBgs+failBgs));
+	}
+	
+	@Override
+	protected void doAppManagerCleanup() {
+		// Cleanup public/job services
+		BasePublicService publicInst = null;
+		for(String serviceId : listPrivateServices()) {
+			// Cleanup job service
+			//TODO: effettuare lo shutdown dei task
+			final BaseBackgroundService bgInst = backgroundServices.get(serviceId);
+			if (bgInst != null) cleanupBackgroundService(bgInst);
+		}
+		
+		backgroundServices.clear();
+		descriptors.clear();
+		xidToServiceId.clear();
+		serviceIdToJsPath.clear();
+		serviceIdToPublicName.clear();
+		publicNameToServiceId.clear();
+		scheduler = null;
+	}
+	
+	private String getUpgradeTag() {
+		UpgradeStatementDAO upgdao = UpgradeStatementDAO.getInstance();
+		Connection con = null;
+		
+		try {
+			con = getConnection(true);
+			String lastTag = upgdao.selectLastTag(con);
+			int pendingUpgrades = upgdao.countPendingByTagType(con, lastTag, OUpgradeStatement.STATEMENT_TYPE_SQL);
+			if (pendingUpgrades == 0) {
+				return String.valueOf(JodaTimeUtils.now(true).getMillis());
+			} else {
+				return lastTag;
+			}
+		} catch (Exception ex) {
+			LOGGER.error("Unable to determine upgrade-tag", ex);
+			return null;
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
 	}
 	
 	/**
@@ -367,36 +345,36 @@ public class ServiceManager {
 	}
 	
 	private boolean isDbInitEnabled() {
-		SettingsManager setMgr = wta.getSettingsManager();
+		SettingsManager setMgr = getWebTopApp().getSettingsManager();
 		return LangUtils.value(setMgr.getServiceSetting(CoreManifest.ID, CoreSettings.DB_INIT_ENABLED), true);
 	}
 	
 	private boolean isDbAutoUpgrade() {
-		SettingsManager setMgr = wta.getSettingsManager();
+		SettingsManager setMgr = getWebTopApp().getSettingsManager();
 		return LangUtils.value(setMgr.getServiceSetting(CoreManifest.ID, CoreSettings.DB_UPGRADE_AUTO), true);
 	}
 	
 	private boolean isMaintenanceDisabled() {
-		SettingsManager setMgr = wta.getSettingsManager();
+		SettingsManager setMgr = getWebTopApp().getSettingsManager();
 		return LangUtils.value(setMgr.getServiceSetting(CoreManifest.ID, CoreSettings.MAINTENANCE_ENABLED), false);
 	}
 	
 	public boolean isInMaintenance(String serviceId) {
-		SettingsManager setMgr = wta.getSettingsManager();
+		SettingsManager setMgr = getWebTopApp().getSettingsManager();
 		return LangUtils.value(setMgr.getServiceSetting(serviceId, CoreSettings.MAINTENANCE), false);
 	}
 	
 	public boolean isInDevMode(String serviceId) {
 		ServiceDescriptor descr = getDescriptor(serviceId);
 		if (ServiceManifest.BUILD_TYPE_PROD.equals(descr.getManifest().getBuildType())) {
-			return WebTopProps.getDevMode(wta.getProperties());
+			return WebTopProps.getDevMode(getWebTopApp().getProperties());
 		} else {
 			return true;
 		}
 	}
 	
 	public void setMaintenance(String serviceId, boolean maintenance) {
-		SettingsManager setMgr = wta.getSettingsManager();
+		SettingsManager setMgr = getWebTopApp().getSettingsManager();
 		setMgr.setServiceSetting(serviceId, CoreSettings.MAINTENANCE, maintenance);
 	}
 	
@@ -516,13 +494,13 @@ public class ServiceManager {
 				BaseController instance = getController(serviceId);
 				IControllerServiceHooks controller = (IControllerServiceHooks)instance;
 			
-				logger.debug("Initializing profile for service [{}]", serviceId);
+				LOGGER.debug("Initializing profile for service [{}]", serviceId);
 				try {
 					LoggerUtils.setContextDC(instance.SERVICE_ID);
 					controller.initProfile(descr.getManifest().getVersion(), profileId);
 				} catch(Throwable t) {
 					//TODO: valutare se ritornare un booleano per verifica
-					logger.error("Controller: initProfile() throws errors", t);
+					LOGGER.error("Controller: initProfile() throws errors", t);
 				} finally {
 					LoggerUtils.clearContextServiceDC();
 				}
@@ -535,13 +513,13 @@ public class ServiceManager {
 					BaseController instance = getController(serviceId);
 					IControllerServiceHooks controller = (IControllerServiceHooks)instance;
 
-					logger.debug("Upgrading profile for service [{}]", serviceId);
+					LOGGER.debug("Upgrading profile for service [{}]", serviceId);
 					try {
 						LoggerUtils.setContextDC(instance.SERVICE_ID);
 						controller.upgradeProfile(upgradeResult.getCurrent(), profileId, upgradeResult.getPrevious());
 					} catch(Throwable t) {
 						//TODO: valutare se ritornare un booleano per verifica
-						logger.error("Controller: upgradeProfile() throws errors", t);
+						LOGGER.error("Controller: upgradeProfile() throws errors", t);
 					} finally {
 						LoggerUtils.clearContextServiceDC();
 					}
@@ -584,7 +562,7 @@ public class ServiceManager {
 	 * @return The original value read before any update.
 	 */
 	private boolean evaluateProfileInit(String serviceId, UserProfileId profileId) {
-		SettingsManager setMgr = wta.getSettingsManager();
+		SettingsManager setMgr = getWebTopApp().getSettingsManager();
 		final String lockKey = serviceId + "|" + profileId.toString();
 		try {
 			prepareProfileLocks.lock(lockKey);
@@ -600,7 +578,7 @@ public class ServiceManager {
 	}
 	
 	private ServiceVersionEvalResult evaluateProfileUpgrade(final ServiceManifest manifest, final UserProfileId profileId) {
-		SettingsManager setMgr = wta.getSettingsManager();
+		SettingsManager setMgr = getWebTopApp().getSettingsManager();
 		final String lockKey = manifest.getId() + "|" + profileId.toString();
 		
 		try {
@@ -620,14 +598,14 @@ public class ServiceManager {
 	}
 	
 	public ServiceVersionEvalResult evaluateServiceVersionForProfile(final ServiceManifest manifest, final UserProfileId profileId) {
-		SettingsManager setMgr = wta.getSettingsManager();
+		SettingsManager setMgr = getWebTopApp().getSettingsManager();
 		ServiceVersion manifestVer = manifest.getVersion();
 		ServiceVersion profileVer = new ServiceVersion(CoreUserSettings.getServiceVersion(setMgr, profileId, manifest.getId()));
 		return new ServiceVersionEvalResult(manifestVer, profileVer);
 	}
 	
 	public ServiceVersionEvalResult evaluateWhatsnewServiceVersionForProfile(final ServiceManifest manifest, final UserProfileId profileId) {
-		SettingsManager setm = wta.getSettingsManager();
+		SettingsManager setm = getWebTopApp().getSettingsManager();
 		ServiceVersion manifestVer = manifest.getVersion();
 		ServiceVersion profileVer = new ServiceVersion(CoreUserSettings.getWhatsnewVersion(setm, profileId, manifest.getId()));
 		return new ServiceVersionEvalResult(manifestVer, profileVer);
@@ -650,13 +628,13 @@ public class ServiceManager {
 			BaseController instance = getController(serviceId);
 			IControllerUserEvents iface = (IControllerUserEvents)instance;
 			
-			logger.debug("Calling onUserAdded [{}, {}]", serviceId, profileId.toString());
+			LOGGER.debug("Calling onUserAdded [{}, {}]", serviceId, profileId.toString());
 			try {
 				LoggerUtils.setContextDC(instance.SERVICE_ID);
 				iface.onUserAdded(profileId);
 				
 			} catch(Throwable t) {
-				logger.error("onUserAdded() throws errors [{}, {}]", serviceId, profileId.toString(), t);
+				LOGGER.error("onUserAdded() throws errors [{}, {}]", serviceId, profileId.toString(), t);
 				return t;
 			} finally {
 				LoggerUtils.clearContextServiceDC();
@@ -682,13 +660,13 @@ public class ServiceManager {
 			BaseController instance = getController(serviceId);
 			IControllerUserEvents iface = (IControllerUserEvents)instance;
 			
-			logger.debug("Calling onUserRemoved() [{}, {}]", serviceId, profileId.toString());
+			LOGGER.debug("Calling onUserRemoved() [{}, {}]", serviceId, profileId.toString());
 			try {
 				LoggerUtils.setContextDC(instance.SERVICE_ID);
 				iface.onUserRemoved(profileId);
 				
 			} catch(Throwable t) {
-				logger.error("onUserRemoved() throws errors [{}, {}]", serviceId, profileId.toString(), t);
+				LOGGER.error("onUserRemoved() throws errors [{}, {}]", serviceId, profileId.toString(), t);
 				return t;
 			} finally {
 				LoggerUtils.clearContextServiceDC();
@@ -718,13 +696,13 @@ public class ServiceManager {
 			if(StringUtils.isEmpty(html)) {
 				// If content is empty, updates whatsnew version for the user;
 				// it basically realign versions in user-settings.
-				logger.trace("Whatsnew empty [{}]", serviceId);
+				LOGGER.trace("Whatsnew empty [{}]", serviceId);
 				resetWhatsnew(serviceId, profile.getId());
 			} else {
 				show = true;
 			}
 		}
-		logger.debug("Need to show whatsnew? {} [{}]", show, serviceId);
+		LOGGER.debug("Need to show whatsnew? {} [{}]", show, serviceId);
 		return show;
 	}
 	
@@ -754,7 +732,7 @@ public class ServiceManager {
 		ServiceVersion fromVersion = null;
 		ServiceDescriptor desc = getDescriptor(serviceId);
 		if(!full) {
-			SettingsManager setm = wta.getSettingsManager();
+			SettingsManager setm = getWebTopApp().getSettingsManager();
 			fromVersion = new ServiceVersion(CoreUserSettings.getWhatsnewVersion(setm, profile.getId(), serviceId));
 		}
 		return desc.getWhatsnew(profile.getLocale(), fromVersion);
@@ -767,7 +745,7 @@ public class ServiceManager {
 	 * @param profileId The user profile ID.
 	 */
 	public void resetWhatsnew(String serviceId, UserProfileId profileId) {
-		SettingsManager setm = wta.getSettingsManager();
+		SettingsManager setm = getWebTopApp().getSettingsManager();
 		ServiceVersion manifestVer = null;
 		
 		// Gets current service's version info
@@ -794,7 +772,7 @@ public class ServiceManager {
 	
 	
 	public void scheduleAllBackgroundServicesTasks() {
-		if (!wta.isLatest()) return; // Make sure we are in latest webapp
+		if (!getWebTopApp().isLatest()) return; // Make sure we are in latest webapp
 		synchronized (backgroundServices) {
 			for (BaseBackgroundService instance : backgroundServices.values()) {
 				boolean ret = instance.scheduleTasks();
@@ -803,7 +781,7 @@ public class ServiceManager {
 	}
 	
 	public void unscheduleAllBackgroundServicesTasks() {
-		if (!wta.isLatest()) return; // Make sure we are in latest webapp
+		if (!getWebTopApp().isLatest()) return; // Make sure we are in latest webapp
 		synchronized (backgroundServices) {
 			for (BaseBackgroundService instance : backgroundServices.values()) {
 				boolean ret = instance.unscheduleTasks();
@@ -819,7 +797,7 @@ public class ServiceManager {
 			BaseController inst = instantiateController(descriptor);
 			if (inst != null) {
 				controllers.put(serviceId, inst);
-				wta.getEventBus().subscribe(inst);
+				getWebTopApp().getEventBus().subscribe(inst);
 				return true;
 			} else {
 				return false;
@@ -829,20 +807,20 @@ public class ServiceManager {
 	
 	private BaseController instantiateController(ServiceDescriptor descriptor) {
 		try {
-			if (logger.isTraceEnabled()) logger.trace("[{}] Controller: instantiating class '{}'", descriptor.getManifest().getId(), descriptor.getManifest().getControllerClassName());
+			if (LOGGER.isTraceEnabled()) LOGGER.trace("[{}] Controller: instantiating class '{}'", descriptor.getManifest().getId(), descriptor.getManifest().getControllerClassName());
 			return (BaseController)descriptor.getControllerClass().newInstance();
 		} catch(Throwable t) {
-			logger.error("[{}] Controller: instantiation of '{}' throws errors", descriptor.getManifest().getId(), descriptor.getManifest().getControllerClassName(), t);
+			LOGGER.error("[{}] Controller: instantiation of '{}' throws errors", descriptor.getManifest().getId(), descriptor.getManifest().getControllerClassName(), t);
 			return null;
 		}
 	}
 	
 	public CoreManager instantiateCoreManager(boolean fastInit, UserProfileId targetProfileId) {
-		return new CoreManager(wta, fastInit, targetProfileId);
+		return new CoreManager(getWebTopApp(), fastInit, targetProfileId);
 	}
 	
 	public CoreAdminManager instantiateCoreAdminManager(boolean fastInit, UserProfileId targetProfileId) {
-		return new CoreAdminManager(wta, fastInit, targetProfileId);
+		return new CoreAdminManager(getWebTopApp(), fastInit, targetProfileId);
 	}
 	
 	public BaseManager instantiateServiceManager(String serviceId, boolean fastInit, UserProfileId targetProfileId) {
@@ -850,12 +828,12 @@ public class ServiceManager {
 		if (!descr.hasManager()) return null;
 		
 		try {
-			if (logger.isTraceEnabled()) logger.trace("[{}] Manager: instantiating class '{}'", serviceId, descr.getManifest().getManagerClassName());
+			if (LOGGER.isTraceEnabled()) LOGGER.trace("[{}] Manager: instantiating class '{}'", serviceId, descr.getManifest().getManagerClassName());
 			Class clazz = descr.getManagerClass();
 			Constructor<BaseManager> constructor = clazz.getConstructor(boolean.class, UserProfileId.class);
 			return constructor.newInstance(fastInit, targetProfileId);
 		} catch(Throwable t) {
-			logger.error("[{}] Manager: instantiation of '{}' throws errors", serviceId, descr.getManifest().getManagerClassName(), t);
+			LOGGER.error("[{}] Manager: instantiation of '{}' throws errors", serviceId, descr.getManifest().getManagerClassName(), t);
 			return null;
 		}
 	}
@@ -882,34 +860,34 @@ public class ServiceManager {
 		// Creates service instance
 		BaseService instance = null;
 		try {
-			if (logger.isTraceEnabled()) logger.trace("[{}] PrivateService: instantiating class '{}'", serviceId, descr.getManifest().getPrivateServiceClassName());
+			if (LOGGER.isTraceEnabled()) LOGGER.trace("[{}] PrivateService: instantiating class '{}'", serviceId, descr.getManifest().getPrivateServiceClassName());
 			instance = (BaseService)descr.getPrivateServiceClass().newInstance();
 		} catch(Throwable t) {
-			logger.error("[{}] PrivateService: instantiation of '{}' throws errors", serviceId, descr.getManifest().getPrivateServiceClassName(), t);
+			LOGGER.error("[{}] PrivateService: instantiation of '{}' throws errors", serviceId, descr.getManifest().getPrivateServiceClassName(), t);
 			return null;
 		}
 		instance.configure(environment);
 		
 		// Calls initialization method
 		long start = 0, end = 0;
-		if (logger.isTraceEnabled()) logger.trace("[{}] PrivateService: calling initialize()", serviceId);
+		if (LOGGER.isTraceEnabled()) LOGGER.trace("[{}] PrivateService: calling initialize()", serviceId);
 		try {
 			LoggerUtils.setContextDC(serviceId);
 			start = System.nanoTime();
 			instance.initialize();
 			end = System.nanoTime();
 		} catch(Throwable t) {
-			logger.error("[{}] PrivateService: initialize() throws errors [{}]", serviceId, instance.getClass().getCanonicalName(), t);
+			LOGGER.error("[{}] PrivateService: initialize() throws errors [{}]", serviceId, instance.getClass().getCanonicalName(), t);
 		} finally {
 			LoggerUtils.clearContextServiceDC();
 		}
-		if (logger.isTraceEnabled() && (end != 0)) logger.trace("[{}] PrivateService: initialize() took {} ms", serviceId, TimeUnit.MILLISECONDS.convert(end-start, TimeUnit.NANOSECONDS));
+		if (LOGGER.isTraceEnabled() && (end != 0)) LOGGER.trace("[{}] PrivateService: initialize() took {} ms", serviceId, TimeUnit.MILLISECONDS.convert(end-start, TimeUnit.NANOSECONDS));
 		
 		return instance;
 	}
 	
 	public void privateServiceCallReady(BaseService instance) {
-		logger.trace("[{}] PrivateService: calling ready()", instance.SERVICE_ID);
+		LOGGER.trace("[{}] PrivateService: calling ready()", instance.SERVICE_ID);
 		boolean success = false;
 		StopWatch stopWatch = new StopWatch();
 		try {
@@ -921,15 +899,15 @@ public class ServiceManager {
 			
 		} catch (Throwable t) {
 			stopWatch.stop();
-			logger.error("[{}] PrivateService: ready() throws errors [{}]", instance.SERVICE_ID, instance.getClass().getCanonicalName(), t);
+			LOGGER.error("[{}] PrivateService: ready() throws errors [{}]", instance.SERVICE_ID, instance.getClass().getCanonicalName(), t);
 		} finally {
 			LoggerUtils.clearContextServiceDC();
 		}
-		if (success && logger.isTraceEnabled()) logger.trace("[{}] PrivateService: ready() took {} ms", instance.SERVICE_ID, TimeUnit.MILLISECONDS.convert(stopWatch.getNanoTime(), TimeUnit.NANOSECONDS));
+		if (success && LOGGER.isTraceEnabled()) LOGGER.trace("[{}] PrivateService: ready() took {} ms", instance.SERVICE_ID, TimeUnit.MILLISECONDS.convert(stopWatch.getNanoTime(), TimeUnit.NANOSECONDS));
 	}
 	
 	public void privateServiceCallCleanup(BaseService instance) {
-		logger.trace("[{}] PrivateService: calling cleanup()", instance.SERVICE_ID);
+		LOGGER.trace("[{}] PrivateService: calling cleanup()", instance.SERVICE_ID);
 		boolean success = false;
 		StopWatch stopWatch = new StopWatch();
 		try {
@@ -941,11 +919,11 @@ public class ServiceManager {
 			
 		} catch (Throwable t) {
 			stopWatch.stop();
-			logger.error("[{}] PrivateService: cleanup() throws errors [{}]", instance.SERVICE_ID, instance.getClass().getCanonicalName(), t);
+			LOGGER.error("[{}] PrivateService: cleanup() throws errors [{}]", instance.SERVICE_ID, instance.getClass().getCanonicalName(), t);
 		} finally {
 			LoggerUtils.clearContextServiceDC();
 		}
-		if (success && logger.isTraceEnabled()) logger.trace("[{}]PrivateService: cleanup() took {} ms", instance.SERVICE_ID, TimeUnit.MILLISECONDS.convert(stopWatch.getNanoTime(), TimeUnit.NANOSECONDS), instance.SERVICE_ID);
+		if (success && LOGGER.isTraceEnabled()) LOGGER.trace("[{}]PrivateService: cleanup() took {} ms", instance.SERVICE_ID, TimeUnit.MILLISECONDS.convert(stopWatch.getNanoTime(), TimeUnit.NANOSECONDS), instance.SERVICE_ID);
 	}
 	
 	public BaseUserOptionsService instantiateUserOptionsService(UserProfile sessionProfile, String sessionId, String serviceId, UserProfileId targetProfileId) {
@@ -954,10 +932,10 @@ public class ServiceManager {
 		
 		BaseUserOptionsService instance = null;
 		try {
-			if (logger.isTraceEnabled()) logger.trace("[{}] UserOptions: instantiating class '{}'", serviceId, descr.getManifest().getUserOptionsServiceClassName());
+			if (LOGGER.isTraceEnabled()) LOGGER.trace("[{}] UserOptions: instantiating class '{}'", serviceId, descr.getManifest().getUserOptionsServiceClassName());
 			instance = (BaseUserOptionsService)descr.getUserOptionsServiceClass().newInstance();
 		} catch(Throwable t) {
-			logger.error("[{}] UserOptions: instantiation of '{}' throws errors", serviceId, descr.getManifest().getUserOptionsServiceClassName(), t);
+			LOGGER.error("[{}] UserOptions: instantiation of '{}' throws errors", serviceId, descr.getManifest().getUserOptionsServiceClassName(), t);
 			return null;
 		}
 		instance.configure(sessionProfile, targetProfileId);
@@ -970,46 +948,46 @@ public class ServiceManager {
 		
 		BasePublicService instance = null;
 		try {
-			if (logger.isTraceEnabled()) logger.trace("[{}] PublicService: instantiating class '{}'", serviceId, descr.getManifest().getPublicServiceClassName());
+			if (LOGGER.isTraceEnabled()) LOGGER.trace("[{}] PublicService: instantiating class '{}'", serviceId, descr.getManifest().getPublicServiceClassName());
 			instance = (BasePublicService)descr.getPublicServiceClass().newInstance();
 		} catch(Throwable t) {
-			logger.error("[{}] PublicService: instantiation of '{}' throws errors", serviceId, descr.getManifest().getPublicServiceClassName(), t);
+			LOGGER.error("[{}] PublicService: instantiation of '{}' throws errors", serviceId, descr.getManifest().getPublicServiceClassName(), t);
 			return null;
 		}
 		instance.configure(environment);
 		
 		// Calls initialization method
 		long start = 0, end = 0;
-		if (logger.isTraceEnabled()) logger.trace("[{}] PublicService: calling initialize()", serviceId);
+		if (LOGGER.isTraceEnabled()) LOGGER.trace("[{}] PublicService: calling initialize()", serviceId);
 		try {
 			LoggerUtils.setContextDC(instance.SERVICE_ID);
 			start = System.nanoTime();
 			instance.initialize();
 			end = System.nanoTime();
 		} catch(Throwable t) {
-			logger.error("[{}] PublicService: initialize() throws errors [{}]", serviceId, instance.getClass().getCanonicalName(), t);
+			LOGGER.error("[{}] PublicService: initialize() throws errors [{}]", serviceId, instance.getClass().getCanonicalName(), t);
 		} finally {
 			LoggerUtils.clearContextServiceDC();
 		}
-		if (logger.isTraceEnabled() && (end != 0)) logger.trace("[{}] PublicService: initialize() took {} ms", serviceId, TimeUnit.MILLISECONDS.convert(end-start, TimeUnit.NANOSECONDS), serviceId);
+		if (LOGGER.isTraceEnabled() && (end != 0)) LOGGER.trace("[{}] PublicService: initialize() took {} ms", serviceId, TimeUnit.MILLISECONDS.convert(end-start, TimeUnit.NANOSECONDS), serviceId);
 		
 		return instance;
 	}
 	
 	public void cleanupPublicService(BasePublicService instance) {
 		long start = 0, end = 0;
-		logger.trace("[{}] PublicService: calling cleanup()", instance.SERVICE_ID);
+		LOGGER.trace("[{}] PublicService: calling cleanup()", instance.SERVICE_ID);
 		try {
 			LoggerUtils.setContextDC(instance.SERVICE_ID);
 			start = System.nanoTime();
 			instance.cleanup();
 			end = System.nanoTime();
 		} catch(Throwable t) {
-			logger.error("[{}] PublicService: cleanup() throws errors [{}]", instance.SERVICE_ID, instance.getClass().getCanonicalName(), t);
+			LOGGER.error("[{}] PublicService: cleanup() throws errors [{}]", instance.SERVICE_ID, instance.getClass().getCanonicalName(), t);
 		} finally {
 			LoggerUtils.clearContextServiceDC();
 		}
-		if (logger.isTraceEnabled() && (end != 0)) logger.trace("[{}] PublicService: cleanup() took {} ms [{}]", instance.SERVICE_ID, TimeUnit.MILLISECONDS.convert(end-start, TimeUnit.NANOSECONDS), instance.SERVICE_ID);
+		if (LOGGER.isTraceEnabled() && (end != 0)) LOGGER.trace("[{}] PublicService: cleanup() took {} ms [{}]", instance.SERVICE_ID, TimeUnit.MILLISECONDS.convert(end-start, TimeUnit.NANOSECONDS), instance.SERVICE_ID);
 	}
 	
 	private boolean createBackgroundService(String serviceId) {
@@ -1031,46 +1009,46 @@ public class ServiceManager {
 		
 		BaseBackgroundService instance = null;
 		try {
-			if (logger.isTraceEnabled()) logger.trace("[{}] BackgroundService: instantiating class '{}'", serviceId, descr.getManifest().getBackgroundServiceClassName());
+			if (LOGGER.isTraceEnabled()) LOGGER.trace("[{}] BackgroundService: instantiating class '{}'", serviceId, descr.getManifest().getBackgroundServiceClassName());
 			instance = (BaseBackgroundService)descr.getBackgroundServiceClass().newInstance();
 		} catch(Throwable t) {
-			logger.error("[{}] BackgroundService: instantiation of '{}' throws errors", serviceId, descr.getManifest().getBackgroundServiceClassName(), t);
+			LOGGER.error("[{}] BackgroundService: instantiation of '{}' throws errors", serviceId, descr.getManifest().getBackgroundServiceClassName(), t);
 			return null;
 		}
-		instance.configure(scheduler, wta.getAdminSubject());
+		instance.configure(scheduler, getWebTopApp().getAdminSubject());
 		return instance;
 	}
 	
 	private void initializeBackgroundService(BaseBackgroundService instance) {
 		long start = 0, end = 0;
-		logger.trace("[{}] BackgroundService: calling initialize()", instance.SERVICE_ID);
+		LOGGER.trace("[{}] BackgroundService: calling initialize()", instance.SERVICE_ID);
 		try {
 			LoggerUtils.setContextDC(instance.SERVICE_ID);
 			start = System.nanoTime();
 			instance.initialize();
 			end = System.nanoTime();
 		} catch(Throwable t) {
-			logger.error("[{}] BackgroundService: initialize() throws errors [{}]", instance.SERVICE_ID, instance.getClass().getCanonicalName(), t);
+			LOGGER.error("[{}] BackgroundService: initialize() throws errors [{}]", instance.SERVICE_ID, instance.getClass().getCanonicalName(), t);
 		} finally {
 			LoggerUtils.clearContextServiceDC();
 		}
-		if (logger.isTraceEnabled() && (end != 0)) logger.trace("[{}] BackgroundService: initialize() took {} ms", instance.SERVICE_ID, TimeUnit.MILLISECONDS.convert(end-start, TimeUnit.NANOSECONDS), instance.SERVICE_ID);
+		if (LOGGER.isTraceEnabled() && (end != 0)) LOGGER.trace("[{}] BackgroundService: initialize() took {} ms", instance.SERVICE_ID, TimeUnit.MILLISECONDS.convert(end-start, TimeUnit.NANOSECONDS), instance.SERVICE_ID);
 	}
 	
 	private void cleanupBackgroundService(BaseBackgroundService instance) {
 		long start = 0, end = 0;
-		logger.trace("[{}] BackgroundService: calling cleanup()", instance.SERVICE_ID);
+		LOGGER.trace("[{}] BackgroundService: calling cleanup()", instance.SERVICE_ID);
 		try {
 			LoggerUtils.setContextDC(instance.getManifest().getId());
 			start = System.nanoTime();
 			instance.cleanup();
 			end = System.nanoTime();
 		} catch(Throwable t) {
-			logger.error("[{}] BackgroundService: cleanup() throws errors [{}]", instance.SERVICE_ID, instance.getClass().getCanonicalName(), t);
+			LOGGER.error("[{}] BackgroundService: cleanup() throws errors [{}]", instance.SERVICE_ID, instance.getClass().getCanonicalName(), t);
 		} finally {
 			LoggerUtils.clearContextServiceDC();
 		}
-		if (logger.isTraceEnabled() && (end != 0)) logger.trace("[{}] BackgroundService: cleanup() took {} ms", instance.SERVICE_ID, TimeUnit.MILLISECONDS.convert(end-start, TimeUnit.NANOSECONDS), instance.SERVICE_ID);
+		if (LOGGER.isTraceEnabled() && (end != 0)) LOGGER.trace("[{}] BackgroundService: cleanup() took {} ms", instance.SERVICE_ID, TimeUnit.MILLISECONDS.convert(end-start, TimeUnit.NANOSECONDS), instance.SERVICE_ID);
 	}
 	
 	
@@ -1085,7 +1063,7 @@ public class ServiceManager {
 	
 	
 	private String generatePublicName(String serviceId) {
-		SettingsManager setm = wta.getSettingsManager();
+		SettingsManager setm = getWebTopApp().getSettingsManager();
 		String overriddenPublicName = setm.getServiceSetting(serviceId, CoreSettings.PUBLIC_NAME);
 		
 		if(!StringUtils.isEmpty(overriddenPublicName)) {
@@ -1119,12 +1097,12 @@ public class ServiceManager {
 						manifests.put(manifest.getId(), manifest);
 						
 					} else if (manifest.getVersion().compareTo(manifests.get(key).getVersion()) > 0) {
-						logger.warn("[{}] Version {} replaced by {}", manifest.getId(), manifests.get(key).getVersion(), manifest.getVersion());
+						LOGGER.warn("[{}] Version {} replaced by {}", manifest.getId(), manifests.get(key).getVersion(), manifest.getVersion());
 						manifests.put(manifest.getId(), manifest);
 					}
 				}
 			} catch(ConfigurationException ex) {
-				logger.error("Error while reading descriptor [{}]", url.toString(), ex);
+				LOGGER.error("Error while reading descriptor [{}]", url.toString(), ex);
 			}
 		}
 		
@@ -1149,7 +1127,7 @@ public class ServiceManager {
 		ArrayList<ServiceManifest> manifests = new ArrayList();
 		ServiceManifest manifest = null;
 		
-		logger.trace("Parsing descriptor [{}]", descriptorUri.toString());
+		LOGGER.trace("Parsing descriptor [{}]", descriptorUri.toString());
 		
 		FileBasedConfigurationBuilder<XMLConfiguration> builder = new FileBasedConfigurationBuilder<>(XMLConfiguration.class)
 			.configure(new Parameters()
@@ -1166,41 +1144,41 @@ public class ServiceManager {
 				manifests.add(manifest);
 				
 			} catch(Exception ex) {
-				logger.warn("Service descriptor for '{}' version {} skipped. Cause: {}", elService.getString("shortName"), elService.getString("version"), ex.getMessage());
+				LOGGER.warn("Service descriptor for '{}' version {} skipped. Cause: {}", elService.getString("shortName"), elService.getString("version"), ex.getMessage());
 			}
 		}
 		return manifests;
 	}
 	
 	private ServiceDescriptor registerService(ServiceManifest manifest) {
-		ConnectionManager conMgr = wta.getConnectionManager();
+		ConnectionManager conMgr = getWebTopApp().getConnectionManager();
 		ServiceDescriptor desc = null;
 		String serviceId = manifest.getId();
 		String xid = manifest.getXId();
 		
-		logger.info("[{}] Registering service...", serviceId);
+		LOGGER.info("[{}] Registering service...", serviceId);
 		synchronized(lock1) {
 			if (descriptors.containsKey(serviceId)) throw new WTRuntimeException("Service ID is already registered [{0}]", serviceId);	
 			if (xidToServiceId.containsKey(xid)) throw new WTRuntimeException("Service XID (short ID) is already bound to a service [{0} -> {1}]", xid, xidToServiceId.get(xid));
 			
 			desc = new ServiceDescriptor(manifest);
-			logger.info("[private:{}, public:{}, background:{}, userOptions:{}]", desc.hasPrivateService(), desc.hasPublicService(), desc.hasBackgroundService(), desc.hasUserOptionsService());
+			LOGGER.info("[private:{}, public:{}, background:{}, userOptions:{}]", desc.hasPrivateService(), desc.hasPublicService(), desc.hasBackgroundService(), desc.hasUserOptionsService());
 			
 			// Register dataSources
 			try {
 				// Add data-sources from file
 				DataSourcesConfig config = conMgr.getConfiguration();
 				DataSourcesConfig.HikariConfigMap sources = config.getSources(serviceId);
-				logger.debug("[{}] Found {} dataSources", serviceId, (sources != null) ? sources.size() : 0);
+				LOGGER.debug("[{}] Found {} dataSources", serviceId, (sources != null) ? sources.size() : 0);
 				if (sources != null) {
 					if (!serviceId.equals(CoreManifest.ID)) {
 						// If service provides its own sources, register them...
 						for (Entry<String, HikariConfig> entry : sources.entrySet()) {
 							try {
 								conMgr.registerDataSource(serviceId, entry.getKey(), entry.getValue());
-								logger.debug("[{}] {} OK", serviceId, entry.getKey());
+								LOGGER.debug("[{}] {} OK", serviceId, entry.getKey());
 							} catch(Throwable t1) {
-								logger.warn("[{}] {} Fail", serviceId, entry.getKey(), t1);
+								LOGGER.warn("[{}] {} Fail", serviceId, entry.getKey(), t1);
 							}
 						}
 					}
@@ -1215,7 +1193,7 @@ public class ServiceManager {
 			desc.setUpgraded(upgraded);
 			if(upgraded) {
 				// Force whatsnew pre-caching
-				desc.getWhatsnew(wta.getSystemLocale(), manifest.getOldVersion());
+				desc.getWhatsnew(getWebTopApp().getSystemLocale(), manifest.getOldVersion());
 			}
 
 			descriptors.put(serviceId, desc);
@@ -1224,7 +1202,7 @@ public class ServiceManager {
 			
 			String publicName = generatePublicName(serviceId);
 			if(publicNameToServiceId.containsKey(publicName)) {
-				logger.warn("Service public name [{}] conflict! [{} hides {}]", publicName, serviceId, publicNameToServiceId.get(publicName));
+				LOGGER.warn("Service public name [{}] conflict! [{} hides {}]", publicName, serviceId, publicNameToServiceId.get(publicName));
 				//TODO: valutare se portare il servizio in manutenzione
 			}
 			serviceIdToPublicName.put(serviceId, publicName);
@@ -1244,14 +1222,14 @@ public class ServiceManager {
 			IControllerInitHooks iface = (IControllerInitHooks)instance;
 			
 			// Add data-sources from hook
-			ConnectionManager conMgr = wta.getConnectionManager();
-			logger.debug("[{}] Calling 'initDataSources'...", serviceId);
+			ConnectionManager conMgr = getWebTopApp().getConnectionManager();
+			LOGGER.debug("[{}] Calling 'initDataSources'...", serviceId);
 			try {
 				LoggerUtils.setContextDC(instance.SERVICE_ID);
 				iface.initDataSources(new IControllerInitHooks.Context(this, conMgr, instance.SERVICE_ID));
 
 			} catch(Throwable t) {
-				logger.error("[{}] initDataSources() throws errors", serviceId, t);
+				LOGGER.error("[{}] initDataSources() throws errors", serviceId, t);
 			} finally {
 				LoggerUtils.clearContextServiceDC();
 			}
@@ -1264,7 +1242,7 @@ public class ServiceManager {
 	}
 	
 	private boolean upgradeServiceDb(ServiceDescriptor desc, ArrayList<SqlUpgradeScript> scripts, String upgradeTag, boolean autoUpdate) {
-		ConnectionManager conMgr = wta.getConnectionManager();
+		ConnectionManager conMgr = getWebTopApp().getConnectionManager();
 		UpgradeStatementDAO upgdao = UpgradeStatementDAO.getInstance();
 		boolean requireAdmin = false;
 		Connection con = null;
@@ -1280,7 +1258,7 @@ public class ServiceManager {
 					// Extracts and inserts statements
 					ArrayList<BaseScriptLine> scriptStatements = script.getStatements();
 					String targetDataSource = null;
-					logger.trace("Script {}: found {} statement/s", script.getFileName(), scriptStatements.size());
+					LOGGER.trace("Script {}: found {} statement/s", script.getFileName(), scriptStatements.size());
 					for(BaseScriptLine statement: scriptStatements) {
 						sequence++;
 						String stmtType, stmtDs;
@@ -1310,7 +1288,7 @@ public class ServiceManager {
 				// Reads all inserted statements (NB: id needs to be refreshed because it comes from a db sequence)
 				stmts = upgdao.selectFromIdByTagService(con, maxId == null ? -1 : maxId, upgradeTag, serviceId);
 				if(stmts.isEmpty()) {
-					logger.debug("DB upgrade is not necessary [{}]", serviceId);
+					LOGGER.debug("DB upgrade is not necessary [{}]", serviceId);
 				} else {
 					if(!autoUpdate) { // Manual
 						requireAdmin = true;
@@ -1318,13 +1296,13 @@ public class ServiceManager {
 					} else { // Auto: Runs statements...
 						HashMap<String, Connection> conCache = new HashMap<>();
 						try {
-							logger.debug("Executing upgrade statements [{}, {}]", serviceId, stmts.size());
+							LOGGER.debug("Executing upgrade statements [{}, {}]", serviceId, stmts.size());
 							boolean ignoreErrors = false;
 							for(OUpgradeStatement stmt: stmts) {
 								
 								if (stmt.getStatementType().equals(OUpgradeStatement.STATEMENT_TYPE_ANNOTATION)) {
 									if (RequireAdminAnnotationLine.matches(stmt.getStatementBody())) {
-										logger.trace("[{}, {}]: {}", stmt.getServiceId(), stmt.getSequenceNo(), stmt.getStatementBody());
+										LOGGER.trace("[{}, {}]: {}", stmt.getServiceId(), stmt.getSequenceNo(), stmt.getStatementBody());
 										requireAdmin = true;
 										break; // Stops iteration!
 									} else if (IgnoreErrorsAnnotationLine.matches(stmt.getStatementBody())) {
@@ -1350,12 +1328,12 @@ public class ServiceManager {
 									ignoreErrors = false; // Resets value!
 									
 								} else {
-									logger.trace("[{}, {}]: !!! {}", stmt.getServiceId(), stmt.getSequenceNo(), StringUtils.replace(stmt.getStatementBody(), "\n", " "));
+									LOGGER.trace("[{}, {}]: !!! {}", stmt.getServiceId(), stmt.getSequenceNo(), StringUtils.replace(stmt.getStatementBody(), "\n", " "));
 								}
 							}
 						} finally {
 							if (!conCache.isEmpty()) {
-								logger.trace("Closing connections [{}]", conCache.size());
+								LOGGER.trace("Closing connections [{}]", conCache.size());
 								Iterator<Entry<String, Connection>> it = conCache.entrySet().iterator();
 								while(it.hasNext()) {
 									final Entry<String, Connection> entry = it.next();
@@ -1369,7 +1347,7 @@ public class ServiceManager {
 			}
 		} catch(Throwable t) {
 			requireAdmin = true;
-			logger.error("Error handling upgrade script", t);
+			LOGGER.error("Error handling upgrade script", t);
 		} finally {
 			DbUtils.closeQuietly(con);
 			return requireAdmin;
@@ -1390,7 +1368,7 @@ public class ServiceManager {
 	}
 	
 	public boolean executeUpgradeStatement(OUpgradeStatement statement, boolean ignoreErrors) throws WTException {
-		ConnectionManager conMgr = wta.getConnectionManager();
+		ConnectionManager conMgr = getWebTopApp().getConnectionManager();
 		UpgradeStatementDAO upgdao = UpgradeStatementDAO.getInstance();
 		Connection con = null, targetCon = null;
 		
@@ -1414,14 +1392,14 @@ public class ServiceManager {
 	}
 	
 	public void skipUpgradeStatement(OUpgradeStatement statement) throws WTException {
-		ConnectionManager conMgr = wta.getConnectionManager();
+		ConnectionManager conMgr = getWebTopApp().getConnectionManager();
 		UpgradeStatementDAO upgdao = UpgradeStatementDAO.getInstance();
 		Connection con = null;
 		
 		try {
 			con = conMgr.getConnection();
 			statement.setRunStatus(OUpgradeStatement.RUN_STATUS_SKIPPED);
-			logger.trace("[{}, {}]: {}", statement.getServiceId(), statement.getSequenceNo(), statement.getStatementBody());
+			LOGGER.trace("[{}, {}]: {}", statement.getServiceId(), statement.getSequenceNo(), statement.getStatementBody());
 			upgdao.update(con, statement);
 			
 		} catch(SQLException | DAOException ex) {
@@ -1435,7 +1413,7 @@ public class ServiceManager {
 		Statement stmt = null;
 		
 		try {
-			logger.trace("[{}]: {}", statement.getUpgradeStatementId(), statement.getStatementBody());
+			LOGGER.trace("[{}]: {}", statement.getUpgradeStatementId(), statement.getStatementBody());
 			stmt = statementCon.createStatement();
 			statement.setRunTimestamp(JodaTimeUtils.now(true).withZone(DateTimeZone.getDefault()).toLocalDateTime());
 			int ret = stmt.executeUpdate(statement.getStatementBody());
@@ -1447,7 +1425,7 @@ public class ServiceManager {
 			if(!ignoreErrors) {
 				statement.setRunStatus(OUpgradeStatement.RUN_STATUS_ERROR);
 				statement.setRunMessage(ex.getMessage());
-				logger.trace("{}", statement.getRunMessage());
+				LOGGER.trace("{}", statement.getRunMessage());
 				return false;
 			} else {
 				statement.setRunStatus(OUpgradeStatement.RUN_STATUS_WARNING);
@@ -1460,7 +1438,7 @@ public class ServiceManager {
 	}
 	
 	private boolean upgradeCheck(ServiceManifest manifest) {
-		SettingsManager setm = wta.getSettingsManager();
+		SettingsManager setm = getWebTopApp().getSettingsManager();
 		ServiceVersion manifestVer = null, currentVer = null;
 		
 		// Gets current service's version info
@@ -1469,12 +1447,12 @@ public class ServiceManager {
 		
 		// Upgrade check!
 		if(manifestVer.compareTo(currentVer) > 0) {
-			logger.info("Upgrade found! [{} -> {}] Updating version setting...", currentVer.toString(), manifestVer.toString());
+			LOGGER.info("Upgrade found! [{} -> {}] Updating version setting...", currentVer.toString(), manifestVer.toString());
 			manifest.setOldVersion(currentVer);
 			setm.setServiceSetting(manifest.getId(), CoreSettings.MANIFEST_VERSION, manifestVer.toString());
 			return true;
 		} else {
-			logger.info("Not upgraded! [{} = {}]", manifestVer.toString(), currentVer.toString());
+			LOGGER.info("Not upgraded! [{} = {}]", manifestVer.toString(), currentVer.toString());
 			return false;
 		}
 	}
@@ -1489,20 +1467,20 @@ public class ServiceManager {
 		};
 		
 		try {
-			String postPath = wta.getFileSystem().getDbScriptsPostPath(serviceId);
-			logger.debug("Looking for post db-scripts in [{}]", postPath);
+			String postPath = getWebTopApp().getFileSystem().getDbScriptsPostPath(serviceId);
+			LOGGER.debug("Looking for post db-scripts in [{}]", postPath);
 			File postDir = new File(postPath);
 			if (postDir.exists()) {
 				File[] files = postDir.listFiles(sqlFilter);
 				if(files != null) {
 					for (File file: files) {
 						try {
-							logger.debug("Reading post db-scripts [{}]", file.getName());
+							LOGGER.debug("Reading post db-scripts [{}]", file.getName());
 							SqlUpgradeScript script = new SqlUpgradeScript(file);
 							scripts.add(script);
 
 						} catch(Exception ex1) {
-							logger.warn(ex1.getMessage());
+							LOGGER.warn(ex1.getMessage());
 							// increment error counter...
 						}
 					}
@@ -1510,7 +1488,7 @@ public class ServiceManager {
 			}
 			
 		} catch(Exception ex) {
-			logger.error("Error loading post db-scripts", ex);
+			LOGGER.error("Error loading post db-scripts", ex);
 		}
 		return scripts;
 	}

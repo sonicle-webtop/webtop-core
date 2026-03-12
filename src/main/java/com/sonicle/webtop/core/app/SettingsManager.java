@@ -39,6 +39,7 @@ import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 import com.sonicle.commons.db.DbUtils;
 import com.sonicle.commons.web.json.CId;
+import com.sonicle.webtop.core.app.exc.ManagerLifecycleException;
 import com.sonicle.webtop.core.app.sdk.EventSettingBase;
 import com.sonicle.webtop.core.sdk.interfaces.IServiceSettingReader;
 import com.sonicle.webtop.core.bol.ODomainSetting;
@@ -85,18 +86,12 @@ public final class SettingsManager extends AbstractAppManager<SettingsManager> i
 	private final LoadingCache<String, Optional<String>> userSettingsCache = Caffeine.newBuilder().build(new UserSettingsCacheLoader());
 	
 	SettingsManager(WebTopApp wta) {
-		super(wta, false);
-		initialize();
+		super(wta);
 	}
 	
 	@Override
 	protected Logger doGetLogger() {
 		return LOGGER;
-	}
-	
-	@Override
-	protected void doAppManagerInitialize() {
-		
 	}
 	
 	@Override

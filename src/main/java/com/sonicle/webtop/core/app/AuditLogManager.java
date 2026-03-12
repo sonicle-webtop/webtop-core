@@ -718,8 +718,8 @@ public class AuditLogManager extends AbstractAppManager<AuditLogManager> {
 			con = getWebTopApp().getConnectionManager().getConnection();
 			return igrDao.selectLastByIP(con, ipAddress);
 			
-		} catch(Throwable t) {
-			LOGGER.error("DB error", t);
+		} catch (Exception ex) {
+			LOGGER.error("DB error", ex);
 			return null;
 		} finally {
 			DbUtils.closeQuietly(con);
@@ -734,8 +734,8 @@ public class AuditLogManager extends AbstractAppManager<AuditLogManager> {
 			con = getWebTopApp().getConnectionManager().getConnection();
 			return igrDao.insert(con, oigr, BaseDAO.createRevisionTimestamp()) == 1;
 			
-		} catch(Throwable t) {
-			LOGGER.error("DB error", t);
+		} catch (Exception ex) {
+			LOGGER.error("DB error", ex);
 			return false;
 		} finally {
 			DbUtils.closeQuietly(con);

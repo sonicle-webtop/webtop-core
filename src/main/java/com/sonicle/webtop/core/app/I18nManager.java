@@ -34,6 +34,7 @@
 package com.sonicle.webtop.core.app;
 
 import com.sonicle.commons.db.DbUtils;
+import com.sonicle.webtop.core.app.exc.ManagerLifecycleException;
 import com.sonicle.webtop.core.dal.DAOException;
 import com.sonicle.webtop.core.dal.LanguageDAO;
 import com.sonicle.webtop.core.sdk.WTRuntimeException;
@@ -52,49 +53,32 @@ import org.slf4j.Logger;
  *
  * @author malbinola
  */
-public class I18nManager {
-	private static final Logger logger = WT.getLogger(I18nManager.class);
-	private static boolean initialized = false;
+public class I18nManager extends AbstractAppManager<I18nManager> {
+	private static final Logger LOGGER = WT.getLogger(I18nManager.class);
 	
-	/**
-	 * Initialization method. This method should be called once.
-	 * 
-	 * @param wta WebTopApp instance.
-	 * @return The instance.
-	 */
-	public static synchronized I18nManager initialize(WebTopApp wta) {
-		if (initialized) throw new RuntimeException("Initialization already done");
-		I18nManager locm = new I18nManager(wta);
-		initialized = true;
-		logger.info("Initialized");
-		return locm;
+	private static final String VALID_TIMEZONES_RE = "^(Etc|Africa|America|Asia|Atlantic|Australia|Europe|Indian|Pacific)/.*";
+	private List<TimeZone> timezones;
+	private HashMap<String, AppLocale> locales;
+	
+	I18nManager(WebTopApp wta) {
+		super(wta);
 	}
 	
-	private WebTopApp wta = null;
-	private static final String VALID_TIMEZONES_RE = "^(Etc|Africa|America|Asia|Atlantic|Australia|Europe|Indian|Pacific)/.*";
-	private final List<TimeZone> timezones;
-	private final HashMap<String, AppLocale> locales;
+	@Override
+	protected Logger doGetLogger() {
+		return LOGGER;
+	}
 	
-	/**
-	 * Private constructor.
-	 * Instances of this class must be created using static initialize method.
-	 * @param wta WebTopApp instance.
-	 */
-	private I18nManager(WebTopApp wta) {
-		this.wta = wta;
-		
+	@Override
+	protected void doAppManagerInitialize() {
 		timezones = loadTimezones();
 		locales = loadLocales();
 	}
 	
-	/**
-	 * Performs cleanup process.
-	 */
-	void cleanup() {
+	@Override
+	protected void doAppManagerCleanup() {
 		timezones.clear();
 		locales.clear();
-		wta = null;
-		logger.info("Cleaned up");
 	}
 	
 	public List<TimeZone> getTimezones() {
@@ -129,7 +113,7 @@ public class I18nManager {
 		Connection con = null;
 		
 		try {
-			con = wta.getConnectionManager().getConnection();
+			con = getConnection(true);
 			
 			HashMap<String, AppLocale> locs = new HashMap<>();
 			for (String tag : lanDao.selectTags(con)) {

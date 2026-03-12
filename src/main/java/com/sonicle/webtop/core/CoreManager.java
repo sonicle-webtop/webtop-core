@@ -3648,7 +3648,7 @@ public class CoreManager extends BaseManager {
 				return sseDao.selectKeyValueByLikeKeyLimit(con, targetPid.getDomainId(), targetPid.getUserId(), serviceId, context, "%"+newQuery+"%", max);
 			}
 		
-		} catch(SQLException | DAOException ex) {
+		} catch(Exception ex) {
 			logger.error("Error querying servicestore entry [{}, {}, {}, {}]", targetPid, serviceId, context, query, ex);
 			return new ArrayList<>();
 		} finally {
@@ -3669,7 +3669,7 @@ public class CoreManager extends BaseManager {
 		try {
 			con = WT.getCoreConnection();
 			return sseDao.select(con, targetPid.getDomainId(), targetPid.getUserId(), serviceId, context, key);
-		} catch(SQLException | DAOException ex) {
+		} catch(Exception ex) {
 			logger.error("Error querying servicestore entry [{}, {}, {}, {}]", targetPid, serviceId, context, key, ex);
 			return null;
 		} finally {
@@ -3891,7 +3891,7 @@ public class CoreManager extends BaseManager {
 			List<OAutosave> data=asdao.selectOthersByUserServices(con, targetPid.getDomainId(), targetPid.getUserId(), notWebtopClientId, listAllowedServices());
 			List<OAutosave> rdata=new ArrayList<>();
 			for(OAutosave as: data) {
-				if (!sm.isOnline(new UserProfileId(as.getDomainId(),as.getUserId()), as.getWebtopClientId()))
+				if (!sm.isOnlineQuietly(new UserProfileId(as.getDomainId(),as.getUserId()), as.getWebtopClientId()))
 					rdata.add(as);
 			}
 			return rdata;
