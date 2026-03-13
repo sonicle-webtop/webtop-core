@@ -76,11 +76,11 @@ import org.slf4j.LoggerFactory;
  */
 public class DocEditorManager extends AbstractAppManager<DocEditorManager> {
 	private static final Logger LOGGER = LoggerFactory.getLogger(DocEditorManager.class);
+	private final long timeToLiveMillis;
 	private final MultiValuedMap<String, String> editingIdsBySessionId = new ArrayListValuedHashMap<>();
 	private final Map<String, String> sessionIdByEditingId = new HashMap<>();
 	private final Map<String, BaseDocEditorDocumentHandler> handlers = new HashMap<>();
 	private final Map<String, EditingParams> handlersParams = new HashMap<>();
-	private final long timeToLiveMillis;
 	private final Map<String, Long> expirationCandidates = new HashMap();
 	
 	DocEditorManager(WebTopApp wta, final long timeToLiveMillis) {
@@ -112,110 +112,97 @@ public class DocEditorManager extends AbstractAppManager<DocEditorManager> {
 		Check.notNull(docHandler, "docHandler");
 		Check.notEmpty(filename, "filename");
 		
-		long stamp = readyLock();
+		ensureStateReady();
 		try {
-			try {
-				internalCleanupExpired(System.currentTimeMillis());
-				String editingId = buildEditingId(RunContext.getRunProfileId());
-				DocumentType type = getDocumentType(filename);
-				if (type == null) throw new WTException("File is not supported by DocumentEditor [{}]", filename);
-				String ext = getDocumentExtension(filename);
-				String key = buildDocumentKey(docHandler.getDocumentUniqueId(), lastModifiedTime);
-				String baseUrl = getWebTopApp().getDocumentServerLoopbackUrl();
-				String domainPublicName = WT.getDomainPublicName(docHandler.getTargetProfileId().getDomainId());
-				String url = generateUrl(baseUrl, domainPublicName, wtSessionId, editingId).toString();
-				String callbackUrl = buildCallbackUrl(baseUrl, domainPublicName, wtSessionId, editingId).toString();
-				
-				EditingParams params = new EditingParams(type, UriParser.decode(filename), ext, key, url, callbackUrl);
-				
-				LOGGER.debug("Registering DocumentHandler [{}, {}, {}, {} -> {}]", editingId, docHandler.getTargetProfileId().getDomainId(), wtSessionId, docHandler.getDocumentUniqueId(), filename);
-				LOGGER.debug("Document URL: {}", params.url);
-				LOGGER.debug("Document callback URL: {}", params.callbackUrl);
-				editingIdsBySessionId.put(wtSessionId, editingId);
-				sessionIdByEditingId.put(editingId, wtSessionId);
-				handlers.put(editingId, docHandler);
-				handlersParams.put(editingId, params);
-				
-				return new EditingResult(editingId, params.type, params.name, params.extension, docHandler.isWriteSupported());
+			internalCleanupExpired(System.currentTimeMillis());
+			String editingId = buildEditingId(RunContext.getRunProfileId());
+			DocumentType type = getDocumentType(filename);
+			if (type == null) throw new WTException("File is not supported by DocumentEditor [{}]", filename);
+			
+			String ext = getDocumentExtension(filename);
+			String key = buildDocumentKey(docHandler.getDocumentUniqueId(), lastModifiedTime);
+			String baseUrl = getWebTopApp().getDocumentServerLoopbackUrl();
+			String domainPublicName = WT.getDomainPublicName(docHandler.getTargetProfileId().getDomainId());
+			String url = generateUrl(baseUrl, domainPublicName, wtSessionId, editingId).toString();
+			String callbackUrl = buildCallbackUrl(baseUrl, domainPublicName, wtSessionId, editingId).toString();
 
-			} catch(URISyntaxException ex) {
-				LOGGER.error("Unable to build URL", ex);
-				return null;
-			}
-		} finally {
-			readyUnlock(stamp);
+			EditingParams params = new EditingParams(type, UriParser.decode(filename), ext, key, url, callbackUrl);
+
+			LOGGER.debug("Registering DocumentHandler [{}, {}, {}, {} -> {}]", editingId, docHandler.getTargetProfileId().getDomainId(), wtSessionId, docHandler.getDocumentUniqueId(), filename);
+			LOGGER.debug("Document URL: {}", params.url);
+			LOGGER.debug("Document callback URL: {}", params.callbackUrl);
+
+			editingIdsBySessionId.put(wtSessionId, editingId);
+			sessionIdByEditingId.put(editingId, wtSessionId);
+			handlers.put(editingId, docHandler);
+			handlersParams.put(editingId, params);
+
+			return new EditingResult(editingId, params.type, params.name, params.extension, docHandler.isWriteSupported());
+
+		} catch (URISyntaxException ex) {
+			LOGGER.error("Unable to build URL", ex);
+			return null;
 		}
 	}
 	
-	public OOClientAPIBaseConfig getClientAPIConfig(final String editingId, final boolean view) {
+	public OOClientAPIBaseConfig getClientAPIConfig(final String editingId, final boolean view) throws WTException {
 		Check.notEmpty(editingId, "editingId");
 		
+		//TODO: evaluate to remove wrapping try-catch
 		try {
-			long stamp = readyLock();
-			try {
-				LOGGER.debug("Generating ClientAPI config [{}]", editingId);
-				BaseDocEditorDocumentHandler docHandler = handlers.get(editingId);
-				EditingParams editingParams = handlersParams.get(editingId);
-				if (docHandler == null || editingParams == null) throw new WTNotFoundException("Editing session not found [{}]", editingId);
-				
-				OOClientAPIBaseConfig config = new OOClientAPIBaseConfig();
-				config.document.fileType = editingParams.extension;
-				config.document.key = editingParams.key;
-				config.document.title = editingParams.name;
-				config.document.url = editingParams.url;
-				if (docHandler.isWriteSupported()) config.document.permissions.allowEditing();
-				config.editorConfig.callbackUrl = editingParams.callbackUrl;
-				config.editorConfig.mode = view ? OOEditorConfig.Mode.VIEW : OOEditorConfig.Mode.EDIT;
-				
-				String secret = getWebTopApp().getDocumentServerSecretOut(docHandler.getTargetProfileId().getDomainId());
-				if (!StringUtils.isBlank(secret)) {
-					config.token = generateToken(config, secret.getBytes(StandardCharsets.UTF_8), SignatureAlgorithm.HS256);
-					LOGGER.debug("JWT: {}", config.token);
-				}
-				if (LOGGER.isDebugEnabled()) {
-					LOGGER.debug("JSON config: {}", JsonResult.gson(false).toJson(config, OOClientAPIBaseConfig.class));
-				}
-				
-				return config;
-				
-			} finally {
-				readyUnlock(stamp);
+			ensureStateReady();
+			LOGGER.debug("Generating ClientAPI config [{}]", editingId);
+			BaseDocEditorDocumentHandler docHandler = handlers.get(editingId);
+			EditingParams editingParams = handlersParams.get(editingId);
+			if (docHandler == null || editingParams == null) throw new WTNotFoundException("Editing session not found [{}]", editingId);
+
+			OOClientAPIBaseConfig config = new OOClientAPIBaseConfig();
+			config.document.fileType = editingParams.extension;
+			config.document.key = editingParams.key;
+			config.document.title = editingParams.name;
+			config.document.url = editingParams.url;
+			if (docHandler.isWriteSupported()) config.document.permissions.withAllowEditing();
+			config.editorConfig.callbackUrl = editingParams.callbackUrl;
+			config.editorConfig.mode = view ? OOEditorConfig.Mode.VIEW : OOEditorConfig.Mode.EDIT;
+
+			String secret = getWebTopApp().getDocumentServerSecretOut(docHandler.getTargetProfileId().getDomainId());
+			if (!StringUtils.isBlank(secret)) {
+				config.token = generateToken(config, secret.getBytes(StandardCharsets.UTF_8), SignatureAlgorithm.HS256);
+				LOGGER.debug("JWT: {}", config.token);
 			}
+			if (LOGGER.isDebugEnabled()) {
+				LOGGER.debug("JSON config: {}", JsonResult.gson(false).toJson(config, OOClientAPIBaseConfig.class));
+			}
+
+			return config;
+
 		} catch (WTException ex1) {
 			LOGGER.trace("Not ready", ex1);
 		}
 		return null;
 	}
 	
-	public void clearEditing(final String editingId) {
+	public void clearEditing(final String editingId) throws WTException {
 		Check.notEmpty(editingId, "editingId");
+		ensureStateReady();
 		
-		try {
-			long stamp = readyLock();
-			try {
-				LOGGER.debug("Unregistering DocumentHandler [{}]", editingId);
-				String sessionId = sessionIdByEditingId.remove(editingId);
-				editingIdsBySessionId.remove(sessionId);
-				handlers.remove(editingId);
-				handlersParams.remove(editingId);
-			} finally {
-				readyUnlock(stamp);
-			}
-		} catch (WTException ex1) {
-			LOGGER.trace("Not ready", ex1);
+		LOGGER.debug("Unregistering DocumentHandler [{}]", editingId);
+		String sessionId = sessionIdByEditingId.remove(editingId);
+		if (sessionId != null) {
+			editingIdsBySessionId.removeMapping(sessionId, editingId);
 		}
+		handlers.remove(editingId);
+		handlersParams.remove(editingId);
 	}
 	
 	public BaseDocEditorDocumentHandler getDocumentHandler(final String editingId) {
 		Check.notEmpty(editingId, "editingId");
 		
+		//TODO: evaluate to remove wrapping try-catch
 		try {
-			long stamp = readyLock();
-			try {
-				return handlers.get(editingId);
-			} finally {
-				readyUnlock(stamp);
-			}
+			ensureStateReady();
+			return handlers.get(editingId);
+				
 		} catch (WTException ex1) {
 			LOGGER.trace("Not ready", ex1);
 		}
@@ -227,16 +214,13 @@ public class DocEditorManager extends AbstractAppManager<DocEditorManager> {
 		return StringUtils.left(AlgoUtils.md5Hex(s), 20);
 	}
 	
-	void cleanupOnSessionDestroy(String sessionId) {
+	void cleanupOnSessionDestroy(final String sessionId) {
 		try {
-			long stamp = readyLock();
-			try {
-				if (editingIdsBySessionId.containsKey(sessionId)) {
-					expirationCandidates.put(sessionId, System.currentTimeMillis());
-				}
-			} finally {
-				readyUnlock(stamp);
+			ensureStateReady();
+			if (editingIdsBySessionId.containsKey(sessionId)) {
+				expirationCandidates.put(sessionId, System.currentTimeMillis());
 			}
+			
 		} catch (WTException ex1) {
 			LOGGER.trace("Not ready", ex1);
 		}
@@ -321,15 +305,25 @@ public class DocEditorManager extends AbstractAppManager<DocEditorManager> {
 	 */
 	public static class OODocument {
 		public String fileType;
+		// isForm
 		public String key;
+		// referenceData
 		public String title;
 		public String url;
+		
 		public final Permissions permissions = new Permissions();
-
+		
+		// https://api.onlyoffice.com/docs/docs-api/usage-api/config/document/#referencedata
+		public static class ReferenceData {
+			public String fileKey;
+			public String instanceId;
+		}
+		
+		// https://api.onlyoffice.com/docs/docs-api/usage-api/config/document/permissions/
 		public static class Permissions {
 			public boolean chat = false;
 			public boolean comment = false;
-			//commentGroups
+			// commentGroups
 			public boolean copy = true;
 			public boolean deleteCommentAuthorOnly = false;
 			public boolean download = true;
@@ -341,21 +335,16 @@ public class DocEditorManager extends AbstractAppManager<DocEditorManager> {
 			public boolean print = true;
 			public boolean protect = false;
 			public boolean review = false;
-			//reviewGroups
-			//userInfoGroups
+			// reviewGroups
+			// userInfoGroups
 			
-			public void allowEditing() {
+			public Permissions withAllowEditing() {
 				this.comment = true;
 				this.edit = true;
 				this.protect = true;
 				this.review = true;
+				return this;
 			}
-		}
-
-		public static class ReferenceData {
-			public String fileKey;
-			public String instanceId;
-
 		}
 	}
 	
@@ -363,13 +352,55 @@ public class DocEditorManager extends AbstractAppManager<DocEditorManager> {
 	 * https://api.onlyoffice.com/docs/docs-api/usage-api/config/editor/
 	 */
 	public static class OOEditorConfig {
+		// actionLink
 		public String callbackUrl;
+		// coEditing 
+		// createUrl
+		// lang
+		// location
 		public Mode mode = Mode.EDIT;
-		//...user
+		// recent
+		// region
+		// templates
+		// user
 		
+		// https://api.onlyoffice.com/docs/docs-api/usage-api/config/editor/#coediting
+		public static class CoEditing {
+			public Mode mode = Mode.FAST;
+			public boolean change = true;
+			
+			public static enum Mode {
+				@SerializedName("fast") FAST,
+				@SerializedName("strict") STRICT
+			}
+		}
+		
+		// https://api.onlyoffice.com/docs/docs-api/usage-api/config/editor/#mode
 		public static enum Mode {
 			@SerializedName("edit") EDIT,
 			@SerializedName("view") VIEW
+		}
+		
+		// https://api.onlyoffice.com/docs/docs-api/usage-api/config/editor/#recent
+		public static class Recent {
+			public String folder;
+			public String title;
+			public String url;
+		}
+		
+		// https://api.onlyoffice.com/docs/docs-api/usage-api/config/editor/#templates
+		public static class Template {
+			public String image;
+			public String title;
+			public String url;
+		}
+		
+		// https://api.onlyoffice.com/docs/docs-api/usage-api/config/editor/#user
+		public static class User {
+			public String group;
+			public String id;
+			public String image;
+			public String name;
 		}
 	}
 	

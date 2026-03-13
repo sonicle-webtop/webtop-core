@@ -46,6 +46,7 @@ import com.sonicle.webtop.core.app.exc.WTServletException;
 import com.sonicle.webtop.core.app.servlet.js.DocEditorCallbackPayload;
 import com.sonicle.webtop.core.app.servlet.js.DocEditorCallbackResponse;
 import com.sonicle.webtop.core.sdk.DomainURIPath;
+import com.sonicle.webtop.core.sdk.WTException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
@@ -65,7 +66,7 @@ import org.slf4j.LoggerFactory;
  * @author malbinola
  */
 public class DocEditor extends AbstractServlet {
-	private static final Logger logger = LoggerFactory.getLogger(DocEditor.class);
+	private static final Logger LOGGER = LoggerFactory.getLogger(DocEditor.class);
 	public static final String URL = "/doc-editor"; // Shiro.ini must reflect this URI!
 	public static final String DOWNLOAD_PATH = "/oo/download";
 	public static final String TRACK_PATH = "/oo/track";
@@ -80,8 +81,8 @@ public class DocEditor extends AbstractServlet {
 		threadState.bind();
 		try {
 			processRequestAsAdmin(request, response);
-		} catch(Throwable t) {
-			logger.error("Error fulfilling request", t);
+		} catch (Throwable t) {
+			LOGGER.error("Error fulfilling request", t);
 			throw t;
 		} finally {
 			threadState.clear();
@@ -94,7 +95,7 @@ public class DocEditor extends AbstractServlet {
 		DocEditorManager docEdMgr = wta.getDocEditorManager();
 		
 		String domainId = WT.findDomainIdByDomainPublicId(path.getDomainPublicName());
-		if (domainId == null) throw new WTServletException("Invalid domain public name [{0}]", path.getDomainPublicName());
+		if (domainId == null) throw new WTServletException("Invalid domain public name [{}]", path.getDomainPublicName());
 		if (!wta.getDocumentServerEnabled(domainId)) throw new WTServletException("DocumentServer not enabled for domain [{}]", domainId);
 		
 		String remainingPath = path.getRemainingPath();
@@ -112,7 +113,7 @@ public class DocEditor extends AbstractServlet {
 			Payload<MapItem, DocEditorCallbackPayload> payload = ServletUtils.getPayload(request, DocEditorCallbackPayload.class);
 			
 			if (payload.data.status == 1) {
-				logger.debug("Document is being edited [{}, {}]", editingId, payload.data.key);
+				LOGGER.debug("Document is being edited [{}, {}]", editingId, payload.data.key);
 				
 				ServletUtils.writeJsonResponse(response, new DocEditorCallbackResponse(0));
 				
@@ -121,9 +122,9 @@ public class DocEditor extends AbstractServlet {
 				if (docHandler == null) throw new WTServletException("Missing DocumentHandler [{}]", editingId);
 				
 				if (payload.data.status == 2) {
-					logger.debug("Document is ready for saving [{}, {}]", editingId, payload.data.key);
+					LOGGER.debug("Document is ready for saving [{}, {}]", editingId, payload.data.key);
 				} else if (payload.data.status == 6) {
-					logger.debug("Document is being edited, but the current document state is saved [{}, {}]", editingId, payload.data.key);
+					LOGGER.debug("Document is being edited, but the current document state is saved [{}, {}]", editingId, payload.data.key);
 				}
 				if (!docHandler.isWriteSupported()) throw new WTServletException("Write is not supported here [{}]", editingId);
 				
@@ -155,26 +156,34 @@ public class DocEditor extends AbstractServlet {
 				
 				//UserProfileId profileId = new UserProfileId(payload.data.users.get(0));
 				if (payload.data.status == 2) {
-					docEdMgr.clearEditing(editingId);
+					quietlyClearEditing(docEdMgr, editingId);
 				}
 				ServletUtils.writeJsonResponse(response, new DocEditorCallbackResponse(0));
 				
 			} else if ((payload.data.status == 3) || (payload.data.status == 7)) {
 				if (payload.data.status == 3) {
-					logger.error("Document saving error has occurred [{}, {}]", editingId, payload.data.key);
-					logger.error("Changes URL: {}", payload.data.changesurl);
+					LOGGER.error("Document saving error has occurred [{}, {}]", editingId, payload.data.key);
+					LOGGER.error("Changes URL: {}", payload.data.changesurl);
 					
 				} else if (payload.data.status == 7) {
-					logger.error("Error has occurred while force saving the document [{}, {}]", editingId, payload.data.key);
+					LOGGER.error("Error has occurred while force saving the document [{}, {}]", editingId, payload.data.key);
 				}
-				docEdMgr.clearEditing(editingId);
+				quietlyClearEditing(docEdMgr, editingId);
 				ServletUtils.writeJsonResponse(response, new DocEditorCallbackResponse(0));
 				
 			} else if (payload.data.status == 4) {
-				logger.debug("Document is closed with no changes [{}, {}]", editingId, payload.data.key);
-				docEdMgr.clearEditing(editingId);
+				LOGGER.debug("Document is closed with no changes [{}, {}]", editingId, payload.data.key);
+				quietlyClearEditing(docEdMgr, editingId);
 				ServletUtils.writeJsonResponse(response, new DocEditorCallbackResponse(0));
 			}
+		}
+	}
+	
+	private void quietlyClearEditing(final DocEditorManager mgr, final String editingId) {
+		try {
+			mgr.clearEditing(editingId);
+		} catch (WTException ex) {
+			LOGGER.warn("Unable to clear editing session [{}]", editingId, ex);
 		}
 	}
 }

@@ -1486,11 +1486,11 @@ public class WebTopSession {
 		return wta.getDocEditorManager().registerEditing(getId(), docHandler, filename, lastModifiedTime);
 	}
 	
-	public DocEditorManager.OOClientAPIBaseConfig docEditorGetClientAPIConfig(final String editingId, final boolean view) {
+	public DocEditorManager.OOClientAPIBaseConfig docEditorGetClientAPIConfig(final String editingId, final boolean view) throws WTException {
 		return wta.getDocEditorManager().getClientAPIConfig(editingId, view);
 	}
 	
-	public void docEditorFinalizeEditing(final String editingId) {
+	public void docEditorFinalizeEditing(final String editingId) throws WTException {
 		wta.getDocEditorManager().clearEditing(editingId);
 	}
 	
