@@ -16,7 +16,7 @@ import javax.validation.Valid;
 
 @Path("/principals/{profileUsername}")
 @Api(description = "the principals API")
-@javax.annotation.Generated(value = "org.openapitools.codegen.languages.JavaJAXRSSpecServerCodegen", date = "2026-02-27T16:20:59.935+01:00[Europe/Berlin]")
+@javax.annotation.Generated(value = "org.openapitools.codegen.languages.JavaJAXRSSpecServerCodegen", date = "2026-03-16T17:01:06.128+01:00[Europe/Berlin]")
 public abstract class PrincipalsApi extends com.sonicle.webtop.core.sdk.BaseRestApiResource {
 
     @GET

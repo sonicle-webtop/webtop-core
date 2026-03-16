@@ -18,7 +18,7 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
  **/
 @ApiModel(description = "Represents a recipient for communications.")
 @JsonTypeName("Recipient")
-@javax.annotation.Generated(value = "org.openapitools.codegen.languages.JavaJAXRSSpecServerCodegen", date = "2026-02-27T16:20:59.935+01:00[Europe/Berlin]")
+@javax.annotation.Generated(value = "org.openapitools.codegen.languages.JavaJAXRSSpecServerCodegen", date = "2026-03-16T17:01:06.128+01:00[Europe/Berlin]")
 public class ApiRecipient   {
   private @Valid String sourceId;
   private @Valid String sourceName;
@@ -26,54 +26,6 @@ public class ApiRecipient   {
   private @Valid String recipientId;
   private @Valid String personal;
   private @Valid String address;
-  public enum RcptTypeEnum {
-
-    TO(String.valueOf("to")), CC(String.valueOf("cc")), BCC(String.valueOf("bcc"));
-
-
-    private String value;
-
-    RcptTypeEnum (String v) {
-        value = v;
-    }
-
-    public String value() {
-        return value;
-    }
-
-    @Override
-    @JsonValue
-    public String toString() {
-        return String.valueOf(value);
-    }
-
-    /**
-     * Convert a String into String, as specified in the
-     * <a href="https://download.oracle.com/otndocs/jcp/jaxrs-2_0-fr-eval-spec/index.html">See JAX RS 2.0 Specification, section 3.2, p. 12</a>
-     */
-	public static RcptTypeEnum fromString(String s) {
-        for (RcptTypeEnum b : RcptTypeEnum.values()) {
-            // using Objects.toString() to be safe if value type non-object type
-            // because types like 'int' etc. will be auto-boxed
-            if (java.util.Objects.toString(b.value).equals(s)) {
-                return b;
-            }
-        }
-        throw new IllegalArgumentException("Unexpected string value '" + s + "'");
-	}
-	
-    @JsonCreator
-    public static RcptTypeEnum fromValue(String value) {
-        for (RcptTypeEnum b : RcptTypeEnum.values()) {
-            if (b.value.equals(value)) {
-                return b;
-            }
-        }
-        throw new IllegalArgumentException("Unexpected value '" + value + "'");
-    }
-}
-
-  private @Valid RcptTypeEnum rcptType;
 
   /**
    * The RecipientsProvider&#39;s ID.
@@ -196,26 +148,6 @@ public class ApiRecipient   {
     this.address = address;
   }
 
-  /**
-   * The recipient destination type, only useful for email recipient.
-   **/
-  public ApiRecipient rcptType(RcptTypeEnum rcptType) {
-    this.rcptType = rcptType;
-    return this;
-  }
-
-  
-  @ApiModelProperty(value = "The recipient destination type, only useful for email recipient.")
-  @JsonProperty("rcptType")
-  public RcptTypeEnum getRcptType() {
-    return rcptType;
-  }
-
-  @JsonProperty("rcptType")
-  public void setRcptType(RcptTypeEnum rcptType) {
-    this.rcptType = rcptType;
-  }
-
 
   @Override
   public boolean equals(Object o) {
@@ -231,13 +163,12 @@ public class ApiRecipient   {
         Objects.equals(this.origin, recipient.origin) &&
         Objects.equals(this.recipientId, recipient.recipientId) &&
         Objects.equals(this.personal, recipient.personal) &&
-        Objects.equals(this.address, recipient.address) &&
-        Objects.equals(this.rcptType, recipient.rcptType);
+        Objects.equals(this.address, recipient.address);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(sourceId, sourceName, origin, recipientId, personal, address, rcptType);
+    return Objects.hash(sourceId, sourceName, origin, recipientId, personal, address);
   }
 
   @Override
@@ -251,7 +182,6 @@ public class ApiRecipient   {
     sb.append("    recipientId: ").append(toIndentedString(recipientId)).append("\n");
     sb.append("    personal: ").append(toIndentedString(personal)).append("\n");
     sb.append("    address: ").append(toIndentedString(address)).append("\n");
-    sb.append("    rcptType: ").append(toIndentedString(rcptType)).append("\n");
     sb.append("}");
     return sb.toString();
   }

@@ -87,7 +87,6 @@ public class MeApiUtils extends BaseRestApiUtils {
 		tgt.setRecipientId(src.getRecipientId());
 		tgt.setAddress(src.getAddress());
 		tgt.setPersonal(src.getPersonal());
-		tgt.setRcptType(ApiRecipient.RcptTypeEnum.fromValue(EnumUtils.toSerializedName(src.getRcptType())));
 		return tgt;
 	}
 	
