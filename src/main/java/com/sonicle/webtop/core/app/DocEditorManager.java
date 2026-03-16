@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Sonicle S.r.l.
+ * Copyright (C) 2026 Sonicle S.r.l.
  *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by
@@ -28,7 +28,7 @@
  * version 3, these Appropriate Legal Notices must retain the display of the
  * Sonicle logo and Sonicle copyright notice. If the display of the logo is not
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
- * display the words "Copyright (C) 2018 Sonicle S.r.l.".
+ * display the words "Copyright (C) 2026 Sonicle S.r.l.".
  */
 package com.sonicle.webtop.core.app;
 
@@ -37,6 +37,7 @@ import com.sonicle.webtop.core.app.sdk.BaseDocEditorDocumentHandler;
 import com.sonicle.commons.AlgoUtils;
 import com.sonicle.commons.IdentifierUtils;
 import com.sonicle.commons.URIUtils;
+import com.sonicle.commons.concurrent.KeyedReentrantLocks;
 import com.sonicle.commons.time.JodaTimeUtils;
 import com.sonicle.commons.web.json.JsonResult;
 import com.sonicle.webtop.core.app.sdk.WTNotFoundException;
@@ -48,14 +49,18 @@ import io.jsonwebtoken.SignatureAlgorithm;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
+import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 import net.sf.qualitycheck.Check;
@@ -71,22 +76,32 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- *
+ * Manages active OnlyOffice editing sessions and the related runtime state.
+ * 
+ * This manager keeps track of:
+ * - the mapping between WebTop session IDs and active editing IDs
+ * - the runtime data associated with each editing session
+ * - delayed cleanup of editing sessions after HTTP session destruction
+ * 
+ * Concurrency model:
+ * - a keyed lock is used to serialize operations on the same editingId
+ * - a dedicated index lock protects shared secondary indexes based on sessionId
+ * 
  * @author malbinola
  */
 public class DocEditorManager extends AbstractAppManager<DocEditorManager> {
 	private static final Logger LOGGER = LoggerFactory.getLogger(DocEditorManager.class);
-	private final long timeToLiveMillis;
+	private final long expirationTTL;
 	private final MultiValuedMap<String, String> editingIdsBySessionId = new ArrayListValuedHashMap<>();
-	private final Map<String, String> sessionIdByEditingId = new HashMap<>();
-	private final Map<String, BaseDocEditorDocumentHandler> handlers = new HashMap<>();
-	private final Map<String, EditingParams> handlersParams = new HashMap<>();
-	private final Map<String, Long> expirationCandidates = new HashMap();
+	private final ConcurrentMap<String, EditingEntry> entriesByEditingId = new ConcurrentHashMap<>();
+	private final Map<String, Long> expirationQuarantine = new HashMap<>(); // Session IDs to be expired
+	private final Object indexLock = new Object();
+	private final KeyedReentrantLocks<String> editingLocks = new KeyedReentrantLocks<>();
 	
-	DocEditorManager(WebTopApp wta, final long timeToLiveMillis) {
+	DocEditorManager(WebTopApp wta, final long expirationTTL ){
 		super(wta);
-		this.timeToLiveMillis = timeToLiveMillis;
-		LOGGER.debug("timeToLive: {}", timeToLiveMillis);
+		this.expirationTTL = expirationTTL;
+		LOGGER.debug("expirationTTL: {}", expirationTTL);
 	}
 
 	@Override
@@ -95,77 +110,149 @@ public class DocEditorManager extends AbstractAppManager<DocEditorManager> {
 	}
 	
 	@Override
-	protected void doAppManagerCleanup() {
-		handlers.clear();
-		handlersParams.clear();
-		sessionIdByEditingId.clear();
-		editingIdsBySessionId.clear();
-		expirationCandidates.clear();
+	protected void doAppManagerCleanup() {	
+		synchronized (indexLock) {
+			editingIdsBySessionId.clear();
+			expirationQuarantine.clear();
+		}
+		entriesByEditingId.clear();
 	}
 	
 	public static boolean isEditable(final String fileName) {
 		return getDocumentType(fileName) != null;
 	}
 	
-	public EditingResult registerEditing(final String wtSessionId, final BaseDocEditorDocumentHandler docHandler, final String filename, final long lastModifiedTime) throws WTException, FileSystemException {
-		Check.notEmpty(wtSessionId, "wtSessionId");
+	/**
+	 * Builds a stable document key for OnlyOffice based on the document unique ID
+	 * and the last modification timestamp.
+	 * If the last modification timestamp is unavailable, the current time is used.
+	 * @param documentUniqueId the logical unique identifier of the document
+	 * @param lastModifiedTime the last modification time, or a negative value if unavailable
+	 * @return a shortened MD5-based document key
+	 */
+	public String buildDocumentKey(final String documentUniqueId, final long lastModifiedTime) {
+		String s = documentUniqueId + String.valueOf((lastModifiedTime > -1) ? lastModifiedTime : JodaTimeUtils.now().getMillis());
+		return StringUtils.left(AlgoUtils.md5Hex(s), 20);
+	}
+	
+	/**
+	 * Marks all editing sessions associated with the specified WebTop session
+	 * as expiration candidates.
+	 * Cleanup is intentionally delayed to tolerate late callbacks or trailing requests
+	 * that may still arrive shortly after HTTP session destruction.
+	 * @param sessionId the destroyed WebTop session ID
+	 */
+	void onHttpSessionDestroyCleanup(final String sessionId) {
+		try {
+			LOGGER.debug("onHttpSessionDestroyCleanup [{}]", sessionId);
+			ensureStateReady();
+			synchronized (indexLock) {
+				if (editingIdsBySessionId.containsKey(sessionId)) {
+					long millis = System.currentTimeMillis();
+					LOGGER.debug("Adding HTTP session '{}' into expiration quarantine [{}]", sessionId, millis);
+					expirationQuarantine.put(sessionId, millis);
+					
+				} else {
+					LOGGER.debug("No editing-sessions bound to HTTP session '{}'", sessionId);
+				}
+			}
+			
+		} catch (WTException ex) {
+			// Do NOT rethrown errors...
+			LOGGER.warn("Manager NOT ready yet", ex);
+		}
+	}
+	
+	/**
+	 * Registers a new document editing session and returns the client-side metadata
+	 * required to initialize the editor.
+	 * 
+	 * A fresh editing ID is generated for each registration.
+	 * Before creating the new session, expired cleanup candidates are processed.
+	 * 
+	 * @param sessionId the owning HTTP session ID
+	 * @param docHandler the document handler backing the editing session
+	 * @param filename the original document filename
+	 * @param lastModifiedTime the document last modification time, or a negative value if unavailable
+	 * @return the editing session descriptor
+	 * @throws WTException if the file type is unsupported, the manager is not ready
+	 * @throws FileSystemException if the document handler cannot access the target resource
+	 */
+	public EditingResult registerEditing(final String sessionId, final BaseDocEditorDocumentHandler docHandler, final String filename, final long lastModifiedTime) throws WTException, FileSystemException {
+		Check.notEmpty(sessionId, "sessionId");
 		Check.notNull(docHandler, "docHandler");
 		Check.notEmpty(filename, "filename");
 		
+		LOGGER.debug("Registering new editing-session [{}, '{}']", sessionId, filename);
+		DocumentType type = getDocumentType(filename);
+		if (type == null) throw new WTException("File is not supported by DocumentEditor [{}]", filename);
+		
 		ensureStateReady();
+		internalCleanupExpiredSessions(System.currentTimeMillis());
+		
+		final String editingId = buildEditingId(RunContext.getRunProfileId());
+		LOGGER.debug("{} is the generated editing ID [{}, {}]", editingId, sessionId, filename);
+		editingLocks.lock(editingId);
 		try {
-			internalCleanupExpired(System.currentTimeMillis());
-			String editingId = buildEditingId(RunContext.getRunProfileId());
-			DocumentType type = getDocumentType(filename);
-			if (type == null) throw new WTException("File is not supported by DocumentEditor [{}]", filename);
-			
 			String ext = getDocumentExtension(filename);
 			String key = buildDocumentKey(docHandler.getDocumentUniqueId(), lastModifiedTime);
 			String baseUrl = getWebTopApp().getDocumentServerLoopbackUrl();
 			String domainPublicName = WT.getDomainPublicName(docHandler.getTargetProfileId().getDomainId());
-			String url = generateUrl(baseUrl, domainPublicName, wtSessionId, editingId).toString();
-			String callbackUrl = buildCallbackUrl(baseUrl, domainPublicName, wtSessionId, editingId).toString();
-
+			String url = generateUrl(baseUrl, domainPublicName, sessionId, editingId).toString();
+			String callbackUrl = buildCallbackUrl(baseUrl, domainPublicName, sessionId, editingId).toString();
 			EditingParams params = new EditingParams(type, UriParser.decode(filename), ext, key, url, callbackUrl);
+			EditingEntry entry = new EditingEntry(sessionId, docHandler, params);
 
-			LOGGER.debug("Registering DocumentHandler [{}, {}, {}, {} -> {}]", editingId, docHandler.getTargetProfileId().getDomainId(), wtSessionId, docHandler.getDocumentUniqueId(), filename);
+			LOGGER.debug("DocumentHandler [{}, {}, {}, {} -> '{}']", docHandler.getTargetProfileId(), editingId, sessionId, docHandler.getDocumentUniqueId(), filename);
 			LOGGER.debug("Document URL: {}", params.url);
 			LOGGER.debug("Document callback URL: {}", params.callbackUrl);
-
-			editingIdsBySessionId.put(wtSessionId, editingId);
-			sessionIdByEditingId.put(editingId, wtSessionId);
-			handlers.put(editingId, docHandler);
-			handlersParams.put(editingId, params);
+			
+			LOGGER.debug("Registering editing-session [{}]", editingId);
+			entriesByEditingId.put(editingId, entry);
+			synchronized (indexLock) {
+				editingIdsBySessionId.put(sessionId, editingId);
+				expirationQuarantine.remove(sessionId);
+			}
 
 			return new EditingResult(editingId, params.type, params.name, params.extension, docHandler.isWriteSupported());
 
 		} catch (URISyntaxException ex) {
-			LOGGER.error("Unable to build URL", ex);
-			return null;
+			throw new WTException("Unable to build URL", ex);
+			
+		} finally {
+			editingLocks.unlock(editingId);
 		}
 	}
 	
+	/**
+	 * Builds the OnlyOffice client configuration for the specified editing session.
+	 * The returned object includes document metadata, permissions, callback URL
+	 * and, when configured, a signed JWT token.
+	 * @param editingId the editing session identifier
+	 * @param view `true` to open the editor in view mode, `false` for edit mode
+	 * @return the client API configuration
+	 * @throws WTException if the manager is not ready or the editing session does not exist
+	 */
 	public OOClientAPIBaseConfig getClientAPIConfig(final String editingId, final boolean view) throws WTException {
 		Check.notEmpty(editingId, "editingId");
+		ensureStateReady();
 		
-		//TODO: evaluate to remove wrapping try-catch
+		LOGGER.debug("Generating OO client config for editing-session [{}]", editingId);
+		editingLocks.lock(editingId);
 		try {
-			ensureStateReady();
-			LOGGER.debug("Generating ClientAPI config [{}]", editingId);
-			BaseDocEditorDocumentHandler docHandler = handlers.get(editingId);
-			EditingParams editingParams = handlersParams.get(editingId);
-			if (docHandler == null || editingParams == null) throw new WTNotFoundException("Editing session not found [{}]", editingId);
-
+			EditingEntry entry = entriesByEditingId.get(editingId);
+			if (entry == null) throw new WTNotFoundException("Editing-session not found [{}]", editingId);
+			
 			OOClientAPIBaseConfig config = new OOClientAPIBaseConfig();
-			config.document.fileType = editingParams.extension;
-			config.document.key = editingParams.key;
-			config.document.title = editingParams.name;
-			config.document.url = editingParams.url;
-			if (docHandler.isWriteSupported()) config.document.permissions.withAllowEditing();
-			config.editorConfig.callbackUrl = editingParams.callbackUrl;
+			config.document.fileType = entry.params.extension;
+			config.document.key = entry.params.key;
+			config.document.title = entry.params.name;
+			config.document.url = entry.params.url;
+			if (entry.handler.isWriteSupported()) config.document.permissions.withAllowEditing();
+			config.editorConfig.callbackUrl = entry.params.callbackUrl;
 			config.editorConfig.mode = view ? OOEditorConfig.Mode.VIEW : OOEditorConfig.Mode.EDIT;
-
-			String secret = getWebTopApp().getDocumentServerSecretOut(docHandler.getTargetProfileId().getDomainId());
+			
+			String secret = getWebTopApp().getDocumentServerSecretOut(entry.handler.getTargetProfileId().getDomainId());
 			if (!StringUtils.isBlank(secret)) {
 				config.token = generateToken(config, secret.getBytes(StandardCharsets.UTF_8), SignatureAlgorithm.HS256);
 				LOGGER.debug("JWT: {}", config.token);
@@ -173,81 +260,124 @@ public class DocEditorManager extends AbstractAppManager<DocEditorManager> {
 			if (LOGGER.isDebugEnabled()) {
 				LOGGER.debug("JSON config: {}", JsonResult.gson(false).toJson(config, OOClientAPIBaseConfig.class));
 			}
-
 			return config;
-
-		} catch (WTException ex1) {
-			LOGGER.trace("Not ready", ex1);
+			
+		} finally {
+			editingLocks.unlock(editingId);
 		}
-		return null;
 	}
 	
+	/**
+	 * Returns the document handler associated with the specified editing session.
+	 * @param editingId the editing session identifier
+	 * @return the associated document handler
+	 * @throws WTException if the manager is not ready or the editing session does not exist
+	 */
+	public BaseDocEditorDocumentHandler getDocumentHandler(final String editingId) throws WTException {
+		Check.notEmpty(editingId, "editingId");
+		
+		ensureStateReady();
+		editingLocks.lock(editingId);
+		try {
+			EditingEntry entry = entriesByEditingId.get(editingId);
+			if (entry == null) throw new WTNotFoundException("Editing-session not found [{}]", editingId);
+			return entry.handler;
+
+		} finally {
+			editingLocks.unlock(editingId);
+		}
+	}
+	
+	/**
+	 * Removes a single editing session from the manager and updates all related indexes.
+	 * This method only removes the specified editing ID and preserves any other
+	 * editing sessions still associated with the same WebTop session.
+	 * @param editingId the editing session identifier
+	 * @throws WTException if the manager is not ready
+	 */
 	public void clearEditing(final String editingId) throws WTException {
 		Check.notEmpty(editingId, "editingId");
 		ensureStateReady();
 		
-		LOGGER.debug("Unregistering DocumentHandler [{}]", editingId);
-		String sessionId = sessionIdByEditingId.remove(editingId);
-		if (sessionId != null) {
-			editingIdsBySessionId.removeMapping(sessionId, editingId);
-		}
-		handlers.remove(editingId);
-		handlersParams.remove(editingId);
-	}
-	
-	public BaseDocEditorDocumentHandler getDocumentHandler(final String editingId) {
-		Check.notEmpty(editingId, "editingId");
-		
-		//TODO: evaluate to remove wrapping try-catch
+		LOGGER.debug("Clear editing-session [{}]", editingId);
+		editingLocks.lock(editingId);
 		try {
-			ensureStateReady();
-			return handlers.get(editingId);
-				
-		} catch (WTException ex1) {
-			LOGGER.trace("Not ready", ex1);
-		}
-		return null;
-	}
-	
-	public String buildDocumentKey(String documentUniqueId, long lastModifiedTime) {
-		String s = documentUniqueId + String.valueOf((lastModifiedTime > -1) ? lastModifiedTime : JodaTimeUtils.now().getMillis());
-		return StringUtils.left(AlgoUtils.md5Hex(s), 20);
-	}
-	
-	void cleanupOnSessionDestroy(final String sessionId) {
-		try {
-			ensureStateReady();
-			if (editingIdsBySessionId.containsKey(sessionId)) {
-				expirationCandidates.put(sessionId, System.currentTimeMillis());
-			}
-			
-		} catch (WTException ex1) {
-			LOGGER.trace("Not ready", ex1);
-		}
-	}
-	
-	private void internalCleanupExpired(final long now) {
-		final Iterator<Map.Entry<String, Long>> it = expirationCandidates.entrySet().iterator();
-		while (it.hasNext()) {
-			final Map.Entry<String, Long> entry = it.next();
-			if (now >= (entry.getValue() + timeToLiveMillis)) {
-				final String sessionId = entry.getKey();
-				if (editingIdsBySessionId.containsKey(sessionId)) {
-					LOGGER.debug("Expiring entries for session {}", sessionId);
-					internalRemoveBySession(sessionId);
+			LOGGER.debug("Unregistering editing-entry... [{}]", editingId);
+			EditingEntry entry = entriesByEditingId.remove(editingId);
+			if (entry != null) {
+				LOGGER.debug("Removing HTTP session mapping [{}, {}]", editingId, entry.sessionId);
+				synchronized (indexLock) {
+					editingIdsBySessionId.removeMapping(entry.sessionId, editingId);
+					// do not remove expirationCandidates here
+					/*
+					if (!editingIdsBySessionId.containsKey(entry.sessionId)) {
+						expirationCandidatesBySessionId.remove(entry.sessionId);
+					}
+					*/
 				}
 			}
-			it.remove();
+			
+		} finally {
+			editingLocks.unlock(editingId);
 		}
 	}
 	
+	/**
+	 * Removes all sessions whose delayed cleanup TTL has expired.
+	 * This method first collects expired session IDs under the index lock and then
+	 * performs the actual removal outside that lock.
+	 * @param now 
+	 */
+	private void internalCleanupExpiredSessions(final long now) {
+		final Set<String> foundExpiredSessionIds = new LinkedHashSet<>();
+		LOGGER.debug("Cleaning expired HTTP sessions...");
+		synchronized (indexLock) {
+			for (Map.Entry<String, Long> entry : expirationQuarantine.entrySet()) {
+				if (now >= (entry.getValue() + expirationTTL)) {
+					LOGGER.debug("HTTP session '{}' is expired", entry.getKey());
+					foundExpiredSessionIds.add(entry.getKey());
+				}
+			}
+			for (String sessionId : foundExpiredSessionIds) {
+				LOGGER.debug("Removing HTTP session '{}' from expiration quarantine", sessionId);
+				expirationQuarantine.remove(sessionId);
+			}
+		}
+		for (String sessionId : foundExpiredSessionIds) {
+			LOGGER.debug("Expiring entries for HTTP session '{}'...", sessionId);
+			internalRemoveBySession(sessionId);
+		}
+	}
+	
+	/**
+	 * Removes all editing sessions associated with the specified WebTop session.
+	 * The related editing IDs are locked in deterministic order to reduce the risk
+	 * of lock-ordering issues during bulk cleanup.
+	 * @param sessionId 
+	 */
 	private void internalRemoveBySession(String sessionId) {
-		Collection<String> editingIds = editingIdsBySessionId.remove(sessionId);
+		final List<String> editingIds;
+		synchronized (indexLock) {
+			Collection<String> values = editingIdsBySessionId.get(sessionId);
+			if (values == null || values.isEmpty()) return;
+			editingIds = new ArrayList<>(values);
+			editingIdsBySessionId.remove(sessionId);
+			expirationQuarantine.remove(sessionId);
+		}
+		
+		Collections.sort(editingIds);
 		for (String editingId : editingIds) {
-			LOGGER.debug("Cleaning DocumentHandler [{}]", editingId);
-			sessionIdByEditingId.remove(editingId);
-			handlers.remove(editingId);
-			handlersParams.remove(editingId);
+			editingLocks.lock(editingId);
+		}
+		try {
+			for (String editingId : editingIds) {
+				LOGGER.debug("Cleaning editing-entry [{}]", editingId);
+				entriesByEditingId.remove(editingId);
+			}
+		} finally {
+			for (int i = editingIds.size() -1; i >= 0; --i) {
+				editingLocks.unlock(editingIds.get(i));
+			}
 		}
 	}
 	
@@ -287,6 +417,18 @@ public class DocEditorManager extends AbstractAppManager<DocEditorManager> {
 		if (!StringUtils.isBlank(sessionId)) builder.addParameter(DocEditor.SESSION_ID_PARAM, sessionId);
 		builder.addParameter(DocEditor.EDITING_ID_PARAM, editingId);
 		return builder.build();
+	}
+	
+	private static final class EditingEntry {
+		private final String sessionId;
+		private final BaseDocEditorDocumentHandler handler;
+		private final EditingParams params;
+		
+		private EditingEntry(final String sessionId, final BaseDocEditorDocumentHandler handler, final EditingParams params) {
+			this.sessionId = Check.notEmpty(sessionId, "sessionId");
+			this.handler = Check.notNull(handler, "handler");
+			this.params = Check.notNull(params, "params");
+		}
 	}
 	
 	/**

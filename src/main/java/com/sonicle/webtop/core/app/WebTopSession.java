@@ -158,7 +158,7 @@ public class WebTopSession {
 		}
 		
 		DocEditorManager docEdMgr = wta.getDocEditorManager();
-		if (docEdMgr != null) docEdMgr.cleanupOnSessionDestroy(session.getId());
+		if (docEdMgr != null) docEdMgr.onHttpSessionDestroyCleanup(session.getId());
 	}
 	
 	// TODO: rimuovere metodi deprecati

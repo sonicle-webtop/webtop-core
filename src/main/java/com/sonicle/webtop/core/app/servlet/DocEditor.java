@@ -102,8 +102,12 @@ public class DocEditor extends AbstractServlet {
 		if (StringUtils.equalsIgnoreCase(remainingPath, DOWNLOAD_PATH)) {
 			String editingId = ServletUtils.getStringParameter(request, EDITING_ID_PARAM, true);
 			
-			BaseDocEditorDocumentHandler docHandler = docEdMgr.getDocumentHandler(editingId);
-			if (docHandler == null) throw new WTServletException("Missing DocumentHandler [{}]", editingId);
+			BaseDocEditorDocumentHandler docHandler = null;
+			try {
+				docHandler = docEdMgr.getDocumentHandler(editingId);
+			} catch (WTException ex) {
+				throw new WTServletException("Missing DocumentHandler [{}]", editingId);
+			}
 			
 			ServletUtils.setContentTypeHeader(response, "application/octet-stream");
 			IOUtils.copy(docHandler.readDocument(), response.getOutputStream());
@@ -118,8 +122,12 @@ public class DocEditor extends AbstractServlet {
 				ServletUtils.writeJsonResponse(response, new DocEditorCallbackResponse(0));
 				
 			} else if ((payload.data.status == 2) || (payload.data.status == 6)) {
-				BaseDocEditorDocumentHandler docHandler = docEdMgr.getDocumentHandler(editingId);
-				if (docHandler == null) throw new WTServletException("Missing DocumentHandler [{}]", editingId);
+				BaseDocEditorDocumentHandler docHandler = null;
+				try {
+					docHandler = docEdMgr.getDocumentHandler(editingId);
+				} catch (WTException ex) {
+					throw new WTServletException("Missing DocumentHandler [{}]", editingId);
+				}
 				
 				if (payload.data.status == 2) {
 					LOGGER.debug("Document is ready for saving [{}, {}]", editingId, payload.data.key);
