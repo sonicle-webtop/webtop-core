@@ -33,6 +33,7 @@
 package com.sonicle.webtop.core.app;
 
 import com.sonicle.commons.LangUtils;
+import com.sonicle.commons.web.ServletUtils;
 import com.sonicle.commons.web.json.MapItem;
 import com.sonicle.webtop.core.sdk.ServiceVersion;
 import java.io.IOException;
@@ -57,7 +58,7 @@ public abstract class AbstractServlet extends HttpServlet {
 		try {
 			processGetOrPost(request, response);
 		} catch (Throwable t) {
-			response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, t.getMessage());
+			ServletUtils.sendError(response, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, t.getMessage());
 		}
 	}
 
@@ -66,7 +67,7 @@ public abstract class AbstractServlet extends HttpServlet {
 		try {
 			processGetOrPost(request, response);
 		} catch (Throwable t) {
-			response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, t.getMessage());
+			ServletUtils.sendError(response, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, t.getMessage());
 		}
 	}
 	

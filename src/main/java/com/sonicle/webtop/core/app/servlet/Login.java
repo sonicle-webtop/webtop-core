@@ -33,7 +33,6 @@
 package com.sonicle.webtop.core.app.servlet;
 
 import com.sonicle.commons.LangUtils;
-import com.sonicle.commons.web.CacheControl;
 import com.sonicle.commons.web.ServletUtils;
 import com.sonicle.commons.web.json.MapItem;
 import com.sonicle.webtop.core.CoreLocaleKey;

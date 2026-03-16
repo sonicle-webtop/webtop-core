@@ -144,6 +144,12 @@ public class ContextLoader {
 			servletContext.getSessionCookieConfig().setSecure(true);
 		}
 		
+		if (WebTopProps.getServletHealthCheckEnabled(properties)) {
+			Dynamic healthCheckServlet = servletContext.addServlet("HealthCheckServlet", com.sonicle.webtop.core.app.servlet.HealthCheck.class);
+			healthCheckServlet.setLoadOnStartup(1);
+			healthCheckServlet.addMapping(com.sonicle.webtop.core.app.servlet.HealthCheck.URL + "/*");
+		}
+		
 		try {
 			WebTopApp wta = new WebTopApp(servletContext, properties);
 			wta.boot();
@@ -217,6 +223,12 @@ public class ContextLoader {
 				restApiDocsServlet.setLoadOnStartup(2);
 				restApiDocsServlet.setAsyncSupported(true);
 				restApiDocsServlet.addMapping(com.sonicle.webtop.core.app.servlet.RestApiDocs.URL + "/*");
+			}
+			
+			if (WebTopProps.getServletMyIPEnabled(properties)) {
+				Dynamic myIPServlet = servletContext.addServlet("MyIPServlet", com.sonicle.webtop.core.app.servlet.MyIP.class);
+				myIPServlet.setLoadOnStartup(1);
+				myIPServlet.addMapping(com.sonicle.webtop.core.app.servlet.MyIP.URL + "/*");
 			}
 			
 		} catch (Throwable t) {

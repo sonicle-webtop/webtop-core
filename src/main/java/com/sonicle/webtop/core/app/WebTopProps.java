@@ -61,6 +61,8 @@ public class WebTopProps {
 	public static final String PROP_LOG_AUTH_TARGET = "webtop.log.auth.target";
 	public static final String PROP_LOGBACK_SYSLOG_HOST = "webtop.logback.syslog.host";
 	public static final String PROP_LOGBACK_SYSLOG_PORT = "webtop.logback.syslog.port";
+	public static final String PROP_SERVLET_HEALTHCHECK_ENABLED = "webtop.servlet.healthcheck.enabled";
+	public static final String PROP_SERVLET_MYIP_ENABLED = "webtop.servlet.myip.enabled";
 	public static final String PROP_EXTJS_DEBUG = "webtop.extjs.debug";
 	public static final String PROP_JS_DEBUG = "webtop.js.debug";
 	public static final String PROP_SOEXT_DEV_MODE = "webtop.soext.devmode";
@@ -157,6 +159,8 @@ public class WebTopProps {
 		WebTopApp.logger.info("{} = {} [{}]", PROP_LOG_AUTH_TARGET, properties.getProperty(PROP_LOG_AUTH_TARGET), getLogAuthTarget(emptyProperties));
 		WebTopApp.logger.info("{} = {} [{}]", PROP_LOGBACK_SYSLOG_HOST, properties.getProperty(PROP_LOGBACK_SYSLOG_HOST), getLogbackSyslogHost(emptyProperties));
 		WebTopApp.logger.info("{} = {} [{}]", PROP_LOGBACK_SYSLOG_PORT, properties.getProperty(PROP_LOGBACK_SYSLOG_PORT), getLogbackSyslogPort(emptyProperties));
+		WebTopApp.logger.info("{} = {} [{}]", PROP_SERVLET_HEALTHCHECK_ENABLED, properties.getProperty(PROP_SERVLET_HEALTHCHECK_ENABLED), getServletHealthCheckEnabled(emptyProperties));
+		WebTopApp.logger.info("{} = {} [{}]", PROP_SERVLET_MYIP_ENABLED, properties.getProperty(PROP_SERVLET_MYIP_ENABLED), getServletMyIPEnabled(emptyProperties));
 		WebTopApp.logger.info("{} = {} [{}]", PROP_EXTJS_DEBUG, properties.getProperty(PROP_EXTJS_DEBUG), getExtJsDebug(emptyProperties));
 		WebTopApp.logger.info("{} = {} [{}]", PROP_JS_DEBUG, properties.getProperty(PROP_JS_DEBUG), getJsDebug(emptyProperties));
 		WebTopApp.logger.info("{} = {} [{}]", PROP_SOEXT_DEV_MODE, properties.getProperty(PROP_SOEXT_DEV_MODE), getSoExtJsExtensionsDevMode(emptyProperties));
@@ -271,6 +275,14 @@ public class WebTopProps {
 	
 	public static int getLogbackSyslogPort(Properties props) {
 		return PropUtils.getIntProperty(props, PROP_LOGBACK_SYSLOG_PORT, 514);
+	}
+	
+	public static boolean getServletHealthCheckEnabled(Properties props) {
+		return PropUtils.getBooleanProperty(props, PROP_SERVLET_HEALTHCHECK_ENABLED, true);
+	}
+	
+	public static boolean getServletMyIPEnabled(Properties props) {
+		return PropUtils.getBooleanProperty(props, PROP_SERVLET_MYIP_ENABLED, true);
 	}
 	
 	public static boolean getExtJsDebug(Properties props) {
