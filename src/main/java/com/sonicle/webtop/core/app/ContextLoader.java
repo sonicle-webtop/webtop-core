@@ -199,10 +199,6 @@ public class ContextLoader {
 			docEditorServlet.setLoadOnStartup(1);
 			docEditorServlet.addMapping(com.sonicle.webtop.core.app.servlet.DocEditor.URL + "/*");
 			
-			Dynamic myIPServlet = servletContext.addServlet("MyIPServlet", com.sonicle.webtop.core.app.servlet.MyIP.class);
-			myIPServlet.setLoadOnStartup(1);
-			myIPServlet.addMapping(com.sonicle.webtop.core.app.servlet.MyIP.URL + "/*");
-			
 			// Adds RestAPIs Servlets dynamically
 			ServiceManager svcMgr = wta.getServiceManager();
 			for (String serviceId : svcMgr.listRegisteredServices()) {
