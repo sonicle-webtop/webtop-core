@@ -4959,6 +4959,7 @@
           "id": "yd10hffap156e"
         },
         "type": "object",
+        "description": "Represents a recipient for communications.",
         "properties": {
           "sourceId": {
             "type": "string",
@@ -5000,25 +5001,12 @@
               "id": "rbwuakanlq30b"
             },
             "description": "The recipient address (eg. email, number, etc...)"
-          },
-          "rcptType": {
-            "type": "string",
-            "x-stoplight": {
-              "id": "ogekctrrgh86l"
-            },
-            "enum": [
-              "to",
-              "cc",
-              "bcc"
-            ],
-            "description": "The recipient destination type, only useful for email recipient."
           }
         },
         "required": [
           "sourceId",
           "sourceName"
-        ],
-        "description": "Represents a recipient for communications."
+        ]
       }
     },
     "securitySchemes": {
