@@ -73,7 +73,7 @@ Ext.define('Sonicle.webtop.core.sdk.FolderSharingView', {
 		me.callParent([cfg]);
 		
 		Sonicle.VMUtils.applyFormulas(me.getVM(), {
-			foIsOrigin: WTF.foIsEqual('record', 'type', 'O'),
+			foIsOrigin: WTF.foFieldIsEqual('type', 'O'),
 			foFolderRightsLabel: WTF.foGetFn('record', 'type', function(v) {
 				var wildcard = (v === 'O') ? '.root' : '';
 				return WT.res('folderSharing.folderRights'+wildcard+'.lbl');

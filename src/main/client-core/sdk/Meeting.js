@@ -34,6 +34,7 @@ Ext.define('Sonicle.webtop.core.sdk.Meeting', {
 	alternateClassName: 'WTA.sdk.Meeting',
 	extend: 'WTA.sdk.UIView',
 	requires: [
+		'Sonicle.VMUtils',
 		'Sonicle.form.Spacer',
 		'Sonicle.form.Text',
 		'WTA.ux.field.Meeting'
@@ -68,13 +69,14 @@ Ext.define('Sonicle.webtop.core.sdk.Meeting', {
 	
 	initComponent: function() {
 		var me = this,
-				vm = me.getVM();
+			SoVMU = Sonicle.VMUtils,
+			vm = me.getVM();
 		
 		WTU.applyFormulas(vm, {
-			foHasLink: WTF.foIsEmpty(null, 'data.link', true),
-			foCopyEnabled: WTF.foIsEmpty(null, 'data.shareInfo', true),
-			foEmailEnabled: WTF.foIsEmpty(null, 'data.shareMailMessage', true),
-			foEventEnabled: WTF.foIsEmpty(null, 'data.shareEventDescription', true),
+			foHasLink: SoVMU.foPropIsEmpty('data', 'link', true),
+			foCopyEnabled: SoVMU.foPropIsEmpty('data', 'shareInfo', true),
+			foEmailEnabled: SoVMU.foPropIsEmpty('data', 'shareMailMessage', true),
+			foEventEnabled: SoVMU.foPropIsEmpty('data', 'shareEventDescription', true),
 			foIsMeetingLocation: WTF.foGetFn(null, 'data.link', function(val) {
 				return WT.isMeetingUrl(val);
 			})

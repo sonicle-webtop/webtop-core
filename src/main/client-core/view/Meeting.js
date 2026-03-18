@@ -34,6 +34,7 @@ Ext.define('Sonicle.webtop.core.view.Meeting', {
 	//extend: 'Sonicle.webtop.core.sdk.Meeting'
 	extend: 'WTA.sdk.UIView',
 	requires: [
+		'Sonicle.VMUtils',
 		'Sonicle.form.Spacer',
 		'Sonicle.form.Text',
 		'WTA.ux.field.Meeting',
@@ -76,12 +77,13 @@ Ext.define('Sonicle.webtop.core.view.Meeting', {
 	
 	initComponent: function() {
 		var me = this,
-				ic = me.getInitialConfig(),
-				vm = me.getVM();
+			SoVMU = Sonicle.VMUtils,
+			ic = me.getInitialConfig(),
+			vm = me.getVM();
 		
 		if (ic.data) vm.set('data', ic.data);
-		WTU.applyFormulas(vm, {
-			foHasLink: WTF.foIsEmpty(null, 'data.link', true),
+		SoVMU.applyFormulas(vm, {
+			foHasLink: SoVMU.foPropIsEmpty('data', 'link', true),
 			foIsMeetingLocation: WTF.foGetFn(null, 'data.link', function(val) {
 				return WT.isMeetingUrl(val);
 			})

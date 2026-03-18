@@ -63,7 +63,7 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 	
 	viewModel: {
 		formulas: {
-			isOTPActive: WTF.foIsEmpty('record', 'otpDelivery', true),
+			isOTPActive: WTF.foFieldIsEmpty('otpDelivery', true),
 			syncAlertEnabled: WTF.checkboxBind('record', 'syncAlertEnabled'),
 			imSoundOnFriendConnect: WTF.checkboxBind('record', 'imSoundOnFriendConnect'),
 			imSoundOnFriendDisconnect: WTF.checkboxBind('record', 'imSoundOnFriendDisconnect'),

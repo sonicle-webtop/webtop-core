@@ -89,7 +89,7 @@ Ext.define('Sonicle.webtop.core.view.CustomPanel', {
 		
 		WTU.applyFormulas(me.getVM(), {
 			foMainTitle: WTF.foRecordTwoWay('record', 'titleI18n', 'txt', WT.getLanguage()),
-			foTags: WTF.foFieldTwoWay('record', 'tags', function(v) {
+			foTags: WTF.foFieldTwoWay('tags', function(v) {
 					return Sonicle.String.split(v, '|');
 				}, function(v) {
 					return Sonicle.String.join('|', v);

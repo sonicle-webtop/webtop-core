@@ -1087,35 +1087,7 @@ Ext.define('Sonicle.webtop.core.app.Factory', {
 	
 	/**
 	 * Helper method for defining a {@link Ext.app.bind.Formula} that is able   
-	 * to perform a two-way binding within a ViewModel's property.
-	 * @param {String} pathPrefix ViewModel's property prefix.
-	 * Specify as empty string if you're working directly with viewModel.
-	 * @param {String} propName Property name to bind.
-	 * @param {Function} getFn Function that calculate and return the value to get.
-	 * @param {Function} setFn Function that calculate and return the value to set.
-	 * @param {Object} [opts] An object containing configuration.
-	 * @param {Function} [opts.noset] Set to `true` to NOT set the returned value in set method.
-	 * @returns {Object} Formula configuration object
-	 */
-	foPropTwoWay: function(pathPrefix, propName, getFn, setFn, opts) {
-		opts = opts || {};
-		var path = Sonicle.String.join('.', pathPrefix, propName);
-		return {
-			bind: {bindTo: '{'+path+'}'},
-			get: function(val) {
-				return Ext.callback(getFn, this, [val]);
-			},
-			set: function(val) {
-				var ret = Ext.callback(setFn, this, [val, path]);
-				if (!opts.noset) this.set(path, ret);
-			}
-		};
-	},
-	
-	/**
-	 * Helper method for defining a {@link Ext.app.bind.Formula} that is able   
 	 * to perform a two-way binding between form-field and a model's field.
-	 * @param {String} modelProp ViewModel's property in which the model is stored.
 	 * @param {String} fieldName Model's field name.
 	 * @param {Function} getFn Function that calculate and return the value to get.
 	 * @param {Mixed} getFn.value The candidate value to return (current field's value).
@@ -1129,26 +1101,8 @@ Ext.define('Sonicle.webtop.core.app.Factory', {
 	 * @param {Function} [opts.modelProp] Override dafault property ('record') in which the model is stored.
 	 * @returns {Object} Formula configuration object
 	 */
-	foFieldTwoWay: function(modelProp, fieldName, getFn, setFn, opts) {
-		opts = opts || {};
-		var path = Sonicle.String.join('.', modelProp, fieldName);
-		return {
-			bind: {bindTo: '{'+path+'}'},
-			get: function(val) {
-				return Ext.callback(getFn, this, [val, this.get(modelProp), fieldName]);
-			},
-			set: function(val) {
-				var mo = this.get(modelProp);
-				if (val !== undefined) mo.set(fieldName, Ext.callback(setFn, this, [val, mo, fieldName]));
-			}
-		};
-	},
-	
-	/**
-	 * @deprecated use foFieldTwoWay instead
-	 */
-	foTwoWay: function(modelProp, fieldName, getFn, setFn) {
-		return this.foFieldTwoWay(modelProp, fieldName, getFn, setFn);
+	foFieldTwoWay: function(fieldName, getFn, setFn, opts) {
+		return Sonicle.VMUtils.foFieldTwoWay.apply(this, Ext.Array.join(['record'], arguments));
 	},
 	
 	foRecordTwoWay: function(modelProp, fieldName, valueField, targetRecId) {
@@ -1182,60 +1136,48 @@ Ext.define('Sonicle.webtop.core.app.Factory', {
 	
 	/**
 	 * Defines a{@link Ext.app.bind.Formula} that checks the equality between 
-	 * a model field's value and passed value.
-	 * @param {String} modelProp ViewModel's property in which the model is stored
+	 * a model field's value and a passed value.
 	 * @param {String} fieldName Model's field name
 	 * @param {Mixed} equalsTo Value to match
 	 * @param {Boolean} [not=false] True to negate tests applying NOT operator
 	 * @returns {Object} Formula configuration object
 	 */
-	foIsEqual: function(modelProp, fieldName, equalsTo, not) {
-		if (arguments.length === 3) not = false;
-		return {
-			bind: {bindTo: '{'+Sonicle.String.join('.', modelProp, fieldName)+'}'},
-			get: function(val) {
-				return (not === true) ? (val !== equalsTo) : (val === equalsTo);
-			}
-		};
+	foFieldIsEqual: function(fieldName, equalsTo, not) {
+		return Sonicle.VMUtils.foPropIsEqual.apply(this, Ext.Array.join(['record'], arguments));
 	},
 	
 	/**
-	 * 
-	 * @param {String} modelProp ViewModel's property in which the model is stored
+	 * Defines a{@link Ext.app.bind.Formula} that checks if model field's value 
+	 * is equal to one (or none for the negated form) of the passed list of values.
 	 * @param {String} fieldName Model's field name
 	 * @param {Mixed[]|Mixed} values Allowed values list
-	 * @param {Boolean} [not=false] True to negate tests applying NOT operator
+	 * @param {Boolean} [not=false] Set to `true` to negate tests, applying NOT operator
 	 * @returns {Object} Formula configuration object
 	 */
-	foIsIn: function(modelProp, fieldName, values, not) {
-		if (arguments.length === 3) not = false;
-		values = Ext.Array.from(values);
-		return {
-			bind: {bindTo: '{'+Sonicle.String.join('.', modelProp, fieldName)+'}'},
-			get: function(val) {
-				var iof = values.indexOf(val);
-				return not === true ? iof === -1 : iof > -1;
-			}
-		};
+	foFieldIsIn: function(fieldName, values, not) {
+		return Sonicle.VMUtils.foPropIsIn.apply(this, Ext.Array.join(['record'], arguments));
 	},
 	
 	/**
 	 * Helper method for defining a {@link Ext.app.bind.Formula} that checks 
 	 * if specified field name is empty or not.
-	 * @param {String} modelProp ViewModel's property in which the model is stored
 	 * @param {String} fieldName Model's field name
 	 * @param {Boolean} [not=false] True to apply NOT operator
 	 * @returns {Object} Formula configuration object
 	 */
-	foIsEmpty: function(modelProp, fieldName, not) {
-		if (arguments.length === 2) not = false;
-		return {
-			bind: {bindTo: '{'+Sonicle.String.join('.', modelProp, fieldName)+'}'},
-			get: function(val) {
-				var ret = Ext.isEmpty(val);
-				return (not === true) ? !ret : ret;
-			}
-		};
+	foFieldIsEmpty: function(fieldName, not) {
+		return Sonicle.VMUtils.foPropIsEmpty.apply(this, Ext.Array.join(['record'], arguments));
+	},
+	
+	/**
+	 * Defines a {@link Ext.app.bind.Formula} that returns the model field's 
+	 * value if not empty, otherwise the specified default value.
+	 * @param {String} fieldName Model's field name
+	 * @param {Mixed} defaultValue Value to apply if empty
+	 * @returns {Object} Formula configuration object
+	 */
+	foFieldOrDefault: function(fieldName, defaultValue) {
+		return Sonicle.VMUtils.foPropOrDefault.apply(this, Ext.Array.join(['record'], arguments));
 	},
 	
 	/**
@@ -1293,23 +1235,6 @@ Ext.define('Sonicle.webtop.core.app.Factory', {
 			bind: {bindTo: '{'+Sonicle.String.join('.', modelProp, associationName, 'data')+'}', deep: true},
 			get: function(data) {
 				return getFn.apply(this, [data, (!data) ? 0 : data.length].concat(moreArgs));
-			}
-		};
-	},
-	
-	/**
-	 * Defines a {@link Ext.app.bind.Formula} that returns the model field's 
-	 * value if not empty, otherwise the specified default value.
-	 * @param {String} modelProp ViewModel's property in which the model is stored
-	 * @param {String} fieldName Model's field name
-	 * @param {Mixed} defaultValue Value to apply if empty
-	 * @returns {Object} Formula configuration object
-	 */
-	foDefaultIfEmpty: function(modelProp, fieldName, defaultValue) {
-		return {
-			bind: {bindTo: '{'+Sonicle.String.join('.', modelProp, fieldName)+'}'},
-			get: function(val) {
-				return Ext.isEmpty(val) ? defaultValue : val;
 			}
 		};
 	},
@@ -1379,10 +1304,58 @@ Ext.define('Sonicle.webtop.core.app.Factory', {
 	},
 	
 	/**
+	 * @deprecated Use {@link #foFieldTwoWay} (without modelProp) or {@link Sonicle.VMUtils#foFieldTwoWay} instead.
+	 */
+	foTwoWay: function(modelProp, fieldName, getFn, setFn) {
+		Ext.log.warn("[WT.core] WTF.foTwoWay is deprecated, see docs for more info!");
+		return Sonicle.VMUtils.foFieldTwoWay.apply(this, arguments);
+	},
+	
+	/**
+	 * @deprecated Use {@link Sonicle.VMUtils#foPropTwoWay} instead.
+	 */
+	foPropTwoWay: function(pathPrefix, propName, getFn, setFn, opts) {
+		Ext.log.warn("[WT.core] WTF.foPropTwoWay is deprecated, see docs for more info!");
+		return Sonicle.VMUtils.foPropTwoWay.apply(this, arguments);
+	},
+	
+	/**
+	 * @deprecated Use {@link #foFieldIsEqual} (without modelProp) or {@link Sonicle.VMUtils#foPropIsEqual} instead.
+	 */
+	foIsEqual: function(modelProp, fieldName, equalsTo, not) {
+		Ext.log.warn("[WT.core] WTF.foIsEqual is deprecated, see docs for more info!");
+		return Sonicle.VMUtils.foPropIsEqual.apply(this, arguments);
+	},
+	
+	/**
+	 * @deprecated Use {@link #foFieldIsIn} (without modelProp) or {@link Sonicle.VMUtils#foFieldIsIn} instead.
+	 */
+	foIsIn: function(modelProp, fieldName, values, not) {
+		Ext.log.warn("[WT.core] WTF.foIsIn is deprecated, see docs for more info!");
+		return Sonicle.VMUtils.foPropIsIn.apply(this, arguments);
+	},
+	
+	/**
+	 * @deprecated Use {@link #foFieldIsEmpty} (without modelProp) or {@link Sonicle.VMUtils#foPropIsEmpty} instead.
+	 */
+	foIsEmpty: function(modelProp, fieldName, not) {
+		//Ext.log.warn("[WT.core] WTF.foIsEmpty is deprecated, see docs for more info!");
+		return Sonicle.VMUtils.foPropIsEmpty.apply(this, arguments);
+	},
+	
+	/**
+	 * @deprecated Use {@link #foFieldOrDefault} (without modelProp) or {@link Sonicle.VMUtils#foPropOrDefault} instead.
+	 */
+	foDefaultIfEmpty: function(modelProp, fieldName, defaultValue) {
+		Ext.log.warn("[WT.core] WTF.foDefaultIfEmpty is deprecated, see docs for more info!");
+		return Sonicle.VMUtils.foPropOrDefault.apply(this, arguments);
+	},
+	
+	/**
 	 * @deprecated Use {@link #foGetFn} instead.
 	 */
 	foCompare: function(modelProp, fieldName, compareFn) {
-		Ext.log.warn("[WT.core] WTF.foCompare is deprecated, please use WTF.foGetFn instead.");
+		Ext.log.warn("[WT.core] WTF.foCompare is deprecated, see docs for more info!");
 		return this.foGetFn(modelProp, fieldName, compareFn);
 	}
 	

@@ -252,6 +252,23 @@ Ext.define('Sonicle.webtop.core.view.ThemeDebug', {
 					bodyPadding: 10,
 					html: 'Nothing to see here.'
 				}, {
+					title: 'Tab Progress',
+					bodyPadding: 10,
+					items: [
+						{
+							xtype: 'container',
+							layout: 'anchor',
+							defaults: {
+								labelWidth: 150
+							},
+							items: [
+								{
+									xtype: 'progressbar'
+								}
+							]
+						}
+					]
+				}, {
 					title: 'Tab Buttons',
 					bodyPadding: 10,
 					items: [

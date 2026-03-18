@@ -64,12 +64,13 @@ Ext.define('Sonicle.webtop.core.admin.view.Role', {
 	domainId: null,
 	
 	constructor: function(cfg) {
-		var me = this;
+		var me = this,
+			SoVMU = Sonicle.VMUtils;
 		if (!cfg.domainId) Ext.raise('domainId is mandatory');
 		me.callParent([cfg]);
 		
-		Sonicle.VMUtils.applyFormulas(me.getVM(), {
-			foIsNew: WTF.foIsEqual('_mode', null, me.MODE_NEW)
+		SoVMU.applyFormulas(me.getVM(), {
+			foIsNew: SoVMU.foPropIsEqual('', '_mode', me.MODE_NEW)
 		});
 	},
 	

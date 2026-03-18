@@ -33,6 +33,7 @@
 Ext.define('Sonicle.webtop.core.sdk.SQLQueryEditor', {
 	extend: 'WTA.sdk.OkView',
 	requires: [
+		'Sonicle.VMUtils',
 		'Sonicle.plugin.FieldTooltip',
 		'Sonicle.form.field.CodeEditor'
 	],
@@ -114,7 +115,7 @@ Ext.define('Sonicle.webtop.core.sdk.SQLQueryEditor', {
 					return !Ext.isEmpty(data.dataSourceId) && !Ext.isEmpty(data.rawSql);
 				}
 			},
-			foDSMissing: WTF.foIsEmpty(null, 'data.dataSourceId')
+			foDSMissing: SoVMU.foPropIsEmpty('data', 'dataSourceId')
 		});
 	},
 	

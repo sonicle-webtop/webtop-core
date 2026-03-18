@@ -55,15 +55,16 @@ Ext.define('Sonicle.webtop.core.admin.view.Domain', {
 	passwordPolicy: false,
 	
 	constructor: function(cfg) {
-		var me = this;
+		var me = this,
+			SoVMU = Sonicle.VMUtils;
 		me.callParent([cfg]);
 		
-		WTU.applyFormulas(me.getVM(), {
-			foIsNew: WTF.foIsEqual('_mode', null, me.MODE_NEW),
+		SoVMU.applyFormulas(me.getVM(), {
+			foIsNew: SoVMU.foPropIsEqual('', '_mode', me.MODE_NEW),
 			foEnabled: WTF.checkboxBind('record', 'enabled'),
 			foUserAutoCreation: WTF.checkboxBind('record', 'userAutoCreation'),
 			foDirCaseSensitive: WTF.checkboxBind('record', 'dirCaseSensitive'),
-			foActiveDir: WTF.foDefaultIfEmpty('record', 'dirScheme', 'empty'),
+			foActiveDir: WTF.foFieldOrDefault('dirScheme', 'empty'),
 			foPwdComplexity: WTF.checkboxBind('record', 'pwdComplexity'),
 			foPwdAvoidConsecutiveChars: WTF.checkboxBind('record', 'pwdAvoidConsecutiveChars'),
 			foPwdAvoidOldSimilarity: WTF.checkboxBind('record', 'pwdAvoidOldSimilarity'),

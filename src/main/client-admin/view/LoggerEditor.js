@@ -33,6 +33,7 @@
 Ext.define('Sonicle.webtop.core.admin.view.LoggerEditor', {
 	extend: 'WTA.sdk.UIView',
 	requires: [
+		'Sonicle.VMUtils',
 		'Sonicle.webtop.core.admin.store.LoggerLevel'
 	],
 	
@@ -63,11 +64,12 @@ Ext.define('Sonicle.webtop.core.admin.view.LoggerEditor', {
 	*/
 	
 	constructor: function(cfg) {
-		var me = this;
+		var me = this,
+			SoVMU = Sonicle.VMUtils;
 		me.callParent([cfg]);
 		
-		WTU.applyFormulas(me.getVM(), {
-			isValid: WTF.foIsEmpty('data', 'name', true)
+		SoVMU.applyFormulas(me.getVM(), {
+			isValid: SoVMU.foPropIsEmpty('data', 'name', true)
 		});
 	},
 	
