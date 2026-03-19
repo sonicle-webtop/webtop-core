@@ -52,9 +52,9 @@ public class Dav extends DavApi {
 	public Response getDavPrincipalInfo(String profileUsername) {
 		UserProfileId pid = WT.guessProfileIdByAuthAddress(profileUsername);
 		if (pid == null) return respErrorNotFound();
-		UserProfile.Data ud = WT.getUserData(pid);
-		if (ud == null) return respErrorNotFound();
-		return respOk(createApiPrincipalInfo(pid, profileUsername, ud));
+		UserProfile.Data pdata = WT.getProfileData(pid);
+		if (pdata == null) return respErrorNotFound();
+		return respOk(createApiPrincipalInfo(pid, profileUsername, pdata));
 	}
 	
 	private ApiPrincipalInfo createApiPrincipalInfo(UserProfileId profileId, String profileUsername, UserProfile.Data data) {

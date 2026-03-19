@@ -1043,12 +1043,12 @@ public class CoreAdminManager extends BaseManager {
 		try {
 			String internetName = WT.getPrimaryDomainName(pid.getDomainId());
 			if (internetName == null) throw new WTException("Domain not found [{0}]", pid.getDomainId());
-			UserProfile.Data ud = WT.getUserData(pid);
-			if (ud == null) throw new WTException("User-data not found [{0}]", pid.toString());
+			UserProfile.Data pdata = WT.getProfileData(pid);
+			if (pdata == null) throw new WTException("User-data not found [{0}]", pid.toString());
 			
 			con = WT.getConnection(SERVICE_ID, false);
 			fetcher.setContext(internetName);
-			fetcher.setForwardAddress(ud.getProfileEmailAddress());
+			fetcher.setForwardAddress(pdata.getProfileEmailAddress());
 			fetcher.setFetcherId(dao.getSequence(con).intValue());
 			dao.insert(con, fetcher);
 			
@@ -1075,11 +1075,11 @@ public class CoreAdminManager extends BaseManager {
 		try {
 			String internetName = WT.getPrimaryDomainName(pid.getDomainId());
 			if (internetName == null) throw new WTException("Domain not found [{0}]", pid.getDomainId());
-			UserProfile.Data ud = WT.getUserData(pid);
-			if (ud == null) throw new WTException("User-data not found [{0}]", pid.toString());
+			UserProfile.Data pdata = WT.getProfileData(pid);
+			if (pdata == null) throw new WTException("User-data not found [{0}]", pid.toString());
 			
 			con = WT.getConnection(SERVICE_ID, false);
-			fetcher.setForwardAddress(ud.getProfileEmailAddress());
+			fetcher.setForwardAddress(pdata.getProfileEmailAddress());
 			dao.update(con, fetcher);
 			
 			DbUtils.commitQuietly(con);
@@ -1196,8 +1196,8 @@ public class CoreAdminManager extends BaseManager {
 		try {
 			String internetName = WT.getPrimaryDomainName(pid.getDomainId());
 			if (internetName == null) throw new WTException("Domain not found [{0}]", pid.getDomainId());
-			UserProfile.Data ud = WT.getUserData(pid);
-			if (ud == null) throw new WTException("User-data not found [{0}]", pid.toString());
+			UserProfile.Data pdata = WT.getProfileData(pid);
+			if (pdata == null) throw new WTException("User-data not found [{0}]", pid.toString());
 			
 			//TODO: aggiornare email del profilo?
 			//int ret = WebTopDb.updateUserEmail(con, domainId, tokens[0], matcher);
@@ -1232,8 +1232,8 @@ public class CoreAdminManager extends BaseManager {
 		try {
 			String internetName = WT.getPrimaryDomainName(pid.getDomainId());
 			if (internetName == null) throw new WTException("Domain not found [{0}]", pid.getDomainId());
-			UserProfile.Data ud = WT.getUserData(pid);
-			if (ud == null) throw new WTException("User-data not found [{0}]", pid.toString());
+			UserProfile.Data pdata = WT.getProfileData(pid);
+			if (pdata == null) throw new WTException("User-data not found [{0}]", pid.toString());
 			
 			//TODO: aggiornare email del profilo?
 			//int ret = WebTopDb.updateUserEmail(con, domainId, tokens[0], matcher);

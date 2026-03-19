@@ -170,8 +170,8 @@ public abstract class BaseManager {
 	public Locale getProfileOrTargetLocale(UserProfileId profile) {
 		Locale loc = getLocale();
 		if (profile != null) {
-			UserProfile.Data ud = WT.getUserData(profile);
-			if (ud != null) loc = ud.getLocale();
+			UserProfile.Data pdata = WT.getProfileData(profile);
+			if (pdata != null) loc = pdata.getLocale();
 		}
 		return loc;
 	}

@@ -2481,14 +2481,14 @@ public class CoreManager extends BaseManager {
 	
 	private AuditLog createAuditLog(String domainId, OAuditLog olog) {
 		UserProfileId uid = new UserProfileId(domainId, olog.getUserId());
-		DateTimeZone userTz = DateTimeZone.forID(WT.getUserData(uid).getTimeZoneId());
+		DateTimeZone userTz = DateTimeZone.forID(WT.getProfileData(uid).getTimeZoneId());
 		DateTimeFormatter ymdhmsZoneFmt = JodaTimeUtils.createFormatterYMDHMS(userTz);
 		
 		AuditLog log = new AuditLog();
 		log.setAuditLogId(olog.getAuditLogId());
 		log.setTimestamp(ymdhmsZoneFmt.print(olog.getTimestamp()));
 		log.setUserId(olog.getUserId());
-		log.setUserName(WT.getUserData(uid).getDisplayName());
+		log.setUserName(WT.getProfileData(uid).getDisplayName());
 		log.setServiceId(olog.getServiceId());
 		log.setContext(olog.getContext());
 		log.setAction(olog.getAction());

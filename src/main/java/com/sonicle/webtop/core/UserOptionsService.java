@@ -326,7 +326,7 @@ public class UserOptionsService extends BaseUserOptionsService {
 	
 	public void processLookupStartupServices(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
 		CoreManager core = WT.getCoreManager(getTargetProfileId());
-		Locale locale = WT.getUserData(getTargetProfileId()).getLocale();
+		Locale locale = WT.getProfileData(getTargetProfileId()).getLocale();
 		ArrayList<JsSimple> items = new ArrayList<>();
 		
 		try {

@@ -185,7 +185,7 @@ public class OTPManager extends AbstractAppManager<OTPManager> {
 		
 		if (Principal.xisAdminDomain(pid.getDomainId())) {
 			//admin user takes personal email
-			String address=WT.getUserData(pid).getPersonalEmailAddress();
+			String address=WT.getProfileData(pid).getPersonalEmailAddress();
 			if (!StringUtils.isEmpty(address)) {
 				int ix=address.indexOf("@");
 				internetName=address.substring(ix+1);

@@ -214,9 +214,9 @@ public class UIPrivate extends AbstractServlet {
 	private void writePrivatePage(WebTopApp wta, WebTopSession wts, String baseUrl, HttpServletRequest request, HttpServletResponse response)  throws IOException, TemplateException {
 		String userTitle = null;
 		if (wts.getProfileId() != null) {
-			UserProfile.Data ud = WT.getUserData(wts.getProfileId());
-			if (ud != null) {
-				userTitle = ud.getDisplayName();
+			UserProfile.Data pdata = WT.getProfileData(wts.getProfileId());
+			if (pdata != null) {
+				userTitle = pdata.getDisplayName();
 			}
 		}
 		

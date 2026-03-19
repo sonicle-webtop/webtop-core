@@ -137,10 +137,10 @@ public class ReminderTask extends BaseBackgroundServiceTask {
 	
 	private void sendEmail(ReminderEmail reminder) {
 		try {
-			UserProfile.Data ud = WT.getUserData(reminder.getProfileId());
+			UserProfile.Data pdata = WT.getProfileData(reminder.getProfileId());
 			InternetAddress from = WT.getNotificationAddress(reminder.getProfileId().getDomainId());
 			if (from == null) throw new WTException("Error building sender address");
-			InternetAddress to = ud.getPersonalEmail();
+			InternetAddress to = pdata.getPersonalEmail();
 			if (to == null) throw new WTException("Error building destination address");
 			WT.sendEmail(WT.getGlobalMailSession(reminder.getProfileId()), reminder.getRich(), from, to, reminder.getSubject(), reminder.getBody());
 

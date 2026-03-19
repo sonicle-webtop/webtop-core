@@ -132,7 +132,7 @@ public class CoreController extends BaseController implements IControllerService
 				tag.setColor(color);
 				tag.setDomainId(profileId.getDomainId());
 				tag.setExternalId(id);
-				tag.setName(WT.lookupResource(SERVICE_ID,WT.getUserData(profileId).getLocale(), CoreLocaleKey.TAGS_LABEL(id)));
+				tag.setName(WT.lookupResource(SERVICE_ID, WT.getProfileData(profileId).getLocale(), CoreLocaleKey.TAGS_LABEL(id)));
 				tag.setVisibility(Tag.Visibility.PRIVATE);
 				WT.getCoreManager().addTag(tag);
 			} catch(Exception exc) {

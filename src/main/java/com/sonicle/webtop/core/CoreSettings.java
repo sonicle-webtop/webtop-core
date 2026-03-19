@@ -360,7 +360,7 @@ public class CoreSettings {
 	/**
 	 * [system+domain]
 	 * [integer]
-	 * Defines the maximum total lifetime of a remember-me authentication. Once this limit is reached, the remember-me session expires regardless of user activity and a full login is required.
+	 * Defines the maximum total lifetime in days of a remember-me authentication. Once this limit is reached, the remember-me session expires regardless of user activity and a full login is required.
 	 * Must be greater than 0.
 	 */
 	public static final String LOGIN_REMEMBERME_ABSOLUTELIFETIME = "login.rememberme.absolutelifetime";

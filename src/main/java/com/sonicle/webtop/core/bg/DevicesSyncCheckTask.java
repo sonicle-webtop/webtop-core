@@ -90,13 +90,13 @@ public class DevicesSyncCheckTask extends BaseBackgroundServiceTask {
 		LOGGER.debug("Working on profiles...");
 		for (UserProfileId pid : pids) {
 			if (shouldStop()) break; // Speed-up shutdown process!
-			UserProfile.Data ud = WT.getUserData(pid);
-			if (ud.getPersonalEmail() == null) continue; // Skip profiles that cannot receive email alerts
-			LOGGER.debug("Working on profile [{}, {}]", pid.toString(), ud.getPersonalEmailAddress());
+			UserProfile.Data pdata = WT.getProfileData(pid);
+			if (pdata.getPersonalEmail() == null) continue; // Skip profiles that cannot receive email alerts
+			LOGGER.debug("Working on profile [{}, {}]", pid.toString(), pdata.getPersonalEmailAddress());
 
 			int daysTolerance = new CoreUserSettings(pid).getDevicesSyncAlertTolerance();
-			if (!checkSyncStatusForUser(devices, ud.getProfileEmailAddress(), context.getExecuteInstant(), daysTolerance * 24)) {
-				sendEmail(bs, pid, ud);
+			if (!checkSyncStatusForUser(devices, pdata.getProfileEmailAddress(), context.getExecuteInstant(), daysTolerance * 24)) {
+				sendEmail(bs, pid, pdata);
 			}
 		}
 	}

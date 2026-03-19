@@ -54,8 +54,8 @@ public class Principals extends PrincipalsApi {
 	public Response getPrincipalInfo(String profileUsername, List<String> permRefs) {
 		UserProfileId pid = WT.guessProfileIdByAuthAddress(profileUsername);
 		if (pid == null) return respErrorNotFound();
-		UserProfile.Data ud = WT.getUserData(pid);
-		if (ud == null) return respErrorNotFound();
+		UserProfile.Data pdata = WT.getProfileData(pid);
+		if (pdata == null) return respErrorNotFound();
 		
 		ArrayList<Boolean> evalPermRefs = null;
 		if (permRefs != null) {
@@ -64,7 +64,7 @@ public class Principals extends PrincipalsApi {
 				evalPermRefs.add(RunContext.isPermitted(true, permRef));
 			}
 		}
-		return respOk(createApiPrincipalInfo(pid, profileUsername, ud, evalPermRefs));
+		return respOk(createApiPrincipalInfo(pid, profileUsername, pdata, evalPermRefs));
 	}
 	
 	private ApiPrincipalInfo createApiPrincipalInfo(UserProfileId profileId, String profileUsername, UserProfile.Data data, ArrayList<Boolean> evalPermRefs) {
