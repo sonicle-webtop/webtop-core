@@ -197,6 +197,7 @@ public class DocEditorManager extends AbstractAppManager<DocEditorManager> {
 			String ext = getDocumentExtension(filename);
 			String key = buildDocumentKey(docHandler.getDocumentUniqueId(), lastModifiedTime);
 			String baseUrl = getWebTopApp().getDocumentServerLoopbackUrl();
+			if (StringUtils.isEmpty(baseUrl)) baseUrl = WT.getPublicBaseUrl(docHandler.getTargetProfileId().getDomainId());
 			String domainPublicName = WT.getDomainPublicName(docHandler.getTargetProfileId().getDomainId());
 			String url = generateUrl(baseUrl, domainPublicName, sessionId, editingId).toString();
 			String callbackUrl = buildCallbackUrl(baseUrl, domainPublicName, sessionId, editingId).toString();

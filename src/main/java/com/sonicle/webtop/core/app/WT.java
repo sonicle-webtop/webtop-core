@@ -181,7 +181,7 @@ public class WT {
 	}
 	
 	/**
-	 * @deprecated use getGroupUidOfPecAccounts instead (will be removed in v.5.17.0)
+	 * @deprecated use getGroupSidOfPecAccounts instead (will be removed in v.5.17.0)
 	 */
 	@Deprecated
 	public static String getGroupUidForPecAccounts(String domainId) {
