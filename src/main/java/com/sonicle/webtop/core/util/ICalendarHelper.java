@@ -91,7 +91,7 @@ public class ICalendarHelper {
 			.to(organizerAddress)
 			.withSubject(TplHelper.buildEventInvitationReplyEmailSubject(locale, response, summary))
 			.withCalendarText(CalendarMethod.REPLY, calendarText)
-			.withAttachment(attData, attFilename, ContentTransferEncoding.BASE_64)
+			.withAttachment(attData, attFilename, null, ContentTransferEncoding.BASE_64)
 			.build();
 	}
 	
@@ -122,7 +122,7 @@ public class ICalendarHelper {
 			.withSubject(subject)
 			.withHTMLText(html)
 			.withCalendarText(method, calendarText)
-			.withAttachment(attData, attFilename, ContentTransferEncoding.BASE_64)
+			.withAttachment(attData, attFilename, null, ContentTransferEncoding.BASE_64)
 			.build();
 	}
 }
