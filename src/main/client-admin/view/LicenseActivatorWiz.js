@@ -387,7 +387,7 @@ Ext.define('Sonicle.webtop.core.admin.view.LicenseActivatorWiz', {
 			
 		} else if (path === 'offline') {
 			if (pp === 'confirm') {
-				if (me.type === 'activation') {
+				if (me.type === 'activation' || me.type === 'change') {
 					if (!ppcmp.lref('fldresponse').isValid()) return false;
 					me.executeUI(vm.get('data.response'), function(success, data, json) {
 						if (success) me.onNavigate(np);
