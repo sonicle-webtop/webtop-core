@@ -40,6 +40,7 @@ import com.sonicle.webtop.core.app.WT;
 import com.sonicle.webtop.core.app.WebTopSession;
 import com.sonicle.webtop.core.app.sdk.AuditReferenceDataEntry;
 import com.sonicle.webtop.core.dal.DAOException;
+import com.sonicle.webtop.core.model.ProfileI18n;
 import com.sonicle.webtop.core.products.AuditProduct;
 import java.sql.SQLException;
 import java.util.Collection;
@@ -160,12 +161,35 @@ public abstract class BaseManager {
 	}
 	
 	/**
+	 * Returns i18n data for the targetProfile of this Manager.
+	 * @return 
+	 */
+	public ProfileI18n getI18nInfo() {
+		UserProfile.Data pdata = WT.getProfileData(getTargetProfileId());
+		//TODO: decide whether to expose or not longDateTimeFormat switch
+		return (pdata != null) ? pdata.toProfileI18n(false) : null;
+	}
+	
+	public ProfileI18n coalesceI18nInfo(final UserProfileId profile) {
+		ProfileI18n i18n = getI18nInfo();
+		if (profile != null) {
+			UserProfile.Data pdata = WT.getProfileData(profile);
+			if (pdata != null) i18n = pdata.toProfileI18n(false);
+		}
+		return i18n;
+	}
+	
+	/**
 	 * Checks if audit-logs are enabled.
 	 * @return 
 	 */
 	public boolean isAuditEnabled() {
 		return auditEnabled;
 	}
+	
+	
+	
+	
 	
 	public Locale getProfileOrTargetLocale(UserProfileId profile) {
 		Locale loc = getLocale();
