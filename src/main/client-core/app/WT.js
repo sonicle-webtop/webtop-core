@@ -363,6 +363,16 @@ Ext.define('Sonicle.webtop.core.app.WT', {
 	},
 	
 	/**
+	 * Apply ellispsit to passed String, suitable for parameters values 
+	 * used in res templating functions.
+	 * @param {String} s
+	 * @returns {String}
+	 */
+	resEllipsis: function(s) {
+		return Ext.String.ellipsis(s, 40);
+	},
+	
+	/**
 	 * Checks if passes string has format of a i18n resource template string.
 	 * @param {String} str The string to check.
 	 * @returns {Boolean} `True` if string follows the template pattern, `false` otherwise.

@@ -1181,6 +1181,46 @@ Ext.define('Sonicle.webtop.core.app.Factory', {
 	},
 	
 	/**
+	 * Helper method for defining a {@link Ext.app.bind.Formula} that is able   
+	 * to setup binding within a Model's field and return a value 
+	 * computed by a customized function passed as parameter.
+	 * @param {String[]|String} fieldNames An array of field names to bind to
+	 * @param {Function} getFn A function to compute the final value
+	 * @param {Ext.data.Model} getFn.record
+	 * @param {String} getFn.fieldName
+	 * @param {Object} [opts] An object containing configuration
+	 * @param {Mixed[]} [opts.extraArgs] Extra static arguments to pass to getFn, after argsFn if any.
+	 * @returns {Object} Formula configuration object
+	 */
+	foFieldGet: function(fieldName, getFn, opts) {
+		opts = opts || {};
+		opts.getArgsFn = function(pathPrefix, fieldName) {
+			return [this.get(pathPrefix), fieldName];
+		};
+		return Sonicle.VMUtils.foPropMGet.apply(this, ['record', fieldName, getFn, opts]);
+	},
+	
+	/**
+	 * Helper method for defining a {@link Ext.app.bind.Formula} that is able   
+	 * to setup binding within a collection of Model's fields and 
+	 * return a value computed by a customized function passed as parameter.
+	 * @param {String[]|String} fieldNames An array of field names to bind to
+	 * @param {Function} getFn A function to compute the final value
+	 * @param {Ext.data.Model} getFn.record
+	 * @param {String[]} getFn.fieldNames
+	 * @param {Object} [opts] An object containing configuration
+	 * @param {Mixed[]} [opts.extraArgs] Extra static arguments to pass to getFn, after argsFn if any.
+	 * @returns {Object} Formula configuration object
+	 */
+	foFieldMGet: function(fieldNames, getFn, opts) {
+		opts = opts || {};
+		opts.getArgsFn = function(pathPrefix, propNames) {
+			return [this.get(pathPrefix), propNames];
+		};
+		return Sonicle.VMUtils.foPropMGet.apply(this, ['record', fieldNames, getFn, opts]);
+	},
+	
+	/**
 	 * Helper method for defining a {@link Ext.app.bind.Formula} that checks 
 	 * if specified has-many association is empty or not.
 	 * @param {String} modelProp ViewModel's property in which the model is stored
@@ -1201,54 +1241,26 @@ Ext.define('Sonicle.webtop.core.app.Factory', {
 	},
 	
 	/**
-	 * Helper method for defining a {@link Ext.app.bind.Formula} that looks into 
-	 * an internal association and returns items' count.
-	 * @param {String} modelProp ViewModel's property in which the model is stored
-	 * @param {String} associationName Model's association name
-	 * @returns {Object} Formula configuration object
+	 * @deprecated Use {@link Sonicle.VMUtils#foAssociationCount} instead.
 	 */
 	foAssociationCount: function(modelProp, associationName) {
-		return {
-			bind: {bindTo: '{'+Sonicle.String.join('.', modelProp, associationName, 'data')+'}', deep: true},
-			get: function(data) {
-				return (!data) ? 0 : data.length;
-			}
-		};
+		Ext.log.warn("[WT.core] WTF.foAssociationCount is deprecated, see docs for more info!");
+		return Sonicle.VMUtils.foAssociationCount.apply(this, arguments);
 	},
 	
 	/**
-	 * Helper method for defining a {@link Ext.app.bind.Formula} that returns a 
-	 * value from an internal association computed by a customized function 
-	 * passed as parameter.
-	 * @param {String} modelProp ViewModel's property in which the model is stored
-	 * @param {String} associationName Model's association name
-	 * @param {Function} getFn A function to produce the desired value.
-	 * @param {Object} getFn.data
-	 * @param {Integer} getFn.count
-	 * @param {Mixed...} [args] The arguments to append to getFn (after the 2nd argument).
-	 * @returns {Object} Formula configuration object
+	 * @deprecated Use {@link Sonicle.VMUtils#foAssociationGet} instead.
 	 */
 	foAssociationGetFn: function(modelProp, associationName, getFn) {
-		if (!Ext.isFunction(getFn)) getFn = function(v) {return v;};
-		var moreArgs = arguments.length > 3 ? Ext.Array.slice(arguments, 3) : [];
-		return {
-			bind: {bindTo: '{'+Sonicle.String.join('.', modelProp, associationName, 'data')+'}', deep: true},
-			get: function(data) {
-				return getFn.apply(this, [data, (!data) ? 0 : data.length].concat(moreArgs));
-			}
-		};
+		Ext.log.warn("[WT.core] WTF.foAssociationGetFn is deprecated, see docs for more info!");
+		return Sonicle.VMUtils.foAssociationGet.apply(this, arguments);
 	},
 	
 	/**
-	 * Defines a {@link Ext.app.bind.Formula} that returns a value computed by
-	 * a customized function passed as parameter.
-	 * @param {String} modelProp ViewModel's property in which the model is stored.
-	 * @param {String} fieldName Model's field name.
-	 * @param {Function} getFn A function to produce the desired value.
-	 * @param {Mixed...} [args] The arguments to append to getFn (after value argument, the 1st one).
-	 * @returns {Mixed} A value computed by the function.
+	 * @deprecated Use {@link #foFieldGet} (without modelProp) instead.
 	 */
 	foGetFn: function(modelProp, fieldName, getFn) {
+		Ext.log.warn("[WT.core] WTF.foGetFn is deprecated, see docs for more info!");
 		if (!Ext.isFunction(getFn)) getFn = function(v) {return v;};
 		var moreArgs = arguments.length > 3 ? Ext.Array.slice(arguments, 3) : [];
 		return {
@@ -1260,15 +1272,10 @@ Ext.define('Sonicle.webtop.core.app.Factory', {
 	},
 	
 	/**
-	 * Defines a {@link Ext.app.bind.Formula} that returns a value computed by
-	 * a customized function passed as parameter that tracks multiple props.
-	 * @param {String} pathPrefix The path prefix of propNames in viewModel.
-	 * @param {String[]|String} propNames An array of property/field names to track.
-	 * @param {Function} getFn A function to produce the desired value.
-	 * @param {Mixed...} [args] The arguments to append to getFn (after value argument, the 1st one).
-	 * @returns {Mixed} A value computed by the function.
+	 * @deprecated Use {@link #foFieldMGet} (without modelProp) instead.
 	 */
 	foMultiGetFn: function(pathPrefix, propNames, getFn) {
+		Ext.log.warn("[WT.core] WTF.foMultiGetFn is deprecated, see docs for more info!");
 		if (arguments.length < 3) {
 			getFn = propNames;
 			propNames = pathPrefix;
