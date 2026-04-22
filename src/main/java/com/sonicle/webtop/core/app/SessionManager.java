@@ -85,6 +85,7 @@ public class SessionManager extends AbstractAppManager<SessionManager> implement
 	public static final String ATTRIBUTE_CLIENT_COLORSCHEME = "webtop.clientColorScheme";
 	public static final String ATTRIBUTE_CLIENT_USERAGENT = "webtop.clientUA";
 	public static final String ATTRIBUTE_WEBTOP_SESSION = "webtop.Session";
+	public static final String ATTRIBUTE_RME_ARMED = "webtop.RMe.armed";
 	public static final String ATTRIBUTE_GUESSING_LOCALE = "Locale";
 	public static final String ATTRIBUTE_GUESSING_USERNAME = "UserName";
 	

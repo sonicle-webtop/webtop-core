@@ -207,19 +207,26 @@ Ext.define('Sonicle.webtop.core.private.app.App', {
 				},
 				servererror: function(s, status) {
 					if (status === 401) {
-						WT.confirm(WT.res('warn.conn.forbidden'), function(bid) {
-							if (bid === 'ok') WT.reload();
-						}, me, {
-							itemId: 'pushservererror',
-							title: WT.res('warning'),
-							icon: Ext.Msg.WARNING,
-							buttons: Ext.Msg.OK,
-							config: {
-								buttonText: {
-									ok: WT.res('word.continue')
+						// When rememberMe is on, do NOT show classic "session expired"
+						// message, simple reload soon!
+						if (!WT.getVar(WT.ID, 'rmeArmed')) {
+							WT.confirm(WT.res('warn.conn.forbidden'), function(bid) {
+								if (bid === 'ok') WT.reload();
+							}, me, {
+								itemId: 'pushservererror',
+								title: WT.res('warning'),
+								icon: Ext.Msg.WARNING,
+								buttons: Ext.Msg.OK,
+								config: {
+									buttonText: {
+										ok: WT.res('word.continue')
+									}
 								}
-							}
-						});
+							});
+						} else {
+							WT.reload();
+						}
+							
 					} else if (status >= 500) {
 						WT.confirm(WT.res(WT.ID, 'warn.conn.error', status), function(bid) {
 							if (bid === 'ok') WTA.PushManager.connect();

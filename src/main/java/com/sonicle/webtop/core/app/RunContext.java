@@ -158,6 +158,28 @@ public class RunContext {
 	}
 	
 	/**
+	 * Checks if the currently executing Subject has been remembered.
+	 * @return True if remembered, false otherwise
+	 */
+	public static boolean isRemembered() {
+		try {
+			return isRemembered(getSubject());
+		} catch (UnavailableSecurityManagerException ex) {
+			return false;
+		}
+	}
+	
+	/**
+	 * Checks if the specified Subject has been been remembered.
+	 * @param subject The Subject to work on it.
+	 * @return True if remembered, false otherwise
+	 */
+	public static boolean isRemembered(final Subject subject) {
+		if (subject == null) return false;
+		return hasRole(subject, WebTopManager.REMRMBERED_USER_ROLESID);
+	}
+	
+	/**
 	 * Gets the profile ID of the currently executing Subject.
 	 * @return Subject's profile ID
 	 */

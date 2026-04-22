@@ -210,6 +210,7 @@ public class WTCookieRememberMeManager implements RememberMeManager {
 		final String clientIdentifier = SessionContext.getWTClientID(SessionContext.getSubjectSession(subject));
 		final String[] clientParams = ServletHelper.lookupClientParams(subject, request);
 		
+		boolean cookieArmed = false;
 		try {
 			// Revoke any previous token...
 			RMeCookieValue rmeCookie = ServletHelper.readRememberMeCookie(request);
@@ -222,10 +223,18 @@ public class WTCookieRememberMeManager implements RememberMeManager {
 			if (result.getObject() != null) {
 				if (LOGGER.isTraceEnabled()) LOGGER.trace("Writing RMe cookie... [{}, {}]", subject.getPrincipal(), result.getObject().getSelector());
 				ServletHelper.writeRememberMeCookie(response, result.getObject());
+				cookieArmed = true;
 			}
 			
 		} catch (Exception ex) {
 			LOGGER.error("Error remembering new identity", ex);
+		} finally {
+			if (cookieArmed) {
+				Session subjectSession = SessionContext.getSubjectSession(subject);
+				if (subjectSession != null) {
+					subjectSession.setAttribute(SessionManager.ATTRIBUTE_RME_ARMED, true);
+				}
+			}
 		}
 	}
 	
@@ -234,6 +243,7 @@ public class WTCookieRememberMeManager implements RememberMeManager {
 		final HttpServletRequest request = WebUtils.getHttpRequest(subject);
 		final HttpServletResponse response = WebUtils.getHttpResponse(subject);
 		
+		boolean cookieCleared = false;
 		final WebTopManager wtMgr = WebTopApp.getInstance().getWebTopManager();
 		try {
 			// Revoke any previous token...
@@ -245,9 +255,17 @@ public class WTCookieRememberMeManager implements RememberMeManager {
 			// Then, force cookie cleanup
 			if (LOGGER.isTraceEnabled()) LOGGER.trace("Cleaning RMe cookie... [{}]", subject.getPrincipal());
 			ServletUtils.eraseCookie(response, ServletHelper.COOKIE_REMEMBERME);
+			cookieCleared = true;
 			
 		} catch (Exception ex) {
 			LOGGER.error("Error forgetting remembered identity", ex);
+		} finally {
+			if (cookieCleared) {
+				Session subjectSession = SessionContext.getSubjectSession(subject);
+				if (subjectSession != null) {
+					subjectSession.removeAttribute(SessionManager.ATTRIBUTE_RME_ARMED);
+				}
+			}
 		}
 	}
 	

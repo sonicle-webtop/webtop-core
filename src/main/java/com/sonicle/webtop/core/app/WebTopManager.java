@@ -236,6 +236,7 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 	public static final String SYSADMIN_ROLESID = "__SYSADMIN__"; // NB: Reflect any update to client-side too (see WTPrivate.js) !!!
 	public static final String WTADMIN_ROLESID = "__WTADMIN__"; // NB: Reflect any update to client-side too (see WTPrivate.js) !!!
 	public static final String IMPERSONATED_USER_ROLESID = "__IMPERSONATED_USER__"; // NB: Reflect any update to client-side too (see WTPrivate.js) !!!
+	public static final String REMRMBERED_USER_ROLESID = "__REMRMBERED_USER__"; // NB: Reflect any update to client-side too (see WTPrivate.js) !!!
 	public static final String SYSADMIN_DOMAINID = "*";
 	public static final String SYSADMIN_USERID = "admin";
 	//public static final String SYSADMIN_PSTRING = ServicePermission.permissionString(ServicePermission.namespacedName(CoreManifest.ID, "SYSADMIN"), "ACCESS", "*");

@@ -219,7 +219,7 @@ public class WTRealm extends AuthorizingRealm {
 			// Support access leveraging on a pre-shared token, suitable for 
 			// provisioning application configuration through APIs.
 			final AuthContext acontext = wtMgr.createSysAdminAuthenticationContext();
-			Principal principal = new Principal(false, acontext.getDomainId(), WebTopManager.SYSADMIN_USERID);
+			Principal principal = new Principal(false, false, acontext.getDomainId(), WebTopManager.SYSADMIN_USERID);
 			principal.setDisplayName(WebTopManager.SYSADMIN_USERID);
 			return principal;
 
@@ -238,7 +238,7 @@ public class WTRealm extends AuthorizingRealm {
 				final DirectoryOptions opts = DirectoryUtils.createDirectoryOptions(acontext, wta.getConnectionManager());
 				
 				// Prepare principal for authentication
-				final AuthPrincipal authPrincipal = createAuthenticatingPrincipal(acontext, directory, opts, false, localUsername, null);
+				final AuthPrincipal authPrincipal = createAuthenticatingPrincipal(acontext, directory, opts, false, false, localUsername, null);
 				
 				// Authenticate against directory
 				AuthUser authUser = null;
@@ -255,7 +255,7 @@ public class WTRealm extends AuthorizingRealm {
 				// If we are here, directory has successfully authenticated the user, provided credentials are valid!
 				
 				// Now build resulting principal...
-				Principal principal = new Principal(false, acontext.getDomainId(), authUser.userId);
+				Principal principal = new Principal(false, false, acontext.getDomainId(), authUser.userId);
 				principal.setDisplayName(StringUtils.defaultIfBlank(authUser.displayName, authUser.userId));
 				return principal;
 				
@@ -331,9 +331,9 @@ public class WTRealm extends AuthorizingRealm {
 		return userDomainId;
 	}
 	
-	private AuthPrincipal createAuthenticatingPrincipal(final AuthContext context, final AbstractDirectory directory, final DirectoryOptions directoryOpts, final boolean impersonate, final String username, final char[] password) {
-		final String authUsername = impersonate ? "admin" : directory.sanitizeUsername(directoryOpts, username);
-		return new AuthPrincipal(impersonate, context.getDomainId(), authUsername, password);
+	private AuthPrincipal createAuthenticatingPrincipal(final AuthContext context, final AbstractDirectory directory, final DirectoryOptions directoryOpts, final boolean impersonated, final boolean remembered, final String username, final char[] password) {
+		final String authUsername = impersonated ? "admin" : directory.sanitizeUsername(directoryOpts, username);
+		return new AuthPrincipal(impersonated, remembered, context.getDomainId(), authUsername, password);
 	}
 	
 	private Principal authenticateUser(final String authInternetDomain, String authDomainId, final String localUsername, final char[] password) throws AuthenticationException {
@@ -403,7 +403,7 @@ public class WTRealm extends AuthorizingRealm {
 			final DirectoryOptions opts = DirectoryUtils.createDirectoryOptions(acontext, wta.getConnectionManager());
 			
 			// Prepare principal for authentication
-			final AuthPrincipal authPrincipal = createAuthenticatingPrincipal(acontext, directory, opts, impersonate, localUsername, password);
+			final AuthPrincipal authPrincipal = createAuthenticatingPrincipal(acontext, directory, opts, impersonate, false, localUsername, password);
 			
 			LOGGER.debug("Authenticating principal [{}, {}]", authPrincipal.getDomainId(), authPrincipal.getUserId());
 			AuthUser authUser = null;
@@ -420,7 +420,7 @@ public class WTRealm extends AuthorizingRealm {
 			Principal principal = null;
 			if (impersonate) { // User is impersonated
 				String impUsername = sanitizeImpersonateUsername(localUsername);
-				principal = new Principal(impersonate, userDomainId, impUsername);
+				principal = new Principal(impersonate, false, userDomainId, impUsername);
 				UserProfileId impPid = UserProfileId.from(principal);
 				principal.setDisplayName(lookupProfileDisplayName(impPid));
 				
@@ -436,7 +436,7 @@ public class WTRealm extends AuthorizingRealm {
 				}
 				
 			} else { // User NOT impersonated (authentication result points to the right userId)
-				principal = new Principal(impersonate, userDomainId, authUser.userId);
+				principal = new Principal(impersonate, false, userDomainId, authUser.userId);
 				UserProfileId userPid = UserProfileId.from(principal);
 				principal.setDisplayName(StringUtils.defaultIfBlank(authUser.displayName, authUser.userId));
 				
@@ -504,7 +504,7 @@ public class WTRealm extends AuthorizingRealm {
 			final DirectoryOptions opts = DirectoryUtils.createDirectoryOptions(acontext, wta.getConnectionManager());
 			
 			// Prepare principal for authentication
-			final AuthPrincipal authPrincipal = createAuthenticatingPrincipal(acontext, directory, opts, false, localUsername, password);
+			final AuthPrincipal authPrincipal = createAuthenticatingPrincipal(acontext, directory, opts, false, true, localUsername, password);
 			//CryptoUtils.
 			
 			LOGGER.debug("Authenticating principal [{}, {}]", authPrincipal.getDomainId(), authPrincipal.getUserId());
@@ -519,7 +519,7 @@ public class WTRealm extends AuthorizingRealm {
 			// If we are here, directory has successfully authenticated the user!
 			
 			// Now build the right principal according to impersonate status...
-			Principal principal = new Principal(false, userDomainId, authUser.userId);
+			Principal principal = new Principal(false, true, userDomainId, authUser.userId);
 			UserProfileId remPid = UserProfileId.from(principal);
 			principal.setDisplayName(lookupProfileDisplayName(remPid));
 			
@@ -579,6 +579,8 @@ public class WTRealm extends AuthorizingRealm {
 		} else if (principal.isImpersonated()) {
 			roles.add(WebTopManager.IMPERSONATED_USER_ROLESID);
 			//perms.add(ServicePermission.permissionString(ServicePermission.namespacedName(CoreManifest.ID, "WTADMIN"), ServicePermission.ACTION_ACCESS, "*"));
+		} else if (principal.isRemembered()) {
+			roles.add(WebTopManager.REMRMBERED_USER_ROLESID);
 		}
 		
 		// Force core private service permission for any principal

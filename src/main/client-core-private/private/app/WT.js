@@ -274,6 +274,14 @@ Ext.define('Sonicle.webtop.core.private.app.WT', {
 		return this.hasRole('__IMPERSONATED_USER__');
 	},
 	
+	/**
+	 * Returns `true` if this current profile has been remembered.
+	 * @returns {Boolean}
+	 */
+	isProfileRemembered: function() {
+		return this.hasRole('__REMEMBERED_USER__');
+	},
+	
 	isProfileActingAsAdmin: function() {
 		return this.isWTAdmin() || this.isProfileImpersonated();
 	},

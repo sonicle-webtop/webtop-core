@@ -51,6 +51,8 @@ Ext.define('Sonicle.webtop.core.model.ServiceVars', {
 		WTF.roField('wtMeetingProvider', 'string'),
 		WTF.roField('wtMeetingConfig', 'string'),
 		
+		WTF.roField('rmeArmed', 'boolean'),
+		//WTF.roField('domainInternetName', 'string'), ???
 		WTF.roField('profileId', 'string'),
 		WTF.roField('domainId', 'string'),
 		WTF.roField('userId', 'string'),

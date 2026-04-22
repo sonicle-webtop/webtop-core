@@ -61,6 +61,7 @@ import com.sonicle.webtop.core.app.CorePrivateEnvironment;
 import com.sonicle.webtop.core.app.DocEditorManager;
 import com.sonicle.webtop.core.app.OTPManager;
 import com.sonicle.webtop.core.app.SessionContext;
+import com.sonicle.webtop.core.app.SessionManager;
 import com.sonicle.webtop.core.app.UIBoot;
 import com.sonicle.webtop.core.app.WT;
 import com.sonicle.webtop.core.app.WebTopManager;
@@ -197,6 +198,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import org.apache.commons.vfs2.FileObject;
+import org.apache.shiro.session.Session;
 import org.jivesoftware.smack.tcp.XMPPTCPConnectionConfiguration;
 import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
@@ -355,6 +357,13 @@ public class Service extends BaseService implements EventListener {
 				vars.put("editorAttachPatterns-"+apploc.getId().substring(0,2), patterns);
 		}
 		
+		boolean rmeArmed = false;
+		Session subjectSession = SessionContext.getSubjectSession(RunContext.getSubject());
+		if (subjectSession != null) {
+			rmeArmed = Boolean.TRUE.equals((Boolean)subjectSession.getAttribute(SessionManager.ATTRIBUTE_RME_ARMED));
+		}
+		
+		vars.put("rmeArmed", rmeArmed);
 		vars.put("domainInternetName", WT.getPrimaryDomainName(profile.getDomainId()));
 		vars.put("profileId", profile.getStringId());
 		vars.put("domainId", profile.getDomainId());
