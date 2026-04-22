@@ -36,6 +36,7 @@ import com.sonicle.commons.LangUtils;
 import com.sonicle.commons.beans.SortInfo;
 import com.sonicle.commons.time.JodaTimeUtils;
 import com.sonicle.webtop.core.app.sdk.WTParseException;
+import com.sonicle.webtop.core.app.util.ExceptionUtils;
 import java.text.ParseException;
 import java.util.Set;
 import org.apache.commons.lang3.StringUtils;
@@ -52,10 +53,6 @@ public class BaseRestApiUtils {
 		return fields2set == null || fields2set.contains(name);
 	}
 	
-	@Deprecated public static Set<String> parseSet(final String s) {
-		return (s == null) ? null : LangUtils.parseStringAsSet(s, ",", true);
-	}
-	
 	public static Set<String> parseStringSet(final String s) {
 		return (s == null) ? null : LangUtils.parseStringAsSet(s, ",", true);
 	}
@@ -70,6 +67,12 @@ public class BaseRestApiUtils {
 	
 	public static DateTime parseETag(final String etag) {
 		return JodaTimeUtils.parseDateTime(JodaTimeUtils.SYNCTAG_FMT, etag);
+	}
+	
+	public static DateTime parseDateTimeISO(final String s) throws ParseException {
+		DateTime dt = JodaTimeUtils.parseDateTimeISO(s);
+		if (dt == null) throw new ParseException(ExceptionUtils.msg("Unable to parse '{}' as ISO DateTime", s), 0);
+		return dt;
 	}
 	
 	public static String parseUserId(final String s, final String ifBlank) {
