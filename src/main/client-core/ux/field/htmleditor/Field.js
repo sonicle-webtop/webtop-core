@@ -34,9 +34,14 @@
 Ext.define('Sonicle.webtop.core.ux.field.htmleditor.Field', {
 	extend: 'Sonicle.form.field.tinymce.HTMLEditor',
 	alias: ['widget.wthtmleditor'],
+	requires: [
+		'Sonicle.webtop.core.ux.field.htmleditor.AITool',
+		'Sonicle.webtop.core.ux.field.htmleditor.AILoadMask'
+	],
 	
 	showElementPath: false,
 	showWordCount: false,
+	loadMaskTarget: null,
 	
 	constructor: function(cfg) {
 		var me = this,
@@ -134,7 +139,19 @@ Ext.define('Sonicle.webtop.core.ux.field.htmleditor.Field', {
 			cfg.fontColors = WT.getColorPalette('html');
 			cfg.fontColorsTilesPerRow = 8;
 		}
+		
+		cfg.customTools = (cfg.customTools || {} );
+		cfg.customTools['ai'] = {
+			pos: 3,
+			xtype: 'wt-htmleditortoolai'
+		};
 		me.callParent([cfg]);
+		
+		me.getToolbarCmp('ai').setLoadMask(new Sonicle.webtop.core.ux.field.htmleditor.AILoadMask({
+			target: me.loadMaskTarget || me,
+			msg: "Thinking..."//,
+			//msgCls: 'ai-mask-message' // Classe per eventuale styling extra
+		}));
 	},
 	
 	statics: {

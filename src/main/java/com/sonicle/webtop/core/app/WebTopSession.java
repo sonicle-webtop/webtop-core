@@ -37,7 +37,11 @@ import com.sonicle.webtop.core.app.sdk.BaseDocEditorDocumentHandler;
 import com.sonicle.commons.time.JodaTimeUtils;
 import com.sonicle.commons.web.json.JsonResult;
 import com.sonicle.commons.web.json.MapItem;
+import com.sonicle.mail.PropsBuilder;
 import com.sonicle.mail.StoreUtils;
+import com.sonicle.mail.imap.SonicleIMAPSSLSocketFactory;
+import com.sonicle.mail.imap.SonicleIMAPSocketFactory;
+import com.sonicle.mail.imap.SonicleIMAPSocketTracker;
 import com.sonicle.security.PasswordUtils;
 import com.sonicle.webtop.core.sdk.UserProfile;
 import com.sonicle.security.Principal;
@@ -47,6 +51,9 @@ import com.sonicle.webtop.core.CoreServiceSettings;
 import com.sonicle.webtop.core.CoreSettings;
 import com.sonicle.webtop.core.CoreUserSettings;
 import com.sonicle.webtop.core.admin.CoreAdminManager;
+import com.sonicle.webtop.core.ai.AIBackendType;
+import com.sonicle.webtop.core.ai.AIFactory;
+import com.sonicle.webtop.core.ai.AIManager;
 import com.sonicle.webtop.core.app.model.UIPreset;
 import com.sonicle.webtop.core.app.sdk.msg.UITryMeBannerSM;
 import com.sonicle.webtop.core.app.servlet.UIPrivate;
@@ -84,7 +91,9 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import jakarta.mail.Authenticator;
+import jakarta.mail.NoSuchProviderException;
 import jakarta.mail.PasswordAuthentication;
+import jakarta.mail.Provider;
 import java.io.IOException;
 import java.util.Collection;
 import javax.servlet.http.HttpServletRequest;
@@ -126,7 +135,11 @@ public class WebTopSession {
 	private final LinkedHashMap<String, BasePublicService> publicServices = new LinkedHashMap<>();
 	private final HashMap<String, UploadedFile> uploads = new HashMap<>();
 	private final Object lock1 = new Object();
-	private jakarta.mail.Session mailSession = null;
+
+	private final Object aiManagerLock = new Object();
+	private AIManager cachedAiManager = null;
+	private String cachedAiBackend = null;
+	private String cachedAiToken = null;
 	
 	public WebTopSession(HttpSession session) {
 		this(WebTopApp.getInstance(), session);
@@ -630,48 +643,6 @@ public class WebTopSession {
 		synchronized(managers) {
 			managers.clear();
 		}
-	}
-	
-	public jakarta.mail.Session getMailSession() {
-		synchronized(lock1) {
-			UserProfileId pid = getProfileId();
-			if (pid != null && mailSession == null) {
-				CoreServiceSettings css = new CoreServiceSettings(CoreManifest.ID, pid.getDomainId());
-				String smtphost=css.getSMTPHost();
-				int smtpport=css.getSMTPPort();
-				boolean starttls=css.isSMTPStartTLS();
-				boolean auth=css.isSMTPAuthentication();
-				Properties props = new Properties(wta.getProperties());
-				//props.setProperty("mail.socket.debug", "true");
-				//props.setProperty("mail.imap.parse.debug", "true");
-				props.setProperty("mail.smtp.host", smtphost);
-				props.setProperty("mail.smtp.port", ""+smtpport);
-				if (starttls) {
-					props.put("mail.smtp.starttls.enable","true");
-					props.put("mail.smtp.ssl.trust","*");
-					props.put("mail.smtp.ssl.checkserveridentity", "false");
-				}
-				props.setProperty("mail.imaps.ssl.trust", "*");
-				StoreUtils.useExtendedFolderClasses(props);
-				props.setProperty("mail.imap.enableimapevents", "true"); // Support idle events
-				Authenticator authenticator=null;
-				if (auth) {
-					props.setProperty("mail.smtp.auth", "true");
-					authenticator=new Authenticator() {
-						@Override
-						protected PasswordAuthentication getPasswordAuthentication() {
-							final Principal principal = (Principal)SecurityUtils.getSubject().getPrincipal();
-							final String login = principal.toFullyQualifiedUsername(WT.getAuthDomainName(principal.getDomainId()));
-							//logger.info("getPasswordAuthentication: "+login+" / *****");
-							return new PasswordAuthentication(login, PasswordUtils.asString(wta.getWebTopManager().lookupSecretValue(UserProfileId.from(principal), WebTopManager.PSVKEY_PPW)));
-						}
-
-					};
-				}
-				mailSession = jakarta.mail.Session.getInstance(props, authenticator);
-			}
-		}
-		return mailSession;
 	}
 	
 	/**
@@ -1457,7 +1428,35 @@ public class WebTopSession {
 			}
 		}
 	}
-	
+
+	public boolean isAIConfigured() {
+		CoreUserSettings cus = new CoreUserSettings(getUserProfile().getId());
+		return cus.isAIConfigured();
+	}
+
+	public AIManager getAIManager() {
+		CoreUserSettings cus = new CoreUserSettings(getUserProfile().getId());
+		String backend = cus.getAiApiBackend();
+		String token = cus.getAiApiToken();
+		synchronized (aiManagerLock) {
+			if (cachedAiManager == null
+				|| !java.util.Objects.equals(backend, cachedAiBackend)
+				|| !java.util.Objects.equals(token, cachedAiToken)) {
+				AIBackendType aibt = null;
+				if ("sonicle".equalsIgnoreCase(backend)) aibt = AIBackendType.SONICLE;
+				else if ("openai".equalsIgnoreCase(backend)) aibt = AIBackendType.OPENAI;
+				else if ("claude".equalsIgnoreCase(backend)) aibt = AIBackendType.CLAUDE;
+				else if ("ollama".equalsIgnoreCase(backend)) aibt = AIBackendType.OLLAMA;
+				AIManager aim = AIFactory.createAIManager(aibt, token, getLocale());
+				aim.setUserId(AIManager.hashUserId(getUserProfile().getStringId()));
+				cachedAiManager = aim;
+				cachedAiBackend = backend;
+				cachedAiToken = token;
+			}
+			return cachedAiManager;
+		}
+	}
+		
 	/**
 	 * Remove uploaded files by tag value.
 	 * Files will be also deleted from Temp directory.

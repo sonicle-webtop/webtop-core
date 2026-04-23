@@ -489,6 +489,33 @@ public class CoreServiceSettings extends BaseServiceSettings {
 		return setObject(SERVICES_ORDER, value, ServicesOrder.class);
 	}
 	
+	public String getAiApiBackend() {
+		return getString(AI_API_BACKEND, "sonicle");
+	}
+	
+	public String getAiApiToken() {
+		return getString(AI_API_TOKEN, "sk-...");
+	}
+
+	/**
+	 * True when the AI backend looks usable: either an Ollama self-hosted
+	 * backend (no token required) or a token has been explicitly set to
+	 * something other than the default placeholder.
+	 */
+	public boolean isAIConfigured() {
+		String backend = getAiApiBackend();
+		if ("ollama".equalsIgnoreCase(backend)) return true;
+		String token = getAiApiToken();
+		return token != null && !token.trim().isEmpty() && !"sk-...".equals(token);
+	}
+
+	public int getAiToolSelectionMaxChars() {
+		return getInteger(AI_TOOL_SELECTION_MAX_CHARS, 8000);
+	}
+
+	public int getAiToolUserInputMaxChars() {
+		return getInteger(AI_TOOL_USER_INPUT_MAX_CHARS, 2000);
+	}
 	
 	
 	

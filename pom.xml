@@ -92,6 +92,15 @@
             <artifactId>joda-to-java-time-bridge</artifactId>
             <version>3</version>
         </dependency>
+        <dependency>
+            <!-- Used by AI helpers for HTML reduction of untrusted email
+                 content and for server-side sanitization of AI output.
+                 Version pinned to match the transitive jsoup in the
+                 broader ecosystem; bump when that baseline moves. -->
+            <groupId>org.jsoup</groupId>
+            <artifactId>jsoup</artifactId>
+            <version>1.8.3</version>
+        </dependency>
 		<dependency>
 			<!-- Force version from jakarta (same in swagger-core) -->
 			<!--

@@ -1,0 +1,42 @@
+{
+  "items": [
+    {
+      "id": "help-write",
+      "labelKey": "ai.tool.help-write.label",
+      "promptKey": "ai.tool.help-write.prompt",
+      "requiresSelection": false,
+      "input": {
+        "titleKey": "ai.tool.dialog.title",
+        "questionKey": "ai.tool.help-write.question",
+        "multiline": true,
+        "required": true
+      }
+    },
+    {
+      "id": "rewrite",
+      "labelKey": "ai.tool.rewrite.label",
+      "promptKey": "ai.tool.rewrite.prompt",
+      "requiresSelection": true,
+      "noSelectionErrorKey": "ai.tool.rewrite.no-selection",
+      "input": {
+        "titleKey": "ai.tool.dialog.title",
+        "questionKey": "ai.tool.rewrite.question",
+        "multiline": false,
+        "required": true
+      }
+    },
+    {
+      "id": "translate",
+      "labelKey": "ai.tool.translate.label",
+      "promptKey": "ai.tool.translate.prompt",
+      "requiresSelection": true,
+      "noSelectionErrorKey": "ai.tool.translate.no-selection",
+      "input": {
+        "titleKey": "ai.tool.dialog.title",
+        "questionKey": "ai.tool.translate.question",
+        "multiline": false,
+        "required": true
+      }
+    }
+  ]
+}

@@ -210,7 +210,16 @@ public class UserOptionsService extends BaseUserOptionsService {
 				jso.imSoundOnFriendDisconnect = us.getIMSoundOnFriendDisconnect();
 				jso.imSoundOnMessageReceived = us.getIMSoundOnMessageReceived();
 				jso.imSoundOnMessageSent = us.getIMSoundOnMessageSent();
-				
+
+				// AI (user-scope override)
+				// Emit only the user override for backend (null => using domain default).
+				// Never echo the stored token back to the client; send empty and a flag
+				// indicating whether the user has set one.
+				String aiUserToken = us.getAiApiTokenUserOverride();
+				jso.aiApiBackend = us.getAiApiBackendUserOverride();
+				jso.aiApiToken = "";
+				jso.aiApiTokenSet = (aiUserToken != null && !aiUserToken.trim().isEmpty());
+
 				new JsonResult(jso).printTo(out);
 				
 			} else if (crud.equals(Crud.UPDATE)) {
@@ -289,6 +298,21 @@ public class UserOptionsService extends BaseUserOptionsService {
 				if (pl.map.has("imSoundOnFriendDisconnect"))  us.setIMSoundOnFriendDisconnect(pl.data.imSoundOnFriendDisconnect);
 				if (pl.map.has("imSoundOnMessageReceived"))  us.setIMSoundOnMessageReceived(pl.data.imSoundOnMessageReceived);
 				if (pl.map.has("imSoundOnMessageSent"))  us.setIMSoundOnMessageSent(pl.data.imSoundOnMessageSent);
+
+				// AI (user-scope override). Backend: empty => clear override.
+				// Token: since the stored token is never sent to the client, an
+				// incoming empty value would just mean "the user didn't retype it",
+				// not "clear it". Ignore empty updates; require explicit clear via
+				// the reserved sentinel "__CLEAR__".
+				if (pl.map.has("aiApiBackend")) us.setAiApiBackend(pl.data.aiApiBackend);
+				if (pl.map.has("aiApiToken")) {
+					String t = pl.data.aiApiToken;
+					if ("__CLEAR__".equals(t)) {
+						us.setAiApiToken(null);
+					} else if (t != null && !t.isEmpty()) {
+						us.setAiApiToken(t);
+					}
+				}
 				
 				if (upCacheNeedsUpdate) coreMgr.cleanUserProfileCache();
 				

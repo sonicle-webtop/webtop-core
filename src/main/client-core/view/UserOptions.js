@@ -97,7 +97,13 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 			foCanManageUpi: WTF.foGetFn('record', 'permUpiManage', function(v) {
 				if (WT.isAdmin() || me.isAdminOnBehalf()) return true;
 				return v;
-			})
+			}),
+			foAiApiTokenEmptyText: {
+				bind: { set: '{record.aiApiTokenSet}' },
+				get: function(get) {
+					return get.set ? '••••••••' : WT.res('opts.ai.fld-token-empty.lbl');
+				}
+			}
 		}));
 		
 		me.add({
@@ -1262,6 +1268,80 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 							html: WT.res('opts.sms.fld-sender.html')
 						}
 					]
+				}
+			]
+		}, {
+			xtype: 'wtopttabsection',
+			title: WT.res('opts.ai.tit'),
+			hidden: me.isProfileSysAdmin(),
+			items: [
+				{
+					xtype: 'soformseparator',
+					title: WT.res('opts.ai.service.tit')
+				},
+				WTF.lookupCombo('id', 'desc', {
+					bind: '{record.aiApiBackend}',
+					store: {
+						type: 'array',
+						fields: ['id', 'desc'],
+						data: [
+							['', WT.res('opts.ai.fld-backend-empty.lbl')],
+							['sonicle', 'Sonicle'],
+							['openai', 'OpenAI'],
+							['claude', 'Claude']
+						]
+					},
+					triggers: {
+						clear: WTF.clearTrigger()
+					},
+					fieldLabel: WT.res('opts.ai.fld-backend.lbl'),
+					emptyText: WT.res('opts.ai.fld-backend-empty.lbl'),
+					width: 440,
+					listeners: { blur: { fn: me.onBlurAutoSave, scope: me } }
+				}), {
+					xtype: 'sopasswordfield',
+					bind: {
+						value: '{record.aiApiToken}',
+						emptyText: '{foAiApiTokenEmptyText}'
+					},
+					fieldLabel: WT.res('opts.ai.fld-token.lbl'),
+					width: 440,
+					emptyText: WT.res('opts.ai.fld-token-empty.lbl'),
+					submitEmptyText: false,
+					listeners: { blur: { fn: me.onBlurAutoSave, scope: me } }
+				}, {
+					xtype: 'label',
+					bind: {
+						hidden: '{!record.aiApiTokenSet}'
+					},
+					html: WT.res('opts.ai.fld-token-set.lbl')
+				}, {
+					xtype: 'sospacer'
+				}, {
+					xtype: 'container',
+					layout: {
+						type: 'hbox',
+						pack: 'center',
+						align: 'middle'
+					},
+					bind: {
+						hidden: '{!record.aiApiTokenSet}'
+					},
+					items: [{
+						xtype: 'button',
+						text: WT.res('opts.ai.btn-clear-token'),
+						handler: function() {
+							var model = me.getModel();
+							if (!model) return;
+							model.set('aiApiBackend', '');
+							model.set('aiApiToken', '__CLEAR__');
+							me.saveModel({
+								callback: function(success) {
+									if (success) me.loadModel();
+								}
+							});
+						}
+					}]
 				}
 			]
 		}, {

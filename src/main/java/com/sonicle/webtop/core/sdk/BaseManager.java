@@ -404,10 +404,4 @@ public abstract class BaseManager {
 		if (isAuditEnabled()) WT.auditLogRebaseReference(SERVICE_ID, context, oldReference, newReference);
 	}
 	
-	public Session getMailSession() {
-		WebTopSession wts = SessionContext.getCurrentWTSession(false);
-		Session s=(wts != null) ? wts.getMailSession() : null;
-		if (s==null) s=WT.getGlobalMailSession(getTargetProfileId());
-		return s;
-	}
 }
