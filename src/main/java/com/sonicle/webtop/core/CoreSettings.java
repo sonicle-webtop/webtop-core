@@ -999,6 +999,53 @@ public class CoreSettings {
 	
 	/**
 	 * [domain+system]
+	 * [string]
+	 * AI API backend : sonicle | openai | claude.
+	 * Defaults to sonicle.
+	 */
+	public static final String AI_API_BACKEND = "ai.api.backend";
+	
+	/**
+	 * [domain+system]
+	 * [string]
+	 * AI API token.
+	 */
+	public static final String AI_API_TOKEN = "ai.api.token";
+
+	/**
+	 * [user]
+	 * [string]
+	 * User-supplied AI API backend. When set, fully replaces the domain/system
+	 * value for this user. Allowed values are the same as {@link #AI_API_BACKEND}.
+	 */
+	public static final String AI_API_BACKEND_USER = "ai.api.backend.user";
+
+	/**
+	 * [user]
+	 * [string]
+	 * User-supplied AI API token. When set, fully replaces the domain/system
+	 * value for this user.
+	 */
+	public static final String AI_API_TOKEN_USER = "ai.api.token.user";
+
+	/**
+	 * [domain+system]
+	 * [integer]
+	 * Maximum size (in characters) of the editor selection forwarded to the AI
+	 * backend as untrusted content for tool actions such as rewrite/translate.
+	 */
+	public static final String AI_TOOL_SELECTION_MAX_CHARS = "ai.tool.selection.max_chars";
+
+	/**
+	 * [domain+system]
+	 * [integer]
+	 * Maximum size (in characters) of the user input forwarded to the AI
+	 * backend as untrusted content for editor tool actions.
+	 */
+	public static final String AI_TOOL_USER_INPUT_MAX_CHARS = "ai.tool.user_input.max_chars";
+
+	/**
+	 * [domain+system]
 	 * [object[]]
 	 * Defines additional data-source types in addition to built-in ones:
 	 *  - proto: JDBC protocol

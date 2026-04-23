@@ -37,6 +37,7 @@ import com.sonicle.commons.EnumUtils;
 import com.sonicle.commons.InternetAddressUtils;
 import com.sonicle.commons.LangUtils;
 import com.sonicle.commons.PathUtils;
+import com.sonicle.commons.ResourceUtils;
 import com.sonicle.commons.beans.PageInfo;
 import com.sonicle.commons.db.DbUtils;
 import com.sonicle.commons.flags.BitFlags;
@@ -54,6 +55,13 @@ import com.sonicle.security.PasswordUtils;
 import com.sonicle.security.Principal;
 import com.sonicle.webtop.core.CoreSettings.OtpDeliveryMode;
 import com.sonicle.webtop.core.admin.CoreAdminManager;
+import com.sonicle.webtop.core.ai.AIManager;
+import com.sonicle.webtop.core.ai.AIOutputSanitizer;
+import com.sonicle.webtop.core.ai.AIPromptBuilder;
+import com.sonicle.webtop.core.ai.AIRequestConfig;
+import com.sonicle.webtop.core.ai.tool.AIToolConfig;
+import com.sonicle.webtop.core.ai.tool.AIToolInputSpec;
+import com.sonicle.webtop.core.ai.tool.AIToolItem;
 import com.sonicle.webtop.core.app.CoreAdminManifest;
 import com.sonicle.webtop.core.app.CoreManifest;
 import com.sonicle.webtop.core.app.RunContext;
@@ -191,6 +199,7 @@ import com.sonicle.webtop.vfs.IVfsManager;
 import com.sonicle.webtop.vfs.model.SharingLink;
 import java.io.StringReader;
 import java.net.URI;
+import java.net.URL;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -214,6 +223,7 @@ public class Service extends BaseService implements EventListener {
 	private CoreServiceSettings ss;
 	private CoreUserSettings us;
 	private XMPPClient xmppCli;
+	private AIToolConfig aiToolConfig = null;
 	
 	/*
 	private WebTopApp getApp() {
@@ -253,6 +263,20 @@ public class Service extends BaseService implements EventListener {
 		
 		coreMgr.addListener(this);
 		//sendAuthMessage(principal.getUserId(),principal.getPassword());
+
+		try {
+			URL aiToolUrl = ResourceUtils.getResource("com/sonicle/webtop/core/ai-tool.json");
+			if (aiToolUrl != null) {
+				try (InputStream in = aiToolUrl.openStream()) {
+					aiToolConfig = AIToolConfig.load(in);
+				}
+			} else {
+				logger.warn("ai-tool.json resource not found; AI editor tool menu will be empty");
+			}
+		} catch (Throwable t) {
+			logger.error("Failed to load ai-tool.json; AI editor tool menu will be empty", t);
+			aiToolConfig = null;
+		}
 	}
 	
 	@Override
@@ -401,8 +425,48 @@ public class Service extends BaseService implements EventListener {
 		vars.put("auditUi", WT.isLicensed(coreMgr.AUDIT_PRODUCT, profile.getUserId()) > 0);
 		//TODO: manage licensing
 		vars.put("hasAudit",coreMgr.isAuditEnabled()&&(RunContext.isImpersonated()||RunContext.isPermitted(true, CoreManifest.ID, "AUDIT")));
-		
+
+		if (aiToolConfig != null && getWts().isAIConfigured()) {
+			vars.put("aiTool", buildClientAITool(aiToolConfig));
+		}
+
 		return vars;
+	}
+
+	private Map<String, Object> buildClientAITool(AIToolConfig cfg) {
+		Map<String, Object> root = new LinkedHashMap<>();
+		List<Map<String, Object>> items = new ArrayList<>();
+		for (AIToolItem it : cfg.getItems()) items.add(buildClientAIToolItem(it));
+		root.put("items", items);
+		return root;
+	}
+
+	private Map<String, Object> buildClientAIToolItem(AIToolItem it) {
+		Map<String, Object> o = new LinkedHashMap<>();
+		o.put("id", it.getId());
+		o.put("label", lookupResource(it.getLabelKey()));
+		if (it.isGroup()) {
+			List<Map<String, Object>> kids = new ArrayList<>();
+			for (AIToolItem c : it.getChildren()) kids.add(buildClientAIToolItem(c));
+			o.put("children", kids);
+		} else {
+			if (it.requiresSelection()) {
+				o.put("requiresSelection", true);
+				if (it.getNoSelectionErrorKey() != null) {
+					o.put("noSelectionError", lookupResource(it.getNoSelectionErrorKey()));
+				}
+			}
+			AIToolInputSpec in = it.getInput();
+			if (in != null) {
+				Map<String, Object> ino = new LinkedHashMap<>();
+				if (in.getTitleKey() != null) ino.put("title", lookupResource(in.getTitleKey()));
+				if (in.getQuestionKey() != null) ino.put("question", lookupResource(in.getQuestionKey()));
+				ino.put("multiline", in.isMultiline());
+				ino.put("required", in.isRequired());
+				o.put("input", ino);
+			}
+		}
+		return o;
 	}
 	
 	@Override
@@ -1959,6 +2023,72 @@ public class Service extends BaseService implements EventListener {
 			DbUtils.closeQuietly(con);
 		}
 	}
+
+	public void processAIPrompt(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
+		try {
+			String actionId = ServletUtils.getStringParameter(request, "menuaction", true);
+			String rawInput = ServletUtils.getStringParameter(request, "userInput", "");
+			String rawSelection = ServletUtils.getStringParameter(request, "selection", "");
+			String format = ServletUtils.getStringParameter(request, "format", "text");
+
+			if (aiToolConfig == null) {
+				new JsonResult(false, "AI tool not configured").printTo(out);
+				return;
+			}
+			AIToolItem item = aiToolConfig.findById(actionId);
+			if (item == null || item.getPromptKey() == null) {
+				new JsonResult(false, "Unknown AI action").printTo(out);
+				return;
+			}
+			AIToolInputSpec inSpec = item.getInput();
+			if (inSpec != null && inSpec.isRequired() && StringUtils.isBlank(rawInput)) {
+				new JsonResult(false, "Required input missing").printTo(out);
+				return;
+			}
+			if (inSpec == null) rawInput = "";
+			if (item.requiresSelection() && StringUtils.isBlank(rawSelection)) {
+				String msg = "Selection required";
+				if (item.getNoSelectionErrorKey() != null) {
+					String localized = lookupResource(item.getNoSelectionErrorKey());
+					if (!StringUtils.isBlank(localized)) msg = localized;
+				}
+				new JsonResult(false, msg).printTo(out);
+				return;
+			}
+
+			String template = lookupResource(item.getPromptKey());
+			if (template == null) {
+				logger.error("AI tool prompt resource key '{}' not found", item.getPromptKey());
+				new JsonResult(false, "AI prompt not found").printTo(out);
+				return;
+			}
+			String renderedTask = AIPromptBuilder.renderUserInputTemplate(
+					template, rawInput, ss.getAiToolUserInputMaxChars());
+			String normalizedFormat = format == null ? "" : format.trim().toLowerCase();
+			if (normalizedFormat.equals("minimal html") || normalizedFormat.equals("minimal-html")) {
+				String hint = lookupResource("ai.tool.format.minimal-html.hint");
+				if (!StringUtils.isBlank(hint)) renderedTask = renderedTask + "\n\n" + hint;
+			}
+
+			String selection = rawSelection;
+			int selMax = ss.getAiToolSelectionMaxChars();
+			if (selMax > 0 && selection != null && selection.length() > selMax) {
+				selection = selection.substring(0, selMax);
+			}
+
+			String prompt = AIPromptBuilder.buildSelectionAnalysisPrompt(renderedTask, selection);
+
+			AIManager aim = getWts().getAIManager();
+			AIRequestConfig cfg = AIRequestConfig.builder().outputFormat(format).build();
+			String answer = aim.prompt(prompt, cfg);
+			String safeAnswer = AIOutputSanitizer.sanitizeByFormat(answer, format);
+			new JsonResult(safeAnswer).printTo(out, false);
+		} catch (Throwable t) {
+			new JsonResult(t).printTo(out);
+			Service.logger.error("Exception", t);
+		}
+	}
+
 	
 	/*
 	private List<String> queryDomains() {

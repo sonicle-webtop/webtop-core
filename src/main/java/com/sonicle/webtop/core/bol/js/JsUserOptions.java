@@ -104,6 +104,10 @@ public class JsUserOptions extends JsUserOptionsBase {
 	public Boolean imSoundOnFriendDisconnect;
 	public Boolean imSoundOnMessageReceived;
 	public Boolean imSoundOnMessageSent;
+
+	public String aiApiBackend;
+	public String aiApiToken;
+	public Boolean aiApiTokenSet;
 	
 	public JsUserOptions() {
 		super();

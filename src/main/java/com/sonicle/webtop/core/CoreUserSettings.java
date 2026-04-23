@@ -392,9 +392,77 @@ public class CoreUserSettings extends BaseUserSettings {
 	public boolean getIMSoundOnMessageSent() {
 		return getBoolean(IM_SOUND_ON_MESSAGE_SENT, false);
 	}
-	
+
 	public boolean setIMSoundOnMessageSent(boolean value) {
 		return setBoolean(IM_SOUND_ON_MESSAGE_SENT, value);
+	}
+
+	/**
+	 * Returns the user-supplied AI backend if set, otherwise falls back to the
+	 * domain/system default.
+	 */
+	public String getAiApiBackend() {
+		String value = getString(AI_API_BACKEND_USER, null);
+		if (value != null) return value;
+		return ss.getAiApiBackend();
+	}
+
+	/**
+	 * Sets the user-supplied AI backend. Pass null or empty to clear the
+	 * override and fall back to the domain default.
+	 */
+	public boolean setAiApiBackend(String value) {
+		if (value == null || value.isEmpty()) return clear(AI_API_BACKEND_USER);
+		return setString(AI_API_BACKEND_USER, value);
+	}
+
+	/**
+	 * Returns the user-supplied AI token if set, otherwise falls back to the
+	 * domain/system default.
+	 */
+	public String getAiApiToken() {
+		String value = getString(AI_API_TOKEN_USER, null);
+		if (value != null) return value;
+		return ss.getAiApiToken();
+	}
+
+	/**
+	 * Sets the user-supplied AI token. Pass null or empty to clear the
+	 * override and fall back to the domain default.
+	 */
+	public boolean setAiApiToken(String value) {
+		if (value == null || value.isEmpty()) return clear(AI_API_TOKEN_USER);
+		return setString(AI_API_TOKEN_USER, value);
+	}
+
+	/**
+	 * Returns the raw user override backend (may be null). Useful to know
+	 * whether the user has explicitly selected a backend vs. relying on the
+	 * domain default.
+	 */
+	public String getAiApiBackendUserOverride() {
+		return getString(AI_API_BACKEND_USER, null);
+	}
+
+	/**
+	 * Returns the raw user override token (may be null). Useful to know
+	 * whether the user has supplied their own token vs. relying on the
+	 * domain default.
+	 */
+	public String getAiApiTokenUserOverride() {
+		return getString(AI_API_TOKEN_USER, null);
+	}
+
+	/**
+	 * True when the resolved AI backend looks usable for this user.
+	 * Either a user-supplied token is set, or the domain is configured.
+	 * Ollama is excluded here (experimental) — it must be explicitly
+	 * configured at the domain level if needed.
+	 */
+	public boolean isAIConfigured() {
+		String userToken = getString(AI_API_TOKEN_USER, null);
+		if (userToken != null && !userToken.trim().isEmpty()) return true;
+		return ss.isAIConfigured();
 	}
 	
 	public static String getServiceVersion(SettingsManager setm, UserProfileId profileId, String serviceId) {

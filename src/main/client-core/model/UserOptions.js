@@ -85,6 +85,9 @@ Ext.define('Sonicle.webtop.core.model.UserOptions', {
 		WTF.roField('otpDelivery', 'string'),
 		WTF.roField('otpEmailAddress', 'string'),
 		WTF.roField('otpDeviceIsTrusted', 'boolean'),
-		WTF.roField('otpDeviceTrustedOn', 'string')
+		WTF.roField('otpDeviceTrustedOn', 'string'),
+		WTF.field('aiApiBackend', 'string', true),
+		WTF.field('aiApiToken', 'string', true),
+		WTF.roField('aiApiTokenSet', 'boolean')
 	]
 });
