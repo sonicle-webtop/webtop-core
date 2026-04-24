@@ -104,8 +104,10 @@ Ext.define('Sonicle.webtop.core.view.AIView', {
 			.replace(/'/g, '&#39;');
 	},
 
-	typeText: function(fullText, delay = 50, isHtml = false) {
+	typeText: function(fullText, delay, isHtml) {
 		var me = this, aiLoader = me.down('#aiLoader');
+		if (!delay) delay = 50;
+		
 		if (aiLoader) {
 			// For non-HTML formats, escape HTML entities so model output cannot be
 			// rendered as active content by the iframe. HTML formats have already
