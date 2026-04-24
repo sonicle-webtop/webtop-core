@@ -106,36 +106,37 @@ Ext.define('Sonicle.webtop.core.view.AIView', {
 
 	typeText: function(fullText, delay = 50, isHtml = false) {
 		var me = this, aiLoader = me.down('#aiLoader');
-		if (!aiLoader) return;
+		if (aiLoader) {
+			// For non-HTML formats, escape HTML entities so model output cannot be
+			// rendered as active content by the iframe. HTML formats have already
+			// been sanitized server-side (AIOutputSanitizer) before arriving here.
+			var text = isHtml ? (fullText == null ? '' : String(fullText)) : me.escapeHtml(fullText);
 
-		// For non-HTML formats, escape HTML entities so model output cannot be
-		// rendered as active content by the iframe. HTML formats have already
-		// been sanitized server-side (AIOutputSanitizer) before arriving here.
-		var text = isHtml ? (fullText == null ? '' : String(fullText)) : me.escapeHtml(fullText);
+			const doc = aiLoader.getDoc();
+			const pBody = window.getComputedStyle(document.body);
+			const style = '<style>html,body{font-family:' + pBody.fontFamily +
+				';color:' + pBody.color +
+				';background:' + pBody.backgroundColor +
+				';margin:0;padding:8px;font-size:13px;line-height:1.4}</style>';
+			doc.open();
+			doc.write(style);
+			if (!isHtml) doc.write('<pre style="white-space:pre-wrap;font-family:inherit;margin:0">');
+			let index = 0;
+			const interval = setInterval(() => {
+				var eIndex = index+10;
+				if (eIndex > text.length) {
+					clearInterval(interval);
+					doc.write(text.substring(index,text.length));
+					if (!isHtml) doc.write('</pre>');
+					doc.close();
+				}
+				else {
+					doc.write(text.substring(index,eIndex));
+					index=eIndex;
+				}
+			}, delay);
+		}
 
-		const doc = aiLoader.getDoc();
-		const pBody = window.getComputedStyle(document.body);
-		const style = '<style>html,body{font-family:' + pBody.fontFamily +
-			';color:' + pBody.color +
-			';background:' + pBody.backgroundColor +
-			';margin:0;padding:8px;font-size:13px;line-height:1.4}</style>';
-		doc.open();
-		doc.write(style);
-		if (!isHtml) doc.write('<pre style="white-space:pre-wrap;font-family:inherit;margin:0">');
-		let index = 0;
-		const interval = setInterval(() => {
-			var eIndex = index+10;
-			if (eIndex > text.length) {
-				clearInterval(interval);
-				doc.write(text.substring(index,text.length));
-				if (!isHtml) doc.write('</pre>');
-				doc.close();
-			}
-			else {
-				doc.write(text.substring(index,eIndex));
-				index=eIndex;
-			}
-		}, delay);
 	},
 
 	askQuestion: function(sid, action, params, func) {
