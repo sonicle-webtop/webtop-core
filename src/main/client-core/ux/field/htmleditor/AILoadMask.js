@@ -40,13 +40,13 @@ Ext.define('Sonicle.webtop.core.ux.field.htmleditor.AILoadMask', {
 		Ext.defer(function () {
 			var inner = me.el && me.el.down('.x-mask-msg-inner');
 			if (inner) {
-				inner.setHtml(`
-					<div class="ai-thinking">
-					  <div class="ai-dot"></div>
-					  <div class="ai-dot"></div>
-					  <div class="ai-dot"></div>
-					</div>
-				`);
+				inner.setHtml(
+					'<div class="ai-thinking">'+
+					'  <div class="ai-dot"></div>'+
+					'  <div class="ai-dot"></div>'+
+					'  <div class="ai-dot"></div>'+
+					'</div>'
+				);
 			}
 		}, 1);
 	}
