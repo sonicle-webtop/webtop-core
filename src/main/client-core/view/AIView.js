@@ -59,13 +59,13 @@ Ext.define('Sonicle.webtop.core.view.AIView', {
 			xtype: 'component',
 			itemId: 'aiLoader',
 			region: 'center',
-			html: `
-				<div class="ai-thinking">
-				  <div class="ai-dot"></div>
-				  <div class="ai-dot"></div>
-				  <div class="ai-dot"></div>
-				</div>
-			`,
+			html: 
+				'<div class="ai-thinking">'+
+				'  <div class="ai-dot"></div>'+
+				'  <div class="ai-dot"></div>'+
+				'  <div class="ai-dot"></div>'+
+				'</div>'
+			,
 			styleHtmlContent: true
 		});
 	},
