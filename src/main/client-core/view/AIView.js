@@ -112,17 +112,17 @@ Ext.define('Sonicle.webtop.core.view.AIView', {
 			// been sanitized server-side (AIOutputSanitizer) before arriving here.
 			var text = isHtml ? (fullText == null ? '' : String(fullText)) : me.escapeHtml(fullText);
 
-			const doc = aiLoader.getDoc();
-			const pBody = window.getComputedStyle(document.body);
-			const style = '<style>html,body{font-family:' + pBody.fontFamily +
+			var doc = aiLoader.getDoc();
+			var pBody = window.getComputedStyle(document.body);
+			var style = '<style>html,body{font-family:' + pBody.fontFamily +
 				';color:' + pBody.color +
 				';background:' + pBody.backgroundColor +
 				';margin:0;padding:8px;font-size:13px;line-height:1.4}</style>';
 			doc.open();
 			doc.write(style);
 			if (!isHtml) doc.write('<pre style="white-space:pre-wrap;font-family:inherit;margin:0">');
-			let index = 0;
-			const interval = setInterval(() => {
+			var index = 0;
+			var interval = setInterval(() => {
 				var eIndex = index+10;
 				if (eIndex > text.length) {
 					clearInterval(interval);
