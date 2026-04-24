@@ -122,7 +122,7 @@ Ext.define('Sonicle.webtop.core.view.AIView', {
 			doc.write(style);
 			if (!isHtml) doc.write('<pre style="white-space:pre-wrap;font-family:inherit;margin:0">');
 			var index = 0;
-			var interval = setInterval(() => {
+			var interval = setInterval(function() {
 				var eIndex = index+10;
 				if (eIndex > text.length) {
 					clearInterval(interval);
