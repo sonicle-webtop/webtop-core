@@ -59,13 +59,13 @@ Ext.define('Sonicle.webtop.core.view.AIView', {
 			xtype: 'component',
 			itemId: 'aiLoader',
 			region: 'center',
-			html: `
-				<div class="ai-thinking">
-				  <div class="ai-dot"></div>
-				  <div class="ai-dot"></div>
-				  <div class="ai-dot"></div>
-				</div>
-			`,
+			html: 
+				'<div class="ai-thinking">'+
+				'  <div class="ai-dot"></div>'+
+				'  <div class="ai-dot"></div>'+
+				'  <div class="ai-dot"></div>'+
+				'</div>'
+			,
 			styleHtmlContent: true
 		});
 	},
@@ -104,38 +104,41 @@ Ext.define('Sonicle.webtop.core.view.AIView', {
 			.replace(/'/g, '&#39;');
 	},
 
-	typeText: function(fullText, delay = 50, isHtml = false) {
+	typeText: function(fullText, delay, isHtml) {
 		var me = this, aiLoader = me.down('#aiLoader');
-		if (!aiLoader) return;
+		if (!delay) delay = 50;
+		
+		if (aiLoader) {
+			// For non-HTML formats, escape HTML entities so model output cannot be
+			// rendered as active content by the iframe. HTML formats have already
+			// been sanitized server-side (AIOutputSanitizer) before arriving here.
+			var text = isHtml ? (fullText == null ? '' : String(fullText)) : me.escapeHtml(fullText);
 
-		// For non-HTML formats, escape HTML entities so model output cannot be
-		// rendered as active content by the iframe. HTML formats have already
-		// been sanitized server-side (AIOutputSanitizer) before arriving here.
-		var text = isHtml ? (fullText == null ? '' : String(fullText)) : me.escapeHtml(fullText);
+			var doc = aiLoader.getDoc();
+			var pBody = window.getComputedStyle(document.body);
+			var style = '<style>html,body{font-family:' + pBody.fontFamily +
+				';color:' + pBody.color +
+				';background:' + pBody.backgroundColor +
+				';margin:0;padding:8px;font-size:13px;line-height:1.4}</style>';
+			doc.open();
+			doc.write(style);
+			if (!isHtml) doc.write('<pre style="white-space:pre-wrap;font-family:inherit;margin:0">');
+			var index = 0;
+			var interval = setInterval(function() {
+				var eIndex = index+10;
+				if (eIndex > text.length) {
+					clearInterval(interval);
+					doc.write(text.substring(index,text.length));
+					if (!isHtml) doc.write('</pre>');
+					doc.close();
+				}
+				else {
+					doc.write(text.substring(index,eIndex));
+					index=eIndex;
+				}
+			}, delay);
+		}
 
-		const doc = aiLoader.getDoc();
-		const pBody = window.getComputedStyle(document.body);
-		const style = '<style>html,body{font-family:' + pBody.fontFamily +
-			';color:' + pBody.color +
-			';background:' + pBody.backgroundColor +
-			';margin:0;padding:8px;font-size:13px;line-height:1.4}</style>';
-		doc.open();
-		doc.write(style);
-		if (!isHtml) doc.write('<pre style="white-space:pre-wrap;font-family:inherit;margin:0">');
-		let index = 0;
-		const interval = setInterval(() => {
-			var eIndex = index+10;
-			if (eIndex > text.length) {
-				clearInterval(interval);
-				doc.write(text.substring(index,text.length));
-				if (!isHtml) doc.write('</pre>');
-				doc.close();
-			}
-			else {
-				doc.write(text.substring(index,eIndex));
-				index=eIndex;
-			}
-		}, delay);
 	},
 
 	askQuestion: function(sid, action, params, func) {
