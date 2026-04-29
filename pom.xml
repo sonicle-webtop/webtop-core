@@ -542,6 +542,11 @@
 			<artifactId>caffeine</artifactId>
 			<version>${caffeine.version}</version>
 		</dependency>
+		<dependency>
+			<groupId>com.bucket4j</groupId>
+			<artifactId>bucket4j_jdk8-core</artifactId>
+			<version>8.2.0</version>
+		</dependency>
 		
 		<!-- WebTop libraries -->
 		<dependency>
@@ -799,6 +804,25 @@
 							</jsSourceIncludes>
 						</configuration>
 					</execution>
+					<!--
+					<execution>
+						<id>client-minify-extjs2</id>
+						<phase>none</phase>
+						<goals>
+							<goal>minify</goal>
+						</goals>
+						<configuration>
+							<jsEngine>YUI</jsEngine>
+							<suffix>.min</suffix>
+							<skipMerge>true</skipMerge>
+							<jsSourceDir>client/extjs</jsSourceDir>
+							<jsTargetDir>client/extjs</jsTargetDir>
+							<jsSourceIncludes>
+								<jsSourceInclude>**/*.css</jsSourceInclude>
+							</jsSourceIncludes>
+						</configuration>
+					</execution>
+					-->
 					<execution>
 						<id>client-minify-boot</id>
 						<phase>none</phase>

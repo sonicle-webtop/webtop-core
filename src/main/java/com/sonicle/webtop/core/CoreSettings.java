@@ -364,6 +364,26 @@ public class CoreSettings {
 	 * Must be greater than 0.
 	 */
 	public static final String LOGIN_REMEMBERME_ABSOLUTELIFETIME = "login.rememberme.absolutelifetime";
+
+	/**
+	 * [system+domain]
+	 * [integer]
+	 * Lifetime of an access token issued by /auth/login or /auth/refresh, in minutes.
+	 * Used by the user-session bearer flow consumed by REST clients (mobile app, etc.).
+	 * Must be greater than 0.
+	 */
+	public static final String AUTH_TOKEN_ACCESS_TTL_MINUTES = "auth.token.access.ttl.minutes";
+
+	/**
+	 * [system+domain]
+	 * [integer]
+	 * Lifetime of a refresh token issued by /auth/login or /auth/refresh, in days.
+	 * Used by the user-session bearer flow consumed by REST clients (mobile app, etc.).
+	 * Refresh tokens are rotated on every use; this value caps the absolute lifetime
+	 * of the rotation chain.
+	 * Must be greater than 0.
+	 */
+	public static final String AUTH_TOKEN_REFRESH_TTL_DAYS = "auth.token.refresh.ttl.days";
 	
 	/**
 	 * [system+domain]

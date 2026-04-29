@@ -35,6 +35,7 @@ package com.sonicle.webtop.core;
 import com.sonicle.webtop.core.app.CoreManifest;
 import com.sonicle.webtop.core.app.WT;
 import com.sonicle.webtop.core.app.sdk.interfaces.IControllerRemindersHooks;
+import com.sonicle.webtop.core.bg.AuthTokenCleanupTask;
 import com.sonicle.webtop.core.bg.DevicesSyncCheckTask;
 import com.sonicle.webtop.core.bg.ReminderTask;
 import com.sonicle.webtop.core.sdk.BaseBackgroundService;
@@ -83,6 +84,13 @@ public class BackgroundService extends BaseBackgroundService {
 				DevicesSyncCheckTask.class,
 				TriggerBuilder.newTrigger()
 					.withSchedule(devicesSyncCheckTaskScheduleBuilder()) // every day at...
+					.build()
+			),
+			// Auth-token cleanup task: hard-delete expired access/refresh tokens
+			new BaseBackgroundService.TaskDefinition(
+				AuthTokenCleanupTask.class,
+				TriggerBuilder.newTrigger()
+					.withSchedule(CronScheduleBuilder.dailyAtHourAndMinute(3, 30)) // every day at 03:30
 					.build()
 			)
 		);

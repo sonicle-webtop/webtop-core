@@ -33,7 +33,8 @@
 package com.sonicle.webtop.core.app.shiro.filter;
 
 import com.sonicle.commons.web.ServletUtils;
-import com.sonicle.webtop.core.app.shiro.AuthTokenBearer;
+import com.sonicle.webtop.core.app.shiro.AuthTokenAccessToken;
+import com.sonicle.webtop.core.app.shiro.AuthTokenBearerApiKey;
 import com.sonicle.webtop.core.app.shiro.MaintenanceException;
 import java.io.IOException;
 import javax.servlet.ServletRequest;
@@ -64,9 +65,13 @@ public class AuthBearer extends BearerHttpAuthenticationFilter {
 	protected AuthenticationToken createBearerToken(String token, ServletRequest request) {
 		String xAuthUsernameHeader = getXAuthUsernameHeader(request);
 		if (xAuthUsernameHeader == null || xAuthUsernameHeader.length() == 0) {
-			return super.createBearerToken(token, request);
+			// New user-session access-token flow: token alone identifies the
+			// user via DB lookup (see WTRealm.authenticateAccessToken).
+			return new AuthTokenAccessToken(token, request.getRemoteHost());
 		} else {
-			return new AuthTokenBearer(token, xAuthUsernameHeader, request.getRemoteHost());
+			// Existing API-key flow: token is paired with X-Auth-Username and
+			// authenticated via WebTopManager.authenticateApiKey.
+			return new AuthTokenBearerApiKey(token, xAuthUsernameHeader, request.getRemoteHost());
 		}
 	}
 	
@@ -78,14 +83,25 @@ public class AuthBearer extends BearerHttpAuthenticationFilter {
 		if (LOGGER.isTraceEnabled()) LOGGER.trace("[{}] onLoginFailure", ServletUtils.getRequestID(httpRequest));
 		
 		// Breaks the default flow in case of MaintenanceException:
-		// in this case send a SERVICE_UNAVAILABLE (503) error in order to allow 
+		// in this case send a SERVICE_UNAVAILABLE (503) error in order to allow
 		// clients to get informed to the temporary condition.
 		if (e instanceof MaintenanceException) {
 			if (LOGGER.isTraceEnabled()) LOGGER.trace("[{}] Maintenance detected, sending a 503 error...", ServletUtils.getRequestID(httpRequest));
 			try {
 				httpResponse.sendError(HttpServletResponse.SC_SERVICE_UNAVAILABLE, e.getMessage());
 				return false;
-				
+
+			} catch (IOException ex) {
+				return super.onLoginFailure(token, e, request, response);
+			}
+		} else if (token instanceof AuthTokenAccessToken) {
+			// User-session access-token failure: signal the client to attempt
+			// a refresh by responding 401 with WWW-Authenticate: Bearer error="invalid_token".
+			httpResponse.setHeader("WWW-Authenticate", "Bearer error=\"invalid_token\"");
+			try {
+				httpResponse.sendError(HttpServletResponse.SC_UNAUTHORIZED);
+				return false;
+
 			} catch (IOException ex) {
 				return super.onLoginFailure(token, e, request, response);
 			}

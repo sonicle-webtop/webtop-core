@@ -13,32 +13,34 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 
-
-
-@JsonTypeName("GroupAdd_allOf")
+/**
+ * Body of a /auth/refresh call.
+ **/
+@ApiModel(description = "Body of a /auth/refresh call.")
+@JsonTypeName("AuthRefreshRequest")
 @javax.annotation.Generated(value = "org.openapitools.codegen.languages.JavaJAXRSSpecServerCodegen", date = "2026-04-29T10:39:20.102+02:00[Europe/Berlin]")
-public class ApiGroupAddAllOf   {
-  private @Valid String groupId;
+public class ApiAuthRefreshRequest   {
+  private @Valid String refreshToken;
 
   /**
-   * Group ID, actually its name.
+   * The refresh token previously issued by /auth/login or /auth/refresh
    **/
-  public ApiGroupAddAllOf groupId(String groupId) {
-    this.groupId = groupId;
+  public ApiAuthRefreshRequest refreshToken(String refreshToken) {
+    this.refreshToken = refreshToken;
     return this;
   }
 
   
-  @ApiModelProperty(required = true, value = "Group ID, actually its name.")
-  @JsonProperty("groupId")
+  @ApiModelProperty(required = true, value = "The refresh token previously issued by /auth/login or /auth/refresh")
+  @JsonProperty("refreshToken")
   @NotNull
-  public String getGroupId() {
-    return groupId;
+  public String getRefreshToken() {
+    return refreshToken;
   }
 
-  @JsonProperty("groupId")
-  public void setGroupId(String groupId) {
-    this.groupId = groupId;
+  @JsonProperty("refreshToken")
+  public void setRefreshToken(String refreshToken) {
+    this.refreshToken = refreshToken;
   }
 
 
@@ -50,21 +52,21 @@ public class ApiGroupAddAllOf   {
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
-    ApiGroupAddAllOf groupAddAllOf = (ApiGroupAddAllOf) o;
-    return Objects.equals(this.groupId, groupAddAllOf.groupId);
+    ApiAuthRefreshRequest authRefreshRequest = (ApiAuthRefreshRequest) o;
+    return Objects.equals(this.refreshToken, authRefreshRequest.refreshToken);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(groupId);
+    return Objects.hash(refreshToken);
   }
 
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();
-    sb.append("class ApiGroupAddAllOf {\n");
+    sb.append("class ApiAuthRefreshRequest {\n");
     
-    sb.append("    groupId: ").append(toIndentedString(groupId)).append("\n");
+    sb.append("    refreshToken: ").append(toIndentedString(refreshToken)).append("\n");
     sb.append("}");
     return sb.toString();
   }

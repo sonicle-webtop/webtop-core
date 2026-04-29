@@ -90,32 +90,34 @@ public class WTCookieRememberMeManager implements RememberMeManager {
 		// So, to make sure to initialize things properly, some of statements of 
 		// original onLoginSuccess was moved here!
 		
-		final HttpServletRequest request = WebUtils.getHttpRequest(subject);
-		final HttpServletResponse response = WebUtils.getHttpResponse(subject);
-		
-		if (isAuthC(token)) { // Is authenticated through authc?
-			Session subjectSession = SessionContext.getSubjectSession(subject, true);
-			if (subjectSession != null) {
-				final UserProfileId subjectPid = RunContext.getRunProfileId(subject);
-				initSessionAttributes(subjectPid, subjectSession, request, response);
-				initClientID(subjectPid, subjectSession, request, response);
-			}
+		if (WebUtils.isWeb(subject)) {
+			final HttpServletRequest request = WebUtils.getHttpRequest(subject);
+			final HttpServletResponse response = WebUtils.getHttpResponse(subject);
 			
-		} else if (isAuthRMe(token)) { // Is authenticated through rme?
-			Session subjectSession = SessionContext.getSubjectSession(subject);
-			if (subjectSession != null) {
-				final UserProfileId subjectPid = RunContext.getRunProfileId(subject);
-				initSessionAttributes(subjectPid, subjectSession, request, response);
-				initClientID(subjectPid, subjectSession, request, response);
+			if (isAuthC(token)) { // Is authenticated through authc?
+				Session subjectSession = SessionContext.getSubjectSession(subject, true);
+				if (subjectSession != null) {
+					final UserProfileId subjectPid = RunContext.getRunProfileId(subject);
+					initSessionAttributes(subjectPid, subjectSession, request, response);
+					initClientID(subjectPid, subjectSession, request, response);
+				}
+
+			} else if (isAuthRMe(token)) { // Is authenticated through rme?
+				Session subjectSession = SessionContext.getSubjectSession(subject);
+				if (subjectSession != null) {
+					final UserProfileId subjectPid = RunContext.getRunProfileId(subject);
+					initSessionAttributes(subjectPid, subjectSession, request, response);
+					initClientID(subjectPid, subjectSession, request, response);
+				}
 			}
-		}
-		
-		if (isRememberMeActivation(token)) {
-			rememberIdentity(subject, request, response);
-			
-		} else {
-			if (LOGGER.isDebugEnabled()) {
-				LOGGER.debug("AuthenticationToken did not indicate RememberMe activation is requested. Functionality ignored.");
+
+			if (isRememberMeActivation(token)) {
+				rememberIdentity(subject, request, response);
+
+			} else {
+				if (LOGGER.isDebugEnabled()) {
+					LOGGER.debug("AuthenticationToken did not indicate RememberMe activation is requested. Functionality ignored.");
+				}
 			}
 		}
 	}
@@ -240,30 +242,33 @@ public class WTCookieRememberMeManager implements RememberMeManager {
 	
 	private void forgetIdentity(final Subject subject) {
 		if (LOGGER.isTraceEnabled()) LOGGER.trace("Forgetting identity... [{}]", subject.getPrincipal());
-		final HttpServletRequest request = WebUtils.getHttpRequest(subject);
-		final HttpServletResponse response = WebUtils.getHttpResponse(subject);
 		
-		boolean cookieCleared = false;
-		final WebTopManager wtMgr = WebTopApp.getInstance().getWebTopManager();
-		try {
-			// Revoke any previous token...
-			RMeCookieValue rmeCookie = ServletHelper.readRememberMeCookie(request);
-			if (rmeCookie != null) {
-				wtMgr.revokeRememberMeToken(rmeCookie.getSelector());
-			}
+		if (WebUtils.isWeb(subject)) {
+			final HttpServletRequest request = WebUtils.getHttpRequest(subject);
+			final HttpServletResponse response = WebUtils.getHttpResponse(subject);
 			
-			// Then, force cookie cleanup
-			if (LOGGER.isTraceEnabled()) LOGGER.trace("Cleaning RMe cookie... [{}]", subject.getPrincipal());
-			ServletUtils.eraseCookie(response, ServletHelper.COOKIE_REMEMBERME);
-			cookieCleared = true;
-			
-		} catch (Exception ex) {
-			LOGGER.error("Error forgetting remembered identity", ex);
-		} finally {
-			if (cookieCleared) {
-				Session subjectSession = SessionContext.getSubjectSession(subject);
-				if (subjectSession != null) {
-					subjectSession.removeAttribute(SessionManager.ATTRIBUTE_RME_ARMED);
+			boolean cookieCleared = false;
+			final WebTopManager wtMgr = WebTopApp.getInstance().getWebTopManager();
+			try {
+				// Revoke any previous token...
+				RMeCookieValue rmeCookie = ServletHelper.readRememberMeCookie(request);
+				if (rmeCookie != null) {
+					wtMgr.revokeRememberMeToken(rmeCookie.getSelector());
+				}
+
+				// Then, force cookie cleanup
+				if (LOGGER.isTraceEnabled()) LOGGER.trace("Cleaning RMe cookie... [{}]", subject.getPrincipal());
+				ServletUtils.eraseCookie(response, ServletHelper.COOKIE_REMEMBERME);
+				cookieCleared = true;
+
+			} catch (Exception ex) {
+				LOGGER.error("Error forgetting remembered identity", ex);
+			} finally {
+				if (cookieCleared) {
+					Session subjectSession = SessionContext.getSubjectSession(subject);
+					if (subjectSession != null) {
+						subjectSession.removeAttribute(SessionManager.ATTRIBUTE_RME_ARMED);
+					}
 				}
 			}
 		}

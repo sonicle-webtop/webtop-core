@@ -145,6 +145,9 @@ import com.sonicle.webtop.core.app.model.GroupUpdateOption;
 import com.sonicle.webtop.core.app.model.HomedThrowable;
 import com.sonicle.webtop.core.app.model.PermissionString;
 import com.sonicle.webtop.core.app.model.PlatformUser;
+import com.sonicle.webtop.core.app.model.AuthSession;
+import com.sonicle.webtop.core.app.model.AuthTokenPair;
+import com.sonicle.webtop.core.app.model.AuthTokenValidated;
 import com.sonicle.webtop.core.app.model.RMeToken;
 import com.sonicle.webtop.core.app.model.RMeTokenInfo;
 import com.sonicle.webtop.core.app.model.RMeTokenIssued;
@@ -171,9 +174,11 @@ import com.sonicle.webtop.core.app.model.UserUpdateOption;
 import com.sonicle.webtop.core.app.shiro.ShiroUtils;
 import com.sonicle.webtop.core.app.shiro.WTRealm;
 import com.sonicle.webtop.core.bol.OApiKey;
+import com.sonicle.webtop.core.bol.OAuthToken;
 import com.sonicle.webtop.core.bol.ORememberMeToken;
 import com.sonicle.webtop.core.bol.VUser;
 import com.sonicle.webtop.core.dal.ApiKeyDAO;
+import com.sonicle.webtop.core.dal.AuthTokenDAO;
 import com.sonicle.webtop.core.dal.BaseDAO;
 import com.sonicle.webtop.core.dal.CustomFieldDAO;
 import com.sonicle.webtop.core.dal.CustomPanelDAO;
@@ -206,8 +211,11 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import jakarta.mail.internet.InternetAddress;
+import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.ArrayDeque;
 import java.util.Collection;
+import java.util.Deque;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Locale;
@@ -256,6 +264,11 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 	private final Cache<String, String> profileSecretValueCache = Caffeine.newBuilder().build();
 	private final KeyedReentrantLocks<String> lockSecretGet = new KeyedReentrantLocks<>();
 	private final KeyedReentrantLocks<String> lockRMEValidation = new KeyedReentrantLocks<>();
+	private final KeyedReentrantLocks<String> lockAuthTokenRotation = new KeyedReentrantLocks<>();
+	private final Cache<String, Optional<AuthTokenValidated>> authAccessTokenCache = Caffeine.newBuilder()
+		.expireAfterWrite(2, TimeUnit.MINUTES)
+		.maximumSize(10_000)
+		.build();
 	private final SubjectSidCache subjectSidCache;
 	private final LoadingCache<UserProfileId, UserProfile.PersonalInfo> profileToPersonalInfoCache = Caffeine.newBuilder().build(new ProfilePersonalInfoCacheLoader());
 	private final LoadingCache<UserProfileId, UserProfile.Data> profileToDataCache = Caffeine.newBuilder().build(new ProfileDataCacheLoader());
@@ -2003,12 +2016,453 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 		Check.notEmpty(userId, "userId");
 		RememberMeTokenDAO rmeDao = RememberMeTokenDAO.getInstance();
 		Connection con = null;
-		
+
 		try {
 			con = getConnection(true);
 			int ret = rmeDao.revokeByProfile(con, domainId, userId, BaseDAO.createRevisionTimestamp());
 			return ret > 0;
+
+		} catch (Exception ex) {
+			throw ExceptionUtils.wrapThrowable(ex);
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+
+	/**
+	 * Issues a fresh access + refresh token pair for the given user, opening
+	 * a new session (i.e. a new chain head). Inserts the refresh row first
+	 * (parent_id=null) and then the access row (parent_id={refresh row id}).
+	 * 
+	 * @param domainId
+	 * @param userId
+	 * @param deviceLabel
+	 * @param clientIpAddress
+	 * @param clientUserAgentString
+	 * @return
+	 * @throws WTException 
+	 */
+	public AuthTokenPair issueAuthSession(final String domainId, final String userId, final String deviceLabel, final String clientIpAddress, final String clientUserAgentString) throws WTException {
+		Check.notEmpty(domainId, "domainId");
+		Check.notEmpty(userId, "userId");
+		AuthTokenDAO tokDao = AuthTokenDAO.getInstance();
+		Connection con = null;
+		
+		CoreServiceSettings css = new CoreServiceSettings(CoreManifest.ID, domainId);
+		final Duration accessTtl = Duration.standardMinutes(css.getAuthTokenAccessTtlMinutes());
+		final Duration refreshTtl = Duration.standardDays(css.getAuthTokenRefreshTtlDays());
+
+		try {
+			final DateTime now = JodaTimeUtils.now();
+			final String refreshPlain = CryptoUtils.generateBase64RandomToken(32);
+			final String accessPlain = CryptoUtils.generateBase64RandomToken(32);
 			
+			final String refreshHash = CryptoUtils.hash(refreshPlain, DigestAlgorithm.SHA256);
+			final String accessHash = CryptoUtils.hash(accessPlain, DigestAlgorithm.SHA256);
+
+			OAuthToken refreshRow = new OAuthToken();
+			refreshRow.setDomainId(domainId);
+			refreshRow.setUserId(userId);
+			refreshRow.setToken(refreshHash);
+			refreshRow.setType(OAuthToken.TYPE_REFRESH);
+			refreshRow.setParentId(null);
+			refreshRow.setDeviceLabel(StringUtils.left(StringUtils.defaultString(deviceLabel, clientUserAgentString), 255));
+			refreshRow.setIssuedAt(now);
+			refreshRow.setExpiresAt(now.plus(refreshTtl));
+			refreshRow.setLastUsedAt(now);
+			refreshRow.setRevokedAt(null);
+			refreshRow.setClientIpAddress(StringUtils.left(clientIpAddress, 45));
+			refreshRow.setClientUserAgent(StringUtils.left(clientUserAgentString, 512));
+
+			OAuthToken accessRow = new OAuthToken();
+			accessRow.setDomainId(domainId);
+			accessRow.setUserId(userId);
+			accessRow.setToken(accessHash);
+			accessRow.setType(OAuthToken.TYPE_ACCESS);
+			accessRow.setParentId(refreshRow.getAuthTokenId());
+			accessRow.setDeviceLabel(refreshRow.getDeviceLabel());
+			accessRow.setIssuedAt(now);
+			accessRow.setExpiresAt(now.plus(accessTtl));
+			accessRow.setLastUsedAt(now);
+			accessRow.setRevokedAt(null);
+			accessRow.setClientIpAddress(refreshRow.getClientIpAddress());
+			accessRow.setClientUserAgent(refreshRow.getClientUserAgent());
+			
+			con = getConnection(true);
+			tokDao.insert(con, refreshRow, BaseDAO.createRevisionTimestamp());
+			tokDao.insert(con, accessRow, BaseDAO.createRevisionTimestamp());
+
+			return new AuthTokenPair(
+				new UserProfileId(domainId, userId),
+				accessPlain,
+				refreshPlain,
+				accessRow.getIssuedAt(), accessRow.getExpiresAt(),
+				refreshRow.getIssuedAt(), refreshRow.getExpiresAt()
+			);
+
+		} catch (Exception ex) {
+			throw ExceptionUtils.wrapThrowable(ex);
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+
+	/**
+	 * Validates a plaintext access token against the database, with a short
+	 * Caffeine cache in front to absorb the per-request hot path. Returns
+	 * {@code null} for missing, revoked, expired or wrong-typed tokens.
+	 * Updates last_used_at on cache miss.
+	 * @param plainToken
+	 * @return
+	 * @throws WTException 
+	 */
+	public AuthTokenValidated validateAccessToken(final String plainToken) throws WTException {
+		if (StringUtils.isBlank(plainToken)) return null;
+		
+		final String hash = CryptoUtils.hash(plainToken, DigestAlgorithm.SHA256);
+		Optional<AuthTokenValidated> cached = authAccessTokenCache.getIfPresent(hash);
+		if (cached != null) return cached.orElse(null);
+		
+		final AuthTokenDAO tokDao = AuthTokenDAO.getInstance();
+		Connection con = null;
+		try {
+			final DateTime now = JodaTimeUtils.now();
+			con = getConnection(true);
+			final OAuthToken row = tokDao.selectByTokenHash(con, hash);
+			
+			if (row == null
+					|| !OAuthToken.TYPE_ACCESS.equals(row.getType())
+					|| row.getRevokedAt() != null
+					|| !now.isBefore(row.getExpiresAt())) {
+				authAccessTokenCache.put(hash, Optional.empty());
+				return null;
+			}
+			
+			final AuthTokenValidated result = new AuthTokenValidated(
+				row.getAuthTokenId(),
+				row.getParentId(),
+				new UserProfileId(row.getDomainId(), row.getUserId())
+			);
+			authAccessTokenCache.put(hash, Optional.of(result));
+			
+			// Best-effort touch; failures are not fatal to validation
+			try {
+				tokDao.updateLastUsedById(con, row.getAuthTokenId(), now);
+			} catch (Exception ex) {
+				LOGGER.trace("AuthToken: last_used_at update failed [{}]", row.getAuthTokenId(), ex);
+			}
+			
+			return result;
+
+		} catch (Exception ex) {
+			throw ExceptionUtils.wrapThrowable(ex);
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+
+	/**
+	 * Atomic refresh-token rotation. On success returns a new pair; on theft
+	 * detection (a refresh token presented after it was already revoked) the
+	 * entire chain it belongs to is revoked and {@code null} is returned.
+	 * @param plainRefreshToken
+	 * @param deviceLabel
+	 * @param clientIpAddress
+	 * @param clientUserAgentString
+	 * @return {@code null} also for invalid, expired or wrong-typed tokens.
+	 * @throws WTException 
+	 */
+	public AuthTokenPair rotateAuthRefresh(final String plainRefreshToken, final String deviceLabel, final String clientIpAddress, final String clientUserAgentString) throws WTException {
+		if (StringUtils.isBlank(plainRefreshToken)) return null;
+		AuthTokenDAO tokDao = AuthTokenDAO.getInstance();
+		Connection con = null;
+		
+		final String hash = CryptoUtils.hash(plainRefreshToken, DigestAlgorithm.SHA256);
+		try {
+			lockAuthTokenRotation.lock(hash);
+			try {
+				con = getConnection(true);
+				final OAuthToken old = tokDao.selectByTokenHash(con, hash);
+				if (old == null || !OAuthToken.TYPE_REFRESH.equals(old.getType())) {
+					return null;
+				}
+
+				final DateTime now = JodaTimeUtils.now();
+				if (old.getRevokedAt() != null) {
+					// Theft signal: a previously revoked refresh token is
+					// being presented again. Nuke the entire chain.
+					LOGGER.warn("AuthToken: revoked refresh token replayed, revoking chain [{}, {}@{}]",
+						old.getAuthTokenId(), old.getUserId(), old.getDomainId());
+					doRevokeAuthChainInternal(con, old.getAuthTokenId());
+					return null;
+				}
+				if (!now.isBefore(old.getExpiresAt())) {
+					tokDao.revokeById(con, old.getAuthTokenId(), now, BaseDAO.createRevisionTimestamp());
+					return null;
+				}
+
+				// Mint new pair, parent of new refresh = old refresh (rotation chain).
+				CoreServiceSettings css = new CoreServiceSettings(CoreManifest.ID, old.getDomainId());
+				Duration accessTtl = Duration.standardMinutes(css.getAuthTokenAccessTtlMinutes());
+				Duration refreshTtl = Duration.standardDays(css.getAuthTokenRefreshTtlDays());
+
+				final String newRefreshPlain = CryptoUtils.generateBase64RandomToken(32);
+				final String newAccessPlain = CryptoUtils.generateBase64RandomToken(32);
+
+				final OAuthToken orefresh = new OAuthToken();
+				orefresh.setDomainId(old.getDomainId());
+				orefresh.setUserId(old.getUserId());
+				orefresh.setToken(CryptoUtils.hash(newRefreshPlain, DigestAlgorithm.SHA256));
+				orefresh.setType(OAuthToken.TYPE_REFRESH);
+				orefresh.setParentId(old.getAuthTokenId());
+				orefresh.setDeviceLabel(StringUtils.defaultString(StringUtils.left(deviceLabel, 255), old.getDeviceLabel()));
+				orefresh.setIssuedAt(now);
+				orefresh.setExpiresAt(now.plus(refreshTtl));
+				orefresh.setLastUsedAt(now);
+				orefresh.setClientIpAddress(StringUtils.left(StringUtils.defaultString(clientIpAddress, old.getClientIpAddress()), 45));
+				orefresh.setClientUserAgent(StringUtils.left(StringUtils.defaultString(clientUserAgentString, old.getClientUserAgent()), 512));
+
+				final OAuthToken oaccess = new OAuthToken();
+				oaccess.setDomainId(old.getDomainId());
+				oaccess.setUserId(old.getUserId());
+				oaccess.setToken(CryptoUtils.hash(newAccessPlain, DigestAlgorithm.SHA256));
+				oaccess.setType(OAuthToken.TYPE_ACCESS);
+				oaccess.setParentId(orefresh.getAuthTokenId());
+				oaccess.setDeviceLabel(orefresh.getDeviceLabel());
+				oaccess.setIssuedAt(now);
+				oaccess.setExpiresAt(now.plus(accessTtl));
+				oaccess.setLastUsedAt(now);
+				oaccess.setClientIpAddress(orefresh.getClientIpAddress());
+				oaccess.setClientUserAgent(orefresh.getClientUserAgent());
+				oaccess.setAuthTokenId(tokDao.getSequence(con));
+
+				// Revoke old refresh + all access tokens minted by it, then
+				// insert the new pair. Any partial failure rolls back via
+				// auto-commit boundaries we accept transient inconsistency
+				// favoring liveness, matching the rememberme approach.
+				final DateTime revisionTs = BaseDAO.createRevisionTimestamp();
+				tokDao.revokeById(con, old.getAuthTokenId(), now, revisionTs);
+				tokDao.revokeByParentId(con, old.getAuthTokenId(), now, revisionTs);
+				tokDao.insert(con, orefresh, revisionTs);
+				tokDao.insert(con, oaccess, revisionTs);
+
+				return new AuthTokenPair(
+					new UserProfileId(old.getDomainId(), old.getUserId()),
+					newAccessPlain,
+					newRefreshPlain,
+					oaccess.getIssuedAt(), oaccess.getExpiresAt(),
+					orefresh.getIssuedAt(), orefresh.getExpiresAt()
+				);
+
+			} catch (Exception ex) {
+				throw ExceptionUtils.wrapThrowable(ex);
+			} finally {
+				DbUtils.closeQuietly(con);
+			}
+
+		} finally {
+			lockAuthTokenRotation.unlock(hash);
+		}
+	}
+
+	/**
+	 * Walks the refresh-token chain rooted at the given refresh-token id (both
+	 * ancestors via parent_id and descendants via children) and revokes every
+	 * row in it, including all access tokens whose parent_id is in the chain.
+	 * No-op if the id is not a refresh token row.
+	 * @param con
+	 * @param anyRefreshTokenId
+	 * @return
+	 * @throws DAOException 
+	 */
+	private int doRevokeAuthChainInternal(final Connection con, final long anyRefreshTokenId) throws DAOException {
+		AuthTokenDAO tokDao = AuthTokenDAO.getInstance();
+		
+		final Set<Long> chain = new HashSet<>();
+
+		// Walk ancestors via parent_id.
+		Long cur = anyRefreshTokenId;
+		while (cur != null && chain.add(cur)) {
+			final OAuthToken row = tokDao.selectById(con, cur);
+			if (row == null) break;
+			cur = row.getParentId();
+		}
+
+		// Walk descendants (refresh children) breadth-first from each known node.
+		final Deque<Long> q = new ArrayDeque<>(chain);
+		while (!q.isEmpty()) {
+			final long parent = q.poll();
+			for (OAuthToken child : tokDao.selectByParentIdAndType(con, parent, OAuthToken.TYPE_REFRESH)) {
+				if (chain.add(child.getAuthTokenId())) q.offer(child.getAuthTokenId());
+			}
+		}
+
+		final DateTime now = JodaTimeUtils.now();
+		final DateTime revisionTs = BaseDAO.createRevisionTimestamp();
+		final int revokedRefresh = tokDao.revokeByIds(con, chain, now, revisionTs);
+		final int revokedAccess = tokDao.revokeByParentIds(con, chain, now, revisionTs);
+		// Cache invalidation: drop everything; per-token entries are keyed by hash
+		// which we don't have on hand, and the access cache is small + short-TTL.
+		authAccessTokenCache.invalidateAll();
+		return revokedRefresh + revokedAccess;
+	}
+
+	/**
+	 * Revokes a refresh token (by id) plus all access tokens it minted.
+	 * Caller must own the row (caller's domainId/userId match the row).
+	 * Used by /auth/logout (with explicit refreshToken) and DELETE /auth/sessions/{id}.
+	 * @param domainId
+	 * @param userId
+	 * @param refreshTokenId
+	 * @return
+	 * @throws WTException 
+	 */
+	public boolean revokeAuthSession(final String domainId, final String userId, final long refreshTokenId) throws WTException {
+		Check.notEmpty(domainId, "domainId");
+		Check.notEmpty(userId, "userId");
+		AuthTokenDAO tokDao = AuthTokenDAO.getInstance();
+		Connection con = null;
+
+		try {
+			con = getConnection(true);
+			final OAuthToken row = tokDao.selectByIdAndUser(con, refreshTokenId, domainId, userId);
+			if (row == null || !OAuthToken.TYPE_REFRESH.equals(row.getType())) return false;
+
+			final DateTime now = JodaTimeUtils.now();
+			final DateTime revisionTs = BaseDAO.createRevisionTimestamp();
+			tokDao.revokeById(con, refreshTokenId, now, revisionTs);
+			tokDao.revokeByParentId(con, refreshTokenId, now, revisionTs);
+			authAccessTokenCache.invalidateAll();
+			return true;
+
+		} catch (Exception ex) {
+			throw ExceptionUtils.wrapThrowable(ex);
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+
+	/**
+	 * Revokes every auth_tokens row for the user (all sessions, all devices).
+	 * Used by /auth/logout-all.
+	 * @param domainId
+	 * @param userId
+	 * @return
+	 * @throws WTException 
+	 */
+	public int revokeAllAuthForUser(final String domainId, final String userId) throws WTException {
+		Check.notEmpty(domainId, "domainId");
+		Check.notEmpty(userId, "userId");
+		AuthTokenDAO tokDao = AuthTokenDAO.getInstance();
+		Connection con = null;
+
+		try {
+			con = getConnection(true);
+			final int n = tokDao.revokeAllByUser(con, domainId, userId, JodaTimeUtils.now(), BaseDAO.createRevisionTimestamp());
+			authAccessTokenCache.invalidateAll();
+			return n;
+
+		} catch (Exception ex) {
+			throw ExceptionUtils.wrapThrowable(ex);
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+
+	/**
+	 * Lists active refresh tokens (sessions) for the given user. Returns one
+	 * AuthSession per non-revoked, non-expired refresh token, newest first.
+	 * @param domainId
+	 * @param userId
+	 * @return
+	 * @throws WTException 
+	 */
+	public List<AuthSession> listActiveAuthSessions(final String domainId, final String userId) throws WTException {
+		Check.notEmpty(domainId, "domainId");
+		Check.notEmpty(userId, "userId");
+		AuthTokenDAO tokDao = AuthTokenDAO.getInstance();
+		Connection con = null;
+
+		try {
+			con = getConnection(true);
+			final List<OAuthToken> rows = tokDao.selectActiveRefreshByUser(con, domainId, userId, JodaTimeUtils.now());
+			final List<AuthSession> out = new ArrayList<>(rows.size());
+			for (OAuthToken r : rows) {
+				out.add(new AuthSession(
+					r.getAuthTokenId(),
+					r.getDeviceLabel(),
+					r.getCreationTimestamp(),
+					r.getLastUsedAt(),
+					r.getExpiresAt(),
+					r.getClientIpAddress(),
+					r.getClientUserAgent()
+				));
+			}
+			return out;
+
+		} catch (Exception ex) {
+			throw ExceptionUtils.wrapThrowable(ex);
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+
+	/**
+	 * Resolves the id of a refresh token from its plaintext form, but only
+	 * if the resulting row belongs to the given user (defense in depth: the
+	 * refresh token itself authenticates the chain, but /auth/logout is also
+	 * gated by an authenticated access token, and the two must agree).
+	 * Returns {@code null} when the token is unknown, expired, revoked,
+	 * not a refresh token, or owned by a different user.
+	 * @param domainId
+	 * @param userId
+	 * @param plainRefreshToken
+	 * @return
+	 * @throws WTException 
+	 */
+	public Long lookupOwnedRefreshTokenId(final String domainId, final String userId, final String plainRefreshToken) throws WTException {
+		Check.notEmpty(domainId, "domainId");
+		Check.notEmpty(userId, "userId");
+		if (StringUtils.isBlank(plainRefreshToken)) return null;
+		
+		AuthTokenDAO tokDao = AuthTokenDAO.getInstance();
+		Connection con = null;
+		
+		final String hash = CryptoUtils.hash(plainRefreshToken, DigestAlgorithm.SHA256);
+		try {
+			con = getConnection(true);
+			final OAuthToken row = tokDao.selectByTokenHash(con, hash);
+			if (row == null) return null;
+			if (!OAuthToken.TYPE_REFRESH.equals(row.getType())) return null;
+			if (!domainId.equals(row.getDomainId()) || !userId.equals(row.getUserId())) return null;
+			if (row.getRevokedAt() != null) return null;
+			if (!JodaTimeUtils.now().isBefore(row.getExpiresAt())) return null;
+			return row.getAuthTokenId();
+
+		} catch (Exception ex) {
+			throw ExceptionUtils.wrapThrowable(ex);
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+
+	/**
+	 * Hard-deletes auth_tokens rows whose absolute expiry passed at least
+	 * {@code graceDays} ago. Wired into a daily scheduled job.
+	 * @param graceDays
+	 * @return
+	 * @throws WTException 
+	 */
+	public int purgeExpiredAuthTokens(final int graceDays) throws WTException {
+		Check.greaterOrEqualThan(0, graceDays, "graceDays");
+		AuthTokenDAO tokDao = AuthTokenDAO.getInstance();
+		Connection con = null;
+
+		try {
+			con = getConnection(true);
+			final DateTime threshold = JodaTimeUtils.now().minusDays(graceDays);
+			return tokDao.deleteExpiredBefore(con, threshold);
+
 		} catch (Exception ex) {
 			throw ExceptionUtils.wrapThrowable(ex);
 		} finally {

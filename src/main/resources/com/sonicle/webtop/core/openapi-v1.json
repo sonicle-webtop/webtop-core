@@ -75,6 +75,326 @@
         }
       }
     },
+    "/auth/login": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Authenticates a user and issues a token pair",
+        "description": "Validates user credentials and returns an access token + refresh token pair. Anonymous endpoint (no authentication required). On invalid credentials responds with 401 and WWW-Authenticate: Bearer error=\"invalid_grant\".",
+        "operationId": "authLogin",
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AuthLoginRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Login successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthTokenPair"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid credentials",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "423": {
+            "description": "Account or domain disabled",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many login attempts",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "System under maintenance",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "x-codegen-request-body-name": "body"
+      }
+    },
+    "/auth/refresh": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Rotates a refresh token for a new token pair",
+        "description": "Atomically validates and revokes the supplied refresh token, then mints a new access + refresh token pair. If the supplied refresh token has already been revoked, the entire chain is revoked (theft signal) and 401 is returned with WWW-Authenticate: Bearer error=\"invalid_grant\".",
+        "operationId": "authRefresh",
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AuthRefreshRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Token pair rotated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthTokenPair"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid, expired or revoked refresh token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many refresh attempts",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "System under maintenance",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "x-codegen-request-body-name": "body"
+      }
+    },
+    "/auth/logout": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Revokes the current session (refresh token + its access tokens)",
+        "description": "Idempotent. If a refreshToken is supplied in the body, that session is revoked along with all access tokens descended from it; otherwise only the chain of the access token used for this call is revoked.",
+        "operationId": "authLogout",
+        "security": [
+          {
+            "auth-bearer": []
+          }
+        ],
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AuthLogoutRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Logged out"
+          },
+          "401": {
+            "description": "Missing or invalid access token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "x-codegen-request-body-name": "body"
+      }
+    },
+    "/auth/logout-all": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Revokes every session (all devices) for the current user",
+        "description": "Revokes all refresh and access tokens belonging to the authenticated user across every device.",
+        "operationId": "authLogoutAll",
+        "security": [
+          {
+            "auth-bearer": []
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "All sessions revoked"
+          },
+          "401": {
+            "description": "Missing or invalid access token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/sessions": {
+      "get": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Lists active sessions for the current user",
+        "description": "Returns one entry per active refresh token belonging to the authenticated user.",
+        "operationId": "authListSessions",
+        "security": [
+          {
+            "auth-bearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Active sessions",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AuthSessionInfo"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid access token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/sessions/{session_id}": {
+      "delete": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Revokes a specific session by its ID",
+        "description": "Revokes the refresh token identified by sessionId and all access tokens descended from it. The sessionId is the opaque value returned by GET /auth/sessions.",
+        "operationId": "authRevokeSession",
+        "security": [
+          {
+            "auth-bearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "path",
+            "description": "The opaque session ID returned by GET /auth/sessions",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Session revoked"
+          },
+          "401": {
+            "description": "Missing or invalid access token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Session not found or not owned by the calling user",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/principals/{profileUsername}": {
       "get": {
         "tags": [
@@ -3730,6 +4050,168 @@
         },
         "description": "This general detailed error structure is used throughout this API."
       },
+      "AuthLoginRequest": {
+        "required": [
+          "username",
+          "password"
+        ],
+        "type": "object",
+        "properties": {
+          "username": {
+            "type": "string",
+            "description": "User identifier; may be a bare local username (e.g. john.doe) or a full internet name (john.doe@example.com)",
+            "example": "john.doe@example.com"
+          },
+          "password": {
+            "type": "string",
+            "format": "password",
+            "description": "User password"
+          },
+          "domain": {
+            "type": "string",
+            "description": "WebTop domain ID; optional when only one domain is enabled or when the username carries an internet-domain suffix"
+          },
+          "deviceLabel": {
+            "type": "string",
+            "description": "Human-readable label for the device/client requesting the token (recorded in the session list)",
+            "example": "Pixel 7 - Chrome"
+          }
+        },
+        "description": "Credentials for issuing a new token pair via /auth/login."
+      },
+      "AuthRefreshRequest": {
+        "required": [
+          "refreshToken"
+        ],
+        "type": "object",
+        "properties": {
+          "refreshToken": {
+            "type": "string",
+            "description": "The refresh token previously issued by /auth/login or /auth/refresh"
+          }
+        },
+        "description": "Body of a /auth/refresh call."
+      },
+      "AuthLogoutRequest": {
+        "type": "object",
+        "properties": {
+          "refreshToken": {
+            "type": "string",
+            "description": "The refresh token to revoke. If omitted, only the chain associated with the current access token is revoked."
+          }
+        },
+        "description": "Body of a /auth/logout call (all fields optional)."
+      },
+      "AuthTokenPair": {
+        "required": [
+          "accessToken",
+          "accessTokenExpiresAt",
+          "refreshToken",
+          "refreshTokenExpiresAt",
+          "tokenType"
+        ],
+        "type": "object",
+        "properties": {
+          "tokenType": {
+            "type": "string",
+            "description": "Token scheme. Always 'Bearer'.",
+            "default": "Bearer",
+            "example": "Bearer"
+          },
+          "accessToken": {
+            "type": "string",
+            "description": "Short-lived token to send as 'Authorization: Bearer <token>' on authenticated REST calls."
+          },
+          "refreshToken": {
+            "type": "string",
+            "description": "Long-lived token used only against /auth/refresh to mint a new pair. Rotated on every use."
+          },
+          "accessTokenExpiresAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Absolute expiry of the access token (ISO-8601, UTC)."
+          },
+          "refreshTokenExpiresAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Absolute expiry of the refresh token (ISO-8601, UTC)."
+          },
+          "user": {
+            "$ref": "#/components/schemas/AuthUserInfo"
+          }
+        },
+        "description": "Result of /auth/login or /auth/refresh."
+      },
+      "AuthUserInfo": {
+        "required": [
+          "displayName",
+          "profileId",
+          "profileUsername"
+        ],
+        "type": "object",
+        "properties": {
+          "profileId": {
+            "type": "string",
+            "description": "Internal profile ID (user@wtdomain)"
+          },
+          "profileUsername": {
+            "type": "string",
+            "description": "Full profile username (user@domain.tld)"
+          },
+          "displayName": {
+            "type": "string",
+            "description": "Associated display name"
+          }
+        },
+        "description": "Compact authenticated-user descriptor returned alongside a token pair on /auth/login."
+      },
+      "AuthSessionInfo": {
+        "required": [
+          "createdAt",
+          "current",
+          "expiresAt",
+          "sessionId"
+        ],
+        "type": "object",
+        "properties": {
+          "sessionId": {
+            "type": "string",
+            "description": "Opaque session identifier; pass to DELETE /auth/sessions/{session_id} to revoke this session."
+          },
+          "deviceLabel": {
+            "type": "string",
+            "description": "Device label provided at /auth/login (or derived from User-Agent if absent)."
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "When the session was issued."
+          },
+          "lastUsedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "When the session was last used (last refresh or last access-token validation)."
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "When the underlying refresh token expires."
+          },
+          "clientIpAddress": {
+            "type": "string",
+            "description": "Source IP recorded at issue time."
+          },
+          "clientUserAgent": {
+            "type": "string",
+            "description": "User-Agent recorded at issue time."
+          },
+          "current": {
+            "type": "boolean",
+            "description": "True if this session corresponds to the access token used for the current request."
+          }
+        },
+        "description": "Active-session entry returned by GET /auth/sessions."
+      },
       "PrincipalInfo": {
         "required": [
           "displayName",
@@ -5187,6 +5669,10 @@
     {
       "name": "me",
       "description": "User-centric endpoints for managing user-data"
+    },
+    {
+      "name": "auth",
+      "description": "Authentication endpoints: login, token refresh, logout, session listing and revocation"
     }
   ]
 }

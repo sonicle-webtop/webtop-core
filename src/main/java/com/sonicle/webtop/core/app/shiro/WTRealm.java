@@ -48,6 +48,7 @@ import com.sonicle.webtop.core.app.WebTopManager;
 import com.sonicle.webtop.core.app.WebTopApp;
 import com.sonicle.webtop.core.app.WebTopProps;
 import com.sonicle.webtop.core.app.auth.DirectoryUtils;
+import com.sonicle.webtop.core.app.model.AuthTokenValidated;
 import com.sonicle.webtop.core.app.model.User;
 import com.sonicle.webtop.core.app.model.UserBase;
 import com.sonicle.webtop.core.app.model.UserUpdateOption;
@@ -179,19 +180,34 @@ public class WTRealm extends AuthorizingRealm {
 		} else if (token instanceof BearerToken) {
 			BearerToken bt = (BearerToken)token;
 			
-			String authInternetDomain = null;
-			String localUsername = null;
-			if (token instanceof AuthTokenBearer) {
-				DomainAccount authAccount = DomainAccount.parseQuietly(((AuthTokenBearer)token).getAuthUsername());
-				if (authAccount != null) {
-					authInternetDomain = authAccount.getDomain();
-					localUsername = authAccount.getLocal();
+			final String provisioningApiToken = WebTopProps.getProvisioningApiToken(WebTopApp.getInstanceProperties());
+			if (provisioningApiToken != null && provisioningApiToken.equals(bt.getToken())) {
+				// Support access leveraging on a pre-shared token, suitable for 
+				// provisioning application configuration through APIs.
+				LOGGER.trace("doGetAuthenticationInfo [Bearer, PST]");
+				Principal principal = authenticateProvisioningApiToken();
+				return new WTAuthenticationInfo(principal, bt.getToken().toCharArray(), this.getName());
+				
+			} else {
+				if (token instanceof AuthTokenBearerApiKey) {
+					String authInternetDomain = null;
+					String localUsername = null;
+					DomainAccount authAccount = DomainAccount.parseQuietly(((AuthTokenBearerApiKey)token).getAuthUsername());
+					if (authAccount != null) {
+						authInternetDomain = authAccount.getDomain();
+						localUsername = authAccount.getLocal();
+					}
+					
+					LOGGER.trace("doGetAuthenticationInfo [Bearer, {}, {}]", authInternetDomain, localUsername);
+					Principal principal = authenticateApiUser(authInternetDomain, localUsername, bt.getToken());
+					return new WTAuthenticationInfo(principal, bt.getToken().toCharArray(), this.getName());
+					
+				} else if (token instanceof AuthTokenAccessToken) {
+					LOGGER.trace("doGetAuthenticationInfo [Bearer, AccessToken]");
+					Principal principal = authenticateAccessToken(bt.getToken());
+					return new WTAuthenticationInfo(principal, bt.getToken().toCharArray(), this.getName());
 				}
 			}
-			
-			LOGGER.trace("doGetAuthenticationInfo [Bearer, {}, {}]", authInternetDomain, localUsername);
-			Principal principal = authenticateApiUser(authInternetDomain, localUsername, bt.getToken());
-			return new WTAuthenticationInfo(principal, bt.getToken().toCharArray(), this.getName());
 			
 		} else if (token instanceof AuthTokenRMe) {
 			AuthTokenRMe rmet = (AuthTokenRMe)token;
@@ -207,64 +223,7 @@ public class WTRealm extends AuthorizingRealm {
 		
 		return null;
 	}
-	
-	private Principal authenticateApiUser(final String authInternetDomain, final String localUsername, final String token) throws AuthenticationException {
-		if (StringUtils.isBlank(token)) throw new AuthenticationException();
-		
-		final WebTopApp wta = WebTopApp.getInstance();
-		final WebTopManager wtMgr = wta.getWebTopManager();
-		
-		final String provisioningApiToken = WebTopProps.getProvisioningApiToken(WebTopApp.getInstanceProperties());
-		if (provisioningApiToken != null && provisioningApiToken.equals(token)) {
-			// Support access leveraging on a pre-shared token, suitable for 
-			// provisioning application configuration through APIs.
-			final AuthContext acontext = wtMgr.createSysAdminAuthenticationContext();
-			Principal principal = new Principal(false, false, acontext.getDomainId(), WebTopManager.SYSADMIN_USERID);
-			principal.setDisplayName(WebTopManager.SYSADMIN_USERID);
-			return principal;
 
-		} else {
-			try {
-				checkMaintenance(wta); // Stop users if system in under maintenance!
-				
-				// Verify provided ApiKey
-				if (!wtMgr.authenticateApiKey(token)) throw new AuthenticationException();
-				
-				String userDomainId = lookupAuthDomainId(wtMgr, authInternetDomain, null); // This will ensure to get a positive lookup or an exp!
-				
-				// Prepare Directory
-				final AuthContext acontext = wtMgr.lookupAuthenticationContext(userDomainId);
-				final AbstractDirectory directory = WebTopManager.getAuthDirectory(acontext);
-				final DirectoryOptions opts = DirectoryUtils.createDirectoryOptions(acontext, wta.getConnectionManager());
-				
-				// Prepare principal for authentication
-				final AuthPrincipal authPrincipal = createAuthenticatingPrincipal(acontext, directory, opts, false, false, localUsername, null);
-				
-				// Authenticate against directory
-				AuthUser authUser = null;
-				try {
-					// In this case authentication is simply a existence check
-					authUser = directory.exist(opts, authPrincipal);
-					if (authUser == null) throw new AuthenticationException();
-					//TODO: enabled state should be checked?
-				} catch (DirectoryException ex1) {
-					LOGGER.trace("Unable to chck principal: {}", authPrincipal.toString(), ex1);
-					throw new AuthenticationException(ex1);
-				}
-				
-				// If we are here, directory has successfully authenticated the user, provided credentials are valid!
-				
-				// Now build resulting principal...
-				Principal principal = new Principal(false, false, acontext.getDomainId(), authUser.userId);
-				principal.setDisplayName(StringUtils.defaultIfBlank(authUser.displayName, authUser.userId));
-				return principal;
-				
-			} catch (WTException ex) {
-				throw new AuthenticationException(ex);
-			}
-		}
-	}
-	
 	@Override
 	protected AuthorizationInfo doGetAuthorizationInfo(PrincipalCollection principals) {
 		if (principals == null) throw new AuthorizationException("PrincipalCollection method argument cannot be null.");
@@ -549,6 +508,87 @@ public class WTRealm extends AuthorizingRealm {
 			LOGGER.error("Error performing authentication", ex);
 			throw new AuthenticationException(ex);
 		}
+	}
+	
+	private Principal authenticateProvisioningApiToken() throws AuthenticationException {
+		final WebTopApp wta = WebTopApp.getInstance();
+		final WebTopManager wtMgr = wta.getWebTopManager();
+		
+		final AuthContext acontext = wtMgr.createSysAdminAuthenticationContext();
+		Principal principal = new Principal(false, false, acontext.getDomainId(), WebTopManager.SYSADMIN_USERID);
+		principal.setDisplayName(WebTopManager.SYSADMIN_USERID);
+		return principal;
+	}
+	
+	private Principal authenticateApiUser(final String authInternetDomain, final String localUsername, final String token) throws AuthenticationException {
+		if (StringUtils.isBlank(token)) throw new AuthenticationException();
+		
+		final WebTopApp wta = WebTopApp.getInstance();
+		final WebTopManager wtMgr = wta.getWebTopManager();
+		
+		try {
+			checkMaintenance(wta); // Stop users if system in under maintenance!
+
+			// Verify provided ApiKey
+			if (!wtMgr.authenticateApiKey(token)) throw new AuthenticationException();
+
+			String userDomainId = lookupAuthDomainId(wtMgr, authInternetDomain, null); // This will ensure to get a positive lookup or an exp!
+
+			// Prepare Directory
+			final AuthContext acontext = wtMgr.lookupAuthenticationContext(userDomainId);
+			final AbstractDirectory directory = WebTopManager.getAuthDirectory(acontext);
+			final DirectoryOptions opts = DirectoryUtils.createDirectoryOptions(acontext, wta.getConnectionManager());
+
+			// Prepare principal for authentication
+			final AuthPrincipal authPrincipal = createAuthenticatingPrincipal(acontext, directory, opts, false, false, localUsername, null);
+
+			// Authenticate against directory
+			AuthUser authUser = null;
+			try {
+				// In this case authentication is simply a existence check
+				authUser = directory.exist(opts, authPrincipal);
+				if (authUser == null) throw new AuthenticationException();
+				//TODO: enabled state should be checked?
+			} catch (DirectoryException ex1) {
+				LOGGER.trace("Unable to chck principal: {}", authPrincipal.toString(), ex1);
+				throw new AuthenticationException(ex1);
+			}
+
+			// If we are here, directory has successfully authenticated the user, provided credentials are valid!
+
+			// Now build resulting principal...
+			Principal principal = new Principal(false, false, acontext.getDomainId(), authUser.userId);
+			principal.setDisplayName(StringUtils.defaultIfBlank(authUser.displayName, authUser.userId));
+			return principal;
+
+		} catch (WTException ex) {
+			throw new AuthenticationException(ex);
+		}
+	}
+	
+	private Principal authenticateAccessToken(final String token) throws AuthenticationException {
+		if (StringUtils.isBlank(token)) throw new AuthenticationException();
+		
+		final WebTopApp wta = WebTopApp.getInstance();
+		final WebTopManager wtMgr = wta.getWebTopManager();
+		
+		checkMaintenance(wta); // Stop users if system in under maintenance!
+
+		AuthTokenValidated validated;
+		try {
+			validated = wtMgr.validateAccessToken(token);
+		} catch (WTException ex) {
+			throw new AuthenticationException(ex);
+		}
+		if (validated == null) throw new AuthenticationException();
+
+		final UserProfileId pid = validated.getProfileId();
+		final AuthContext acontext = wtMgr.lookupAuthenticationContext(pid.getDomainId());
+		if (acontext == null) throw new AuthenticationException();
+
+		Principal principal = new Principal(false, false, pid.getDomainId(), pid.getUserId());
+		principal.setDisplayName(lookupProfileDisplayName(pid));
+		return principal;
 	}
 	
 	private String lookupProfileDisplayName(final UserProfileId pid) {

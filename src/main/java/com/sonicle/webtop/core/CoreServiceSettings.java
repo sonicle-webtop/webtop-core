@@ -270,6 +270,20 @@ public class CoreServiceSettings extends BaseServiceSettings {
 		if (v != null && v > 0) ret = v;
 		return ret;
 	}
+
+	public int getAuthTokenAccessTtlMinutes() {
+		int ret = 30;
+		Integer v = getInteger(AUTH_TOKEN_ACCESS_TTL_MINUTES, null);
+		if (v != null && v > 0) ret = v;
+		return ret;
+	}
+
+	public int getAuthTokenRefreshTtlDays() {
+		int ret = 60;
+		Integer v = getInteger(AUTH_TOKEN_REFRESH_TTL_DAYS, null);
+		if (v != null && v > 0) ret = v;
+		return ret;
+	}
 	
 	public Boolean isImpersonateEnabled() {
 		return getBoolean(IMPERSONATE_ENABLED, true);
