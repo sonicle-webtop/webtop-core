@@ -58,12 +58,16 @@ public final class AIRequestConfig {
 	private final String outputFormat;
 	private final Float temperature;
 	private final Integer maxTokens;
+	private final String serviceId;
+	private final String operation;
 	private final Map<String, String> ragProperties;
 
 	private AIRequestConfig(Builder b) {
 		this.outputFormat = b.outputFormat;
 		this.temperature = b.temperature;
 		this.maxTokens = b.maxTokens;
+		this.serviceId = b.serviceId;
+		this.operation = b.operation;
 		this.ragProperties = b.ragProperties == null || b.ragProperties.isEmpty()
 			? Collections.<String, String>emptyMap()
 			: Collections.unmodifiableMap(new HashMap<>(b.ragProperties));
@@ -81,6 +85,24 @@ public final class AIRequestConfig {
 		return maxTokens;
 	}
 
+	/**
+	 * WebTop service id of the calling service (e.g. {@code com.sonicle.webtop.mail}).
+	 * Recorded on the usage row so reports can slice spend by service. Null
+	 * means the call wasn't tagged.
+	 */
+	public String getServiceId() {
+		return serviceId;
+	}
+
+	/**
+	 * Free-form tag identifying what the call is for (AI menu item id,
+	 * "rag", "embedding", ...). Recorded on the usage row so reports can
+	 * slice spend by feature. Null means "unknown".
+	 */
+	public String getOperation() {
+		return operation;
+	}
+
 	public Map<String, String> getRagProperties() {
 		return ragProperties;
 	}
@@ -94,6 +116,8 @@ public final class AIRequestConfig {
 		b.outputFormat = this.outputFormat;
 		b.temperature = this.temperature;
 		b.maxTokens = this.maxTokens;
+		b.serviceId = this.serviceId;
+		b.operation = this.operation;
 		b.ragProperties = this.ragProperties.isEmpty() ? null : new HashMap<>(this.ragProperties);
 		return b;
 	}
@@ -102,6 +126,8 @@ public final class AIRequestConfig {
 		private String outputFormat;
 		private Float temperature;
 		private Integer maxTokens;
+		private String serviceId;
+		private String operation;
 		private Map<String, String> ragProperties;
 
 		public Builder outputFormat(String outputFormat) {
@@ -126,6 +152,16 @@ public final class AIRequestConfig {
 
 		public Builder maxTokens(int maxTokens) {
 			this.maxTokens = Integer.valueOf(maxTokens);
+			return this;
+		}
+
+		public Builder serviceId(String serviceId) {
+			this.serviceId = serviceId;
+			return this;
+		}
+
+		public Builder operation(String operation) {
+			this.operation = operation;
 			return this;
 		}
 

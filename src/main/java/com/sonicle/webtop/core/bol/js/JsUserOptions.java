@@ -44,6 +44,7 @@ public class JsUserOptions extends JsUserOptionsBase {
 	public Boolean permUpiManage; // Read-only
 	public Boolean permSyncDevicesAccess; // Read-only
 	public Boolean permWebchatAccess; // Read-only
+	public Boolean permPersonalAIManage; // Read-only
 	public Boolean dirCapPasswordWrite; // Read-only
 	public String dirPasswordPolicies; // Read-only
 	
@@ -105,8 +106,10 @@ public class JsUserOptions extends JsUserOptionsBase {
 	public Boolean imSoundOnMessageReceived;
 	public Boolean imSoundOnMessageSent;
 
+	public Integer aiDomainMaxTokens;
 	public String aiApiBackend;
 	public String aiApiToken;
+	public Integer aiUserMaxTokens;
 	public Boolean aiApiTokenSet;
 	
 	public JsUserOptions() {

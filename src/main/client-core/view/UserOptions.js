@@ -98,6 +98,13 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 				if (WT.isAdmin() || me.isAdminOnBehalf()) return true;
 				return v;
 			}),
+			foCanManageDomainAI: function() {
+				return WT.isAdmin() || me.isAdminOnBehalf();
+			},
+			foCanManagePersonalAI: WTF.foGetFn('record', 'permPersonalAIManage', function(v) {
+				if (WT.isAdmin() || me.isAdminOnBehalf()) return true;
+				return v;
+			}),
 			foAiApiTokenEmptyText: {
 				bind: { set: '{record.aiApiTokenSet}' },
 				get: function(get) {
@@ -1277,10 +1284,32 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 			items: [
 				{
 					xtype: 'soformseparator',
-					title: WT.res('opts.ai.service.tit')
+					title: WT.res('opts.ai.service.domain.tit')
+				},
+				{
+					xtype: 'numberfield',
+					bind: {
+						value: '{record.aiDomainMaxTokens}',
+						disabled: '{!foCanManageDomainAI}'
+					},
+					fieldLabel: WT.res('opts.ai.fld-max-tokens.lbl'),
+					emptyText: WT.res('opts.ai.fld-domain-max-tokens.emp'),
+					minValue: 0,
+					width: 400,
+					hideTrigger: false,
+					keyNavEnabled: false,
+					mouseWheelEnabled: false,
+					listeners: { blur: { fn: me.onBlurAutoSave, scope: me } }
+				},				
+				{
+					xtype: 'soformseparator',
+					title: WT.res('opts.ai.service.user.tit')
 				},
 				WTF.lookupCombo('id', 'desc', {
-					bind: '{record.aiApiBackend}',
+					bind: {
+						value: '{record.aiApiBackend}',
+						disabled: '{!foCanManagePersonalAI}'
+					},
 					store: {
 						type: 'array',
 						fields: ['id', 'desc'],
@@ -1297,17 +1326,33 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 					fieldLabel: WT.res('opts.ai.fld-backend.lbl'),
 					emptyText: WT.res('opts.ai.fld-backend-empty.lbl'),
 					width: 440,
+					needLogin: true,
 					listeners: { blur: { fn: me.onBlurAutoSave, scope: me } }
 				}), {
 					xtype: 'sopasswordfield',
 					bind: {
 						value: '{record.aiApiToken}',
-						emptyText: '{foAiApiTokenEmptyText}'
+						emptyText: '{foAiApiTokenEmptyText}',
+						disabled: '{!foCanManagePersonalAI}'
 					},
 					fieldLabel: WT.res('opts.ai.fld-token.lbl'),
 					width: 440,
 					emptyText: WT.res('opts.ai.fld-token-empty.lbl'),
 					submitEmptyText: false,
+					needLogin: true,
+					listeners: { blur: { fn: me.onBlurAutoSave, scope: me } }
+				}, {
+					xtype: 'numberfield',
+					bind: {
+						value: '{record.aiUserMaxTokens}',
+						disabled: '{!foCanManagePersonalAI}'
+					},
+					fieldLabel: WT.res('opts.ai.fld-max-tokens.lbl'),
+					emptyText: WT.res('opts.ai.fld-user-max-tokens.emp'),
+					width: 400,
+					hideTrigger: false,
+					keyNavEnabled: false,
+					mouseWheelEnabled: false,
 					listeners: { blur: { fn: me.onBlurAutoSave, scope: me } }
 				}, {
 					xtype: 'label',
@@ -1325,7 +1370,8 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 						align: 'middle'
 					},
 					bind: {
-						hidden: '{!record.aiApiTokenSet}'
+						hidden: '{!record.aiApiTokenSet}',
+						disabled: '{!foCanManagePersonalAI}'
 					},
 					items: [{
 						xtype: 'button',

@@ -135,11 +135,15 @@ Ext.define('Sonicle.webtop.core.ux.field.htmleditor.AITool', {
 			params: params,
 			callback: function(success, json) {
 				if (!success) {
-					cb(false, 'Request error', format);
+					// WT.ajaxReq passes json.success as the first arg, so this
+					// branch covers server-side {success:false, message:...}
+					// (e.g. AIQuotaExceededException). Surface the actual
+					// message; fall back only if it's truly missing.
+					var msg = (json && json.message) ? json.message : 'Request error';
+					cb(false, msg, format);
 					return;
 				}
-				if (json.success) cb(true, json.data, format);
-				else cb(false, json.message, format);
+				cb(true, json.data, format);
 			},
 			failure: function(response) {
 				if (response.status === 0) {

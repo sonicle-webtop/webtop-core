@@ -35,14 +35,18 @@ package com.sonicle.webtop.core;
 
 import com.sonicle.commons.time.JodaTimeUtils;
 import com.sonicle.commons.web.json.MapItem;
+import com.sonicle.commons.web.json.MapItemList;
 import com.sonicle.commons.web.json.ipstack.IPLookupResponse;
 import com.sonicle.webtop.core.app.CoreManifest;
 import com.sonicle.webtop.core.app.WT;
+import com.sonicle.webtop.core.app.model.AIUsage;
 import com.sonicle.webtop.core.util.NotificationHelper;
 import freemarker.template.TemplateException;
 import java.io.IOException;
 import java.text.MessageFormat;
+import java.text.NumberFormat;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Locale;
 import net.fortuna.ical4j.model.parameter.PartStat;
 import net.sf.uadetector.ReadableUserAgent;
@@ -120,6 +124,50 @@ public class TplHelper {
 		return NotificationHelper.buildDefaultBodyTplForNoReplay(locale, source, null, bodyMessage);
 	}
 	
+	public static String buildAIReportBody(Locale locale, String period, List<AIUsage> usages) throws IOException, TemplateException {
+		MapItem i18n = new MapItem()
+			.add("title", WT.lookupResource(CoreManifest.ID, locale, "tpl.email.aiReport.body.title"))
+			.add("period", StringUtils.defaultString(period))
+			.add("empty", WT.lookupResource(CoreManifest.ID, locale, "tpl.email.aiReport.body.empty"))
+			.add("colUsername", WT.lookupResource(CoreManifest.ID, locale, "tpl.email.aiReport.body.col.username"))
+			.add("colDisplayName", WT.lookupResource(CoreManifest.ID, locale, "tpl.email.aiReport.body.col.displayName"))
+			.add("colPromptTokens", WT.lookupResource(CoreManifest.ID, locale, "tpl.email.aiReport.body.col.promptTokens"))
+			.add("colCompletionTokens", WT.lookupResource(CoreManifest.ID, locale, "tpl.email.aiReport.body.col.completionTokens"))
+			.add("colTotalTokens", WT.lookupResource(CoreManifest.ID, locale, "tpl.email.aiReport.body.col.totalTokens"))
+			.add("colTotal", WT.lookupResource(CoreManifest.ID, locale, "tpl.email.aiReport.body.col.total"));
+
+		NumberFormat nf = NumberFormat.getIntegerInstance(locale);
+		long sumPrompt = 0, sumCompletion = 0, sumTotal = 0;
+		MapItemList rows = new MapItemList();
+		for (AIUsage u : usages) {
+			int prompt = u.getPromptTokens() != null ? u.getPromptTokens() : 0;
+			int completion = u.getCompletionTokens() != null ? u.getCompletionTokens() : 0;
+			int total = u.getTotalTokens() != null ? u.getTotalTokens() : 0;
+			sumPrompt += prompt;
+			sumCompletion += completion;
+			sumTotal += total;
+
+			MapItem row = new MapItem();
+			row.put("username", StringUtils.defaultString(u.getUserName()));
+			row.put("displayName", StringUtils.defaultString(u.getDisplaName()));
+			row.put("promptTokens", nf.format(prompt));
+			row.put("completionTokens", nf.format(completion));
+			row.put("totalTokens", nf.format(total));
+			rows.add(row);
+		}
+
+		MapItem totals = new MapItem()
+			.add("promptTokens", nf.format(sumPrompt))
+			.add("completionTokens", nf.format(sumCompletion))
+			.add("totalTokens", nf.format(sumTotal));
+
+		MapItem vars = new MapItem();
+		vars.put("i18n", i18n);
+		vars.put("rows", rows);
+		vars.put("totals", totals);
+		return WT.buildTemplate(CoreManifest.ID, "tpl/email/aiReport-body.html", vars);
+	}
+
 	public static String buildEventInvitationReplyEmailSubject(Locale locale, PartStat response, String eventTitle) {
 		String title = StringUtils.abbreviate(eventTitle, 30);
 		if (PartStat.ACCEPTED.equals(response)) {

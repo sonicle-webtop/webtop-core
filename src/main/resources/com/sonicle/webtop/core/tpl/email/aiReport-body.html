@@ -1,0 +1,43 @@
+<#assign LangUtils=statics['com.sonicle.commons.LangUtils']>
+<div style="font-size:13px;color:#262626;">
+    <div style="padding: 0 0 15px 0;border-bottom:thin solid #d4d4d4;text-align:center;word-break:break-word;">
+        <p style="margin:0;margin-bottom:15px;font-size:1.8em;">${LangUtils.encodeForHTMLContent(i18n.title)}</p>
+        <p style="margin:0;font-size:1.2em;color:#a3a3a3;">${LangUtils.encodeForHTMLContent(i18n.period)}</p>
+    </div>
+    <div style="padding: 15px 0 0 0;">
+    <#if rows?size == 0>
+        <p style="margin:0;text-align:center;color:#a3a3a3;">${LangUtils.encodeForHTMLContent(i18n.empty)}</p>
+    <#else>
+        <table style="font-size:inherit;color:inherit;width:100%;border-collapse:collapse;" cellpadding="0" cellspacing="0" border="0" summary="">
+            <thead>
+                <tr>
+                    <th style="text-align:left;padding:0 1em 8px 0;border-bottom:thin solid #d4d4d4;color:#a3a3a3;font-weight:normal;">${LangUtils.encodeForHTMLContent(i18n.colUsername)}</th>
+                    <th style="text-align:left;padding:0 1em 8px 0;border-bottom:thin solid #d4d4d4;color:#a3a3a3;font-weight:normal;">${LangUtils.encodeForHTMLContent(i18n.colDisplayName)}</th>
+                    <th style="text-align:right;padding:0 1em 8px 0;border-bottom:thin solid #d4d4d4;color:#a3a3a3;font-weight:normal;">${LangUtils.encodeForHTMLContent(i18n.colPromptTokens)}</th>
+                    <th style="text-align:right;padding:0 1em 8px 0;border-bottom:thin solid #d4d4d4;color:#a3a3a3;font-weight:normal;">${LangUtils.encodeForHTMLContent(i18n.colCompletionTokens)}</th>
+                    <th style="text-align:right;padding:0 0 8px 0;border-bottom:thin solid #d4d4d4;color:#a3a3a3;font-weight:normal;">${LangUtils.encodeForHTMLContent(i18n.colTotalTokens)}</th>
+                </tr>
+            </thead>
+            <tbody>
+            <#list rows as row>
+                <tr>
+                    <td style="padding:6px 1em 6px 0;" valign="top">${LangUtils.encodeForHTMLContent(row.username)}</td>
+                    <td style="padding:6px 1em 6px 0;" valign="top">${LangUtils.encodeForHTMLContent(row.displayName)}</td>
+                    <td style="padding:6px 1em 6px 0;text-align:right;" valign="top">${LangUtils.encodeForHTMLContent(row.promptTokens)}</td>
+                    <td style="padding:6px 1em 6px 0;text-align:right;" valign="top">${LangUtils.encodeForHTMLContent(row.completionTokens)}</td>
+                    <td style="padding:6px 0 6px 0;text-align:right;" valign="top">${LangUtils.encodeForHTMLContent(row.totalTokens)}</td>
+                </tr>
+            </#list>
+            </tbody>
+            <tfoot>
+                <tr>
+                    <td colspan="2" style="padding:8px 1em 6px 0;border-top:thin solid #d4d4d4;font-weight:bold;" valign="top">${LangUtils.encodeForHTMLContent(i18n.colTotal)}</td>
+                    <td style="padding:8px 1em 6px 0;border-top:thin solid #d4d4d4;text-align:right;font-weight:bold;" valign="top">${LangUtils.encodeForHTMLContent(totals.promptTokens)}</td>
+                    <td style="padding:8px 1em 6px 0;border-top:thin solid #d4d4d4;text-align:right;font-weight:bold;" valign="top">${LangUtils.encodeForHTMLContent(totals.completionTokens)}</td>
+                    <td style="padding:8px 0 6px 0;border-top:thin solid #d4d4d4;text-align:right;font-weight:bold;" valign="top">${LangUtils.encodeForHTMLContent(totals.totalTokens)}</td>
+                </tr>
+            </tfoot>
+        </table>
+    </#if>
+    </div>
+</div>

@@ -1033,22 +1033,6 @@ public class CoreSettings {
 	public static final String AI_API_TOKEN = "ai.api.token";
 
 	/**
-	 * [user]
-	 * [string]
-	 * User-supplied AI API backend. When set, fully replaces the domain/system
-	 * value for this user. Allowed values are the same as {@link #AI_API_BACKEND}.
-	 */
-	public static final String AI_API_BACKEND_USER = "ai.api.backend.user";
-
-	/**
-	 * [user]
-	 * [string]
-	 * User-supplied AI API token. When set, fully replaces the domain/system
-	 * value for this user.
-	 */
-	public static final String AI_API_TOKEN_USER = "ai.api.token.user";
-
-	/**
 	 * [domain+system]
 	 * [integer]
 	 * Maximum size (in characters) of the editor selection forwarded to the AI
@@ -1063,6 +1047,50 @@ public class CoreSettings {
 	 * backend as untrusted content for editor tool actions.
 	 */
 	public static final String AI_TOOL_USER_INPUT_MAX_CHARS = "ai.tool.user_input.max_chars";
+
+	/**
+	 * [domain+system]
+	 * [integer]
+	 * Maximum number of AI tokens a single user may consume per day. The
+	 * counter resets at local midnight in the domain timezone. A value of
+	 * 0 (or unset) disables the cap.
+	 */
+	public static final String AI_MAX_TOKENS = "ai.max_tokens";
+
+	/**
+	 * [user]
+	 * [integer]
+	 * Maximum number of domain AI tokens a single user may consume per day. The
+	 * counter resets at local midnight in the domain timezone. A value of
+	 * 0 (or unset) disables the cap.
+	 */
+
+	public static final String AI_DOMAIN_MAX_TOKENS = "ai.domain_max_tokens";
+	
+	/**
+	 * [user]
+	 * [integer]
+	 * Maximum number of user AI tokens a single user may consume per day. The
+	 * counter resets at local midnight in the domain timezone. A value of
+	 * 0 (or unset) disables the cap.
+	 */
+
+	public static final String AI_USER_MAX_TOKENS = "ai.user_max_tokens";
+
+	/**
+	 * [domain+system]
+	 * [string]
+	 * Cadence of the automated A.I. usage report email: none | daily | weekly
+	 * | monthly. Default is none (no report is scheduled).
+	 */
+	public static final String AI_REPORT_CADENCE = "ai.report.cadence";
+
+	/**
+	 * [domain+system]
+	 * [string]
+	 * Destination email address for the automated A.I. usage report.
+	 */
+	public static final String AI_REPORT_EMAIL = "ai.report.email";
 
 	/**
 	 * [domain+system]

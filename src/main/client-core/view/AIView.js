@@ -151,17 +151,18 @@ Ext.define('Sonicle.webtop.core.view.AIView', {
 			callback: function(success,json) {
 				me.setTitle("A.I. ha risposto");
 				if (func) func.apply(this, []);
-				if (!success) return;
-
-				if (json.success) {
-					if (format == 'json') {
-						var emails = JSON.parse(json.data).emails;
-						me.setData(emails);
-					} else {
-						me.setAnswer(json.data, format);
-					}
+				// WT.ajaxReq passes json.success as `success`, so a server-side
+				// {success:false, message:...} (e.g. AIQuotaExceededException)
+				// lands here with success=false but a real message attached.
+				if (!success) {
+					me.setError((json && json.message) ? json.message : 'Request failed');
+					return;
+				}
+				if (format == 'json') {
+					var emails = JSON.parse(json.data).emails;
+					me.setData(emails);
 				} else {
-					me.setError(json.message);
+					me.setAnswer(json.data, format);
 				}
 			},
 			failure: function(response) {
@@ -200,17 +201,15 @@ Ext.define('Sonicle.webtop.core.view.AIView', {
 			callback: function(success,json) {
 				me.setTitle("A.I. ha risposto");
 				if (func) func.apply(this, []);
-				if (!success) return;
-
-				if (json.success) {
-					if (format == 'json') {
-						var emails = JSON.parse(json.data).emails;
-						me.setData(emails);
-					} else {
-						me.setAnswer(json.data, format);
-					}
+				if (!success) {
+					me.setError((json && json.message) ? json.message : 'Request failed');
+					return;
+				}
+				if (format == 'json') {
+					var emails = JSON.parse(json.data).emails;
+					me.setData(emails);
 				} else {
-					me.setError(json.message);
+					me.setAnswer(json.data, format);
 				}
 			},
 			failure: function(response) {

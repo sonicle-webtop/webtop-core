@@ -51,6 +51,7 @@ import com.sonicle.commons.flags.BitFlags;
 import com.sonicle.commons.flags.BitFlagsEnum;
 import com.sonicle.commons.time.JavaTimeUtils;
 import com.sonicle.commons.time.JodaTimeUtils;
+import com.sonicle.mail.email.Recipient;
 import com.sonicle.security.AuthContext;
 import com.sonicle.security.CryptoUtils;
 import com.sonicle.security.DigestAlgorithm;
@@ -96,6 +97,7 @@ import com.sonicle.webtop.core.app.sdk.ResultVoid;
 import com.sonicle.webtop.core.app.sdk.WTMultiCauseWarnException;
 import com.sonicle.webtop.core.app.sdk.WTNotFoundException;
 import com.sonicle.webtop.core.app.exc.PwdPolicyException;
+import com.sonicle.webtop.core.app.model.AIUsage;
 import com.sonicle.webtop.core.app.util.ExceptionUtils;
 import com.sonicle.webtop.core.bol.ODomain;
 import com.sonicle.webtop.core.bol.OGroup;
@@ -171,12 +173,15 @@ import com.sonicle.webtop.core.app.model.User;
 import com.sonicle.webtop.core.app.model.UserBase;
 import com.sonicle.webtop.core.app.model.UserGetOption;
 import com.sonicle.webtop.core.app.model.UserUpdateOption;
+import com.sonicle.webtop.core.app.sdk.WTEmailSendException;
 import com.sonicle.webtop.core.app.shiro.ShiroUtils;
 import com.sonicle.webtop.core.app.shiro.WTRealm;
+import com.sonicle.webtop.core.bol.OAIUsage;
 import com.sonicle.webtop.core.bol.OApiKey;
 import com.sonicle.webtop.core.bol.OAuthToken;
 import com.sonicle.webtop.core.bol.ORememberMeToken;
 import com.sonicle.webtop.core.bol.VUser;
+import com.sonicle.webtop.core.dal.AIUsageDAO;
 import com.sonicle.webtop.core.dal.ApiKeyDAO;
 import com.sonicle.webtop.core.dal.AuthTokenDAO;
 import com.sonicle.webtop.core.dal.BaseDAO;
@@ -196,7 +201,14 @@ import com.sonicle.webtop.core.sdk.UserProfile;
 import com.sonicle.webtop.core.sdk.UserProfileId;
 import com.sonicle.webtop.core.sdk.WTException;
 import com.sonicle.webtop.core.sdk.WTRuntimeException;
+import com.sonicle.webtop.core.TplHelper;
+import freemarker.template.TemplateException;
+import jakarta.mail.Message;
+import jakarta.mail.MessagingException;
+import jakarta.mail.Session;
+import jakarta.mail.internet.AddressException;
 import java.io.File;
+import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.sql.Connection;
@@ -213,6 +225,7 @@ import java.util.stream.Collectors;
 import jakarta.mail.internet.InternetAddress;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.text.DateFormat;
 import java.util.ArrayDeque;
 import java.util.Collection;
 import java.util.Deque;
@@ -231,6 +244,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.Duration;
+import org.joda.time.format.DateTimeFormat;
+import org.joda.time.format.DateTimeFormatter;
 import org.slf4j.Logger;
 
 /**
@@ -2470,6 +2485,53 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 		}
 	}
 	
+	public void sendAIReportEmail(String domainId) throws WTEmailSendException, WTException {
+		CoreServiceSettings css = new CoreServiceSettings(CoreManifest.ID, domainId);
+		String cadence = css.getAiReportCadence();
+		String toEmail = css.getAiReportEmail();
+		if (StringUtils.isEmpty(cadence) || StringUtils.isEmpty(toEmail) || cadence.equals("none")) return;
+
+		Locale locale = CoreServiceSettings.getSystemLocale(getWebTopApp().getSettingsManager());
+
+		DateTime dateFrom = DateTime.now().withTimeAtStartOfDay();
+		DateTime dateTo = dateFrom.plusDays(1);
+		String periodKey = "tpl.email.aiReport.body.period.daily";
+		if (cadence.equals("weekly")) {
+			dateFrom = dateFrom.withDayOfWeek(1).minusWeeks(1);
+			dateTo = dateFrom.plusWeeks(1);
+			periodKey = "tpl.email.aiReport.body.period.weekly";
+		} else if (cadence.equals("monthly")) {
+			dateFrom = dateFrom.withDayOfMonth(1).minusMonths(1);
+			dateTo = dateFrom.plusMonths(1);
+			periodKey = "tpl.email.aiReport.body.period.monthly";
+		}
+
+		DateTimeFormatter dtf = DateTimeFormat.forPattern(DateTimeFormat.patternForStyle("M-", locale)).withLocale(locale);
+		String period = WT.lookupFormattedResource(CoreManifest.ID, locale, periodKey, dtf.print(dateFrom), dtf.print(dateTo));
+		sendAIReportEmail(domainId, locale, toEmail, dateFrom, dateTo, period);
+	}
+
+	public void sendAIReportEmail(String domainId, Locale locale, String toEmail, DateTime dateFrom, DateTime dateTo, String period) throws WTEmailSendException, WTException {
+		InternetAddress from = WT.getNotificationAddress(domainId);
+		if (from == null) throw new WTException("Unable to build notification sender address for domain [{}]", domainId);
+
+		List<AIUsage> aiusages = listAIUsage(domainId, dateFrom, dateTo);
+
+		String subject;
+		String body;
+		try {
+			subject = WT.lookupResource(CoreManifest.ID, locale, "tpl.email.aiReport.subject");
+			body = TplHelper.buildAIReportBody(locale, period, aiusages);
+		} catch (IOException | TemplateException ex) {
+			throw new WTException(ex);
+		}
+
+		UserProfileId adminPid = RunContext.buildDomainAdminProfileId(domainId);
+		ArrayList<Recipient> recipients = new ArrayList<>();
+		recipients.add(new Recipient(toEmail, "", Message.RecipientType.TO));
+		WT.sendEmailMessage(adminPid, from, recipients, subject, body);
+	}
+	
 	public Set<String> listResourceIds(final String domainId, final EnabledCond enabled) throws WTException {
 		Check.notEmpty(domainId, "domainId");
 		Check.notNull(enabled, "enabled");
@@ -2855,6 +2917,32 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 		EventBus.PostResult postResult = fireEvent(new GroupUpdateEvent(GroupUpdateEvent.Type.DELETE, groupPid), true, true);
 		
 		return new ResultVoid(postResult.getHandlerErrorsCauses());
+	}
+	
+	public List<AIUsage> listAIUsage(final String domainId, final DateTime from, final DateTime to) throws WTException {
+		Check.notEmpty(domainId, "domainId");
+		AIUsageDAO aiuDao = AIUsageDAO.getInstance();
+		Connection con = null;
+		
+		try {
+			con = getConnection(true);
+			List<OAIUsage> oaiusages = aiuDao.groupUserNamesByDateRange(con, domainId, from, to);
+			List<AIUsage> items = new ArrayList<>();
+			for (OAIUsage oaius: oaiusages) {
+				AIUsage aiu = new AIUsage();
+				aiu.setUserName(oaius.getUserId());
+				aiu.setDisplayName(oaius.getDisplayName());
+				aiu.setPromptTokens(oaius.getPromptTokens());
+				aiu.setCompletionTokens(oaius.getCompletionTokens());
+				aiu.setTotalTokens(oaius.getTotalTokens());
+				items.add(aiu);
+			}
+			return items;
+		} catch (Exception ex) {
+			throw ExceptionUtils.wrapThrowable(ex);
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
 	}
 	
 	public Map<String, Role> listRoles(final String domainId) throws WTException {

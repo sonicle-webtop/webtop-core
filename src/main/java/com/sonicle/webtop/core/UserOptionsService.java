@@ -113,6 +113,7 @@ public class UserOptionsService extends BaseUserOptionsService {
 				jso.permUpiManage = RunContext.isPermitted(true, getTargetProfileId(), CoreManifest.ID, "USER_PROFILE_INFO", "MANAGE");
 				jso.permSyncDevicesAccess = RunContext.isPermitted(true, getTargetProfileId(), CoreManifest.ID, "DEVICES_SYNC");
 				jso.permWebchatAccess = RunContext.isPermitted(true, getTargetProfileId(), CoreManifest.ID, "WEBCHAT");
+				jso.permPersonalAIManage = RunContext.isPermitted(true, getTargetProfileId(), CoreManifest.ID, "AI_PERSONAL", "MANAGE");
 				
 				jso.dirCapPasswordWrite = false;
 				jso.dirPasswordPolicies = null;
@@ -215,10 +216,15 @@ public class UserOptionsService extends BaseUserOptionsService {
 				// Emit only the user override for backend (null => using domain default).
 				// Never echo the stored token back to the client; send empty and a flag
 				// indicating whether the user has set one.
-				String aiUserToken = us.getAiApiTokenUserOverride();
+				String aiUserToken = us.getAiApiToken();
 				jso.aiApiBackend = us.getAiApiBackendUserOverride();
 				jso.aiApiToken = "";
 				jso.aiApiTokenSet = (aiUserToken != null && !aiUserToken.trim().isEmpty());
+				
+				jso.aiDomainMaxTokens = us.getAiDomainMaxTokens();
+				jso.aiUserMaxTokens = us.getAiUserMaxTokens();
+				if (jso.aiDomainMaxTokens!=null && jso.aiDomainMaxTokens == 0) jso.aiDomainMaxTokens = null;
+				if (jso.aiUserMaxTokens!=null && jso.aiUserMaxTokens == 0) jso.aiUserMaxTokens = null;
 
 				new JsonResult(jso).printTo(out);
 				
@@ -314,6 +320,12 @@ public class UserOptionsService extends BaseUserOptionsService {
 					}
 				}
 				
+				if (pl.map.has("aiDomainMaxTokens")) us.setAiDomainMaxTokens(pl.data.aiDomainMaxTokens);
+				else us.setAiDomainMaxTokens(null);
+				
+				if (pl.map.has("aiUserMaxTokens")) us.setAiUserMaxTokens(pl.data.aiUserMaxTokens);
+				else us.setAiUserMaxTokens(null);
+
 				if (upCacheNeedsUpdate) coreMgr.cleanUserProfileCache();
 				
 				new JsonResult().printTo(out);

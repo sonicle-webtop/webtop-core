@@ -254,6 +254,7 @@ public final class WebTopApp {
 	private ConnectionManager conMgr = null;
 	private LicenseManager licMgr = null;
 	private AuditLogManager auditLogMgr = null;
+	private AIUsageManager aiUsageMgr = null;
 	private WebTopManager wtMgr = null;
 	private SettingsManager setMgr = null;
 	private ServiceManager svcMgr = null;
@@ -531,6 +532,7 @@ public final class WebTopApp {
 		logger.info("WTA initializing managers [{}]", webappName);
 		
 		this.auditLogMgr = new AuditLogManager(this).initialize(); // --> Moved down from above section (around conMgr)
+		this.aiUsageMgr = new AIUsageManager(this).initialize();
 		this.sesMgr = new SessionManager(this).initialize(); // --> Moved down from above section (around conMgr)
 		//comm = ComponentsManager.initialize(this); // Components Manager
 		this.licMgr = new LicenseManager(this, this.scheduler).initialize();
@@ -563,6 +565,7 @@ public final class WebTopApp {
 		this.docEditorMgr = quietlyDestroyManager(this.docEditorMgr);
 		this.rptMgr = quietlyDestroyManager(this.rptMgr);
 		this.otpMgr = quietlyDestroyManager(this.otpMgr);
+		this.aiUsageMgr = quietlyDestroyManager(this.aiUsageMgr);
 		this.auditLogMgr = quietlyDestroyManager(this.auditLogMgr);
 		this.setMgr = quietlyDestroyManager(this.setMgr);
 		this.dsMgr = quietlyDestroyManager(this.dsMgr);
@@ -947,6 +950,14 @@ public final class WebTopApp {
 	 */
 	public AuditLogManager getAuditLogManager() {
 		return auditLogMgr;
+	}
+
+	/**
+	 * Returns the AIUsageManager.
+	 * @return AIUsageManager instance.
+	 */
+	public AIUsageManager getAIUsageManager() {
+		return aiUsageMgr;
 	}
 	
 	/**

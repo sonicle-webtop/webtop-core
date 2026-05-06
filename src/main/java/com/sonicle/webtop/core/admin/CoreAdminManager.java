@@ -54,6 +54,7 @@ import com.sonicle.webtop.core.app.WebTopApp;
 import com.sonicle.webtop.core.app.WebTopProps;
 import com.sonicle.webtop.core.app.io.dbutils.FilterableArrayListHandler;
 import com.sonicle.webtop.core.app.io.dbutils.RowsAndCols;
+import com.sonicle.webtop.core.app.model.AIUsage;
 import com.sonicle.webtop.core.app.model.ApiKey;
 import com.sonicle.webtop.core.app.model.ApiKeyBase;
 import com.sonicle.webtop.core.app.model.ApiKeyNew;
@@ -137,6 +138,7 @@ import java.util.stream.Collectors;
 import net.sf.qualitycheck.Check;
 import org.apache.commons.dbutils.ResultSetHandler;
 import org.apache.commons.lang.StringUtils;
+import org.joda.time.DateTime;
 import org.slf4j.Logger;
 
 /**
@@ -607,6 +609,13 @@ public class CoreAdminManager extends BaseManager {
 		final UserProfileId targetPid = ensureWebTopDomainAdmin();
 		return wtMgr.deleteResource(targetPid.getDomainId(), resourceId);
 	}
+	
+	public List<AIUsage> listAIUsage(DateTime from, DateTime to) throws WTException {
+		WebTopManager wtMgr = wta.getWebTopManager();
+
+		final UserProfileId targetPid = ensureWebTopDomainAdmin();
+		return wtMgr.listAIUsage(targetPid.getDomainId(), from, to);
+	} 
 	
 	public Map<String, Role> listRoles() throws WTException {
 		WebTopManager wtMgr = wta.getWebTopManager();

@@ -35,6 +35,7 @@ package com.sonicle.webtop.core;
 import com.sonicle.webtop.core.app.CoreManifest;
 import com.sonicle.webtop.core.app.WT;
 import com.sonicle.webtop.core.app.sdk.interfaces.IControllerRemindersHooks;
+import com.sonicle.webtop.core.bg.AIReportTask;
 import com.sonicle.webtop.core.bg.AuthTokenCleanupTask;
 import com.sonicle.webtop.core.bg.DevicesSyncCheckTask;
 import com.sonicle.webtop.core.bg.ReminderTask;
@@ -91,6 +92,13 @@ public class BackgroundService extends BaseBackgroundService {
 				AuthTokenCleanupTask.class,
 				TriggerBuilder.newTrigger()
 					.withSchedule(CronScheduleBuilder.dailyAtHourAndMinute(3, 30)) // every day at 03:30
+					.build()
+			),
+			// AI report task: cadence managed internally by task
+			new BaseBackgroundService.TaskDefinition(
+				AIReportTask.class,
+				TriggerBuilder.newTrigger()
+					.withSchedule(CronScheduleBuilder.dailyAtHourAndMinute(8, 0)) // every day at 08:00
 					.build()
 			)
 		);

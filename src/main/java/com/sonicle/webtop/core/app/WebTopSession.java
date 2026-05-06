@@ -1449,6 +1449,9 @@ public class WebTopSession {
 				else if ("ollama".equalsIgnoreCase(backend)) aibt = AIBackendType.OLLAMA;
 				AIManager aim = AIFactory.createAIManager(aibt, token, getLocale());
 				aim.setUserId(AIManager.hashUserId(getUserProfile().getStringId()));
+				aim.setProfileId(getUserProfile().getId());
+				aim.setBackendType(aibt != null ? aibt.name() : "UNKNOWN");
+				aim.setUsageRecorder(wta.getAIUsageManager());
 				cachedAiManager = aim;
 				cachedAiBackend = backend;
 				cachedAiToken = token;

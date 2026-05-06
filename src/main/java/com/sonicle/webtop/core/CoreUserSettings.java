@@ -402,7 +402,7 @@ public class CoreUserSettings extends BaseUserSettings {
 	 * domain/system default.
 	 */
 	public String getAiApiBackend() {
-		String value = getString(AI_API_BACKEND_USER, null);
+		String value = getString(AI_API_BACKEND, null);
 		if (value != null) return value;
 		return ss.getAiApiBackend();
 	}
@@ -412,8 +412,8 @@ public class CoreUserSettings extends BaseUserSettings {
 	 * override and fall back to the domain default.
 	 */
 	public boolean setAiApiBackend(String value) {
-		if (value == null || value.isEmpty()) return clear(AI_API_BACKEND_USER);
-		return setString(AI_API_BACKEND_USER, value);
+		if (value == null || value.isEmpty()) return clear(AI_API_BACKEND);
+		return setString(AI_API_BACKEND, value);
 	}
 
 	/**
@@ -421,7 +421,7 @@ public class CoreUserSettings extends BaseUserSettings {
 	 * domain/system default.
 	 */
 	public String getAiApiToken() {
-		String value = getString(AI_API_TOKEN_USER, null);
+		String value = getString(AI_API_TOKEN, null);
 		if (value != null) return value;
 		return ss.getAiApiToken();
 	}
@@ -431,8 +431,8 @@ public class CoreUserSettings extends BaseUserSettings {
 	 * override and fall back to the domain default.
 	 */
 	public boolean setAiApiToken(String value) {
-		if (value == null || value.isEmpty()) return clear(AI_API_TOKEN_USER);
-		return setString(AI_API_TOKEN_USER, value);
+		if (value == null || value.isEmpty()) return clear(AI_API_TOKEN);
+		return setString(AI_API_TOKEN, value);
 	}
 
 	/**
@@ -441,7 +441,7 @@ public class CoreUserSettings extends BaseUserSettings {
 	 * domain default.
 	 */
 	public String getAiApiBackendUserOverride() {
-		return getString(AI_API_BACKEND_USER, null);
+		return getString(AI_API_BACKEND, null);
 	}
 
 	/**
@@ -450,8 +450,57 @@ public class CoreUserSettings extends BaseUserSettings {
 	 * domain default.
 	 */
 	public String getAiApiTokenUserOverride() {
-		return getString(AI_API_TOKEN_USER, null);
+		return getString(AI_API_TOKEN, null);
 	}
+
+	/**
+	 * Returns the effective per-user daily domain AI token cap: the per-user
+	 * override if set, otherwise the service default. 0 means no cap.
+	 */
+	public Integer getAiDomainMaxTokens() {
+		Integer value = getInteger(AI_DOMAIN_MAX_TOKENS, null);
+		if (value != null) return value;
+		return ss.getAiMaxTokens();
+	}
+
+	/**
+	 * Returns the effective per-user daily domain AI token cap: the per-user
+	 * override if set, otherwise the domain default. 0 means no cap.
+	 */
+	public Integer getAiUserMaxTokens() {
+		Integer value = getInteger(AI_USER_MAX_TOKENS, null);
+		return value;
+	}
+
+	/**
+	 * Sets the user-level daily domain AI token cap override. Pass null to clear
+	 * the override and fall back to the domain default; pass 0 to
+	 * explicitly disable the cap for this user. Intended to be writable
+	 * by administrators only.
+	 */
+	public boolean setAiDomainMaxTokens(Integer value) {
+		if (value == null) return clear(AI_DOMAIN_MAX_TOKENS);
+		return setInteger(AI_DOMAIN_MAX_TOKENS, value);
+	}
+
+	/**
+	 * Sets the user-level daily user AI token cap override. Pass null to clear
+	 * the override and fall back to the domain default; pass 0 to
+	 * explicitly disable the cap for this user. Intended to be writable
+	 * by administrators only.
+	 */
+	public boolean setAiUserMaxTokens(Integer value) {
+		if (value == null) return clear(AI_USER_MAX_TOKENS);
+		return setInteger(AI_USER_MAX_TOKENS, value);
+	}
+
+	/**
+	 * Raw user override (may be null) — useful to know whether the user
+	 * has an explicit cap vs. relying on the domain default.
+	 */
+//	public Integer getAiMaxTokensPerDayUserOverride() {
+//		return getInteger(AI_MAX_TOKENS_PER_DAY_USER, null);
+//	}
 
 	/**
 	 * True when the resolved AI backend looks usable for this user.
@@ -460,7 +509,7 @@ public class CoreUserSettings extends BaseUserSettings {
 	 * configured at the domain level if needed.
 	 */
 	public boolean isAIConfigured() {
-		String userToken = getString(AI_API_TOKEN_USER, null);
+		String userToken = getString(AI_API_TOKEN, null);
 		if (userToken != null && !userToken.trim().isEmpty()) return true;
 		return ss.isAIConfigured();
 	}

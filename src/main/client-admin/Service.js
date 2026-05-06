@@ -178,6 +178,8 @@ Ext.define('Sonicle.webtop.core.admin.Service', {
 							me.showDomainLauncherLinksUI(rec.parentNode, rec);
 						} else if (type === 'dpecbridge') {
 							me.showPecBridgeUI(rec.parentNode, rec);
+						} else if (type === 'dai') {
+							me.showAIUI(rec.parentNode, rec);
 						} else if (type === 'dbupgrader') {
 							me.showDbUpgraderUI(rec);
 						} else if (type === 'logging') {
@@ -922,6 +924,20 @@ Ext.define('Sonicle.webtop.core.admin.Service', {
 				return Ext.create('Sonicle.webtop.core.admin.view.LogViewer', {
 					mys: me,
 					itemId: itemId,
+					closable: true
+				});
+			});
+		},
+
+		showAIUI: function(domNode, node) {
+			var me = this,
+				itemId = WTU.forItemId(node.getId());
+
+			me.showTab(itemId, function() {
+				return Ext.create('Sonicle.webtop.core.admin.view.AI', {
+					mys: me,
+					itemId: itemId,
+					domainId: domNode.get('_domainId'),
 					closable: true
 				});
 			});

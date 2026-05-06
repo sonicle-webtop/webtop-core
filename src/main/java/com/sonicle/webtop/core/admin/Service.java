@@ -61,12 +61,14 @@ import com.sonicle.commons.web.json.extjs.ExtTreeNode;
 import com.sonicle.commons.web.json.extjs.GridMetadata;
 import com.sonicle.commons.web.json.extjs.ResultMeta;
 import com.sonicle.commons.web.json.extjs.SortMeta;
+import com.sonicle.mail.email.Recipient;
 import com.sonicle.security.auth.directory.AbstractDirectory;
 import com.sonicle.security.auth.directory.DirectoryCapability;
 import com.sonicle.webtop.core.CoreLocaleKey;
 import com.sonicle.webtop.core.CoreManager;
 import com.sonicle.webtop.core.CoreServiceSettings;
 import com.sonicle.webtop.core.CoreSettings.LauncherLink;
+import com.sonicle.webtop.core.admin.bol.js.JsAIUsage;
 import com.sonicle.webtop.core.admin.bol.js.JsApiKey;
 import com.sonicle.webtop.core.admin.bol.js.JsDataSource;
 import com.sonicle.webtop.core.admin.bol.js.JsDataSourceQuery;
@@ -120,6 +122,7 @@ import com.sonicle.webtop.core.app.exc.WTLicenseActivationException;
 import com.sonicle.webtop.core.app.exc.WTLicenseException;
 import com.sonicle.webtop.core.app.exc.WTLicenseMismatchException;
 import com.sonicle.webtop.core.app.exc.WTLicenseValidationException;
+import com.sonicle.webtop.core.app.model.AIUsage;
 import com.sonicle.webtop.core.app.sdk.WTUnsupportedOperationException;
 import com.sonicle.webtop.core.bol.js.JsGridPecBridgeFetcher;
 import com.sonicle.webtop.core.bol.js.JsGridPecBridgeRelay;
@@ -167,10 +170,15 @@ import com.sonicle.webtop.core.sdk.WTException;
 import com.sonicle.webtop.core.sdk.WTRuntimeException;
 import com.sonicle.webtop.core.versioning.IgnoreErrorsAnnotationLine;
 import com.sonicle.webtop.core.versioning.RequireAdminAnnotationLine;
+import jakarta.mail.Message;
+import jakarta.mail.MessagingException;
+import jakarta.mail.Session;
+import jakarta.mail.internet.AddressException;
 import jakarta.mail.internet.InternetAddress;
 import java.io.InputStream;
 import java.io.PrintWriter;
 import java.sql.SQLException;
+import java.text.DateFormat;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -178,6 +186,7 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.ListIterator;
+import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -190,6 +199,8 @@ import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.Days;
 import org.joda.time.LocalDate;
+import org.joda.time.format.DateTimeFormat;
+import org.joda.time.format.DateTimeFormatter;
 import org.slf4j.Logger;
 
 /**
@@ -327,6 +338,7 @@ public class Service extends BaseService {
 	private static final String NID_LICENSES = "licenses";
 	private static final String NID_PECBRIDGE = "pecbridge";
 	private static final String NID_DBUPGRADER = "dbupgrader";
+	private static final String NID_AI = "ai";
 	private static final String NID_LOGS = "logs";
 	private static final String NID_VIEWER = "viewer";
 	private static final String NID_AUDIT = "audit";
@@ -424,6 +436,7 @@ public class Service extends BaseService {
 							if (css.getHasPecBridgeManagement()) {
 								children.add(createDomainChildNode(nodeId, NID_PECBRIDGE, "dpecbridge", "wtadm-icon-pecBridge", null, null, null));
 							}
+							children.add(createDomainChildNode(nodeId, NID_AI, "dai", "wt-icon-ai", null, null, null));
 							children.add(createTreeNode(CId.build(nodeId, NID_AUDIT).toString(), "daudit", null, false, "wtadm-icon-audit"));
 						}
 					} else if (cid.getToken(0).equals(NID_LOGS)) {
@@ -961,6 +974,107 @@ public class Service extends BaseService {
 		}
 	}
 	
+	public void processManageDomainAI(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
+		try {
+			String domainId = ServletUtils.getStringParameter(request, "domainId", true);
+			String crud = ServletUtils.getStringParameter(request, "crud", true);
+			String view = ServletUtils.getStringParameter(request, "view", true);
+			CoreAdminManager admMgr = WT.getCoreAdminManager(RunContext.buildDomainAdminProfileId(domainId));
+			//default 'today'
+			DateTime from = DateTime.now().withTimeAtStartOfDay();
+			DateTime to = from.plusDays(1);
+			if (view.equals("thisweek")) {
+				from = from.withDayOfWeek(1);
+			}
+			else if (view.equals("lastweek")) {
+				from = from.withDayOfWeek(1).minusWeeks(1);
+				to = from.plusWeeks(1);
+			}
+			else if (view.equals("thismonth")) {
+				from = from.withDayOfMonth(1);
+				to = from.plusMonths(1);
+			}
+			else if (view.equals("lastmonth")) {
+				from = from.withDayOfMonth(1).minusMonths(1);
+				to = from.plusMonths(1);
+			}
+			if (Crud.READ.equals(crud)) {
+				List<JsAIUsage> items = new ArrayList<>();
+				for (AIUsage aiu : admMgr.listAIUsage(from, to)) {
+					items.add(new JsAIUsage(aiu));
+				}
+				new JsonResult(items).printTo(out);
+			} else if ("send".equals(crud)) {
+				final WebTopApp wta = WebTopApp.getInstance();
+				final WebTopManager wtMgr = wta.getWebTopManager();
+				String emailTo = ServletUtils.getStringParameter(request, "email", true);
+				Locale locale = CoreServiceSettings.getSystemLocale(wta.getSettingsManager());
+				DateTimeFormatter dtf = DateTimeFormat.forPattern(DateTimeFormat.patternForStyle("M-", locale)).withLocale(locale);
+				String period = WT.lookupFormattedResource(CoreManifest.ID, locale, "tpl.email.aiReport.body.period.custom", dtf.print(from), dtf.print(to));
+				wtMgr.sendAIReportEmail(domainId, locale, emailTo, from, to, period);
+				new JsonResult().printTo(out);
+			} else {
+				throw new WTUnsupportedOperationException("Unsupported operation [{}]", crud);
+			}
+			
+		} catch (Exception ex) {
+			logger.error("Error in ManageDomainRoles", ex);
+			new JsonResult(ex).printTo(out);
+		}
+	}
+	
+	public void processManageAIReport(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
+		try {
+			String domainId = ServletUtils.getStringParameter(request, "domainId", true);
+			String crud = ServletUtils.getStringParameter(request, "crud", true);
+			CoreServiceSettings css = new CoreServiceSettings(CoreManifest.ID, domainId);
+
+			if (Crud.READ.equals(crud)) {
+				MapItem item = new MapItem();
+				item.put("cadence", css.getAiReportCadence());
+				item.put("email", css.getAiReportEmail());
+				new JsonResult(item).printTo(out);
+
+			} else if (Crud.UPDATE.equals(crud)) {
+				String cadence = ServletUtils.getStringParameter(request, "cadence", true);
+				String email = ServletUtils.getStringParameter(request, "email", false);
+				if (!isValidAIReportCadence(cadence)) {
+					throw new WTException("Invalid cadence [{}]", cadence);
+				}
+				css.setAiReportCadence(cadence);
+				css.setAiReportEmail(email);
+				new JsonResult().printTo(out);
+
+			} else if ("test".equals(crud)) {
+				String email = ServletUtils.getStringParameter(request, "email", true);
+				sendAIReportTestEmail(domainId, email);
+				new JsonResult().printTo(out);
+
+			} else {
+				throw new WTUnsupportedOperationException("Unsupported operation [{}]", crud);
+			}
+
+		} catch (Exception ex) {
+			logger.error("Error in ManageAIReport", ex);
+			new JsonResult(ex).printTo(out);
+		}
+	}
+
+	private boolean isValidAIReportCadence(String cadence) {
+		return "none".equals(cadence) || "daily".equals(cadence) || "weekly".equals(cadence) || "monthly".equals(cadence);
+	}
+
+	private void sendAIReportTestEmail(String domainId, String toEmail) throws WTException, AddressException, MessagingException {
+		InternetAddress from = WT.getNotificationAddress(domainId);
+		if (from == null) throw new WTException("Unable to build notification sender address for domain [{}]", domainId);
+		String subject = "WebTop A.I. usage report";
+		String body = "<p>This is a test email for the WebTop A.I. usage report. If you can read this, the report destination address is correctly configured.</p>";
+		UserProfileId adminPid = RunContext.buildDomainAdminProfileId(domainId);
+		ArrayList<Recipient> recipients = new ArrayList<>();
+		recipients.add(new Recipient(toEmail, "", Message.RecipientType.TO));
+		WT.sendEmailMessage(adminPid, from, recipients, subject, body);		
+	}
+
 	public void processManageDomainRoles(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
 		try {
 			String domainId = ServletUtils.getStringParameter(request, "domainId", true);

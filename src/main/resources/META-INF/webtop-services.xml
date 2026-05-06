@@ -92,6 +92,11 @@
 			-->
 			<permission group="MEETING" actions="CREATE" />
 			<!--
+			AI_PERSONAL - Personal A.I. management
+			- MANAGE ability to set up personal A.I. provider
+			-->
+			<permission group="AI_PERSONAL" actions="MANAGE" />
+			<!--
 			AUDIT - show audit interface
 			- ACCESS ability to use audit interface
 			-->

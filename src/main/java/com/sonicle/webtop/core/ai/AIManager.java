@@ -36,6 +36,8 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.sonicle.webtop.core.bol.OAIUsage;
+import com.sonicle.webtop.core.sdk.UserProfileId;
 import com.sonicle.webtop.core.sdk.WTException;
 import java.io.OutputStream;
 import java.net.URL;
@@ -48,6 +50,8 @@ import java.util.Locale;
 import java.util.Scanner;
 import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.lang3.StringUtils;
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 
 /**
  * Base for backend-specific AI managers. Instances are cached per
@@ -82,10 +86,31 @@ public abstract class AIManager {
 
 	protected Locale locale;
 
+	/** Backend tag persisted on every usage row (one of OAIUsage.BACKEND_*). */
+	protected String backendType;
+
+	/** Real (un-hashed) user identity for usage rows; null disables profile-bound recording. */
+	protected UserProfileId profileId;
+
+	/** Optional sink for usage rows; null means recording is disabled. */
+	protected AIUsageRecorder usageRecorder;
+
 	public AIManager(String apiUrl, String apiToken, Locale locale) {
 		this.locale = locale;
 		this.apiUrl = apiUrl;
 		this.apiToken = apiToken;
+	}
+
+	public void setBackendType(String backendType) {
+		this.backendType = backendType;
+	}
+
+	public void setProfileId(UserProfileId profileId) {
+		this.profileId = profileId;
+	}
+
+	public void setUsageRecorder(AIUsageRecorder usageRecorder) {
+		this.usageRecorder = usageRecorder;
 	}
 
 	/**
@@ -184,13 +209,93 @@ public abstract class AIManager {
 		// Convert to JSON string
 		String jsonPayload = gson.toJson(payload);
 
+		long startMs = System.currentTimeMillis();
 		try {
 			String jsonResponse = getAnswer(new URL(apiUrl+apiCompletionPath), jsonPayload, apiToken);
+			int durationMs = clampToInt(System.currentTimeMillis() - startMs);
+			recordUsage(cfg, jsonResponse, durationMs, true, null);
 			return AIOutputSanitizer.sanitizeByFormat(extractAssistantReply(jsonResponse), outputFormat);
 		} catch(Exception exc) {
+			int durationMs = clampToInt(System.currentTimeMillis() - startMs);
+			recordUsage(cfg, null, durationMs, false, exc.getMessage());
 			exc.printStackTrace();
 			throw new WTException("AI backend request failed");
 		}
+	}
+
+	/**
+	 * Builds an OAIUsage row from the just-completed call and hands it to the
+	 * recorder. The recorder is responsible for persistence and counter
+	 * updates; this method only marshals fields. Silently skips when no
+	 * recorder or profile id has been wired (standalone use, tests).
+	 *
+	 * Token counts come from the response's {@code usage} block when present
+	 * (OpenAI/Anthropic compat), and stay null otherwise — Sonicle's /ask
+	 * path and any backend that doesn't echo usage simply produce a row
+	 * with null tokens.
+	 */
+	protected void recordUsage(AIRequestConfig cfg, String jsonResponse, int durationMs, boolean success, String errorMessage) {
+		if (usageRecorder == null || profileId == null) return;
+		try {
+			OAIUsage row = new OAIUsage();
+			row.setTimestamp(DateTime.now(DateTimeZone.UTC));
+			row.setDomainId(profileId.getDomainId());
+			row.setUserId(profileId.getUserId());
+			String svc = (cfg != null && cfg.getServiceId() != null) ? cfg.getServiceId() : "";
+			row.setServiceId(svc);
+			String op = (cfg != null && cfg.getOperation() != null) ? cfg.getOperation() : "unknown";
+			row.setOperation(op);
+			row.setBackendType(backendType != null ? backendType : "UNKNOWN");
+			row.setModel(model);
+			if (jsonResponse != null) {
+				int[] tokens = parseUsageTokens(jsonResponse);
+				if (tokens[0] >= 0) row.setPromptTokens(tokens[0]);
+				if (tokens[1] >= 0) row.setCompletionTokens(tokens[1]);
+				if (tokens[2] >= 0) row.setTotalTokens(tokens[2]);
+			}
+			row.setDurationMs(durationMs);
+			row.setSuccess(success);
+			if (!success && !StringUtils.isBlank(errorMessage)) row.setErrorShort(errorMessage);
+			usageRecorder.record(row);
+		} catch (Throwable t) {
+			// Recording must never break the AI call.
+		}
+	}
+
+	private static int clampToInt(long v) {
+		return (v > Integer.MAX_VALUE) ? Integer.MAX_VALUE : (int) v;
+	}
+
+	/**
+	 * Returns {prompt, completion, total} token counts parsed from the
+	 * response JSON, with -1 in slots that aren't present. Handles both
+	 * the OpenAI shape (prompt_tokens/completion_tokens) and the Anthropic
+	 * native shape (input_tokens/output_tokens). When total is missing
+	 * but prompt+completion are present, derives it.
+	 */
+	private static int[] parseUsageTokens(String jsonResponse) {
+		int[] out = new int[]{-1, -1, -1};
+		try {
+			JsonObject root = new JsonParser().parse(jsonResponse).getAsJsonObject();
+			if (!root.has("usage") || !root.get("usage").isJsonObject()) return out;
+			JsonObject usage = root.getAsJsonObject("usage");
+			if (usage.has("prompt_tokens") && !usage.get("prompt_tokens").isJsonNull()) {
+				out[0] = usage.get("prompt_tokens").getAsInt();
+			} else if (usage.has("input_tokens") && !usage.get("input_tokens").isJsonNull()) {
+				out[0] = usage.get("input_tokens").getAsInt();
+			}
+			if (usage.has("completion_tokens") && !usage.get("completion_tokens").isJsonNull()) {
+				out[1] = usage.get("completion_tokens").getAsInt();
+			} else if (usage.has("output_tokens") && !usage.get("output_tokens").isJsonNull()) {
+				out[1] = usage.get("output_tokens").getAsInt();
+			}
+			if (usage.has("total_tokens") && !usage.get("total_tokens").isJsonNull()) {
+				out[2] = usage.get("total_tokens").getAsInt();
+			} else if (out[0] >= 0 && out[1] >= 0) {
+				out[2] = out[0] + out[1];
+			}
+		} catch (Exception ignored) {}
+		return out;
 	}
 
 	protected String getAnswer(URL url, String jsonPayload) throws Exception {

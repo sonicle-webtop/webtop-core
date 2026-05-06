@@ -34,3 +34,36 @@ CREATE UNIQUE INDEX "auth_tokens_ak1" ON "core"."auth_tokens" ("token");
 CREATE INDEX "auth_tokens_ak2" ON "core"."auth_tokens" ("domain_id", "user_id");
 CREATE INDEX "auth_tokens_ak3" ON "core"."auth_tokens" ("parent_id");
 CREATE INDEX "auth_tokens_ak4" ON "core"."auth_tokens" ("expires_at");
+
+-- ----------------------------
+-- New table: ai_usage
+-- One row per AI completion call (mail "Ask A.I." menu, future RAG/embedding,
+-- and any other webtop service consuming AIManager). Records token spend per
+-- (domain, user) so reports can aggregate by day/week/month and an in-memory
+-- daily counter can gate calls when a per-user/global cap is set.
+-- Stores metrics only — never prompt or response content.
+-- ----------------------------
+DROP SEQUENCE IF EXISTS "core"."seq_ai_usage";
+CREATE SEQUENCE "core"."seq_ai_usage";
+
+DROP TABLE IF EXISTS "core"."ai_usage";
+CREATE TABLE "core"."ai_usage" (
+"ai_usage_id" int8 DEFAULT nextval('"core".seq_ai_usage'::regclass) NOT NULL,
+"timestamp" timestamptz NOT NULL,
+"domain_id" varchar(20) NOT NULL,
+"user_id" varchar(100) NOT NULL,
+"service_id" varchar(255) NOT NULL,
+"operation" varchar(64) NOT NULL,
+"backend_type" varchar(20) NOT NULL,
+"model" varchar(100),
+"prompt_tokens" int4,
+"completion_tokens" int4,
+"total_tokens" int4,
+"duration_ms" int4,
+"success" bool NOT NULL,
+"error_short" text
+);
+
+ALTER TABLE "core"."ai_usage" ADD PRIMARY KEY ("ai_usage_id");
+CREATE INDEX "ai_usage_ak1" ON "core"."ai_usage" ("domain_id", "user_id", "timestamp");
+CREATE INDEX "ai_usage_ak2" ON "core"."ai_usage" ("timestamp");

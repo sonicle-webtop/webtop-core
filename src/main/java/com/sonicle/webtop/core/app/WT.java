@@ -35,6 +35,7 @@ package com.sonicle.webtop.core.app;
 
 import com.sonicle.commons.InternetAddressUtils;
 import com.sonicle.commons.LangUtils;
+import com.sonicle.commons.MailUtils;
 import com.sonicle.commons.PathUtils;
 import com.sonicle.commons.l4j.ProductLicense;
 import com.sonicle.mail.PropsBuilder;
@@ -821,6 +822,15 @@ public class WT {
 		logMgr.rebaseReference(RunContext.getRunProfileId(), serviceId, context, oldReference, newReference);
 	}
 	
+	/**
+	 * Returns the AIUsageManager (JVM-singleton). May be null very early
+	 * during startup before managers have been initialized; callers
+	 * should null-check.
+	 */
+	public static AIUsageManager getAIUsageManager() {
+		return getWTA().getAIUsageManager();
+	}
+
 	public static void notify(UserProfileId profileId, ServiceMessage message) {
 		WT.notify(profileId, message, false);
 	}
@@ -862,7 +872,8 @@ public class WT {
 			.from(from)
 			.to(recipients)
 			.withSubject(subject)
-			.withHTMLText(htmlBody);
+			.withHTMLText(htmlBody)
+			.withPlainText(MailUtils.htmlToText(htmlBody));
 		if (headers != null && !headers.isEmpty()) builder.withHeaders(headers);
 		getWTA().sendEmailMessage(sendingProfileId, builder.build(), moveToFolderAfterSent);
 	}

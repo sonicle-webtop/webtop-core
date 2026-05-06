@@ -530,8 +530,32 @@ public class CoreServiceSettings extends BaseServiceSettings {
 	public int getAiToolUserInputMaxChars() {
 		return getInteger(AI_TOOL_USER_INPUT_MAX_CHARS, 2000);
 	}
-	
-	
+
+	/**
+	 * Domain/system default for the per-user daily AI token cap. 0 (the
+	 * default) means no cap.
+	 */
+	public int getAiMaxTokens() {
+		return getInteger(AI_MAX_TOKENS, 0);
+	}
+
+	public String getAiReportCadence() {
+		return getString(AI_REPORT_CADENCE, "none");
+	}
+
+	public boolean setAiReportCadence(String value) {
+		return setString(AI_REPORT_CADENCE, value);
+	}
+
+	public String getAiReportEmail() {
+		return getString(AI_REPORT_EMAIL, null);
+	}
+
+	public boolean setAiReportEmail(String value) {
+		return setString(AI_REPORT_EMAIL, value);
+	}
+
+
 	
 	
 	
