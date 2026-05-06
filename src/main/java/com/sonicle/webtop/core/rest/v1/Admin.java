@@ -32,6 +32,7 @@
  */
 package com.sonicle.webtop.core.rest.v1;
 
+import com.sonicle.commons.Check;
 import com.sonicle.commons.LangUtils;
 import com.sonicle.commons.flags.BitFlags;
 import com.sonicle.commons.l4j.ProductLicense;
@@ -105,7 +106,6 @@ import com.sonicle.webtop.core.swagger.v1.model.ApiUserBase;
 import java.util.ArrayList;
 import java.util.List;
 import javax.ws.rs.core.Response;
-import net.sf.qualitycheck.Check;
 import org.codehaus.plexus.util.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

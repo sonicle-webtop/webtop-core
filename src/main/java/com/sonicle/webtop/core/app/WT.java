@@ -33,6 +33,7 @@
  */
 package com.sonicle.webtop.core.app;
 
+import com.sonicle.commons.Check;
 import com.sonicle.commons.InternetAddressUtils;
 import com.sonicle.commons.LangUtils;
 import com.sonicle.commons.PathUtils;
@@ -94,7 +95,6 @@ import jakarta.mail.internet.MimeMultipart;
 import java.util.Set;
 import javax.sql.DataSource;
 import net.sf.jasperreports.engine.JRException;
-import net.sf.qualitycheck.Check;
 import org.apache.commons.lang3.StringUtils;
 import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;

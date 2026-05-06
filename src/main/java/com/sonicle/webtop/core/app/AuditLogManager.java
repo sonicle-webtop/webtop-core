@@ -34,6 +34,7 @@ package com.sonicle.webtop.core.app;
 
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
+import com.sonicle.commons.Check;
 import com.sonicle.commons.EnumUtils;
 import com.sonicle.commons.InternetAddressUtils;
 import com.sonicle.commons.PathUtils;
@@ -79,7 +80,6 @@ import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
-import net.sf.qualitycheck.Check;
 import net.sf.uadetector.ReadableUserAgent;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.client.HttpClient;

@@ -33,6 +33,7 @@
  */
 package com.sonicle.webtop.core.app;
 
+import com.sonicle.commons.Check;
 import com.sonicle.commons.EnumUtils;
 import com.sonicle.commons.InternetAddressUtils;
 import com.sonicle.commons.URIUtils;
@@ -74,7 +75,6 @@ import jakarta.mail.internet.InternetAddress;
 import java.security.NoSuchAlgorithmException;
 import java.sql.Connection;
 import net.glxn.qrgen.javase.QRCode;
-import net.sf.qualitycheck.Check;
 import org.apache.commons.lang3.StringUtils;
 import org.joda.time.DateTime;
 import org.joda.time.Duration;

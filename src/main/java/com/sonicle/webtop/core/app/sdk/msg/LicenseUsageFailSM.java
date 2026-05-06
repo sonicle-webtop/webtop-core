@@ -32,11 +32,11 @@
  */
 package com.sonicle.webtop.core.app.sdk.msg;
 
+import com.sonicle.commons.Check;
 import com.sonicle.webtop.core.app.CoreManifest;
 import com.sonicle.webtop.core.app.WT;
 import com.sonicle.webtop.core.sdk.BaseServiceProduct;
 import java.util.Locale;
-import net.sf.qualitycheck.Check;
 
 /**
  *

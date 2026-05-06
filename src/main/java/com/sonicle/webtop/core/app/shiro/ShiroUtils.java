@@ -32,11 +32,10 @@
  */
 package com.sonicle.webtop.core.app.shiro;
 
-import net.sf.qualitycheck.Check;
+import com.sonicle.commons.Check;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.mgt.RealmSecurityManager;
 import org.apache.shiro.realm.Realm;
-import org.apache.shiro.subject.Subject;
 
 /**
  *
