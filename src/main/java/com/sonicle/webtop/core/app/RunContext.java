@@ -33,6 +33,7 @@
  */
 package com.sonicle.webtop.core.app;
 
+import com.sonicle.commons.Check;
 import com.sonicle.security.Principal;
 import com.sonicle.webtop.core.app.shiro.ShiroUtils;
 import com.sonicle.webtop.core.app.shiro.WTRealm;
@@ -43,7 +44,6 @@ import java.util.Arrays;
 import java.util.Collection;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
-import net.sf.qualitycheck.Check;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.UnavailableSecurityManagerException;

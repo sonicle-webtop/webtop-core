@@ -32,6 +32,7 @@
  */
 package com.sonicle.webtop.core.app;
 
+import com.sonicle.commons.Check;
 import com.sonicle.commons.ClassUtils;
 import com.sonicle.webtop.core.app.exc.ManagerLifecycleException;
 import com.sonicle.webtop.core.app.sdk.EventBase;
@@ -40,7 +41,6 @@ import com.sonicle.webtop.core.sdk.WTRuntimeException;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.concurrent.locks.ReentrantLock;
-import net.sf.qualitycheck.Check;
 import org.slf4j.Logger;
 
 /**

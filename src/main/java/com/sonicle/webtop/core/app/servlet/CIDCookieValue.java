@@ -32,7 +32,7 @@
  */
 package com.sonicle.webtop.core.app.servlet;
 
-import net.sf.qualitycheck.Check;
+import com.sonicle.commons.Check;
 import org.apache.commons.lang3.StringUtils;
 
 /**

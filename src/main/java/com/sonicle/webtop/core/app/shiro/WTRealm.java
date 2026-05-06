@@ -32,6 +32,7 @@
  */
 package com.sonicle.webtop.core.app.shiro;
 
+import com.sonicle.commons.Check;
 import com.sonicle.commons.concurrent.KeyedReentrantLocks;
 import com.sonicle.security.AuthContext;
 import com.sonicle.security.AuthPrincipal;
@@ -61,7 +62,6 @@ import com.sonicle.webtop.core.sdk.WTException;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
-import net.sf.qualitycheck.Check;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.shiro.authc.AuthenticationException;
 import org.apache.shiro.authc.AuthenticationInfo;

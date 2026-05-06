@@ -33,6 +33,7 @@
 package com.sonicle.webtop.core.app;
 
 import com.rits.cloning.Cloner;
+import com.sonicle.commons.Check;
 import com.sonicle.commons.ClassUtils;
 import com.sonicle.commons.IdentifierUtils;
 import com.sonicle.commons.LangUtils;
@@ -94,7 +95,6 @@ import java.util.concurrent.TimeoutException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-import net.sf.qualitycheck.Check;
 import org.apache.commons.collections4.BidiMap;
 import org.apache.commons.collections4.bidimap.DualHashBidiMap;
 import org.apache.commons.dbutils.QueryRunner;

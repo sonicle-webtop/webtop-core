@@ -32,13 +32,13 @@
  */
 package com.sonicle.webtop.core.sdk;
 
+import com.sonicle.commons.Check;
 import com.sonicle.webtop.core.app.AbstractService;
 import com.sonicle.webtop.core.app.util.LoggerUtils;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
-import net.sf.qualitycheck.Check;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.shiro.subject.Subject;
 import org.quartz.JobBuilder;

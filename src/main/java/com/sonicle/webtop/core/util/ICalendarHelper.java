@@ -32,12 +32,12 @@
  */
 package com.sonicle.webtop.core.util;
 
+import com.sonicle.commons.Check;
 import com.sonicle.mail.MimeUtils;
 import com.sonicle.mail.email.CalendarMethod;
 import com.sonicle.mail.email.ContentTransferEncoding;
 import com.sonicle.mail.email.EmailMessage;
 import com.sonicle.mail.email.EmailMessageBuilder;
-import com.sonicle.mail.email.EmailPopulatingBuilder;
 import com.sonicle.webtop.core.TplHelper;
 import com.sonicle.webtop.core.app.WT;
 import com.sonicle.webtop.core.app.sdk.WTParseException;
@@ -50,7 +50,6 @@ import java.text.ParseException;
 import java.util.Locale;
 import net.fortuna.ical4j.model.Calendar;
 import net.fortuna.ical4j.model.parameter.PartStat;
-import net.sf.qualitycheck.Check;
 
 /**
  * https://stackoverflow.com/questions/51516325/sending-calendar-events-invitations-using-ical4j-library-java-spring

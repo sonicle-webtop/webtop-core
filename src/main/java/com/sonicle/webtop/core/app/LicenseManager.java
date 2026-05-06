@@ -34,6 +34,7 @@ package com.sonicle.webtop.core.app;
 
 import com.license4j.ValidationStatus;
 import com.rits.cloning.Cloner;
+import com.sonicle.commons.Check;
 import com.sonicle.commons.LangUtils;
 import com.sonicle.commons.db.DbUtils;
 import com.sonicle.commons.flags.BitFlags;
@@ -77,7 +78,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import net.sf.qualitycheck.Check;
 import org.apache.commons.collections4.MultiValuedMap;
 import org.apache.commons.collections4.multimap.ArrayListValuedHashMap;
 import org.apache.commons.lang3.RandomUtils;

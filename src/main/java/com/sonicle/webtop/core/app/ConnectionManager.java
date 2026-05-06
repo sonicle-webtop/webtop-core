@@ -32,6 +32,7 @@
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
 package com.sonicle.webtop.core.app;
+import com.sonicle.commons.Check;
 import com.sonicle.commons.ClassUtils;
 import com.sonicle.commons.PathUtils;
 import com.sonicle.webtop.core.app.DataSourcesConfig.HikariConfigMap;
@@ -50,7 +51,6 @@ import java.util.Map.Entry;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import javax.sql.DataSource;
-import net.sf.qualitycheck.Check;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 

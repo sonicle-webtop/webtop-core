@@ -34,6 +34,7 @@
 package com.sonicle.webtop.core;
 
 import com.aventrix.jnanoid.jnanoid.NanoIdUtils;
+import com.sonicle.commons.Check;
 import com.sonicle.commons.EnumUtils;
 import com.sonicle.commons.InternetAddressUtils;
 import com.sonicle.commons.LangUtils;
@@ -194,7 +195,6 @@ import jakarta.mail.internet.InternetAddress;
 import java.util.HashMap;
 import java.util.Optional;
 import java.util.stream.Collectors;
-import net.sf.qualitycheck.Check;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.client.utils.URIBuilder;
 import org.joda.time.DateTime;

@@ -32,6 +32,7 @@
  */
 package com.sonicle.webtop.core.app.sdk;
 
+import com.sonicle.commons.Check;
 import com.sonicle.commons.cache.AbstractOptionableBulkCache;
 import com.sonicle.webtop.core.app.model.FolderShareFolder;
 import com.sonicle.webtop.core.app.model.ShareOrigin;
@@ -41,7 +42,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Set;
-import net.sf.qualitycheck.Check;
 import org.apache.commons.collections4.MultiValuedMap;
 import org.apache.commons.collections4.multimap.ArrayListValuedHashMap;
 

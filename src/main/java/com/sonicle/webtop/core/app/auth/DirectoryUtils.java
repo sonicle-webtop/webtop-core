@@ -32,6 +32,7 @@
  */
 package com.sonicle.webtop.core.app.auth;
 
+import com.sonicle.commons.Check;
 import com.sonicle.commons.LangUtils;
 import com.sonicle.security.AuthContext;
 import com.sonicle.security.auth.directory.ADConfigBuilder;
@@ -47,14 +48,12 @@ import com.sonicle.security.auth.directory.SftpConfigBuilder;
 import com.sonicle.security.auth.directory.SftpDirectory;
 import com.sonicle.security.auth.directory.SmbConfigBuilder;
 import com.sonicle.security.auth.directory.SmbDirectory;
-import com.sonicle.webtop.core.app.WebTopApp;
 import com.sonicle.webtop.core.app.WebTopProps;
 import com.sonicle.webtop.core.app.model.DomainBase;
 import com.sonicle.webtop.core.model.ParamsLdapDirectory;
 import com.sonicle.webtop.core.sdk.interfaces.IConnectionProvider;
 import java.net.URI;
 import java.util.Properties;
-import net.sf.qualitycheck.Check;
 import org.apache.commons.lang3.StringUtils;
 
 /**

@@ -33,6 +33,7 @@
  */
 package com.sonicle.webtop.core.admin;
 
+import com.sonicle.commons.Check;
 import com.sonicle.commons.beans.PageInfo;
 import com.sonicle.commons.beans.SortInfo;
 import com.sonicle.commons.db.DbUtils;
@@ -135,7 +136,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
-import net.sf.qualitycheck.Check;
 import org.apache.commons.dbutils.ResultSetHandler;
 import org.apache.commons.lang.StringUtils;
 import org.joda.time.DateTime;

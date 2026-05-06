@@ -33,6 +33,7 @@
  */
 package com.sonicle.webtop.core.sdk;
 
+import com.sonicle.commons.Check;
 import com.sonicle.commons.LangUtils;
 import com.sonicle.webtop.core.app.AbstractPlatformService;
 import com.sonicle.webtop.core.app.RunContext;
@@ -148,6 +149,8 @@ public abstract class BaseRestApiResource extends AbstractPlatformService {
 			return respErrorNotFound(t.getMessage());
 		} else if (t instanceof WTParseException) {
 			return respErrorBadRequest(t.getMessage());
+		} else if (t != null && LangUtils.getDeepestCause(t) instanceof Check.BaseIllegalArgumentException) {
+			return respErrorBadRequest(t.getMessage());
 		}  else {
 			if (t != null) {
 				if ("net.sf.qualitycheck.exception".equals(ClassUtils.getPackageName(LangUtils.getDeepestCause(t).getClass()))) {
@@ -185,6 +188,8 @@ public abstract class BaseRestApiResource extends AbstractPlatformService {
 		} else if (t instanceof WTNotFoundException) {
 			return false;
 		} else if (t instanceof WTParseException) {
+			return false;
+		} else if (t != null && LangUtils.getDeepestCause(t) instanceof Check.BaseIllegalArgumentException) {
 			return false;
 		}  else {
 			if (t != null && "net.sf.qualitycheck.exception".equals(ClassUtils.getPackageName(LangUtils.getDeepestCause(t).getClass()))) {
