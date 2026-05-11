@@ -92,6 +92,11 @@
 			-->
 			<permission group="MEETING" actions="CREATE" />
 			<!--
+			AI - Activate A.I. actions
+			- Activate A.I. actions
+			-->
+			<permission group="AI_ACTIONS" actions="ACCESS" />
+			<!--
 			AI_PERSONAL - Personal A.I. management
 			- MANAGE ability to set up personal A.I. provider
 			-->
@@ -109,6 +114,7 @@
 		</permissions>
 		
 		<products>
+			<product className=".products.AIProduct" />
 			<product className=".products.TMCEPremiumProduct" />
 			<product className=".products.AuditProduct" />
 			<product className=".products.CustomFieldsProduct" />

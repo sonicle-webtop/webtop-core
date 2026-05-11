@@ -63,6 +63,7 @@ import com.sonicle.webtop.core.ai.AIRequestConfig;
 import com.sonicle.webtop.core.ai.tool.AIToolConfig;
 import com.sonicle.webtop.core.ai.tool.AIToolInputSpec;
 import com.sonicle.webtop.core.ai.tool.AIToolItem;
+import com.sonicle.webtop.core.ai.tool.AIToolMode;
 import com.sonicle.webtop.core.app.CoreAdminManifest;
 import com.sonicle.webtop.core.app.CoreManifest;
 import com.sonicle.webtop.core.app.RunContext;
@@ -438,7 +439,10 @@ public class Service extends BaseService implements EventListener {
 		//TODO: manage licensing
 		vars.put("hasAudit",coreMgr.isAuditEnabled()&&(RunContext.isImpersonated()||RunContext.isPermitted(true, CoreManifest.ID, "AUDIT")));
 		
-		if (aiToolConfig != null && getWts().isAIConfigured()) {
+		boolean hasAI = coreMgr.isAIEnabled()&&RunContext.isPermitted(true, CoreManifest.ID, "AI_ACTIONS", "ACCESS");
+		vars.put("hasAI", hasAI);
+		
+		if (hasAI && aiToolConfig != null && getWts().isAIConfigured()) {
 			vars.put("aiTool", buildClientAITool(aiToolConfig));
 		}
 
@@ -446,33 +450,37 @@ public class Service extends BaseService implements EventListener {
 	}
 	
 	private Map<String, Object> buildClientAITool(AIToolConfig cfg) {
+		String userLang = getEnv().getProfile().getLocale().getLanguage();
+		String dialogTitle = cfg.resolve(cfg.getDialogTitle(), userLang);
 		Map<String, Object> root = new LinkedHashMap<>();
 		List<Map<String, Object>> items = new ArrayList<>();
-		for (AIToolItem it : cfg.getItems()) items.add(buildClientAIToolItem(it));
+		for (AIToolItem it : cfg.getItems()) items.add(buildClientAIToolItem(cfg, userLang, dialogTitle, it));
 		root.put("items", items);
 		return root;
 	}
 
-	private Map<String, Object> buildClientAIToolItem(AIToolItem it) {
+	private Map<String, Object> buildClientAIToolItem(AIToolConfig cfg, String userLang, String dialogTitle, AIToolItem it) {
 		Map<String, Object> o = new LinkedHashMap<>();
 		o.put("id", it.getId());
-		o.put("label", lookupResource(it.getLabelKey()));
+		String label = cfg.resolve(it.getLabel(), userLang);
+		o.put("label", label != null ? label : it.getId());
 		if (it.isGroup()) {
 			List<Map<String, Object>> kids = new ArrayList<>();
-			for (AIToolItem c : it.getChildren()) kids.add(buildClientAIToolItem(c));
+			for (AIToolItem c : it.getChildren()) kids.add(buildClientAIToolItem(cfg, userLang, dialogTitle, c));
 			o.put("children", kids);
 		} else {
+			o.put("mode", it.getMode() == AIToolMode.SHOW ? "show" : "insert");
 			if (it.requiresSelection()) {
 				o.put("requiresSelection", true);
-				if (it.getNoSelectionErrorKey() != null) {
-					o.put("noSelectionError", lookupResource(it.getNoSelectionErrorKey()));
-				}
+				String err = cfg.resolve(it.getNoSelectionError(), userLang);
+				if (err != null) o.put("noSelectionError", err);
 			}
 			AIToolInputSpec in = it.getInput();
 			if (in != null) {
 				Map<String, Object> ino = new LinkedHashMap<>();
-				if (in.getTitleKey() != null) ino.put("title", lookupResource(in.getTitleKey()));
-				if (in.getQuestionKey() != null) ino.put("question", lookupResource(in.getQuestionKey()));
+				if (dialogTitle != null) ino.put("title", dialogTitle);
+				String question = cfg.resolve(in.getQuestion(), userLang);
+				if (question != null) ino.put("question", question);
 				ino.put("multiline", in.isMultiline());
 				ino.put("required", in.isRequired());
 				o.put("input", ino);
@@ -2048,7 +2056,7 @@ public class Service extends BaseService implements EventListener {
 				return;
 			}
 			AIToolItem item = aiToolConfig.findById(actionId);
-			if (item == null || item.getPromptKey() == null) {
+			if (item == null || item.getPrompt() == null || item.getPrompt().isEmpty()) {
 				new JsonResult(false, "Unknown AI action").printTo(out);
 				return;
 			}
@@ -2058,19 +2066,18 @@ public class Service extends BaseService implements EventListener {
 				return;
 			}
 			if (inSpec == null) rawInput = "";
+			String userLang = getEnv().getProfile().getLocale().getLanguage();
 			if (item.requiresSelection() && StringUtils.isBlank(rawSelection)) {
 				String msg = "Selection required";
-				if (item.getNoSelectionErrorKey() != null) {
-					String localized = lookupResource(item.getNoSelectionErrorKey());
-					if (!StringUtils.isBlank(localized)) msg = localized;
-				}
+				String localized = aiToolConfig.resolve(item.getNoSelectionError(), userLang);
+				if (!StringUtils.isBlank(localized)) msg = localized;
 				new JsonResult(false, msg).printTo(out);
 				return;
 			}
 
-			String template = lookupResource(item.getPromptKey());
+			String template = aiToolConfig.resolve(item.getPrompt(), userLang);
 			if (template == null) {
-				logger.error("AI tool prompt resource key '{}' not found", item.getPromptKey());
+				logger.error("AI tool prompt for action '{}' has no entry for language '{}' or default", item.getId(), userLang);
 				new JsonResult(false, "AI prompt not found").printTo(out);
 				return;
 			}
@@ -2078,7 +2085,7 @@ public class Service extends BaseService implements EventListener {
 					template, rawInput, ss.getAiToolUserInputMaxChars());
 			String normalizedFormat = format == null ? "" : format.trim().toLowerCase();
 			if (normalizedFormat.equals("minimal html") || normalizedFormat.equals("minimal-html")) {
-				String hint = lookupResource("ai.tool.format.minimal-html.hint");
+				String hint = aiToolConfig.resolve(aiToolConfig.getMinimalHtmlFormatHint(), userLang);
 				if (!StringUtils.isBlank(hint)) renderedTask = renderedTask + "\n\n" + hint;
 			}
 

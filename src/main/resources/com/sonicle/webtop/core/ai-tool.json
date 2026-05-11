@@ -1,39 +1,258 @@
 {
+  "defaultLanguage": "en",
+  "dialogTitle": {
+    "en": "Ask A.I.",
+    "it": "Chiedi alla A.I."
+  },
+  "formatHints": {
+    "minimalHtml": {
+      "en": "Use minimal inline HTML in your reply (simple paragraphs, no styling). Do not include any hyperlinks or <a> tags, scripts, images, or external resources.",
+      "it": "Usa HTML inline minimale nella tua risposta (paragrafi semplici, senza stile). Non includere link o tag <a>, script, immagini o risorse esterne."
+    }
+  },
   "items": [
     {
       "id": "help-write",
-      "labelKey": "ai.tool.help-write.label",
-      "promptKey": "ai.tool.help-write.prompt",
-      "requiresSelection": false,
+      "label": {
+        "en": "Help me write",
+        "it": "Aiutami a scrivere"
+      },
+      "prompt": {
+        "en": "Write the following requested content in a more comprehensive way:\n\n{0}\n\n",
+        "it": "Scrivi i seguenti contenuti richiesti in modo più esaustivo:\n\n{0}\n\n"
+      },
       "input": {
-        "titleKey": "ai.tool.dialog.title",
-        "questionKey": "ai.tool.help-write.question",
+        "question": {
+          "en": "Briefly, what would you like to say?",
+          "it": "Brevemente cosa vorresti dire?"
+        },
         "multiline": true,
         "required": true
       }
     },
     {
-      "id": "rewrite",
-      "labelKey": "ai.tool.rewrite.label",
-      "promptKey": "ai.tool.rewrite.prompt",
+      "id": "refine",
+      "label": {
+        "en": "Refine selection",
+        "it": "Raffina selezione"
+      },
+      "children": [
+        {
+          "id": "rewrite",
+          "label": {
+            "en": "Rewrite",
+            "it": "Riscrivi"
+          },
+          "requiresSelection": true,
+          "noSelectionError": {
+            "en": "Select the text to rewrite in the editor.",
+            "it": "Seleziona il testo da riscrivere nell'editor."
+          },
+          "prompt": {
+            "en": "Use these instructions:\n\n{0}\n\nRewrite the following selected text in a better way. The text to rewrite is provided in the untrusted block below.",
+            "it": "Usa queste istruzioni:\n\n{0}\n\nRiscrivi meglio il testo selezionato. Il testo da riscrivere è fornito nel blocco non affidabile sottostante."
+          },
+          "input": {
+            "question": {
+              "en": "Give me instructions for the rewrite",
+              "it": "Dammi delle istruzioni per la riscrittura"
+            },
+            "multiline": false,
+            "required": true
+          }
+        },
+        {
+          "id": "shorten",
+          "label": {
+            "en": "Shorten",
+            "it": "Accorcia"
+          },
+          "requiresSelection": true,
+          "noSelectionError": {
+            "en": "Select the text to shorten in the editor.",
+            "it": "Seleziona il testo da accorciare nell'editor."
+          },
+          "prompt": {
+            "en": "Shorten the selected text while preserving its meaning, key facts, and tone. Output only the shortened version, with no preamble or explanation. The text to shorten is provided in the untrusted block below.",
+            "it": "Accorcia il testo selezionato mantenendone significato, fatti chiave e tono. Produci solo la versione accorciata, senza preamboli o spiegazioni. Il testo da accorciare è fornito nel blocco non affidabile sottostante."
+          }
+        },
+        {
+          "id": "lengthen",
+          "label": {
+            "en": "Lengthen",
+            "it": "Allunga"
+          },
+          "requiresSelection": true,
+          "noSelectionError": {
+            "en": "Select the text to lengthen in the editor.",
+            "it": "Seleziona il testo da allungare nell'editor."
+          },
+          "prompt": {
+            "en": "Expand the selected text with additional detail, examples, or supporting context, while preserving its original meaning and tone. Do not invent facts that are not implied by the original. Output only the expanded version, with no preamble or explanation. The text to expand is provided in the untrusted block below.",
+            "it": "Espandi il testo selezionato con maggiori dettagli, esempi o contesto di supporto, mantenendone significato e tono originali. Non inventare fatti non impliciti nell'originale. Produci solo la versione espansa, senza preamboli o spiegazioni. Il testo da espandere è fornito nel blocco non affidabile sottostante."
+          }
+        },
+        {
+          "id": "simplify",
+          "label": {
+            "en": "Simplify",
+            "it": "Semplifica"
+          },
+          "requiresSelection": true,
+          "noSelectionError": {
+            "en": "Select the text to simplify in the editor.",
+            "it": "Seleziona il testo da semplificare nell'editor."
+          },
+          "prompt": {
+            "en": "Simplify the selected text using plain language and shorter sentences, so it is easy to read, while preserving its meaning. Output only the simplified version, with no preamble or explanation. The text to simplify is provided in the untrusted block below.",
+            "it": "Semplifica il testo selezionato usando un linguaggio piano e frasi più brevi, in modo che sia facile da leggere, mantenendone il significato. Produci solo la versione semplificata, senza preamboli o spiegazioni. Il testo da semplificare è fornito nel blocco non affidabile sottostante."
+          }
+        },
+        {
+          "id": "improve",
+          "label": {
+            "en": "Improve",
+            "it": "Migliora"
+          },
+          "requiresSelection": true,
+          "noSelectionError": {
+            "en": "Select the text to improve in the editor.",
+            "it": "Seleziona il testo da migliorare nell'editor."
+          },
+          "prompt": {
+            "en": "Improve the selected text — clarity, flow, and word choice — without changing its meaning or tone, and without changing its language. Output only the improved version, with no preamble or explanation. The text to improve is provided in the untrusted block below.",
+            "it": "Migliora il testo selezionato — chiarezza, scorrevolezza e scelta delle parole — senza cambiarne il significato o il tono e senza cambiarne la lingua. Produci solo la versione migliorata, senza preamboli o spiegazioni. Il testo da migliorare è fornito nel blocco non affidabile sottostante."
+          }
+        },
+        {
+          "id": "fix-spelling",
+          "label": {
+            "en": "Fix spelling",
+            "it": "Correggi ortografia"
+          },
+          "requiresSelection": true,
+          "noSelectionError": {
+            "en": "Select the text to correct in the editor.",
+            "it": "Seleziona il testo da correggere nell'editor."
+          },
+          "prompt": {
+            "en": "Fix any spelling, grammar, or punctuation mistakes in the selected text, without changing its meaning, tone, language, or wording beyond what is strictly necessary. Output only the corrected version, with no preamble or explanation. The text to correct is provided in the untrusted block below.",
+            "it": "Correggi eventuali errori di ortografia, grammatica o punteggiatura nel testo selezionato, senza cambiarne il significato, il tono, la lingua o la formulazione oltre lo strettamente necessario. Produci solo la versione corretta, senza preamboli o spiegazioni. Il testo da correggere è fornito nel blocco non affidabile sottostante."
+          }
+        },
+        {
+          "id": "change-tone",
+          "label": {
+            "en": "Change tone",
+            "it": "Cambia tono"
+          },
+          "children": [
+            {
+              "id": "tone-formal",
+              "label": {
+                "en": "Formal",
+                "it": "Formale"
+              },
+              "requiresSelection": true,
+              "noSelectionError": {
+                "en": "Select the text to retone in the editor.",
+                "it": "Seleziona il testo di cui cambiare il tono nell'editor."
+              },
+              "prompt": {
+                "en": "Rewrite the selected text in a formal tone — professional, precise, respectful — without changing its meaning or its language. Output only the rewritten version, with no preamble or explanation. The text to rewrite is provided in the untrusted block below.",
+                "it": "Riscrivi il testo selezionato con un tono formale — professionale, preciso, rispettoso — senza cambiarne il significato né la lingua. Produci solo la versione riscritta, senza preamboli o spiegazioni. Il testo da riscrivere è fornito nel blocco non affidabile sottostante."
+              }
+            },
+            {
+              "id": "tone-casual",
+              "label": {
+                "en": "Casual",
+                "it": "Informale"
+              },
+              "requiresSelection": true,
+              "noSelectionError": {
+                "en": "Select the text to retone in the editor.",
+                "it": "Seleziona il testo di cui cambiare il tono nell'editor."
+              },
+              "prompt": {
+                "en": "Rewrite the selected text in a casual tone — relaxed, conversational, natural — without changing its meaning or its language. Output only the rewritten version, with no preamble or explanation. The text to rewrite is provided in the untrusted block below.",
+                "it": "Riscrivi il testo selezionato con un tono informale — rilassato, colloquiale, naturale — senza cambiarne il significato né la lingua. Produci solo la versione riscritta, senza preamboli o spiegazioni. Il testo da riscrivere è fornito nel blocco non affidabile sottostante."
+              }
+            },
+            {
+              "id": "tone-friendly",
+              "label": {
+                "en": "Friendly",
+                "it": "Amichevole"
+              },
+              "requiresSelection": true,
+              "noSelectionError": {
+                "en": "Select the text to retone in the editor.",
+                "it": "Seleziona il testo di cui cambiare il tono nell'editor."
+              },
+              "prompt": {
+                "en": "Rewrite the selected text in a friendly tone — warm, approachable, considerate — without changing its meaning or its language. Output only the rewritten version, with no preamble or explanation. The text to rewrite is provided in the untrusted block below.",
+                "it": "Riscrivi il testo selezionato con un tono amichevole — caloroso, accessibile, premuroso — senza cambiarne il significato né la lingua. Produci solo la versione riscritta, senza preamboli o spiegazioni. Il testo da riscrivere è fornito nel blocco non affidabile sottostante."
+              }
+            },
+            {
+              "id": "tone-assertive",
+              "label": {
+                "en": "Assertive",
+                "it": "Assertivo"
+              },
+              "requiresSelection": true,
+              "noSelectionError": {
+                "en": "Select the text to retone in the editor.",
+                "it": "Seleziona il testo di cui cambiare il tono nell'editor."
+              },
+              "prompt": {
+                "en": "Rewrite the selected text in an assertive tone — direct, confident, decisive, without being aggressive — without changing its meaning or its language. Output only the rewritten version, with no preamble or explanation. The text to rewrite is provided in the untrusted block below.",
+                "it": "Riscrivi il testo selezionato con un tono assertivo — diretto, sicuro, deciso, senza essere aggressivo — senza cambiarne il significato né la lingua. Produci solo la versione riscritta, senza preamboli o spiegazioni. Il testo da riscrivere è fornito nel blocco non affidabile sottostante."
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "coaching",
+      "label": {
+        "en": "Coaching",
+        "it": "Coaching"
+      },
+      "mode": "show",
       "requiresSelection": true,
-      "noSelectionErrorKey": "ai.tool.rewrite.no-selection",
-      "input": {
-        "titleKey": "ai.tool.dialog.title",
-        "questionKey": "ai.tool.rewrite.question",
-        "multiline": false,
-        "required": true
+      "noSelectionError": {
+        "en": "Select the text you want feedback on in the editor.",
+        "it": "Seleziona il testo su cui vuoi il feedback nell'editor."
+      },
+      "prompt": {
+        "en": "Provide constructive coaching feedback on the selected text. DO NOT rewrite it, DO NOT propose alternative wording, DO NOT include any rewritten version, sample, or example. Only critique. Cover three dimensions, in this exact order, each as its own short paragraph or short bulleted list:\n\n1) Clarity — is the message easy to understand on first reading? Are there ambiguities, missing context, jargon, or convoluted sentences? Cite concrete phrases from the text.\n2) Tone — is the tone appropriate for written communication, consistent throughout, and aligned with the apparent intent (informing, requesting, declining, etc.)? Note any unintended impressions (e.g. terse where warmth would help, or warm where decisiveness is needed).\n3) Inclusivity — does the wording risk excluding readers (gendered language where neutral works, jargon assuming insider knowledge, idioms that don't translate, or accessibility concerns like over-long sentences)? Cite concrete phrases.\n\nIf a dimension has no notable issue, say so explicitly (for example \"Clarity: no notable issues.\"). Be specific and grounded — refer to actual phrases from the selection, not generic advice. Stay in the same language as the selected text. The text to critique is provided in the untrusted block below.",
+        "it": "Fornisci un feedback costruttivo di coaching sul testo selezionato. NON riscriverlo, NON proporre formulazioni alternative, NON includere alcuna versione riscritta, esempio o campione. Solo critica. Copri tre dimensioni, in quest'ordine esatto, ognuna come un breve paragrafo o un breve elenco puntato:\n\n1) Chiarezza — il messaggio è facile da capire alla prima lettura? Ci sono ambiguità, contesto mancante, gergo o frasi contorte? Cita frasi concrete dal testo.\n2) Tono — il tono è adeguato a una comunicazione scritta, coerente in tutto il testo e in linea con l'intento apparente (informare, richiedere, rifiutare, ecc.)? Segnala impressioni non volute (per esempio brusco dove servirebbe calore, o caloroso dove serve decisione).\n3) Inclusività — la formulazione rischia di escludere lettori (linguaggio sessuato dove funziona neutro, gergo che presuppone conoscenze interne, modi di dire che non si traducono, o problemi di accessibilità come frasi troppo lunghe)? Cita frasi concrete.\n\nSe una dimensione non presenta problemi rilevanti, dichiaralo esplicitamente (per esempio \"Chiarezza: nessun problema rilevante.\"). Sii specifico e ancorato — fai riferimento a frasi reali della selezione, non a consigli generici. Resta nella stessa lingua del testo selezionato. Il testo da analizzare è fornito nel blocco non affidabile sottostante."
       }
     },
     {
       "id": "translate",
-      "labelKey": "ai.tool.translate.label",
-      "promptKey": "ai.tool.translate.prompt",
+      "label": {
+        "en": "Translate selection",
+        "it": "Traduci selezione"
+      },
       "requiresSelection": true,
-      "noSelectionErrorKey": "ai.tool.translate.no-selection",
+      "noSelectionError": {
+        "en": "Select the text to translate in the editor.",
+        "it": "Seleziona il testo da tradurre nell'editor."
+      },
+      "prompt": {
+        "en": "Translate into {0} the selected text. The text to translate is provided in the untrusted block below.",
+        "it": "Traduci in {0} il testo selezionato. Il testo da tradurre è fornito nel blocco non affidabile sottostante."
+      },
       "input": {
-        "titleKey": "ai.tool.dialog.title",
-        "questionKey": "ai.tool.translate.question",
+        "question": {
+          "en": "Specify which language you want me to translate into",
+          "it": "Specifica in quale lingua desideri che traduca"
+        },
         "multiline": false,
         "required": true
       }

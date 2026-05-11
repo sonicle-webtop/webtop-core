@@ -76,7 +76,7 @@ Ext.define('Sonicle.webtop.core.admin.model.GridDomainLicenses', {
 		return (this.get('status') & 2) === 2;
 	},
 	
-	isActivationPening: function() {
+	isActivationPending: function() {
 		return (this.get('status') & 4) === 4;
 	},
 	

@@ -35,6 +35,7 @@ package com.sonicle.webtop.core.admin;
 
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
+import com.google.gson.JsonObject;
 import com.license4j.ActivationStatus;
 import com.license4j.ValidationStatus;
 import com.sonicle.commons.AlgoUtils.MD5HashBuilder;
@@ -1023,6 +1024,34 @@ public class Service extends BaseService {
 		}
 	}
 	
+	public void processManageDomainAIConfiguration(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
+		try {
+			String domainId = ServletUtils.getStringParameter(request, "domainId", true);
+			String crud = ServletUtils.getStringParameter(request, "crud", true);
+			CoreServiceSettings css = new CoreServiceSettings(CoreManifest.ID, domainId);
+			if (Crud.READ.equals(crud)) {
+				CoreManager coreMgr = WT.getCoreManager(RunContext.buildDomainAdminProfileId(domainId));
+				JsonObject jso = new JsonObject();
+				jso.addProperty("provider", css.getAiApiBackend());
+				jso.addProperty("apikey", css.getAiApiToken());
+				jso.addProperty("hasAI", coreMgr.isAIEnabled());
+				new JsonResult(jso).printTo(out);
+			} else if (Crud.UPDATE.equals(crud)) {
+				String provider = ServletUtils.getStringParameter(request, "provider", true);
+				String apikey = ServletUtils.getStringParameter(request, "apikey", true);
+				css.setAiApiBackend(provider);
+				css.setAiApiToken(apikey);
+				new JsonResult().printTo(out);
+			} else {
+				throw new WTUnsupportedOperationException("Unsupported operation [{}]", crud);
+			}
+			
+		} catch (Exception ex) {
+			logger.error("Error in ManageDomainRoles", ex);
+			new JsonResult(ex).printTo(out);
+		}
+	}
+	
 	public void processManageAIReport(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
 		try {
 			String domainId = ServletUtils.getStringParameter(request, "domainId", true);
@@ -1275,7 +1304,7 @@ public class Service extends BaseService {
 			} else if ("activate".equals(crud)) {
 				String activatedString = ServletUtils.getStringParameter(request, "astring", false);
 				
-				try {
+				try { 
 					admMgr.activateLicense(prodId.getProductCode(), activatedString);
 					new JsonResult().printTo(out);
 					

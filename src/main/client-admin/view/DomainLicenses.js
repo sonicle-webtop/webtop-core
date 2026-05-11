@@ -140,7 +140,7 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainLicenses', {
 							} else {
 								return 'wt-icon-ok';
 							}
-						} else if (rec.isActivationPening()) {
+						} else if (rec.isActivationPending()) {
 							return 'wt-icon-ok-with-warning';
 						} else { // invalid...
 							return 'wt-icon-critical';
@@ -155,7 +155,7 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainLicenses', {
 								} else {
 									s = 'valid';
 								}
-							} else if (rec.isActivationPening()) {
+							} else if (rec.isActivationPending()) {
 								s = 'pending';
 							} else if (rec.isExpired()) {
 								s = 'expired';
@@ -295,7 +295,7 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainLicenses', {
 								me.activateLicenseUI(rec);
 							},
 							isActionDisabled: function(s, ridx, cidx, itm, rec) {
-								if (rec.isBuiltIn()) return true;
+								//if (rec.isBuiltIn()) return true;
 								return rec.isActivated();
 							},
 							getClass: function(v, meta, rec) {
@@ -310,7 +310,7 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainLicenses', {
 								me.deactivateLicenseUI(rec);
 							},
 							isActionDisabled: function(s, ridx, cidx, itm, rec) {
-								if (rec.isBuiltIn()) return true;
+								//if (rec.isBuiltIn()) return true;
 								return !rec.isActivated();
 							},
 							getClass: function(v, meta, rec) {

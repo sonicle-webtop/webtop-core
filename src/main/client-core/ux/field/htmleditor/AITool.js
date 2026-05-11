@@ -52,6 +52,7 @@ Ext.define('Sonicle.webtop.core.ux.field.htmleditor.AITool', {
 		Ext.apply(me, {
 			iconCls: 'wt-icon-ai',
 			arrowVisible: false,
+			hidden: !WT.getVar('hasAI'),
 			menu: {
 				plain: true,
 				items: menuItems
@@ -111,10 +112,10 @@ Ext.define('Sonicle.webtop.core.ux.field.htmleditor.AITool', {
 			me.setLoading(false);
 			if (success) {
 				var hed = me.getHtmlEditor();
-				if (hed) {
-					hed.editorInsertContent(answer);
-				} else {
+				if (def.mode === 'show' || !hed) {
 					me.showAIView(answer, false, format);
+				} else {
+					hed.editorInsertContent(answer);
 				}
 			} else {
 				me.showAIView(answer, true);

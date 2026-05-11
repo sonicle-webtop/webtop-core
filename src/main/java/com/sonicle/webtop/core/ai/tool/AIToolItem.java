@@ -34,50 +34,62 @@ package com.sonicle.webtop.core.ai.tool;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 /**
  * A single AI tool menu entry for the HTML editor. Leaves carry a prompt
- * key (and optionally an input spec / selection requirement); parents carry
- * a non-empty children list.
+ * (and optionally an input spec / selection requirement); parents carry a
+ * non-empty children list.
  *
- * Prompts, labels, and no-selection error messages are referenced by locale
- * keys and resolved at service-vars build time.
+ * Labels, prompts and no-selection error messages are inline language maps
+ * (ISO-639 code → localized string) resolved against the user's locale at
+ * service-vars build time and at AIPrompt dispatch time.
  */
 public final class AIToolItem {
 
 	private final String id;
-	private final String labelKey;
-	private final String promptKey;
+	private final Map<String, String> label;
+	private final AIToolMode mode;
+	private final Map<String, String> prompt;
 	private final AIToolInputSpec input;
 	private final boolean requiresSelection;
-	private final String noSelectionErrorKey;
+	private final Map<String, String> noSelectionError;
 	private final List<AIToolItem> children;
 
 	public AIToolItem(
 			String id,
-			String labelKey,
-			String promptKey,
+			Map<String, String> label,
+			AIToolMode mode,
+			Map<String, String> prompt,
 			AIToolInputSpec input,
 			boolean requiresSelection,
-			String noSelectionErrorKey,
+			Map<String, String> noSelectionError,
 			List<AIToolItem> children) {
 		this.id = id;
-		this.labelKey = labelKey;
-		this.promptKey = promptKey;
+		this.label = label == null
+				? Collections.<String, String>emptyMap()
+				: Collections.unmodifiableMap(label);
+		this.mode = mode;
+		this.prompt = prompt == null
+				? Collections.<String, String>emptyMap()
+				: Collections.unmodifiableMap(prompt);
 		this.input = input;
 		this.requiresSelection = requiresSelection;
-		this.noSelectionErrorKey = noSelectionErrorKey;
+		this.noSelectionError = noSelectionError == null
+				? Collections.<String, String>emptyMap()
+				: Collections.unmodifiableMap(noSelectionError);
 		this.children = children == null
 				? Collections.<AIToolItem>emptyList()
 				: Collections.unmodifiableList(children);
 	}
 
 	public String getId() { return id; }
-	public String getLabelKey() { return labelKey; }
-	public String getPromptKey() { return promptKey; }
+	public Map<String, String> getLabel() { return label; }
+	public AIToolMode getMode() { return mode; }
+	public Map<String, String> getPrompt() { return prompt; }
 	public AIToolInputSpec getInput() { return input; }
 	public boolean requiresSelection() { return requiresSelection; }
-	public String getNoSelectionErrorKey() { return noSelectionErrorKey; }
+	public Map<String, String> getNoSelectionError() { return noSelectionError; }
 	public List<AIToolItem> getChildren() { return children; }
 
 	public boolean isGroup() { return !children.isEmpty(); }

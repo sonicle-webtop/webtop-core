@@ -82,6 +82,7 @@ import org.apache.commons.collections4.MultiValuedMap;
 import org.apache.commons.collections4.multimap.ArrayListValuedHashMap;
 import org.apache.commons.lang3.RandomUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 import org.quartz.CronScheduleBuilder;
 import org.quartz.Job;
@@ -198,12 +199,18 @@ public class LicenseManager extends AbstractAppManager<LicenseManager> {
 		return license;
 	}
 	
-	public ProductLicense getProductLicense(final BaseServiceProduct product) {
-		// This will always return a value, see dummy object creation!
-		return getProductLicenseData(product).license;
+	public ProductData getProductDataOrThrow(final BaseServiceProduct product) throws WTNotFoundException {
+		final ProductData productData = getProductData(product);
+		if (productData == null) throw new WTNotFoundException("License not found [{}]", product.getProductCode());
+		return productData;
 	}
 	
-	public ProductData getProductLicenseData(final BaseServiceProduct product) {
+	public ProductLicense getProductLicense(final BaseServiceProduct product) {
+		// This will always return a value, see dummy object creation!
+		return getProductData(product).license;
+	}
+	
+	public ProductData getProductData(final BaseServiceProduct product) {
 		Check.notNull(product, "product");
 		
 		String key = productLicenseCacheKey(product.getDomainId(), product.SERVICE_ID, product.getProductCode());
@@ -243,7 +250,7 @@ public class LicenseManager extends AbstractAppManager<LicenseManager> {
 						plicNew.setCustomHardwareId(product.getBuiltInHardwareId());
 						
 						LicenseInfo li = plicNew.validate(true);
-						return new ProductData(plicNew, null, false);
+						return new ProductData(plicNew, null, false, true);
 						
 					} else {
 						if (LOGGER.isTraceEnabled()) LOGGER.trace("License missing, returning dummy! [{}]", key);
@@ -294,7 +301,7 @@ public class LicenseManager extends AbstractAppManager<LicenseManager> {
 		
 		String key = licenseLeaseCacheKey(product.getDomainId(), product.SERVICE_ID, product.getProductCode(), userId);
 		Integer result = licenseLeaseCache.computeIfAbsent(key, k -> {
-			ProductData pData = getProductLicenseData(product);
+			ProductData pData = getProductData(product);
 			// Do product checks (0)
 			if (pData.license == null) return 0; // Failure: missing license
 			
@@ -694,8 +701,8 @@ public class LicenseManager extends AbstractAppManager<LicenseManager> {
 	public void activateLicense(final BaseServiceProduct product, final String activatedString) throws WTException {
 		Check.notNull(product, "product");
 		
-		ProductLicense productLicense = getProductLicenseOrThrow(product);
-		boolean ret = internalActivateLicense(product.getDomainId(), product.getProductId(), productLicense, activatedString);
+		ProductData productData = getProductDataOrThrow(product);
+		boolean ret = internalActivateLicense(product.getDomainId(), product.getProductId(), productData, activatedString);
 		if (ret) {
 			fireEvent(new LicenseUpdateEvent(product.getDomainId(), LicenseUpdateEvent.Type.ACTIVATE, product));
 			forgetProductLicense(product.getDomainId(), product.SERVICE_ID, product.getProductCode());
@@ -734,7 +741,7 @@ public class LicenseManager extends AbstractAppManager<LicenseManager> {
 		Check.notNull(product, "product");
 		Check.notEmpty(userIds, "userIds");
 		
-		ProductData productData = getProductLicenseData(product);
+		ProductData productData = getProductData(product);
 		if (productData == null) throw new WTNotFoundException("Unknown product [{}]", product.getProductCode());
 		boolean ret = internalAssignLicenseLease(product.getDomainId(), product.getProductId(), productData, userIds, ServiceLicenseLease.LeaseOrigin.STATIC);
 		if (ret) forgetLicenseLease(product.getDomainId(), product.SERVICE_ID, product.getProductCode(), userIds);
@@ -744,7 +751,7 @@ public class LicenseManager extends AbstractAppManager<LicenseManager> {
 		Check.notNull(product, "product");
 		Check.notEmpty(userIds, "userIds");
 		
-		ProductData productData = getProductLicenseData(product);
+		ProductData productData = getProductData(product);
 		if (productData == null) throw new WTNotFoundException("Unknown product [{}]", product.getProductCode());
 		internalRevokeLicenseLease(product.getDomainId(), product.getProductId(), productData, userIds);
 		forgetLicenseLease(product.getDomainId(), product.SERVICE_ID, product.getProductCode(), userIds);
@@ -810,7 +817,7 @@ public class LicenseManager extends AbstractAppManager<LicenseManager> {
 	private ProductData findProductLicenseData(String domainId, ProductId productId) throws WTException {
 		BaseServiceProduct product = ProductRegistry.getInstance().getServiceProduct(productId, domainId);
 		if (product == null) throw new WTNotFoundException("Unknown product [{}]", productId);
-		ProductData plData = getProductLicenseData(product);
+		ProductData plData = getProductData(product);
 		if (plData == null) throw new WTNotFoundException("Unknown product [{}]", productId);
 		return plData;
 	}
@@ -920,13 +927,14 @@ public class LicenseManager extends AbstractAppManager<LicenseManager> {
 		}
 	}
 	
-	private boolean internalActivateLicense(final String domainId, final ProductId productId, final ProductLicense tplProductLicense, final String activatedString) throws WTException {
+	private boolean internalActivateLicense(final String domainId, final ProductId productId, final ProductData tplProductData, final String activatedString) throws WTException {
 		LicenseDAO licDao = LicenseDAO.getInstance();
 		LicenseLeaseDAO lleaDao = LicenseLeaseDAO.getInstance();
 		Connection con = null;
 		
 		try {
 			LOGGER.debug("[{}] Activating license...", productId);
+			ProductLicense tplProductLicense = tplProductData.license;
 			LicenseInfo li = tplProductLicense.validate(true);
 			LOGGER.debug("[{}] {} -> Validate Be. [{}, {}]", productId, li.getLicenseID(), li.getValidationStatus(), li.getActivationStatus());
 			if (!li.isValid()) throw new WTLicenseValidationException(li);
@@ -946,7 +954,16 @@ public class LicenseManager extends AbstractAppManager<LicenseManager> {
 			if (!li.isActivationCompleted()) throw new WTLicenseActivationException(li);
 			
 			con = getConnection(true);
-			boolean ret = licDao.updateActivation(con, domainId, productId.getServiceId(), productId.getProductCode(), plic.getActivatedLicenseString(), JodaTimeUtils.now(), li.getHardwareID(), li.getExpirationDate()) == 1;
+			DateTime now = JodaTimeUtils.now();
+			boolean ret = licDao.updateActivation(con, domainId, productId.getServiceId(), productId.getProductCode(), plic.getActivatedLicenseString(), now, li.getHardwareID(), li.getExpirationDate()) == 1;
+			//if update finds no record, check for builtin product and insert record
+			if (!ret && tplProductData.builtIn) {
+				licDao.insertActivation(con, domainId, productId.getServiceId(), productId.getProductCode(), 
+						plic.getLicenseString(), now,
+						plic.getActivatedLicenseString(), now, li.getHardwareID(), li.getExpirationDate(),
+						quantity, false
+				);
+			}
 			if (quantity != null) {
 				OLicense olic = licDao.lock(con, domainId, productId.getServiceId(), productId.getProductCode());
 				if (olic == null) throw new WTException("Unable to lookup license '{}'", productId.getProductCode());
@@ -1256,11 +1273,20 @@ public class LicenseManager extends AbstractAppManager<LicenseManager> {
 		public final ProductLicense license;
 		public final Integer maxLease;
 		public final boolean autoLease;
+		public final boolean builtIn;
 		
 		public ProductData(ProductLicense license, Integer maxLease, boolean autoLease) {
 			this.license = license;
 			this.maxLease = maxLease;
 			this.autoLease = autoLease;
+			this.builtIn = false;
+		}
+		
+		public ProductData(ProductLicense license, Integer maxLease, boolean autoLease, boolean builtIn) {
+			this.license = license;
+			this.maxLease = maxLease;
+			this.autoLease = autoLease;
+			this.builtIn = builtIn;
 		}
 	}
 	

@@ -931,15 +931,31 @@ Ext.define('Sonicle.webtop.core.admin.Service', {
 
 		showAIUI: function(domNode, node) {
 			var me = this,
-				itemId = WTU.forItemId(node.getId());
+				itemId = WTU.forItemId(node.getId()),
+				domainId = domNode.get('_domainId');
 
-			me.showTab(itemId, function() {
-				return Ext.create('Sonicle.webtop.core.admin.view.AI', {
-					mys: me,
-					itemId: itemId,
-					domainId: domNode.get('_domainId'),
-					closable: true
-				});
+			WT.ajaxReq(me.ID, 'ManageDomainAIConfiguration', {
+				params: {
+					crud: 'read',
+					domainId: domainId
+				},
+				callback: function(success, json) {
+					if (success) {
+						me.showTab(itemId, function() {
+							return Ext.create('Sonicle.webtop.core.admin.view.AI', {
+								mys: me,
+								itemId: itemId,
+								domainId: domainId,
+								provider: json.data.provider,
+								apikey: json.data.apikey,
+								hasAI: json.data.hasAI,
+								closable: true
+							});
+						});
+					} else {
+						WT.error(json.message);
+					}
+				}
 			});
 		},
 

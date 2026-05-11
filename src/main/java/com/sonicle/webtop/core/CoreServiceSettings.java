@@ -507,10 +507,18 @@ public class CoreServiceSettings extends BaseServiceSettings {
 		return getString(AI_API_BACKEND, "sonicle");
 	}
 	
+	public void setAiApiBackend(String backend) {
+		setString(AI_API_BACKEND, backend);
+	}
+	
 	public String getAiApiToken() {
 		return getString(AI_API_TOKEN, "sk-...");
 	}
 
+	public void setAiApiToken(String token) {
+		setString(AI_API_TOKEN, token);
+	}
+	
 	/**
 	 * True when the AI backend looks usable: either an Ollama self-hosted
 	 * backend (no token required) or a token has been explicitly set to

@@ -44,33 +44,69 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
 /**
  * Immutable AI tool configuration parsed from the bundled ai-tool.json.
  *
+ * All user-visible strings (labels, prompts, input questions, dialog title,
+ * format hints, no-selection error messages) are carried inline as ISO-639
+ * language maps; resolution against the user's locale happens via
+ * {@link #resolve(Map, String)}.
+ *
  * Responsibilities:
  *  - Parse the JSON tree into AIToolItem/AIToolInputSpec instances.
  *  - Build a flat id→item index for O(1) lookup during AIPrompt dispatch.
- *  - Refuse duplicate ids; refuse leaves without a prompt key.
+ *  - Refuse duplicate ids; refuse leaves without a prompt map.
  */
 public final class AIToolConfig {
 
+	public static final String DEFAULT_LANGUAGE_FALLBACK = "en";
+
+	private final String defaultLanguage;
+	private final Map<String, String> dialogTitle;
+	private final Map<String, String> minimalHtmlFormatHint;
 	private final List<AIToolItem> items;
 	private final Map<String, AIToolItem> index;
 
-	private AIToolConfig(List<AIToolItem> items, Map<String, AIToolItem> index) {
+	private AIToolConfig(
+			String defaultLanguage,
+			Map<String, String> dialogTitle,
+			Map<String, String> minimalHtmlFormatHint,
+			List<AIToolItem> items,
+			Map<String, AIToolItem> index) {
+		this.defaultLanguage = defaultLanguage;
+		this.dialogTitle = Collections.unmodifiableMap(dialogTitle);
+		this.minimalHtmlFormatHint = Collections.unmodifiableMap(minimalHtmlFormatHint);
 		this.items = Collections.unmodifiableList(items);
 		this.index = Collections.unmodifiableMap(index);
 	}
 
-	public List<AIToolItem> getItems() {
-		return items;
-	}
+	public String getDefaultLanguage() { return defaultLanguage; }
+	public Map<String, String> getDialogTitle() { return dialogTitle; }
+	public Map<String, String> getMinimalHtmlFormatHint() { return minimalHtmlFormatHint; }
+	public List<AIToolItem> getItems() { return items; }
 
 	public AIToolItem findById(String id) {
 		return id == null ? null : index.get(id);
+	}
+
+	/**
+	 * Pick the entry for {@code lang}; fall back to the configured default
+	 * language; fall back to any available entry. Returns null only if the
+	 * map is null or empty.
+	 */
+	public String resolve(Map<String, String> map, String lang) {
+		if (map == null || map.isEmpty()) return null;
+		if (lang != null) {
+			String v = map.get(lang);
+			if (v != null) return v;
+		}
+		String v = map.get(defaultLanguage);
+		if (v != null) return v;
+		return map.values().iterator().next();
 	}
 
 	public static AIToolConfig load(InputStream in) throws IOException {
@@ -83,6 +119,15 @@ public final class AIToolConfig {
 			throw new IOException("ai-tool.json: expected an object at root");
 		}
 		JsonObject rootObj = root.getAsJsonObject();
+
+		String defaultLanguage = getString(rootObj, "defaultLanguage", DEFAULT_LANGUAGE_FALLBACK);
+		Map<String, String> dialogTitle = parseLangMap(rootObj, "dialogTitle", false, null);
+		Map<String, String> minimalHtmlHint = new LinkedHashMap<>();
+		if (rootObj.has("formatHints") && rootObj.get("formatHints").isJsonObject()) {
+			JsonObject fh = rootObj.getAsJsonObject("formatHints");
+			minimalHtmlHint = parseLangMap(fh, "minimalHtml", false, null);
+		}
+
 		JsonElement itemsEl = rootObj.get("items");
 		if (itemsEl == null || !itemsEl.isJsonArray()) {
 			throw new IOException("ai-tool.json: missing 'items' array");
@@ -92,7 +137,7 @@ public final class AIToolConfig {
 		for (JsonElement el : itemsEl.getAsJsonArray()) {
 			parsed.add(parseItem(el, idx));
 		}
-		return new AIToolConfig(parsed, idx);
+		return new AIToolConfig(defaultLanguage, dialogTitle, minimalHtmlHint, parsed, idx);
 	}
 
 	private static AIToolItem parseItem(JsonElement el, Map<String, AIToolItem> idx) throws IOException {
@@ -101,9 +146,8 @@ public final class AIToolConfig {
 		}
 		JsonObject o = el.getAsJsonObject();
 		String id = getString(o, "id", null);
-		String labelKey = getString(o, "labelKey", null);
 		if (id == null || id.isEmpty()) throw new IOException("ai-tool.json: item missing 'id'");
-		if (labelKey == null || labelKey.isEmpty()) throw new IOException("ai-tool.json: item '" + id + "' missing 'labelKey'");
+		Map<String, String> label = parseLangMap(o, "label", true, "item '" + id + "'");
 
 		List<AIToolItem> children = new ArrayList<>();
 		if (o.has("children") && o.get("children").isJsonArray()) {
@@ -111,33 +155,53 @@ public final class AIToolConfig {
 			for (JsonElement cel : arr) children.add(parseItem(cel, idx));
 		}
 
-		String promptKey = null;
+		AIToolMode mode = null;
+		Map<String, String> prompt = null;
 		AIToolInputSpec input = null;
 		boolean requiresSelection = false;
-		String noSelectionErrorKey = null;
+		Map<String, String> noSelectionError = null;
 
 		if (children.isEmpty()) {
-			promptKey = getString(o, "promptKey", null);
-			if (promptKey == null || promptKey.isEmpty()) {
-				throw new IOException("ai-tool.json: leaf '" + id + "' missing 'promptKey'");
-			}
+			mode = AIToolMode.parse(getString(o, "mode", null), AIToolMode.INSERT);
+			prompt = parseLangMap(o, "prompt", true, "leaf '" + id + "'");
 			requiresSelection = getBoolean(o, "requiresSelection", false);
-			noSelectionErrorKey = getString(o, "noSelectionErrorKey", null);
+			noSelectionError = parseLangMap(o, "noSelectionError", false, "leaf '" + id + "'");
 			if (o.has("input") && o.get("input").isJsonObject()) {
 				JsonObject ino = o.getAsJsonObject("input");
-				String titleKey = getString(ino, "titleKey", null);
-				String questionKey = getString(ino, "questionKey", null);
+				Map<String, String> question = parseLangMap(ino, "question", true, "input of '" + id + "'");
 				boolean multiline = getBoolean(ino, "multiline", false);
 				boolean required = getBoolean(ino, "required", true);
-				input = new AIToolInputSpec(titleKey, questionKey, multiline, required);
+				input = new AIToolInputSpec(question, multiline, required);
 			}
 		}
 
-		AIToolItem item = new AIToolItem(id, labelKey, promptKey, input, requiresSelection, noSelectionErrorKey, children);
+		AIToolItem item = new AIToolItem(id, label, mode, prompt, input, requiresSelection, noSelectionError, children);
 		if (idx.put(id, item) != null) {
 			throw new IOException("ai-tool.json: duplicate id '" + id + "'");
 		}
 		return item;
+	}
+
+	private static Map<String, String> parseLangMap(JsonObject parent, String field, boolean required, String ownerDesc) throws IOException {
+		JsonElement el = parent.get(field);
+		if (el == null || el.isJsonNull()) {
+			if (required) throw new IOException("ai-tool.json: " + ownerDesc + " missing '" + field + "' map");
+			return new LinkedHashMap<>();
+		}
+		if (!el.isJsonObject()) {
+			throw new IOException("ai-tool.json: '" + field + "' must be a {lang: string} object"
+					+ (ownerDesc == null ? "" : " (" + ownerDesc + ")"));
+		}
+		Map<String, String> out = new LinkedHashMap<>();
+		for (Map.Entry<String, JsonElement> e : el.getAsJsonObject().entrySet()) {
+			JsonElement v = e.getValue();
+			if (v == null || v.isJsonNull()) continue;
+			out.put(e.getKey(), v.getAsString());
+		}
+		if (required && out.isEmpty()) {
+			throw new IOException("ai-tool.json: " + ownerDesc + " has empty '" + field + "' map");
+		}
+		return out;
 	}
 
 	private static String getString(JsonObject o, String key, String def) {

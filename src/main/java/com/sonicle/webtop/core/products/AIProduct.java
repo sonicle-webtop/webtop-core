@@ -38,20 +38,39 @@ import com.sonicle.webtop.core.sdk.BaseServiceProduct;
  *
  * @author gbulfon
  */
-public final class MailBridgeProduct extends BaseServiceProduct {
-	public static final String PRODUCT_ID = "SNCL-WT-CORE-MAILBRIDGE";
-	public static final String PRODUCT_NAME = "MailBridge";
-	public static final String PUBLIC_KEY =
+public final class AIProduct extends BaseServiceProduct {
+	public static final String PRODUCT_ID = "SNCL-WT-CORE-AI";
+	public static final String PRODUCT_NAME = "A.I.";
+	public static final String PUBLIC_KEY = 
 		"30819f300d06092a864886f70d010101050003818d003081893032301006\n" +
 		"072a8648ce3d02002EC311215SHA512withECDSA106052b81040006031e0\n" +
-		"0047bf692e4901b01ef6f4787b24ef0bf86cbc6d7ca9075e749a4f3feecG\n" +
-		"02818100c054262dda08a328da61c687050d1049f3b92ca30c4afb18fe14\n" +
-		"0bceb5b6f9d98e0d45641f1a55612283223f34d540af13d0a76749e58660\n" +
-		"39a7e1f1a1a32a201691b71108b80066829e9f673ecd7769d51770b368c6\n" +
-		"2ea5991696ad3d15b2ac03RSA4102413SHA512withRSA4b3a9fdbfc705dc\n" +
-		"c5977ccffa2ebef83d91eb9ccff7f0e91b842c68b73d0a1a30203010001";
-				
-	public MailBridgeProduct(String domainId) {
+		"0041b1721a847c8d72f4b61cf304d956a5593d6b9dc240e7622af260084G\n" +
+		"02818100813f0c792b9be59965df421c4fdca1b979292168e42dfc5d3098\n" +
+		"925c7c369c1e76640c236e8c9f4d17e52d1c62cae183d094e1d52c2fae0c\n" +
+		"6d59a38274fca9cce04d2ceb2071c2d95e32aa2a4917c8cfdb904d56d58c\n" +
+		"d94d5443d973e09921be03RSA4102413SHA512withRSA1368c8a003bad48\n" +
+		"fe39a1ac6eb3f1faba328f2bc1cc8b16d4fa33250076476770203010001";
+	
+	//Trial 90 days
+	private static String BUILTIN_LICENSE_STRING =
+		//"# Core - A.I. License (id: 1778140391230)\n" +
+		"72c8f193d1588cc36971baca3f538ce715070a22ac8faa8a4b1b5b42642a\n" +
+		"cde6581e9c5dfca07fdfa3346bcb7b3b3289debee79ed74fc1884b75937a\n" +
+		"919cbefe9d0f020b7e9386e27e22afe05a0d11298a2a6c492ab2dddf21fd\n" +
+		"40e9b78f1c1b2bb088d48bc5741710272a1bb3cb5e04eb8bba769bc3cc58\n" +
+		"f4e0880a4a5be9ba4992c567661d02f1ea18610c4fb3e80f94c5d9e296f0\n" +
+		"4f7e168bf254bb98fc444e117c11de8f95c21e0bb5923ef0a5e7368cb434\n" +
+		"b90e972b224ce868b9fe501fe07301bbac8ce9ed903c456c10691b5cf25c\n" +
+		"c0e14aa41c6c0e75d4e9f5c353d7c3a91d2ef1988e41968de734e0423bce\n" +
+		"7f42dd74176f27246514e4fdfbbd7f68ab6433068746375c85da2c03f9c8\n" +
+		"e88d721e51d16fd13d66573b361cec936e41616fd03af1f3cc7525cf76f5\n" +
+		"ea89affcd7875d788304c521d8427f7920c94fd337ff49ae7d9a9492ac5e\n" +
+		"59bcc9b31c0fbc0db467ce88f5d537a96152104f631163e57dc48e80deba\n" +
+		"2c7302bfc4d0b2d04b997cb2860603e7042beeccc5807cf084db1aa51d50\n" +
+		"19ee284d9bf368437cbfc363f25dba2d7c2e9497688465203afbba4f7511\n" +
+		"a149027c";
+	
+	public AIProduct(String domainId) {
 		super(domainId, HardwareIDSource.DOMAIN_INTERNET_NAME);
 	}
 	
@@ -74,4 +93,11 @@ public final class MailBridgeProduct extends BaseServiceProduct {
 	public String getPublicKey() {
 		return PUBLIC_KEY;
 	}
+
+	@Override
+	public String getBuiltInLicenseString() {
+		return BUILTIN_LICENSE_STRING;
+	}
+
+	
 }

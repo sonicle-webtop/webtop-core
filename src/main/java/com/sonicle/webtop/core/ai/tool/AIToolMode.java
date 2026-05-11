@@ -32,24 +32,24 @@
  */
 package com.sonicle.webtop.core.ai.tool;
 
-import java.util.Collections;
-import java.util.Map;
+/**
+ * How an AI tool's answer should be delivered to the user.
+ *
+ * INSERT — splice the answer into the active HTML editor, replacing the
+ * current selection (the default for rewrite-style tools).
+ * SHOW — display the answer in the AI dialog only; never modify the editor
+ * (used by feedback/coaching/critique tools).
+ */
+public enum AIToolMode {
+	INSERT,
+	SHOW;
 
-public final class AIToolInputSpec {
-
-	private final Map<String, String> question;
-	private final boolean multiline;
-	private final boolean required;
-
-	public AIToolInputSpec(Map<String, String> question, boolean multiline, boolean required) {
-		this.question = question == null
-				? Collections.<String, String>emptyMap()
-				: Collections.unmodifiableMap(question);
-		this.multiline = multiline;
-		this.required = required;
+	public static AIToolMode parse(String s, AIToolMode def) {
+		if (s == null) return def;
+		try {
+			return AIToolMode.valueOf(s.trim().toUpperCase());
+		} catch (IllegalArgumentException ex) {
+			return def;
+		}
 	}
-
-	public Map<String, String> getQuestion() { return question; }
-	public boolean isMultiline() { return multiline; }
-	public boolean isRequired() { return required; }
 }

@@ -48,129 +48,187 @@ Ext.define('Sonicle.webtop.core.admin.view.AI', {
 		var me = this;
 		me.callParent(arguments);
 		
+		var title = me.res('ai.configuration.tit');
+		if (!me.hasAI) title += " - <span style='color:red'>"+me.res('ai.configuration.inactive.tit')+"</span>";
+			
 		me.add({
-			region: 'center',
-			xtype: 'grid',
-			reference: 'gp',
-			border: false,
-			features: [{
-				ftype: 'summary'
-				// dock: 'bottom'  // optional, pins the row to the bottom even when scrolling
-			}],
-			store: {
-				autoLoad: true,
-				model: 'Sonicle.webtop.core.admin.model.GridAI',
-				proxy: WTF.proxy(me.mys.ID, 'ManageDomainAI', null, {
-					extraParams: {
-						domainId: me.domainId,
-						crud: 'read',
-						view: 'today'
-					},
-					writer: {
-						allowSingle: false // Always wraps records into an array
-					}
-				})
+			region: 'north',
+			xtype: 'wtform',
+			title: title,
+			layout: 'hbox',
+			height: 200,
+			fieldDefaults: {
+				labelAlign: 'right'
 			},
-			columns: [
-				{
-					xtype: 'rownumberer'
-				}, {
-					dataIndex: 'userName',
-					header: me.res('ai.gp.userName.lbl'),
-					flex: 1
-				}, {
-					dataIndex: 'displayName',
-					header: me.res('ai.gp.displayName.lbl'),
-					flex: 1
-				}, {
-					dataIndex: 'promptTokens',
-					header: me.res('ai.gp.promptTokens.lbl'),
-					align: 'right',
-					xtype: 'numbercolumn',
-					format: '0,000',
-					summaryType: 'sum',
-					summaryRenderer: function(value) {
-						return '<b>' + Ext.util.Format.number(value, '0,000') + '</b>';
-					},
-					flex: 1
-				}, {
-					dataIndex: 'completionTokens',
-					header: me.res('ai.gp.completionTokens.lbl'),
-					align: 'right',
-					xtype: 'numbercolumn',
-					format: '0,000',
-					summaryType: 'sum',
-					summaryRenderer: function(value) {
-						return '<b>' + Ext.util.Format.number(value, '0,000') + '</b>';
-					},
-					flex: 1
-				}, {
-					dataIndex: 'totalTokens',
-					header: me.res('ai.gp.totalTokens.lbl'),
-					align: 'right',
-					xtype: 'numbercolumn',
-					format: '0,000',
-					summaryType: 'sum',
-					summaryRenderer: function(value) {
-						return '<b>' + Ext.util.Format.number(value, '0,000') + '</b>';
-					},
-					flex: 1
-				}
-			],
-			tbar: [
+			items: [
 				WTF.lookupCombo('id', 'desc', {
-					reference: 'cbview',
+						reference: 'cbprovider',
+						fieldLabel: me.res('ai.provider.lbl'),
+						width: 300,
+						value: me.provider,
+						store: {
+							autoLoad: true,
+							fields: ['id', 'desc'],
+							data: [
+								['',    me.res('ai.provider.none')],
+								['openai',   me.res('ai.provider.openai')],
+								['claude',  me.res('ai.provider.claude')]
+							]
+						}
+				}),{
+					xtype: 'label',
+					text: ' ',
+					width: 24
+				}, {
+					xtype: 'textfield',
+					fieldLabel: me.res('ai.apikey.lbl'),
+					reference: 'txtapikey',
+					width: 400,
+					value: me.apikey
+				},{
+					xtype: 'label',
+					text: ' ',
+					width: 24
+				}, {
+					xtype: 'button',
+					text: WT.res('act-save.lbl'),
+					handler: function() {
+						me.saveConfiguration();
+					}
+				}
+			]
+		}, 
+		{
+			xtype: 'wtpanel',
+			region: 'center',
+			layout: 'border',
+			title: 'Report',
+			items: [
+				{
+					region: 'center',
+					xtype: 'grid',
+					reference: 'gp',
+					border: false,
+					features: [{
+						ftype: 'summary'
+						// dock: 'bottom'  // optional, pins the row to the bottom even when scrolling
+					}],
 					store: {
 						autoLoad: true,
-						fields: ['id', 'desc'],
-						data: [
-							['today', me.mys.res('ai.today')],
-							['thisweek', me.mys.res('ai.thisweek')],
-							['lastweek', me.mys.res('ai.lastweek')],
-							['thismonth', me.mys.res('ai.thismonth')],
-							['lastmonth', me.mys.res('ai.lastmonth')],
-						]
+						model: 'Sonicle.webtop.core.admin.model.GridAI',
+						proxy: WTF.proxy(me.mys.ID, 'ManageDomainAI', null, {
+							extraParams: {
+								domainId: me.domainId,
+								crud: 'read',
+								view: 'today'
+							},
+							writer: {
+								allowSingle: false // Always wraps records into an array
+							}
+						})
 					},
-					value: 'today',
-					fieldLabel: me.mys.res('ai.view.lbl'),
-					labelAlign: 'right',
-					width: 100+140,
-					listeners: {
-						select: function(s, rec) {
-							Sonicle.Data.loadWithExtraParams(
-								me.lref('gp').getStore(),
-								{ view: rec.get('id') }
-							);
+					columns: [
+						{
+							xtype: 'rownumberer'
+						}, {
+							dataIndex: 'userName',
+							header: me.res('ai.gp.userName.lbl'),
+							flex: 1
+						}, {
+							dataIndex: 'displayName',
+							header: me.res('ai.gp.displayName.lbl'),
+							flex: 1
+						}, {
+							dataIndex: 'promptTokens',
+							header: me.res('ai.gp.promptTokens.lbl'),
+							align: 'right',
+							xtype: 'numbercolumn',
+							format: '0,000',
+							summaryType: 'sum',
+							summaryRenderer: function(value) {
+								return '<b>' + Ext.util.Format.number(value, '0,000') + '</b>';
+							},
+							flex: 1
+						}, {
+							dataIndex: 'completionTokens',
+							header: me.res('ai.gp.completionTokens.lbl'),
+							align: 'right',
+							xtype: 'numbercolumn',
+							format: '0,000',
+							summaryType: 'sum',
+							summaryRenderer: function(value) {
+								return '<b>' + Ext.util.Format.number(value, '0,000') + '</b>';
+							},
+							flex: 1
+						}, {
+							dataIndex: 'totalTokens',
+							header: me.res('ai.gp.totalTokens.lbl'),
+							align: 'right',
+							xtype: 'numbercolumn',
+							format: '0,000',
+							summaryType: 'sum',
+							summaryRenderer: function(value) {
+								return '<b>' + Ext.util.Format.number(value, '0,000') + '</b>';
+							},
+							flex: 1
 						}
-					}
-				}),
-				'-',
-				me.addAct('refresh', {
-					text: null,
-					tooltip: WT.res('act-refresh.lbl'),
-					iconCls: 'wt-icon-refresh',
-					handler: function() {
-						me.lref('gp').getStore().load();
-					}
-				}),
-				me.addAct('share', {
-					text: null,
-					tooltip: WT.res('act-share.lbl'),
-					iconCls: 'wt-icon-share',
-					handler: function() {
-						me.shareUI();
-					}
-				}),
-				'->',
-				me.addAct('report', {
-					text: null,
-					tooltip: WT.res('act-generate.lbl'),
-					iconCls: 'wt-icon-generate',
-					handler: function() {
-						me.addReportUI();
-					}
-				})
-				
+					],
+					tbar: [
+						WTF.lookupCombo('id', 'desc', {
+							reference: 'cbview',
+							store: {
+								autoLoad: true,
+								fields: ['id', 'desc'],
+								data: [
+									['today', me.mys.res('ai.today')],
+									['thisweek', me.mys.res('ai.thisweek')],
+									['lastweek', me.mys.res('ai.lastweek')],
+									['thismonth', me.mys.res('ai.thismonth')],
+									['lastmonth', me.mys.res('ai.lastmonth')],
+								]
+							},
+							value: 'today',
+							fieldLabel: me.mys.res('ai.view.lbl'),
+							labelAlign: 'right',
+							width: 100+140,
+							listeners: {
+								select: function(s, rec) {
+									Sonicle.Data.loadWithExtraParams(
+										me.lref('gp').getStore(),
+										{ view: rec.get('id') }
+									);
+								}
+							}
+						}),
+						'-',
+						me.addAct('refresh', {
+							text: null,
+							tooltip: WT.res('act-refresh.lbl'),
+							iconCls: 'wt-icon-refresh',
+							handler: function() {
+								me.lref('gp').getStore().load();
+							}
+						}),
+						me.addAct('share', {
+							text: null,
+							tooltip: WT.res('act-share.lbl'),
+							iconCls: 'wt-icon-share',
+							handler: function() {
+								me.shareUI();
+							}
+						}),
+						'->',
+						me.addAct('report', {
+							text: null,
+							tooltip: WT.res('act-generate.lbl'),
+							iconCls: 'wt-icon-generate',
+							handler: function() {
+								me.addReportUI();
+							}
+						})
+
+					]
+				}				
 			]
 		});
 	},
@@ -279,6 +337,27 @@ Ext.define('Sonicle.webtop.core.admin.view.AI', {
 				me.unwait();
 				if (success) {
 					WT.toast(me.mys.res('aiReport.info.sent'));
+				} else {
+					WT.error(json.message);
+				}
+			}
+		});
+	},
+	
+	saveConfiguration: function() {
+		var me = this;
+		me.wait();
+		WT.ajaxReq(me.mys.ID, 'ManageDomainAIConfiguration', {
+			params: {
+				crud: 'update',
+				domainId: me.domainId,
+				provider: me.lref('cbprovider').getValue(),
+				apikey: me.lref('txtapikey').getValue(),
+			},
+			callback: function(success, json) {
+				me.unwait();
+				if (success) {
+					WT.toast(me.mys.res('ai.configuration.saved'));
 				} else {
 					WT.error(json.message);
 				}

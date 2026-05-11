@@ -34,6 +34,7 @@
 package com.sonicle.webtop.core.sdk;
 
 import com.sonicle.webtop.core.app.AuditLogManager;
+import com.sonicle.webtop.core.app.CoreManifest;
 import com.sonicle.webtop.core.app.RunContext;
 import com.sonicle.webtop.core.app.SessionContext;
 import com.sonicle.webtop.core.app.WT;
@@ -41,6 +42,7 @@ import com.sonicle.webtop.core.app.WebTopSession;
 import com.sonicle.webtop.core.app.sdk.AuditReferenceDataEntry;
 import com.sonicle.webtop.core.dal.DAOException;
 import com.sonicle.webtop.core.model.ProfileI18n;
+import com.sonicle.webtop.core.products.AIProduct;
 import com.sonicle.webtop.core.products.AuditProduct;
 import java.sql.SQLException;
 import java.util.Collection;
@@ -63,6 +65,9 @@ public abstract class BaseManager {
 	public final AuditProduct AUDIT_PRODUCT;
 	private boolean auditEnabled = false;
 	
+	public final AIProduct AI_PRODUCT;
+	private boolean aiEnabled = false;
+
 	public BaseManager(boolean fastInit, UserProfileId targetProfileId) {
 		SERVICE_ID = WT.findServiceId(this.getClass());
 		this.fastInit = fastInit;
@@ -73,12 +78,26 @@ public abstract class BaseManager {
 		// targetProfile can be null in case of public context where 
 		// we have no logged user. So check it!
 		//TODO: evaluate whether to create a dedicated dummy user for this (eg. wt-public@domain, ...)
-		if (!RunContext.isSysAdmin() && targetProfileId != null) {
+		boolean setProducts = false;
+		if (RunContext.isSysAdmin()) {
+			if (targetProfileId != null && !StringUtils.isEmpty(targetProfileId.getDomainId()))
+				setProducts = true;
+		}
+		else if (targetProfileId != null) {
+			setProducts = true;
+		}
+		
+		if (setProducts) {
 			AUDIT_PRODUCT = new AuditProduct(targetProfileId.getDomainId());
 			this.auditEnabled = WT.isLicensed(new AuditProduct(targetProfileId.getDomainId()));
+
+			AI_PRODUCT = new AIProduct(targetProfileId.getDomainId());
+			this.aiEnabled = WT.isLicensed(new AIProduct(targetProfileId.getDomainId()));
 		} else {
 			AUDIT_PRODUCT = null;
+			AI_PRODUCT = null;
 		}
+
 	}
 	
 	/**
@@ -188,6 +207,13 @@ public abstract class BaseManager {
 	}
 	
 	
+	/**
+	 * Checks if A.I. is enabled.
+	 * @return 
+	 */
+	public boolean isAIEnabled() {
+		return aiEnabled;
+	}
 	
 	
 	
