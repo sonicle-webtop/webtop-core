@@ -87,11 +87,11 @@ public abstract class BaseServiceProduct extends AbstractProduct {
 		return null;
 	}
 	
-	public final String getBuiltInHardwareId() {
+	public String getBuiltInHardwareId() {
 		return createHardwareIdString(domainId, HardwareIDSource.DOMAIN_ID);
 	}
 	
-	private static String createHardwareIdString(String domainId, HardwareIDSource hwIdSource) {
+	protected static String createHardwareIdString(String domainId, HardwareIDSource hwIdSource) {
 		String s = null;
 		if (HardwareIDSource.DOMAIN_ID.equals(hwIdSource)) {
 			s = domainId;

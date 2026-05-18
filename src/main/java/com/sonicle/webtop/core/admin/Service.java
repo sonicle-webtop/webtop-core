@@ -1031,16 +1031,20 @@ public class Service extends BaseService {
 			CoreServiceSettings css = new CoreServiceSettings(CoreManifest.ID, domainId);
 			if (Crud.READ.equals(crud)) {
 				CoreManager coreMgr = WT.getCoreManager(RunContext.buildDomainAdminProfileId(domainId));
+				int maxTokens = css.getAiApiMaxTokens();
 				JsonObject jso = new JsonObject();
 				jso.addProperty("provider", css.getAiApiBackend());
 				jso.addProperty("apikey", css.getAiApiToken());
 				jso.addProperty("hasAI", coreMgr.isAIEnabled());
+				jso.addProperty("quota", (maxTokens == 0 ? "" : ""+maxTokens));
 				new JsonResult(jso).printTo(out);
 			} else if (Crud.UPDATE.equals(crud)) {
 				String provider = ServletUtils.getStringParameter(request, "provider", true);
 				String apikey = ServletUtils.getStringParameter(request, "apikey", true);
+				String quota = ServletUtils.getStringParameter(request, "quota", "");
 				css.setAiApiBackend(provider);
 				css.setAiApiToken(apikey);
+				css.setAiApiMaxTokens(StringUtils.isEmpty(quota) ? 0 : Integer.parseInt(quota));
 				new JsonResult().printTo(out);
 			} else {
 				throw new WTUnsupportedOperationException("Unsupported operation [{}]", crud);

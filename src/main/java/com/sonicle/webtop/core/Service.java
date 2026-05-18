@@ -271,13 +271,15 @@ public class Service extends BaseService implements EventListener {
 		//sendAuthMessage(principal.getUserId(),principal.getPassword());
 
 		try {
-			URL aiToolUrl = ResourceUtils.getResource("com/sonicle/webtop/core/ai-tool.json");
-			if (aiToolUrl != null) {
-				try (InputStream in = aiToolUrl.openStream()) {
-					aiToolConfig = AIToolConfig.load(in);
+			if (getWts().isAIConfigured() && RunContext.isPermitted(true, CoreManifest.ID, "AI_ACTIONS", "ACCESS") && WT.isLicensed(coreMgr.AI_PRODUCT, profile.getUserId()) > 0) {
+				URL aiToolUrl = ResourceUtils.getResource("com/sonicle/webtop/core/ai-tool.json");
+				if (aiToolUrl != null) {
+					try (InputStream in = aiToolUrl.openStream()) {
+						aiToolConfig = AIToolConfig.load(in);
+					}
+				} else {
+					logger.warn("ai-tool.json resource not found; AI editor tool menu will be empty");
 				}
-			} else {
-				logger.warn("ai-tool.json resource not found; AI editor tool menu will be empty");
 			}
 		} catch (Throwable t) {
 			logger.error("Failed to load ai-tool.json; AI editor tool menu will be empty", t);
@@ -439,10 +441,9 @@ public class Service extends BaseService implements EventListener {
 		//TODO: manage licensing
 		vars.put("hasAudit",coreMgr.isAuditEnabled()&&(RunContext.isImpersonated()||RunContext.isPermitted(true, CoreManifest.ID, "AUDIT")));
 		
-		boolean hasAI = coreMgr.isAIEnabled()&&RunContext.isPermitted(true, CoreManifest.ID, "AI_ACTIONS", "ACCESS");
-		vars.put("hasAI", hasAI);
+		vars.put("hasAI", coreMgr.isAIEnabled()&&RunContext.isPermitted(true, CoreManifest.ID, "AI_ACTIONS", "ACCESS"));
 		
-		if (hasAI && aiToolConfig != null && getWts().isAIConfigured()) {
+		if (aiToolConfig != null) {
 			vars.put("aiTool", buildClientAITool(aiToolConfig));
 		}
 

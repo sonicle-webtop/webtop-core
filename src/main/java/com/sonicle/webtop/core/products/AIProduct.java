@@ -70,13 +70,31 @@ public final class AIProduct extends BaseServiceProduct {
 		"19ee284d9bf368437cbfc363f25dba2d7c2e9497688465203afbba4f7511\n" +
 		"a149027c";
 	
+	//Trial 1 day
+/*	private static String BUILTIN_LICENSE_STRING =
+		//"# Core - A.I. License (id: 1778160183204)\n" +
+		"72c8f193d1588cc36971baca3f538ce715070a22ac8faa8a4b1b5b42642a\n" +
+		"cde6581e9c5dfca07fdf6519a779030bc464c3c4b1fd2ab49a02a246c114\n" +
+		"16b2db5e537c34f28c302e25a8e513ffcfcb5c0f186ffb768a866a9d5870\n" +
+		"eea6f4c7a8a67e4264d899a4956e4907b881b1e65147b3dad63e89764561\n" +
+		"dbc5b47553349f89d9a9fd6dda2ce3c75130a39722c60436edda810723e8\n" +
+		"dc56769cb5b03ba7b6db380bbbbebe0ded8dbd3a9a9b4fb0ace6d83c2898\n" +
+		"4fe13b6a52a00b89945f90f09f09272aa3b740128501c206fcc1b2072a9e\n" +
+		"ef269cd5876178e4dee6d302c89eea9dc5531f453ca5327987beee3c26d2\n" +
+		"d3b94b8086b21672bc4d555ca97a17f74395672d32b96a94e3ed4e3398ae\n" +
+		"00ab08971f84a3966d9c5e0219f39f679c78f26efe0382a47a6ca88f51c4\n" +
+		"c165d1c1fe1f5c684fa55f448a2385ba9a4af2f7e3fcad5a1e6e7f9970ec\n" +
+		"41c51e37b19bd797289d89cfb53f5054a244ca143d2f6ea442317d5ee7fc\n" +
+		"d7e0392a261b271ea5b2090c3cc36f2a7e75fc665d45ad1b010a0813d3bd\n" +
+		"b9eea75d63ad9619318df11ff8a925bb75d5ba90363ea4a2f784";*/
+	
 	public AIProduct(String domainId) {
 		super(domainId, HardwareIDSource.DOMAIN_INTERNET_NAME);
 	}
 	
 	@Override
 	public String getLicenseQuantityType() {
-		return LQT_ACCOUNTS;
+		return LQT_USERS;
 	}
 	
 	@Override
@@ -99,5 +117,10 @@ public final class AIProduct extends BaseServiceProduct {
 		return BUILTIN_LICENSE_STRING;
 	}
 
+	@Override
+	public String getBuiltInHardwareId() {
+		return createHardwareIdString(domainId, HardwareIDSource.DOMAIN_INTERNET_NAME);
+	}
+	
 	
 }

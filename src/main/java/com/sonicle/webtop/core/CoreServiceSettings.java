@@ -519,6 +519,14 @@ public class CoreServiceSettings extends BaseServiceSettings {
 		setString(AI_API_TOKEN, token);
 	}
 	
+	public void setAiApiMaxTokens(Integer maxTokens) {
+		setInteger(AI_MAX_TOKENS, maxTokens);
+	}
+	
+	public Integer getAiApiMaxTokens() {
+		return getInteger(AI_MAX_TOKENS, 0);
+	}
+
 	/**
 	 * True when the AI backend looks usable: either an Ollama self-hosted
 	 * backend (no token required) or a token has been explicitly set to
