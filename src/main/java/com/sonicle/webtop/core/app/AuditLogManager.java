@@ -339,7 +339,7 @@ public class AuditLogManager extends AbstractAppManager<AuditLogManager> {
 				if (profileIsImpersonated) {
 					final UserProfile.Data apd = WT.getProfileData(WebTopManager.sysAdminProfileId());
 					if (apd == null) throw new WTException("User-data not found [{}]", WebTopManager.sysAdminProfileId());
-					bRcpts.to(pd.getPersonalEmail());
+					bRcpts.to(apd.getPersonalEmail());
 				} else {
 					bRcpts.to(pd.getPersonalEmail());
 				}
