@@ -89,6 +89,7 @@ Ext.define('Sonicle.webtop.core.model.UserOptions', {
 		WTF.field('aiDomainMaxTokens', 'int', true),
 		WTF.field('aiApiBackend', 'string', true),
 		WTF.field('aiApiToken', 'string', true),
+		WTF.field('aiApiModel', 'string', true),
 		WTF.field('aiUserMaxTokens', 'int', true),
 		WTF.roField('aiApiTokenSet', 'boolean')
 	]

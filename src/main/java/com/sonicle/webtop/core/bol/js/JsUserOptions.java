@@ -108,6 +108,7 @@ public class JsUserOptions extends JsUserOptionsBase {
 
 	public Integer aiDomainMaxTokens;
 	public String aiApiBackend;
+	public String aiApiModel;
 	public String aiApiToken;
 	public Integer aiUserMaxTokens;
 	public Boolean aiApiTokenSet;

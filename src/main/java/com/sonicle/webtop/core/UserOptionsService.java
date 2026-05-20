@@ -218,6 +218,7 @@ public class UserOptionsService extends BaseUserOptionsService {
 				// indicating whether the user has set one.
 				String aiUserToken = us.getAiApiToken();
 				jso.aiApiBackend = us.getAiApiBackendUserOverride();
+				jso.aiApiModel = us.getAiApiModelUserOverride();
 				jso.aiApiToken = "";
 				jso.aiApiTokenSet = (aiUserToken != null && !aiUserToken.trim().isEmpty());
 				
@@ -311,6 +312,7 @@ public class UserOptionsService extends BaseUserOptionsService {
 				// not "clear it". Ignore empty updates; require explicit clear via
 				// the reserved sentinel "__CLEAR__".
 				if (pl.map.has("aiApiBackend")) us.setAiApiBackend(pl.data.aiApiBackend);
+				if (pl.map.has("aiApiModel")) us.setAiApiModel(pl.data.aiApiModel);
 				if (pl.map.has("aiApiToken")) {
 					String t = pl.data.aiApiToken;
 					if ("__CLEAR__".equals(t)) {

@@ -1028,6 +1028,14 @@ public class CoreSettings {
 	/**
 	 * [domain+system]
 	 * [string]
+	 * AI API model : provider dependent string.
+	 * Defaults to null, code default.
+	 */
+	public static final String AI_API_MODEL = "ai.api.model";
+
+	/**
+	 * [domain+system]
+	 * [string]
 	 * AI API token.
 	 */
 	public static final String AI_API_TOKEN = "ai.api.token";

@@ -1034,15 +1034,18 @@ public class Service extends BaseService {
 				int maxTokens = css.getAiApiMaxTokens();
 				JsonObject jso = new JsonObject();
 				jso.addProperty("provider", css.getAiApiBackend());
+				jso.addProperty("model", css.getAiApiModel());
 				jso.addProperty("apikey", css.getAiApiToken());
 				jso.addProperty("hasAI", coreMgr.isAIEnabled());
 				jso.addProperty("quota", (maxTokens == 0 ? "" : ""+maxTokens));
 				new JsonResult(jso).printTo(out);
 			} else if (Crud.UPDATE.equals(crud)) {
-				String provider = ServletUtils.getStringParameter(request, "provider", true);
-				String apikey = ServletUtils.getStringParameter(request, "apikey", true);
+				String provider = ServletUtils.getStringParameter(request, "provider", "");
+				String model = ServletUtils.getStringParameter(request, "model", "");
+				String apikey = ServletUtils.getStringParameter(request, "apikey", "");
 				String quota = ServletUtils.getStringParameter(request, "quota", "");
 				css.setAiApiBackend(provider);
+				css.setAiApiModel(model);
 				css.setAiApiToken(apikey);
 				css.setAiApiMaxTokens(StringUtils.isEmpty(quota) ? 0 : Integer.parseInt(quota));
 				new JsonResult().printTo(out);

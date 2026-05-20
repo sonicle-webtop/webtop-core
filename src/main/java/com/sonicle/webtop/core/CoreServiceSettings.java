@@ -511,6 +511,14 @@ public class CoreServiceSettings extends BaseServiceSettings {
 		setString(AI_API_BACKEND, backend);
 	}
 	
+	public String getAiApiModel() {
+		return getString(AI_API_MODEL, null);
+	}
+	
+	public void setAiApiModel(String model) {
+		setString(AI_API_MODEL, model);
+	}
+	
 	public String getAiApiToken() {
 		return getString(AI_API_TOKEN, "sk-...");
 	}

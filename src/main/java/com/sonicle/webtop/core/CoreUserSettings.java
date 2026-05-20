@@ -417,6 +417,25 @@ public class CoreUserSettings extends BaseUserSettings {
 	}
 
 	/**
+	 * Returns the user-supplied AI model if set, otherwise falls back to the
+	 * domain/system default.
+	 */
+	public String getAiApiModel() {
+		String value = getString(AI_API_MODEL, null);
+		if (value != null) return value;
+		return ss.getAiApiModel();
+	}
+
+	/**
+	 * Sets the user-supplied AI model. Pass null or empty to clear the
+	 * override and fall back to the domain default.
+	 */
+	public boolean setAiApiModel(String value) {
+		if (value == null || value.isEmpty()) return clear(AI_API_MODEL);
+		return setString(AI_API_MODEL, value);
+	}
+
+	/**
 	 * Returns the user-supplied AI token if set, otherwise falls back to the
 	 * domain/system default.
 	 */
@@ -441,7 +460,16 @@ public class CoreUserSettings extends BaseUserSettings {
 	 * domain default.
 	 */
 	public String getAiApiBackendUserOverride() {
-		return getString(AI_API_BACKEND, null);
+		return getString(AI_API_BACKEND, null, false);
+	}
+
+	/**
+	 * Returns the raw user override model (may be null). Useful to know
+	 * whether the user has explicitly selected a model vs. relying on the
+	 * domain default.
+	 */
+	public String getAiApiModelUserOverride() {
+		return getString(AI_API_MODEL, null, false);
 	}
 
 	/**
@@ -450,7 +478,7 @@ public class CoreUserSettings extends BaseUserSettings {
 	 * domain default.
 	 */
 	public String getAiApiTokenUserOverride() {
-		return getString(AI_API_TOKEN, null);
+		return getString(AI_API_TOKEN, null, false);
 	}
 
 	/**

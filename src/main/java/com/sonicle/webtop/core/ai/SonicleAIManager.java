@@ -41,6 +41,7 @@ import java.net.URL;
 import java.util.List;
 import java.util.Locale;
 import java.util.Scanner;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  *
@@ -50,9 +51,9 @@ public class SonicleAIManager extends AIManager {
 	
 	private static String SonicleURL = "http://ip-address:port";
 	
-	public SonicleAIManager(String apiToken, Locale locale) {
-		super(SonicleURL, apiToken, locale);
-		model = "blueit/llama-3-3-70b-instruct";
+	public SonicleAIManager(String model, String apiToken, Locale locale) {
+		super(model, SonicleURL, apiToken, locale);
+		if (StringUtils.isBlank(model)) model = "blueit/llama-3-3-70b-instruct";
 		apiRAGAskPath = "/ask";
 	} 	
 	

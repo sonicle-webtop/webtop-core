@@ -83,9 +83,18 @@ Ext.define('Sonicle.webtop.core.admin.view.AI', {
 					width: 24
 				},*/ {
 					xtype: 'textfield',
+					fieldLabel: me.res('ai.model.lbl'),
+					reference: 'txtmodel',
+					width: 400,
+					colspan: 1,
+					emptyText: '(default)',
+					value: me.model
+				}, {
+					xtype: 'textfield',
 					fieldLabel: me.res('ai.apikey.lbl'),
 					reference: 'txtapikey',
 					width: 400,
+					colspan: 2,
 					value: me.apikey
 				},/*{
 					xtype: 'label',
@@ -371,6 +380,7 @@ Ext.define('Sonicle.webtop.core.admin.view.AI', {
 				crud: 'update',
 				domainId: me.domainId,
 				provider: me.lref('cbprovider').getValue(),
+				model: me.lref('txtmodel').getValue(),
 				apikey: me.lref('txtapikey').getValue(),
 				quota: me.lref('nmbquota').getValue()
 			},

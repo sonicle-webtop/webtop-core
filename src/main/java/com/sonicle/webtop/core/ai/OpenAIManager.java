@@ -55,9 +55,9 @@ public class OpenAIManager extends AIManager {
 
 	boolean useOpenAIEmbedding=true;
 
-	public OpenAIManager(String apiToken, Locale locale) {
-		super("https://api.openai.com", apiToken, locale);
-		model = "gpt-4.1-mini";
+	public OpenAIManager(String model, String apiToken, Locale locale) {
+		super(model, "https://api.openai.com", apiToken, locale);
+		if (StringUtils.isBlank(model)) this.model = "gpt-5-mini";
 		//model = "gpt-4o";
 		//model = "gpt-5-mini";
 		//model = "gpt-5-nano";

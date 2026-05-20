@@ -36,6 +36,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import java.util.Locale;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  *
@@ -44,10 +45,10 @@ import java.util.Locale;
 public class ClaudeAIManager extends OpenAIManager {
 	
 	
-	public ClaudeAIManager(String apiToken, Locale locale) {
-		super(apiToken, locale);
+	public ClaudeAIManager(String model, String apiToken, Locale locale) {
+		super(model, apiToken, locale);
 		apiUrl = "https://api.anthropic.com";
-		model = "claude-haiku-4-5";
+		if (StringUtils.isBlank(model)) this.model = "claude-haiku-4-5";
 
 		embeddingModel = "bge-m3";
 		apiEmebeddingUrl = "http://localhost:11434";

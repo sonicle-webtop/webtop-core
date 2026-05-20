@@ -95,10 +95,11 @@ public abstract class AIManager {
 	/** Optional sink for usage rows; null means recording is disabled. */
 	protected AIUsageRecorder usageRecorder;
 
-	public AIManager(String apiUrl, String apiToken, Locale locale) {
+	public AIManager(String model, String apiUrl, String apiToken, Locale locale) {
 		this.locale = locale;
 		this.apiUrl = apiUrl;
 		this.apiToken = apiToken;
+		this.model = model;
 	}
 
 	public void setBackendType(String backendType) {

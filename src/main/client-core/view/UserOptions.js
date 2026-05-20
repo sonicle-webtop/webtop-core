@@ -1329,12 +1329,23 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 					needLogin: true,
 					listeners: { blur: { fn: me.onBlurAutoSave, scope: me } }
 				}), {
+					xtype: 'textfield',
+					bind: {
+						value: '{record.aiApiModel}'
+					},
+					fieldLabel: WT.res('opts.ai.fld-model.lbl'),
+					emptyText: '(default)',
+					width: 440,
+					submitEmptyText: false,
+					listeners: { blur: { fn: me.onBlurAutoSave, scope: me } }
+				}, {
 					xtype: 'sopasswordfield',
 					bind: {
 						value: '{record.aiApiToken}',
 						emptyText: '{foAiApiTokenEmptyText}',
 						disabled: '{!foCanManagePersonalAI}'
 					},
+					plugins: 'sonoautocomplete',
 					fieldLabel: WT.res('opts.ai.fld-token.lbl'),
 					width: 440,
 					emptyText: WT.res('opts.ai.fld-token-empty.lbl'),

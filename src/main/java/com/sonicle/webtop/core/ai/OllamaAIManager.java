@@ -40,6 +40,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.List;
 import java.util.Locale;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  *
@@ -54,9 +55,9 @@ public class OllamaAIManager extends AIManager {
 	String qdrantURL = "http://"+qdrantHost+":6333/collections/emails/points/search";
 	int qdrantLimit = 10;
 	
-	public OllamaAIManager(String apiToken, Locale locale) {
-		super("http://localhost:11434", null, locale);
-		model = "gpt-oss:20b";
+	public OllamaAIManager(String model, String apiToken, Locale locale) {
+		super(model, "http://localhost:11434", null, locale);
+		if (StringUtils.isBlank(model)) model = "gpt-oss:20b";
 	} 
 	
 	public boolean hasRag() {

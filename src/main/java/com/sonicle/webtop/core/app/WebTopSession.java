@@ -1437,6 +1437,7 @@ public class WebTopSession {
 	public AIManager getAIManager() {
 		CoreUserSettings cus = new CoreUserSettings(getUserProfile().getId());
 		String backend = cus.getAiApiBackend();
+		String model = cus.getAiApiModel();
 		String token = cus.getAiApiToken();
 		synchronized (aiManagerLock) {
 			if (cachedAiManager == null
@@ -1447,7 +1448,7 @@ public class WebTopSession {
 				else if ("openai".equalsIgnoreCase(backend)) aibt = AIBackendType.OPENAI;
 				else if ("claude".equalsIgnoreCase(backend)) aibt = AIBackendType.CLAUDE;
 				else if ("ollama".equalsIgnoreCase(backend)) aibt = AIBackendType.OLLAMA;
-				AIManager aim = AIFactory.createAIManager(aibt, token, getLocale());
+				AIManager aim = AIFactory.createAIManager(aibt, model, token, getLocale());
 				aim.setUserId(AIManager.hashUserId(getUserProfile().getStringId()));
 				aim.setProfileId(getUserProfile().getId());
 				aim.setBackendType(aibt != null ? aibt.name() : "UNKNOWN");
