@@ -144,19 +144,16 @@ public class AuditLogManager extends AbstractAppManager<AuditLogManager> {
 		boolean isImpersonated = RunContext.isImpersonated();
 		
 		try {
-			long stamp = readyLock();
-			try {
-				if (isImpersonated && !logImpersonatedEnabled(profileId)) return;
-				WT.runPrivileged(() -> {
-					try {
-						internalWriteSync(profileId.getDomain(), buildAuditUserId(profileId, isImpersonated), softwareName, sessionId, serviceId, context, action, entries);
-					} catch (WTException ex) {
-						LOGGER.error("Unable to write entries", ex);
-					}
-				});
-			} finally {
-				readyUnlock(stamp);
-			}
+			ensureStateReady();
+			if (isImpersonated && !logImpersonatedEnabled(profileId)) return;
+			WT.runPrivileged(() -> {
+				try {
+					internalWriteSync(profileId.getDomain(), buildAuditUserId(profileId, isImpersonated), softwareName, sessionId, serviceId, context, action, entries);
+				} catch (WTException ex) {
+					LOGGER.error("Unable to write entries", ex);
+				}
+			});
+			
 		} catch (WTException ex1) {
 			LOGGER.trace("Not ready", ex1);
 		}
@@ -174,19 +171,16 @@ public class AuditLogManager extends AbstractAppManager<AuditLogManager> {
 		boolean isImpersonated = RunContext.isImpersonated();
 		
 		try {
-			long stamp = readyLock();
-			try {
-				if (isImpersonated && !logImpersonatedEnabled(profileId)) return;
-				WT.runPrivileged(() -> {
-					try {
-						internalWriteSync(profileId.getDomain(), buildAuditUserId(profileId, isImpersonated), softwareName, sessionId, serviceId, context, action, reference, data);
-					} catch (WTException ex) {
-						LOGGER.error("Unable to write entries", ex);
-					}
-				});
-			} finally {
-				readyUnlock(stamp);
-			}
+			ensureStateReady();
+			if (isImpersonated && !logImpersonatedEnabled(profileId)) return;
+			WT.runPrivileged(() -> {
+				try {
+					internalWriteSync(profileId.getDomain(), buildAuditUserId(profileId, isImpersonated), softwareName, sessionId, serviceId, context, action, reference, data);
+				} catch (WTException ex) {
+					LOGGER.error("Unable to write entries", ex);
+				}
+			});
+			
 		} catch (WTException ex1) {
 			LOGGER.trace("Not ready", ex1);
 		}
@@ -216,16 +210,13 @@ public class AuditLogManager extends AbstractAppManager<AuditLogManager> {
 		boolean isImpersonated = RunContext.isImpersonated();
 		
 		try {
-			long stamp = readyLock();
-			try {
-				if (isImpersonated && !logImpersonatedEnabled(profileId)) {
-					return null;
-				} else {
-					return new Batch(this, profileId.getDomain(), buildAuditUserId(profileId, isImpersonated), softwareName, sessionId, serviceId, context, action, 50);
-				}
-			} finally {
-				readyUnlock(stamp);
+			ensureStateReady();
+			if (isImpersonated && !logImpersonatedEnabled(profileId)) {
+				return null;
+			} else {
+				return new Batch(this, profileId.getDomain(), buildAuditUserId(profileId, isImpersonated), softwareName, sessionId, serviceId, context, action, 50);
 			}
+			
 		} catch (WTException ex1) {
 			LOGGER.trace("Not ready", ex1);
 		}
@@ -245,19 +236,16 @@ public class AuditLogManager extends AbstractAppManager<AuditLogManager> {
 		boolean isImpersonated = RunContext.isImpersonated();
 		
 		try {
-			long stamp = readyLock();
-			try {
-				if (isImpersonated && !logImpersonatedEnabled(profileId)) return;
-				WT.runPrivileged(() -> {
-					try {
-						internalUpdateReference(profileId, serviceId, context, oldReference, newReference);
-					} catch (WTException ex) {
-						LOGGER.error("Unable to write entries", ex);
-					}
-				});
-			} finally {
-				readyUnlock(stamp);
-			}
+			ensureStateReady();
+			if (isImpersonated && !logImpersonatedEnabled(profileId)) return;
+			WT.runPrivileged(() -> {
+				try {
+					internalUpdateReference(profileId, serviceId, context, oldReference, newReference);
+				} catch (WTException ex) {
+					LOGGER.error("Unable to write entries", ex);
+				}
+			});
+			
 		} catch (WTException ex1) {
 			LOGGER.trace("Not ready", ex1);
 		}
@@ -287,87 +275,82 @@ public class AuditLogManager extends AbstractAppManager<AuditLogManager> {
 		Check.notNull(clientIpAddress, "clientIpAddress");
 		Check.notNull(clientUserAgentString, "clientUserAgentString");
 		
-		long stamp = readyLock();
+		ensureStateReady();
+		CoreServiceSettings css = new CoreServiceSettings(getWebTopApp().getSettingsManager(), CoreManifest.ID, profileId.getDomainId());
+
 		try {
-			CoreServiceSettings css = new CoreServiceSettings(getWebTopApp().getSettingsManager(), CoreManifest.ID, profileId.getDomainId());
+			final UserProfile.Data pd = WT.getProfileData(profileId);
+			if (pd == null) throw new WTException("User-data not found [{}]", profileId);
 
-			try {
-				final UserProfile.Data pd = WT.getProfileData(profileId);
-				if (pd == null) throw new WTException("User-data not found [{}]", profileId);
-
-				String remoteIp = clientIpAddress.toAddressString().toString();
-				ReadableUserAgent rua = WebTopApp.getUserAgentInfo(clientUserAgentString);
-				IPLookupResponse ipData = null;
-				if (IPUtils.isPublicAddress(clientIpAddress)) {
-					ipData = getIPGeolocationData(profileId.getDomainId(), remoteIp);
-				}
-				
-				Headers.Builder bHeaders = new Headers.Builder()
-					.addHeader(EmailNotification.HEADER_NOTIFICATION_TYPE, EmailNotification.TYPE_SECURITY_NOTICE)
-					.addHeader(EmailNotification.HEADER_CLIENT_IDENTIFIER, clientIdentifier)
-					.addHeader(EmailNotification.HEADER_CLIENT_IP_ADDRESS, remoteIp);
-				
-				if (ipData != null) {
-					bHeaders.addHeader(EmailNotification.HEADER_CLIENT_GEO_CONTINENT_CODE, ipData.getContinentCode());
-					bHeaders.addHeader(EmailNotification.HEADER_CLIENT_GEO_COUNTRY_CODE, ipData.getCountryCode());
-					bHeaders.addHeader(EmailNotification.HEADER_CLIENT_GEO_CITY, ipData.getCity());
-					bHeaders.addHeader(EmailNotification.HEADER_CLIENT_GEO_ZIP, ipData.getZip());
-					bHeaders.addHeader(EmailNotification.HEADER_CLIENT_GEO_LATITUDE, ipData.getLatitude());
-					bHeaders.addHeader(EmailNotification.HEADER_CLIENT_GEO_LONGITUDE, ipData.getLongitude());
-				}
-				if (rua != null) {
-					bHeaders.addHeader(EmailNotification.HEADER_CLIENT_UA_NAME, rua.getName());
-					bHeaders.addHeader(EmailNotification.HEADER_CLIENT_UA_TYPE, rua.getTypeName());
-					bHeaders.addHeader(EmailNotification.HEADER_CLIENT_UA_DEVICECATEGORY, rua.getDeviceCategory().getName());
-					bHeaders.addHeader(EmailNotification.HEADER_CLIENT_UA_OSNAME, rua.getOperatingSystem().getName());
-					bHeaders.addHeader(EmailNotification.HEADER_CLIENT_UA_OSPRODUCER, rua.getOperatingSystem().getProducer());
-				}
-				
-				String findMyIPUrl = null;
-				if (css.getSecurityKDVerificationNoticeFindMyIPEnabled()) {
-					findMyIPUrl = PathUtils.concatPaths(WT.getPublicBaseUrl(profileId.getDomainId()), MyIP.URL);
-				}
-				
-				final String subject = EmailNotification.buildSubject(pd.getLocale(), CoreManifest.ID, WT.lookupResource(CoreManifest.ID, pd.getLocale(), "tpl.email.newDevice.subject"));
-				final String customBodyHtml = TplHelper.buildNewDeviceNoticeBody(pd.getProfileEmailAddress(), JodaTimeUtils.now(), rua, remoteIp, ipData, findMyIPUrl, pd.getLocale(), pd.getTimeZone(), pd.getShortDateFormat(), pd.getShortTimeFormat());
-				final String html = new EmailNotification.NoReplyBuilder()
-					.withCustomBody(null, customBodyHtml)
-					.build(pd.getLocale(), EmailNotification.buildSource(pd.getLocale(), CoreManifest.ID)).write();
-
-				final InternetAddress from = WT.getNoReplyAddress(profileId.getDomainId());
-				if (from == null) throw new WTException("Error getting no-reply address for '{}'", profileId.getDomainId());
-				
-				Recipients.Builder bRcpts = new Recipients.Builder();
-				// Do not include additional recipients (defined in settings) when 
-				// the target profile is sysAdmin or during impersonation. This helps
-				// to keep connections private during some *special* activities.
-				if (!WebTopManager.isSysAdmin(profileId) && !profileIsImpersonated) {
-					bRcpts.to(pd.getProfileEmail());
-					//TODO: evaluate how to treat domain admin when will be implemented!
-					for (String email : css.getSecurityKnownDeviceVerificationRecipients()) {
-						final InternetAddress ia = InternetAddressUtils.toInternetAddress(email);
-						if (ia != null) bRcpts.bcc(pd.getProfileEmail());/*ccns.add(ia);*/
-					}
-				} else {
-					if (profileIsImpersonated) {
-						final UserProfile.Data apd = WT.getProfileData(WebTopManager.sysAdminProfileId());
-						if (apd == null) throw new WTException("User-data not found [{}]", WebTopManager.sysAdminProfileId());
-						bRcpts.to(pd.getPersonalEmail());
-					} else {
-						bRcpts.to(pd.getPersonalEmail());
-					}
-				}
-				
-				WT.sendEmailMessage(RunContext.getSysAdminProfileId(), from, bRcpts.asList(), subject, html, bHeaders.build(), null);
-
-			} catch (IOException | TemplateException ex) {
-				LOGGER.error("Unable to build email template", ex);
-			} catch (WTEmailSendException ex) {
-				LOGGER.error("Unable to send email", ex);
+			String remoteIp = clientIpAddress.toAddressString().toString();
+			ReadableUserAgent rua = WebTopApp.getUserAgentInfo(clientUserAgentString);
+			IPLookupResponse ipData = null;
+			if (IPUtils.isPublicAddress(clientIpAddress)) {
+				ipData = getIPGeolocationData(profileId.getDomainId(), remoteIp);
 			}
-			
-		} finally {
-			readyUnlock(stamp);
+
+			Headers.Builder bHeaders = new Headers.Builder()
+				.addHeader(EmailNotification.HEADER_NOTIFICATION_TYPE, EmailNotification.TYPE_SECURITY_NOTICE)
+				.addHeader(EmailNotification.HEADER_CLIENT_IDENTIFIER, clientIdentifier)
+				.addHeader(EmailNotification.HEADER_CLIENT_IP_ADDRESS, remoteIp);
+
+			if (ipData != null) {
+				bHeaders.addHeader(EmailNotification.HEADER_CLIENT_GEO_CONTINENT_CODE, ipData.getContinentCode());
+				bHeaders.addHeader(EmailNotification.HEADER_CLIENT_GEO_COUNTRY_CODE, ipData.getCountryCode());
+				bHeaders.addHeader(EmailNotification.HEADER_CLIENT_GEO_CITY, ipData.getCity());
+				bHeaders.addHeader(EmailNotification.HEADER_CLIENT_GEO_ZIP, ipData.getZip());
+				bHeaders.addHeader(EmailNotification.HEADER_CLIENT_GEO_LATITUDE, ipData.getLatitude());
+				bHeaders.addHeader(EmailNotification.HEADER_CLIENT_GEO_LONGITUDE, ipData.getLongitude());
+			}
+			if (rua != null) {
+				bHeaders.addHeader(EmailNotification.HEADER_CLIENT_UA_NAME, rua.getName());
+				bHeaders.addHeader(EmailNotification.HEADER_CLIENT_UA_TYPE, rua.getTypeName());
+				bHeaders.addHeader(EmailNotification.HEADER_CLIENT_UA_DEVICECATEGORY, rua.getDeviceCategory().getName());
+				bHeaders.addHeader(EmailNotification.HEADER_CLIENT_UA_OSNAME, rua.getOperatingSystem().getName());
+				bHeaders.addHeader(EmailNotification.HEADER_CLIENT_UA_OSPRODUCER, rua.getOperatingSystem().getProducer());
+			}
+
+			String findMyIPUrl = null;
+			if (css.getSecurityKDVerificationNoticeFindMyIPEnabled()) {
+				findMyIPUrl = PathUtils.concatPaths(WT.getPublicBaseUrl(profileId.getDomainId()), MyIP.URL);
+			}
+
+			final String subject = EmailNotification.buildSubject(pd.getLocale(), CoreManifest.ID, WT.lookupResource(CoreManifest.ID, pd.getLocale(), "tpl.email.newDevice.subject"));
+			final String customBodyHtml = TplHelper.buildNewDeviceNoticeBody(pd.getProfileEmailAddress(), JodaTimeUtils.now(), rua, remoteIp, ipData, findMyIPUrl, pd.getLocale(), pd.getTimeZone(), pd.getShortDateFormat(), pd.getShortTimeFormat());
+			final String html = new EmailNotification.NoReplyBuilder()
+				.withCustomBody(null, customBodyHtml)
+				.build(pd.getLocale(), EmailNotification.buildSource(pd.getLocale(), CoreManifest.ID)).write();
+
+			final InternetAddress from = WT.getNoReplyAddress(profileId.getDomainId());
+			if (from == null) throw new WTException("Error getting no-reply address for '{}'", profileId.getDomainId());
+
+			Recipients.Builder bRcpts = new Recipients.Builder();
+			// Do not include additional recipients (defined in settings) when 
+			// the target profile is sysAdmin or during impersonation. This helps
+			// to keep connections private during some *special* activities.
+			if (!WebTopManager.isSysAdmin(profileId) && !profileIsImpersonated) {
+				bRcpts.to(pd.getProfileEmail());
+				//TODO: evaluate how to treat domain admin when will be implemented!
+				for (String email : css.getSecurityKnownDeviceVerificationRecipients()) {
+					final InternetAddress ia = InternetAddressUtils.toInternetAddress(email);
+					if (ia != null) bRcpts.bcc(pd.getProfileEmail());/*ccns.add(ia);*/
+				}
+			} else {
+				if (profileIsImpersonated) {
+					final UserProfile.Data apd = WT.getProfileData(WebTopManager.sysAdminProfileId());
+					if (apd == null) throw new WTException("User-data not found [{}]", WebTopManager.sysAdminProfileId());
+					bRcpts.to(pd.getPersonalEmail());
+				} else {
+					bRcpts.to(pd.getPersonalEmail());
+				}
+			}
+
+			WT.sendEmailMessage(RunContext.getSysAdminProfileId(), from, bRcpts.asList(), subject, html, bHeaders.build(), null);
+
+		} catch (IOException | TemplateException ex) {
+			LOGGER.error("Unable to build email template", ex);
+		} catch (WTEmailSendException ex) {
+			LOGGER.error("Unable to send email", ex);
 		}
 	}
 	
@@ -421,28 +404,20 @@ public class AuditLogManager extends AbstractAppManager<AuditLogManager> {
 		Check.notNull(domainId, "domainId");
 		Check.notNull(ipAddress, "ipAddress");
 		
-		long stamp = readyLock();
-		try {
-			return internalGetIPGeolocationData(domainId, ipAddress);
-		} finally {
-			readyUnlock(stamp);
-		}
+		ensureStateReady();
+		return internalGetIPGeolocationData(domainId, ipAddress);
 	}
 	
 	private void batchWrite(final String domainId, final String userId, final String softwareName, final String sessionId, final String serviceId, final String context, final String action, final Collection<AuditReferenceDataEntry> entries) {
 		try {
-			long stamp = readyLock();
-			try {
-				WT.runPrivileged(() -> {
-					try {
-						internalWriteSync(domainId, userId, softwareName, sessionId, serviceId, context, action, entries);
-					} catch (WTException ex) {
-						LOGGER.error("Unable to write entries", ex);
-					}
-				});
-			} finally {
-				readyUnlock(stamp);
-			}
+			ensureStateReady();
+			WT.runPrivileged(() -> {
+				try {
+					internalWriteSync(domainId, userId, softwareName, sessionId, serviceId, context, action, entries);
+				} catch (WTException ex) {
+					LOGGER.error("Unable to write entries", ex);
+				}
+			});
 		} catch (WTException ex1) {
 			LOGGER.trace("Not ready", ex1);
 		}
