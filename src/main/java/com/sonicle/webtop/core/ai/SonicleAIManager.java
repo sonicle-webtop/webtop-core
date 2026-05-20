@@ -48,8 +48,10 @@ import java.util.Scanner;
  */
 public class SonicleAIManager extends AIManager {
 	
+	private static String SonicleURL = "http://ip-address:port";
+	
 	public SonicleAIManager(String apiToken, Locale locale) {
-		super("http://192.168.222.221:4000", apiToken, locale);
+		super(SonicleURL, apiToken, locale);
 		model = "blueit/llama-3-3-70b-instruct";
 		apiRAGAskPath = "/ask";
 	} 	
