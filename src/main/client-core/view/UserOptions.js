@@ -1280,7 +1280,7 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 		}, {
 			xtype: 'wtopttabsection',
 			title: WT.res('opts.ai.tit'),
-			hidden: !WT.getVar('hasAI'),
+			hidden: !WT.isAdmin() && !WT.getVar('hasAI'),
 			items: [
 				{
 					xtype: 'soformseparator',

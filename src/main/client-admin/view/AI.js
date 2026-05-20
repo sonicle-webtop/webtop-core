@@ -55,10 +55,11 @@ Ext.define('Sonicle.webtop.core.admin.view.AI', {
 			region: 'north',
 			xtype: 'wtform',
 			title: title,
-			layout: 'hbox',
+			layout: { type: 'table', columns: 2, tableAttrs: { style: 'width: 500px' } },
 			height: 200,
 			fieldDefaults: {
-				labelAlign: 'right'
+				labelAlign: 'right',
+				labelWidth: 150,
 			},
 			items: [
 				WTF.lookupCombo('id', 'desc', {
@@ -66,6 +67,7 @@ Ext.define('Sonicle.webtop.core.admin.view.AI', {
 						fieldLabel: me.res('ai.provider.lbl'),
 						width: 300,
 						value: me.provider,
+						colspan: 1,
 						store: {
 							autoLoad: true,
 							fields: ['id', 'desc'],
@@ -75,23 +77,40 @@ Ext.define('Sonicle.webtop.core.admin.view.AI', {
 								['claude',  me.res('ai.provider.claude')]
 							]
 						}
-				}),{
+				}),/*{
 					xtype: 'label',
 					text: ' ',
 					width: 24
-				}, {
+				},*/ {
 					xtype: 'textfield',
 					fieldLabel: me.res('ai.apikey.lbl'),
 					reference: 'txtapikey',
 					width: 400,
 					value: me.apikey
-				},{
+				},/*{
 					xtype: 'label',
 					text: ' ',
 					width: 24
-				}, {
+				},*/ {
+					xtype: 'numberfield',
+					reference: 'nmbquota',
+					fieldLabel: WT.res('opts.ai.fld-max-tokens.lbl'),
+					emptyText: WT.res('opts.ai.fld-max-tokens.emp'),
+					minValue: 0,
+					width: 300,
+					value: me.quota,
+					hideTrigger: false,
+					keyNavEnabled: false,
+					mouseWheelEnabled: false,
+					colspan: 2
+				},/*{
+					xtype: 'label',
+					text: ' ',
+					colspan: 1
+				},*/ {
 					xtype: 'button',
 					text: WT.res('act-save.lbl'),
+					style: 'margin-left: 154px',
 					handler: function() {
 						me.saveConfiguration();
 					}
@@ -353,6 +372,7 @@ Ext.define('Sonicle.webtop.core.admin.view.AI', {
 				domainId: me.domainId,
 				provider: me.lref('cbprovider').getValue(),
 				apikey: me.lref('txtapikey').getValue(),
+				quota: me.lref('nmbquota').getValue()
 			},
 			callback: function(success, json) {
 				me.unwait();
