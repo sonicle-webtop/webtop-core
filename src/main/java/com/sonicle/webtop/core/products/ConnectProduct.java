@@ -51,7 +51,7 @@ public final class ConnectProduct extends BaseServiceProduct {
 		"c870a50e6587bee8fbba03RSA4102413SHA512withRSAf2b3751c872fba8\n" +
 		"578e95dafde965e87bf43d333298b95332b7abc46829253a30203010001";			
 	
-	//Trial 90 days
+	//Trial 30 days
 	private static String BUILTIN_LICENSE_STRING =
 		"# Core - Connect License (id: 1779368085540)\n" +
 		"f4409a5ba6b5ead167bc7cb33ca292cd5b2ea9afa2784df357129ee00cf4\n" +
