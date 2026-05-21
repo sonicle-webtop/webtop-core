@@ -203,6 +203,7 @@ import com.sonicle.webtop.core.sdk.UserProfileId;
 import com.sonicle.webtop.core.sdk.WTException;
 import com.sonicle.webtop.core.sdk.WTRuntimeException;
 import com.sonicle.webtop.core.TplHelper;
+import com.sonicle.webtop.core.products.ConnectProduct;
 import freemarker.template.TemplateException;
 import jakarta.mail.Message;
 import jakarta.mail.MessagingException;
@@ -287,6 +288,7 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 	private final LoadingCache<UserProfileId, UserProfile.PersonalInfo> profileToPersonalInfoCache = Caffeine.newBuilder().build(new ProfilePersonalInfoCacheLoader());
 	private final LoadingCache<UserProfileId, UserProfile.Data> profileToDataCache = Caffeine.newBuilder().build(new ProfileDataCacheLoader());
 	private final Cache<String, Optional<Integer>> shareIdCache = Caffeine.newBuilder().expireAfterWrite(60, TimeUnit.SECONDS).build();
+	private final LoadingCache<String, ConnectProduct> connectProductCache = Caffeine.newBuilder().build(new ConnectProductCacheLoader());
 	private final ApiKeyCache apiKeyCache;
 	private final Object foldersLock = new Object();
 	
@@ -2120,6 +2122,14 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 			DbUtils.closeQuietly(con);
 		}
 	}
+	
+	private void verifyProductLicense(AuthTokenValidated atv) throws WTException {
+		if (atv == null) throw new WTException("AuthTokenValidated is null");
+		
+		String domainId = atv.getProfileId().getDomainId();
+		ConnectProduct cp = connectProductCache.get(domainId);
+		if (!WT.isLicensed(cp)) throw new WTException("No license found for WebTop Connect");
+	}
 
 	/**
 	 * Validates a plaintext access token against the database, with a short
@@ -2135,7 +2145,11 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 		
 		final String hash = CryptoUtils.hash(plainToken, DigestAlgorithm.SHA256);
 		Optional<AuthTokenValidated> cached = authAccessTokenCache.getIfPresent(hash);
-		if (cached != null) return cached.orElse(null);
+		if (cached != null) {
+			AuthTokenValidated atv = cached.orElse(null);
+			verifyProductLicense(atv);
+			return atv;
+		}
 		
 		final AuthTokenDAO tokDao = AuthTokenDAO.getInstance();
 		Connection con = null;
@@ -2157,6 +2171,7 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 				row.getParentId(),
 				new UserProfileId(row.getDomainId(), row.getUserId())
 			);
+			verifyProductLicense(result);
 			authAccessTokenCache.put(hash, Optional.of(result));
 			
 			// Best-effort touch; failures are not fatal to validation
@@ -6429,6 +6444,21 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 				
 			} catch (Exception ex) {
 				LOGGER.error("[UserProfilePersonalInfoCache] Unable to lookup [{}]", k, ex);
+				return null;
+			}
+		}
+	}
+	
+	private class ConnectProductCacheLoader implements CacheLoader<String, ConnectProduct> {
+
+		@Override
+		public ConnectProduct load(String k) throws Exception {
+			try {
+				LOGGER.trace("[ConnectProductCache] Loading... [{}]", k);
+				return new ConnectProduct(k);
+				
+			} catch (Exception ex) {
+				LOGGER.error("[ConnectProductCache] Unable to lookup [{}]", k, ex);
 				return null;
 			}
 		}
