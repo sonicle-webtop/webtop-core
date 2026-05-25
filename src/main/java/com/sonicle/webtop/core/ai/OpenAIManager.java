@@ -57,13 +57,13 @@ public class OpenAIManager extends AIManager {
 
 	public OpenAIManager(String model, String apiToken, Locale locale) {
 		super(model, "https://api.openai.com", apiToken, locale);
-		if (StringUtils.isBlank(model)) this.model = "gpt-5-mini";
+		if (StringUtils.isBlank(model)) this.model = "gpt-4.1-mini";
 		//model = "gpt-4o";
 		//model = "gpt-5-mini";
 		//model = "gpt-5-nano";
 		// gpt-4.1-mini / gpt-4o honor temperature; gpt-5-* reject it.
 		// Flip to false (or call setUseTemperature(false)) when switching to a gpt-5-* model.
-		useTemperature = true;
+		useTemperature = this.model.startsWith("gpt-4");
 
 		//OpenAI embedding
 		if (useOpenAIEmbedding) {

@@ -56,7 +56,7 @@ Ext.define('Sonicle.webtop.core.admin.view.AI', {
 			xtype: 'wtform',
 			title: title,
 			layout: { type: 'table', columns: 2, tableAttrs: { style: 'width: 500px' } },
-			height: 200,
+			height: 250,
 			fieldDefaults: {
 				labelAlign: 'right',
 				labelWidth: 150,

@@ -1337,6 +1337,7 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 					emptyText: '(default)',
 					width: 440,
 					submitEmptyText: false,
+					needLogin: true,
 					listeners: { blur: { fn: me.onBlurAutoSave, scope: me } }
 				}, {
 					xtype: 'sopasswordfield',
@@ -1391,7 +1392,9 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 							var model = me.getModel();
 							if (!model) return;
 							model.set('aiApiBackend', '');
+							model.set('aiApiModel', '');
 							model.set('aiApiToken', '__CLEAR__');
+							me.needLogin = true;
 							me.saveModel({
 								callback: function(success) {
 									if (success) me.loadModel();
