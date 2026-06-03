@@ -147,11 +147,15 @@ Ext.define('Sonicle.webtop.core.ux.field.htmleditor.Field', {
 		};
 		me.callParent([cfg]);
 		
-		me.getToolbarCmp('ai').setLoadMask(new Sonicle.webtop.core.ux.field.htmleditor.AILoadMask({
-			target: me.loadMaskTarget || me,
-			msg: "Thinking..."//,
-			//msgCls: 'ai-mask-message' // Classe per eventuale styling extra
-		}));
+		me.on('render', function() {
+			var target = ( me.loadMaskTarget ?  me.loadMaskTarget.ownerCt : me ) || me;
+			me.getToolbarCmp('ai').setLoadMask(new Sonicle.webtop.core.ux.field.htmleditor.AILoadMask({
+				target: target,
+				useTargetEl: true,
+				msg: "Thinking..."//,
+				//msgCls: 'ai-mask-message' // Classe per eventuale styling extra
+			}));
+		});
 	},
 	
 	statics: {

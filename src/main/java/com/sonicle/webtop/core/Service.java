@@ -441,7 +441,11 @@ public class Service extends BaseService implements EventListener {
 		//TODO: manage licensing
 		vars.put("hasAudit",coreMgr.isAuditEnabled()&&(RunContext.isImpersonated()||RunContext.isPermitted(true, CoreManifest.ID, "AUDIT")));
 		
-		vars.put("hasAI", coreMgr.isAIEnabled()&&RunContext.isPermitted(true, CoreManifest.ID, "AI_ACTIONS", "ACCESS"));
+		boolean aiEnabled = coreMgr.isAIEnabled()&&RunContext.isPermitted(true, CoreManifest.ID, "AI_ACTIONS", "ACCESS");
+		if (aiEnabled) {
+			vars.put("hasAI", aiEnabled);
+			vars.put("aiGeneralMaxTokens", ss.getAiApiMaxTokens());
+		}
 		
 		if (aiToolConfig != null) {
 			vars.put("aiTool", buildClientAITool(aiToolConfig));
@@ -453,9 +457,11 @@ public class Service extends BaseService implements EventListener {
 	private Map<String, Object> buildClientAITool(AIToolConfig cfg) {
 		String userLang = getEnv().getProfile().getLocale().getLanguage();
 		String dialogTitle = cfg.resolve(cfg.getDialogTitle(), userLang);
+		String buttonOk = cfg.resolve(cfg.getButtonOk(), userLang);
 		Map<String, Object> root = new LinkedHashMap<>();
 		List<Map<String, Object>> items = new ArrayList<>();
 		for (AIToolItem it : cfg.getItems()) items.add(buildClientAIToolItem(cfg, userLang, dialogTitle, it));
+		root.put("buttonOk", buttonOk);
 		root.put("items", items);
 		return root;
 	}
@@ -473,8 +479,6 @@ public class Service extends BaseService implements EventListener {
 			o.put("mode", it.getMode() == AIToolMode.SHOW ? "show" : "insert");
 			if (it.requiresSelection()) {
 				o.put("requiresSelection", true);
-				String err = cfg.resolve(it.getNoSelectionError(), userLang);
-				if (err != null) o.put("noSelectionError", err);
 			}
 			AIToolInputSpec in = it.getInput();
 			if (in != null) {
@@ -2069,10 +2073,7 @@ public class Service extends BaseService implements EventListener {
 			if (inSpec == null) rawInput = "";
 			String userLang = getEnv().getProfile().getLocale().getLanguage();
 			if (item.requiresSelection() && StringUtils.isBlank(rawSelection)) {
-				String msg = "Selection required";
-				String localized = aiToolConfig.resolve(item.getNoSelectionError(), userLang);
-				if (!StringUtils.isBlank(localized)) msg = localized;
-				new JsonResult(false, msg).printTo(out);
+				new JsonResult(false, "No selection").printTo(out);
 				return;
 			}
 

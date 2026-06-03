@@ -33,6 +33,8 @@
 Ext.define('Sonicle.webtop.core.ux.field.htmleditor.AILoadMask', {
 	extend: 'Ext.LoadMask',
 	
+	componentCls: 'x-mask-ai',
+	
 	show: function() {
 		var me=this;
 		

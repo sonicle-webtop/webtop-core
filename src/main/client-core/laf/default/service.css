@@ -381,7 +381,9 @@
 .wt-launcher { /* Override this in service-{theme}.css file */ }
 .wt-portal { /* Override this in service-{theme}.css file */ }
 
-
+.x-mask-ai > .x-mask-msg {
+	background-color: transparent;
+}
 .ai-thinking {
     display: flex;
     justify-content: center;

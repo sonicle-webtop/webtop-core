@@ -34,6 +34,8 @@ Ext.define('Sonicle.webtop.core.ux.field.htmleditor.AITool', {
 	extend: 'Sonicle.form.field.tinymce.tool.base.Button',
 	alias: ['widget.wt-htmleditortoolai'],
 
+	buttonOk: 'Ok',
+
 	initComponent: function() {
 		var me = this,
 			cfg = WT.getVar('aiTool'),
@@ -45,6 +47,7 @@ Ext.define('Sonicle.webtop.core.ux.field.htmleditor.AITool', {
 				handler: function() { WT.info(msg); }
 			});
 		} else {
+			me.buttonOk = cfg.buttonOk || 'Ok'; 
 			for (var i = 0; i < cfg.items.length; i++) {
 				menuItems.push(me.buildMenuItem(cfg.items[i]));
 			}
@@ -86,14 +89,18 @@ Ext.define('Sonicle.webtop.core.ux.field.htmleditor.AITool', {
 		if (def.requiresSelection) {
 			selection = me.getEditorSelection();
 			if (!selection || selection === '') {
-				WT.error(def.noSelectionError || 'Editor selection required.');
+				WT.error(WT.res('ai.noSelectionError.message'), {
+					title: WT.res('ai.noSelectionError.tit'),
+					okText: WT.res('act-close')
+				});
 				return;
 			}
 		}
 		if (def.input) {
-			WT.prompt(def.input.question, {
-				title: def.input.title,
+			WT.prompt(def.input.question+'<br><br>', {
+				title: def.label,
 				multiline: !!def.input.multiline,
+				okText: me.buttonOk,
 				fn: function(btn, value) {
 					if (btn !== 'ok') return;
 					if (def.input.required && (!value || value === '')) return;

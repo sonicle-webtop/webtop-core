@@ -65,7 +65,7 @@ Ext.define('Sonicle.webtop.core.admin.view.AI', {
 				WTF.lookupCombo('id', 'desc', {
 						reference: 'cbprovider',
 						fieldLabel: me.res('ai.provider.lbl'),
-						width: 300,
+						width: 400,
 						value: me.provider,
 						colspan: 1,
 						store: {
@@ -106,7 +106,7 @@ Ext.define('Sonicle.webtop.core.admin.view.AI', {
 					fieldLabel: WT.res('opts.ai.fld-max-tokens.lbl'),
 					emptyText: WT.res('opts.ai.fld-max-tokens.emp'),
 					minValue: 0,
-					width: 300,
+					width: 400,
 					value: me.quota,
 					hideTrigger: false,
 					keyNavEnabled: false,
@@ -247,7 +247,7 @@ Ext.define('Sonicle.webtop.core.admin.view.AI', {
 						}),
 						'->',
 						me.addAct('report', {
-							text: null,
+							text: WT.res('act-generate.lbl'),
 							tooltip: WT.res('act-generate.lbl'),
 							iconCls: 'wt-icon-generate',
 							handler: function() {

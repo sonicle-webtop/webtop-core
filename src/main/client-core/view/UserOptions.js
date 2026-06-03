@@ -1293,9 +1293,9 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 						disabled: '{!foCanManageDomainAI}'
 					},
 					fieldLabel: WT.res('opts.ai.fld-max-tokens.lbl'),
-					emptyText: WT.res('opts.ai.fld-domain-max-tokens.emp'),
+					emptyText: WT.res(WT.ID, 'opts.ai.fld-domain-max-tokens.emp', WT.getVar("aiGeneralMaxTokens") || WT.res("opts.ai.fld-user-max-tokens.emp")),
 					minValue: 0,
-					width: 400,
+					width: 440,
 					hideTrigger: false,
 					keyNavEnabled: false,
 					mouseWheelEnabled: false,
@@ -1315,7 +1315,6 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 						fields: ['id', 'desc'],
 						data: [
 							['', WT.res('opts.ai.fld-backend-empty.lbl')],
-							['sonicle', 'Sonicle'],
 							['openai', 'OpenAI'],
 							['claude', 'Claude']
 						]
@@ -1331,7 +1330,8 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 				}), {
 					xtype: 'textfield',
 					bind: {
-						value: '{record.aiApiModel}'
+						value: '{record.aiApiModel}',
+						disabled: '{!foCanManagePersonalAI}'
 					},
 					fieldLabel: WT.res('opts.ai.fld-model.lbl'),
 					emptyText: '(default)',
@@ -1361,7 +1361,7 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 					},
 					fieldLabel: WT.res('opts.ai.fld-max-tokens.lbl'),
 					emptyText: WT.res('opts.ai.fld-user-max-tokens.emp'),
-					width: 400,
+					width: 440,
 					hideTrigger: false,
 					keyNavEnabled: false,
 					mouseWheelEnabled: false,
@@ -1378,7 +1378,7 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 					xtype: 'container',
 					layout: {
 						type: 'hbox',
-						pack: 'center',
+						pack: 'left',
 						align: 'middle'
 					},
 					bind: {

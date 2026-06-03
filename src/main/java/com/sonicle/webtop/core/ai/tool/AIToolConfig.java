@@ -67,6 +67,7 @@ public final class AIToolConfig {
 
 	private final String defaultLanguage;
 	private final Map<String, String> dialogTitle;
+	private final Map<String, String> buttonOk;
 	private final Map<String, String> minimalHtmlFormatHint;
 	private final List<AIToolItem> items;
 	private final Map<String, AIToolItem> index;
@@ -74,11 +75,13 @@ public final class AIToolConfig {
 	private AIToolConfig(
 			String defaultLanguage,
 			Map<String, String> dialogTitle,
+			Map<String, String> buttonOk,
 			Map<String, String> minimalHtmlFormatHint,
 			List<AIToolItem> items,
 			Map<String, AIToolItem> index) {
 		this.defaultLanguage = defaultLanguage;
 		this.dialogTitle = Collections.unmodifiableMap(dialogTitle);
+		this.buttonOk = Collections.unmodifiableMap(buttonOk);
 		this.minimalHtmlFormatHint = Collections.unmodifiableMap(minimalHtmlFormatHint);
 		this.items = Collections.unmodifiableList(items);
 		this.index = Collections.unmodifiableMap(index);
@@ -86,6 +89,7 @@ public final class AIToolConfig {
 
 	public String getDefaultLanguage() { return defaultLanguage; }
 	public Map<String, String> getDialogTitle() { return dialogTitle; }
+	public Map<String, String> getButtonOk() { return buttonOk; }
 	public Map<String, String> getMinimalHtmlFormatHint() { return minimalHtmlFormatHint; }
 	public List<AIToolItem> getItems() { return items; }
 
@@ -122,6 +126,7 @@ public final class AIToolConfig {
 
 		String defaultLanguage = getString(rootObj, "defaultLanguage", DEFAULT_LANGUAGE_FALLBACK);
 		Map<String, String> dialogTitle = parseLangMap(rootObj, "dialogTitle", false, null);
+		Map<String, String> buttonOk = parseLangMap(rootObj, "buttonOk", false, null);
 		Map<String, String> minimalHtmlHint = new LinkedHashMap<>();
 		if (rootObj.has("formatHints") && rootObj.get("formatHints").isJsonObject()) {
 			JsonObject fh = rootObj.getAsJsonObject("formatHints");
@@ -137,7 +142,7 @@ public final class AIToolConfig {
 		for (JsonElement el : itemsEl.getAsJsonArray()) {
 			parsed.add(parseItem(el, idx));
 		}
-		return new AIToolConfig(defaultLanguage, dialogTitle, minimalHtmlHint, parsed, idx);
+		return new AIToolConfig(defaultLanguage, dialogTitle, buttonOk, minimalHtmlHint, parsed, idx);
 	}
 
 	private static AIToolItem parseItem(JsonElement el, Map<String, AIToolItem> idx) throws IOException {
@@ -159,13 +164,11 @@ public final class AIToolConfig {
 		Map<String, String> prompt = null;
 		AIToolInputSpec input = null;
 		boolean requiresSelection = false;
-		Map<String, String> noSelectionError = null;
 
 		if (children.isEmpty()) {
 			mode = AIToolMode.parse(getString(o, "mode", null), AIToolMode.INSERT);
 			prompt = parseLangMap(o, "prompt", true, "leaf '" + id + "'");
 			requiresSelection = getBoolean(o, "requiresSelection", false);
-			noSelectionError = parseLangMap(o, "noSelectionError", false, "leaf '" + id + "'");
 			if (o.has("input") && o.get("input").isJsonObject()) {
 				JsonObject ino = o.getAsJsonObject("input");
 				Map<String, String> question = parseLangMap(ino, "question", true, "input of '" + id + "'");
@@ -175,7 +178,7 @@ public final class AIToolConfig {
 			}
 		}
 
-		AIToolItem item = new AIToolItem(id, label, mode, prompt, input, requiresSelection, noSelectionError, children);
+		AIToolItem item = new AIToolItem(id, label, mode, prompt, input, requiresSelection, children);
 		if (idx.put(id, item) != null) {
 			throw new IOException("ai-tool.json: duplicate id '" + id + "'");
 		}

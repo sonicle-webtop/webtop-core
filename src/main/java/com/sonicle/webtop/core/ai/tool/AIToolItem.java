@@ -53,7 +53,6 @@ public final class AIToolItem {
 	private final Map<String, String> prompt;
 	private final AIToolInputSpec input;
 	private final boolean requiresSelection;
-	private final Map<String, String> noSelectionError;
 	private final List<AIToolItem> children;
 
 	public AIToolItem(
@@ -63,7 +62,6 @@ public final class AIToolItem {
 			Map<String, String> prompt,
 			AIToolInputSpec input,
 			boolean requiresSelection,
-			Map<String, String> noSelectionError,
 			List<AIToolItem> children) {
 		this.id = id;
 		this.label = label == null
@@ -75,9 +73,6 @@ public final class AIToolItem {
 				: Collections.unmodifiableMap(prompt);
 		this.input = input;
 		this.requiresSelection = requiresSelection;
-		this.noSelectionError = noSelectionError == null
-				? Collections.<String, String>emptyMap()
-				: Collections.unmodifiableMap(noSelectionError);
 		this.children = children == null
 				? Collections.<AIToolItem>emptyList()
 				: Collections.unmodifiableList(children);
@@ -89,7 +84,6 @@ public final class AIToolItem {
 	public Map<String, String> getPrompt() { return prompt; }
 	public AIToolInputSpec getInput() { return input; }
 	public boolean requiresSelection() { return requiresSelection; }
-	public Map<String, String> getNoSelectionError() { return noSelectionError; }
 	public List<AIToolItem> getChildren() { return children; }
 
 	public boolean isGroup() { return !children.isEmpty(); }
