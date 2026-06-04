@@ -106,7 +106,7 @@ import com.sonicle.webtop.core.swagger.v1.model.ApiUserBase;
 import java.util.ArrayList;
 import java.util.List;
 import javax.ws.rs.core.Response;
-import org.codehaus.plexus.util.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
