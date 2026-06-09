@@ -91,7 +91,7 @@ Ext.define('Sonicle.webtop.core.ux.field.htmleditor.AITool', {
 			if (!selection || selection === '') {
 				WT.error(WT.res('ai.noSelectionError.message'), {
 					title: WT.res('ai.noSelectionError.tit'),
-					okText: WT.res('act-close')
+					okText: WT.res('act-close.lbl')
 				});
 				return;
 			}
