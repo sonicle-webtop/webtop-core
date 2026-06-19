@@ -36,7 +36,7 @@ Ext.define('Sonicle.webtop.core.view.AIView', {
 	extend: 'WTA.sdk.DockableView',
 	
 	dockableConfig: {
-		title: 'Chiedi alla A.I.',
+		title: '{ai.view.default.tit}',
 		iconCls: 'wt-icon-ai',
 		width: 800,
 		height: 600
@@ -78,7 +78,7 @@ Ext.define('Sonicle.webtop.core.view.AIView', {
 	setAnswer: function(answer, format) {
 		var me = this, aiLoader = me.down('#aiLoader');
 
-		me.setTitle("A.I. answer");
+		me.setTitle(WT.res('ai.view.answer.tit'));
 		if (aiLoader) me.remove(aiLoader);
 		me.add({
 			xtype: 'uxiframe',
@@ -143,13 +143,13 @@ Ext.define('Sonicle.webtop.core.view.AIView', {
 
 	askQuestion: function(sid, action, params, func) {
 		var me = this, format = (params && params.format) || 'text';
-		me.setTitle("A.I. sta pensando...");
+		me.setTitle(WT.res('ai.view.thinking.tit'));
 		me.setBaloons();
 		WT.ajaxReq(sid, action, {
 			timeout: WT.getVar("ajaxLongTimeout"),
 			params: params,
 			callback: function(success,json) {
-				me.setTitle("A.I. ha risposto");
+				me.setTitle(WT.res('ai.view.answered.tit'));
 				if (func) func.apply(this, []);
 				// WT.ajaxReq passes json.success as `success`, so a server-side
 				// {success:false, message:...} (e.g. AIQuotaExceededException)
@@ -166,7 +166,7 @@ Ext.define('Sonicle.webtop.core.view.AIView', {
 				}
 			},
 			failure: function(response) {
-				me.setTitle("A.I. ha avuto un problema...");
+				me.setTitle(WT.res('ai.view.problem.tit'));
 				if (func) func.apply(this, []);
 				if (response.status === 0) {
 					// Could be a timeout or network error
@@ -188,7 +188,7 @@ Ext.define('Sonicle.webtop.core.view.AIView', {
 	 */
 	askRAG: function(sid, action, cfg, func) {
 		var me = this, format = cfg.format || 'text';
-		me.setTitle("A.I. sta pensando...");
+		me.setTitle(WT.res('ai.view.thinking.tit'));
 		me.setBaloons();
 		WT.ajaxReq(sid, action, {
 			timeout: WT.getVar("ajaxLongTimeout"),
@@ -199,7 +199,7 @@ Ext.define('Sonicle.webtop.core.view.AIView', {
 				when: cfg.when||''
 			},
 			callback: function(success,json) {
-				me.setTitle("A.I. ha risposto");
+				me.setTitle(WT.res('ai.view.answered.tit'));
 				if (func) func.apply(this, []);
 				if (!success) {
 					me.setError((json && json.message) ? json.message : 'Request failed');
@@ -213,7 +213,7 @@ Ext.define('Sonicle.webtop.core.view.AIView', {
 				}
 			},
 			failure: function(response) {
-				me.setTitle("A.I. ha avuto un problema...");
+				me.setTitle(WT.res('ai.view.problem.tit'));
 				if (func) func.apply(this, []);
 				if (response.status === 0) {
 					// Could be a timeout or network error
