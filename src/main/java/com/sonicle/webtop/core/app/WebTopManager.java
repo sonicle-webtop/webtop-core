@@ -2128,7 +2128,9 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 		
 		String domainId = atv.getProfileId().getDomainId();
 		ConnectProduct cp = connectProductCache.get(domainId);
-		if (!WT.isLicensed(cp)) throw new WTException("No license found for WebTop Connect");
+		int licret = WT.isLicensed(cp, atv.getProfileId().getUserId());
+		if (licret<1) throw new WTException("No license found for WebTop Connect");
+		else if (licret>1) throw new WTException("License leases exceeded for WebTop Connect");
 	}
 
 	/**
