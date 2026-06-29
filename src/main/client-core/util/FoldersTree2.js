@@ -320,6 +320,7 @@ Ext.define('Sonicle.webtop.core.app.util.FoldersTree2', {
 						return '<span>' + Ext.String.htmlEncode(Ext.isFunction(opts.getNodeText) ? opts.getNodeText.apply(this, [node, val]) : val) + '</span>' + (opts.countField ? countHtml(node.get(opts.countField)) : '');
 
 					} else if (node.isFolder()) {
+						val = Ext.String.htmlEncode(val);
 						if (!isPers) {
 							var ir = node.getItemsRights();
 							if (!ir.CREATE && !ir.UPDATE && !ir.DELETE) meta.tdCls += ' wt-color-off';
