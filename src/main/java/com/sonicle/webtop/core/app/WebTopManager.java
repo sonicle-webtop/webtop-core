@@ -2123,14 +2123,17 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 		}
 	}
 	
-	private void verifyProductLicense(AuthTokenValidated atv) throws WTException {
-		if (atv == null) throw new WTException("AuthTokenValidated is null");
-		
-		String domainId = atv.getProfileId().getDomainId();
-		ConnectProduct cp = connectProductCache.get(domainId);
-		int licret = WT.isLicensed(cp, atv.getProfileId().getUserId());
-		if (licret<1) throw new WTException("No license found for WebTop Connect");
-		else if (licret>1) throw new WTException("License leases exceeded for WebTop Connect");
+	private AuthTokenValidated ensureConnectProductLicensed(final AuthTokenValidated atv) throws WTException {
+		if (atv != null) {
+			ConnectProduct cp = connectProductCache.get(atv.getProfileId().getDomainId());
+			int ret = WT.isLicensed(cp, atv.getProfileId().getUserId());
+			if (ret < 1) {
+				throw new WTException("Missing license for '{}'", ConnectProduct.PRODUCT_NAME);
+			} else if (ret > 1) {
+				throw new WTException("License leases exceeded for '{}'", ConnectProduct.PRODUCT_NAME);
+			}
+		}
+		return atv;
 	}
 
 	/**
@@ -2148,9 +2151,7 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 		final String hash = CryptoUtils.hash(plainToken, DigestAlgorithm.SHA256);
 		Optional<AuthTokenValidated> cached = authAccessTokenCache.getIfPresent(hash);
 		if (cached != null) {
-			AuthTokenValidated atv = cached.orElse(null);
-			verifyProductLicense(atv);
-			return atv;
+			return ensureConnectProductLicensed(cached.orElse(null));
 		}
 		
 		final AuthTokenDAO tokDao = AuthTokenDAO.getInstance();
@@ -2173,8 +2174,7 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 				row.getParentId(),
 				new UserProfileId(row.getDomainId(), row.getUserId())
 			);
-			verifyProductLicense(result);
-			authAccessTokenCache.put(hash, Optional.of(result));
+			authAccessTokenCache.put(hash, Optional.of(ensureConnectProductLicensed(result)));
 			
 			// Best-effort touch; failures are not fatal to validation
 			try {
