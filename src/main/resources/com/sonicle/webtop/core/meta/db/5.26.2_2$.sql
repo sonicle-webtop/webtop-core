@@ -31,7 +31,6 @@ BEGIN
   IF in_maxdate IS NULL THEN
     maxdate := current_date + '10 years'::interval;
   ELSE
-    -- If we add the duration onto the event, then an overlap occurs if dtend <= increased end of range.
     maxdate := in_maxdate + (base_date - dtstart);
   END IF;
 
@@ -45,3 +44,4 @@ BEGIN
 END$BODY$
   LANGUAGE plpgsql IMMUTABLE
   PARALLEL SAFE
+  COST 100;

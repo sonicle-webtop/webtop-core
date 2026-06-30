@@ -16,9 +16,7 @@ BEGIN
     RETURN NULL;
   END IF;
 
-  -- Event duration; zero when there's no dtend
   duration := COALESCE(dtend, dtstart) - dtstart;
-
   mindate := COALESCE(in_mindate, current_date - '10 years'::interval);
   maxdate := COALESCE(in_maxdate, current_date + '10 years'::interval);
 
@@ -26,9 +24,6 @@ BEGIN
     RETURN (dtstart < maxdate AND (dtstart + duration) >= mindate);
   END IF;
 
-  -- Expand the series anchored on DTSTART (correct per RFC 5545 for UNTIL/BYDAY/etc.);
-  -- shift the lower bound of the search window back by the duration instead, so an
-  -- instance whose END falls inside [mindate, maxdate) is still found.
   RETURN EXISTS (
     SELECT 1
     FROM rrule_event_instances_range(dtstart, repeatrule, mindate - duration, maxdate, 60) d
@@ -38,3 +33,4 @@ BEGIN
 END$BODY$
   LANGUAGE plpgsql IMMUTABLE
   PARALLEL SAFE
+  COST 100;
