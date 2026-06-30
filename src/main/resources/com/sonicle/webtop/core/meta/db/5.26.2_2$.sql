@@ -42,7 +42,6 @@ BEGIN
   SELECT d INTO mindate FROM rrule_event_instances_range( base_date, repeatrule, mindate, maxdate, 60 ) d LIMIT 1;
   RETURN FOUND;
 
-END;
-$BODY$
+END$BODY$
   LANGUAGE plpgsql IMMUTABLE
   PARALLEL SAFE
