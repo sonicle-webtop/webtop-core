@@ -35,8 +35,6 @@ BEGIN
     WHERE (d + duration) >= mindate
   );
 
-END;
-$BODY$
+END$BODY$
   LANGUAGE plpgsql IMMUTABLE
   PARALLEL SAFE
-  COST 100
