@@ -121,7 +121,14 @@ Ext.define('Sonicle.webtop.core.admin.view.AI', {
 					text: WT.res('act-save.lbl'),
 					style: 'margin-left: 154px',
 					handler: function() {
-						me.saveConfiguration();
+						WT.confirm(me.res('ai.disclaimer.txt'),function(bid) {
+							if (bid==='yes') {
+								me.saveConfiguration();
+							}
+						}, me, { 
+							title: me.res('ai.disclaimer.tit'),
+							icon: Ext.MessageBox.WARNING
+						});
 					}
 				}
 			]
