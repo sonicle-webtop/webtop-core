@@ -444,38 +444,82 @@ public class WT {
 		return getWTA().getServiceManager().instantiateCoreAdminManager(false, targetProfileId);
 	}
 	
-	public static BaseManager getServiceManager(String serviceId) {
+/*	public static BaseManager getServiceManager(String serviceId) {
 		WebTopSession wts = SessionContext.getCurrentWTSession(false);
 		BaseManager manager = null;
 		if (wts != null) {
+			// For shared managers the session cache holds the shared instance
+			// (acquired at session init); for the rest it's the per-session one.
 			manager = wts.getServiceManager(serviceId);
 		}
 		if (manager == null) {
-			manager = getWTA().getServiceManager().instantiateServiceManager(serviceId, true, RunContext.getRunProfileId());
+			ServiceManager svcm = getWTA().getServiceManager();
+			UserProfileId runPid = RunContext.getRunProfileId();
+			if (svcm.isSharedManagerService(serviceId) && !RunContext.getSysAdminProfileId().equals(runPid)) {
+				// No session (or not cached): route transient/background access to
+				// the shared per-user instance, kept warm by the idle grace.
+				// The SysAdmin profile is deliberately excluded: background tasks
+				// run under the admin subject and would otherwise materialize a
+				// never-evicted shared instance for admin@* on every scheduled run.
+				manager = svcm.getOrTouchSharedManager(serviceId, runPid);
+			} else {
+				manager = svcm.instantiateServiceManager(serviceId, true, runPid);
+			}
 		}
 		return manager;
-		/*
-		if (wts != null) {
-			return wts.getServiceManager(serviceId);
-		} else {
-			return getWTA().getServiceManager().instantiateServiceManager(serviceId, true, RunContext.getRunProfileId());
-		}
-		*/
+		
+		//if (wts != null) {
+		//	return wts.getServiceManager(serviceId);
+		//} else {
+		//	return getWTA().getServiceManager().instantiateServiceManager(serviceId, true, RunContext.getRunProfileId());
+		//}
+		
 		//return RunContext.getWebTopSession().getServiceManager(serviceId);
-	}
+	}*/
 	
 	public static BaseManager getServiceManager(String serviceId, UserProfileId targetProfileId) {
 		return getServiceManager(serviceId, true, targetProfileId);
 	}
 	
 	public static BaseManager getServiceManager(String serviceId, boolean fastInit, UserProfileId targetProfileId) {
-		if (targetProfileId.equals(RunContext.getRunProfileId())) {
-			return getServiceManager(serviceId);
+		ServiceManager svcm = getWTA().getServiceManager();
+		if (svcm.isSharedManagerService(serviceId) && !RunContext.getSysAdminProfileId().equals(targetProfileId)) {
+			// Cross-profile access (e.g. sessionless REST): reuse the shared
+			// per-user instance instead of a throwaway. SysAdmin-target
+			// lookups keep the throwaway path (same rule as above).
+			return svcm.getOrTouchSharedManager(serviceId, targetProfileId);
 		} else {
-			return getWTA().getServiceManager().instantiateServiceManager(serviceId, fastInit, targetProfileId);
+			WebTopSession wts = SessionContext.getCurrentWTSession(false);
+			if (wts != null) {
+				return wts.getServiceManager(serviceId);
+			}
+			return svcm.instantiateServiceManager(serviceId, fastInit, targetProfileId);
 		}
 	}
 	
+	/**
+	 * Acquires the shared per-user Manager for a shared-manager service, holding a
+	 * durable SUBSCRIPTION reference: the instance and its background machinery
+	 * survive with zero web sessions until the matching
+	 * {@link #releaseServiceManagerSubscription} call. Seam for mobile push
+	 * gateways. Returns null for services not using shared managers.
+	 */
+	public static BaseManager acquireServiceManagerSubscription(String serviceId, UserProfileId targetProfileId, String subscriptionId) {
+		ServiceManager svcm = getWTA().getServiceManager();
+		if (!svcm.isSharedManagerService(serviceId)) return null;
+		return svcm.acquireSharedManagerSubscription(serviceId, targetProfileId, subscriptionId);
+	}
+
+	/**
+	 * Releases the durable subscription reference added by
+	 * {@link #acquireServiceManagerSubscription}.
+	 */
+	public static void releaseServiceManagerSubscription(String serviceId, UserProfileId targetProfileId, String subscriptionId) {
+		ServiceManager svcm = getWTA().getServiceManager();
+		if (!svcm.isSharedManagerService(serviceId)) return;
+		svcm.releaseSharedManagerSubscription(serviceId, targetProfileId, subscriptionId);
+	}
+
 	public static DataSource getCoreDataSource() throws WTException {
 		ConnectionManager conm = getWTA().getConnectionManager();
 		return conm.getDataSource();

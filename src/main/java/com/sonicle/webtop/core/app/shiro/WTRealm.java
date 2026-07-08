@@ -232,7 +232,7 @@ public class WTRealm extends AuthorizingRealm {
 			Principal principal = (Principal)principals.getPrimaryPrincipal();
 			LOGGER.trace("doGetAuthorizationInfo [{}]", principal);
 			return loadAuthorizationInfo(principal);
-			
+
 		} catch(Exception ex) {
 			throw new AuthorizationException(ex);
 		}

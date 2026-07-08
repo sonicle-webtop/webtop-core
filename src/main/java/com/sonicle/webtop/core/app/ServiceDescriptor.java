@@ -121,6 +121,15 @@ public class ServiceDescriptor {
 		return (managerClass != null);
 	}
 
+	/**
+	 * True if this service's Manager opts into the app-level per-user shared
+	 * instance model (its class implements {@link com.sonicle.webtop.core.sdk.SharedManager}).
+	 * @return
+	 */
+	public boolean hasSharedManager() {
+		return hasManager() && ClassHelper.isImplementingInterface(managerClass, com.sonicle.webtop.core.sdk.SharedManager.class);
+	}
+
 	public Class getManagerClass() {
 		return managerClass;
 	}

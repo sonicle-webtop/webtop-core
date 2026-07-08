@@ -217,8 +217,9 @@ public class Service extends BaseService {
 	
 	@Override
 	public void initialize() throws Exception {
+		UserProfileId targetProfile = getEnv().getProfileId();
 		core = WT.getCoreManager();
-		coreadm = (CoreAdminManager)WT.getServiceManager(SERVICE_ID);
+		coreadm = (CoreAdminManager)WT.getServiceManager(SERVICE_ID, targetProfile);
 	}
 
 	@Override

@@ -243,6 +243,9 @@ public final class WebTopApp {
 	private TomcatManager tomcat = null;
 	private boolean webappIsTheLatest;
 	private Timer webappVersionCheckTimer = null;
+	private Timer sharedManagerSweepTimer = null;
+	private static final long SHARED_MANAGER_SWEEP_INTERVAL_MS = 5 * 60 * 1000L;
+	private static final long SHARED_MANAGER_IDLE_GRACE_MS = 15 * 60 * 1000L;
 	private FileSystem fileSystem;
 	private MediaTypes mediaTypes = null;
 	private FileTypes fileTypes = null;
@@ -543,6 +546,7 @@ public final class WebTopApp {
 		this.rptMgr = new ReportManager(this).initialize();
 		this.docEditorMgr = new DocEditorManager(this, 30*1000).initialize();
 		this.svcMgr = new ServiceManager(this, this.scheduler).initialize();
+		scheduleSharedManagerSweepTask();
 		this.dsMgr = new DataSourcesManager(this); // Initialization later...
 		
 		this.mediaTypes = MediaTypes.init(this.conMgr);
@@ -552,6 +556,7 @@ public final class WebTopApp {
 	
 	private void internalDestroy() {
 		clearWebappVersionCheckTask();
+		clearSharedManagerSweepTask();
 		this.tomcat = null;
 		
 		try {
@@ -793,6 +798,51 @@ public final class WebTopApp {
 		}
 		webappVersionCheckTimer = null;
 		logger.info("Task 'webappVersionCheck' destroyed");
+	}
+
+	private void scheduleSharedManagerSweepTask() {
+		//interval is read once here (needs a reschedule to change); grace is read
+		//at every tick so it can be tuned at runtime via settings
+		long configuredPeriod = SHARED_MANAGER_SWEEP_INTERVAL_MS;
+		try {
+			configuredPeriod = getCoreServiceSettings().getSharedManagerSweepInterval() * 1000L;
+		} catch (Throwable t) {
+			logger.warn("Cannot read shared-manager sweep interval, using default", t);
+		}
+		if (configuredPeriod <= 0) configuredPeriod = SHARED_MANAGER_SWEEP_INTERVAL_MS;
+		final long period = configuredPeriod;
+		sharedManagerSweepTimer = new Timer("sharedManagerSweep");
+		sharedManagerSweepTimer.schedule(new TimerTask() {
+			@Override
+			public void run() {
+				ThreadState threadState = new SubjectThreadState(adminSubject);
+				try {
+					threadState.bind();
+					long grace = SHARED_MANAGER_IDLE_GRACE_MS;
+					try {
+						grace = getCoreServiceSettings().getSharedManagerIdleGrace() * 1000L;
+					} catch (Throwable t) {
+						logger.warn("Cannot read shared-manager idle grace, using default", t);
+					}
+					if (grace <= 0) grace = SHARED_MANAGER_IDLE_GRACE_MS;
+					ServiceManager svcm = instance.getServiceManager();
+					if (svcm != null) svcm.sweepSharedManagers(grace);
+				} catch (Throwable t) {
+					logger.error("Task 'sharedManagerSweep' failed", t);
+				} finally {
+					threadState.clear();
+				}
+			}
+		}, period, period);
+		logger.info("Task 'sharedManagerSweep' scheduled [{}sec, default grace {}sec]", period/1000, SHARED_MANAGER_IDLE_GRACE_MS/1000);
+	}
+
+	private void clearSharedManagerSweepTask() {
+		if (sharedManagerSweepTimer != null) {
+			sharedManagerSweepTimer.cancel();
+		}
+		sharedManagerSweepTimer = null;
+		logger.info("Task 'sharedManagerSweep' destroyed");
 	}
 	
 	private void onWebappVersionCheck() {

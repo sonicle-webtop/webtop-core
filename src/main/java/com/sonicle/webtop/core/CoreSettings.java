@@ -100,6 +100,20 @@ public class CoreSettings {
 	 * Defines a special milliseconds timeout for selected ajax calls which may be longer than default 30 seconds
 	 */
 	public static final String AJAX_SPECIALTIMEOUT = "ajax.specialtimeout";
+
+	/**
+	 * [system]
+	 * [int]
+	 * Seconds between shared-manager registry sweeps (eviction scans). Read at startup. Defaults to 300.
+	 */
+	public static final String SHARED_MANAGER_SWEEP_INTERVAL = "shared.manager.sweep.interval";
+
+	/**
+	 * [system]
+	 * [int]
+	 * Seconds a shared manager may stay reference-free and untouched before the sweeper evicts it. Read at each sweep. Defaults to 900.
+	 */
+	public static final String SHARED_MANAGER_IDLE_GRACE = "shared.manager.idle.grace";
 	
 	/**
 	 * [domain+system]

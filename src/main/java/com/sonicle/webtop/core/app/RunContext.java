@@ -42,10 +42,12 @@ import com.sonicle.webtop.core.sdk.AuthException;
 import com.sonicle.webtop.core.sdk.UserProfileId;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Locale;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.shiro.SecurityUtils;
+import org.apache.shiro.util.ThreadContext;
 import org.apache.shiro.UnavailableSecurityManagerException;
 import org.apache.shiro.subject.PrincipalCollection;
 import org.apache.shiro.subject.SimplePrincipalCollection;
@@ -58,11 +60,58 @@ import org.apache.shiro.web.subject.WebSubject;
  * @author malbinola
  */
 public class RunContext {
-	
+	private static final String TCKEY_SOFTWARE_NAME = RunContext.class.getName() + ".softwareName";
+	private static final String TCKEY_LOCALE = RunContext.class.getName() + ".locale";
+
 	public static enum AdminScope {
 		SYSADMIN, DOMAINADMIN, WTADMIN;
 	}
-	
+
+	/**
+	 * Sets the thread-scoped software name identifying the protocol/client of
+	 * the request being served (eg. "rest", "rest-caldav", "rest-eas"); it is
+	 * used to attribute audit-log entries. Call it at the protocol entry point
+	 * of the current request. The value lives in Shiro's ThreadContext: it is
+	 * automatically cleared by ThreadState.restore() when the request unwinds,
+	 * so the thread returns to its pool clean. Do NOT rely on it in threads you
+	 * spawn: children get a snapshot copy (InheritableThreadLocal), treat it as
+	 * undefined there.
+	 * @param softwareName The software name, or null to clear.
+	 */
+	public static void setSoftwareName(final String softwareName) {
+		if (softwareName == null) ThreadContext.remove(TCKEY_SOFTWARE_NAME);
+		else ThreadContext.put(TCKEY_SOFTWARE_NAME, softwareName);
+	}
+
+	/**
+	 * Gets the thread-scoped software name of the request being served.
+	 * @return The software name, or null if none was set (eg. web-UI traffic).
+	 */
+	public static String getSoftwareName() {
+		Object value = ThreadContext.get(TCKEY_SOFTWARE_NAME);
+		return (value instanceof String) ? (String)value : null;
+	}
+
+	/**
+	 * Sets the thread-scoped locale override for the request being served:
+	 * BaseManager.guessLocale() returns it, when set, instead of looking up the
+	 * profile locale. Same lifecycle rules as {@link #setSoftwareName(String)}.
+	 * @param locale The locale, or null to clear.
+	 */
+	public static void setLocale(final Locale locale) {
+		if (locale == null) ThreadContext.remove(TCKEY_LOCALE);
+		else ThreadContext.put(TCKEY_LOCALE, locale);
+	}
+
+	/**
+	 * Gets the thread-scoped locale override of the request being served.
+	 * @return The locale, or null if none was set.
+	 */
+	public static Locale getLocale() {
+		Object value = ThreadContext.get(TCKEY_LOCALE);
+		return (value instanceof Locale) ? (Locale)value : null;
+	}
+
 	public static UserProfileId getSysAdminProfileId() {
 		return new UserProfileId(WebTopManager.SYSADMIN_DOMAINID, WebTopManager.SYSADMIN_USERID);
 	}

@@ -131,7 +131,8 @@ public class ServiceManager extends AbstractAppManager<ServiceManager> {
 	private final HashMap<String, String> serviceIdToPublicName = new HashMap<>();
 	private final HashMap<String, String> publicNameToServiceId = new HashMap<>();
 	private final LinkedHashMap<String, BaseBackgroundService> backgroundServices = new LinkedHashMap<>();
-	
+	private final SharedManagerRegistry sharedManagerRegistry = new SharedManagerRegistry(this);
+
 	ServiceManager(WebTopApp wta, Scheduler scheduler) {
 		super(wta);
 		this.scheduler = scheduler;
@@ -256,6 +257,10 @@ public class ServiceManager extends AbstractAppManager<ServiceManager> {
 			if (bgInst != null) cleanupBackgroundService(bgInst);
 		}
 		
+		// Evict all live shared per-user manager instances (runs their
+		// onSharedShutdown), before clearing descriptors below.
+		sharedManagerRegistry.shutdownAll();
+
 		backgroundServices.clear();
 		descriptors.clear();
 		xidToServiceId.clear();
@@ -823,6 +828,75 @@ public class ServiceManager extends AbstractAppManager<ServiceManager> {
 		return new CoreAdminManager(getWebTopApp(), fastInit, targetProfileId);
 	}
 	
+	/**
+	 * True if the given service's Manager opts into the app-level per-user shared
+	 * instance model (see {@link com.sonicle.webtop.core.sdk.SharedManager}).
+	 */
+	public boolean isSharedManagerService(String serviceId) {
+		ServiceDescriptor descr = getDescriptor(serviceId);
+		return (descr != null) && descr.hasSharedManager();
+	}
+
+	/**
+	 * Returns the shared per-user Manager instance for (serviceId, targetProfileId),
+	 * creating and starting it if absent, and registering a durable web-session
+	 * reference keyed by {@code sessionId} that keeps it alive until the matching
+	 * {@link #releaseSharedManager} call.
+	 */
+	public BaseManager acquireSharedManager(String serviceId, UserProfileId targetProfileId, String sessionId) {
+		return sharedManagerRegistry.acquire(serviceId, targetProfileId, SharedManagerRegistry.REF_SESSION + sessionId);
+	}
+
+	/**
+	 * Releases the durable web-session reference added by {@link #acquireSharedManager}.
+	 * The instance is not torn down immediately; the idle sweeper reclaims it once
+	 * no references remain and the grace period elapses.
+	 */
+	public void releaseSharedManager(String serviceId, UserProfileId targetProfileId, String sessionId) {
+		sharedManagerRegistry.release(serviceId, targetProfileId, SharedManagerRegistry.REF_SESSION + sessionId);
+	}
+
+	/**
+	 * Returns the shared per-user Manager instance for (serviceId, targetProfileId),
+	 * creating and starting it if absent, and registering a durable SUBSCRIPTION
+	 * reference keyed by {@code subscriptionId}: the instance (and its background
+	 * machinery) survives with zero web sessions until the matching
+	 * {@link #releaseSharedManagerSubscription} call. Seam for mobile push
+	 * gateways, which need per-user machinery alive while devices are registered.
+	 */
+	public BaseManager acquireSharedManagerSubscription(String serviceId, UserProfileId targetProfileId, String subscriptionId) {
+		return sharedManagerRegistry.acquire(serviceId, targetProfileId, SharedManagerRegistry.REF_SUBSCRIPTION + subscriptionId);
+	}
+
+	/**
+	 * Releases the durable subscription reference added by
+	 * {@link #acquireSharedManagerSubscription}. The instance is not torn down
+	 * immediately; the idle sweeper reclaims it once no references remain and the
+	 * grace period elapses.
+	 */
+	public void releaseSharedManagerSubscription(String serviceId, UserProfileId targetProfileId, String subscriptionId) {
+		sharedManagerRegistry.release(serviceId, targetProfileId, SharedManagerRegistry.REF_SUBSCRIPTION + subscriptionId);
+	}
+
+	/**
+	 * Returns the shared per-user Manager instance for (serviceId, targetProfileId),
+	 * creating and starting it if absent, bumping only its last-access time (no
+	 * durable reference). Used by transient/background access and short REST calls
+	 * that rely on the idle grace to keep the instance warm.
+	 */
+	public BaseManager getOrTouchSharedManager(String serviceId, UserProfileId targetProfileId) {
+		return sharedManagerRegistry.getOrTouch(serviceId, targetProfileId);
+	}
+
+	/**
+	 * Periodic idle-eviction pass over shared per-user Manager instances. Invoked by
+	 * the application sweeper thread (bound to the admin subject).
+	 * @param graceMs Evict instances with no references idle longer than this.
+	 */
+	public void sweepSharedManagers(long graceMs) {
+		sharedManagerRegistry.sweep(graceMs);
+	}
+
 	public BaseManager instantiateServiceManager(String serviceId, boolean fastInit, UserProfileId targetProfileId) {
 		ServiceDescriptor descr = getDescriptor(serviceId);
 		if (!descr.hasManager()) return null;

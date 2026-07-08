@@ -505,7 +505,14 @@ public class WebTopSession {
 			// Skip core service... its manager has already been instantiated above (see: internalInitPrivate)
 			if (!serviceId.equals(CoreManifest.ID) && !serviceId.equals(CoreAdminManifest.ID)) {
 				if (descriptor.hasManager() && !isServiceManagerCached(serviceId)) {
-					managerInst = svcm.instantiateServiceManager(serviceId, false, profile.getId());
+					if (descriptor.hasSharedManager()) {
+						// Shared per-user instance: acquire (creating+starting on
+						// first touch) and hold a durable ref for this session; the
+						// session cache holds the same shared instance for reuse.
+						managerInst = svcm.acquireSharedManager(serviceId, profile.getId(), getId());
+					} else {
+						managerInst = svcm.instantiateServiceManager(serviceId, false, profile.getId());
+					}
 					if (managerInst != null) {
 						cacheServiceManager(serviceId, managerInst);
 					}
@@ -641,6 +648,20 @@ public class WebTopSession {
 	
 	private void emptyServiceManagers() {
 		synchronized(managers) {
+			// Release this session's durable reference on any shared per-user
+			// managers before dropping the map. The instance itself is NOT torn
+			// down here (unlike per-session managers): the registry sweeper evicts
+			// it once no session/subscription references remain past the grace.
+			if (!managers.isEmpty()) {
+				ServiceManager svcm = wta.getServiceManager();
+				UserProfileId pid = getProfileId();
+				String sessionId = getId();
+				for (String serviceId : managers.keySet()) {
+					if (svcm.isSharedManagerService(serviceId)) {
+						svcm.releaseSharedManager(serviceId, pid, sessionId);
+					}
+				}
+			}
 			managers.clear();
 		}
 	}

@@ -70,7 +70,7 @@ public class Me extends MeApi {
 	
 	private CoreManager getManager(UserProfileId targetProfileId) {
 		CoreManager manager = WT.getCoreManager(targetProfileId);
-		manager.setSoftwareName("rest");
+		RunContext.setSoftwareName("rest");
 		return manager;
 	}
 	

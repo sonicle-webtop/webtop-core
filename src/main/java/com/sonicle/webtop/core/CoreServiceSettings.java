@@ -84,6 +84,14 @@ public class CoreServiceSettings extends BaseServiceSettings {
     public int getAjaxLongTimeout() {
         return getInteger(AJAX_LONGTIMEOUT, 300000);
     }
+
+	public int getSharedManagerSweepInterval() {
+		return getInteger(SHARED_MANAGER_SWEEP_INTERVAL, 300); //seconds
+	}
+
+	public int getSharedManagerIdleGrace() {
+		return getInteger(SHARED_MANAGER_IDLE_GRACE, 900); //seconds
+	}
 	
 	public Boolean getDocumentServerEnabled() {
 		return getBoolean(DOCUMENT_SERVER_ENABLED, false);

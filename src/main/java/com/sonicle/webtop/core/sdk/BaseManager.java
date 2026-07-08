@@ -59,9 +59,7 @@ public abstract class BaseManager {
 	public final String SERVICE_ID;
 	private final UserProfileId targetProfile;
 	protected final boolean fastInit;
-	private String softwareName;
-	private Locale locale;
-	
+
 	public final AuditProduct AUDIT_PRODUCT;
 	private boolean auditEnabled = false;
 	
@@ -72,20 +70,15 @@ public abstract class BaseManager {
 		SERVICE_ID = WT.findServiceId(this.getClass());
 		this.fastInit = fastInit;
 		this.targetProfile = targetProfileId;
-		this.softwareName = null;
-		this.locale = guessLocale();
-		
-		// targetProfile can be null in case of public context where 
+
+		// targetProfile can be null in case of public context where
 		// we have no logged user. So check it!
 		//TODO: evaluate whether to create a dedicated dummy user for this (eg. wt-public@domain, ...)
-		boolean setProducts = false;
-		if (RunContext.isSysAdmin()) {
-			if (targetProfileId != null && !StringUtils.isEmpty(targetProfileId.getDomainId()))
-				setProducts = true;
-		}
-		else if (targetProfileId != null) {
-			setProducts = true;
-		}
+		// Derive from the TARGET profile only (domain-scoped licensing): shared
+		// instances can be first-created by ANY caller (user session, sessionless
+		// REST, admin background task) — caller identity must not freeze
+		// audit/AI licensing state on the instance.
+		boolean setProducts = (targetProfileId != null) && !StringUtils.isEmpty(targetProfileId.getDomainId());
 		
 		if (setProducts) {
 			AUDIT_PRODUCT = new AuditProduct(targetProfileId.getDomainId());
@@ -128,6 +121,10 @@ public abstract class BaseManager {
 	}
 	
 	protected final Locale guessLocale() {
+		//a thread-scoped override (set by the protocol entry point of the
+		//request being served) wins over profile lookups
+		Locale tl = RunContext.getLocale();
+		if (tl != null) return tl;
 		UserProfile.Data ud = null;
 		ud = WT.getProfileData(getTargetProfileId());
 		if (ud != null) return ud.getLocale();
@@ -145,38 +142,34 @@ public abstract class BaseManager {
 	}
 	
 	/**
-	 * Returns specified software name that is using this manager. Defaults to null.
+	 * Returns the software name of the request being served (thread-scoped,
+	 * see {@link RunContext#getSoftwareName()}). Defaults to null.
 	 * @return provided software name, or null if no value is provided
 	 */
 	public String getSoftwareName() {
-		return softwareName;
+		return RunContext.getSoftwareName();
 	}
-	
+
 	/**
-	 * Sets the current software name value.
-	 * @param softwareName 
+	 * Sets the software name for the CURRENT THREAD.
+	 * @deprecated Use {@link RunContext#setSoftwareName(String)} instead: the
+	 * value is thread-scoped, not tied to this manager instance.
+	 * @param softwareName
 	 */
+	@Deprecated
 	public void setSoftwareName(String softwareName) {
-		this.softwareName = softwareName;
+		RunContext.setSoftwareName(softwareName);
 	}
-	
+
 	/**
-	 * Gets current locale.
-	 * By default locale is guessed during initialization by taking the first
-	 * non-null value from the following: (1) targetProfile locale,
-	 * (3) runningProfile locale, (3) english locale (fallback).
-	 * @return 
+	 * Gets current locale, dynamically resolved on each call by taking the
+	 * first non-null value from the following: (1) thread-scoped override
+	 * ({@link RunContext#getLocale()}), (2) targetProfile locale,
+	 * (3) runningProfile locale, (4) english locale (fallback).
+	 * @return
 	 */
 	public Locale getLocale() {
-		return locale;
-	}
-	
-	/**
-	 * Sets the current associated locale.
-	 * @param locale 
-	 */
-	public void setLocale(Locale locale) {
-		this.locale = locale;
+		return guessLocale();
 	}
 	
 	/**
@@ -351,7 +344,7 @@ public abstract class BaseManager {
 	 * @param data An optional data (eg. JSON payload) to complete info about operation.
 	 */
 	public <C extends Enum<C>, A extends Enum<A>> void auditLogWrite(final C context, final A action, final Object reference, final Object data) {
-		if (isAuditEnabled()) WT.writeAuditLog(softwareName, SERVICE_ID, context, action, reference, data);
+		if (isAuditEnabled()) WT.writeAuditLog(getSoftwareName(), SERVICE_ID, context, action, reference, data);
 	}
 	
 	/**
@@ -362,7 +355,7 @@ public abstract class BaseManager {
 	 * @param data An optional data (eg. JSON payload) to complete info about operation.
 	 */
 	public void auditLogWrite(final String context, final String action, final String reference, final String data) {
-		if (isAuditEnabled()) WT.writeAuditLog(softwareName, SERVICE_ID, context, action, reference, data);
+		if (isAuditEnabled()) WT.writeAuditLog(getSoftwareName(), SERVICE_ID, context, action, reference, data);
 	}
 	
 	/**
@@ -374,7 +367,7 @@ public abstract class BaseManager {
 	 * @param entries A collection of multiple reference/data objects.
 	 */
 	public <C extends Enum<C>, A extends Enum<A>> void auditLogWrite(final C context, final A action, final Collection<AuditReferenceDataEntry> entries) {
-		if (isAuditEnabled()) WT.writeAuditLog(softwareName, SERVICE_ID, context, action, entries);
+		if (isAuditEnabled()) WT.writeAuditLog(getSoftwareName(), SERVICE_ID, context, action, entries);
 	}
 	
 	/**
@@ -384,7 +377,7 @@ public abstract class BaseManager {
 	 * @param entries A collection of multiple reference/data objects.
 	 */
 	public void auditLogWrite(final String context, final String action, final Collection<AuditReferenceDataEntry> entries) {
-		if (isAuditEnabled()) WT.writeAuditLog(softwareName, SERVICE_ID, context, action, entries);
+		if (isAuditEnabled()) WT.writeAuditLog(getSoftwareName(), SERVICE_ID, context, action, entries);
 	}
 	
 	/**
@@ -396,7 +389,7 @@ public abstract class BaseManager {
 	 * @return The Batch object interface
 	 */
 	public <C extends Enum<C>, A extends Enum<A>> AuditLogManager.Batch auditLogGetBatch(final C context, final A action) {
-		return isAuditEnabled() ? WT.auditLogGetBatch(softwareName, SERVICE_ID, context, action) : null;
+		return isAuditEnabled() ? WT.auditLogGetBatch(getSoftwareName(), SERVICE_ID, context, action) : null;
 	}
 	
 	/**
@@ -406,7 +399,7 @@ public abstract class BaseManager {
 	 * @return The Batch object interface
 	 */
 	public AuditLogManager.Batch auditLogGetBatch(final String context, final String action) {
-		return isAuditEnabled() ? WT.auditLogGetBatch(softwareName, SERVICE_ID, context, action) : null;
+		return isAuditEnabled() ? WT.auditLogGetBatch(getSoftwareName(), SERVICE_ID, context, action) : null;
 	}
 	
 	/**

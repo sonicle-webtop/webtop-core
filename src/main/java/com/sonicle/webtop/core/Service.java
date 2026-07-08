@@ -312,15 +312,15 @@ public class Service extends BaseService implements EventListener {
 	//}
 	
 	private CoreManager getCoreManager() {
-		return (CoreManager)WT.getServiceManager(SERVICE_ID);
+		return (CoreManager)WT.getServiceManager(SERVICE_ID, getEnv().getProfileId());
 	}
 	
 	private CoreAdminManager getCoreAdminManager() {
-		return (CoreAdminManager)WT.getServiceManager(CoreAdminManifest.ID);
+		return (CoreAdminManager)WT.getServiceManager(CoreAdminManifest.ID, getEnv().getProfileId());
 	}
 	
 	private IVfsManager getVfsManager() {
-		return (IVfsManager)WT.getServiceManager("com.sonicle.webtop.vfs");
+		return (IVfsManager)WT.getServiceManager("com.sonicle.webtop.vfs", getEnv().getProfileId());
 	}
 
 	@Override
