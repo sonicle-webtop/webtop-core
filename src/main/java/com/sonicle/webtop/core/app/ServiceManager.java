@@ -898,6 +898,10 @@ public class ServiceManager extends AbstractAppManager<ServiceManager> {
 	}
 
 	public BaseManager instantiateServiceManager(String serviceId, boolean fastInit, UserProfileId targetProfileId) {
+		// CoreManager doesn't follow the (boolean, UserProfileId) constructor
+		// convention (it needs the WebTopApp handle): use its dedicated factory
+		// so the registry create path works for core too.
+		if (CoreManifest.ID.equals(serviceId)) return instantiateCoreManager(fastInit, targetProfileId);
 		ServiceDescriptor descr = getDescriptor(serviceId);
 		if (!descr.hasManager()) return null;
 		

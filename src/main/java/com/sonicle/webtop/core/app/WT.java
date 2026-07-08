@@ -412,30 +412,39 @@ public class WT {
 			manager = (CoreManager)wts.getServiceManager(CoreManifest.ID);
 		}
 		if (manager == null) {
-			// For admin subject during application startup
-			manager = getWTA().getServiceManager().instantiateCoreManager(false, RunContext.getRunProfileId());
+			ServiceManager svcm = getWTA().getServiceManager();
+			UserProfileId runPid = RunContext.getRunProfileId();
+			if (svcm.isSharedManagerService(CoreManifest.ID) && !RunContext.getSysAdminProfileId().equals(runPid)) {
+				// No session (or not cached): route transient/background access
+				// to the shared per-user instance. The SysAdmin profile keeps the
+				// throwaway path (same rule as getServiceManager) — background
+				// tasks run under the admin subject and would otherwise
+				// materialize a never-evicted shared instance for admin@*.
+				manager = (CoreManager)svcm.getOrTouchSharedManager(CoreManifest.ID, runPid);
+			} else {
+				// For admin subject during application startup
+				manager = svcm.instantiateCoreManager(false, runPid);
+			}
 		}
 		return manager;
-		/*
-		if(wts != null) {
-			return (CoreManager)wts.getServiceManager(CoreManifest.ID);
-		} else {
-			// For admin subject during application startup
-			return getWTA().getServiceManager().instantiateCoreManager(false, RunContext.getRunProfileId());
-		}
-		*/
-		//return RunContext.getWebTopSession().getCoreManager();
 	}
-	
+
 	public static CoreManager getCoreManager(UserProfileId targetProfileId) {
 		return getCoreManager(true, targetProfileId);
 	}
-	
+
 	public static CoreManager getCoreManager(boolean fastInit, UserProfileId targetProfileId) {
 		if(targetProfileId.equals(RunContext.getRunProfileId())) {
 			return getCoreManager();
 		} else {
-			return getWTA().getServiceManager().instantiateCoreManager(fastInit, targetProfileId);
+			ServiceManager svcm = getWTA().getServiceManager();
+			if (svcm.isSharedManagerService(CoreManifest.ID) && !RunContext.getSysAdminProfileId().equals(targetProfileId)) {
+				// Cross-profile access: reuse the target user's shared instance;
+				// SysAdmin-target lookups keep the throwaway path (same rule as
+				// getServiceManager).
+				return (CoreManager)svcm.getOrTouchSharedManager(CoreManifest.ID, targetProfileId);
+			}
+			return svcm.instantiateCoreManager(fastInit, targetProfileId);
 		}
 	}
 	

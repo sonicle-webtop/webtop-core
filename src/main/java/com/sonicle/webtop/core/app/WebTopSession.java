@@ -427,7 +427,15 @@ public class WebTopSession {
 		
 		emptyServiceManagers();
 		
-		CoreManager core = svcMgr.instantiateCoreManager(false, profileId);
+		CoreManager core;
+		if (svcMgr.isSharedManagerService(CoreManifest.ID) && !RunContext.getSysAdminProfileId().equals(profileId)) {
+			// Shared per-user instance, kept alive by this session's durable
+			// reference (released in emptyServiceManagers). SysAdmin sessions
+			// keep a private instance: the registry never hosts admin@*.
+			core = (CoreManager)svcMgr.acquireSharedManager(CoreManifest.ID, profileId, getId());
+		} else {
+			core = svcMgr.instantiateCoreManager(false, profileId);
+		}
 		cacheServiceManager(CoreManifest.ID, core);
 		CoreAdminManager coreadmin = svcMgr.instantiateCoreAdminManager(false, profileId);
 		cacheServiceManager(CoreAdminManifest.ID, coreadmin);

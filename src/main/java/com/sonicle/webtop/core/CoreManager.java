@@ -171,6 +171,7 @@ import com.sonicle.webtop.core.model.TagBase;
 import com.sonicle.webtop.core.model.TagListOption;
 import com.sonicle.webtop.core.products.CustomFieldsProduct;
 import com.sonicle.webtop.core.sdk.BaseManager;
+import com.sonicle.webtop.core.sdk.SharedManager;
 import com.sonicle.webtop.core.sdk.EventManager;
 import com.sonicle.webtop.core.sdk.ReminderInApp;
 import com.sonicle.webtop.core.sdk.UserProfile;
@@ -207,7 +208,7 @@ import org.slf4j.Logger;
  *
  * @author malbinola
  */
-public class CoreManager extends BaseManager {
+public class CoreManager extends BaseManager implements SharedManager {
 	private static final Logger logger = WT.getLogger(CoreManager.class);
 	
 	public static final String RECIPIENT_PROVIDER_BUILTIN_AUTO_SUFFIX = "auto";
@@ -219,14 +220,14 @@ public class CoreManager extends BaseManager {
 	private WebTopApp wta = null;
 	private final CacheRecipientsProvider cacheRecipientsProvider = new CacheRecipientsProvider();
 	
-	private PbxProvider pbx=null;
-	private SmsProvider sms=null;
-	
+	private volatile PbxProvider pbx=null;
+	private volatile SmsProvider sms=null;
+
 	public final CustomFieldsProduct CUSTOM_FIELD_PRODUCT;
 	private final boolean cfieldsLicensed;
 	private static final int MAX_CFIELDS_FREE = 6*2/4; // -> 3
-	private boolean webtopRcptProviderEnabled = true;
-	private boolean autoRcptProviderEnabled = true;
+	private final boolean webtopRcptProviderEnabled;
+	private final boolean autoRcptProviderEnabled;
 	
 	/**
 	 * @deprecated use lookupProfilePersonalInfo instead (will be removed in v.5.16.0)
@@ -260,22 +261,38 @@ public class CoreManager extends BaseManager {
 		super(fastInit, targetProfileId);
 		this.wta = wta;
 		
-		if (targetProfileId != null && !RunContext.isSysAdmin()) {
+		// gate on the TARGET profile, never the running caller: on a shared
+		// instance the first toucher may be an admin-context thread and its
+		// identity must not freeze licensing state for the target user
+		if (targetProfileId != null && !RunContext.isSysAdmin(targetProfileId)) {
 			CUSTOM_FIELD_PRODUCT = new CustomFieldsProduct(targetProfileId.getDomainId());
 			cfieldsLicensed = WT.isLicensed(CUSTOM_FIELD_PRODUCT, targetProfileId.getUserId()) > 0;
-			
+
 			CoreServiceSettings css = new CoreServiceSettings(CoreManifest.ID, targetProfileId.getDomainId());
 			webtopRcptProviderEnabled = css.getRecipientWebTopProviderEnabled();
 			autoRcptProviderEnabled = css.getRecipientAutoProviderEnabled();
-			
+
 		} else {
 			CUSTOM_FIELD_PRODUCT = null;
 			cfieldsLicensed = false;
+			webtopRcptProviderEnabled = true;
+			autoRcptProviderEnabled = true;
 		}
 			
 		if(!fastInit) {
 			//initAllowedServices();
 		}
+	}
+
+	@Override
+	public void onSharedStartup() {
+		logger.info("[{}] shared CoreManager created", getTargetProfileId());
+	}
+
+	@Override
+	public void onSharedShutdown() {
+		logger.info("[{}] shared CoreManager shutting down", getTargetProfileId());
+		cacheRecipientsProvider.clear();
 	}
 	
 	public void addListener(final EventListener listener) {
@@ -295,10 +312,10 @@ public class CoreManager extends BaseManager {
 	}
 	*/
 	
-	private void initPbx() {
+	private synchronized void initPbx() {
 		if (pbx==null) {
 			UserProfileId pid=getTargetProfileId();
-			CoreServiceSettings css = new CoreServiceSettings(CoreManifest.ID, pid.getDomainId());		
+			CoreServiceSettings css = new CoreServiceSettings(CoreManifest.ID, pid.getDomainId());
 			String provider=css.getPbxProvider();
 			if (provider!=null) {
 				pbx=PbxProvider.getInstance(provider, pid);
@@ -306,13 +323,17 @@ public class CoreManager extends BaseManager {
 		}
 	}
 
-	private void initSms() {
+	private synchronized void initSms() {
 		if (sms==null) {
 			UserProfileId pid=getTargetProfileId();
-			CoreServiceSettings css = new CoreServiceSettings(CoreManifest.ID, pid.getDomainId());		
+			CoreServiceSettings css = new CoreServiceSettings(CoreManifest.ID, pid.getDomainId());
 			String provider=css.getSmsProvider();
 			if (provider!=null) {
-				sms=SmsProvider.getInstance(getLocale(), provider, pid);
+				// the provider outlives the creating request on a shared instance:
+				// resolve the TARGET user's locale, never the calling thread's
+				UserProfile.Data ud = WT.getProfileData(pid);
+				Locale locale = (ud != null) ? ud.getLocale() : WT.LOCALE_ENGLISH;
+				sms=SmsProvider.getInstance(locale, provider, pid);
 			}
 		}
 	}
