@@ -70,8 +70,12 @@ public class BaseRestApiUtils {
 	}
 	
 	public static DateTime parseDateTimeISO(final String s) throws ParseException {
+		return parseDateTimeISO(s, false);
+	}
+	
+	public static DateTime parseDateTimeISO(final String s, final boolean silent) throws ParseException {
 		DateTime dt = JodaTimeUtils.parseDateTimeISO(s);
-		if (dt == null) throw new ParseException(ExceptionUtils.msg("Unable to parse '{}' as ISO DateTime", s), 0);
+		if (!silent && dt == null) throw new ParseException(ExceptionUtils.msg("Unable to parse '{}' as ISO DateTime", s), 0);
 		return dt;
 	}
 	
