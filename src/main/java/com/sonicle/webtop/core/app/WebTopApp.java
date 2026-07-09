@@ -111,6 +111,8 @@ import jakarta.mail.internet.MimeBodyPart;
 import jakarta.mail.internet.MimeMessage;
 import jakarta.mail.internet.MimeMultipart;
 import jakarta.mail.internet.MimeUtility;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.InputStream;
@@ -1386,11 +1388,10 @@ public final class WebTopApp {
 		MimeMessage mimeMessage = null;
 		if (message instanceof MimeMessage) {
 			try {
-				QueueOutputStream os = new QueueOutputStream();
-				try (InputStream is = os.newQueueInputStream()) {
-					mimeMessage = new MimeMessage(transportSession, is);
-					mimeMessage.saveChanges();
-				}
+				mimeMessage = (MimeMessage) message;
+				ByteArrayOutputStream bos = new ByteArrayOutputStream();
+				mimeMessage.writeTo(bos);
+				mimeMessage = new MimeMessage(transportSession, new ByteArrayInputStream(bos.toByteArray()));
 			} catch (IOException | MessagingException ex) {
 				throw new WTEmailSendException(false, false, "Unable to create mimeMessage", ex);
 			}
