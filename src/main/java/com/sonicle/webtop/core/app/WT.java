@@ -789,6 +789,11 @@ public class WT {
 		return (ud != null) ? ud.getPersonalEmail(): null;
 	}
 	
+	public static boolean matchesProfilePersonalEmail(final String emailAddress, final UserProfileId profileId) {
+		InternetAddress ia = getProfilePersonalAddress(profileId);
+		return (ia == null) ? false : StringUtils.equalsIgnoreCase(ia.getAddress(), emailAddress);
+	}
+	
 	/**
 	 * Gets the profile/authentication (email) address associated to the passed profile ID.
 	 * @param profileId The target profile ID to lookup.
@@ -797,6 +802,11 @@ public class WT {
 	public static InternetAddress getProfileAddress(final UserProfileId profileId) {
 		UserProfile.Data ud = getProfileData(profileId);
 		return (ud != null) ? ud.getProfileEmail(): null;
+	}
+	
+	public static boolean matchesProfileEmail(final String emailAddress, final UserProfileId profileId) {
+		InternetAddress ia = getProfileAddress(profileId);
+		return (ia == null) ? false : StringUtils.equalsIgnoreCase(ia.getAddress(), emailAddress);
 	}
 	
 	public static String lookupCoreResource(Locale locale, String key) {
