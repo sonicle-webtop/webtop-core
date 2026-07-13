@@ -430,7 +430,7 @@ public class CoreServiceSettings extends BaseServiceSettings {
 	
 	public String getPopularMeetingProviders() {
 		//https://www.dgicommunications.com/video-conferencing-software/
-		return getString(POPULAR_MEETING_PROVIDERS, "Google Meet=https://meet.google.com/,Microsoft Teams=https://teams.microsoft.com/l/meetup-join/,Zoom=https://*.zoom.us/j/,Jitsi Meet=https://meet.jit.si/");
+		return getString(POPULAR_MEETING_PROVIDERS, "Google Meet=https://meet.google.com/,Microsoft Teams=https://teams.microsoft.com/l/meetup-join/,Microsoft Teams=https://teams.microsoft.com/meet/,Zoom=https://*.zoom.us/j/,Jitsi Meet=https://meet.jit.si/");
 	}
 	
 	public Meeting.Provider getMeetingProvider() {
