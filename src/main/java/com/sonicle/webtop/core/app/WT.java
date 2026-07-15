@@ -66,6 +66,7 @@ import com.sonicle.webtop.core.util.RRuleStringify;
 import freemarker.ext.beans.BeansWrapper;
 import freemarker.template.Template;
 import freemarker.template.TemplateException;
+import jakarta.mail.Address;
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -914,16 +915,32 @@ public class WT {
 		getWTA().sendEmailMessage(sendingProfileId, message, null);
 	}
 	
+	public static void sendEmailMessage(final UserProfileId sendingProfileId, final MimeMessage message, final Address[] transportRecipients) throws WTEmailSendException {
+		getWTA().sendEmailMessage(sendingProfileId, message, transportRecipients, null);
+	}
+	
 	public static void sendEmailMessage(final UserProfileId sendingProfileId, final MimeMessage message, final String moveToFolderAfterSent) throws WTEmailSendException {
 		getWTA().sendEmailMessage(sendingProfileId, message, moveToFolderAfterSent);
+	}
+	
+	public static void sendEmailMessage(final UserProfileId sendingProfileId, final MimeMessage message, final Address[] transportRecipients, final String moveToFolderAfterSent) throws WTEmailSendException {
+		getWTA().sendEmailMessage(sendingProfileId, message, transportRecipients, moveToFolderAfterSent);
 	}
 	
 	public static void sendEmailMessage(final UserProfileId sendingProfileId, final EmailMessage message) throws WTEmailSendException {
 		getWTA().sendEmailMessage(sendingProfileId, message, null);
 	}
 	
+	public static void sendEmailMessage(final UserProfileId sendingProfileId, final EmailMessage message, final Address[] transportRecipients) throws WTEmailSendException {
+		getWTA().sendEmailMessage(sendingProfileId, message, transportRecipients, null);
+	}
+	
 	public static void sendEmailMessage(final UserProfileId sendingProfileId, final EmailMessage message, final String moveToFolderAfterSent) throws WTEmailSendException {
 		getWTA().sendEmailMessage(sendingProfileId, message, moveToFolderAfterSent);
+	}
+	
+	public static void sendEmailMessage(final UserProfileId sendingProfileId, final EmailMessage message, final Address[] transportRecipients, final String moveToFolderAfterSent) throws WTEmailSendException {
+		getWTA().sendEmailMessage(sendingProfileId, message, transportRecipients, moveToFolderAfterSent);
 	}
 	
 	public static void sendEmailMessage(final UserProfileId sendingProfileId, final InternetAddress from, final Collection<Recipient> recipients, final String subject, final String htmlBody) throws WTEmailSendException {

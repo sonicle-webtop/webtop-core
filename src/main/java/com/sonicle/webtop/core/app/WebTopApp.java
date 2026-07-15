@@ -79,6 +79,7 @@ import freemarker.cache.TemplateLoader;
 import freemarker.template.Configuration;
 import freemarker.template.DefaultObjectWrapper;
 import freemarker.template.Template;
+import jakarta.mail.Address;
 import jakarta.mail.Folder;
 import java.io.File;
 import java.io.IOException;
@@ -1318,15 +1319,94 @@ public final class WebTopApp {
 		return session;
 	}
 	
+	/**
+	 * Sends a jakarta.mail.internet.MimeMessage on behalf of the given
+	 * sending profile, using the recipients already present in the
+	 * message, and optionally saves a copy of the sent message into a
+	 * mailbox folder.
+	 *
+	 * @param sendingProfileId the profile on whose behalf the message is sent
+	 * @param message the MimeMessage to send
+	 * @param moveToFolderAfterSent name of the folder to copy the sent message into, or null/blank to skip this step
+	 * @throws WTEmailSendException if the message cannot be sent, or if saving the copy into the folder fails
+	 */
 	public void sendEmailMessage(final UserProfileId sendingProfileId, final MimeMessage message, final String moveToFolderAfterSent) throws WTEmailSendException {
 		sendEmailMessage(sendingProfileId, (Object)message, moveToFolderAfterSent);
 	}
 	
+	/**
+	 * Sends a jakarta.mail.internet.MimeMessage on behalf of the given
+	 * sending profile, using an explicit list of transport-level
+	 * recipients, and optionally saves a copy of the sent message into a
+	 * mailbox folder.
+	 *
+	 * @param sendingProfileId the profile on whose behalf the message is sent
+	 * @param message the MimeMessage to send
+	 * @param transportRecipients explicit recipients for the transport-level send, or null to use the message's own recipients
+	 * @param moveToFolderAfterSent name of the folder to copy the sent message into, or null/blank to skip this step
+	 * @throws WTEmailSendException if the message cannot be sent, or if saving the copy into the folder fails
+	 */
+	public void sendEmailMessage(final UserProfileId sendingProfileId, final MimeMessage message, final Address[] transportRecipients, final String moveToFolderAfterSent) throws WTEmailSendException {
+		sendEmailMessage(sendingProfileId, (Object)message, transportRecipients, moveToFolderAfterSent);
+	}
+	
+	/**
+	 * Sends a com.sonicle.mail.email.EmailMessage on behalf of the given
+	 * sending profile, using the recipients already present in the
+	 * message, and optionally saves a copy of the sent message into a
+	 * mailbox folder.
+	 *
+	 * @param sendingProfileId the profile on whose behalf the message is sent
+	 * @param message the EmailMessage to send
+	 * @param moveToFolderAfterSent name of the folder to copy the sent message into, or null/blank to skip this step
+	 * @throws WTEmailSendException if the message cannot be sent, or if saving the copy into the folder fails
+	 */
 	public void sendEmailMessage(final UserProfileId sendingProfileId, final EmailMessage message, final String moveToFolderAfterSent) throws WTEmailSendException {
 		sendEmailMessage(sendingProfileId, (Object)message, moveToFolderAfterSent);
 	}
 	
+	/**
+	 * Sends a com.sonicle.mail.email.EmailMessage on behalf of the given
+	 * sending profile, using an explicit list of transport-level
+	 * recipients, and optionally saves a copy of the sent message into a
+	 * mailbox folder.
+	 *
+	 * @param sendingProfileId the profile on whose behalf the message is sent
+	 * @param message the EmailMessage to send
+	 * @param transportRecipients explicit recipients for the transport-level send, or null to use the message's own recipients
+	 * @param moveToFolderAfterSent name of the folder to copy the sent message into, or null/blank to skip this step
+	 * @throws WTEmailSendException if the message cannot be sent, or if saving the copy into the folder fails
+	 */
+	public void sendEmailMessage(final UserProfileId sendingProfileId, final EmailMessage message, final Address[] transportRecipients, final String moveToFolderAfterSent) throws WTEmailSendException {
+		sendEmailMessage(sendingProfileId, (Object)message, transportRecipients, moveToFolderAfterSent);
+	}
+	
+	/**
+	 * Internal overload that delegates to the full implementation using
+	 * the recipients already present in the message (no explicit
+	 * transport-level recipients).
+	 *
+	 * @param sendingProfileId the profile on whose behalf the message is sent
+	 * @param message the message to send, either a MimeMessage or an EmailMessage
+	 * @param moveToFolderAfterSent name of the folder to copy the sent message into, or null/blank to skip this step
+	 * @throws WTEmailSendException if the message cannot be sent, or if saving the copy into the folder fails
+	 */
 	private void sendEmailMessage(final UserProfileId sendingProfileId, final Object message, final String moveToFolderAfterSent) throws WTEmailSendException {
+		sendEmailMessage(sendingProfileId, message, null, moveToFolderAfterSent);
+	}
+	
+	/**
+	 * Core implementation that sends an email message (MimeMessage or
+	 * EmailMessage) on behalf of the given sending profile and,
+	 * optionally, saves a copy of the sent message into a mailbox folder.
+	 *
+	 * @param sendingProfileId the profile on whose behalf the message is sent
+	 * @param message the message to send, either a MimeMessage or an EmailMessage
+	 * @param transportRecipients explicit recipients for the transport-level send, or null to use the message's own recipients
+	 * @param moveToFolderAfterSent name of the folder to copy the sent message into, or null/blank to skip this step
+	 * @throws WTEmailSendException if the running profile is not authorized to send on behalf of sendingProfileId, if the message type is not supported, if the Transport session or the MimeMessage cannot be created, if sending fails, or if saving the copy into the folder fails
+	 */
+	private void sendEmailMessage(final UserProfileId sendingProfileId, final Object message, final Address[] transportRecipients, final String moveToFolderAfterSent) throws WTEmailSendException {
 		Check.notNull(sendingProfileId, "sendingProfileId");
 		Check.notNull(message, "message");
 		
@@ -1410,7 +1490,7 @@ public final class WebTopApp {
 		Transport transport = null;
 		try {
 			transport = TransportUtils.open(transportSession, transportParams.getProtocol());
-			TransportUtils.send(transport, mimeMessage);
+			TransportUtils.send(transport, mimeMessage, transportRecipients);
 			
 		} catch (MessagingException ex) {
 			throw new WTEmailSendException(false, false, "Unable to send message", ex);
