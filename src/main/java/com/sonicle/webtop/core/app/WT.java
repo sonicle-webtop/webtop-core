@@ -999,7 +999,7 @@ public class WT {
 		getWTA().sendEmail(session, from, to, cc, bcc, subject, part);
 	}
 	
-	public static RRuleStringify.Strings getRRuleStringifyStrings(Locale locale) {
+	public static RRuleStringify.Strings getRRuleStringifyStrings(final Locale locale) {
 		RRuleStringify.Strings strings = new RRuleStringify.Strings(locale);
 		strings.freqSecondly = WT.lookupCoreResource(locale, "rr.stringify.freq.secondly");
 		strings.freqHourly = WT.lookupCoreResource(locale, "rr.stringify.freq.hourly");
@@ -1027,7 +1027,8 @@ public class WT {
 		strings.onThe2ndLast = WT.lookupCoreResource(locale, "rr.stringify.onThe2ndLast");
 		strings.time = WT.lookupCoreResource(locale, "rr.stringify.time");
 		strings.times = WT.lookupCoreResource(locale, "rr.stringify.times");
-		strings.endsBy = WT.lookupCoreResource(locale, "rr.stringify.endsBy");
+		strings.endsByUntil = WT.lookupCoreResource(locale, "rr.stringify.endsBy.until");
+		strings.endsByCount = WT.lookupCoreResource(locale, "rr.stringify.endsBy.count");
 		strings.nth1st = WT.lookupCoreResource(locale, "rr.stringify.nth.1st");
 		strings.nth2nd = WT.lookupCoreResource(locale, "rr.stringify.nth.2nd");
 		strings.nth3rd = WT.lookupCoreResource(locale, "rr.stringify.nth.3rd");
