@@ -15,9 +15,9 @@
     --wt-theme-color-surface-l4: #D9E8FB;
     --wt-theme-color-n1: #000000; /* Black */
     --wt-theme-color-n1-inv: #ffffff; /* White */
-    --wt-theme-color-n2: #000000; /* Black */
-    --wt-theme-color-n3: #000000; /* Black */
-    /*--wt-theme-color-1: */
+    --wt-theme-color-n2: #333333;
+    --wt-theme-color-n3: #666666;
+    --wt-theme-color-1: #567CAE;
     /*--wt-theme-color-2: */
     --wt-theme-color-3: #c7c7c7;
     --wt-theme-color-off: #b4b4b4;
