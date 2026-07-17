@@ -1157,97 +1157,11 @@ public class WebTopSession {
 		js.appManifest.framework = "ext";
 		js.appManifest.toolkit = "classic";
 		
-		//TODO: rendere dinamico il caricamento delle librerie, permettendo ai servizi di aggiungere le loro
-		
-		// Do not replace 0.0.0 with the real version, it limits server traffic.
-		final String VENDOR_PATH = "resources/com.sonicle.webtop.core/0.0.0/resources/vendor";
-		final String LIBS_PATH = "resources/com.sonicle.webtop.core/0.0.0/resources/libs";
-		
 		// Include external libraries references
-		js.appManifest.addJs(VENDOR_PATH + "/jquery/3.3.1/" + "jquery.min.js");
-		js.appManifest.addJs(VENDOR_PATH + "/spark-md5/3.0.0/" + "spark-md5.min.js");
-		js.appManifest.addJs(VENDOR_PATH + "/js-emoji/3.4.1/" + "emoji.min.js");
-		js.appManifest.addJs(VENDOR_PATH + "/ion.sound/3.0.7/" + "ion.sound.min.js");
-		js.appManifest.addJs(VENDOR_PATH + "/linkify/2.1.6/" + "linkify.min.js");
-		js.appManifest.addJs(VENDOR_PATH + "/linkify/2.1.6/" + "linkify-string.min.js");
-		js.appManifest.addJs(VENDOR_PATH + "/screenfull/3.3.2/" + "screenfull.min.js");
-		js.appManifest.addJs(VENDOR_PATH + "/atmosphere/2.3.9/" + "atmosphere.min.js");
-		js.appManifest.addJs(VENDOR_PATH + "/jsxc/3.4.0/" + "jsxc.dep.js");
-		js.appManifest.addJs(VENDOR_PATH + "/tinymce/7.9.1/" + "tinymce.min.js");
-		js.appManifest.addJs(VENDOR_PATH + "/plupload/2.3.6/" + "plupload.full.min.js"); // Remember to update paths in Factory.js
-		//js.appManifest.addJs(VENDOR_PATH + "/rrule/2.1.0/" + "rrule.min.js");
-		js.appManifest.addJs(VENDOR_PATH + "/rrule/2.7.1/" + "rrule.min.js");
-		js.appManifest.addJs(VENDOR_PATH + "/markjs/8.11.1/" + "mark.min.js");
-		js.appManifest.addJs(VENDOR_PATH + "/search-string/3.1.0/" + "search-string.min.js");
-		js.appManifest.addJs(VENDOR_PATH + "/jsdifflib/1.1.0/" + "jsdifflib.min.js");
-		js.appManifest.addJs(VENDOR_PATH + "/guess-language/" + "_languageData.js");
-		js.appManifest.addJs(VENDOR_PATH + "/guess-language/" + "guessLanguage.js");
-		js.appManifest.addJs(VENDOR_PATH + "/showdown/1.9.1/" + "showdown.min.js");
-		js.appManifest.addCss(VENDOR_PATH + "/github-markdown/4.0.0/" + "github-markdown.min.css");
-		js.appManifest.addJs(VENDOR_PATH + "/codemirror/5.65.2/" + "codemirror.min.js");
-		js.appManifest.addJs(VENDOR_PATH + "/codemirror/5.65.2/mode/sql/" + "sql.min.js");
-		js.appManifest.addCss(VENDOR_PATH + "/codemirror/5.65.2/" + "codemirror.min.css");
-		js.appManifest.addJs(VENDOR_PATH + "/jexl/2.3.0/" + "jexl.min.js");
-		js.appManifest.addJs(VENDOR_PATH + "/fullcalendar/6.1.18-premium/dist/" + "index.global.min.js");
-		js.appManifest.addJs(VENDOR_PATH + "/fullcalendar/6.1.18-premium/packages/core/locales/" + locale.getLanguage() + ".global.min.js");
-		
-		// Uncomment these lines to load debug versions of the libraries ----->
-		//js.appManifest.addJs(VENDOR_PATH + "/jsxc/3.4.0/" + "jsxc.dep.js");
-		//js.appManifest.addJs(VENDOR_PATH + "/tinymce/6.3.1/" + "tinymce.js");
-		//js.appManifest.addJs(VENDOR_PATH + "/tinymce/7.9.1/" + "tinymce.js");
-		//js.appManifest.addJs(VENDOR_PATH + "/plupload/2.3.6/" + "moxie.js");
-		//js.appManifest.addJs(VENDOR_PATH + "/plupload/2.3.6/" + "plupload.dev.js");
-		// <-------------------------------------------------------------------
-		//js.appManifest.addJs(VENDOR_PATH + "/ckeditor/" + "ckeditor.js");
-		//js.appManifest.addJs(VENDOR_PATH + "/cke5/20.0.0/" + "ckeditor.js");
+		UIBoot.includeVendorLibraries(js.appManifest, locale);
 		
 		// Include ExtJs references
-		final String EXTJS_PATH = "resources/client/extjs/";
-		String extRtl = rtl ? "-rtl" : "";
-		String extDebug = WebTopProps.getExtJsDebug(wta.getProperties()) ? "-debug" : "";
-		String extTheme = theme;
-		String extThemeName = UIBoot.sanitizeExtJSTheme(theme);
-		String extBaseTheme = UIBoot.getBaseExtJSTheme(extThemeName);
-		String extLang = "-" + locale.getLanguage();
-		
-		// ExtJS: core library + locales
-		js.appManifest.addJs(EXTJS_PATH + "ext-all" + extRtl + extDebug + ".js");
-		js.appManifest.addJs(EXTJS_PATH + js.appManifest.toolkit + "/locale/" + "locale" + extLang + extDebug + ".js");
-		// ExtJS: themes library + styles (see below for overrides)
-		js.appManifest.addJs(EXTJS_PATH + js.appManifest.toolkit + "/" + "theme-" + extTheme + "/" + "theme-" + extTheme + extDebug + ".js"); // Original theme's JS file
-		js.appManifest.addCss(EXTJS_PATH + js.appManifest.toolkit + "/" + "theme-" + extTheme + "/resources/" + "theme-" + extTheme + "-all" + extRtl + extDebug + ".css"); // Original theme's CSS file
-		// ExtJS: charts library + styles
-		js.appManifest.addJs(EXTJS_PATH + "packages/charts/" + js.appManifest.toolkit + "/" + "charts" + extDebug + ".js");
-		js.appManifest.addCss(EXTJS_PATH + "packages/charts/" + js.appManifest.toolkit + "/" + extBaseTheme + "/resources/" + "charts-all" + extRtl + extDebug + ".css");
-		// ExtJS: UX library + styles
-		js.appManifest.addJs(EXTJS_PATH + "packages/ux/" + js.appManifest.toolkit + "/" + "ux" + extDebug + ".js");
-		js.appManifest.addCss(EXTJS_PATH + "packages/ux/" + js.appManifest.toolkit + "/" + extBaseTheme + "/resources/" + "ux-all" + extRtl + extDebug + ".css");
-		// ExtJS: themes overrides
-		js.appManifest.addJs(EXTJS_PATH + js.appManifest.toolkit + "/" + "theme-" + extTheme + "/" + "theme-" + extTheme + "-override" + extDebug + ".js"); // Supports overriding theme's JS file
-		//TODO: add debug
-		js.appManifest.addCss(EXTJS_PATH + js.appManifest.toolkit + "/" + "theme-" + extTheme + "/" + "theme-" + extTheme + "-override" + ".css"); // Supports overriding theme's CSS file
-		
-		// Fonts: styles
-		js.appManifest.addCss(EXTJS_PATH + "packages/font-awesome/resources/" + "font-awesome-all" + extRtl + extDebug + ".css");
-		js.appManifest.addCss(EXTJS_PATH + "packages/font-awesome/resources/vendor/6.4.2/css/fontawesome.min.css");
-		js.appManifest.addCss(EXTJS_PATH + "packages/font-awesome/resources/vendor/6.4.2/css/solid.min.css");
-		js.appManifest.addCss(EXTJS_PATH + "packages/font-awesome/resources/vendor/6.4.2/css/regular.min.css");
-		js.appManifest.addCss(EXTJS_PATH + "packages/font-awesome/resources/vendor/6.4.2/css/brands.min.css");
-		js.appManifest.addCss(EXTJS_PATH + "packages/font-awesome/resources/vendor/6.4.2/css/v5-font-face.min.css");
-		js.appManifest.addCss(EXTJS_PATH + "packages/font-ext/resources/" + "font-ext-all" + extRtl + extDebug + ".css");
-		js.appManifest.addCss(EXTJS_PATH + "packages/font-pictos/resources/" + "font-pictos-all" + extRtl + extDebug + ".css");
-		// Sonicle ExtJs Extensions
-		if (WebTopProps.getSoExtJsExtensionsDevMode(wta.getProperties())) {
-			js.appManifest.addPath("Sonicle", EXTJS_PATH + "packages/sonicle-extensions/src");
-		} else {
-			js.appManifest.addJs(EXTJS_PATH + "packages/sonicle-extensions/" + "sonicle-extensions" + extDebug + ".js");
-		}
-		js.appManifest.addCss(EXTJS_PATH + "packages/sonicle-extensions/base/resources/" + "sonicle-extensions-all" + extRtl + extDebug + ".css");
-		js.appManifest.addCss(EXTJS_PATH + "packages/sonicle-extensions/" + extThemeName + "/resources/" + "sonicle-extensions-all" + extRtl + extDebug + ".css");
-		// Override default Ext error handling in order to avoid application hang.
-		// NB: This is only necessary when using ExtJs debug file!
-		if (WebTopProps.getExtJsDebug(wta.getProperties()))
-			js.appManifest.addJs(LIBS_PATH + "/" + "ext-override-errors.js");
+		UIBoot.includeExtJs(js.appManifest, js.appManifest.toolkit, locale, theme, rtl, WebTopProps.getExtJsDebug(wta.getProperties()), WebTopProps.getSoExtJsExtensionsDevMode(wta.getProperties()));
 	}
 	
 	private void fillCoreServiceJsReferences(final boolean devMode, final String target, final JsWTS js, final ServiceManifest manifest, final Locale locale, final String theme, final String lookAndFeel) {
