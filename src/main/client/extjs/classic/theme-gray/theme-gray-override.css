@@ -12,7 +12,7 @@
     /*--wt-theme-color-surface-l2: */
     /*--wt-theme-color-surface-l2-inv: */
     --wt-theme-color-surface-l3: #efefef;
-    /*--wt-theme-color-surface-l4: */
+    --wt-theme-color-surface-l4: #efefef;
     --wt-theme-color-n1: #000000; /* Black */
     --wt-theme-color-n1-inv: #ffffff; /* White */
     --wt-theme-color-n2: #000000; /* Black */
@@ -62,6 +62,7 @@
     --wt-theme-color-taskbar: #e6e6e6;
     
     --wt-theme-fontfamily: helvetica, arial, verdana, sans-serif;
+    --wt-theme-fontsize-2xs: 7px;
     --wt-theme-fontsize-xs: 8px;
     --wt-theme-fontsize-sm: 10px;
     --wt-theme-fontsize-base: 11px;

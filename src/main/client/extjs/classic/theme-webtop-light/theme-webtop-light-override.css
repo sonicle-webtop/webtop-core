@@ -67,6 +67,7 @@ grep -R -l -i "#212121" * | while read fname; do echo "sedding $fname"; sed -i -
     --wt-theme-color-taskbar: var(--wt-theme-color-surface-l3);
     
     --wt-theme-fontfamily: Inter, helvetica, arial, verdana, sans-serif;
+    --wt-theme-fontsize-2xs: 10px;
     --wt-theme-fontsize-xs: 12px;
     --wt-theme-fontsize-sm: 14px;
     --wt-theme-fontsize-base: 16px;
