@@ -511,7 +511,7 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 			uis.put("outline", new UIPreset("outline", "Outline", "crisp", "webtop2023"));
 			uis.put("classicb", new UIPreset("classicb", "Classic (blue)", "classic", "webtop2023"));
 			uis.put("classicg", new UIPreset("classicg", "Classic (gray)", "gray", "office2019"));
-			uis.put("legacy", new UIPreset("legacy", "Legacy (blue)", "classic", "webtop"));
+			uis.put("legacy", new UIPreset("legacy", "Legacy (blue)", "classic", "default"));
 			
 			// Then load extra ones from props...
 			internalPutUIPresets(uis, WebTopProps.getUIPresetsExtra(getWebTopApp().getProperties()));
