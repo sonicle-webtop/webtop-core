@@ -35,6 +35,7 @@ Ext.define('Sonicle.webtop.core.sdk.ImportWizardView', {
 	alternateClassName: 'WTA.sdk.ImportWizardView',
 	extend: 'WTA.sdk.WizardView',
 	requires: [
+		'Sonicle.String',
 		'Sonicle.upload.Field',
 		'WTA.ux.data.ValueModel',
 		'WTA.ux.UploadBar',
