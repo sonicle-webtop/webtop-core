@@ -37,8 +37,10 @@ import com.sonicle.commons.web.RequestId;
 import com.sonicle.commons.web.ServletUtils;
 import com.sonicle.webtop.core.app.ContextLoader;
 import com.sonicle.webtop.core.app.WebTopApp;
+import com.sonicle.webtop.core.app.servlet.PrivateRequest;
 import com.sonicle.webtop.core.app.shiro.filter.RequestDumper;
 import java.io.IOException;
+import java.util.concurrent.atomic.AtomicLong;
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
@@ -57,6 +59,30 @@ import org.slf4j.LoggerFactory;
  */
 public class WTShiroFilter extends ShiroFilter {
 	private static final Logger LOGGER_REQDUMP = (Logger) LoggerFactory.getLogger(RequestDumper.class);
+	private static final Logger LOGGER = (Logger) LoggerFactory.getLogger(WTShiroFilter.class);
+
+	//REQDBG: temporary instrumentation to locate intermittent pre-handler stalls
+	//(service handlers log fast while the client waits, with no trace server-side).
+	//Mail service-requests get a stamped bracket across the whole dispatch chain
+	//(filter entry -> subject/session bound -> servlet -> handler); anything else
+	//is only reported once at completion when the whole traversal exceeded 1s.
+	//If a stall recurs and NO "filter entry" line appears for it, the request
+	//never reached the container: look client-side (browser conn pool, proxy).
+	public static final String ATTR_REQDBG_ID = "wt.reqdbg.id";
+	public static final String ATTR_REQDBG_T0 = "wt.reqdbg.t0";
+	private static final AtomicLong REQDBG_COUNTER = new AtomicLong();
+
+	public static void reqdbg(ServletRequest request, String stage) {
+		Object id = request.getAttribute(ATTR_REQDBG_ID);
+		if (id == null) return;
+		long t0 = (Long) request.getAttribute(ATTR_REQDBG_T0);
+		LOGGER.info("[REQDBG {}] {}: +{}ms", id, stage, System.currentTimeMillis() - t0);
+	}
+
+	public static void reqdbgTag(ServletRequest request, long t0) {
+		request.setAttribute(ATTR_REQDBG_ID, "REQ" + REQDBG_COUNTER.incrementAndGet());
+		request.setAttribute(ATTR_REQDBG_T0, t0);
+	}
 
 	@Override
 	protected void executeChain(ServletRequest request, ServletResponse response, FilterChain origChain) throws IOException, ServletException {
@@ -65,6 +91,7 @@ public class WTShiroFilter extends ShiroFilter {
 			ServletUtils.sendError(WebUtils.toHttp(response), 503, "Application not ready");
 			return;
 		}
+		reqdbg(request, "subject/session bound, entering chain");
 		super.executeChain(request, response, origChain);
 	}
 	
@@ -126,7 +153,26 @@ public class WTShiroFilter extends ShiroFilter {
 		if (StringUtils.isBlank(request.getCharacterEncoding())) {
 			request.setCharacterEncoding("UTF-8");
 		}
-		super.doFilterInternal(servletRequest, servletResponse, chain);
+		final long t0 = System.currentTimeMillis();
+		final String uri = request.getRequestURI();
+		final String query = request.getQueryString();
+		boolean tagged = false;
+		if (uri != null && (uri.endsWith(PrivateRequest.URL) || uri.endsWith(PrivateRequest.URL_LEGACY))
+				&& query != null && query.contains("com.sonicle.webtop.mail")) {
+			reqdbgTag(request, t0);
+			tagged = true;
+			LOGGER.info("[REQDBG {}] filter entry: {} {}?{}", request.getAttribute(ATTR_REQDBG_ID), request.getMethod(), uri, StringUtils.abbreviate(query, 160));
+		}
+		try {
+			super.doFilterInternal(servletRequest, servletResponse, chain);
+		} finally {
+			long elapsed = System.currentTimeMillis() - t0;
+			if (tagged) {
+				LOGGER.info("[REQDBG {}] === TOTAL filter enter->exit ===: {}ms", request.getAttribute(ATTR_REQDBG_ID), elapsed);
+			} else if (elapsed > 1000) {
+				LOGGER.info("[REQDBG slow-request] {}ms: {} {}?{}", elapsed, request.getMethod(), uri, StringUtils.abbreviate(query, 160));
+			}
+		}
 	}
 	
 	

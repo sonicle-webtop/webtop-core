@@ -44,6 +44,7 @@ import com.sonicle.webtop.core.sdk.BaseService;
 import com.sonicle.webtop.core.sdk.UserProfileId;
 import com.sonicle.webtop.core.app.RunContext;
 import com.sonicle.webtop.core.app.SessionContext;
+import com.sonicle.webtop.core.app.shiro.WTShiroFilter;
 import com.sonicle.webtop.core.app.util.LoggerUtils;
 import java.io.IOException;
 import javax.servlet.ServletException;
@@ -63,28 +64,39 @@ public class PrivateRequest extends BaseRequest {
 	
 	@Override
 	protected void processGetOrPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+		WTShiroFilter.reqdbg(request, "servlet entry (Shiro chain done)");
 		LoggerUtils.setContextDC(RunContext.getRunProfileId());
 		WebTopApp wta = getWebTopApp(request);
 		WebTopSession wts = SessionContext.getCurrentWTSession(false);
-		
+		WTShiroFilter.reqdbg(request, "got WTS session");
+
 		try {
 			String service = ServletUtils.getStringParameter(request, "service", true);
 			String action = ServletUtils.getStringParameter(request, "action", true);
 			Boolean nowriter = ServletUtils.getBooleanParameter(request, "nowriter", false);
 			String optionsProfile = ServletUtils.getStringParameter(request, "optionsProfile", false);
-			
+
+			//REQDBG: POSTs carrying params in the body have no query string, so the
+			//filter could not tag them - tag here (bracket starts at servlet, not filter)
+			if (request.getAttribute(WTShiroFilter.ATTR_REQDBG_ID) == null && service.startsWith("com.sonicle.webtop.mail")) {
+				WTShiroFilter.reqdbgTag(request, System.currentTimeMillis());
+			}
+			WTShiroFilter.reqdbg(request, "params parsed (service=" + service + " action=" + action + ")");
+
 			if (LOGGER.isTraceEnabled()) {
 				LOGGER.trace("[{}] processGetOrPost [{}, {}, {}, {}, {}, {}]", ServletUtils.getRequestID(request), wts.getId(), wts.getProfileId(), service, action, nowriter, optionsProfile);
 			}
-			
+
 			if (StringUtils.isBlank(optionsProfile)) {
 				// Retrieves instantiated service
 				BaseService instance = wts.getPrivateServiceById(service);
-				
+				WTShiroFilter.reqdbg(request, "got service instance");
+
 				// Gets method and invokes it...
 				MethodInfo meinfo = getMethod(instance.getClass(), service, action, nowriter);
 				invokeMethod(instance, meinfo, service, request, response);
-				
+				WTShiroFilter.reqdbg(request, "action method returned");
+
 			} else {
 				ServiceManager svcm = wta.getServiceManager();
 				
