@@ -35,6 +35,7 @@ Ext.define('Sonicle.webtop.core.sdk.ExportWizardView', {
 	alternateClassName: 'WTA.sdk.ExportWizardView',
 	extend: 'WTA.sdk.WizardView',
 	requires: [
+		'Sonicle.String',
 		'WTA.ux.data.ValueModel',
 		'WTA.ux.panel.Form'
 	],
