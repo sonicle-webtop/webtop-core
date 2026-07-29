@@ -268,6 +268,9 @@ Ext.define('Sonicle.webtop.core.private.viewport.ViewController', {
 			case 'options':
 				me.showOptions();
 				break;
+			case 'connectapp':
+				me.showConnectApp();
+				break;
 		}
 	},
 	
@@ -590,6 +593,13 @@ Ext.define('Sonicle.webtop.core.private.viewport.ViewController', {
 		}).show();
 	},
 	
+	showConnectApp: function() {
+		this.createServiceView(WT.getApp().getDescriptor(WT.ID), 'view.ConnectApp', {
+			swapReturn: true,
+			preventDuplicates: true
+		}).showView();
+	},
+
 	showFeedback: function() {
 		var vct = this.createServiceView(WT.getApp().getDescriptor(WT.ID), 'view.Feedback');
 		vct.show(false, function() {

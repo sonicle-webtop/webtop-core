@@ -154,6 +154,7 @@ import com.sonicle.webtop.core.app.model.UITheme;
 import com.sonicle.webtop.core.app.sdk.WTUnsupportedOperationException;
 import com.sonicle.webtop.core.app.servlet.ServletHelper;
 import com.sonicle.webtop.core.bol.js.JsUIPreset;
+import com.sonicle.webtop.core.products.ConnectProduct;
 import com.sonicle.webtop.core.products.TMCEPremiumProduct;
 import com.sonicle.webtop.core.util.AppLocale;
 import com.sonicle.webtop.core.sdk.BaseService;
@@ -191,6 +192,7 @@ import jakarta.mail.internet.InternetAddress;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.io.IOUtils;
+import net.glxn.qrgen.javase.QRCode;
 import org.apache.commons.lang3.StringUtils;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormatter;
@@ -356,6 +358,16 @@ public class Service extends BaseService implements EventListener {
 		vars.put("wtEditorPasteMode", EnumUtils.toSerializedName(ss.getEditorPasteImportMode()));
 		if (TMCEPremiumProduct.installed()) {
 			vars.put("wtEditorPP", WT.isLicensed(WT.findServiceProduct(TMCEPremiumProduct.PRODUCT_ID, profile.getDomainId())));
+		}
+
+		//Domain-level license check only: the per-user overload would auto-assign
+		//a Connect lease at every web login; leases are enforced when the app
+		//actually connects (OAuth token validation)
+		boolean connectLicensed = WT.isLicensed(new ConnectProduct(profile.getDomainId()))
+				&& !StringUtils.isBlank(WT.getPublicBaseUrl(profile.getDomainId()));
+		vars.put("wtConnectQr", connectLicensed);
+		if (connectLicensed) {
+			vars.put("wtConnectQrUser", profile.getUserId() + "@" + WT.getAuthDomainName(profile.getDomainId()));
 		}
 		vars.put("wtGeolocationProvider", EnumUtils.toSerializedName(ss.getGeolocationProvider()));
 		
@@ -1836,6 +1848,30 @@ public class Service extends BaseService implements EventListener {
 	}
 	*/
 	
+	public void processGetConnectQRCode(HttpServletRequest request, HttpServletResponse response) {
+		UserProfile profile = getEnv().getProfile();
+
+		try {
+			String publicBaseUrl = WT.getPublicBaseUrl(profile.getDomainId());
+			if (!WT.isLicensed(new ConnectProduct(profile.getDomainId())) || StringUtils.isBlank(publicBaseUrl)) {
+				throw new WTException("WebTop Connect not licensed or public URL not configured for domain '{}'", profile.getDomainId());
+			}
+			int size = ServletUtils.getIntParameter(request, "size", 240);
+			size = Math.max(120, Math.min(480, size));
+
+			LinkedHashMap<String, Object> payload = new LinkedHashMap<>();
+			payload.put("v", 1);
+			payload.put("url", publicBaseUrl);
+			payload.put("user", profile.getUserId() + "@" + WT.getAuthDomainName(profile.getDomainId()));
+			byte[] qrcode = QRCode.from(JsonResult.gson().toJson(payload)).withSize(size, size).stream().toByteArray();
+			ServletUtils.writeContent(response, qrcode, qrcode.length, "image/png");
+
+		} catch (Exception ex) {
+			logger.error("Error in GetConnectQRCode", ex);
+			ServletUtils.sendError(response, 404);
+		}
+	}
+
 	public void processGetOTPGoogleAuthQRCode(HttpServletRequest request, HttpServletResponse response) {
 		WebTopSession wts = ((CorePrivateEnvironment)getEnv()).getSession();
 		

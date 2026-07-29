@@ -41,6 +41,8 @@ Ext.define('Sonicle.webtop.core.model.ServiceVars', {
 		WTF.roField('iceServers', 'string'),
 		WTF.field('wtAddonNotifier', 'string'),
 		WTF.field('wtWhatsnewEnabled', 'boolean'),
+		WTF.roField('wtConnectQr', 'boolean'),
+		WTF.roField('wtConnectQrUser', 'string'),
 		WTF.field('wtOtpEnabled', 'boolean'),
 		WTF.field('wtRMeEnabled', 'boolean'),
 		WTF.roField('wtLauncherLinks', 'string'),

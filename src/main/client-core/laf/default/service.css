@@ -122,6 +122,7 @@
 .wt-glyph-paste:before { content: '\f0ea'; font: var(--fa-font-solid); } /* fa-paste */
 .wt-glyph-phone:before { content: '\f095'; font: var(--fa-font-solid); } /* fa-phone */
 .wt-glyph-priority:before { content: '\f071'; font: var(--fa-font-solid); } /* fa-triangle-exclamation */
+.wt-glyph-qrcode:before { content: '\f029'; font: var(--fa-font-solid); } /* fa-qrcode */
 .wt-glyph-settings:before { content: '\f013'; font: var(--fa-font-solid); } /* fa-gear */
 .wt-glyph-signature:before { content: '\f5b7'; font: var(--fa-font-solid); } /* fa-signature */
 .wt-glyph-status:before { content: '\f624'; font: var(--fa-font-solid); } /* fa-gauge */

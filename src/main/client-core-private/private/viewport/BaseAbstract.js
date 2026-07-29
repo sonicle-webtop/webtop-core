@@ -70,7 +70,8 @@ Ext.define('Sonicle.webtop.core.private.viewport.BaseAbstract', {
 	],
 	uses: [
 		'Sonicle.Utils',
-		'WTA.view.Options'
+		'WTA.view.Options',
+		'WTA.view.ConnectApp'
 	],
 	
 	viewModel: {
@@ -415,6 +416,12 @@ Ext.define('Sonicle.webtop.core.private.viewport.BaseAbstract', {
 								itemId: 'options',
 								text: WT.res('accountmenu.options.lbl'),
 								iconCls: 'wt-icon-options',
+								handler: 'onAccountMenuButtonClick'
+							}, {
+								itemId: 'connectapp',
+								text: WT.res('accountmenu.connectapp.lbl'),
+								iconCls: 'wt-glyph-qrcode',
+								hidden: !WT.getVar('wtConnectQr'),
 								handler: 'onAccountMenuButtonClick'
 							}, /*{
 								itemId: 'addons',
