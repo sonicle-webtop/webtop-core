@@ -208,7 +208,7 @@ import org.slf4j.Logger;
  *
  * @author malbinola
  */
-public class CoreManager extends BaseManager implements SharedManager {
+public class CoreManager extends BaseManager /*implements SharedManager*/ {
 	private static final Logger logger = WT.getLogger(CoreManager.class);
 	
 	public static final String RECIPIENT_PROVIDER_BUILTIN_AUTO_SUFFIX = "auto";
@@ -284,16 +284,16 @@ public class CoreManager extends BaseManager implements SharedManager {
 		}
 	}
 
-	@Override
+/*	@Override
 	public void onSharedStartup() {
 		logger.info("[{}] shared CoreManager created", getTargetProfileId());
-	}
+	}*/
 
-	@Override
+/*	@Override
 	public void onSharedShutdown() {
 		logger.info("[{}] shared CoreManager shutting down", getTargetProfileId());
 		cacheRecipientsProvider.clear();
-	}
+	}*/
 	
 	public void addListener(final EventListener listener) {
 		eventManager.addListener(listener);
