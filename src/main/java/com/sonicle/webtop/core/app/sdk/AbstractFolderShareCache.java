@@ -61,6 +61,17 @@ public abstract class AbstractFolderShareCache <T, O extends ShareOrigin> extend
 	protected final MultiValuedMap<UserProfileId, T> folderIdsByProfile = new ArrayListValuedHashMap<>();
 	protected final Set<T> folderIds = new LinkedHashSet<>();
 	
+	/**
+	 * Share caches build ADDITIVELY into their collections assuming they are
+	 * empty: without this, every re-issued init() (e.g. the onAfterXxxAction
+	 * hooks of Calendar/Contacts/Tasks managers) appended the whole origin set
+	 * again — unbounded duplicates on long-lived shared manager instances.
+	 */
+	@Override
+	protected boolean cleanupBeforeBuild() {
+		return true;
+	}
+
 	@Override
 	protected void internalCleanupCache() {
 		origins.clear();
@@ -71,21 +82,26 @@ public abstract class AbstractFolderShareCache <T, O extends ShareOrigin> extend
 		folderIds.clear();
 	}
 	
+	//NB: collection getters return unmodifiable COPIES taken under the read
+	//lock, not views: a view is backed by the live collection and the caller
+	//iterates it AFTER the lock is released — a concurrent rebuild/clear then
+	//throws ConcurrentModificationException (or yields torn data)
+
 	public List<O> getOrigins() {
 		internalCheckBeforeGetDoNotLockThis();
 		long stamp = readLock();
 		try {
-			return Collections.unmodifiableList(origins);
+			return Collections.unmodifiableList(new ArrayList<>(origins));
 		} finally {
 			unlockRead(stamp);
 		}
 	}
-	
+
 	public Map<UserProfileId, O> getOriginsMap() {
 		internalCheckBeforeGetDoNotLockThis();
 		long stamp = readLock();
 		try {
-			return Collections.unmodifiableMap(originByProfile);
+			return Collections.unmodifiableMap(new LinkedHashMap<>(originByProfile));
 		} finally {
 			unlockRead(stamp);
 		}
@@ -115,17 +131,17 @@ public abstract class AbstractFolderShareCache <T, O extends ShareOrigin> extend
 		internalCheckBeforeGetDoNotLockThis();
 		long stamp = readLock();
 		try {
-			return Collections.unmodifiableCollection(folderIdsByProfile.get(originProfileId));
+			return Collections.unmodifiableCollection(new ArrayList<>(folderIdsByProfile.get(originProfileId)));
 		} finally {
 			unlockRead(stamp);
 		}
 	}
-	
+
 	public Set<T> getFolderIds() {
 		internalCheckBeforeGetDoNotLockThis();
 		long stamp = readLock();
 		try {
-			return Collections.unmodifiableSet(folderIds);
+			return Collections.unmodifiableSet(new LinkedHashSet<>(folderIds));
 		} finally {
 			unlockRead(stamp);
 		}

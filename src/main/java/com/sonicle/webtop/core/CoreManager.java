@@ -4496,7 +4496,16 @@ public class CoreManager extends BaseManager /*implements SharedManager*/ {
 	
 	private class CacheRecipientsProvider extends AbstractBulkCache {
 		private final Map<String, RecipientsProviderBase> providersById = new LinkedHashMap<>();
-		
+
+		/**
+		 * Additive build into a keyed map: cleanup-first so providers of
+		 * services the user is no longer allowed on don't survive a rebuild.
+		 */
+		@Override
+		protected boolean cleanupBeforeBuild() {
+			return true;
+		}
+
 		@Override
 		protected void internalBuildCache() {
 			for (String serviceId : listAllowedServices()) {

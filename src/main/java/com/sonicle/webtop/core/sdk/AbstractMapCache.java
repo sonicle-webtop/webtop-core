@@ -47,6 +47,7 @@ import java.util.concurrent.locks.StampedLock;
  * @param <V>
  */
 public abstract class AbstractMapCache<K, V> implements MapCache<K, V> {
+	private static final org.slf4j.Logger LOGGER = org.slf4j.LoggerFactory.getLogger(AbstractMapCache.class);
 	private final StampedLock lock = new StampedLock();
 	protected final Map<K, V> map;
 	
@@ -63,20 +64,26 @@ public abstract class AbstractMapCache<K, V> implements MapCache<K, V> {
 	
 	protected long checkContains(long stamp, K key) {
 		if (map.containsKey(key)) return stamp;
-		
+
 		long newStamp = lock.tryConvertToWriteLock(stamp);
 		if (newStamp == 0L) {
 			lock.unlockRead(stamp);
 			newStamp = lock.writeLock();
 		}
-		
-		try {
-			internalMissKey(map, key);
-		} catch (Throwable t) {
-			// Do nothing...
-		} finally {
-			return newStamp;
+
+		//re-check: the upgrade above may have released the lock entirely before
+		//re-acquiring write — another thread may have loaded the key meanwhile
+		if (!map.containsKey(key)) {
+			try {
+				internalMissKey(map, key);
+			} catch (Throwable t) {
+				//key stays absent and the caller will see null; at least make
+				//the failure visible (the old return-in-finally silently
+				//discarded every throwable, DB errors included)
+				LOGGER.warn("Miss-loading of key '{}' failed", key, t);
+			}
 		}
+		return newStamp;
 	}
 	
 	public final void init() {
@@ -123,7 +130,9 @@ public abstract class AbstractMapCache<K, V> implements MapCache<K, V> {
 	}
 	
 	@Override
-	public synchronized V remove(K key) {
+	public V remove(K key) {
+		//NB: was 'synchronized' too — a second, inconsistent monitor on top of
+		//the StampedLock (no other method took it); the write lock suffices
 		long stamp = lock.writeLock();
 		try {
 			return map.remove(key);
