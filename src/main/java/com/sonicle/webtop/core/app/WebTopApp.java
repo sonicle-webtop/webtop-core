@@ -283,7 +283,7 @@ public final class WebTopApp {
 		WebTopApp.webappName = ContextUtils.getWebappFullName(servletContext, false);
 		this.servletContext = servletContext;
 		this.properties = properties;
-		StoreUtils.useExtendedFolderClasses(properties);
+		PropsBuilder.useCustomizedIMAPFolderClasses(properties);
 		
 		this.osInfo = OSInfo.build();
 		this.systemCharset = Charset.forName("UTF-8");
@@ -1292,7 +1292,7 @@ public final class WebTopApp {
 			// Nothing to preconfigure for now!
 		}
 		if (forStore) {
-			builder.withSonicleIMAPFolder();
+			builder.withCustomizedIMAPFolderClasses();
 		}
 		return builder;
 	}
