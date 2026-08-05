@@ -41,7 +41,6 @@ import com.sonicle.commons.LangUtils;
 import com.sonicle.commons.URIUtils;
 import com.sonicle.commons.beans.PageInfo;
 import com.sonicle.commons.beans.VirtualAddress;
-import com.sonicle.commons.cache.AbstractBulkCache;
 import com.sonicle.commons.db.DbUtils;
 import com.sonicle.commons.flags.BitFlags;
 import com.sonicle.commons.flags.BitFlagsEnum;
@@ -186,6 +185,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -287,6 +287,11 @@ public class CoreManager extends BaseManager /*implements SharedManager*/ {
 /*	@Override
 	public void onSharedStartup() {
 		logger.info("[{}] shared CoreManager created", getTargetProfileId());
+		//warm the recipients-provider cache in the latch-gated startup (runs in
+		//the first caller's thread, outside the registry bin lock) instead of on
+		//the first request thread; the build itself is lock-free (see
+		//CacheRecipientsProvider), this only moves the cost to a clean place
+		cacheRecipientsProvider.ensureBuilt();
 	}*/
 
 /*	@Override
@@ -4494,56 +4499,58 @@ public class CoreManager extends BaseManager /*implements SharedManager*/ {
 		}
 	}
 	
-	private class CacheRecipientsProvider extends AbstractBulkCache {
-		private final Map<String, RecipientsProviderBase> providersById = new LinkedHashMap<>();
+	/**
+	 * Lock-free swap-style cache, deliberately NOT an AbstractBulkCache: that
+	 * base runs the build under its (non-reentrant) StampedLock write lock,
+	 * while THIS build must enter the shared-manager registry and possibly
+	 * CONSTRUCT other services' managers — whose constructors call back into
+	 * Core. Holding the cache lock across those calls inverted the registry's
+	 * lock order (cache-lock → registry-bin-lock vs. the normal bin-lock →
+	 * cache-lock), a deadlock class, and a re-entrant read on the same thread
+	 * would self-deadlock on the StampedLock.
+	 * Here the collection phase runs with NO lock held; the result is published
+	 * as an immutable map via a volatile swap. Two concurrent cold readers may
+	 * both build (rare: cold start or post-clear) — results are equivalent and
+	 * the last swap wins.
+	 */
+	private class CacheRecipientsProvider {
+		private volatile Map<String, RecipientsProviderBase> providersById = null;
 
-		/**
-		 * Additive build into a keyed map: cleanup-first so providers of
-		 * services the user is no longer allowed on don't survive a rebuild.
-		 */
-		@Override
-		protected boolean cleanupBeforeBuild() {
-			return true;
-		}
+		private Map<String, RecipientsProviderBase> ensureBuilt() {
+			Map<String, RecipientsProviderBase> map = providersById;
+			if (map != null) return map;
 
-		@Override
-		protected void internalBuildCache() {
+			LinkedHashMap<String, RecipientsProviderBase> newMap = new LinkedHashMap<>();
 			for (String serviceId : listAllowedServices()) {
 				BaseManager manager = WT.getServiceManager(serviceId, true, getTargetProfileId());
 				if (manager instanceof IRecipientsProvidersSource) {
 					List<RecipientsProviderBase> providers = ((IRecipientsProvidersSource)manager).returnRecipientsProviders();
 					if (providers != null) {
 						for (RecipientsProviderBase provider : providers) {
-							providersById.put(provider.getId(), provider);
+							newMap.put(provider.getId(), provider);
 						}
 					}
 				}
 			}
+			map = Collections.unmodifiableMap(newMap);
+			providersById = map;
+			return map;
 		}
 
-		@Override
-		protected void internalCleanupCache() {
-			providersById.clear();
+		public void clear() {
+			//next read lazily rebuilds: stragglers holding an evicted instance
+			//get fresh data, never an empty cache
+			providersById = null;
 		}
-		
+
 		public Set<String> getIDs() {
-			this.internalCheckBeforeGetDoNotLockThis();
-			long stamp = this.readLock();
-			try {
-				return providersById.keySet();
-			} finally {
-				this.unlockRead(stamp);
-			}
+			//safe to expose directly: the published map is immutable and never
+			//mutated after the swap — no ConcurrentModificationException possible
+			return ensureBuilt().keySet();
 		}
-		
+
 		public RecipientsProviderBase getProvider(final String id) {
-			this.internalCheckBeforeGetDoNotLockThis();
-			long stamp = this.readLock();
-			try {
-				return providersById.get(id);
-			} finally {
-				this.unlockRead(stamp);
-			}
+			return ensureBuilt().get(id);
 		}
 	}
 
