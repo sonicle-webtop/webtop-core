@@ -55,6 +55,7 @@ Ext.define('Sonicle.webtop.core.ux.field.htmleditor.AITool', {
 		Ext.apply(me, {
 			iconCls: 'wt-icon-ai',
 			arrowVisible: false,
+			tooltip: WT.res('ai.htmleditor.button.tip'),
 			hidden: !WT.getVar('hasAI'),
 			menu: {
 				plain: true,
