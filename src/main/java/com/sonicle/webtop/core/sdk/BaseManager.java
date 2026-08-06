@@ -61,10 +61,14 @@ public abstract class BaseManager {
 	protected final boolean fastInit;
 
 	public final AuditProduct AUDIT_PRODUCT;
-	private boolean auditEnabled = false;
-	
+	//lazily evaluated on first isAuditEnabled/isAIEnabled call: shared-manager
+	//ctors run inside the registry's ConcurrentHashMap.compute() bin lock, so no
+	//license read may happen here. volatile Boolean: null = not yet evaluated;
+	//the evaluation race is benign (same result, last write wins).
+	private volatile Boolean auditEnabled = null;
+
 	public final AIProduct AI_PRODUCT;
-	private boolean aiEnabled = false;
+	private volatile Boolean aiEnabled = null;
 
 	public BaseManager(boolean fastInit, UserProfileId targetProfileId) {
 		SERVICE_ID = WT.findServiceId(this.getClass());
@@ -79,13 +83,10 @@ public abstract class BaseManager {
 		// REST, admin background task) — caller identity must not freeze
 		// audit/AI licensing state on the instance.
 		boolean setProducts = (targetProfileId != null) && !StringUtils.isEmpty(targetProfileId.getDomainId());
-		
+
 		if (setProducts) {
 			AUDIT_PRODUCT = new AuditProduct(targetProfileId.getDomainId());
-			this.auditEnabled = WT.isLicensed(new AuditProduct(targetProfileId.getDomainId()));
-
 			AI_PRODUCT = new AIProduct(targetProfileId.getDomainId());
-			this.aiEnabled = WT.isLicensed(new AIProduct(targetProfileId.getDomainId()));
 		} else {
 			AUDIT_PRODUCT = null;
 			AI_PRODUCT = null;
@@ -193,19 +194,29 @@ public abstract class BaseManager {
 	
 	/**
 	 * Checks if audit-logs are enabled.
-	 * @return 
+	 * @return
 	 */
 	public boolean isAuditEnabled() {
-		return auditEnabled;
+		Boolean enabled = auditEnabled;
+		if (enabled == null) {
+			enabled = (AUDIT_PRODUCT != null) && WT.isLicensed(AUDIT_PRODUCT);
+			auditEnabled = enabled;
+		}
+		return enabled;
 	}
-	
-	
+
+
 	/**
 	 * Checks if A.I. is enabled.
-	 * @return 
+	 * @return
 	 */
 	public boolean isAIEnabled() {
-		return aiEnabled;
+		Boolean enabled = aiEnabled;
+		if (enabled == null) {
+			enabled = (AI_PRODUCT != null) && WT.isLicensed(AI_PRODUCT);
+			aiEnabled = enabled;
+		}
+		return enabled;
 	}
 	
 	

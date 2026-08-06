@@ -208,7 +208,7 @@ import org.slf4j.Logger;
  *
  * @author malbinola
  */
-public class CoreManager extends BaseManager /*implements SharedManager*/ {
+public class CoreManager extends BaseManager /* implements SharedManager */ {
 	private static final Logger logger = WT.getLogger(CoreManager.class);
 	
 	public static final String RECIPIENT_PROVIDER_BUILTIN_AUTO_SUFFIX = "auto";
@@ -217,17 +217,31 @@ public class CoreManager extends BaseManager /*implements SharedManager*/ {
 	public static final String RECIPIENT_PROVIDER_BUILTIN_WEBTOP = CId.build("com.sonicle.webtop.core", RECIPIENT_PROVIDER_BUILTIN_WEBTOP_SUFFIX).toString();
 
 	private static final EventManager eventManager = new EventManager();
-	private WebTopApp wta = null;
+	private final WebTopApp wta;
 	private final CacheRecipientsProvider cacheRecipientsProvider = new CacheRecipientsProvider();
-	
+
+	//providers are memoized behind dedicated locks (never the manager monitor: a
+	//stuck settings read/provider build must not block unrelated synchronized
+	//methods on a shared instance) and re-resolved after a TTL so an admin
+	//changing the provider setting becomes visible without waiting for eviction
+	private static final long PROVIDER_RESOLVE_TTL_MS = 5 * 60 * 1000L;
+	private final Object pbxLock = new Object();
 	private volatile PbxProvider pbx=null;
+	private volatile String pbxProviderName=null;
+	private volatile long pbxResolvedTs=0;
+	private final Object smsLock = new Object();
 	private volatile SmsProvider sms=null;
+	private volatile String smsProviderName=null;
+	private volatile long smsResolvedTs=0;
 
 	public final CustomFieldsProduct CUSTOM_FIELD_PRODUCT;
-	private final boolean cfieldsLicensed;
+	//lazily evaluated on first use (volatile Boolean, null = not yet computed):
+	//license and settings reads must not run in the ctor, which for shared
+	//instances executes inside the registry bin lock. Race is benign.
+	private volatile Boolean cfieldsLicensed = null;
 	private static final int MAX_CFIELDS_FREE = 6*2/4; // -> 3
-	private final boolean webtopRcptProviderEnabled;
-	private final boolean autoRcptProviderEnabled;
+	private volatile Boolean webtopRcptProviderEnabled = null;
+	private volatile Boolean autoRcptProviderEnabled = null;
 	
 	/**
 	 * @deprecated use lookupProfilePersonalInfo instead (will be removed in v.5.16.0)
@@ -263,20 +277,16 @@ public class CoreManager extends BaseManager /*implements SharedManager*/ {
 		
 		// gate on the TARGET profile, never the running caller: on a shared
 		// instance the first toucher may be an admin-context thread and its
-		// identity must not freeze licensing state for the target user
-		if (targetProfileId != null && !RunContext.isSysAdmin(targetProfileId)) {
+		// identity must not freeze licensing state for the target user.
+		// WebTopManager.isSysAdmin is the pure identity check (admin@*), same
+		// semantics as the role-based RunContext variant (the SYSADMIN role is
+		// granted exactly on that identity, see WTRealm) but with no Shiro authz
+		// load: the ctor must stay cheap under the registry bin lock. License and
+		// settings evaluation is deferred to first use for the same reason.
+		if (targetProfileId != null && !WebTopManager.isSysAdmin(targetProfileId)) {
 			CUSTOM_FIELD_PRODUCT = new CustomFieldsProduct(targetProfileId.getDomainId());
-			cfieldsLicensed = WT.isLicensed(CUSTOM_FIELD_PRODUCT, targetProfileId.getUserId()) > 0;
-
-			CoreServiceSettings css = new CoreServiceSettings(CoreManifest.ID, targetProfileId.getDomainId());
-			webtopRcptProviderEnabled = css.getRecipientWebTopProviderEnabled();
-			autoRcptProviderEnabled = css.getRecipientAutoProviderEnabled();
-
 		} else {
 			CUSTOM_FIELD_PRODUCT = null;
-			cfieldsLicensed = false;
-			webtopRcptProviderEnabled = true;
-			autoRcptProviderEnabled = true;
 		}
 			
 		if(!fastInit) {
@@ -284,22 +294,65 @@ public class CoreManager extends BaseManager /*implements SharedManager*/ {
 		}
 	}
 
-/*	@Override
+	//CUSTOM_FIELD_PRODUCT null encodes "no real target user" (public context or
+	//sysadmin): the deferred evaluations below reproduce the old ctor defaults
+	//for that branch (cfields unlicensed, both builtin recipient providers on)
+
+	private boolean isCFieldsLicensed() {
+		Boolean licensed = cfieldsLicensed;
+		if (licensed == null) {
+			licensed = (CUSTOM_FIELD_PRODUCT != null) && WT.isLicensed(CUSTOM_FIELD_PRODUCT, getTargetProfileId().getUserId()) > 0;
+			cfieldsLicensed = licensed;
+		}
+		return licensed;
+	}
+
+	private boolean isWebtopRcptProviderEnabled() {
+		Boolean enabled = webtopRcptProviderEnabled;
+		if (enabled == null) {
+			enabled = (CUSTOM_FIELD_PRODUCT == null) || new CoreServiceSettings(CoreManifest.ID, getTargetProfileId().getDomainId()).getRecipientWebTopProviderEnabled();
+			webtopRcptProviderEnabled = enabled;
+		}
+		return enabled;
+	}
+
+	private boolean isAutoRcptProviderEnabled() {
+		Boolean enabled = autoRcptProviderEnabled;
+		if (enabled == null) {
+			enabled = (CUSTOM_FIELD_PRODUCT == null) || new CoreServiceSettings(CoreManifest.ID, getTargetProfileId().getDomainId()).getRecipientAutoProviderEnabled();
+			autoRcptProviderEnabled = enabled;
+		}
+		return enabled;
+	}
+/*
+	@Override
 	public void onSharedStartup() {
 		logger.info("[{}] shared CoreManager created", getTargetProfileId());
-		//warm the recipients-provider cache in the latch-gated startup (runs in
+		//warm the ctor-deferred evaluations in the latch-gated startup (runs in
 		//the first caller's thread, outside the registry bin lock) instead of on
-		//the first request thread; the build itself is lock-free (see
-		//CacheRecipientsProvider), this only moves the cost to a clean place
-		cacheRecipientsProvider.ensureBuilt();
-	}*/
+		//scattered first-use request threads
+		isAuditEnabled();
+		isAIEnabled();
+		isCFieldsLicensed();
+		//DO NOT warm cacheRecipientsProvider here: ensureBuilt() resolves every
+		//allowed service through WT.getServiceManager — core included — which
+		//re-enters the registry for THIS key while the startup latch is still up
+		//→ the creator thread awaits its own latch (login hangs forever). The
+		//build stays lazy on first recipients use, where the latch is already
+		//down and the volatile-swap makes it safe.
+	}
 
-/*	@Override
+	@Override
 	public void onSharedShutdown() {
 		logger.info("[{}] shared CoreManager shutting down", getTargetProfileId());
 		cacheRecipientsProvider.clear();
-	}*/
-	
+		//providers are stateless facades (credentials travel per call, no dispose
+		//API): dropping the refs is the whole cleanup, it just prevents them from
+		//outliving the evicted instance through stray manager references
+		pbx = null;
+		sms = null;
+	}
+*/	
 	public void addListener(final EventListener listener) {
 		eventManager.addListener(listener);
 	}
@@ -317,29 +370,44 @@ public class CoreManager extends BaseManager /*implements SharedManager*/ {
 	}
 	*/
 	
-	private synchronized void initPbx() {
-		if (pbx==null) {
+	private void initPbx() {
+		if ((System.currentTimeMillis() - pbxResolvedTs) < PROVIDER_RESOLVE_TTL_MS) return;
+		synchronized(pbxLock) {
+			if ((System.currentTimeMillis() - pbxResolvedTs) < PROVIDER_RESOLVE_TTL_MS) return;
 			UserProfileId pid=getTargetProfileId();
 			CoreServiceSettings css = new CoreServiceSettings(CoreManifest.ID, pid.getDomainId());
 			String provider=css.getPbxProvider();
-			if (provider!=null) {
-				pbx=PbxProvider.getInstance(provider, pid);
+			//rebuild only on an actual provider change (null included: an unset
+			//provider is memoized too, so pbxConfigured() no longer pays a
+			//settings read per call on unconfigured domains)
+			if (!StringUtils.equals(provider, pbxProviderName)) {
+				pbx=(provider!=null) ? PbxProvider.getInstance(provider, pid) : null;
+				pbxProviderName=provider;
 			}
+			pbxResolvedTs=System.currentTimeMillis();
 		}
 	}
 
-	private synchronized void initSms() {
-		if (sms==null) {
+	private void initSms() {
+		if ((System.currentTimeMillis() - smsResolvedTs) < PROVIDER_RESOLVE_TTL_MS) return;
+		synchronized(smsLock) {
+			if ((System.currentTimeMillis() - smsResolvedTs) < PROVIDER_RESOLVE_TTL_MS) return;
 			UserProfileId pid=getTargetProfileId();
 			CoreServiceSettings css = new CoreServiceSettings(CoreManifest.ID, pid.getDomainId());
 			String provider=css.getSmsProvider();
-			if (provider!=null) {
-				// the provider outlives the creating request on a shared instance:
-				// resolve the TARGET user's locale, never the calling thread's
-				UserProfile.Data ud = WT.getProfileData(pid);
-				Locale locale = (ud != null) ? ud.getLocale() : WT.LOCALE_ENGLISH;
-				sms=SmsProvider.getInstance(locale, provider, pid);
+			if (!StringUtils.equals(provider, smsProviderName)) {
+				if (provider!=null) {
+					// the provider outlives the creating request on a shared instance:
+					// resolve the TARGET user's locale, never the calling thread's
+					UserProfile.Data ud = WT.getProfileData(pid);
+					Locale locale = (ud != null) ? ud.getLocale() : WT.LOCALE_ENGLISH;
+					sms=SmsProvider.getInstance(locale, provider, pid);
+				} else {
+					sms=null;
+				}
+				smsProviderName=provider;
 			}
+			smsResolvedTs=System.currentTimeMillis();
 		}
 	}
 
@@ -354,7 +422,7 @@ public class CoreManager extends BaseManager /*implements SharedManager*/ {
 	}
 	
 	public final int getCustomFieldsMaxNo() {
-		return cfieldsLicensed ? -1 : MAX_CFIELDS_FREE;
+		return isCFieldsLicensed() ? -1 : MAX_CFIELDS_FREE;
 	}
 	
 	public IPLookupResponse getIPGeolocationData(final String ipAddress) throws WTException {
@@ -2210,7 +2278,7 @@ public class CoreManager extends BaseManager /*implements SharedManager*/ {
 			}
 		}
 		DataSourcesManager.QueryPlaceholders placeholders = new DataSourcesManager.QueryPlaceholders(field.getDomainId(), getTargetProfileId().getUserId(), placeholdersValues);
-		return dsMgr.executeQuery(field.getDomainId(), field.getQueryId(), placeholders, pagination, false, new FilterableArrayListHandler(cols), filterClause, !cfieldsLicensed ? 10 : null);
+		return dsMgr.executeQuery(field.getDomainId(), field.getQueryId(), placeholders, pagination, false, new FilterableArrayListHandler(cols), filterClause, !isCFieldsLicensed() ? 10 : null);
 	}
 	
 	/**
@@ -2229,7 +2297,7 @@ public class CoreManager extends BaseManager /*implements SharedManager*/ {
 			
 			DataSourcesManager dsMgr = wta.getDataSourcesManager();
 			DataSourcesManager.QueryPlaceholders placeholders = new DataSourcesManager.QueryPlaceholders(targetPid.getDomainId(), getTargetProfileId().getUserId());
-			return dsMgr.executeQuery(targetPid.getDomainId(), dataSourceQueryId, placeholders, pagination, debugReport, new FilterableArrayListHandler(), null, !cfieldsLicensed ? 10 : null);
+			return dsMgr.executeQuery(targetPid.getDomainId(), dataSourceQueryId, placeholders, pagination, debugReport, new FilterableArrayListHandler(), null, !isCFieldsLicensed() ? 10 : null);
 			
 		} catch (Throwable t) {
 			throw ExceptionUtils.wrapThrowable(t);
@@ -4072,13 +4140,13 @@ public class CoreManager extends BaseManager /*implements SharedManager*/ {
 		
 		final ArrayList<String> sources = new ArrayList<>();
 		if (!builtInProvidersAtTheEnd) {
-			if (autoRcptProviderEnabled && includeAuto) sources.add(RECIPIENT_PROVIDER_BUILTIN_AUTO);
-			if (webtopRcptProviderEnabled && includeWebTop) sources.add(RECIPIENT_PROVIDER_BUILTIN_WEBTOP);
+			if (isAutoRcptProviderEnabled() && includeAuto) sources.add(RECIPIENT_PROVIDER_BUILTIN_AUTO);
+			if (isWebtopRcptProviderEnabled() && includeWebTop) sources.add(RECIPIENT_PROVIDER_BUILTIN_WEBTOP);
 		}
 		sources.addAll(listRecipientsProviderIDs());
 		if (builtInProvidersAtTheEnd) {
-			if (autoRcptProviderEnabled && includeAuto) sources.add(RECIPIENT_PROVIDER_BUILTIN_AUTO);
-			if (webtopRcptProviderEnabled && includeWebTop) sources.add(RECIPIENT_PROVIDER_BUILTIN_WEBTOP);
+			if (isAutoRcptProviderEnabled() && includeAuto) sources.add(RECIPIENT_PROVIDER_BUILTIN_AUTO);
+			if (isWebtopRcptProviderEnabled() && includeWebTop) sources.add(RECIPIENT_PROVIDER_BUILTIN_WEBTOP);
 		}
 		return listRecipients(sources, fieldType, queryText, max);
 	}
