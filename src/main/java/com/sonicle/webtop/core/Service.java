@@ -809,7 +809,7 @@ public class Service extends BaseService implements EventListener {
 			List<JsAclSubjectLkp> items = new ArrayList<>();
 			if (wildcard) items.add(JsAclSubjectLkp.wildcard(lookupResource(up.getLocale(), CoreLocaleKey.WORD_ALL_MALE)));
 			for (GenericSubject subject : coreMgr.listSubjects(users, resources, groups, roles, false).values()) {
-				items.add(new JsAclSubjectLkp(subject.getSid(), subject.getDisplayName(), subject.getName(), EnumUtils.toSerializedName(subject.getType())));
+				items.add(new JsAclSubjectLkp(subject.getUid(), subject.getDisplayName(), subject.getName(), EnumUtils.toSerializedName(subject.getType())));
 			}
 			new JsonResult(items).printTo(out);
 			

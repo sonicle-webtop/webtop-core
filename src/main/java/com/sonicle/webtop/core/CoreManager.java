@@ -252,20 +252,20 @@ public class CoreManager extends BaseManager /* implements SharedManager */ {
 	}
 	
 	/**
-	 * @deprecated use lookupUserSid instead (will be removed in v.5.16.0)
+	 * @deprecated use lookupUserUid instead (will be removed in v.5.16.0)
 	 */
 	@Deprecated
 	public String getUserUid(UserProfileId profileId) throws WTException {
-		return lookupUserSid(profileId);
+		return lookupUserUid(profileId);
 	}
 	
 	/**
-	 * @deprecated use lookupUserProfileIdBySid instead (will be removed in v.5.16.0)
+	 * @deprecated use lookupUserProfileIdByUid instead (will be removed in v.5.16.0)
 	 */
 	@Deprecated
 	public UserProfileId userUidToProfileId(String userUid) {
 		try {
-			return lookupUserProfileIdBySid(userUid);
+			return lookupUserProfileIdByUid(userUid);
 		} catch (WTException ex) {
 			return null;
 		}
@@ -804,8 +804,8 @@ public class CoreManager extends BaseManager /* implements SharedManager */ {
 	 * @return
 	 * @throws WTException 
 	 */
-	public String getUserSid() throws WTException {
-		return lookupUserSid(getTargetProfileId());
+	public String getUserUid() throws WTException {
+		return lookupUserUid(getTargetProfileId());
 	}
 	
 	/**
@@ -814,21 +814,21 @@ public class CoreManager extends BaseManager /* implements SharedManager */ {
 	 * @return
 	 * @throws WTException 
 	 */
-	public String lookupUserSid(final UserProfileId profileId) throws WTException {
+	public String lookupUserUid(final UserProfileId profileId) throws WTException {
 		Check.notNull(profileId, "profileId");
 		RunContext.ensureProfileDomain(profileId.getDomainId(), RunContext.AdminScope.WTADMIN);
-		return wta.getWebTopManager().lookupSubjectSid(profileId, GenericSubject.Type.USER);
+		return wta.getWebTopManager().lookupSubjectUid(profileId, GenericSubject.Type.USER);
 	}
 	
 	/**
 	 * Returns the profile ID related to the passed SID of a user.
-	 * @param userSid The target SID.
+	 * @param userUid The target SID.
 	 * @return
 	 * @throws WTException 
 	 */
-	public UserProfileId lookupUserProfileIdBySid(final String userSid) throws WTException {
-		Check.notNull(userSid, "userSid");
-		UserProfileId pid = wta.getWebTopManager().lookupSubjectProfile(userSid, GenericSubject.Type.USER);
+	public UserProfileId lookupUserProfileIdByUid(final String userUid) throws WTException {
+		Check.notNull(userUid, "userUid");
+		UserProfileId pid = wta.getWebTopManager().lookupSubjectProfile(userUid, GenericSubject.Type.USER);
 		if (pid != null) RunContext.ensureProfileDomain(pid.getDomainId(), RunContext.AdminScope.SYSADMIN);
 		return pid;
 	}
@@ -3236,7 +3236,7 @@ public class CoreManager extends BaseManager /* implements SharedManager */ {
 		Connection con = null;
 		
 		try {
-			String profileUid = usrm.lookupSubjectSid(getTargetProfileId(), GenericSubject.Type.USER);
+			String profileUid = usrm.lookupSubjectUid(getTargetProfileId(), GenericSubject.Type.USER);
 			con = WT.getCoreConnection();
 			
 			OShare share = shadao.selectById(con, Integer.valueOf(shareId));
@@ -3347,7 +3347,7 @@ public class CoreManager extends BaseManager /* implements SharedManager */ {
 			// Retrieves the root share
 			OShare rootShare = null;
 			if(rootId.equals("0")) {
-				String puid = usrm.lookupSubjectSid(getTargetProfileId(), GenericSubject.Type.USER);
+				String puid = usrm.lookupSubjectUid(getTargetProfileId(), GenericSubject.Type.USER);
 				rootShare = shadao.selectByUserServiceKeyInstance2(con, puid, serviceId, rootShareKey, OShare.INSTANCE_ROOT);
 			} else {
 				rootShare = shadao.selectById(con, Integer.valueOf(rootId));
@@ -3440,7 +3440,7 @@ public class CoreManager extends BaseManager /* implements SharedManager */ {
 		// At next level, we have permissions for only the Work category.
 		
 		try {
-			String puid = usrm.lookupSubjectSid(getTargetProfileId(), GenericSubject.Type.USER);
+			String puid = usrm.lookupSubjectUid(getTargetProfileId(), GenericSubject.Type.USER);
 			
 			// Parses the sharing ID as a composite key:
 			// - "0"		for root share
@@ -3604,7 +3604,7 @@ public class CoreManager extends BaseManager /* implements SharedManager */ {
 		
 		try {
 			con = WT.getCoreConnection();
-			String uuid = usrm.lookupSubjectSid(pid, GenericSubject.Type.USER);
+			String uuid = usrm.lookupSubjectUid(pid, GenericSubject.Type.USER);
 			return dao.selectByUserServiceKey(con, uuid, serviceId, shareKey);
 			
 		} catch(SQLException | DAOException ex) {

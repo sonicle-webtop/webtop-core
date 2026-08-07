@@ -47,7 +47,7 @@ public class JsGridGroup {
 	
 	public JsGridGroup(Group item) {
 		this.groupId = item.getGroupId();
-		this.groupSid = item.getGroupSid();
+		this.groupSid = item.getGroupUid();
 		this.description = item.getDescription();
 	}
 	

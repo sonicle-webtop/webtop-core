@@ -47,7 +47,7 @@ public class JsGridRole {
 	
 	public JsGridRole(Role item) {
 		this.roleId = item.getRoleId();
-		this.roleSid = item.getRoleSid();
+		this.roleSid = item.getRoleUid();
 		this.description = item.getDescription();
 	}
 	
