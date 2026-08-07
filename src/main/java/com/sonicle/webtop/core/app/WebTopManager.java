@@ -3676,6 +3676,7 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 	 * @return A set of rights for involved subject IDs (SIDs).
 	 * @throws WTException 
 	 */
+	/*
 	public <T> Map<String, Sharing.SubjectConfiguration> getShareConfigurations(final UserProfileId originProfileId, final String serviceId, final String context, final String instance, final String permissionKey, final Set<UserProfileId> permissionProfileIds, final Class<T> typeOfData) throws WTException {
 		Check.notNull(originProfileId, "originProfileId");
 		Check.notEmpty(serviceId, "serviceId");
@@ -3697,6 +3698,79 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 			
 			con = WT.getCoreConnection();
 			return doShareConfigurationsGet(con, originSid, serviceId, context, instance, permissionKey, permissionSids, typeOfData);
+			
+		} catch (Exception ex) {
+			throw ExceptionUtils.wrapThrowable(ex);
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	*/
+	
+	/**
+	 * Gets Share configurations for an origin profile-id (single) that satisfies 
+	 * some parameters like context, instance and a targetPermissionKey.
+	 * Optionally it can restrict results to a defined set of profile-ids.
+	 * @param <T> The type of Data object inside the configuration
+	 * @param originProfileId The origin profile-id whose Share configurations is to be retrieved.
+	 * @param serviceId The related service ID.
+	 * @param context The context name of the Share.
+	 * @param instance The identifier of the entity that is (or is being) shared.
+	 * @param targetPermissionKey The permission-key to target.
+	 * @param targetPermissionProfileIds Set of targets profileIds associated with permission-key above. Optional, set to <null> to disable filtering.
+	 * @param typeOfData Type of Data object in configuration. Optional, set to <null> to not process Data.
+	 * @return a map of configuration objects keyed by target profile-uid
+	 * @throws WTException 
+	 */
+	public <T> Map<String, Sharing.SubjectConfiguration> getShareConfigurations(final UserProfileId originProfileId, final String serviceId, final String context, final String instance, final String targetPermissionKey, final Set<UserProfileId> targetPermissionProfileIds, final Class<T> typeOfData) throws WTException {
+		Map<UserProfileId, Map<String, Sharing.SubjectConfiguration>> result = getShareConfigurations(LangUtils.asSet(originProfileId), serviceId, context, instance, targetPermissionKey, targetPermissionProfileIds, typeOfData);
+		return result.get(originProfileId);
+	}
+	
+	/**
+	 * Gets Share configurations for multiple origin profile-ids that satisfies 
+	 * same parameters like context, instance and a targetPermissionKey.
+	 * Optionally it can restrict results to a defined set of profile-ids.
+	 * @param <T> The type of Data object inside the configuration
+	 * @param originProfileIds A set of origin profile-id whose Share configurations is to be retrieved.
+	 * @param serviceId The related service ID.
+	 * @param context The context name of the Share.
+	 * @param instance The identifier of the entity that is (or is being) shared.
+	 * @param targetPermissionKey The permission-key to target.
+	 * @param targetPermissionProfileIds Set of targets profileIds associated with permission-key above. Optional, set to <null> to disable filtering.
+	 * @param typeOfData Type of Data object in configuration. Optional, set to <null> to not process Data.
+	 * @return for each origin profile-id a map of configuration objects keyed by target profile-uid
+	 * @throws WTException 
+	 */
+	public <T> Map<UserProfileId, Map<String, Sharing.SubjectConfiguration>> getShareConfigurations(final Set<UserProfileId> originProfileIds, final String serviceId, final String context, final String instance, final String targetPermissionKey, final Set<UserProfileId> targetPermissionProfileIds, final Class<T> typeOfData) throws WTException {
+		Check.notNull(originProfileIds, "originProfileIds");
+		Check.notEmpty(serviceId, "serviceId");
+		Check.notEmpty(context, "context");
+		Check.notEmpty(instance, "instance");
+		Check.notEmpty(targetPermissionKey, "targetPermissionKey");
+		Connection con = null;
+		
+		try {
+			Set<String> targetPermissionUids = (targetPermissionProfileIds == null) ? null : targetPermissionProfileIds.stream()
+				// skipping NULLs and objects with non-matching domain
+				.filter((pid) -> (pid != null))
+				// then lookup related PID
+				.map((pid) -> subjectSidCache.getSid(pid, GenericSubject.Type.GROUP, GenericSubject.Type.USER, GenericSubject.Type.RESOURCE, GenericSubject.Type.ROLE))
+				// making sure that match was successful
+				.filter((sid) -> (sid != null))
+				.collect(Collectors.toSet());
+			
+			Map<UserProfileId, String> originSids = new LinkedHashMap<>(originProfileIds.size());
+			for (UserProfileId originPid : originProfileIds) {
+				originSids.put(originPid, subjectSidCache.getSid(originPid, GenericSubject.Type.USER, GenericSubject.Type.RESOURCE));
+			}
+			
+			con = WT.getCoreConnection();
+			Map<UserProfileId, Map<String, Sharing.SubjectConfiguration>> result = new LinkedHashMap<>(originProfileIds.size());
+			for (Map.Entry<UserProfileId, String> entry : originSids.entrySet()) {
+				result.put(entry.getKey(), doShareConfigurationsGet(con, entry.getValue(), serviceId, context, instance, targetPermissionKey, targetPermissionUids, typeOfData));
+			}
+			return result;
 			
 		} catch (Exception ex) {
 			throw ExceptionUtils.wrapThrowable(ex);
@@ -5396,22 +5470,22 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 		return !ret ? null : oshare;
 	}
 	
-	private <T> Map<String, Sharing.SubjectConfiguration> doShareConfigurationsGet(final Connection con, final String originSid, final String serviceId, final String shareContext, final String shareInstance, final String permissionKey, final Set<String> permissionSids, final Class<T> typeOfData) throws DAOException {
+	private <T> Map<String, Sharing.SubjectConfiguration> doShareConfigurationsGet(final Connection con, final String originUid, final String serviceId, final String shareContext, final String shareInstance, final String targetPermissionKey, final Set<String> targetPermissionUids, final Class<T> typeOfData) throws DAOException {
 		ShareDAO shaDao = ShareDAO.getInstance();
 		ShareDataDAO shadDao = ShareDataDAO.getInstance();
 		RolePermissionDAO permsDao = RolePermissionDAO.getInstance();
 		
 		Map<String, Sharing.SubjectConfiguration> items = new LinkedHashMap<>();
-		OShare oshare = shaDao.selectByUserServiceKeyInstance(con, originSid, serviceId, shareContext, shareInstance);
+		OShare oshare = shaDao.selectByUserServiceKeyInstance(con, originUid, serviceId, shareContext, shareInstance);
 		if (oshare != null) {
-			Map<String, List<ORolePermission>> permsMap = permsDao.mapByServiceKeysInstanceRoles(con, serviceId, Arrays.asList(permissionKey), oshare.getShareIdAsString(), permissionSids);
+			Map<String, List<ORolePermission>> permsMap = permsDao.mapByServiceKeysInstanceUids(con, serviceId, Arrays.asList(targetPermissionKey), oshare.getShareIdAsString(), targetPermissionUids);
 			Map<String, String> dataMap = shadDao.mapByShare(con, oshare.getShareId());
-			LinkedHashSet<String> subjectSids = new LinkedHashSet<>();
-			subjectSids.addAll(permsMap.keySet());
-			subjectSids.addAll(dataMap.keySet());
-			for (String subjectSid : subjectSids) {
-				if (permsMap.containsKey(subjectSid)) {
-					items.put(subjectSid, toSharingSubjectConfiguration(subjectSid, permsMap.get(subjectSid), dataMap.get(subjectSid), typeOfData));
+			LinkedHashSet<String> subjectUids = new LinkedHashSet<>();
+			subjectUids.addAll(permsMap.keySet());
+			subjectUids.addAll(dataMap.keySet());
+			for (String subjectUid : subjectUids) {
+				if (permsMap.containsKey(subjectUid)) {
+					items.put(subjectUid, toSharingSubjectConfiguration(subjectUid, permsMap.get(subjectUid), dataMap.get(subjectUid), typeOfData));
 				}
 			}
 		}
@@ -5482,7 +5556,7 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 		Set<FolderSharing.SubjectConfiguration> items = new LinkedHashSet<>();
 		OShare oshare = shaDao.selectByUserServiceKeyInstance(con, originSid, serviceId, shareContext, shareInstance);
 		if (oshare != null) {
-			Map<String, List<ORolePermission>> permissionMap = permsDao.mapByServiceKeysInstanceRoles(con, serviceId, TARGET_PERMISSION_KEYS, oshare.getShareIdAsString(), targetSids);
+			Map<String, List<ORolePermission>> permissionMap = permsDao.mapByServiceKeysInstanceUids(con, serviceId, TARGET_PERMISSION_KEYS, oshare.getShareIdAsString(), targetSids);
 			Map<String, String> dataMap = shadDao.mapByShare(con, oshare.getShareId());
 			LinkedHashSet<String> subjectSids = new LinkedHashSet<>();
 			subjectSids.addAll(permissionMap.keySet());
