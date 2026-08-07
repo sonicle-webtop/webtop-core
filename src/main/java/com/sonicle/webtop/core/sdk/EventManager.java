@@ -35,54 +35,76 @@ package com.sonicle.webtop.core.sdk;
 import com.sonicle.webtop.core.app.RunContext;
 import com.sonicle.webtop.core.app.sdk.BaseEvent;
 import com.sonicle.webtop.core.app.sdk.EventListener;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import org.apache.shiro.subject.Subject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
- *
+ * Process-wide event bus (one instance is held statically by CoreManager and
+ * shared across ALL users): every structure here is touched concurrently by
+ * login/logout (add/removeListener) and by request threads (fireEvent).
  * @author malbinola
  */
+@Deprecated
 public class EventManager {
+	private static final Logger LOGGER = LoggerFactory.getLogger(EventManager.class);
 	private final List<EventListener> listeners = new CopyOnWriteArrayList<>();
-	private final Map<EventListener, Subject> subjects = new HashMap<>();
-	
+	//ConcurrentHashMap: was a plain HashMap mutated on every login/logout and
+	//read on every fire — lost entries and resize races under concurrency
+	private final ConcurrentMap<EventListener, Subject> subjects = new ConcurrentHashMap<>();
+	//Single shared daemon worker for the rare no-subject listeners: was an
+	//unbounded `new Thread` per listener per event
+	private final ExecutorService asyncFires = Executors.newSingleThreadExecutor(r -> {
+		Thread t = new Thread(r, "wt-eventManager");
+		t.setDaemon(true);
+		return t;
+	});
+
 	public void addListener(final EventListener listener) {
 		Subject subject = RunContext.getSubject();
-		listeners.add(listener);
 		if (subject != null) {
-			if (subjects.put(listener, subject) != null) {
+			//register the subject BEFORE exposing the listener to fireEvent, and
+			//fail before touching the list: the old order added the listener to
+			//the list first, so a duplicated registration left it enlisted twice
+			if (subjects.putIfAbsent(listener, subject) != null) {
 				throw new WTRuntimeException("Unexpected duplicated subject map [{}, {}]", listener, subject);
 			}
 		}
+		listeners.add(listener);
 	}
-	
+
 	public void removeListener(final EventListener listener) {
 		listeners.remove(listener);
 		subjects.remove(listener);
 	}
-	
+
 	public void fireEvent(final BaseEvent event) {
 		for (Iterator<EventListener> i = listeners.iterator(); i.hasNext();) {
 			EventListener listener = i.next();
 			doFire(subjects.get(listener), listener, event);
 		}
 	}
-	
+
 	private void doFire(Subject subject, EventListener listener, BaseEvent event) {
 		Runnable runnable = () -> {
 			try {
 				listener.onEvent(event);
-			} catch (Throwable t) { /* Do nothing... */ }
+			} catch (Throwable t) {
+				LOGGER.error("Event listener failed [{}, {}]", listener.getClass().getName(), event.getClass().getSimpleName(), t);
+			}
 		};
-		
+
 		if (subject != null) {
 			subject.execute(runnable);
 		} else {
-			new Thread(runnable).start();
+			asyncFires.execute(runnable);
 		}
 	}
 }
