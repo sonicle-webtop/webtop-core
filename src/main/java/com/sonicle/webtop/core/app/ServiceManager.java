@@ -838,6 +838,142 @@ public class ServiceManager extends AbstractAppManager<ServiceManager> {
 	}
 
 	/**
+	 * True if the given service is a shared-manager service whose scope routes
+	 * only SESSIONLESS consumers (REST, subscriptions) to the shared instance,
+	 * while web sessions keep private per-session Manager instances (hybrid
+	 * model, see {@link com.sonicle.webtop.core.sdk.SharedManagerScope}).
+	 */
+	public boolean isSessionlessOnlySharedManagerService(String serviceId) {
+		ServiceDescriptor descr = getDescriptor(serviceId);
+		return (descr != null) && descr.hasSharedManager()
+			&& com.sonicle.webtop.core.sdk.SharedManagerScope.Scope.SESSIONLESS_ONLY.equals(descr.getSharedManagerScope());
+	}
+
+	/**
+	 * Age of the live shared instance for (serviceId, targetProfileId) in
+	 * milliseconds, or -1 if none exists. Used to rate-limit rebuild triggers.
+	 */
+	public long getSharedManagerAgeMs(String serviceId, UserProfileId targetProfileId) {
+		return sharedManagerRegistry.ageMs(serviceId, targetProfileId);
+	}
+
+	/**
+	 * Forcibly evicts the shared instance for (serviceId, targetProfileId) NOW
+	 * (see {@link SharedManagerRegistry#evictNow}): the next acquire/getOrTouch
+	 * creates a fresh instance; durable refs die with the old holder and must be
+	 * re-acquired by their owners. Returns true if an instance was evicted.
+	 */
+	public boolean evictSharedManager(String serviceId, UserProfileId targetProfileId) {
+		return sharedManagerRegistry.evictNow(serviceId, targetProfileId);
+	}
+
+	/**
+	 * Forcibly evicts ALL live SESSIONLESS_ONLY shared instances of the given
+	 * profile that are older than {@code minAgeMs} ("app restart = the app
+	 * world's re-login": every app-side manager restarts fresh, exactly like
+	 * every web manager does on a web re-login). Evicted instances rebuild
+	 * lazily on their next sessionless access; owners of durable refs (e.g. a
+	 * push manager) must re-acquire them for the services they hold.
+	 *
+	 * @param minAgeMs Skip instances younger than this (rate limit); 0 evicts all.
+	 * @return the serviceIds whose instance was evicted (empty if none)
+	 */
+	public List<String> evictSessionlessSharedManagers(UserProfileId targetProfileId, long minAgeMs) {
+		List<String> evicted = new ArrayList<>();
+		for (String serviceId : listRegisteredServices()) {
+			if (!isSessionlessOnlySharedManagerService(serviceId)) continue;
+			long age = sharedManagerRegistry.ageMs(serviceId, targetProfileId);
+			if (age < 0) continue; //no live instance
+			if (minAgeMs > 0 && age < minAgeMs) continue; //too young: rate-limited
+			if (sharedManagerRegistry.evictNow(serviceId, targetProfileId)) evicted.add(serviceId);
+		}
+		return evicted;
+	}
+
+	/**
+	 * Notified after {@link #onAppLaunch} force-evicted a profile's
+	 * SESSIONLESS_ONLY shared instances. Modules holding durable refs on
+	 * evicted services (e.g. mail's push subscriptions) re-acquire them here —
+	 * the old holder's refs died with it. Called synchronously on the
+	 * triggering thread; implementations must be quick and never throw.
+	 */
+	public interface SessionlessEvictionListener {
+		void onSessionlessManagersEvicted(UserProfileId profileId, List<String> evictedServiceIds);
+	}
+
+	//"App kill/restart = the app world's re-login" (core-owned: the signal can
+	//arrive on ANY service's API call — X-WT-App-Launch processed at the auth
+	//layer — or from a push device re-registration).
+	private final java.util.concurrent.CopyOnWriteArrayList<SessionlessEvictionListener> sessionlessEvictionListeners = new java.util.concurrent.CopyOnWriteArrayList<>();
+	//recent launch ids per profile (small LRU, not just the last one): with a
+	//single remembered id, two devices re-sending their different ids would
+	//alternate the stored value and each re-send would look "new" → rebuild
+	//ping-pong. A short memory makes any re-sent id inert.
+	private final java.util.concurrent.ConcurrentHashMap<UserProfileId, java.util.LinkedHashSet<String>> seenAppLaunchIds = new java.util.concurrent.ConcurrentHashMap<>();
+	private static final int APP_LAUNCH_IDS_KEPT = 8;
+	private static final String PROP_APP_LAUNCH_DEBOUNCE = "webtop.app-launch.rebuild-debounce-seconds";
+	private static final int DEFAULT_APP_LAUNCH_DEBOUNCE_SECONDS = 10;
+
+	public void addSessionlessEvictionListener(SessionlessEvictionListener listener) {
+		if (listener != null) sessionlessEvictionListeners.addIfAbsent(listener);
+	}
+
+	public void removeSessionlessEvictionListener(SessionlessEvictionListener listener) {
+		sessionlessEvictionListeners.remove(listener);
+	}
+
+	/**
+	 * Handles an app-launch signal for the profile: rebuilds ALL its
+	 * SESSIONLESS_ONLY shared instances — exactly like a web re-login rebuilds
+	 * every web session manager — then notifies the eviction listeners so
+	 * durable-ref owners re-attach. Always immediate, except:
+	 * <ul>
+	 * <li>{@code launchId} dedupe — a retried first call of the same app
+	 * launch must not rebuild twice (null skips the dedupe);</li>
+	 * <li>a small debounce window ({@value #PROP_APP_LAUNCH_DEBOUNCE},
+	 * default 10s): instances younger than it are skipped — loop guard for
+	 * multi-device simultaneous boots and crash-restart loops, NOT a refresh
+	 * delay.</li>
+	 * </ul>
+	 */
+	public void onAppLaunch(UserProfileId profileId, String launchId) {
+		if (profileId == null) return;
+		if (launchId != null) {
+			java.util.LinkedHashSet<String> seen = seenAppLaunchIds.computeIfAbsent(profileId, k -> new java.util.LinkedHashSet<>());
+			synchronized (seen) {
+				if (seen.contains(launchId)) return; //this launch was already handled
+				seen.add(launchId);
+				java.util.Iterator<String> it = seen.iterator();
+				while (seen.size() > APP_LAUNCH_IDS_KEPT && it.hasNext()) {
+					it.next();
+					it.remove();
+				}
+			}
+		}
+		long debounceMs = getAppLaunchDebounceSeconds() * 1000L;
+		List<String> evicted = evictSessionlessSharedManagers(profileId, debounceMs);
+		if (evicted.isEmpty()) return;
+		LOGGER.info("[{}] app-launch: sessionless managers rebuilt {}", profileId, evicted);
+		for (SessionlessEvictionListener listener : sessionlessEvictionListeners) {
+			try {
+				listener.onSessionlessManagersEvicted(profileId, evicted);
+			} catch (Throwable t) {
+				LOGGER.error("Sessionless eviction listener failed", t);
+			}
+		}
+	}
+
+	private int getAppLaunchDebounceSeconds() {
+		try {
+			int v = Integer.parseInt(WebTopApp.getInstanceProperties()
+				.getProperty(PROP_APP_LAUNCH_DEBOUNCE, String.valueOf(DEFAULT_APP_LAUNCH_DEBOUNCE_SECONDS)));
+			return (v < 0) ? 0 : v;
+		} catch (Throwable t) {
+			return DEFAULT_APP_LAUNCH_DEBOUNCE_SECONDS;
+		}
+	}
+
+	/**
 	 * Returns the shared per-user Manager instance for (serviceId, targetProfileId),
 	 * creating and starting it if absent, and registering a durable web-session
 	 * reference keyed by {@code sessionId} that keeps it alive until the matching
@@ -891,10 +1027,12 @@ public class ServiceManager extends AbstractAppManager<ServiceManager> {
 	/**
 	 * Periodic idle-eviction pass over shared per-user Manager instances. Invoked by
 	 * the application sweeper thread (bound to the admin subject).
-	 * @param graceMs Evict instances with no references idle longer than this.
+	 * @param graceMs Evict ref-empty instances idle longer than this.
+	 * @param maxAgeMs When &gt; 0, also evict ref-empty instances older than this
+	 * regardless of touches (staleness bound for continuously-polling clients).
 	 */
-	public void sweepSharedManagers(long graceMs) {
-		sharedManagerRegistry.sweep(graceMs);
+	public void sweepSharedManagers(long graceMs, long maxAgeMs) {
+		sharedManagerRegistry.sweep(graceMs, maxAgeMs);
 	}
 
 	public BaseManager instantiateServiceManager(String serviceId, boolean fastInit, UserProfileId targetProfileId) {

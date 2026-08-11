@@ -205,7 +205,10 @@ public class WTRealm extends AuthorizingRealm {
 				} else if (token instanceof AuthTokenAccessToken) {
 					LOGGER.trace("doGetAuthenticationInfo [Bearer, AccessToken]");
 					Principal principal = authenticateAccessToken(bt.getToken());
-					return new WTAuthenticationInfo(principal, bt.getToken().toCharArray(), this.getName());
+					//accessTokenAuth=true: marks the subject as an APP caller
+					//(WebTop Connect flow) — the only sessionless consumers routed
+					//to the shared per-user managers (hybrid scope)
+					return new WTAuthenticationInfo(principal, bt.getToken().toCharArray(), this.getName(), true);
 				}
 			}
 			

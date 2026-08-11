@@ -208,7 +208,13 @@ import org.slf4j.Logger;
  *
  * @author malbinola
  */
-public class CoreManager extends BaseManager /* implements SharedManager */ {
+//Hybrid scope: web sessions keep PRIVATE per-session CoreManagers (historical
+//lifecycle, re-login = fresh); only sessionless consumers (REST, DAV/EAS,
+//cross-profile lookups) share the registry instance, one per user. The app
+//restart trigger (mail's rebuildIfStale) evicts it together with the other
+//sessionless-only instances. Remove the annotation for everyone-shares-one.
+@com.sonicle.webtop.core.sdk.SharedManagerScope(com.sonicle.webtop.core.sdk.SharedManagerScope.Scope.SESSIONLESS_ONLY)
+public class CoreManager extends BaseManager implements SharedManager {
 	private static final Logger logger = WT.getLogger(CoreManager.class);
 	
 	public static final String RECIPIENT_PROVIDER_BUILTIN_AUTO_SUFFIX = "auto";
@@ -324,7 +330,6 @@ public class CoreManager extends BaseManager /* implements SharedManager */ {
 		}
 		return enabled;
 	}
-/*
 	@Override
 	public void onSharedStartup() {
 		logger.info("[{}] shared CoreManager created", getTargetProfileId());
@@ -352,7 +357,7 @@ public class CoreManager extends BaseManager /* implements SharedManager */ {
 		pbx = null;
 		sms = null;
 	}
-*/	
+
 	public void addListener(final EventListener listener) {
 		eventManager.addListener(listener);
 	}

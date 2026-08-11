@@ -428,12 +428,15 @@ public class WebTopSession {
 		emptyServiceManagers();
 		
 		CoreManager core;
-		if (svcMgr.isSharedManagerService(CoreManifest.ID) && !RunContext.getSysAdminProfileId().equals(profileId)) {
+		if (svcMgr.isSharedManagerService(CoreManifest.ID) && !svcMgr.isSessionlessOnlySharedManagerService(CoreManifest.ID)
+				&& !RunContext.getSysAdminProfileId().equals(profileId)) {
 			// Shared per-user instance, kept alive by this session's durable
 			// reference (released in emptyServiceManagers). SysAdmin sessions
 			// keep a private instance: the registry never hosts admin@*.
 			core = (CoreManager)svcMgr.acquireSharedManager(CoreManifest.ID, profileId, getId());
 		} else {
+			// Private per-session instance (non-shared, SESSIONLESS_ONLY scope,
+			// or SysAdmin session).
 			core = svcMgr.instantiateCoreManager(false, profileId);
 		}
 		cacheServiceManager(CoreManifest.ID, core);
@@ -513,12 +516,16 @@ public class WebTopSession {
 			// Skip core service... its manager has already been instantiated above (see: internalInitPrivate)
 			if (!serviceId.equals(CoreManifest.ID) && !serviceId.equals(CoreAdminManifest.ID)) {
 				if (descriptor.hasManager() && !isServiceManagerCached(serviceId)) {
-					if (descriptor.hasSharedManager()) {
+					if (descriptor.hasSharedManager() && !svcm.isSessionlessOnlySharedManagerService(serviceId)) {
 						// Shared per-user instance: acquire (creating+starting on
 						// first touch) and hold a durable ref for this session; the
 						// session cache holds the same shared instance for reuse.
 						managerInst = svcm.acquireSharedManager(serviceId, profile.getId(), getId());
 					} else {
+						// Per-session instance. SESSIONLESS_ONLY shared services land
+						// here too (hybrid scope): the web session owns a private
+						// Manager with the historical lifecycle, while the registry
+						// instance serves only REST/subscription consumers.
 						managerInst = svcm.instantiateServiceManager(serviceId, false, profile.getId());
 					}
 					if (managerInst != null) {
@@ -665,7 +672,9 @@ public class WebTopSession {
 				UserProfileId pid = getProfileId();
 				String sessionId = getId();
 				for (String serviceId : managers.keySet()) {
-					if (svcm.isSharedManagerService(serviceId)) {
+					// SESSIONLESS_ONLY services never acquired a session ref (the
+					// cached instance is private): nothing to release for them.
+					if (svcm.isSharedManagerService(serviceId) && !svcm.isSessionlessOnlySharedManagerService(serviceId)) {
 						svcm.releaseSharedManager(serviceId, pid, sessionId);
 					}
 				}

@@ -48,9 +48,17 @@ public class WTAuthenticationInfo implements AuthenticationInfo {
 	
 	
 	public WTAuthenticationInfo(Principal principal, char[] credentials, String realmName) {
+		this(principal, credentials, realmName, false);
+	}
+
+	public WTAuthenticationInfo(Principal principal, char[] credentials, String realmName, boolean accessTokenAuth) {
 		this.soniclePrincipal = principal;
 		this.credentials = credentials;
-		principals.add(principal, realmName);
+		principals.add(principal, realmName); //FIRST: must stay the primary principal
+		//marker AFTER the primary: lets RunContext.isAuthenticatedByAccessToken()
+		//recognize app (WebTop Connect access-token) subjects on every request,
+		//surviving Shiro sessions and authentication caching
+		if (accessTokenAuth) principals.add(AccessTokenAuthMarker.INSTANCE, realmName);
 	}
 
 	public Principal getSoniclePrincipal() {

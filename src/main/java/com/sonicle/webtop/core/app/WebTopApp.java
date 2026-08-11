@@ -828,8 +828,14 @@ public final class WebTopApp {
 						logger.warn("Cannot read shared-manager idle grace, using default", t);
 					}
 					if (grace <= 0) grace = SHARED_MANAGER_IDLE_GRACE_MS;
+					long maxAge = 0; //0 = age bound disabled
+					try {
+						maxAge = getCoreServiceSettings().getSharedManagerMaxAge() * 1000L;
+					} catch (Throwable t) {
+						logger.warn("Cannot read shared-manager max age, using default (disabled)", t);
+					}
 					ServiceManager svcm = instance.getServiceManager();
-					if (svcm != null) svcm.sweepSharedManagers(grace);
+					if (svcm != null) svcm.sweepSharedManagers(grace, maxAge);
 				} catch (Throwable t) {
 					logger.error("Task 'sharedManagerSweep' failed", t);
 				} finally {
