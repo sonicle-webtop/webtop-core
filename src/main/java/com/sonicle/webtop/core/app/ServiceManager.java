@@ -111,6 +111,7 @@ import org.apache.commons.configuration2.tree.ImmutableNode;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.joda.time.DateTimeZone;
+import org.quartz.SchedulerException;
 
 /**
  *
@@ -1093,7 +1094,14 @@ public class ServiceManager extends AbstractAppManager<ServiceManager> {
 			LOGGER.error("[{}] BackgroundService: instantiation of '{}' throws errors", serviceId, descr.getManifest().getBackgroundServiceClassName(), t);
 			return null;
 		}
-		instance.configure(scheduler, getWebTopApp().getAdminSubject());
+		
+		try {
+			instance.configure(scheduler, getWebTopApp().getAdminSubject());
+		} catch (Exception ex) {
+			LOGGER.error("[{}] BackgroundService: errore configuring '{}'", serviceId, descr.getManifest().getBackgroundServiceClassName(), ex);
+			return null;
+		}
+		
 		return instance;
 	}
 	

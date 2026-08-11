@@ -32,6 +32,7 @@
  */
 package com.sonicle.webtop.core.sdk;
 
+import com.sonicle.commons.Check;
 import com.sonicle.commons.time.JodaTimeUtils;
 import com.sonicle.webtop.core.app.WebTopApp;
 import com.sonicle.webtop.core.app.util.LoggerUtils;
@@ -51,6 +52,7 @@ import org.slf4j.Logger;
  */
 public abstract class BaseBackgroundServiceTask implements Job {
 	private final AtomicBoolean running = new AtomicBoolean(false);
+	public static final String JEC_KEY_BACKGROUNDSERVICE = "backgroundService";
 	
 	public abstract Logger getLogger();
 	//public abstract String getName();
@@ -84,11 +86,11 @@ public abstract class BaseBackgroundServiceTask implements Job {
 	}
 	
 	protected void doExecuteWork(JobExecutionContext jec) {
-		DateTime now = JodaTimeUtils.now();
-
+		DateTime now = JodaTimeUtils.now(true);
+		
 		try {
 			getLogger().debug("Started [{}]", now);
-			executeWork(jec, new TaskContext(getBackgroundService(jec), now));
+			executeWork(jec, new TaskContext(now, jec));
 			
 		} catch (Exception ex) {
 			getLogger().error("Error", ex);
@@ -98,7 +100,7 @@ public abstract class BaseBackgroundServiceTask implements Job {
 	}
 	
 	protected final BaseBackgroundService getBackgroundService(JobExecutionContext jec) {
-		return (BaseBackgroundService)jec.getMergedJobDataMap().get("backgroundService");
+		return (BaseBackgroundService)jec.get(JEC_KEY_BACKGROUNDSERVICE);
 	}
 	
 	protected final boolean shouldStop() {
@@ -107,20 +109,28 @@ public abstract class BaseBackgroundServiceTask implements Job {
 	}
 	
 	public static class TaskContext {
-		private final BaseBackgroundService backgroundService;
 		private final DateTime executeInstant;
+		private final JobExecutionContext jec;
 		
-		public TaskContext(BaseBackgroundService backgroundService, DateTime executeInstant) {
-			this.backgroundService = backgroundService;
-			this.executeInstant = executeInstant;
+		public TaskContext(DateTime executeInstant, JobExecutionContext jec) {
+			this.executeInstant = Check.notNull(executeInstant, "executeInstant");
+			this.jec = Check.notNull(jec, "jec");
+		}
+		
+		public DateTime getExecuteInstant() {
+			return executeInstant;
+		}
+		
+		public JobExecutionContext getJobExecutionContext() {
+			return jec;
 		}
 		
 		public BaseBackgroundService getBackgroundService() {
-			return backgroundService;
+			return (BaseBackgroundService)jec.get(JEC_KEY_BACKGROUNDSERVICE);
 		}
-
-		public DateTime getExecuteInstant() {
-			return executeInstant;
+		
+		public <T extends BaseBackgroundService> T getBackgroundService(final Class<T> type) {
+			return (T)jec.get(JEC_KEY_BACKGROUNDSERVICE);
 		}
 	}
 }

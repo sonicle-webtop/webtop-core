@@ -34,6 +34,7 @@ package com.sonicle.webtop.core.sdk;
 
 import com.sonicle.commons.Check;
 import com.sonicle.webtop.core.app.AbstractService;
+import com.sonicle.webtop.core.app.BackgroundServiceJobListener;
 import com.sonicle.webtop.core.app.util.LoggerUtils;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -48,7 +49,6 @@ import org.quartz.JobKey;
 import org.quartz.Scheduler;
 import org.quartz.SchedulerException;
 import org.quartz.Trigger;
-import org.quartz.TriggerBuilder;
 import org.quartz.impl.matchers.GroupMatcher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -81,11 +81,17 @@ public abstract class BaseBackgroundService extends AbstractService {
 	}
 	*/
 	
-	public final void configure(Scheduler scheduler, Subject subject) {
+	public final void configure(Scheduler scheduler, Subject subject) throws SchedulerException {
 		if (configured.compareAndSet(false, true)) {
 			this.scheduler = Check.notNull(scheduler, "scheduler");
 			this.subject = Check.notNull(subject, "subject");
+			BackgroundServiceJobListener listener = Check.notNull(lookupBackgroundServiceJobListener(scheduler));
+			listener.registerService(this.SERVICE_ID, this);
 		}
+	}
+	
+	private static BackgroundServiceJobListener lookupBackgroundServiceJobListener(final Scheduler scheduler) throws SchedulerException {
+		return (BackgroundServiceJobListener)scheduler.getListenerManager().getJobListener(BackgroundServiceJobListener.NAME);
 	}
 	
 	public final boolean scheduleTasks() {
@@ -139,11 +145,9 @@ public abstract class BaseBackgroundService extends AbstractService {
 	
 	private JobDetail createJobDetail(final TaskDefinition taskDef) {
 		String classBaseName = taskDef.getTaskClass().getSimpleName();
-		JobDataMap data = (taskDef.getData() != null) ? taskDef.getData() : new JobDataMap();
-		data.put("backgroundService", this);
-		
+		JobDataMap jobData = (taskDef.getData() != null) ? taskDef.getData() : new JobDataMap();
 		JobBuilder jb = JobBuilder.newJob(taskDef.getTaskClass())
-			.usingJobData(data)
+			.usingJobData(jobData)
 			.withIdentity(classBaseName, this.SERVICE_ID);
 		
 		if (!StringUtils.isEmpty(taskDef.getDescription())) {

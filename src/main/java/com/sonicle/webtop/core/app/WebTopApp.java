@@ -149,6 +149,7 @@ import org.joda.time.DateTimeZone;
 import org.quartz.Scheduler;
 import org.quartz.SchedulerException;
 import org.quartz.impl.StdSchedulerFactory;
+import org.quartz.impl.matchers.EverythingMatcher;
 import org.slf4j.Logger;
 
 /**
@@ -512,6 +513,7 @@ public final class WebTopApp {
 			
 			// NB: System props will be added to the properties above internally in the factory!
 			schedulerInstance = new StdSchedulerFactory(quartzProps).getScheduler();
+			schedulerInstance.getListenerManager().addJobListener(new BackgroundServiceJobListener(), EverythingMatcher.allJobs());
 			if (WebTopProps.getSchedulerDisabled(this.properties)) {
 				logger.warn("Scheduler startup forcibly disabled");
 			} else {
