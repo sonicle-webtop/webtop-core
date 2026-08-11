@@ -84,7 +84,7 @@ public class Users extends UsersApi {
 	private ApiLegacyUser createApiLegacyUser(GenericSubject subject) {
 		return new ApiLegacyUser()
 				.id(subject.getName())
-				.uid(subject.getSid())
+				.uid(subject.getUid())
 				.enabled(true)
 				.displayName(subject.getDisplayName());
 	}

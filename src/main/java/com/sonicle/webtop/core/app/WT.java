@@ -183,11 +183,11 @@ public class WT {
 	}
 	
 	/**
-	 * @deprecated use getGroupSidOfPecAccounts instead (will be removed in v.5.17.0)
+	 * @deprecated use getGroupUidOfPecAccounts instead (will be removed in v.5.17.0)
 	 */
 	@Deprecated
 	public static String getGroupUidForPecAccounts(String domainId) {
-		return getGroupSidOfPecAccounts(domainId);
+		return getGroupUidOfPecAccounts(domainId);
 	}
 	
 	/**
@@ -371,9 +371,9 @@ public class WT {
 	 * @param domainId The domain ID
 	 * @return the UID or null if group was not found
 	 */
-	public static String getGroupSidOfUsers(String domainId) {
+	public static String getGroupUidOfUsers(String domainId) {
 		final UserProfileId pid = new UserProfileId(domainId, WebTopManager.GROUPID_USERS);
-		return getWTA().getWebTopManager().lookupSubjectSidQuietly(pid, GenericSubject.Type.GROUP);
+		return getWTA().getWebTopManager().lookupSubjectUidQuietly(pid, GenericSubject.Type.GROUP);
 	}
 	
 	/**
@@ -381,9 +381,9 @@ public class WT {
 	 * @param domainId The domain ID
 	 * @return the UID or null if group was not found
 	 */
-	public static String getGroupSidOfPecAccounts(String domainId) {
+	public static String getGroupUidOfPecAccounts(String domainId) {
 		final UserProfileId pid = new UserProfileId(domainId, WebTopManager.GROUPID_PEC_ACCOUNTS);
-		return getWTA().getWebTopManager().lookupSubjectSidQuietly(pid, GenericSubject.Type.GROUP);
+		return getWTA().getWebTopManager().lookupSubjectUidQuietly(pid, GenericSubject.Type.GROUP);
 	}
 	
 	/**

@@ -258,20 +258,20 @@ public class CoreManager extends BaseManager implements SharedManager {
 	}
 	
 	/**
-	 * @deprecated use lookupUserSid instead (will be removed in v.5.16.0)
+	 * @deprecated use lookupUserUid instead (will be removed in v.5.16.0)
 	 */
 	@Deprecated
 	public String getUserUid(UserProfileId profileId) throws WTException {
-		return lookupUserSid(profileId);
+		return lookupUserUid(profileId);
 	}
 	
 	/**
-	 * @deprecated use lookupUserProfileIdBySid instead (will be removed in v.5.16.0)
+	 * @deprecated use lookupUserProfileIdByUid instead (will be removed in v.5.16.0)
 	 */
 	@Deprecated
 	public UserProfileId userUidToProfileId(String userUid) {
 		try {
-			return lookupUserProfileIdBySid(userUid);
+			return lookupUserProfileIdByUid(userUid);
 		} catch (WTException ex) {
 			return null;
 		}
@@ -809,8 +809,8 @@ public class CoreManager extends BaseManager implements SharedManager {
 	 * @return
 	 * @throws WTException 
 	 */
-	public String getUserSid() throws WTException {
-		return lookupUserSid(getTargetProfileId());
+	public String getUserUid() throws WTException {
+		return lookupUserUid(getTargetProfileId());
 	}
 	
 	/**
@@ -819,21 +819,21 @@ public class CoreManager extends BaseManager implements SharedManager {
 	 * @return
 	 * @throws WTException 
 	 */
-	public String lookupUserSid(final UserProfileId profileId) throws WTException {
+	public String lookupUserUid(final UserProfileId profileId) throws WTException {
 		Check.notNull(profileId, "profileId");
 		RunContext.ensureProfileDomain(profileId.getDomainId(), RunContext.AdminScope.WTADMIN);
-		return wta.getWebTopManager().lookupSubjectSid(profileId, GenericSubject.Type.USER);
+		return wta.getWebTopManager().lookupSubjectUid(profileId, GenericSubject.Type.USER);
 	}
 	
 	/**
 	 * Returns the profile ID related to the passed SID of a user.
-	 * @param userSid The target SID.
+	 * @param userUid The target SID.
 	 * @return
 	 * @throws WTException 
 	 */
-	public UserProfileId lookupUserProfileIdBySid(final String userSid) throws WTException {
-		Check.notNull(userSid, "userSid");
-		UserProfileId pid = wta.getWebTopManager().lookupSubjectProfile(userSid, GenericSubject.Type.USER);
+	public UserProfileId lookupUserProfileIdByUid(final String userUid) throws WTException {
+		Check.notNull(userUid, "userUid");
+		UserProfileId pid = wta.getWebTopManager().lookupSubjectProfile(userUid, GenericSubject.Type.USER);
 		if (pid != null) RunContext.ensureProfileDomain(pid.getDomainId(), RunContext.AdminScope.SYSADMIN);
 		return pid;
 	}
@@ -2891,52 +2891,74 @@ public class CoreManager extends BaseManager implements SharedManager {
 	}
 	
 	/**
-	 * Gets Share configurations related to an instance of a Origin.
+	 * Gets Share configurations for an origin profile-id (single) that satisfies 
+	 * some parameters like context, instance and a targetPermissionKey.
 	 * @param serviceId The related service ID.
-	 * @param context The context-name (or groupName) of the share.
-	 * @param originProfileId The origin profileId of which getting rights.
+	 * @param context The context-name of the Share.
+	 * @param originProfileId The originating Share's profileId.
 	 * @param instance The identifier of the shared-entity involved in the lookup.
-	 * @param permissionKey The permission-keys involved in the lookup.
-	 * @return
+	 * @param targetPermissionKey The permission-keys involved in the lookup.
+	 * @return a map of configuration objects keyed by target profile-uid
 	 * @throws WTException 
 	 */
-	public Map<String, com.sonicle.webtop.core.app.model.Sharing.SubjectConfiguration> getShareSubjectConfiguration(final String serviceId, final String context, final UserProfileId originProfileId, final String instance, final String permissionKey) throws WTException {
-		return getShareSubjectConfiguration(serviceId, context, originProfileId, instance, permissionKey, null);
+	public Map<String, com.sonicle.webtop.core.app.model.Sharing.SubjectConfiguration> getShareSubjectConfigurations(final String serviceId, final String context, final UserProfileId originProfileId, final String instance, final String targetPermissionKey) throws WTException {
+		return getShareSubjectConfigurations(serviceId, context, originProfileId, instance, targetPermissionKey, null);
 	}
 	
 	/**
-	 * Gets Share configurations related to an instance of a Origin.
+	 * Gets Share configurations for an origin profile-id (single) that satisfies 
+	 * some parameters like context, instance and a targetPermissionKey.
 	 * @param <T>
 	 * @param serviceId The related service ID.
 	 * @param context The context-name of the Share.
 	 * @param originProfileId The originating Share's profileId.
 	 * @param instance The identifier of the shared-entity involved in the lookup.
-	 * @param permissionKey The permission-keys involved in the lookup.
+	 * @param targetPermissionKey The permission-keys involved in the lookup.
 	 * @param typeOfData Type of Data object in configuration. Set to <null> to not process Data. Optional.
-	 * @return
+	 * @return a map of configuration objects keyed by target profile-uid
 	 * @throws WTException 
 	 */
-	public <T> Map<String, com.sonicle.webtop.core.app.model.Sharing.SubjectConfiguration> getShareSubjectConfiguration(final String serviceId, final String context, final UserProfileId originProfileId, final String instance, final String permissionKey, final Class<T> typeOfData) throws WTException {
+	public <T> Map<String, com.sonicle.webtop.core.app.model.Sharing.SubjectConfiguration> getShareSubjectConfigurations(final String serviceId, final String context, final UserProfileId originProfileId, final String instance, final String targetPermissionKey, final Class<T> typeOfData) throws WTException {
 		WebTopManager wtMgr = wta.getWebTopManager();
-		return wtMgr.getShareConfigurations(originProfileId, serviceId, context, instance, permissionKey, null, typeOfData);
+		return wtMgr.getShareConfigurations(originProfileId, serviceId, context, instance, targetPermissionKey, null, typeOfData);
 	}
 	
 	/**
-	 * Gets Share configurations related to an instance of a Origin.
+	 * Gets Share configurations for an origin profile-id (single) that satisfies 
+	 * some parameters like context, instance and a targetPermissionKey.
 	 * @param <T>
 	 * @param serviceId The related service ID.
 	 * @param context The context-name of the Share.
 	 * @param originProfileId The originating Share's profileId.
 	 * @param instance The identifier of the shared-entity involved in the lookup.
-	 * @param permissionKey The permission-keys involved in the lookup.
-	 * @param permissionProfileIds Set of target profileIds associated with permission-key above. Optional.
+	 * @param targetPermissionKey The permission-keys involved in the lookup.
+	 * @param targetPermissionProfileIds Set of target profileIds associated with permission-key above. Optional.
 	 * @param typeOfData Type of Data object in configuration. Set to <null> to not process Data. Optional.
-	 * @return
+	 * @return a map of configuration objects keyed by target profile-uid
 	 * @throws WTException 
 	 */
-	public <T> Map<String, com.sonicle.webtop.core.app.model.Sharing.SubjectConfiguration> getShareSubjectConfiguration(final String serviceId, final String context, final UserProfileId originProfileId, final String instance, final String permissionKey, final Set<UserProfileId> permissionProfileIds, final Class<T> typeOfData) throws WTException {
+	public <T> Map<String, com.sonicle.webtop.core.app.model.Sharing.SubjectConfiguration> getShareSubjectConfigurations(final String serviceId, final String context, final UserProfileId originProfileId, final String instance, final String targetPermissionKey, final Set<UserProfileId> targetPermissionProfileIds, final Class<T> typeOfData) throws WTException {
 		WebTopManager wtMgr = wta.getWebTopManager();
-		return wtMgr.getShareConfigurations(originProfileId, serviceId, context, instance, permissionKey, permissionProfileIds, typeOfData);
+		return wtMgr.getShareConfigurations(originProfileId, serviceId, context, instance, targetPermissionKey, targetPermissionProfileIds, typeOfData);
+	}
+	
+	/**
+	 * Gets Share configurations for multiple origin profile-ids that satisfies 
+	 * same parameters like context, instance and a targetPermissionKey.
+	 * @param <T>
+	 * @param serviceId The related service ID.
+	 * @param context The context name of the Share.
+	 * @param originProfileIds
+	 * @param instance The identifier of the entity that is (or is being) shared.
+	 * @param targetPermissionKey The permission-key to target.
+	 * @param targetPermissionProfileIds Set of targets profileIds associated with permission-key above. Optional, set to <null> to disable filtering.
+	 * @param typeOfData Type of Data object in configuration. Optional, set to <null> to not process Data.
+	 * @return for each origin profile-id a map of configuration objects keyed by target profile-uid
+	 * @throws WTException 
+	 */
+	public <T> Map<UserProfileId, Map<String, com.sonicle.webtop.core.app.model.Sharing.SubjectConfiguration>> getShareSubjectConfigurations(final String serviceId, final String context, final Set<UserProfileId> originProfileIds, final String instance, final String targetPermissionKey, final Set<UserProfileId> targetPermissionProfileIds, final Class<T> typeOfData) throws WTException {
+		WebTopManager wtMgr = wta.getWebTopManager();
+		return wtMgr.getShareConfigurations(originProfileIds, serviceId, context, instance, targetPermissionKey, targetPermissionProfileIds, typeOfData);
 	}
 	
 	/**
@@ -3219,7 +3241,7 @@ public class CoreManager extends BaseManager implements SharedManager {
 		Connection con = null;
 		
 		try {
-			String profileUid = usrm.lookupSubjectSid(getTargetProfileId(), GenericSubject.Type.USER);
+			String profileUid = usrm.lookupSubjectUid(getTargetProfileId(), GenericSubject.Type.USER);
 			con = WT.getCoreConnection();
 			
 			OShare share = shadao.selectById(con, Integer.valueOf(shareId));
@@ -3330,7 +3352,7 @@ public class CoreManager extends BaseManager implements SharedManager {
 			// Retrieves the root share
 			OShare rootShare = null;
 			if(rootId.equals("0")) {
-				String puid = usrm.lookupSubjectSid(getTargetProfileId(), GenericSubject.Type.USER);
+				String puid = usrm.lookupSubjectUid(getTargetProfileId(), GenericSubject.Type.USER);
 				rootShare = shadao.selectByUserServiceKeyInstance2(con, puid, serviceId, rootShareKey, OShare.INSTANCE_ROOT);
 			} else {
 				rootShare = shadao.selectById(con, Integer.valueOf(rootId));
@@ -3423,7 +3445,7 @@ public class CoreManager extends BaseManager implements SharedManager {
 		// At next level, we have permissions for only the Work category.
 		
 		try {
-			String puid = usrm.lookupSubjectSid(getTargetProfileId(), GenericSubject.Type.USER);
+			String puid = usrm.lookupSubjectUid(getTargetProfileId(), GenericSubject.Type.USER);
 			
 			// Parses the sharing ID as a composite key:
 			// - "0"		for root share
@@ -3587,7 +3609,7 @@ public class CoreManager extends BaseManager implements SharedManager {
 		
 		try {
 			con = WT.getCoreConnection();
-			String uuid = usrm.lookupSubjectSid(pid, GenericSubject.Type.USER);
+			String uuid = usrm.lookupSubjectUid(pid, GenericSubject.Type.USER);
 			return dao.selectByUserServiceKey(con, uuid, serviceId, shareKey);
 			
 		} catch(SQLException | DAOException ex) {
@@ -3640,6 +3662,30 @@ public class CoreManager extends BaseManager implements SharedManager {
 			DbUtils.closeQuietly(con);
 		}
 	}
+	
+	/*
+	public void cleanupSnoozedReminders(final String serviceId, final String type, final String instanceId) {
+		SnoozedReminderDAO remDao = SnoozedReminderDAO.getInstance();
+		Connection con = null;
+		
+		Check.notEmpty(serviceId, "serviceId");
+		Check.notEmpty(type, "type");
+		Check.notEmpty(instanceId, "instanceId");
+		
+		final UserProfileId targetPid = ensureProfileDomain(RunContext.AdminScope.SYSADMIN);
+		
+		try {
+			con = WT.getCoreConnection();
+			int ret = remDao.deleteByDomainServiceTypeInstance(con, targetPid.getDomainId(), serviceId, type, instanceId);
+			logger.debug("Cleaned-up {} reminders [{}, {}, {}, {}]", ret, targetPid.getDomainId(), serviceId, type, instanceId);
+			
+		} catch (Exception ex) {
+			logger.error("Unable to clear reminders [{}, {}, {}, {}]", targetPid.getDomainId(), serviceId, type, instanceId);
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	*/
 	
 	public List<OSnoozedReminder> listExpiredSnoozedReminders(DateTime greaterInstant) throws WTException {
 		SnoozedReminderDAO dao = SnoozedReminderDAO.getInstance();

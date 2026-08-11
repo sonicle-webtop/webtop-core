@@ -54,7 +54,7 @@ public class JsRoleLkp extends JsSimple {
 	
 	@Deprecated
 	public JsRoleLkp(GenericSubject subject) {
-		super(subject.getSid(), JsSimple.description(subject.getName(), subject.getDisplayName()));
+		super(subject.getUid(), JsSimple.description(subject.getName(), subject.getDisplayName()));
 		if (GenericSubject.Type.USER.equals(subject.getType())) {
 			this.source = RoleWithSource.SOURCE_USER;
 		} else if (GenericSubject.Type.GROUP.equals(subject.getType())) {
@@ -67,7 +67,7 @@ public class JsRoleLkp extends JsSimple {
 	}
 	
 	public JsRoleLkp(Role role, String source) {
-		super(role.getRoleSid(), role.getRoleId());
+		super(role.getRoleUid(), role.getRoleId());
 		this.source = source;
 	}
 	

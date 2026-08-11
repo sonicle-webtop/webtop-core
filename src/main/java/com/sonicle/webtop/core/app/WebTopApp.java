@@ -1420,7 +1420,7 @@ public final class WebTopApp {
 		UserProfileId runPid = RunContext.getRunProfileId();
 		if (!RunContext.isWebTopAdmin(runPid)) {
 			if (!runPid.equals(sendingProfileId)) {
-				if (wtMgr.lookupSubjectSidQuietly(sendingProfileId, GenericSubject.Type.RESOURCE) == null) {
+				if (wtMgr.lookupSubjectUidQuietly(sendingProfileId, GenericSubject.Type.RESOURCE) == null) {
 					throw new AuthException("Running profile [{0}] does not match with sending profile [{1}]", runPid, sendingProfileId);
 				}
 			}
@@ -1538,7 +1538,7 @@ public final class WebTopApp {
 		UserProfileId runPid = RunContext.getRunProfileId();
 		if (!RunContext.isWebTopAdmin(runPid)) {
 			if (!runPid.equals(sendingProfileId)) {
-				if (wtMgr.lookupSubjectSidQuietly(sendingProfileId, GenericSubject.Type.RESOURCE) == null) {
+				if (wtMgr.lookupSubjectUidQuietly(sendingProfileId, GenericSubject.Type.RESOURCE) == null) {
 					throw new AuthException("Running profile [{0}] does not match with sending profile [{1}]", runPid, sendingProfileId);
 				}
 			}

@@ -108,7 +108,7 @@ public class JsFolderSharing {
 		public RightsSet() {}
 		
 		public RightsSet(FolderSharing.SubjectConfiguration rights) {
-			this.subjectSid = rights.getSubjectSid();
+			this.subjectSid = rights.getSubjectUid();
 			this.folderManage = rights.getFolderPermissions().has(FolderShare.FolderRight.MANAGE);
 			this.folderRead = rights.getFolderPermissions().has(FolderShare.FolderRight.READ);
 			this.folderUpdate = rights.getFolderPermissions().has(FolderShare.FolderRight.UPDATE);

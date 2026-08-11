@@ -138,7 +138,7 @@ import com.sonicle.webtop.core.app.model.Resource;
 import com.sonicle.webtop.core.app.model.ResourceBase;
 import com.sonicle.webtop.core.app.model.GenericSubject;
 import com.sonicle.webtop.core.model.SubjectPid;
-import com.sonicle.webtop.core.model.SubjectSid;
+import com.sonicle.webtop.core.model.SubjectUid;
 import com.sonicle.webtop.core.app.model.FolderShareOriginFolders;
 import com.sonicle.webtop.core.app.model.FolderSharing;
 import com.sonicle.webtop.core.app.model.Group;
@@ -284,7 +284,7 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 		.expireAfterWrite(2, TimeUnit.MINUTES)
 		.maximumSize(10_000)
 		.build();
-	private final SubjectSidCache subjectSidCache;
+	private final SubjectUidCache subjectUidCache;
 	private final LoadingCache<UserProfileId, UserProfile.PersonalInfo> profileToPersonalInfoCache = Caffeine.newBuilder().build(new ProfilePersonalInfoCacheLoader());
 	private final LoadingCache<UserProfileId, UserProfile.Data> profileToDataCache = Caffeine.newBuilder().build(new ProfileDataCacheLoader());
 	private final Cache<String, Optional<Integer>> shareIdCache = Caffeine.newBuilder().expireAfterWrite(60, TimeUnit.SECONDS).build();
@@ -295,7 +295,7 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 	WebTopManager(WebTopApp wta) {
 		super(wta);
 		this.domainCache = new CacheDomainInfo();
-		this.subjectSidCache = new SubjectSidCache();
+		this.subjectUidCache = new SubjectUidCache();
 		this.apiKeyCache = new ApiKeyCache();
 	}
 	
@@ -307,13 +307,13 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 	@Override
 	protected void doAppManagerInitialize() {
 		domainCache.init();
-		subjectSidCache.init();
+		subjectUidCache.init();
 		apiKeyCache.init();
 	}
 	
 	@Override
 	protected void doAppManagerCleanup() {
-		subjectSidCache.cleanup();
+		subjectUidCache.cleanup();
 		cleanupProfileCache();
 		profileSecretValueCache.cleanUp();
 		domainAuthenticationContextCache.cleanUp();
@@ -867,29 +867,29 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 		return ret;
 	}
 	
-	public String lookupSubjectSidQuietly(final UserProfileId subjectProfileId, final GenericSubject.Type... validTypes) {
+	public String lookupSubjectUidQuietly(final UserProfileId subjectProfileId, final GenericSubject.Type... validTypes) {
 		Check.notNull(subjectProfileId, "subjectProfileId");
-		return subjectSidCache.getSid(subjectProfileId, validTypes);
+		return subjectUidCache.getUid(subjectProfileId, validTypes);
 	}
 	
-	public String lookupSubjectSid(final UserProfileId subjectProfileId, final GenericSubject.Type... validTypes) throws WTNotFoundException {
+	public String lookupSubjectUid(final UserProfileId subjectProfileId, final GenericSubject.Type... validTypes) throws WTNotFoundException {
 		Check.notNull(subjectProfileId, "subjectProfileId");
-		final String uid = subjectSidCache.getSid(subjectProfileId, validTypes);
+		final String uid = subjectUidCache.getUid(subjectProfileId, validTypes);
 		if (uid == null) throw new WTNotFoundException("SID not found for '{}'", subjectProfileId);
 		return uid;
 	}
 	
-	public UserProfileId lookupSubjectProfileQuietly(final String subjectSid, final GenericSubject.Type... validTypes) {
-		Check.notNull(subjectSid, "subjectSid");
+	public UserProfileId lookupSubjectProfileQuietly(final String subjectUid, final GenericSubject.Type... validTypes) {
+		Check.notNull(subjectUid, "subjectUid");
 		Check.notEmpty(validTypes, "validTypes");
-		return subjectSidCache.getPid(subjectSid, validTypes);
+		return subjectUidCache.getPid(subjectUid, validTypes);
 	}
 	
-	public UserProfileId lookupSubjectProfile(final String subjectSid, final GenericSubject.Type... validTypes) throws WTException {
-		Check.notNull(subjectSid, "subjectSid");
+	public UserProfileId lookupSubjectProfile(final String subjectUid, final GenericSubject.Type... validTypes) throws WTException {
+		Check.notNull(subjectUid, "subjectUid");
 		Check.notEmpty(validTypes, "validTypes");
-		final UserProfileId pid = subjectSidCache.getPid(subjectSid, validTypes);
-		if (pid == null) throw new WTException("ProfileId not found for Sid '{}'", subjectSid);
+		final UserProfileId pid = subjectUidCache.getPid(subjectUid, validTypes);
+		if (pid == null) throw new WTException("ProfileId not found for Uid '{}'", subjectUid);
 		return pid;
 	}
 	
@@ -965,8 +965,8 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 		}
 		
 		if (needsCacheReload) {
-			subjectSidCache.cleanup();
-			subjectSidCache.init();
+			subjectUidCache.cleanup();
+			subjectUidCache.init();
 		}
 	}
 	
@@ -1187,7 +1187,7 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 		
 		domainCache.init();
 		domainAuthenticationContextCache.invalidate(domainId);
-		subjectSidCache.cleanupByDomain(domainId);
+		subjectUidCache.cleanupByDomain(domainId);
 		cleanupProfileCache();
 		
 		ArrayList<HomedThrowable> errors = new ArrayList<>();
@@ -1410,7 +1410,7 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 		// Injects default Group (keep attention to subject ID mode)
 		final String defaultGroup;
 		if (options.has(UserUpdateOption.SUBJECTS_AS_SID)) {
-			defaultGroup = lookupSubjectSid(new UserProfileId(domainId, GROUPID_USERS), GenericSubject.Type.GROUP);
+			defaultGroup = lookupSubjectUid(new UserProfileId(domainId, GROUPID_USERS), GenericSubject.Type.GROUP);
 		} else {
 			defaultGroup = new UserProfileId(domainId, GROUPID_USERS).toString();
 		}
@@ -1428,7 +1428,7 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 		
 		User newUser = null;
 		try {
-			String userSid = null; // Internally auto-generated
+			String userUid = null; // Internally auto-generated
 			UserInsertResult result = null;
 			if (updateDirectory) {
 				final AuthContext acontext = lookupAuthenticationContext(userPid);
@@ -1456,7 +1456,7 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 				}
 				
 				con = getConnection(false);
-				result = doUserInsert(con, userPid.getDomainId(), userPid.getUserId(), userSid, user, UserProcessOpt.fromUserUpdateOptions(options), defaultGroup);
+				result = doUserInsert(con, userPid.getDomainId(), userPid.getUserId(), userUid, user, UserProcessOpt.fromUserUpdateOptions(options), defaultGroup);
 				
 				// Insert user in directory (if necessary)
 				if (directory.hasCapability(DirectoryCapability.USERS_WRITE)) {
@@ -1476,12 +1476,12 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 				
 			} else {
 				con = getConnection(false);
-				result = doUserInsert(con, userPid.getDomainId(), userPid.getUserId(), userSid, user, UserProcessOpt.fromUserUpdateOptions(options), defaultGroup);
+				result = doUserInsert(con, userPid.getDomainId(), userPid.getUserId(), userUid, user, UserProcessOpt.fromUserUpdateOptions(options), defaultGroup);
 			}
 			
 			DbUtils.commitQuietly(con);
 			
-			subjectSidCache.add(result.ouser.getProfileId(), result.ouser.getUserSid(), GenericSubject.Type.USER);
+			subjectUidCache.add(result.ouser.getProfileId(), result.ouser.getUserUid(), GenericSubject.Type.USER);
 			newUser = doUserGet(con, userPid.getDomainId(), userPid.getUserId(), UserProcessOpt.fromUserUpdateOptions(options));
 			
 		} catch (Exception ex) {
@@ -1614,8 +1614,8 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 		
 		final UserProfileId userPid = new UserProfileId(domainId, userId);
 		
-		String userSid = subjectSidCache.getSid(userPid, GenericSubject.Type.USER);
-		if (userSid == null) throw new WTNotFoundException("User not found [{}]", userPid);
+		String userUid = subjectUidCache.getUid(userPid, GenericSubject.Type.USER);
+		if (userUid == null) throw new WTNotFoundException("User not found [{}]", userPid);
 		
 		// Make sure that some data are in cache before permanent user deletion (useful for events below)
 		lookupProfilePersonalInfo(userPid, false);
@@ -1662,7 +1662,7 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 		// Clear settings
 		getWebTopApp().getSettingsManager().deleteUserSettings(userPid);
 		// Clear any cached data
-		subjectSidCache.remove(userPid, GenericSubject.Type.USER);
+		subjectUidCache.remove(userPid, GenericSubject.Type.USER);
 		clearProfileCache(userPid);
 		
 		return new ResultVoid(postResult.getHandlerErrorsCauses());
@@ -2667,12 +2667,12 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 		Resource newResource = null;
 		try {
 			con = getConnection(false);
-			String resourceSid = null; // Internally auto-generated
-			ResourceUpdateResult res = doResourceInsert(con, resourcePid.getDomainId(), resourcePid.getUserId(), resourceSid, resource, ResourceProcessOpt.fromResourceUpdateOptions(options));
+			String resourceUid = null; // Internally auto-generated
+			ResourceUpdateResult res = doResourceInsert(con, resourcePid.getDomainId(), resourcePid.getUserId(), resourceUid, resource, ResourceProcessOpt.fromResourceUpdateOptions(options));
 			DbUtils.commitQuietly(con);
 			
-			if (res.changedPermissionSids != null) clearAuthorizationInfo(domainId, res.changedPermissionSids, options.has(ResourceUpdateOption.SUBJECTS_AS_SID));
-			subjectSidCache.add(res.ouser.getProfileId(), res.ouser.getUserSid(), GenericSubject.Type.RESOURCE);
+			if (res.changedPermissionUids != null) clearAuthorizationInfo(domainId, res.changedPermissionUids, options.has(ResourceUpdateOption.SUBJECTS_AS_SID));
+			subjectUidCache.add(res.ouser.getProfileId(), res.ouser.getUserUid(), GenericSubject.Type.RESOURCE);
 			newResource = doResourceGet(con, resourcePid.getDomainId(), resourcePid.getUserId(), ResourceProcessOpt.fromResourceUpdateOptions(options));
 			
 		} catch (Exception ex) {
@@ -2702,7 +2702,7 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 			ResourceUpdateResult res = doResourceUpdate(con, resourcePid.getDomainId(), resourcePid.getUserId(), resource, ResourceProcessOpt.fromResourceUpdateOptions(options));
 			DbUtils.commitQuietly(con);
 			
-			if (res.changedPermissionSids != null) clearAuthorizationInfo(domainId, res.changedPermissionSids, options.has(ResourceUpdateOption.SUBJECTS_AS_SID));
+			if (res.changedPermissionUids != null) clearAuthorizationInfo(domainId, res.changedPermissionUids, options.has(ResourceUpdateOption.SUBJECTS_AS_SID));
 			if (!before.getEnabled().equals(res.ouser.getEnabled())) newEnabled = res.ouser.getEnabled();
 			
 		} catch (Exception ex) {
@@ -2770,7 +2770,7 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 		}
 		
 		EventBus.PostResult postResult = fireEvent(new ResourceUpdateEvent(ResourceUpdateEvent.Type.DELETE, resourcePid), true, true);
-		subjectSidCache.remove(resourcePid, GenericSubject.Type.RESOURCE);
+		subjectUidCache.remove(resourcePid, GenericSubject.Type.RESOURCE);
 		clearProfileCache(resourcePid); // Clear any cached data
 		
 		return new ResultVoid(postResult.getHandlerErrorsCauses());
@@ -2861,12 +2861,12 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 		try {
 			con = getConnection(false);
 			
-			String groupSid = null; // Internally auto-generated
-			GroupInsertResult result = doGroupInsert(con, groupPid.getDomainId(), groupPid.getUserId(), groupSid, group, GroupProcessOpt.fromGroupUpdateOptions(options));
+			String groupUid = null; // Internally auto-generated
+			GroupInsertResult result = doGroupInsert(con, groupPid.getDomainId(), groupPid.getUserId(), groupUid, group, GroupProcessOpt.fromGroupUpdateOptions(options));
 			
 			DbUtils.commitQuietly(con);
 			
-			subjectSidCache.add(result.ogroup.getProfileId(), result.ogroup.getGroupSid(), GenericSubject.Type.GROUP);
+			subjectUidCache.add(result.ogroup.getProfileId(), result.ogroup.getGroupUid(), GenericSubject.Type.GROUP);
 			newGroup = doGroupGet(con, groupPid.getDomainId(), groupPid.getUserId(), GroupProcessOpt.fromGroupUpdateOptions(options));
 			
 		} catch (Exception ex) {
@@ -2973,7 +2973,7 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 			List<ORole> oroles = rolDao.selectByDomain(con, domainId);
 			Map<String, Role> items = new LinkedHashMap<>(oroles.size());
 			for (ORole orole : oroles) {
-				items.put(orole.getRoleSid(), AppManagerUtils.fillRole(new Role(false), orole));
+				items.put(orole.getRoleUid(), AppManagerUtils.fillRole(new Role(false), orole));
 			}
 			return items;
 			
@@ -3001,14 +3001,14 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 		}
 	}
 	
-	public Role getRole(final String domainId, final String roleSid, final BitFlags<RoleGetOption> options) throws WTException {
+	public Role getRole(final String domainId, final String roleUid, final BitFlags<RoleGetOption> options) throws WTException {
 		Check.notEmpty(domainId, "domainId");
-		Check.notEmpty(roleSid, "roleSid");
+		Check.notEmpty(roleUid, "roleUid");
 		Connection con = null;
 		
 		try {
 			con = getConnection(true);
-			return doRoleGet(con, domainId, roleSid, RoleProcessOpt.fromRoleGetOptions(options));
+			return doRoleGet(con, domainId, roleUid, RoleProcessOpt.fromRoleGetOptions(options));
 			
 		} catch (Exception ex) {
 			throw ExceptionUtils.wrapThrowable(ex);
@@ -3028,13 +3028,13 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 		try {
 			con = getConnection(false);
 			
-			String roleSid = null; // Internally auto-generated
-			RoleInsertResult result = doRoleInsert(con, rolePid.getDomainId(), rolePid.getUserId(), roleSid, role, RoleProcessOpt.fromRoleUpdateOptions(options));
+			String roleUid = null; // Internally auto-generated
+			RoleInsertResult result = doRoleInsert(con, rolePid.getDomainId(), rolePid.getUserId(), roleUid, role, RoleProcessOpt.fromRoleUpdateOptions(options));
 			
 			DbUtils.commitQuietly(con);
 			
-			subjectSidCache.add(result.orole.getProfileId(), result.orole.getRoleSid(), GenericSubject.Type.ROLE);
-			newRole = doRoleGet(con, rolePid.getDomainId(), result.orole.getRoleSid(), RoleProcessOpt.fromRoleUpdateOptions(options));
+			subjectUidCache.add(result.orole.getProfileId(), result.orole.getRoleUid(), GenericSubject.Type.ROLE);
+			newRole = doRoleGet(con, rolePid.getDomainId(), result.orole.getRoleUid(), RoleProcessOpt.fromRoleUpdateOptions(options));
 			
 		} catch (Exception ex) {
 			DbUtils.rollbackQuietly(con);
@@ -3046,15 +3046,15 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 		return new Result(newRole);
 	}
 	
-	public ResultVoid updateRole(final String domainId, final String roleSid, final RoleBase role, final BitFlags<RoleUpdateOption> options) throws WTException {
+	public ResultVoid updateRole(final String domainId, final String roleUid, final RoleBase role, final BitFlags<RoleUpdateOption> options) throws WTException {
 		Check.notEmpty(domainId, "domainId");
-		Check.notEmpty(roleSid, "roleSid");
+		Check.notEmpty(roleUid, "roleUid");
 		Check.notNull(role, "role");
 		Connection con = null;
 		
 		try {
 			con = getConnection(false);
-			doRoleUpdate(con, domainId, roleSid, role, RoleProcessOpt.fromRoleUpdateOptions(options));
+			doRoleUpdate(con, domainId, roleUid, role, RoleProcessOpt.fromRoleUpdateOptions(options));
 			DbUtils.commitQuietly(con);
 			
 		} catch (Exception ex) {
@@ -3067,15 +3067,15 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 		return new ResultVoid();
 	}
 	
-	public ResultVoid deleteRole(final String domainId, final String roleSid) throws WTException {
+	public ResultVoid deleteRole(final String domainId, final String roleUid) throws WTException {
 		Check.notEmpty(domainId, "domainId");
-		Check.notEmpty(roleSid, "roleSid");
+		Check.notEmpty(roleUid, "roleUid");
 		Connection con = null;
 		
 		try {
 			con = getConnection(false);
-			LOGGER.debug("Deleting role '{}'", roleSid);
-			doRoleDelete(con, domainId, roleSid);
+			LOGGER.debug("Deleting role '{}'", roleUid);
+			doRoleDelete(con, domainId, roleUid);
 			
 			DbUtils.commitQuietly(con);
 			
@@ -3295,33 +3295,33 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 			
 			Set<UserProfileId> items = new LinkedHashSet<>();
 			for (String subject : subjects) {
-				String subjectSid = null;
+				String subjectUid = null;
 				if (!subjectsAsSID) {
 					final UserProfileId pid = UserProfileId.parseQuielty(subject);
-					if (pid != null) subjectSid = subjectSidCache.getSid(pid, GenericSubject.Type.GROUP, GenericSubject.Type.USER);
+					if (pid != null) subjectUid = subjectUidCache.getUid(pid, GenericSubject.Type.GROUP, GenericSubject.Type.USER);
 				} else {
-					subjectSid = subject;
+					subjectUid = subject;
 				}
 
-				if (subjectSid == null) {
+				if (subjectUid == null) {
 					LOGGER.trace("");
 					continue;
 				}
 
-				final GenericSubject.Type subjectType = subjectSidCache.getSidType(subjectSid);
+				final GenericSubject.Type subjectType = subjectUidCache.getUidType(subjectUid);
 				if (GenericSubject.Type.USER.equals(subjectType)) { // Already a User, use as is...
 					final UserProfileId pid;
 					if (!subjectsAsSID) {
 						pid = UserProfileId.parseQuielty(subject); // subject was already parsed as Pid successfully
 					} else {
-						pid = subjectSidCache.getPid(subjectSid, GenericSubject.Type.USER);
+						pid = subjectUidCache.getPid(subjectUid, GenericSubject.Type.USER);
 					}
 					if (pid != null && pid.hasDomain(domainId)) items.add(pid);
 					
 				} else if (GenericSubject.Type.GROUP.equals(subjectType)) { // Subject is group: expand to users...
-					Set<String> userSids = uasDao.viewUserSidsByGroup(con, subjectSid);
-					for (String userSid : userSids) {
-						final UserProfileId pid = subjectSidCache.getPid(userSid, GenericSubject.Type.USER);
+					Set<String> userUids = uasDao.viewUserUidsByGroup(con, subjectUid);
+					for (String userUid : userUids) {
+						final UserProfileId pid = subjectUidCache.getPid(userUid, GenericSubject.Type.USER);
 						if (pid != null && pid.hasDomain(domainId)) items.add(pid);
 					}
 				}
@@ -3349,22 +3349,22 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 			LinkedHashMap<String, GenericSubject> items = new LinkedHashMap<>();
 			if (options.has(SubjectGetOption.USERS)) {
 				for (OUser ouser: useDao.selectEnabledByDomain(con, domainId)) {
-					items.put(sidsAsKeys ? ouser.getUserSid() : ouser.getUserId(), new GenericSubject(ouser));
+					items.put(sidsAsKeys ? ouser.getUserUid() : ouser.getUserId(), new GenericSubject(ouser));
 				}
 			}
 			if (options.has(SubjectGetOption.RESOURCES)) {
 				for (VResource vres: resDao.selectByDomainEnabled(con, domainId, EnabledCond.ENABLED_ONLY)) {
-					items.put(sidsAsKeys ? vres.getResourceSid() : vres.getResourceId(), new GenericSubject(vres));
+					items.put(sidsAsKeys ? vres.getResourceUid() : vres.getResourceId(), new GenericSubject(vres));
 				}
 			}
 			if (options.has(SubjectGetOption.GROUPS)) {
 				for (OGroup ogroup: groDao.selectByDomain(con, domainId)) {
-					items.put(sidsAsKeys ? ogroup.getGroupSid() : ogroup.getGroupId(), new GenericSubject(ogroup));
+					items.put(sidsAsKeys ? ogroup.getGroupUid() : ogroup.getGroupId(), new GenericSubject(ogroup));
 				}
 			}
 			if (options.has(SubjectGetOption.ROLES)) {
 				for (ORole orole: rolDao.selectByDomain(con, domainId)) {
-					items.put(sidsAsKeys ? orole.getRoleSid() : orole.getRoleId(), new GenericSubject(orole));
+					items.put(sidsAsKeys ? orole.getRoleUid() : orole.getRoleId(), new GenericSubject(orole));
 				}
 			}
 			return items;
@@ -3383,7 +3383,7 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 	 * @param transitive
 	 * @return
 	 * @throws WTException
-	 * @deprecated use getComputedRoleSidsByUser instead
+	 * @deprecated use getComputedRoleUidsByUser instead
 	 */
 	@Deprecated public List<String> getComputedRolesAsStringByUser(final UserProfileId pid, final boolean self, final boolean transitive) throws WTException {
 		ArrayList<String> sids = new ArrayList<>();
@@ -3394,7 +3394,7 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 		return sids;
 	}
 	
-	public Set<String> getComputedRoleSidsByUser(final UserProfileId pid, final boolean self, final boolean transitive) throws WTException {
+	public Set<String> getComputedRoleUidsByUser(final UserProfileId pid, final boolean self, final boolean transitive) throws WTException {
 		Set<String> sids = new LinkedHashSet<>();
 		for (RoleWithSource role : getComputedRolesByUser(pid, self, transitive)) {
 			sids.add(role.getRoleUid());
@@ -3409,39 +3409,39 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 		
 		try {
 			con = WT.getConnection(CoreManifest.ID);
-			String userSid = lookupSubjectSid(pid, GenericSubject.Type.USER);
+			String userUid = lookupSubjectUid(pid, GenericSubject.Type.USER);
 			
 			if (self) {
 				UserDAO usedao = UserDAO.getInstance();
-				OUser user = usedao.selectBySid(con, userSid);
-				roles.add(new RoleWithSource(RoleWithSource.SOURCE_USER, userSid, user.getDomainId(), pid.getUserId(), user.getDisplayName()));
+				OUser user = usedao.selectByUid(con, userUid);
+				roles.add(new RoleWithSource(RoleWithSource.SOURCE_USER, userUid, user.getDomainId(), pid.getUserId(), user.getDisplayName()));
 			}
 			
 			RoleDAO roldao = RoleDAO.getInstance();
 			
 			// Gets by group
-			List<ORole> groles = roldao.selectFromGroupsByUser(con, userSid);
+			List<ORole> groles = roldao.selectFromGroupsByUser(con, userUid);
 			for (ORole role : groles) {
-				if (roleMap.contains(role.getRoleSid())) continue; // Skip duplicates
-				roleMap.add(role.getRoleSid());
-				roles.add(new RoleWithSource(RoleWithSource.SOURCE_GROUP, role.getRoleSid(), role.getDomainId(), role.getName(), role.getDescription()));
+				if (roleMap.contains(role.getRoleUid())) continue; // Skip duplicates
+				roleMap.add(role.getRoleUid());
+				roles.add(new RoleWithSource(RoleWithSource.SOURCE_GROUP, role.getRoleUid(), role.getDomainId(), role.getName(), role.getDescription()));
 			}
 			
 			// Gets direct assigned roles
-			List<ORole> droles = roldao.selectDirectByUser(con, userSid);
+			List<ORole> droles = roldao.selectDirectByUser(con, userUid);
 			for (ORole role : droles) {
-				if(roleMap.contains(role.getRoleSid())) continue; // Skip duplicates
-				roleMap.add(role.getRoleSid());
-				roles.add(new RoleWithSource(RoleWithSource.SOURCE_ROLE, role.getRoleSid(), role.getDomainId(), role.getName(), role.getDescription()));
+				if(roleMap.contains(role.getRoleUid())) continue; // Skip duplicates
+				roleMap.add(role.getRoleUid());
+				roles.add(new RoleWithSource(RoleWithSource.SOURCE_ROLE, role.getRoleUid(), role.getDomainId(), role.getName(), role.getDescription()));
 			}
 			
 			// Get transivite roles (belonging to groups)
 			if (transitive) {
-				List<ORole> troles = roldao.selectTransitiveFromGroupsByUser(con, userSid);
+				List<ORole> troles = roldao.selectTransitiveFromGroupsByUser(con, userUid);
 				for(ORole role : troles) {
-					if(roleMap.contains(role.getRoleSid())) continue; // Skip duplicates
-					roleMap.add(role.getRoleSid());
-					roles.add(new RoleWithSource(RoleWithSource.SOURCE_TRANSITIVE, role.getRoleSid(), role.getDomainId(), role.getName(), role.getDescription()));
+					if(roleMap.contains(role.getRoleUid())) continue; // Skip duplicates
+					roleMap.add(role.getRoleUid());
+					roles.add(new RoleWithSource(RoleWithSource.SOURCE_TRANSITIVE, role.getRoleUid(), role.getDomainId(), role.getName(), role.getDescription()));
 				}
 			}
 		} catch (Exception ex) {
@@ -3454,19 +3454,19 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 	
 	/**
 	 * Returns all permission strings related to specified role SID.
-	 * @param roleSid The target role SID (SubjectID) 
+	 * @param roleUid The target role SID (SubjectID) 
 	 * @return A set of string permissions
 	 * @throws WTException 
 	 */
-	public Set<String> getRolePermissionStrings(final String roleSid) throws WTException {
-		Check.notEmpty(roleSid, "roleSid");
+	public Set<String> getRolePermissionStrings(final String roleUid) throws WTException {
+		Check.notEmpty(roleUid, "roleUid");
 		RolePermissionDAO rpDao = RolePermissionDAO.getInstance();
 		Connection con = null;
 		
 		List<ORolePermission> rolePermissions = null;
 		try {
 			con = WT.getConnection(CoreManifest.ID);
-			rolePermissions = rpDao.selectByRoleSid(con, roleSid);
+			rolePermissions = rpDao.selectByRoleUid(con, roleUid);
 			
 		} catch (Exception ex) {
 			throw ExceptionUtils.wrapThrowable(ex);
@@ -3487,10 +3487,10 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 		return permissionStrings;
 	}
 	
-	public EntityPermissions extractPermissions(Connection con, String roleSid) throws WTException {
+	public EntityPermissions extractPermissions(Connection con, String roleUid) throws WTException {
 		RolePermissionDAO rolperdao = RolePermissionDAO.getInstance();
 		
-		List<ORolePermission> operms = rolperdao.selectByRoleSid(con, roleSid);
+		List<ORolePermission> operms = rolperdao.selectByRoleUid(con, roleUid);
 		ArrayList<ORolePermission> othersPerms = new ArrayList<>();
 		ArrayList<ORolePermission> servicesPerms = new ArrayList<>();
 		for(ORolePermission operm : operms) {
@@ -3594,22 +3594,22 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 		Connection con = null;
 		
 		// Define lookup targets
-		final String targetSubjectSid = subjectSidCache.getSid(targetProfileId, GenericSubject.Type.USER, GenericSubject.Type.RESOURCE);
+		final String targetSubjectUid = subjectUidCache.getUid(targetProfileId, GenericSubject.Type.USER, GenericSubject.Type.RESOURCE);
 		
 		try {
 			con = WT.getCoreConnection();
-			final Set<String> originSids;
+			final Set<String> originUids;
 			if (targetPermissionKeys == null) {
-				originSids = shaDao.viewOriginatingSidsByServiceKey(con, serviceId, context);
+				originUids = shaDao.viewOriginatingUidsByServiceKey(con, serviceId, context);
 			} else {
-				final Set<String> targetSubjectSids = getComputedRoleSidsByUser(targetProfileId, true, true);
-				originSids = shaDao.viewOriginatingSidsByRoleServiceKey(con, serviceId, context, targetSubjectSids, targetPermissionKeys);
+				final Set<String> targetSubjectUids = getComputedRoleUidsByUser(targetProfileId, true, true);
+				originUids = shaDao.viewOriginatingUidsByRoleServiceKey(con, serviceId, context, targetSubjectUids, targetPermissionKeys);
 			}
 			
 			final ArrayList<ShareOrigin> origins = new ArrayList<>();
-			for (String uid : originSids) {
-				if (uid.equals(targetSubjectSid)) continue; // Skip self				
-				UserProfileId originProfileId = subjectSidCache.getPid(uid, GenericSubject.Type.USER, GenericSubject.Type.RESOURCE);
+			for (String uid : originUids) {
+				if (uid.equals(targetSubjectUid)) continue; // Skip self				
+				UserProfileId originProfileId = subjectUidCache.getPid(uid, GenericSubject.Type.USER, GenericSubject.Type.RESOURCE);
 				if (originProfileId == null) {
 					LOGGER.warn("Unable to lookup USER/RESOURCE profileId for uid '{}'", uid);
 				} else {
@@ -3648,15 +3648,15 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 		Connection con = null;
 		
 		// Define lookup targets
-		final String originSubjectSid = subjectSidCache.getSid(originProfileId, GenericSubject.Type.USER, GenericSubject.Type.RESOURCE);
-		final Set<String> targetSubjectSids = getComputedRoleSidsByUser(targetProfileId, true, true);
+		final String originSubjectUid = subjectUidCache.getUid(originProfileId, GenericSubject.Type.USER, GenericSubject.Type.RESOURCE);
+		final Set<String> targetSubjectUids = getComputedRoleUidsByUser(targetProfileId, true, true);
 		
 		try {
 			con = WT.getCoreConnection();
-			return shaDao.viewInstancesByOriginServiceContextPermissions(con, originSubjectSid, serviceId, context, targetSubjectSids, targetPermissionKeys);
+			return shaDao.viewInstancesByOriginServiceContextPermissions(con, originSubjectUid, serviceId, context, targetSubjectUids, targetPermissionKeys);
 			
 		} catch (Exception ex) {
-			LOGGER.error("Unable to compute share origin-instances for '{}' [{}, {}, {}]", targetProfileId, originSubjectSid, serviceId, context);
+			LOGGER.error("Unable to compute share origin-instances for '{}' [{}, {}, {}]", targetProfileId, originSubjectUid, serviceId, context);
 			throw ExceptionUtils.wrapThrowable(ex);
 		} finally {
 			DbUtils.closeQuietly(con);
@@ -3676,6 +3676,7 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 	 * @return A set of rights for involved subject IDs (SIDs).
 	 * @throws WTException 
 	 */
+	/*
 	public <T> Map<String, Sharing.SubjectConfiguration> getShareConfigurations(final UserProfileId originProfileId, final String serviceId, final String context, final String instance, final String permissionKey, final Set<UserProfileId> permissionProfileIds, final Class<T> typeOfData) throws WTException {
 		Check.notNull(originProfileId, "originProfileId");
 		Check.notEmpty(serviceId, "serviceId");
@@ -3685,18 +3686,91 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 		Connection con = null;
 		
 		try {
-			String originSid = subjectSidCache.getSid(originProfileId, GenericSubject.Type.USER, GenericSubject.Type.RESOURCE);
-			Set<String> permissionSids = (permissionProfileIds == null) ? null : permissionProfileIds.stream()
+			String originUid = subjectUidCache.getUid(originProfileId, GenericSubject.Type.USER, GenericSubject.Type.RESOURCE);
+			Set<String> permissionUids = (permissionProfileIds == null) ? null : permissionProfileIds.stream()
 				// skipping NULLs and objects with non-matching domain
 				.filter((pid) -> (pid != null))
 				// then lookup related PID
-				.map((pid) -> subjectSidCache.getSid(pid, GenericSubject.Type.GROUP, GenericSubject.Type.USER, GenericSubject.Type.RESOURCE, GenericSubject.Type.ROLE))
+				.map((pid) -> subjectUidCache.getUid(pid, GenericSubject.Type.GROUP, GenericSubject.Type.USER, GenericSubject.Type.RESOURCE, GenericSubject.Type.ROLE))
 				// making sure that match was successful
 				.filter((sid) -> (sid != null))
 				.collect(Collectors.toSet());
 			
 			con = WT.getCoreConnection();
-			return doShareConfigurationsGet(con, originSid, serviceId, context, instance, permissionKey, permissionSids, typeOfData);
+			return doShareConfigurationsGet(con, originUid, serviceId, context, instance, permissionKey, permissionUids, typeOfData);
+			
+		} catch (Exception ex) {
+			throw ExceptionUtils.wrapThrowable(ex);
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	*/
+	
+	/**
+	 * Gets Share configurations for an origin profile-id (single) that satisfies 
+	 * some parameters like context, instance and a targetPermissionKey.
+	 * Optionally it can restrict results to a defined set of profile-ids.
+	 * @param <T> The type of Data object inside the configuration
+	 * @param originProfileId The origin profile-id whose Share configurations is to be retrieved.
+	 * @param serviceId The related service ID.
+	 * @param context The context name of the Share.
+	 * @param instance The identifier of the entity that is (or is being) shared.
+	 * @param targetPermissionKey The permission-key to target.
+	 * @param targetPermissionProfileIds Set of targets profileIds associated with permission-key above. Optional, set to <null> to disable filtering.
+	 * @param typeOfData Type of Data object in configuration. Optional, set to <null> to not process Data.
+	 * @return a map of configuration objects keyed by target profile-uid
+	 * @throws WTException 
+	 */
+	public <T> Map<String, Sharing.SubjectConfiguration> getShareConfigurations(final UserProfileId originProfileId, final String serviceId, final String context, final String instance, final String targetPermissionKey, final Set<UserProfileId> targetPermissionProfileIds, final Class<T> typeOfData) throws WTException {
+		Map<UserProfileId, Map<String, Sharing.SubjectConfiguration>> result = getShareConfigurations(LangUtils.asSet(originProfileId), serviceId, context, instance, targetPermissionKey, targetPermissionProfileIds, typeOfData);
+		return result.get(originProfileId);
+	}
+	
+	/**
+	 * Gets Share configurations for multiple origin profile-ids that satisfies 
+	 * same parameters like context, instance and a targetPermissionKey.
+	 * Optionally it can restrict results to a defined set of profile-ids.
+	 * @param <T> The type of Data object inside the configuration
+	 * @param originProfileIds A set of origin profile-id whose Share configurations is to be retrieved.
+	 * @param serviceId The related service ID.
+	 * @param context The context name of the Share.
+	 * @param instance The identifier of the entity that is (or is being) shared.
+	 * @param targetPermissionKey The permission-key to target.
+	 * @param targetPermissionProfileIds Set of targets profileIds associated with permission-key above. Optional, set to <null> to disable filtering.
+	 * @param typeOfData Type of Data object in configuration. Optional, set to <null> to not process Data.
+	 * @return for each origin profile-id a map of configuration objects keyed by target profile-uid
+	 * @throws WTException 
+	 */
+	public <T> Map<UserProfileId, Map<String, Sharing.SubjectConfiguration>> getShareConfigurations(final Set<UserProfileId> originProfileIds, final String serviceId, final String context, final String instance, final String targetPermissionKey, final Set<UserProfileId> targetPermissionProfileIds, final Class<T> typeOfData) throws WTException {
+		Check.notNull(originProfileIds, "originProfileIds");
+		Check.notEmpty(serviceId, "serviceId");
+		Check.notEmpty(context, "context");
+		Check.notEmpty(instance, "instance");
+		Check.notEmpty(targetPermissionKey, "targetPermissionKey");
+		Connection con = null;
+		
+		try {
+			Set<String> targetPermissionUids = (targetPermissionProfileIds == null) ? null : targetPermissionProfileIds.stream()
+				// skipping NULLs and objects with non-matching domain
+				.filter((pid) -> (pid != null))
+				// then lookup related PID
+				.map((pid) -> subjectUidCache.getUid(pid, GenericSubject.Type.GROUP, GenericSubject.Type.USER, GenericSubject.Type.RESOURCE, GenericSubject.Type.ROLE))
+				// making sure that match was successful
+				.filter((sid) -> (sid != null))
+				.collect(Collectors.toSet());
+			
+			Map<UserProfileId, String> originUids = new LinkedHashMap<>(originProfileIds.size());
+			for (UserProfileId originPid : originProfileIds) {
+				originUids.put(originPid, subjectUidCache.getUid(originPid, GenericSubject.Type.USER, GenericSubject.Type.RESOURCE));
+			}
+			
+			con = WT.getCoreConnection();
+			Map<UserProfileId, Map<String, Sharing.SubjectConfiguration>> result = new LinkedHashMap<>(originProfileIds.size());
+			for (Map.Entry<UserProfileId, String> entry : originUids.entrySet()) {
+				result.put(entry.getKey(), doShareConfigurationsGet(con, entry.getValue(), serviceId, context, instance, targetPermissionKey, targetPermissionUids, typeOfData));
+			}
+			return result;
 			
 		} catch (Exception ex) {
 			throw ExceptionUtils.wrapThrowable(ex);
@@ -3727,9 +3801,9 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 		Connection con = null;
 		
 		try {
-			String originSid = subjectSidCache.getSid(originProfileId, GenericSubject.Type.USER, GenericSubject.Type.RESOURCE);
+			String originUid = subjectUidCache.getUid(originProfileId, GenericSubject.Type.USER, GenericSubject.Type.RESOURCE);
 			con = WT.getCoreConnection();
-			doShareConfigurationsUpdate(con, originSid, serviceId, context, instance, permissionKey, configurations, typeOfData);
+			doShareConfigurationsUpdate(con, originUid, serviceId, context, instance, permissionKey, configurations, typeOfData);
 			DbUtils.commitQuietly(con);
 			
 		} catch (Exception ex) {
@@ -3811,7 +3885,7 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 		Check.notNull(actions, "actions");
 		
 		// Define lookup targets
-		final String originSubjectSid = subjectSidCache.getSid(originProfileId, GenericSubject.Type.USER, GenericSubject.Type.RESOURCE);
+		final String originSubjectUid = subjectUidCache.getUid(originProfileId, GenericSubject.Type.USER, GenericSubject.Type.RESOURCE);
 		final String shareInstance;
 		if (scope instanceof FolderSharing.WildcardScope) {
 			shareInstance = FolderSharing.INSTANCE_WILDCARD;
@@ -3830,11 +3904,11 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 			permissionKey = FolderShare.buildItemsPermissionKey(context);
 		}
 		
-		Integer shareId = doShareIdLookup(originSubjectSid, serviceId, context, shareInstance);
+		Integer shareId = doShareIdLookup(originSubjectUid, serviceId, context, shareInstance);
 		if (shareId == null) {
 			if (!throwOnMissingShare) return null;
-			LOGGER.error("Unable to evaluate permissions for '{}' [{}, {}, {}, {}]", targetProfileId, originSubjectSid, serviceId, context, shareInstance);
-			throw new WTNotFoundException("Share not found [{}, {}, {}, {}]", originSubjectSid, serviceId, context, shareInstance);
+			LOGGER.error("Unable to evaluate permissions for '{}' [{}, {}, {}, {}]", targetProfileId, originSubjectUid, serviceId, context, shareInstance);
+			throw new WTNotFoundException("Share not found [{}, {}, {}, {}]", originSubjectUid, serviceId, context, shareInstance);
 		}
 		
 		boolean[] bools = new boolean[actions.length];
@@ -3865,7 +3939,7 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 		final String FOLDER_PERMISSION_KEY = FolderShare.buildFolderPermissionKey(context);
 		final String ITEMS_PERMISSION_KEY = FolderShare.buildItemsPermissionKey(context);
 		
-		final String originSubjectSid = subjectSidCache.getSid(originProfileId, GenericSubject.Type.USER, GenericSubject.Type.RESOURCE);
+		final String originSubjectUid = subjectUidCache.getUid(originProfileId, GenericSubject.Type.USER, GenericSubject.Type.RESOURCE);
 		boolean skipWildcardReservedRights = true;
 		final String shareInstance;
 		if (scope instanceof FolderSharing.WildcardScope) {
@@ -3879,11 +3953,11 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 			throw new IllegalArgumentException("Unsupported scope");
 		}
 		
-		Integer shareId = doShareIdLookup(originSubjectSid, serviceId, context, shareInstance);
+		Integer shareId = doShareIdLookup(originSubjectUid, serviceId, context, shareInstance);
 		if (shareId == null) {
 			if (!throwOnMissingShare) return null;
-			LOGGER.error("Unable to evaluate permissions for '{}' [{}, {}, {}, {}]", targetProfileId, originSubjectSid, serviceId, context, shareInstance);
-			throw new WTNotFoundException("Share not found [{}, {}, {}, {}]", originSubjectSid, serviceId, context, shareInstance);
+			LOGGER.error("Unable to evaluate permissions for '{}' [{}, {}, {}, {}]", targetProfileId, originSubjectUid, serviceId, context, shareInstance);
+			throw new WTNotFoundException("Share not found [{}, {}, {}, {}]", originSubjectUid, serviceId, context, shareInstance);
 		}
 		
 		FolderShare.FolderPermissions folderPerms = new FolderShare.FolderPermissions();
@@ -3922,9 +3996,9 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 		Connection con = null;
 		
 		try {
-			String originSid = subjectSidCache.getSid(originProfileId, GenericSubject.Type.USER, GenericSubject.Type.RESOURCE);
+			String originUid = subjectUidCache.getUid(originProfileId, GenericSubject.Type.USER, GenericSubject.Type.RESOURCE);
 			con = WT.getCoreConnection();
-			return doFolderShareConfigurationsGet(con, originSid, serviceId, context, scope, typeOfData, null);
+			return doFolderShareConfigurationsGet(con, originUid, serviceId, context, scope, typeOfData, null);
 			
 		} catch (Exception ex) {
 			throw ExceptionUtils.wrapThrowable(ex);
@@ -3953,9 +4027,9 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 		Connection con = null;
 		
 		try {
-			String originSid = subjectSidCache.getSid(originProfileId, GenericSubject.Type.USER, GenericSubject.Type.RESOURCE);
+			String originUid = subjectUidCache.getUid(originProfileId, GenericSubject.Type.USER, GenericSubject.Type.RESOURCE);
 			con = WT.getCoreConnection();
-			doFolderShareConfigurationUpdate(con, originSid, serviceId, context, scope, configurations, typeOfData);
+			doFolderShareConfigurationUpdate(con, originUid, serviceId, context, scope, configurations, typeOfData);
 			DbUtils.commitQuietly(con);
 			
 		} catch (Exception ex) {
@@ -4253,7 +4327,7 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 					role.setAllowedServiceIds(LangUtils.asSet("com.sonicle.webtop.core.admin", "com.sonicle.webtop.vfs"));
 					BitFlags<RoleProcessOpt> options = BitFlags.with(RoleProcessOpt.PROCESS_SERVICEPERMISSIONS);
 					RoleInsertResult result = doRoleInsert(con, domainId, DOMAINADMIN_ROLEID, null, role, options);
-					subjectSidCache.add(result.orole.getProfileId(), result.orole.getRoleSid(), GenericSubject.Type.ROLE);
+					subjectUidCache.add(result.orole.getProfileId(), result.orole.getRoleUid(), GenericSubject.Type.ROLE);
 					cacheUpdated = true;
 
 				} catch (Exception ex) {
@@ -4267,7 +4341,7 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 					role.setDescription("Represents an account used as PEC container.");
 					//role.setAllowedServiceIds(LangUtils.asSet("com.sonicle.webtop.core.admin", "com.sonicle.webtop.vfs"));
 					RoleInsertResult result = doRoleInsert(con, domainId, PECACCOUNT_ROLEID, null, role, BitFlags.noneOf(RoleProcessOpt.class));
-					subjectSidCache.add(result.orole.getProfileId(), result.orole.getRoleSid(), GenericSubject.Type.ROLE);
+					subjectUidCache.add(result.orole.getProfileId(), result.orole.getRoleUid(), GenericSubject.Type.ROLE);
 					cacheUpdated = true;
 
 				} catch (Exception ex) {
@@ -4283,7 +4357,7 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 			if (!groups.containsKey(GROUPID_ADMINS)) {
 				try {
 					GroupInsertResult result = doGroupInsert(con, domainId, GROUPID_ADMINS, "Admins");
-					subjectSidCache2.add(result.ogroup.getProfileId(), result.ogroup.getGroupSid(), GenericSubject.Type.GROUP);
+					subjectUidCache2.add(result.ogroup.getProfileId(), result.ogroup.getGroupUid(), GenericSubject.Type.GROUP);
 					cacheUpdated = true;
 
 				} catch (Exception ex) {
@@ -4295,7 +4369,7 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 			if (!groups.containsKey(GROUPID_USERS)) {
 				try {
 					GroupInsertResult result = doGroupInsert(con, domainId, GROUPID_USERS, "Users");
-					subjectSidCache.add(result.ogroup.getProfileId(), result.ogroup.getGroupSid(), GenericSubject.Type.GROUP);
+					subjectUidCache.add(result.ogroup.getProfileId(), result.ogroup.getGroupUid(), GenericSubject.Type.GROUP);
 					cacheUpdated = true;
 
 				} catch (Exception ex) {
@@ -4306,7 +4380,7 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 			if (!groups.containsKey(GROUPID_PEC_ACCOUNTS)) {
 				try {
 					GroupInsertResult result = doGroupInsert(con, domainId, GROUPID_PEC_ACCOUNTS, "Groups all PEC Accounts");
-					subjectSidCache.add(result.ogroup.getProfileId(), result.ogroup.getGroupSid(), GenericSubject.Type.GROUP);
+					subjectUidCache.add(result.ogroup.getProfileId(), result.ogroup.getGroupUid(), GenericSubject.Type.GROUP);
 					cacheUpdated = true;
 
 				} catch (Exception ex) {
@@ -4425,10 +4499,10 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 		
 		Set<String> assignedGroups = null;
 		if (options.has(UserProcessOpt.PROCESS_GROUPASSOCIATIONS)) {
-			assignedGroups = uasDao.viewGroupSidsByUser(con, vuser.getUserSid());
+			assignedGroups = uasDao.viewGroupUidsByUser(con, vuser.getUserUid());
 			if (!subjectsAsSID) {
 				assignedGroups = assignedGroups.stream()
-					.map((userSid) -> subjectSidCache.getPid(userSid, GenericSubject.Type.GROUP))
+					.map((userUid) -> subjectUidCache.getPid(userUid, GenericSubject.Type.GROUP))
 					.filter((userPid) -> userPid != null)
 					.map((userPid) -> userPid.toString())
 					.collect(Collectors.toSet());
@@ -4436,10 +4510,10 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 		}
 		Set<String> assignedRoles = null;
 		if (options.has(UserProcessOpt.PROCESS_ROLEASSOCIATIONS)) {
-			assignedRoles = rasDao.viewRoleSidsBySubject(con, vuser.getUserSid());
+			assignedRoles = rasDao.viewRoleUidsBySubject(con, vuser.getUserUid());
 			if (!subjectsAsSID) {
 				assignedRoles = assignedRoles.stream()
-					.map((roleSid) -> subjectSidCache.getPid(roleSid, GenericSubject.Type.ROLE))
+					.map((roleUid) -> subjectUidCache.getPid(roleUid, GenericSubject.Type.ROLE))
 					.filter((rolePid) -> rolePid != null)
 					.map((rolePid) -> rolePid.toString())
 					.collect(Collectors.toSet());
@@ -4448,7 +4522,7 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 		
 		Set<PermissionString> permissions = null;
 		if (options.has(UserProcessOpt.PROCESS_PERMISSIONS)) {
-			Map<Integer, ORolePermission> map = prmDao.viewSubjectEntriesBySubjectCondition(con, vuser.getUserSid(), RolePermissionDAO.createServicePermissionAndKeysExcludeCondition(buildFolderShareKeysALL("%")));
+			Map<Integer, ORolePermission> map = prmDao.viewSubjectEntriesBySubjectCondition(con, vuser.getUserUid(), RolePermissionDAO.createServicePermissionAndKeysExcludeCondition(buildFolderShareKeysALL("%")));
 			permissions = map.values().stream()
 				.map((orperm) -> toPermissionString(orperm))
 				.collect(Collectors.toSet());
@@ -4456,7 +4530,7 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 		
 		Set<String> allowedServiceIds = null;
 		if (options.has(UserProcessOpt.PROCESS_SERVICEPERMISSIONS)) {
-			Map<Integer, ORolePermission> map = prmDao.viewSubjectEntriesBySubjectCondition(con, vuser.getUserSid(), RolePermissionDAO.createServicePermissionOnlyCondition());
+			Map<Integer, ORolePermission> map = prmDao.viewSubjectEntriesBySubjectCondition(con, vuser.getUserUid(), RolePermissionDAO.createServicePermissionOnlyCondition());
 			allowedServiceIds = map.values().stream()
 				.map((orperm) -> orperm.getInstance())
 				.collect(Collectors.toSet());
@@ -4470,7 +4544,7 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 		return user;
 	}
 	
-	private UserInsertResult doUserInsert(final Connection con, final String domainId, final String userId, final String userSid, final UserBase user, final BitFlags<UserProcessOpt> options, final String defaultGroup) throws WTException {
+	private UserInsertResult doUserInsert(final Connection con, final String domainId, final String userId, final String userUid, final UserBase user, final BitFlags<UserProcessOpt> options, final String defaultGroup) throws WTException {
 		UserDAO useDao = UserDAO.getInstance();
 		UserInfoDAO uinDao = UserInfoDAO.getInstance();
 		UserAssociationDAO uasDao = UserAssociationDAO.getInstance();
@@ -4490,7 +4564,7 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 		OUser ouse = AppManagerUtils.fillOUser(new OUser(), user);
 		ouse.setDomainId(domainId);
 		ouse.setUserId(userId);
-		ouse.setUserSid(userSid);
+		ouse.setUserUid(userUid);
 		ouse.sanitize();
 		OUser.fillDefaultsForInsert(ouse, ouin.getFirstName(), ouin.getLastName());
 		
@@ -4506,21 +4580,21 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 				}
 			}
 			Check.notNull(user.getAssignedGroups(), "assignedGroups");
-			Set<String> assigned = parseSubjectsAsSids(user.getAssignedGroups(), !subjectsAsSID, domainId, GenericSubject.Type.GROUP);
-			uasDao.batchInsert(con, ouse.getUserSid(), assigned);
+			Set<String> assigned = parseSubjectsAsUids(user.getAssignedGroups(), !subjectsAsSID, domainId, GenericSubject.Type.GROUP);
+			uasDao.batchInsert(con, ouse.getUserUid(), assigned);
 		}
 		if (options.has(UserProcessOpt.PROCESS_ROLEASSOCIATIONS) && (user.getAssignedRoles() != null)) {
 			Check.notNull(user.getAssignedRoles(), "assignedRoles");
-			Set<String> assigned = parseSubjectsAsSids(user.getAssignedRoles(), !subjectsAsSID, domainId, GenericSubject.Type.ROLE);
-			rasDao.batchInsert(con, ouse.getUserSid(), assigned);
+			Set<String> assigned = parseSubjectsAsUids(user.getAssignedRoles(), !subjectsAsSID, domainId, GenericSubject.Type.ROLE);
+			rasDao.batchInsert(con, ouse.getUserUid(), assigned);
 		}
 		if (options.has(UserProcessOpt.PROCESS_PERMISSIONS) && (user.getPermissions() != null)) {
 			Check.notNull(user.getPermissions(), "permissions");
-			int[] ret1 = permsDao.batchInsertOfSubject(con, ouse.getUserSid(), toPermissionBatchInsertEntries(user.getPermissions()));
+			int[] ret1 = permsDao.batchInsertOfSubject(con, ouse.getUserUid(), toPermissionBatchInsertEntries(user.getPermissions()));
 		}
 		if (options.has(UserProcessOpt.PROCESS_SERVICEPERMISSIONS) && (user.getAllowedServiceIds() != null)) {
 			Check.notNull(user.getAllowedServiceIds(), "allowedServiceIds");
-			int[] ret2 = permsDao.batchInsertOfSubject(con, ouse.getUserSid(), toServicePermissionBatchInsertEntries(user.getAllowedServiceIds()));
+			int[] ret2 = permsDao.batchInsertOfSubject(con, ouse.getUserUid(), toServicePermissionBatchInsertEntries(user.getAllowedServiceIds()));
 		}
 		
 		return new UserInsertResult(ouse, ouin);
@@ -4534,7 +4608,7 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 		RolePermissionDAO prmDao = RolePermissionDAO.getInstance();
 		UserProfileId userPid = new UserProfileId(domainId, userId);
 		final boolean subjectsAsSID = options.has(UserProcessOpt.SUBJECTS_AS_SID);
-		String userSid = lookupSubjectSid(userPid, GenericSubject.Type.USER);
+		String userUid = lookupSubjectUid(userPid, GenericSubject.Type.USER);
 		
 		OUserInfo ouin = AppManagerUtils.fillOUserInfo(new OUserInfo(), user);
 		ouin.setDomainId(domainId);
@@ -4550,28 +4624,28 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 		
 		if (options.has(UserProcessOpt.PROCESS_GROUPASSOCIATIONS)) {
 			Check.notNull(user.getAssignedGroups(), "assignedGroups");
-			Set<String> assigned = parseSubjectsAsSids(user.getAssignedGroups(), !subjectsAsSID, domainId, GenericSubject.Type.GROUP);
-			LangUtils.CollectionChangeSet<String> changeSet = LangUtils.getCollectionChanges(uasDao.viewGroupSidsByUser(con, userSid), assigned);
-			uasDao.batchInsert(con, userSid, changeSet.inserted);
-			uasDao.deleteByUserGroups(con, userSid, changeSet.deleted);
+			Set<String> assigned = parseSubjectsAsUids(user.getAssignedGroups(), !subjectsAsSID, domainId, GenericSubject.Type.GROUP);
+			LangUtils.CollectionChangeSet<String> changeSet = LangUtils.getCollectionChanges(uasDao.viewGroupUidsByUser(con, userUid), assigned);
+			uasDao.batchInsert(con, userUid, changeSet.inserted);
+			uasDao.deleteByUserGroups(con, userUid, changeSet.deleted);
 		}
 		if (options.has(UserProcessOpt.PROCESS_ROLEASSOCIATIONS)) {
 			Check.notNull(user.getAssignedRoles(), "assignedRoles");
-			Set<String> assigned = parseSubjectsAsSids(user.getAssignedRoles(), !subjectsAsSID, domainId, GenericSubject.Type.ROLE);
-			LangUtils.CollectionChangeSet<String> changeSet = LangUtils.getCollectionChanges(rasDao.viewRoleSidsBySubject(con, userSid), assigned);
-			rasDao.batchInsert(con, userSid, changeSet.inserted);
-			rasDao.deleteBySubjectRolesSids(con, userSid, changeSet.deleted);
+			Set<String> assigned = parseSubjectsAsUids(user.getAssignedRoles(), !subjectsAsSID, domainId, GenericSubject.Type.ROLE);
+			LangUtils.CollectionChangeSet<String> changeSet = LangUtils.getCollectionChanges(rasDao.viewRoleUidsBySubject(con, userUid), assigned);
+			rasDao.batchInsert(con, userUid, changeSet.inserted);
+			rasDao.deleteBySubjectRolesUids(con, userUid, changeSet.deleted);
 		}
 		if (options.has(UserProcessOpt.PROCESS_PERMISSIONS)) {
 			Check.notNull(user.getPermissions(), "permissions");
-			Map<Integer, RolePermissionDAO.SubjectEntry> map = prmDao.viewSubjectEntriesBySubjectCondition(con, userSid, RolePermissionDAO.createServicePermissionAndKeysExcludeCondition(buildFolderShareKeysALL("%"))).entrySet().stream()
+			Map<Integer, RolePermissionDAO.SubjectEntry> map = prmDao.viewSubjectEntriesBySubjectCondition(con, userUid, RolePermissionDAO.createServicePermissionAndKeysExcludeCondition(buildFolderShareKeysALL("%"))).entrySet().stream()
 				.collect(Collectors.toMap(
 					Map.Entry::getKey,
 					(entry) -> toSubjectEntry(entry.getValue())
 				));
-			//Map<Integer, RolePermissionDAO.SubjectEntry> map = prmDao.viewSubjectEntriesBySubjectCondition(con, userSid, RolePermissionDAO.createServicePermissionExcludeCondition());
+			//Map<Integer, RolePermissionDAO.SubjectEntry> map = prmDao.viewSubjectEntriesBySubjectCondition(con, userUid, RolePermissionDAO.createServicePermissionExcludeCondition());
 			LangUtils.CollectionChangeSet<RolePermissionDAO.SubjectEntry> changeSet = LangUtils.getCollectionChanges(map.values(), toPermissionBatchInsertEntries(user.getPermissions()));
-			prmDao.batchInsertOfSubject(con, userSid, changeSet.inserted);
+			prmDao.batchInsertOfSubject(con, userUid, changeSet.inserted);
 			if (!changeSet.deleted.isEmpty()) {
 				Map<RolePermissionDAO.SubjectEntry, Integer> inversedMap = map.entrySet().stream()
 					.collect(Collectors.toMap(Entry::getValue, Entry::getKey));
@@ -4585,14 +4659,14 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 		}
 		if (options.has(UserProcessOpt.PROCESS_SERVICEPERMISSIONS)) {
 			Check.notNull(user.getAllowedServiceIds(), "allowedServiceIds");
-			Map<Integer, RolePermissionDAO.SubjectEntry> map = prmDao.viewSubjectEntriesBySubjectCondition(con, userSid, RolePermissionDAO.createServicePermissionOnlyCondition()).entrySet().stream()
+			Map<Integer, RolePermissionDAO.SubjectEntry> map = prmDao.viewSubjectEntriesBySubjectCondition(con, userUid, RolePermissionDAO.createServicePermissionOnlyCondition()).entrySet().stream()
 				.collect(Collectors.toMap(
 					Map.Entry::getKey,
 					(entry) -> toSubjectEntry(entry.getValue())
 				));
-			//Map<Integer, RolePermissionDAO.SubjectEntry> map = prmDao.viewSubjectEntriesBySubjectCondition(con, userSid, RolePermissionDAO.createServicePermissionOnlyCondition());
+			//Map<Integer, RolePermissionDAO.SubjectEntry> map = prmDao.viewSubjectEntriesBySubjectCondition(con, userUid, RolePermissionDAO.createServicePermissionOnlyCondition());
 			LangUtils.CollectionChangeSet<RolePermissionDAO.SubjectEntry> changeSet = LangUtils.getCollectionChanges(map.values(), toServicePermissionBatchInsertEntries(user.getAllowedServiceIds()));
-			prmDao.batchInsertOfSubject(con, userSid, changeSet.inserted);
+			prmDao.batchInsertOfSubject(con, userUid, changeSet.inserted);
 			if (!changeSet.deleted.isEmpty()) {
 				Map<RolePermissionDAO.SubjectEntry, Integer> inversedMap = map.entrySet().stream()
 					.collect(Collectors.toMap(Entry::getValue, Entry::getKey));
@@ -4613,15 +4687,15 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 		RolePermissionDAO prmDao = RolePermissionDAO.getInstance();
 		
 		UserProfileId userPid = new UserProfileId(domainId, userId);
-		String userSid = subjectSidCache.getSid(userPid, GenericSubject.Type.USER);
-		if (userSid == null) throw new WTNotFoundException("User UID not found [{}@{}]", userId, domainId);
+		String userUid = subjectUidCache.getUid(userPid, GenericSubject.Type.USER);
+		if (userUid == null) throw new WTNotFoundException("User UID not found [{}@{}]", userId, domainId);
 		
-		LOGGER.debug("[{}] Deleting permissions of '{}'...", userId, userSid);
-		prmDao.deleteBySubject(con, userSid);
-		LOGGER.debug("[{}] Deleting groups-associations of '{}'...", userId, userSid);
-		uasDao.deleteByUser(con, userSid);
-		LOGGER.debug("[{}] Deleting roles-associations of '{}'...", userId, userSid);
-		rasDao.deleteBySubject(con, userSid);
+		LOGGER.debug("[{}] Deleting permissions of '{}'...", userId, userUid);
+		prmDao.deleteBySubject(con, userUid);
+		LOGGER.debug("[{}] Deleting groups-associations of '{}'...", userId, userUid);
+		uasDao.deleteByUser(con, userUid);
+		LOGGER.debug("[{}] Deleting roles-associations of '{}'...", userId, userUid);
+		rasDao.deleteBySubject(con, userUid);
 		LOGGER.debug("[{}] Deleting domain user '{}'...", userId, userPid.toString());
 		uinDao.deleteByDomainUser(con, domainId, userId);
 		return useDao.deleteByDomainUser(con, domainId, userId) == 1;
@@ -4666,10 +4740,10 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 		
 		Set<String> assignedUsers = null;
 		if (options.has(GroupProcessOpt.PROCESS_USERASSOCIATIONS)) {
-			assignedUsers = uasDao.viewUserSidsByGroup(con, ogroup.getGroupSid());
+			assignedUsers = uasDao.viewUserUidsByGroup(con, ogroup.getGroupUid());
 			if (!subjectsAsSID) {
 				assignedUsers = assignedUsers.stream()
-					.map((userSid) -> subjectSidCache.getPid(userSid, GenericSubject.Type.USER))
+					.map((userUid) -> subjectUidCache.getPid(userUid, GenericSubject.Type.USER))
 					.filter((userPid) -> userPid != null)
 					.map((userPid) -> userPid.toString())
 					.collect(Collectors.toSet());
@@ -4677,10 +4751,10 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 		}
 		Set<String> assignedRoles = null;
 		if (options.has(GroupProcessOpt.PROCESS_ROLEASSOCIATIONS)) {
-			assignedRoles = rasDao.viewRoleSidsBySubject(con, ogroup.getGroupSid());
+			assignedRoles = rasDao.viewRoleUidsBySubject(con, ogroup.getGroupUid());
 			if (!subjectsAsSID) {
 				assignedRoles = assignedRoles.stream()
-					.map((roleSid) -> subjectSidCache.getPid(roleSid, GenericSubject.Type.ROLE))
+					.map((roleUid) -> subjectUidCache.getPid(roleUid, GenericSubject.Type.ROLE))
 					.filter((rolePid) -> rolePid != null)
 					.map((rolePid) -> rolePid.toString())
 					.collect(Collectors.toSet());
@@ -4689,7 +4763,7 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 		
 		Set<PermissionString> permissions = null;
 		if (options.has(GroupProcessOpt.PROCESS_PERMISSIONS)) {
-			Map<Integer, ORolePermission> map = prmDao.viewSubjectEntriesBySubjectCondition(con, ogroup.getGroupSid(), RolePermissionDAO.createServicePermissionAndKeysExcludeCondition(buildFolderShareKeysALL("%")));
+			Map<Integer, ORolePermission> map = prmDao.viewSubjectEntriesBySubjectCondition(con, ogroup.getGroupUid(), RolePermissionDAO.createServicePermissionAndKeysExcludeCondition(buildFolderShareKeysALL("%")));
 			permissions = map.values().stream()
 				.map((orperm) -> toPermissionString(orperm))
 				.collect(Collectors.toSet());
@@ -4697,7 +4771,7 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 		
 		Set<String> allowedServiceIds = null;
 		if (options.has(GroupProcessOpt.PROCESS_SERVICEPERMISSIONS)) {
-			Map<Integer, ORolePermission> map = prmDao.viewSubjectEntriesBySubjectCondition(con, ogroup.getGroupSid(), RolePermissionDAO.createServicePermissionOnlyCondition());
+			Map<Integer, ORolePermission> map = prmDao.viewSubjectEntriesBySubjectCondition(con, ogroup.getGroupUid(), RolePermissionDAO.createServicePermissionOnlyCondition());
 			allowedServiceIds = map.values().stream()
 				.map((orperm) -> orperm.getInstance())
 				.collect(Collectors.toSet());
@@ -4717,7 +4791,7 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 		return doGroupInsert(con, domainId, groupId, null, group, BitFlags.noneOf(GroupProcessOpt.class));
 	}
 	
-	private GroupInsertResult doGroupInsert(final Connection con, final String domainId, final String groupId, final String groupSid, final GroupBase group, final BitFlags<GroupProcessOpt> options) throws WTException {
+	private GroupInsertResult doGroupInsert(final Connection con, final String domainId, final String groupId, final String groupUid, final GroupBase group, final BitFlags<GroupProcessOpt> options) throws WTException {
 		GroupDAO grpDao = GroupDAO.getInstance();
 		UserAssociationDAO uasDao = UserAssociationDAO.getInstance();
 		RoleAssociationDAO rasDao = RoleAssociationDAO.getInstance();
@@ -4727,28 +4801,28 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 		OGroup ogroup = AppManagerUtils.fillOGroup(new OGroup(), group);
 		ogroup.setDomainId(domainId);
 		ogroup.setUserId(groupId);
-		ogroup.setGroupSid(groupSid);
+		ogroup.setGroupUid(groupUid);
 		OGroup.fillDefaultsForInsert(ogroup);
 		OGroup.validate(ogroup);
 		
 		grpDao.insert(con, ogroup);
 		if (options.has(GroupProcessOpt.PROCESS_USERASSOCIATIONS)) {
 			Check.notNull(group.getAssignedUsers(), "assignedUsers");
-			Set<String> assigned = parseSubjectsAsSids(group.getAssignedUsers(), !subjectsAsSID, domainId, GenericSubject.Type.USER);
-			uasDao.batchInsert(con, assigned, ogroup.getGroupSid());
+			Set<String> assigned = parseSubjectsAsUids(group.getAssignedUsers(), !subjectsAsSID, domainId, GenericSubject.Type.USER);
+			uasDao.batchInsert(con, assigned, ogroup.getGroupUid());
 		}
 		if (options.has(GroupProcessOpt.PROCESS_ROLEASSOCIATIONS)) {
 			Check.notNull(group.getAssignedRoles(), "assignedRoles");
-			Set<String> assigned = parseSubjectsAsSids(group.getAssignedRoles(), !subjectsAsSID, domainId, GenericSubject.Type.ROLE);
-			rasDao.batchInsert(con, ogroup.getGroupSid(), assigned);
+			Set<String> assigned = parseSubjectsAsUids(group.getAssignedRoles(), !subjectsAsSID, domainId, GenericSubject.Type.ROLE);
+			rasDao.batchInsert(con, ogroup.getGroupUid(), assigned);
 		}
 		if (options.has(GroupProcessOpt.PROCESS_PERMISSIONS)) {
 			Check.notNull(group.getPermissions(), "permissions");
-			int[] ret1 = permsDao.batchInsertOfSubject(con, ogroup.getGroupSid(), toPermissionBatchInsertEntries(group.getPermissions()));
+			int[] ret1 = permsDao.batchInsertOfSubject(con, ogroup.getGroupUid(), toPermissionBatchInsertEntries(group.getPermissions()));
 		}
 		if (options.has(GroupProcessOpt.PROCESS_SERVICEPERMISSIONS)) {
 			Check.notNull(group.getAllowedServiceIds(), "allowedServiceIds");
-			int[] ret2 = permsDao.batchInsertOfSubject(con, ogroup.getGroupSid(), toServicePermissionBatchInsertEntries(group.getAllowedServiceIds()));
+			int[] ret2 = permsDao.batchInsertOfSubject(con, ogroup.getGroupUid(), toServicePermissionBatchInsertEntries(group.getAllowedServiceIds()));
 		}
 		
 		return new GroupInsertResult(ogroup);
@@ -4762,34 +4836,34 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 		UserProfileId groupPid = new UserProfileId(domainId, groupId);
 		
 		final boolean subjectsAsSID = options.has(GroupProcessOpt.SUBJECTS_AS_SID);
-		String groupSid = lookupSubjectSid(groupPid, GenericSubject.Type.GROUP);
+		String groupUid = lookupSubjectUid(groupPid, GenericSubject.Type.GROUP);
 		
 		boolean ret = grpDao.updateDescriptionByProfile(con, domainId, groupId, group.getDescription()) == 1;
 		if (!ret) throw new WTNotFoundException("Group not found [{}]", groupPid);
 		
 		if (options.has(GroupProcessOpt.PROCESS_USERASSOCIATIONS)) {
 			Check.notNull(group.getAssignedUsers(), "assignedUsers");
-			Set<String> assigned = parseSubjectsAsSids(group.getAssignedUsers(), !subjectsAsSID, domainId, GenericSubject.Type.USER);
-			LangUtils.CollectionChangeSet<String> changeSet = LangUtils.getCollectionChanges(uasDao.viewUserSidsByGroup(con, groupSid), assigned);
-			uasDao.batchInsert(con, changeSet.inserted, groupSid);
-			uasDao.deleteByGroupUsers(con, groupSid, changeSet.deleted);
+			Set<String> assigned = parseSubjectsAsUids(group.getAssignedUsers(), !subjectsAsSID, domainId, GenericSubject.Type.USER);
+			LangUtils.CollectionChangeSet<String> changeSet = LangUtils.getCollectionChanges(uasDao.viewUserUidsByGroup(con, groupUid), assigned);
+			uasDao.batchInsert(con, changeSet.inserted, groupUid);
+			uasDao.deleteByGroupUsers(con, groupUid, changeSet.deleted);
 		}
 		if (options.has(GroupProcessOpt.PROCESS_ROLEASSOCIATIONS)) {
 			Check.notNull(group.getAssignedRoles(), "assignedRoles");
-			Set<String> assigned = parseSubjectsAsSids(group.getAssignedRoles(), !subjectsAsSID, domainId, GenericSubject.Type.ROLE);
-			LangUtils.CollectionChangeSet<String> changeSet = LangUtils.getCollectionChanges(rasDao.viewRoleSidsBySubject(con, groupSid), assigned);
-			rasDao.batchInsert(con, groupSid, changeSet.inserted);
-			rasDao.deleteBySubjectRolesSids(con, groupSid, changeSet.deleted);
+			Set<String> assigned = parseSubjectsAsUids(group.getAssignedRoles(), !subjectsAsSID, domainId, GenericSubject.Type.ROLE);
+			LangUtils.CollectionChangeSet<String> changeSet = LangUtils.getCollectionChanges(rasDao.viewRoleUidsBySubject(con, groupUid), assigned);
+			rasDao.batchInsert(con, groupUid, changeSet.inserted);
+			rasDao.deleteBySubjectRolesUids(con, groupUid, changeSet.deleted);
 		}
 		if (options.has(GroupProcessOpt.PROCESS_PERMISSIONS)) {
 			Check.notNull(group.getPermissions(), "permissions");
-			Map<Integer, RolePermissionDAO.SubjectEntry> map = prmDao.viewSubjectEntriesBySubjectCondition(con, groupSid, RolePermissionDAO.createServicePermissionAndKeysExcludeCondition(buildFolderShareKeysALL("%"))).entrySet().stream()
+			Map<Integer, RolePermissionDAO.SubjectEntry> map = prmDao.viewSubjectEntriesBySubjectCondition(con, groupUid, RolePermissionDAO.createServicePermissionAndKeysExcludeCondition(buildFolderShareKeysALL("%"))).entrySet().stream()
 				.collect(Collectors.toMap(
 					Map.Entry::getKey,
 					(entry) -> toSubjectEntry(entry.getValue())
 				));
 			LangUtils.CollectionChangeSet<RolePermissionDAO.SubjectEntry> changeSet = LangUtils.getCollectionChanges(map.values(), toPermissionBatchInsertEntries(group.getPermissions()));
-			prmDao.batchInsertOfSubject(con, groupSid, changeSet.inserted);
+			prmDao.batchInsertOfSubject(con, groupUid, changeSet.inserted);
 			if (!changeSet.deleted.isEmpty()) {
 				Map<RolePermissionDAO.SubjectEntry, Integer> inversedMap = map.entrySet().stream()
 					.collect(Collectors.toMap(Entry::getValue, Entry::getKey));
@@ -4803,13 +4877,13 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 		}
 		if (options.has(GroupProcessOpt.PROCESS_SERVICEPERMISSIONS)) {
 			Check.notNull(group.getAllowedServiceIds(), "allowedServiceIds");
-			Map<Integer, RolePermissionDAO.SubjectEntry> map = prmDao.viewSubjectEntriesBySubjectCondition(con, groupSid, RolePermissionDAO.createServicePermissionOnlyCondition()).entrySet().stream()
+			Map<Integer, RolePermissionDAO.SubjectEntry> map = prmDao.viewSubjectEntriesBySubjectCondition(con, groupUid, RolePermissionDAO.createServicePermissionOnlyCondition()).entrySet().stream()
 				.collect(Collectors.toMap(
 					Map.Entry::getKey,
 					(entry) -> toSubjectEntry(entry.getValue())
 				));
 			LangUtils.CollectionChangeSet<RolePermissionDAO.SubjectEntry> changeSet = LangUtils.getCollectionChanges(map.values(), toServicePermissionBatchInsertEntries(group.getAllowedServiceIds()));
-			prmDao.batchInsertOfSubject(con, groupSid, changeSet.inserted);
+			prmDao.batchInsertOfSubject(con, groupUid, changeSet.inserted);
 			if (!changeSet.deleted.isEmpty()) {
 				Map<RolePermissionDAO.SubjectEntry, Integer> inversedMap = map.entrySet().stream()
 					.collect(Collectors.toMap(Entry::getValue, Entry::getKey));
@@ -4829,15 +4903,15 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 		RolePermissionDAO prmDao = RolePermissionDAO.getInstance();
 		
 		UserProfileId groupPid = new UserProfileId(domainId, groupId);
-		String groupSid = subjectSidCache.getSid(groupPid, GenericSubject.Type.GROUP);
-		if (groupSid == null) throw new WTNotFoundException("Group UID not found [{}]", groupPid);
+		String groupUid = subjectUidCache.getUid(groupPid, GenericSubject.Type.GROUP);
+		if (groupUid == null) throw new WTNotFoundException("Group UID not found [{}]", groupPid);
 		
-		LOGGER.debug("[{}] Deleting permissions of '{}'...", groupPid, groupSid);
-		prmDao.deleteBySubject(con, groupSid);
-		LOGGER.debug("[{}] Deleting groups-associations of '{}'...", groupPid, groupSid);
-		uasDao.deleteByGroup(con, groupSid);
-		LOGGER.debug("[{}] Deleting roles-associations of '{}'...", groupPid, groupSid);
-		rasDao.deleteBySubject(con, groupSid);
+		LOGGER.debug("[{}] Deleting permissions of '{}'...", groupPid, groupUid);
+		prmDao.deleteBySubject(con, groupUid);
+		LOGGER.debug("[{}] Deleting groups-associations of '{}'...", groupPid, groupUid);
+		uasDao.deleteByGroup(con, groupUid);
+		LOGGER.debug("[{}] Deleting roles-associations of '{}'...", groupPid, groupUid);
+		rasDao.deleteBySubject(con, groupUid);
 		LOGGER.debug("[{}] Deleting domain user...", groupPid);
 		return grpDao.deleteByProfile(con, domainId, groupId) == 1;
 	}
@@ -4879,10 +4953,10 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 		
 		Set<String> assignedSubjects = null;
 		if (options.has(RoleProcessOpt.PROCESS_SUBJECTASSOCIATIONS)) {
-			assignedSubjects = rasDao.viewRoleSidsBySubject(con, orole.getRoleSid());
+			assignedSubjects = rasDao.viewRoleUidsBySubject(con, orole.getRoleUid());
 			if (!subjectsAsSID) {
 				assignedSubjects = assignedSubjects.stream()
-					.map((roleSid) -> subjectSidCache.getPid(roleSid, GenericSubject.Type.USER, GenericSubject.Type.GROUP))
+					.map((roleUid) -> subjectUidCache.getPid(roleUid, GenericSubject.Type.USER, GenericSubject.Type.GROUP))
 					.filter((rolePid) -> rolePid != null)
 					.map((rolePid) -> rolePid.toString())
 					.collect(Collectors.toSet());
@@ -4891,7 +4965,7 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 		
 		Set<PermissionString> permissions = null;
 		if (options.has(RoleProcessOpt.PROCESS_PERMISSIONS)) {
-			Map<Integer, ORolePermission> map = prmDao.viewSubjectEntriesBySubjectCondition(con, orole.getRoleSid(), RolePermissionDAO.createServicePermissionAndKeysExcludeCondition(buildFolderShareKeysALL("%")));
+			Map<Integer, ORolePermission> map = prmDao.viewSubjectEntriesBySubjectCondition(con, orole.getRoleUid(), RolePermissionDAO.createServicePermissionAndKeysExcludeCondition(buildFolderShareKeysALL("%")));
 			permissions = map.values().stream()
 				.map((orperm) -> toPermissionString(orperm))
 				.collect(Collectors.toSet());
@@ -4899,7 +4973,7 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 		
 		Set<String> allowedServiceIds = null;
 		if (options.has(RoleProcessOpt.PROCESS_SERVICEPERMISSIONS)) {
-			Map<Integer, ORolePermission> map = prmDao.viewSubjectEntriesBySubjectCondition(con, orole.getRoleSid(), RolePermissionDAO.createServicePermissionOnlyCondition());
+			Map<Integer, ORolePermission> map = prmDao.viewSubjectEntriesBySubjectCondition(con, orole.getRoleUid(), RolePermissionDAO.createServicePermissionOnlyCondition());
 			allowedServiceIds = map.values().stream()
 				.map((orperm) -> orperm.getInstance())
 				.collect(Collectors.toSet());
@@ -4912,7 +4986,7 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 		return role;
 	}
 	
-	private RoleInsertResult doRoleInsert(final Connection con, final String domainId, final String roleId, final String roleSid, final RoleBase role, final BitFlags<RoleProcessOpt> options) throws WTException {
+	private RoleInsertResult doRoleInsert(final Connection con, final String domainId, final String roleId, final String roleUid, final RoleBase role, final BitFlags<RoleProcessOpt> options) throws WTException {
 		RoleDAO rolDao = RoleDAO.getInstance();
 		RoleAssociationDAO rasDao = RoleAssociationDAO.getInstance();
 		RolePermissionDAO permsDao = RolePermissionDAO.getInstance();
@@ -4921,23 +4995,23 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 		ORole orole = AppManagerUtils.fillORole(new ORole(), role);
 		orole.setDomainId(domainId);
 		orole.setRoleId(roleId);
-		orole.setRoleSid(roleSid);
+		orole.setRoleUid(roleUid);
 		ORole.fillDefaultsForInsert(orole);
 		ORole.validate(orole);
 		
 		rolDao.insert(con, orole);
 		if (options.has(RoleProcessOpt.PROCESS_SUBJECTASSOCIATIONS)) {
 			Check.notNull(role.getAssignedSubjects(), "assignedSubjects");
-			Set<String> assigned = parseSubjectsAsSids(role.getAssignedSubjects(), !subjectsAsSID, domainId, GenericSubject.Type.USER, GenericSubject.Type.GROUP);
-			rasDao.batchInsert(con, assigned, orole.getRoleSid());
+			Set<String> assigned = parseSubjectsAsUids(role.getAssignedSubjects(), !subjectsAsSID, domainId, GenericSubject.Type.USER, GenericSubject.Type.GROUP);
+			rasDao.batchInsert(con, assigned, orole.getRoleUid());
 		}
 		if (options.has(RoleProcessOpt.PROCESS_PERMISSIONS)) {
 			Check.notNull(role.getPermissions(), "permissions");
-			int[] ret1 = permsDao.batchInsertOfSubject(con, orole.getRoleSid(), toPermissionBatchInsertEntries(role.getPermissions()));
+			int[] ret1 = permsDao.batchInsertOfSubject(con, orole.getRoleUid(), toPermissionBatchInsertEntries(role.getPermissions()));
 		}
 		if (options.has(RoleProcessOpt.PROCESS_SERVICEPERMISSIONS)) {
 			Check.notNull(role.getAllowedServiceIds(), "allowedServiceIds");
-			int[] ret2 = permsDao.batchInsertOfSubject(con, orole.getRoleSid(), toServicePermissionBatchInsertEntries(role.getAllowedServiceIds()));
+			int[] ret2 = permsDao.batchInsertOfSubject(con, orole.getRoleUid(), toServicePermissionBatchInsertEntries(role.getAllowedServiceIds()));
 		}
 		
 		return new RoleInsertResult(orole);
@@ -4949,27 +5023,27 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 		RolePermissionDAO prmDao = RolePermissionDAO.getInstance();
 		UserProfileId rolePid = new UserProfileId(domainId, roleId);
 		final boolean subjectsAsSID = options.has(RoleProcessOpt.SUBJECTS_AS_SID);
-		String roleSid = lookupSubjectSid(rolePid, GenericSubject.Type.ROLE);
+		String roleUid = lookupSubjectUid(rolePid, GenericSubject.Type.ROLE);
 		
 		boolean ret = rolDao.updateDescriptionByProfile(con, domainId, roleId, role.getDescription()) == 1;
 		if (!ret) throw new WTNotFoundException("Role not found [{}]", rolePid);
 		
 		if (options.has(RoleProcessOpt.PROCESS_SUBJECTASSOCIATIONS)) {
 			Check.notNull(role.getAssignedSubjects(), "assignedSubjects");
-			Set<String> assigned = parseSubjectsAsSids(role.getAssignedSubjects(), !subjectsAsSID, domainId, GenericSubject.Type.USER, GenericSubject.Type.GROUP);
-			LangUtils.CollectionChangeSet<String> changeSet = LangUtils.getCollectionChanges(rasDao.viewSubjectSidsByRole(con, roleSid), assigned);
-			rasDao.batchInsert(con, changeSet.inserted, roleSid);
-			rasDao.deleteBySubjectsRoleSid(con, changeSet.deleted, roleSid);
+			Set<String> assigned = parseSubjectsAsUids(role.getAssignedSubjects(), !subjectsAsSID, domainId, GenericSubject.Type.USER, GenericSubject.Type.GROUP);
+			LangUtils.CollectionChangeSet<String> changeSet = LangUtils.getCollectionChanges(rasDao.viewSubjectUidsByRole(con, roleUid), assigned);
+			rasDao.batchInsert(con, changeSet.inserted, roleUid);
+			rasDao.deleteBySubjectsRoleUid(con, changeSet.deleted, roleUid);
 		}
 		if (options.has(RoleProcessOpt.PROCESS_PERMISSIONS)) {
 			Check.notNull(role.getPermissions(), "permissions");
-			Map<Integer, RolePermissionDAO.SubjectEntry> map = prmDao.viewSubjectEntriesBySubjectCondition(con, roleSid, RolePermissionDAO.createServicePermissionAndKeysExcludeCondition(buildFolderShareKeysALL("%"))).entrySet().stream()
+			Map<Integer, RolePermissionDAO.SubjectEntry> map = prmDao.viewSubjectEntriesBySubjectCondition(con, roleUid, RolePermissionDAO.createServicePermissionAndKeysExcludeCondition(buildFolderShareKeysALL("%"))).entrySet().stream()
 				.collect(Collectors.toMap(
 					Map.Entry::getKey,
 					(entry) -> toSubjectEntry(entry.getValue())
 				));
 			LangUtils.CollectionChangeSet<RolePermissionDAO.SubjectEntry> changeSet = LangUtils.getCollectionChanges(map.values(), toPermissionBatchInsertEntries(role.getPermissions()));
-			prmDao.batchInsertOfSubject(con, roleSid, changeSet.inserted);
+			prmDao.batchInsertOfSubject(con, roleUid, changeSet.inserted);
 			if (!changeSet.deleted.isEmpty()) {
 				Map<RolePermissionDAO.SubjectEntry, Integer> inversedMap = map.entrySet().stream()
 					.collect(Collectors.toMap(Entry::getValue, Entry::getKey));
@@ -4983,13 +5057,13 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 		}
 		if (options.has(RoleProcessOpt.PROCESS_SERVICEPERMISSIONS)) {
 			Check.notNull(role.getAllowedServiceIds(), "allowedServiceIds");
-			Map<Integer, RolePermissionDAO.SubjectEntry> map = prmDao.viewSubjectEntriesBySubjectCondition(con, roleSid, RolePermissionDAO.createServicePermissionOnlyCondition()).entrySet().stream()
+			Map<Integer, RolePermissionDAO.SubjectEntry> map = prmDao.viewSubjectEntriesBySubjectCondition(con, roleUid, RolePermissionDAO.createServicePermissionOnlyCondition()).entrySet().stream()
 				.collect(Collectors.toMap(
 					Map.Entry::getKey,
 					(entry) -> toSubjectEntry(entry.getValue())
 				));
 			LangUtils.CollectionChangeSet<RolePermissionDAO.SubjectEntry> changeSet = LangUtils.getCollectionChanges(map.values(), toServicePermissionBatchInsertEntries(role.getAllowedServiceIds()));
-			prmDao.batchInsertOfSubject(con, roleSid, changeSet.inserted);
+			prmDao.batchInsertOfSubject(con, roleUid, changeSet.inserted);
 			if (!changeSet.deleted.isEmpty()) {
 				Map<RolePermissionDAO.SubjectEntry, Integer> inversedMap = map.entrySet().stream()
 					.collect(Collectors.toMap(Entry::getValue, Entry::getKey));
@@ -5008,26 +5082,26 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 		RolePermissionDAO prmDao = RolePermissionDAO.getInstance();
 		
 		UserProfileId rolePid = new UserProfileId(domainId, roleId);
-		String roleSid = subjectSidCache.getSid(rolePid, GenericSubject.Type.ROLE);
-		if (roleSid == null) throw new WTNotFoundException("Role UID not found [{}]", rolePid);
+		String roleUid = subjectUidCache.getUid(rolePid, GenericSubject.Type.ROLE);
+		if (roleUid == null) throw new WTNotFoundException("Role UID not found [{}]", rolePid);
 		
-		LOGGER.debug("[{}] Deleting permissions of '{}'...", rolePid, roleSid);
-		prmDao.deleteBySubject(con, roleSid);
-		LOGGER.debug("[{}] Deleting roles-associations of '{}'...", rolePid, roleSid);
-		rasDao.deleteByRole(con, roleSid);
-		LOGGER.debug("[{}] Deleting domain role '{}'...", rolePid, roleSid);
-		return rolDao.deleteBySid(con, roleSid) == 1;
+		LOGGER.debug("[{}] Deleting permissions of '{}'...", rolePid, roleUid);
+		prmDao.deleteBySubject(con, roleUid);
+		LOGGER.debug("[{}] Deleting roles-associations of '{}'...", rolePid, roleUid);
+		rasDao.deleteByRole(con, roleUid);
+		LOGGER.debug("[{}] Deleting domain role '{}'...", rolePid, roleUid);
+		return rolDao.deleteByUid(con, roleUid) == 1;
 	}
 	
 	private static class ResourceUpdateResult {
 		public final OUser ouser;
 		public final OUserInfo ouserinfo;
-		public final Set<String> changedPermissionSids;
+		public final Set<String> changedPermissionUids;
 		
-		public ResourceUpdateResult(OUser ouser, OUserInfo ouserinfo, Set<String> changedPermissionSids) {
+		public ResourceUpdateResult(OUser ouser, OUserInfo ouserinfo, Set<String> changedPermissionUids) {
 			this.ouser = ouser;
 			this.ouserinfo = ouserinfo;
-			this.changedPermissionSids = changedPermissionSids;
+			this.changedPermissionUids = changedPermissionUids;
 		}
 	}
 	
@@ -5074,23 +5148,23 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 		final UserProfileId resourcePid = new UserProfileId(domainId, resourceId);
 		String manager = null;
 		Set<String> alloweds = new LinkedHashSet<>();
-		String originSid = subjectSidCache.getSid(resourcePid, GenericSubject.Type.RESOURCE);
+		String originUid = subjectUidCache.getUid(resourcePid, GenericSubject.Type.RESOURCE);
 		
-		Set<FolderSharing.SubjectConfiguration> configurations = doFolderShareConfigurationsGet(con, originSid, CoreManifest.ID, "RESOURCE", FolderSharing.Scope.wildcard(), null, null);
+		Set<FolderSharing.SubjectConfiguration> configurations = doFolderShareConfigurationsGet(con, originUid, CoreManifest.ID, "RESOURCE", FolderSharing.Scope.wildcard(), null, null);
 		for (FolderSharing.SubjectConfiguration configuration : configurations) {
 			if (hasResourceManagerPermissions(configuration.getFolderPermissions(), configuration.getItemsPermissions())) {
 				if (manager == null) { // Safe-check, should not happen to have 2 managers... in that case take the first!
-					manager = (!subjectsAsSID) ? subjectSidCache.getPidAsString(configuration.getSubjectSid(), GenericSubject.Type.USER, GenericSubject.Type.GROUP) : configuration.getSubjectSid();
+					manager = (!subjectsAsSID) ? subjectUidCache.getPidAsString(configuration.getSubjectUid(), GenericSubject.Type.USER, GenericSubject.Type.GROUP) : configuration.getSubjectUid();
 				}
 			} else if (configuration.getFolderPermissions().has(FolderShare.FolderRight.READ)) {
-				final String allowed = (!subjectsAsSID) ? subjectSidCache.getPidAsString(configuration.getSubjectSid(), GenericSubject.Type.USER, GenericSubject.Type.GROUP) : configuration.getSubjectSid();
+				final String allowed = (!subjectsAsSID) ? subjectUidCache.getPidAsString(configuration.getSubjectUid(), GenericSubject.Type.USER, GenericSubject.Type.GROUP) : configuration.getSubjectUid();
 				if (allowed != null) alloweds.add(allowed);
 			}
 		}
 		return new ResourcePermissions(manager, alloweds);
 	}
 	
-	private ResourceUpdateResult doResourceInsert(final Connection con, final String domainId, final String resourceId, final String resourceSid, final ResourceBase resource, final BitFlags<ResourceProcessOpt> options) throws WTException {
+	private ResourceUpdateResult doResourceInsert(final Connection con, final String domainId, final String resourceId, final String resourceUid, final ResourceBase resource, final BitFlags<ResourceProcessOpt> options) throws WTException {
 		ResourceDAO resDao = ResourceDAO.getInstance();
 		final boolean subjectsAsSID = options.has(ResourceProcessOpt.SUBJECTS_AS_SID);
 		
@@ -5103,14 +5177,14 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 		OUser ouse = AppManagerUtils.fillOUser(new OUser(), resource);
 		ouse.setDomainId(domainId);
 		ouse.setUserId(resourceId);
-		ouse.setUserSid(resourceSid);
+		ouse.setUserUid(resourceUid);
 		OResource.fillDefaultsForInsert(ouse);
 		OResource.validate(ouse);
 		
 		resDao.insert(con, ouin);
 		resDao.insert(con, ouse);
 		
-		Set<String> newPermissionSids = new HashSet<>();
+		Set<String> newPermissionUids = new HashSet<>();
 		if (options.has(ResourceProcessOpt.PROCESS_PERMISSIONS)) {
 			Check.notNull(resource.getAllowedSubjects(), "allowedSubjects");
 			
@@ -5118,22 +5192,22 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 			Set<FolderSharing.SubjectConfiguration> configurations = new LinkedHashSet<>();
 			if (!StringUtils.isBlank(resource.getManagerSubject())) {
 				// This is treated as collection here, but extracted first below!
-				Set<String> managers = parseSubjectsAsSids(Arrays.asList(resource.getManagerSubject()), !subjectsAsSID, domainId, GenericSubject.Type.USER, GenericSubject.Type.GROUP);
+				Set<String> managers = parseSubjectsAsUids(Arrays.asList(resource.getManagerSubject()), !subjectsAsSID, domainId, GenericSubject.Type.USER, GenericSubject.Type.GROUP);
 				if (!managers.isEmpty()) {
-					final String managerSid = managers.iterator().next();
-					newPermissionSids.add(managerSid);
-					configurations.add(new FolderSharing.SubjectConfiguration(managerSid, buildResourceFolderPermissions(true), buildResourceItemsPermissions(true)));	
+					final String managerUid = managers.iterator().next();
+					newPermissionUids.add(managerUid);
+					configurations.add(new FolderSharing.SubjectConfiguration(managerUid, buildResourceFolderPermissions(true), buildResourceItemsPermissions(true)));	
 				}
 			}
-			Set<String> alloweds = parseSubjectsAsSids(resource.getAllowedSubjects(), !subjectsAsSID, domainId, GenericSubject.Type.USER, GenericSubject.Type.GROUP);
+			Set<String> alloweds = parseSubjectsAsUids(resource.getAllowedSubjects(), !subjectsAsSID, domainId, GenericSubject.Type.USER, GenericSubject.Type.GROUP);
 			for (String sid : alloweds) {
-				newPermissionSids.add(sid);
+				newPermissionUids.add(sid);
 				configurations.add(new FolderSharing.SubjectConfiguration(sid, buildResourceFolderPermissions(false)));
 			}
-			doFolderShareConfigurationUpdate(con, ouse.getUserSid(), CoreManifest.ID, "RESOURCE", FolderSharing.Scope.wildcard(), configurations, null);
+			doFolderShareConfigurationUpdate(con, ouse.getUserUid(), CoreManifest.ID, "RESOURCE", FolderSharing.Scope.wildcard(), configurations, null);
 		}
 		
-		return new ResourceUpdateResult(ouse, ouin, newPermissionSids);
+		return new ResourceUpdateResult(ouse, ouin, newPermissionUids);
 	}
 	
 	private ResourceUpdateResult doResourceUpdate(final Connection con, final String domainId, final String resourceId, final ResourceBase resource, final BitFlags<ResourceProcessOpt> options) throws WTNotFoundException {
@@ -5156,37 +5230,37 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 		if (ret) ret = resDao.update(con, ouse) == 1;
 		if (!ret) throw new WTNotFoundException("Resource not found [{}@{}]", resourceId, domainId);
 		
-		Set<String> oldPermissionSids = null;
-		Set<String> newPermissionSids = null;
+		Set<String> oldPermissionUids = null;
+		Set<String> newPermissionUids = null;
 		if (options.has(ResourceProcessOpt.PROCESS_PERMISSIONS)) {
 			Check.notNull(resource.getAllowedSubjects(), "allowedSubjects");
-			oldPermissionSids = doResourcePermissionsGet(con, domainId, resourceId, subjectsAsSID).getAllSubjects();
-			newPermissionSids = new HashSet<>();
+			oldPermissionUids = doResourcePermissionsGet(con, domainId, resourceId, subjectsAsSID).getAllSubjects();
+			newPermissionUids = new HashSet<>();
 			
 			// Update sharing
 			Set<FolderSharing.SubjectConfiguration> configurations = new LinkedHashSet<>();
 			if (!StringUtils.isBlank(resource.getManagerSubject())) {
 				// This is treated as collection here, but extracted first below!
-				Set<String> managers = parseSubjectsAsSids(Arrays.asList(resource.getManagerSubject()), !subjectsAsSID, domainId, GenericSubject.Type.USER, GenericSubject.Type.GROUP);
+				Set<String> managers = parseSubjectsAsUids(Arrays.asList(resource.getManagerSubject()), !subjectsAsSID, domainId, GenericSubject.Type.USER, GenericSubject.Type.GROUP);
 				if (!managers.isEmpty()) {
 					// READ right for manager is implicit, managers can obviously manage resource fully!
 					// Manager has also CREATE, DELETE, UPDATE right in order to maintain requests.
-					final String managerSid = managers.iterator().next();
-					newPermissionSids.add(managerSid);
-					configurations.add(new FolderSharing.SubjectConfiguration(managerSid, buildResourceFolderPermissions(true), buildResourceItemsPermissions(true)));	
+					final String managerUid = managers.iterator().next();
+					newPermissionUids.add(managerUid);
+					configurations.add(new FolderSharing.SubjectConfiguration(managerUid, buildResourceFolderPermissions(true), buildResourceItemsPermissions(true)));	
 				}
 			}
-			Set<String> alloweds = parseSubjectsAsSids(resource.getAllowedSubjects(), !subjectsAsSID, domainId, GenericSubject.Type.USER, GenericSubject.Type.GROUP);
+			Set<String> alloweds = parseSubjectsAsUids(resource.getAllowedSubjects(), !subjectsAsSID, domainId, GenericSubject.Type.USER, GenericSubject.Type.GROUP);
 			for (String sid : alloweds) {
 				// READ right allows to access the resource, any allowed subject must have it!
-				newPermissionSids.add(sid);
+				newPermissionUids.add(sid);
 				configurations.add(new FolderSharing.SubjectConfiguration(sid, buildResourceFolderPermissions(false)));
 			}
-			String originSid = subjectSidCache.getSid(ouse.getProfileId(), GenericSubject.Type.RESOURCE);
-			doFolderShareConfigurationUpdate(con, originSid, CoreManifest.ID, "RESOURCE", FolderSharing.Scope.wildcard(), configurations, null);
+			String originUid = subjectUidCache.getUid(ouse.getProfileId(), GenericSubject.Type.RESOURCE);
+			doFolderShareConfigurationUpdate(con, originUid, CoreManifest.ID, "RESOURCE", FolderSharing.Scope.wildcard(), configurations, null);
 		}
 		
-		return new ResourceUpdateResult(ouse, ouin, LangUtils.computeChangeSet(oldPermissionSids, newPermissionSids).getMoved());
+		return new ResourceUpdateResult(ouse, ouin, LangUtils.computeChangeSet(oldPermissionUids, newPermissionUids).getMoved());
 	}
 	
 	private void doResourceDelete(final Connection con, final String domainId, final String resourceId) throws WTNotFoundException {
@@ -5194,8 +5268,8 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 		ResourceDAO resDao = ResourceDAO.getInstance();
 		
 		// Remove sharing
-		String originSid = subjectSidCache.getSid(new UserProfileId(domainId, resourceId), GenericSubject.Type.RESOURCE);
-		doFolderShareSharingRightsDelete(con, originSid, CoreManifest.ID, "RESOURCE", FolderSharing.Scope.wildcard());
+		String originUid = subjectUidCache.getUid(new UserProfileId(domainId, resourceId), GenericSubject.Type.RESOURCE);
+		doFolderShareSharingRightsDelete(con, originUid, CoreManifest.ID, "RESOURCE", FolderSharing.Scope.wildcard());
 		
 		uinDao.deleteByDomainUser(con, domainId, resourceId);
 		boolean ret = resDao.deleteByDomainId(con, domainId, resourceId) == 1;
@@ -5210,16 +5284,16 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 		return true;
 	}
 	
-	private Integer doShareIdLookup(final String originSubjectSid, final String serviceId, final String context, final String shareInstance) {
-		final String key = StringUtils.joinWith("|", originSubjectSid, serviceId, context, shareInstance);
+	private Integer doShareIdLookup(final String originSubjectUid, final String serviceId, final String context, final String shareInstance) {
+		final String key = StringUtils.joinWith("|", originSubjectUid, serviceId, context, shareInstance);
 		return shareIdCache.get(key, (k) -> {
 			ShareDAO shaDao = ShareDAO.getInstance();
 			Connection con = null;
 
 			try {
-				if (LOGGER.isTraceEnabled()) LOGGER.trace("Looking for share ID by: [{}, {}, {}, {}]", originSubjectSid, serviceId, context, shareInstance);
+				if (LOGGER.isTraceEnabled()) LOGGER.trace("Looking for share ID by: [{}, {}, {}, {}]", originSubjectUid, serviceId, context, shareInstance);
 				con = WT.getCoreConnection();
-				return Optional.ofNullable(shaDao.selectIdByUserServiceKeyInstance(con, originSubjectSid, serviceId, context, shareInstance));
+				return Optional.ofNullable(shaDao.selectIdByUserServiceKeyInstance(con, originSubjectUid, serviceId, context, shareInstance));
 
 			} catch (Exception ex) {
 				throw new WTRuntimeException();
@@ -5286,8 +5360,8 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 	/**
 	 * Checks if passed SID is really valid: has a matching PID with a specified domain ID
 	 */
-	private boolean evalSidConstraints(String sid, String constrainDomainId, GenericSubject.Type... validTypes) {
-		UserProfileId pid = subjectSidCache.getPid(sid, validTypes);
+	private boolean evalUidConstraints(String sid, String constrainDomainId, GenericSubject.Type... validTypes) {
+		UserProfileId pid = subjectUidCache.getPid(sid, validTypes);
 		if (pid == null) return false;
 		return pid.hasDomain(constrainDomainId);
 	}
@@ -5297,7 +5371,7 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 	 */
 	private boolean evalPidConstraints(UserProfileId pid, String constrainDomainId, GenericSubject.Type... validTypes) {
 		if (pid == null || !pid.hasDomain(constrainDomainId)) return false;
-		String sid = subjectSidCache.getSid(pid, validTypes);
+		String sid = subjectUidCache.getUid(pid, validTypes);
 		return sid != null;
 	}
 	
@@ -5330,14 +5404,14 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 				// skipping NULLs and objects with non-matching domain
 				.filter((sid) -> (sid != null))
 				// then lookup related PID
-				.map((sid) -> subjectSidCache.getPid(sid, validTypes))
+				.map((sid) -> subjectUidCache.getPid(sid, validTypes))
 				// making sure that match was successful
 				.filter((sid) -> (sid != null))
 				.collect(Collectors.toSet());
 		}
 	}
 	
-	private Set<String> parseSubjectsAsSids(Collection<String> subjects, boolean subjectsAsPids, String validDomainId, GenericSubject.Type... validTypes) {
+	private Set<String> parseSubjectsAsUids(Collection<String> subjects, boolean subjectsAsPids, String validDomainId, GenericSubject.Type... validTypes) {
 		if (subjectsAsPids) {
 			// If passed subjects are pids...
 			return subjects.stream()
@@ -5346,14 +5420,14 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 				// skipping NULLs and objects with non-matching domain
 				.filter((pid) -> (pid != null && pid.hasDomain(validDomainId)))
 				// then lookup related SID
-				.map((pid) -> subjectSidCache.getSid(pid, validTypes))
+				.map((pid) -> subjectUidCache.getUid(pid, validTypes))
 				// making sure that match was successful
 				.filter((sid) -> (sid != null))
 				.collect(Collectors.toSet());
 		} else {
 			return subjects.stream()
 				// Filter out non-matching values from source (eventually they will be deleted when processing changes)
-				.filter((sid) -> evalSidConstraints(sid, validDomainId, validTypes))
+				.filter((sid) -> evalUidConstraints(sid, validDomainId, validTypes))
 				.collect(Collectors.toSet());
 		}
 	}
@@ -5383,11 +5457,11 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 		}
 	}
 		
-	private OShare doShareInsert(Connection con, String originSid, String serviceId, String shareKey, String instance) {
+	private OShare doShareInsert(Connection con, String originUid, String serviceId, String shareKey, String instance) {
 		ShareDAO shaDao = ShareDAO.getInstance();
 		
 		OShare oshare = new OShare();
-		oshare.setUserUid(originSid);
+		oshare.setUserUid(originUid);
 		oshare.setServiceId(serviceId);
 		oshare.setKey(shareKey);
 		oshare.setInstance(instance);
@@ -5396,38 +5470,38 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 		return !ret ? null : oshare;
 	}
 	
-	private <T> Map<String, Sharing.SubjectConfiguration> doShareConfigurationsGet(final Connection con, final String originSid, final String serviceId, final String shareContext, final String shareInstance, final String permissionKey, final Set<String> permissionSids, final Class<T> typeOfData) throws DAOException {
+	private <T> Map<String, Sharing.SubjectConfiguration> doShareConfigurationsGet(final Connection con, final String originUid, final String serviceId, final String shareContext, final String shareInstance, final String targetPermissionKey, final Set<String> targetPermissionUids, final Class<T> typeOfData) throws DAOException {
 		ShareDAO shaDao = ShareDAO.getInstance();
 		ShareDataDAO shadDao = ShareDataDAO.getInstance();
 		RolePermissionDAO permsDao = RolePermissionDAO.getInstance();
 		
 		Map<String, Sharing.SubjectConfiguration> items = new LinkedHashMap<>();
-		OShare oshare = shaDao.selectByUserServiceKeyInstance(con, originSid, serviceId, shareContext, shareInstance);
+		OShare oshare = shaDao.selectByUserServiceKeyInstance(con, originUid, serviceId, shareContext, shareInstance);
 		if (oshare != null) {
-			Map<String, List<ORolePermission>> permsMap = permsDao.mapByServiceKeysInstanceRoles(con, serviceId, Arrays.asList(permissionKey), oshare.getShareIdAsString(), permissionSids);
+			Map<String, List<ORolePermission>> permsMap = permsDao.mapByServiceKeysInstanceUids(con, serviceId, Arrays.asList(targetPermissionKey), oshare.getShareIdAsString(), targetPermissionUids);
 			Map<String, String> dataMap = shadDao.mapByShare(con, oshare.getShareId());
-			LinkedHashSet<String> subjectSids = new LinkedHashSet<>();
-			subjectSids.addAll(permsMap.keySet());
-			subjectSids.addAll(dataMap.keySet());
-			for (String subjectSid : subjectSids) {
-				if (permsMap.containsKey(subjectSid)) {
-					items.put(subjectSid, toSharingSubjectConfiguration(subjectSid, permsMap.get(subjectSid), dataMap.get(subjectSid), typeOfData));
+			LinkedHashSet<String> subjectUids = new LinkedHashSet<>();
+			subjectUids.addAll(permsMap.keySet());
+			subjectUids.addAll(dataMap.keySet());
+			for (String subjectUid : subjectUids) {
+				if (permsMap.containsKey(subjectUid)) {
+					items.put(subjectUid, toSharingSubjectConfiguration(subjectUid, permsMap.get(subjectUid), dataMap.get(subjectUid), typeOfData));
 				}
 			}
 		}
 		return items;
 	}
 	
-	public <T> void doShareConfigurationsUpdate(final Connection con, final String originSid, final String serviceId, final String shareContext, final String shareInstance, final String permissionKey, final Set<Sharing.SubjectConfiguration> configurations, Class<T> typeOfData) throws DAOException {
+	public <T> void doShareConfigurationsUpdate(final Connection con, final String originUid, final String serviceId, final String shareContext, final String shareInstance, final String permissionKey, final Set<Sharing.SubjectConfiguration> configurations, Class<T> typeOfData) throws DAOException {
 		ShareDAO shaDao = ShareDAO.getInstance();
 		ShareDataDAO shadDao = ShareDataDAO.getInstance();
 		RolePermissionDAO permsDao = RolePermissionDAO.getInstance();
 		
-		OShare oshare = shaDao.selectByUserServiceKeyInstance(con, originSid, serviceId, shareContext, shareInstance);
+		OShare oshare = shaDao.selectByUserServiceKeyInstance(con, originUid, serviceId, shareContext, shareInstance);
 		if (oshare != null) {
 			permsDao.deleteByServiceKeysInstance(con, serviceId, Arrays.asList(permissionKey), oshare.getShareIdAsString());
 		} else {
-			oshare = doShareInsert(con, originSid, serviceId, shareContext, shareInstance);
+			oshare = doShareInsert(con, originUid, serviceId, shareContext, shareInstance);
 		}
 		if (!configurations.isEmpty()) {
 			// Update permissions
@@ -5438,24 +5512,24 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 				for (Sharing.SubjectConfiguration configuration : configurations) {
 					final String rawData = configuration.getRawData(typeOfData);
 					if (StringUtils.isEmpty(rawData)) {
-						shadDao.deleteByShareUser(con, oshare.getShareId(), configuration.getSubjectSid());
+						shadDao.deleteByShareUser(con, oshare.getShareId(), configuration.getSubjectUid());
 					} else {
-						int ret1 = doShareDataUpdate(con, oshare.getShareId(), configuration.getSubjectSid(), rawData);
+						int ret1 = doShareDataUpdate(con, oshare.getShareId(), configuration.getSubjectUid(), rawData);
 					}
 				}
 			}
 		}
 	}
 	
-	private int doShareDataUpdate(Connection con, int shareId, String userSid, String rawData) throws DAOException {
+	private int doShareDataUpdate(Connection con, int shareId, String userUid, String rawData) throws DAOException {
 		ShareDataDAO shadDao = ShareDataDAO.getInstance();
 		
-		int ret = shadDao.update(con, shareId, userSid, rawData);
-		if (ret == 0) ret = shadDao.insert(con, shareId, userSid, rawData);
+		int ret = shadDao.update(con, shareId, userUid, rawData);
+		if (ret == 0) ret = shadDao.insert(con, shareId, userUid, rawData);
 		return ret;
 	}
 	
-	private <T> Set<FolderSharing.SubjectConfiguration> doFolderShareConfigurationsGet(final Connection con, final String originSid, final String serviceId, final String shareContext, final FolderSharing.Scope level, final Class<T> typeOfData, final Set<String> targetSids) throws DAOException {
+	private <T> Set<FolderSharing.SubjectConfiguration> doFolderShareConfigurationsGet(final Connection con, final String originUid, final String serviceId, final String shareContext, final FolderSharing.Scope level, final Class<T> typeOfData, final Set<String> targetUids) throws DAOException {
 		ShareDAO shaDao = ShareDAO.getInstance();
 		ShareDataDAO shadDao = ShareDataDAO.getInstance();
 		RolePermissionDAO permsDao = RolePermissionDAO.getInstance();
@@ -5480,24 +5554,24 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 		}
 		
 		Set<FolderSharing.SubjectConfiguration> items = new LinkedHashSet<>();
-		OShare oshare = shaDao.selectByUserServiceKeyInstance(con, originSid, serviceId, shareContext, shareInstance);
+		OShare oshare = shaDao.selectByUserServiceKeyInstance(con, originUid, serviceId, shareContext, shareInstance);
 		if (oshare != null) {
-			Map<String, List<ORolePermission>> permissionMap = permsDao.mapByServiceKeysInstanceRoles(con, serviceId, TARGET_PERMISSION_KEYS, oshare.getShareIdAsString(), targetSids);
+			Map<String, List<ORolePermission>> permissionMap = permsDao.mapByServiceKeysInstanceUids(con, serviceId, TARGET_PERMISSION_KEYS, oshare.getShareIdAsString(), targetUids);
 			Map<String, String> dataMap = shadDao.mapByShare(con, oshare.getShareId());
-			LinkedHashSet<String> subjectSids = new LinkedHashSet<>();
-			subjectSids.addAll(permissionMap.keySet());
-			subjectSids.addAll(dataMap.keySet());
+			LinkedHashSet<String> subjectUids = new LinkedHashSet<>();
+			subjectUids.addAll(permissionMap.keySet());
+			subjectUids.addAll(dataMap.keySet());
 			
-			for (String subjectSid : subjectSids) {
-				if (permissionMap.containsKey(subjectSid)) {
-					items.add(toSharingSubjectConfiguration(subjectSid, permissionMap.get(subjectSid), dataMap.get(subjectSid), typeOfData, shareContext, skipOriginPerms));
+			for (String subjectUid : subjectUids) {
+				if (permissionMap.containsKey(subjectUid)) {
+					items.add(toSharingSubjectConfiguration(subjectUid, permissionMap.get(subjectUid), dataMap.get(subjectUid), typeOfData, shareContext, skipOriginPerms));
 				}
 			}
 		}
 		return items;
 	}
 	
-	public <T> void doFolderShareConfigurationUpdate(final Connection con, final String originSid, final String serviceId, final String shareContext, final FolderSharing.Scope level, final Set<FolderSharing.SubjectConfiguration> configurations, final Class<T> typeOfData) throws DAOException {
+	public <T> void doFolderShareConfigurationUpdate(final Connection con, final String originUid, final String serviceId, final String shareContext, final FolderSharing.Scope level, final Set<FolderSharing.SubjectConfiguration> configurations, final Class<T> typeOfData) throws DAOException {
 		ShareDAO shaDao = ShareDAO.getInstance();
 		ShareDataDAO shadDao = ShareDataDAO.getInstance();
 		RolePermissionDAO permsDao = RolePermissionDAO.getInstance();
@@ -5519,11 +5593,11 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 			throw new IllegalArgumentException("Unsupported level");
 		}
 
-		oshare = shaDao.selectByUserServiceKeyInstance(con, originSid, serviceId, shareContext, shareInstance);
+		oshare = shaDao.selectByUserServiceKeyInstance(con, originUid, serviceId, shareContext, shareInstance);
 		if (oshare != null) {
 			permsDao.deleteByServiceKeysInstance(con, serviceId, TARGET_PERMISSION_KEYS, oshare.getShareIdAsString());
 		} else {
-			oshare = doShareInsert(con, originSid, serviceId, shareContext, shareInstance);
+			oshare = doShareInsert(con, originUid, serviceId, shareContext, shareInstance);
 		}
 		if (!configurations.isEmpty()) {
 			// Update permissions
@@ -5534,16 +5608,16 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 				for (FolderSharing.SubjectConfiguration configuration : configurations) {
 					final String rawData = configuration.getRawData(typeOfData);
 					if (StringUtils.isEmpty(rawData)) {
-						shadDao.deleteByShareUser(con, oshare.getShareId(), configuration.getSubjectSid());
+						shadDao.deleteByShareUser(con, oshare.getShareId(), configuration.getSubjectUid());
 					} else {
-						int ret1 = doShareDataUpdate(con, oshare.getShareId(), configuration.getSubjectSid(), rawData);
+						int ret1 = doShareDataUpdate(con, oshare.getShareId(), configuration.getSubjectUid(), rawData);
 					}
 				}
 			}
 		}
 	}
 	
-	public void doFolderShareSharingRightsDelete(final Connection con, final String originSid, final String serviceId, final String context, final FolderSharing.Scope scope) throws DAOException {
+	public void doFolderShareSharingRightsDelete(final Connection con, final String originUid, final String serviceId, final String context, final FolderSharing.Scope scope) throws DAOException {
 		ShareDAO shaDao = ShareDAO.getInstance();
 		RolePermissionDAO permsDao = RolePermissionDAO.getInstance();
 		
@@ -5561,27 +5635,27 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 			throw new IllegalArgumentException("Unsupported level");
 		}
 		
-		Set<Integer> deleted = shaDao.deleteByUserServiceKeyInstance(con, originSid, serviceId, context, shareInstance);
+		Set<Integer> deleted = shaDao.deleteByUserServiceKeyInstance(con, originUid, serviceId, context, shareInstance);
 		if (!deleted.isEmpty()) {
 			Set<String> instances = deleted.stream().map(id -> String.valueOf(id)).collect(Collectors.toSet());
 			permsDao.deleteByServiceKeysInstances(con, serviceId, TARGET_PERMISSION_KEYS, instances);
 		}
 	}
 	
-	private <T> Sharing.SubjectConfiguration toSharingSubjectConfiguration(String subjectSid, Collection<ORolePermission> orolePermissions, String rawData, Class<T> typeOfData) {
+	private <T> Sharing.SubjectConfiguration toSharingSubjectConfiguration(String subjectUid, Collection<ORolePermission> orolePermissions, String rawData, Class<T> typeOfData) {
 		Set<String> actions = new LinkedHashSet<>();
 		for (ORolePermission orolePermission : orolePermissions) {
 			actions.add(orolePermission.getAction());
 		}
 		
 		if (typeOfData != null) {
-			return new Sharing.SubjectConfiguration(subjectSid, actions, rawData, typeOfData);
+			return new Sharing.SubjectConfiguration(subjectUid, actions, rawData, typeOfData);
 		} else {
-			return new Sharing.SubjectConfiguration(subjectSid, actions);
+			return new Sharing.SubjectConfiguration(subjectUid, actions);
 		}
 	}
 	
-	private <T> FolderSharing.SubjectConfiguration toSharingSubjectConfiguration(String subjectSid, Collection<ORolePermission> orolePermissions, String rawData, Class<T> typeOfData, String shareContext, boolean skipWildcardReservedRights) {
+	private <T> FolderSharing.SubjectConfiguration toSharingSubjectConfiguration(String subjectUid, Collection<ORolePermission> orolePermissions, String rawData, Class<T> typeOfData, String shareContext, boolean skipWildcardReservedRights) {
 		final String FOLDER_PERMISSION_KEY = FolderShare.buildFolderPermissionKey(shareContext);
 		final String ITEMS_PERMISSION_KEY = FolderShare.buildItemsPermissionKey(shareContext);
 		
@@ -5600,9 +5674,9 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 			}
 		}
 		if (typeOfData != null) {
-			return new FolderSharing.SubjectConfiguration(subjectSid, folderPerms, itemsPerms, rawData, typeOfData);
+			return new FolderSharing.SubjectConfiguration(subjectUid, folderPerms, itemsPerms, rawData, typeOfData);
 		} else {
-			return new FolderSharing.SubjectConfiguration(subjectSid, folderPerms, itemsPerms);
+			return new FolderSharing.SubjectConfiguration(subjectUid, folderPerms, itemsPerms);
 		}
 	}
 	
@@ -5613,7 +5687,7 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 			
 			Set<String> set = configuration.getActions();
 			for (String action : set) {
-				items.add(new RolePermissionDAO.ServiceEntry(configuration.getSubjectSid(), permissionKey, action, instance));
+				items.add(new RolePermissionDAO.ServiceEntry(configuration.getSubjectUid(), permissionKey, action, instance));
 			}
 		}
 		return items;
@@ -5628,11 +5702,11 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 			if (items == null) items = new LinkedHashSet<>(configurations.size());
 			for (String right : FolderShare.toRightNames(configuration.getFolderPermissions())) {
 				if (!skipOriginOnlyPerms || !FolderShare.FolderRight.isReservedForWildcard(right)) {
-					items.add(new RolePermissionDAO.ServiceEntry(configuration.getSubjectSid(), FOLDER_PERMISSION_KEY, right, shareInstance));
+					items.add(new RolePermissionDAO.ServiceEntry(configuration.getSubjectUid(), FOLDER_PERMISSION_KEY, right, shareInstance));
 				}
 			}
 			for (String right : FolderShare.toRightNames(configuration.getItemsPermissions())) {
-				items.add(new RolePermissionDAO.ServiceEntry(configuration.getSubjectSid(), ITEMS_PERMISSION_KEY, right, shareInstance));
+				items.add(new RolePermissionDAO.ServiceEntry(configuration.getSubjectUid(), ITEMS_PERMISSION_KEY, right, shareInstance));
 			}
 		}
 		return items;
@@ -6466,10 +6540,10 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 		}
 	}
 	
-	private class SubjectSidCache {
-		private final LoadingCache<String, Optional<SubjectSid>> userPidToSid = Caffeine.newBuilder().build(new PidToSidLoader());
-		private final LoadingCache<String, Optional<SubjectSid>> rolePidToSid = Caffeine.newBuilder().build(new PidToSidLoader());
-		private final LoadingCache<String, Optional<SubjectPid>> sidToPid = Caffeine.newBuilder().build(new SidToPidLoader());
+	private class SubjectUidCache {
+		private final LoadingCache<String, Optional<SubjectUid>> userPidToUid = Caffeine.newBuilder().build(new PidToUidLoader());
+		private final LoadingCache<String, Optional<SubjectUid>> rolePidToUid = Caffeine.newBuilder().build(new PidToUidLoader());
+		private final LoadingCache<String, Optional<SubjectPid>> sidToPid = Caffeine.newBuilder().build(new UidToPidLoader());
 	
 		public void init() {
 			UserDAO useDao = UserDAO.getInstance();
@@ -6477,23 +6551,23 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 			Connection con = null;
 
 			try {
-				LOGGER.trace("[Subject Sid <-> Pid Cache] Loading all...");
+				LOGGER.trace("[Subject Uid <-> Pid Cache] Loading all...");
 				con = getConnection(true);
 				// Load data from users/resocurces/groups
 				List<OUser> ousers = useDao.selectAllAsSubjects(con);
 				for (OUser ouser : ousers) {
-					sidToPid.put(ouser.getUserSid(), Optional.ofNullable(new SubjectPid(ouser)));
-					userPidToSid.put(ouser.getProfileId().toString(), Optional.ofNullable(new SubjectSid(ouser)));
+					sidToPid.put(ouser.getUserUid(), Optional.ofNullable(new SubjectPid(ouser)));
+					userPidToUid.put(ouser.getProfileId().toString(), Optional.ofNullable(new SubjectUid(ouser)));
 				}
 				// Load data from roles
 				List<ORole> oroles = rolDao.selectAllAsSubjects(con);
 				for (ORole orole : oroles) {
-					sidToPid.put(orole.getRoleSid(), Optional.ofNullable(new SubjectPid(orole)));
-					rolePidToSid.put(orole.getProfileId().toString(), Optional.ofNullable(new SubjectSid(orole)));
+					sidToPid.put(orole.getRoleUid(), Optional.ofNullable(new SubjectPid(orole)));
+					rolePidToUid.put(orole.getProfileId().toString(), Optional.ofNullable(new SubjectUid(orole)));
 				}
 
 			} catch (Throwable t) {
-				LOGGER.error("[Subject Sid <-> Pid Cache] Unable to load all", t);
+				LOGGER.error("[Subject Uid <-> Pid Cache] Unable to load all", t);
 			} finally {
 				DbUtils.closeQuietly(con);
 			}
@@ -6501,8 +6575,8 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 		
 		public void cleanup() {
 			sidToPid.cleanUp();
-			userPidToSid.cleanUp();
-			rolePidToSid.cleanUp();
+			userPidToUid.cleanUp();
+			rolePidToUid.cleanUp();
 		}
 		
 		public void cleanupByDomain(final String domainId) {
@@ -6511,21 +6585,21 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 			Set<String> uids = new LinkedHashSet<>();
 			Set<String> userPids = new LinkedHashSet<>();
 			Set<String> rolePids = new LinkedHashSet<>();
-			userPidToSid.asMap().forEach((k, v) -> {
+			userPidToUid.asMap().forEach((k, v) -> {
 				if (k.equals("@" + domainId)) {
 					userPids.add(k);
-					if (v.isPresent()) uids.add(v.get().getSid());
+					if (v.isPresent()) uids.add(v.get().getUid());
 				}
 			});
-			rolePidToSid.asMap().forEach((k, v) -> {
+			rolePidToUid.asMap().forEach((k, v) -> {
 				if (k.equals("@" + domainId)) {
 					rolePids.add(k);
-					if (v.isPresent()) uids.add(v.get().getSid());
+					if (v.isPresent()) uids.add(v.get().getUid());
 				}
 			});
 			sidToPid.invalidateAll(uids);
-			userPidToSid.invalidateAll(userPids);
-			rolePidToSid.invalidateAll(rolePids);
+			userPidToUid.invalidateAll(userPids);
+			rolePidToUid.invalidateAll(rolePids);
 		}
 		
 		public void add(final UserProfileId pid, final String sid, final GenericSubject.Type type) {
@@ -6535,9 +6609,9 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 			
 			sidToPid.put(sid, Optional.ofNullable(new SubjectPid(type, pid.toString())));
 			if (GenericSubject.Type.ROLE.equals(type)) {
-				rolePidToSid.put(pid.toString(), Optional.ofNullable(new SubjectSid(type, sid)));
+				rolePidToUid.put(pid.toString(), Optional.ofNullable(new SubjectUid(type, sid)));
 			} else {
-				userPidToSid.put(pid.toString(), Optional.ofNullable(new SubjectSid(type, sid)));
+				userPidToUid.put(pid.toString(), Optional.ofNullable(new SubjectUid(type, sid)));
 			}
 		}
 		
@@ -6545,21 +6619,21 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 			Check.notNull(pid, "pid");
 			Check.notNull(type, "type");
 			
-			Optional<SubjectSid> opt = null;
+			Optional<SubjectUid> opt = null;
 			if (GenericSubject.Type.ROLE.equals(type)) {
-				opt = rolePidToSid.get(pid.toString());
+				opt = rolePidToUid.get(pid.toString());
 			} else {
-				opt = userPidToSid.get(pid.toString());
+				opt = userPidToUid.get(pid.toString());
 			}
-			if ((opt != null) && opt.isPresent()) sidToPid.invalidate(opt.get().getSid());
+			if ((opt != null) && opt.isPresent()) sidToPid.invalidate(opt.get().getUid());
 			if (GenericSubject.Type.ROLE.equals(type)) {
-				rolePidToSid.invalidate(pid.toString());
+				rolePidToUid.invalidate(pid.toString());
 			} else {
-				userPidToSid.invalidate(pid.toString());
+				userPidToUid.invalidate(pid.toString());
 			}
 		}
 		
-		public GenericSubject.Type getSidType(final String sid) {
+		public GenericSubject.Type getUidType(final String sid) {
 			Check.notNull(sid, "sid");
 			
 			Optional<SubjectPid> opt = sidToPid.get(sid);
@@ -6592,25 +6666,25 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 			return (pid != null) ? pid.toString() : null;
 		}
 		
-		public String getSid(final UserProfileId pid, final GenericSubject.Type... validTypes) {
+		public String getUid(final UserProfileId pid, final GenericSubject.Type... validTypes) {
 			Check.notNull(pid, "pid");
 			Check.notEmpty(validTypes, "validTypes");
 			
-			SubjectSid ss = null;
+			SubjectUid ss = null;
 			Set<GenericSubject.Type> constraints = toSet( validTypes);
 			if (constraints.size() > 1 || !constraints.contains(GenericSubject.Type.ROLE)) {
-				Optional<SubjectSid> opt = userPidToSid.get(pid.toString());
+				Optional<SubjectUid> opt = userPidToUid.get(pid.toString());
 				if ((opt != null) && opt.isPresent()) ss = opt.get();
 			}
 			if ((ss == null) && constraints.contains(GenericSubject.Type.ROLE)) {
-				Optional<SubjectSid> opt = rolePidToSid.get(pid.toString());
+				Optional<SubjectUid> opt = rolePidToUid.get(pid.toString());
 				if ((opt != null) && opt.isPresent()) ss = opt.get();
 			}
 			
 			if (ss == null) {
 				return null;
 			} else {
-				return constraints.contains(ss.getType()) ? ss.getSid() : null;
+				return constraints.contains(ss.getType()) ? ss.getUid() : null;
 			}
 		}
 		
@@ -6630,31 +6704,31 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 			return set;
 		}
 		
-		private class PidToSidLoader implements CacheLoader<String, Optional<SubjectSid>> {
+		private class PidToUidLoader implements CacheLoader<String, Optional<SubjectUid>> {
 			
 			@Override
-			public Optional<SubjectSid> load(String k) throws Exception {
+			public Optional<SubjectUid> load(String k) throws Exception {
 				UserDAO useDao = UserDAO.getInstance();
 				RoleDAO rolDao = RoleDAO.getInstance();
 				Connection con = null;
 
 				try {
-					LOGGER.trace("[SubjectPidToSidCache] Loading... [{}]", k);
-					SubjectSid value = null;
+					LOGGER.trace("[SubjectPidToUidCache] Loading... [{}]", k);
+					SubjectUid value = null;
 
 					UserProfileId pid = new UserProfileId(k);
 					con = getConnection(true);
 					// Load data from users/resocurces/groups
 					OUser ouser = useDao.selectAsSubjectByDomainId(con, pid.getDomainId(), pid.getUserId());
-					if (ouser != null) value = new SubjectSid(ouser);
+					if (ouser != null) value = new SubjectUid(ouser);
 					// Load data from roles
 					ORole orole = rolDao.selectAsSubjectByDomainName(con, pid.getDomainId(), pid.getUserId());
-					if (orole != null) value = new SubjectSid(orole);
+					if (orole != null) value = new SubjectUid(orole);
 
 					return Optional.ofNullable(value);
 
 				} catch (Throwable t) {
-					LOGGER.error("[SubjectPidToSidCache] Unable to load [{}]", k, t);
+					LOGGER.error("[SubjectPidToUidCache] Unable to load [{}]", k, t);
 					return null;
 				} finally {
 					DbUtils.closeQuietly(con);
@@ -6662,7 +6736,7 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 			}
 		}
 
-		private class SidToPidLoader implements CacheLoader<String, Optional<SubjectPid>> {
+		private class UidToPidLoader implements CacheLoader<String, Optional<SubjectPid>> {
 
 			@Override
 			public Optional<SubjectPid> load(String k) throws Exception {
@@ -6671,21 +6745,21 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 				Connection con = null;
 
 				try {
-					LOGGER.trace("[SubjectSidToPidCache] Loading... [{}]", k);
+					LOGGER.trace("[SubjectUidToPidCache] Loading... [{}]", k);
 					SubjectPid value = null;
 
 					con = getConnection(true);
 					// Load data from users/resocurces/groups
-					OUser ouser = useDao.selectAsSubjectBySidEnabled(con, k, EnabledCond.ANY_STATE);
+					OUser ouser = useDao.selectAsSubjectByUidEnabled(con, k, EnabledCond.ANY_STATE);
 					if (ouser != null) value = new SubjectPid(ouser);
 					// Load data from roles
-					ORole orole = rolDao.selectAsSubjectBySid(con, k);
+					ORole orole = rolDao.selectAsSubjectByUid(con, k);
 					if (orole != null) value = new SubjectPid(orole);
 
 					return Optional.ofNullable(value);
 
 				} catch (Exception ex) {
-					LOGGER.error("[SubjectSidToPidCache] Unable to load [{}]", k, ex);
+					LOGGER.error("[SubjectUidToPidCache] Unable to load [{}]", k, ex);
 					return null;
 				} finally {
 					DbUtils.closeQuietly(con);

@@ -251,7 +251,7 @@ public class ApiUtils extends BaseRestApiUtils {
 	public static ApiGroup fillApiGroup(final ApiGroup tgt, final Group src) {
 		fillApiGroupBase(tgt, src);
 		tgt.setGroupId(src.getGroupId());
-		tgt.setGroupSid(src.getGroupSid());
+		tgt.setGroupSid(src.getGroupUid());
 		tgt.setBuiltIn(src.isBuiltIn());
 		return tgt;
 	}
@@ -293,7 +293,7 @@ public class ApiUtils extends BaseRestApiUtils {
 	public static ApiUser fillApiUser(final ApiUser tgt, final User src) {
 		fillApiUserBase(tgt, src);
 		tgt.setUserId(src.getUserId());
-		tgt.setUserSid(src.getUserSid());
+		tgt.setUserSid(src.getUserUid());
 		return tgt;
 	}
 	
@@ -332,7 +332,7 @@ public class ApiUtils extends BaseRestApiUtils {
 	public static ApiRole fillApiRole(final ApiRole tgt, final Role src) {
 		fillApiRoleBase(tgt, src);
 		tgt.setRoleId(src.getRoleId());
-		tgt.setRoleSid(src.getRoleSid());
+		tgt.setRoleSid(src.getRoleUid());
 		return tgt;
 	}
 	
@@ -368,7 +368,7 @@ public class ApiUtils extends BaseRestApiUtils {
 	public static ApiResource fillApiResource(final ApiResource tgt, final Resource src) {
 		fillApiResourceBase(tgt, src);
 		tgt.setResourceId(src.getResourceId());
-		tgt.setResourceSid(src.getResourceSid());
+		tgt.setResourceSid(src.getResourceUid());
 		return tgt;
 	}
 	

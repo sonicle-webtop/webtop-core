@@ -203,7 +203,7 @@ public class AppManagerUtils {
 		fillUser((UserBase)tgt, src);
 		if ((tgt != null) && (src != null)) {
 			tgt.setUserId(src.getUserId());
-			tgt.setUserSid(src.getUserSid());
+			tgt.setUserUid(src.getUserUid());
 		}
 		return tgt;
 	}
@@ -222,7 +222,7 @@ public class AppManagerUtils {
 		fillGroup((GroupBase)tgt, src);
 		if ((tgt != null) && (src != null)) {
 			tgt.setGroupId(src.getGroupId());
-			tgt.setGroupSid(src.getGroupSid());
+			tgt.setGroupUid(src.getGroupUid());
 		}
 		return tgt;
 	}
@@ -238,7 +238,7 @@ public class AppManagerUtils {
 		fillRole((RoleBase)tgt, src);
 		if ((tgt != null) && (src != null)) {
 			tgt.setRoleId(src.getRoleId());
-			tgt.setRoleSid(src.getRoleSid());
+			tgt.setRoleUid(src.getRoleUid());
 		}
 		return tgt;
 	}
@@ -254,7 +254,7 @@ public class AppManagerUtils {
 		fillResource((ResourceBase)tgt, src);
 		if ((tgt != null) && (src != null)) {
 			tgt.setResourceId(src.getResourceId());
-			tgt.setResourceSid(src.getResourceSid());
+			tgt.setResourceUid(src.getResourceUid());
 		}
 		return tgt;
 	}
