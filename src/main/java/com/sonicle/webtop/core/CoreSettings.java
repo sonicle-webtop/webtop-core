@@ -114,6 +114,17 @@ public class CoreSettings {
 	 * Seconds a shared manager may stay reference-free and untouched before the sweeper evicts it. Read at each sweep. Defaults to 900.
 	 */
 	public static final String SHARED_MANAGER_IDLE_GRACE = "shared.manager.idle.grace";
+
+	/**
+	 * [system]
+	 * [int]
+	 * Max lifetime (seconds) of a REF-EMPTY shared manager instance: the sweeper evicts it once older
+	 * than this even if steadily touched (e.g. a continuously-polling DAV/EAS client that would
+	 * otherwise keep a stale instance warm forever — next call rebuilds it fresh). Instances holding
+	 * durable refs (web sessions, push subscriptions) are exempt: they have their own refresh
+	 * triggers. Read at each sweep. 0 (default) disables the bound.
+	 */
+	public static final String SHARED_MANAGER_MAX_AGE = "shared.manager.max.age";
 	
 	/**
 	 * [domain+system]

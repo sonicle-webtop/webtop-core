@@ -187,18 +187,63 @@ class SharedManagerRegistry {
 	}
 
 	/**
-	 * Evicts every instance that has no references and has been idle longer than
-	 * {@code graceMs}, invoking {@link SharedManager#onSharedShutdown()} on each
-	 * (outside the map lock). Invoked periodically by the app sweeper.
+	 * Age of the live instance for (serviceId, pid) in milliseconds, or -1 if
+	 * absent. Used by rebuild triggers to rate-limit forced evictions.
 	 */
-	void sweep(long graceMs) {
-		final long deadline = now() - graceMs;
+	long ageMs(String serviceId, UserProfileId pid) {
+		Holder h = holders.get(key(serviceId, pid));
+		return (h != null) ? (now() - h.createdTs) : -1;
+	}
+
+	/**
+	 * Forcibly evicts the instance for (serviceId, pid) NOW, regardless of
+	 * references: the holder is removed atomically (the next acquire/getOrTouch
+	 * creates a fresh instance) and onSharedShutdown() runs on the shutdown
+	 * executor. In-flight users of the old instance finish as stragglers on the
+	 * orphan (same contract as sweep eviction). Existing durable refs die with
+	 * the holder: the CALLER is responsible for re-acquiring its refs on the
+	 * fresh instance (e.g. a push manager re-subscribing its devices).
+	 *
+	 * <p>An instance still inside onSharedStartup() (latch up) is NOT evicted —
+	 * the creator is initializing it right now; returns false so the caller's
+	 * rate limit simply retries later.</p>
+	 *
+	 * @return true if an instance was evicted
+	 */
+	boolean evictNow(String serviceId, UserProfileId pid) {
+		final Holder[] evicted = { null };
+		holders.compute(key(serviceId, pid), (k, h) -> {
+			if (h == null) return null;
+			if (h.startupLatch.getCount() != 0) return h; // mid-startup: keep
+			evicted[0] = h;
+			return null; // remove atomically wrt acquire/getOrCreate
+		});
+		if (evicted[0] == null) return false;
+		LOGGER.info("Shared manager [{}] force-evicted for [{}] ({} refs dropped)", serviceId, pid, evicted[0].refs.size());
+		shutdownAsync(evicted[0]);
+		return true;
+	}
+
+	/**
+	 * Evicts every instance that has no references and either has been idle
+	 * longer than {@code graceMs}, or — when {@code maxAgeMs} > 0 — is older
+	 * than that bound regardless of touches (a continuously-polling sessionless
+	 * client would otherwise keep a stale instance warm forever; its next call
+	 * simply rebuilds fresh). Instances holding durable refs are exempt from
+	 * the age bound: they have their own refresh triggers. Invokes
+	 * {@link SharedManager#onSharedShutdown()} on each eviction (outside the
+	 * map lock). Invoked periodically by the app sweeper.
+	 */
+	void sweep(long graceMs, long maxAgeMs) {
+		final long nowTs = now();
+		final long deadline = nowTs - graceMs;
 		final List<Holder> evicted = new ArrayList<>();
 		for (String k : new ArrayList<>(holders.keySet())) {
 			holders.compute(k, (kk, h) -> {
 				if (h == null) return null;
 				if (h.startupLatch.getCount() != 0) return h; // still starting up
-				if (h.refs.isEmpty() && h.lastAccessTs <= deadline) {
+				if (h.refs.isEmpty()
+						&& (h.lastAccessTs <= deadline || (maxAgeMs > 0 && (nowTs - h.createdTs) > maxAgeMs))) {
 					evicted.add(h);
 					return null; // remove atomically wrt acquire/getOrCreate
 				}
@@ -290,6 +335,7 @@ class SharedManagerRegistry {
 	private static final class Holder {
 		final BaseManager instance;
 		final Set<String> refs = ConcurrentHashMap.newKeySet();
+		final long createdTs = now();
 		volatile long lastAccessTs;
 		final CountDownLatch startupLatch = new CountDownLatch(1);
 		volatile Throwable startupError;

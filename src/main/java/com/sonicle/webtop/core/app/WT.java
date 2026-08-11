@@ -415,12 +415,13 @@ public class WT {
 		if (manager == null) {
 			ServiceManager svcm = getWTA().getServiceManager();
 			UserProfileId runPid = RunContext.getRunProfileId();
-			if (svcm.isSharedManagerService(CoreManifest.ID) && !RunContext.getSysAdminProfileId().equals(runPid)) {
-				// No session (or not cached): route transient/background access
-				// to the shared per-user instance. The SysAdmin profile keeps the
-				// throwaway path (same rule as getServiceManager) — background
-				// tasks run under the admin subject and would otherwise
-				// materialize a never-evicted shared instance for admin@*.
+			if (svcm.isSharedManagerService(CoreManifest.ID) && !RunContext.getSysAdminProfileId().equals(runPid)
+					&& (!svcm.isSessionlessOnlySharedManagerService(CoreManifest.ID) || RunContext.isAuthenticatedByAccessToken())) {
+				// No session (or not cached): route sessionless access to the
+				// shared per-user instance — with hybrid scope ONLY for app
+				// (access-token) callers; api-key/basic (DAV/EAS) callers keep
+				// the historical throwaway below. The SysAdmin profile keeps the
+				// throwaway path too (same rule as getServiceManager).
 				manager = (CoreManager)svcm.getOrTouchSharedManager(CoreManifest.ID, runPid);
 			} else {
 				// For admin subject during application startup
@@ -439,10 +440,12 @@ public class WT {
 			return getCoreManager();
 		} else {
 			ServiceManager svcm = getWTA().getServiceManager();
-			if (svcm.isSharedManagerService(CoreManifest.ID) && !RunContext.getSysAdminProfileId().equals(targetProfileId)) {
-				// Cross-profile access: reuse the target user's shared instance;
-				// SysAdmin-target lookups keep the throwaway path (same rule as
-				// getServiceManager).
+			if (svcm.isSharedManagerService(CoreManifest.ID) && !RunContext.getSysAdminProfileId().equals(targetProfileId)
+					&& (!svcm.isSessionlessOnlySharedManagerService(CoreManifest.ID) || RunContext.isAuthenticatedByAccessToken())) {
+				// Cross-profile access: reuse the target user's shared instance —
+				// with hybrid scope ONLY for app (access-token) callers; everyone
+				// else keeps the historical throwaway. SysAdmin-target lookups
+				// keep the throwaway path (same rule as getServiceManager).
 				return (CoreManager)svcm.getOrTouchSharedManager(CoreManifest.ID, targetProfileId);
 			}
 			return svcm.instantiateCoreManager(fastInit, targetProfileId);
@@ -494,8 +497,30 @@ public class WT {
 	public static BaseManager getServiceManager(String serviceId, boolean fastInit, UserProfileId targetProfileId) {
 		ServiceManager svcm = getWTA().getServiceManager();
 		if (svcm.isSharedManagerService(serviceId) && !RunContext.getSysAdminProfileId().equals(targetProfileId)) {
-			// Cross-profile access (e.g. sessionless REST): reuse the shared
-			// per-user instance instead of a throwaway. SysAdmin-target
+			if (svcm.isSessionlessOnlySharedManagerService(serviceId)) {
+				// Hybrid scope: a web-session caller asking for ITS OWN profile
+				// gets the session's private per-session instance (historical
+				// lifecycle).
+				WebTopSession wts = SessionContext.getCurrentWTSession(false);
+				if (wts != null && targetProfileId != null && targetProfileId.equals(wts.getProfileId())) {
+					BaseManager sessionInst = wts.getServiceManager(serviceId);
+					if (sessionInst != null) return sessionInst;
+				}
+				// Hybrid scope shares ONLY with the APP world: access-token
+				// (WebTop Connect bearer) authenticated callers. Every other
+				// sessionless caller — api-key integrations, basic-auth DAV/EAS —
+				// keeps the historical behavior: per-call throwaway (or the
+				// session instance when a session context exists).
+				if (!RunContext.isAuthenticatedByAccessToken()) {
+					if (wts != null) {
+						BaseManager sessionInst = wts.getServiceManager(serviceId);
+						if (sessionInst != null) return sessionInst;
+					}
+					return svcm.instantiateServiceManager(serviceId, fastInit, targetProfileId);
+				}
+			}
+			// Shared registry instance: scope ALL consumers, or an app
+			// (access-token) caller of a SESSIONLESS_ONLY service. SysAdmin-target
 			// lookups keep the throwaway path (same rule as above).
 			return svcm.getOrTouchSharedManager(serviceId, targetProfileId);
 		} else {
@@ -505,6 +530,62 @@ public class WT {
 			}
 			return svcm.instantiateServiceManager(serviceId, fastInit, targetProfileId);
 		}
+	}
+
+	/**
+	 * Age of the live shared per-user Manager instance in milliseconds, or -1
+	 * if none exists. Used to rate-limit forced rebuild triggers.
+	 */
+	public static long getSharedManagerAgeMs(String serviceId, UserProfileId targetProfileId) {
+		return getWTA().getServiceManager().getSharedManagerAgeMs(serviceId, targetProfileId);
+	}
+
+	/**
+	 * Forcibly evicts the shared per-user Manager instance NOW: the next access
+	 * creates a fresh one; in-flight users of the old instance finish as
+	 * stragglers on the orphan. Durable refs die with the old holder — owners
+	 * (e.g. a push manager) must re-acquire them on the fresh instance. Server
+	 * internal API (rebuild triggers, broken-instance recovery).
+	 * @return true if an instance was evicted
+	 */
+	public static boolean evictSharedManager(String serviceId, UserProfileId targetProfileId) {
+		if (targetProfileId == null) return false;
+		return getWTA().getServiceManager().evictSharedManager(serviceId, targetProfileId);
+	}
+
+	/**
+	 * Forcibly evicts ALL live SESSIONLESS_ONLY shared instances of the profile
+	 * older than {@code minAgeMs} — "app restart = the app world's re-login":
+	 * every app-side manager restarts fresh, exactly like every web manager
+	 * does on a web re-login. Evicted instances rebuild lazily on next access;
+	 * durable-ref owners must re-acquire for the services they hold.
+	 * @return the serviceIds whose instance was evicted (empty if none)
+	 */
+	public static java.util.List<String> evictSessionlessSharedManagers(UserProfileId targetProfileId, long minAgeMs) {
+		if (targetProfileId == null) return java.util.Collections.emptyList();
+		return getWTA().getServiceManager().evictSessionlessSharedManagers(targetProfileId, minAgeMs);
+	}
+
+	/**
+	 * Signals an app launch for the profile ("app kill/restart = the app
+	 * world's re-login"): core rebuilds ALL the profile's SESSIONLESS_ONLY
+	 * shared instances (debounced, deduped by launchId) and notifies the
+	 * registered eviction listeners so durable-ref owners re-attach.
+	 * @param launchId opaque per-launch id for retry dedupe; null skips dedupe
+	 * (e.g. push device re-registration, where the debounce alone guards).
+	 */
+	public static void notifyAppLaunch(UserProfileId profileId, String launchId) {
+		if (profileId == null) return;
+		getWTA().getServiceManager().onAppLaunch(profileId, launchId);
+	}
+
+	/** See {@link ServiceManager.SessionlessEvictionListener}. */
+	public static void addSessionlessEvictionListener(ServiceManager.SessionlessEvictionListener listener) {
+		getWTA().getServiceManager().addSessionlessEvictionListener(listener);
+	}
+
+	public static void removeSessionlessEvictionListener(ServiceManager.SessionlessEvictionListener listener) {
+		getWTA().getServiceManager().removeSessionlessEvictionListener(listener);
 	}
 	
 	/**

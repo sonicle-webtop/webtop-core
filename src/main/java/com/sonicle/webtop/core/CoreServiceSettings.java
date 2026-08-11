@@ -92,6 +92,10 @@ public class CoreServiceSettings extends BaseServiceSettings {
 	public int getSharedManagerIdleGrace() {
 		return getInteger(SHARED_MANAGER_IDLE_GRACE, 900); //seconds
 	}
+
+	public int getSharedManagerMaxAge() {
+		return getInteger(SHARED_MANAGER_MAX_AGE, 0); //seconds, 0 = disabled
+	}
 	
 	public Boolean getDocumentServerEnabled() {
 		return getBoolean(DOCUMENT_SERVER_ENABLED, false);

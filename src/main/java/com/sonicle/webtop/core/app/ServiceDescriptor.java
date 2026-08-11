@@ -130,6 +130,19 @@ public class ServiceDescriptor {
 		return hasManager() && ClassHelper.isImplementingInterface(managerClass, com.sonicle.webtop.core.sdk.SharedManager.class);
 	}
 
+	/**
+	 * Which consumers are routed to the shared per-user instance, declared via
+	 * the {@link com.sonicle.webtop.core.sdk.SharedManagerScope} annotation on
+	 * the Manager class. Absent annotation = ALL (original behavior).
+	 * Meaningless (null) when {@link #hasSharedManager()} is false.
+	 * @return
+	 */
+	public com.sonicle.webtop.core.sdk.SharedManagerScope.Scope getSharedManagerScope() {
+		if (!hasSharedManager()) return null;
+		com.sonicle.webtop.core.sdk.SharedManagerScope ann = (com.sonicle.webtop.core.sdk.SharedManagerScope)managerClass.getAnnotation(com.sonicle.webtop.core.sdk.SharedManagerScope.class);
+		return (ann != null) ? ann.value() : com.sonicle.webtop.core.sdk.SharedManagerScope.Scope.ALL;
+	}
+
 	public Class getManagerClass() {
 		return managerClass;
 	}

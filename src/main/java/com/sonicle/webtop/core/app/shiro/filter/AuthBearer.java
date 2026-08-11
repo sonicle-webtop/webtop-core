@@ -55,10 +55,38 @@ import org.slf4j.LoggerFactory;
 public class AuthBearer extends BearerHttpAuthenticationFilter {
 	private static final Logger LOGGER = (Logger) LoggerFactory.getLogger(AuthBearer.class);
 	private static final String X_AUTH_USERNAME = "X-Auth-Username";
-	
+	/**
+	 * App-launch signal header ("app kill/restart = the app world's re-login"):
+	 * an access-token authenticated app sends an opaque per-launch id here (any
+	 * WebTop API call — processed at this auth layer, so it is service-agnostic);
+	 * core rebuilds the user's shared app-side managers, deduped by the id and
+	 * debounced. Ignored on non-access-token auth.
+	 */
+	public static final String HEADER_APP_LAUNCH = "X-WT-App-Launch";
+
 	protected String getXAuthUsernameHeader(ServletRequest request) {
 		HttpServletRequest httpRequest = WebUtils.toHttp(request);
 		return httpRequest.getHeader(X_AUTH_USERNAME);
+	}
+
+	@Override
+	protected boolean onLoginSuccess(AuthenticationToken token, org.apache.shiro.subject.Subject subject, ServletRequest request, ServletResponse response) throws Exception {
+		if (token instanceof AuthTokenAccessToken) {
+			try {
+				String launchId = WebUtils.toHttp(request).getHeader(HEADER_APP_LAUNCH);
+				if (launchId != null && !launchId.isEmpty()) {
+					com.sonicle.security.Principal principal = (com.sonicle.security.Principal)subject.getPrincipal();
+					if (principal != null) {
+						com.sonicle.webtop.core.app.WT.notifyAppLaunch(
+							com.sonicle.webtop.core.sdk.UserProfileId.from(principal), launchId);
+					}
+				}
+			} catch (Throwable t) {
+				//the launch signal must never break authentication
+				LOGGER.warn("app-launch signal handling failed", t);
+			}
+		}
+		return super.onLoginSuccess(token, subject, request, response);
 	}
 	
 	@Override

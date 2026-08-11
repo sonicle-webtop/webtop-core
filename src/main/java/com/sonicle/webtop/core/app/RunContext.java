@@ -183,6 +183,33 @@ public class RunContext {
 	}
 	
 	/**
+	 * Checks if the currently executing Subject authenticated through the
+	 * user-session ACCESS-TOKEN flow (Bearer token without X-Auth-Username —
+	 * the WebTop Connect mobile-app flow). False for form logins, api-key
+	 * bearer, basic auth (DAV/EAS) and background subjects.
+	 * @return True if access-token authenticated
+	 */
+	public static boolean isAuthenticatedByAccessToken() {
+		try {
+			return isAuthenticatedByAccessToken(getSubject());
+		} catch (UnavailableSecurityManagerException ex) {
+			return false;
+		}
+	}
+
+	/**
+	 * Checks if the specified Subject authenticated through the user-session
+	 * ACCESS-TOKEN flow (see {@link #isAuthenticatedByAccessToken()}).
+	 * @param subject The Subject to work on it.
+	 * @return True if access-token authenticated
+	 */
+	public static boolean isAuthenticatedByAccessToken(final Subject subject) {
+		if (subject == null) return false;
+		PrincipalCollection principals = subject.getPrincipals();
+		return (principals != null) && (principals.oneByType(com.sonicle.webtop.core.app.shiro.AccessTokenAuthMarker.class) != null);
+	}
+
+	/**
 	 * Checks if the currently executing Subject has been impersonated.
 	 * @return True if impersonated, false otherwise
 	 */
