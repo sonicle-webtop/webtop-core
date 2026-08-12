@@ -238,6 +238,13 @@ body {
     font-weight: var(--wt-theme-fontweight-medium);
 }
 
+/* ---------- Sonicle.plugin.FieldTooltip */
+.so-form-tooltip-under {
+    font-weight: var(--wt-theme-fontweight-regular);
+    font-size: var(--wt-theme-fontsize-xs);
+    color: var(--wt-theme-color-n3);
+}
+
 /* ---------- Sonicle.rtc.Panel (deprecated) */
 .so-rtc-lvideo {
 	position: absolute;

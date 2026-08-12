@@ -366,6 +366,8 @@ body > .x-mask {
 .x-window.x-message-box .x-window-text {
     font-size: var(--wt-theme-fontsize-sm);
     color: var(--wt-theme-color-mbox-on);
+    /* Space text from the following field */
+    /*padding-bottom: 2px;*/
 }
 .x-message-box-info { color: var(--wt-theme-color-info) !important; }
 .x-message-box-warning { color: var(--wt-theme-color-warn) !important; }
