@@ -252,6 +252,17 @@ class SharedManagerRegistry {
 		}
 		for (Holder h : evicted) shutdownAsync(h);
 		if (!evicted.isEmpty()) LOGGER.debug("Shared managers swept: {} evictions dispatched", evicted.size());
+		//census: lets ordinary log-watching answer "how many shared instances
+		//exist right now" without attaching to the JVM (session-private managers
+		//are not counted here — they live outside the registry)
+		if (LOGGER.isDebugEnabled() && !holders.isEmpty()) {
+			java.util.Map<String, Integer> byService = new java.util.TreeMap<>();
+			for (String k : holders.keySet()) {
+				String sid = k.substring(0, k.indexOf('|'));
+				byService.merge(sid, 1, Integer::sum);
+			}
+			LOGGER.debug("Shared managers alive: {} {}", holders.size(), byService);
+		}
 	}
 
 	/**
