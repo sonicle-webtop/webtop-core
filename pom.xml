@@ -562,37 +562,37 @@
 		<dependency>
 			<groupId>com.sonicle.extjs</groupId>
 			<artifactId>sonicle-extjs-extensions</artifactId>
-			<version>[3.0.0,4.0.0)</version>
+			<version>[3.0,4.0-alpha)</version>
 		</dependency>
 		<dependency>
 			<groupId>com.sonicle.libraries</groupId>
 			<artifactId>sonicle-commons</artifactId>
-			<version>LATEST</version>
+			<version>[2.0,3.0-alpha)</version>
 		</dependency>
 		<dependency>
 			<groupId>com.sonicle.libraries</groupId>
 			<artifactId>sonicle-commons-web</artifactId>
-			<version>LATEST</version>
+			<version>[1.0,2.0-alpha)</version>
 		</dependency>
 		<dependency>
 			<groupId>com.sonicle.libraries</groupId>
 			<artifactId>sonicle-security</artifactId>
-			<version>LATEST</version>
+			<version>[2.0,3.0-alpha)</version>
 		</dependency>
 		<dependency>
 			<groupId>com.sonicle.libraries</groupId>
 			<artifactId>sonicle-mail</artifactId>
-			<version>LATEST</version>
+			<version>[3.0,4.0-alpha)</version>
 		</dependency>
 		<dependency>
 			<groupId>com.sonicle.libraries</groupId>
 			<artifactId>sonicle-vfs2</artifactId>
-			<version>LATEST</version>
+			<version>[1.0,2.0-alpha)</version>
 		</dependency>
 		<dependency>
             <groupId>com.sonicle.webtop</groupId>
             <artifactId>webtop-vfs-api</artifactId>
-            <version>LATEST</version>
+            <version>[5.0,6.0-alpha)</version>
 			<scope>provided</scope>
         </dependency>
 	</dependencies>
