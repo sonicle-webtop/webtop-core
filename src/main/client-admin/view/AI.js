@@ -56,7 +56,7 @@ Ext.define('Sonicle.webtop.core.admin.view.AI', {
 			xtype: 'wtform',
 			title: title,
 			layout: { type: 'table', columns: 2, tableAttrs: { style: 'width: 500px' } },
-			height: 250,
+			height: 300,
 			fieldDefaults: {
 				labelAlign: 'right',
 				labelWidth: 150,
@@ -74,8 +74,15 @@ Ext.define('Sonicle.webtop.core.admin.view.AI', {
 							data: [
 								['',    me.res('ai.provider.none')],
 								['openai',   me.res('ai.provider.openai')],
-								['claude',  me.res('ai.provider.claude')]
+								['claude',  me.res('ai.provider.claude')],
+								['ollama',  me.res('ai.provider.ollama')]
 							]
+						},
+						listeners: {
+							
+							'change': function(c, nv, ov) {
+								me.lref('txtapiurl').setHidden( nv != 'ollama' );
+							}
 						}
 				}),/*{
 					xtype: 'label',
@@ -90,6 +97,14 @@ Ext.define('Sonicle.webtop.core.admin.view.AI', {
 					emptyText: '(default)',
 					value: me.model
 				}, {
+					xtype: 'textfield',
+					fieldLabel: me.res('ai.apiurl.lbl'),
+					reference: 'txtapiurl',
+					width: 400,
+					colspan: 2,
+					hidden: me.provider != 'ollama',
+					value: me.apiurl
+				},{
 					xtype: 'textfield',
 					fieldLabel: me.res('ai.apikey.lbl'),
 					reference: 'txtapikey',
@@ -387,6 +402,7 @@ Ext.define('Sonicle.webtop.core.admin.view.AI', {
 				crud: 'update',
 				domainId: me.domainId,
 				provider: me.lref('cbprovider').getValue(),
+				apiurl: me.lref('txtapiurl').getValue(),
 				model: me.lref('txtmodel').getValue(),
 				apikey: me.lref('txtapikey').getValue(),
 				quota: me.lref('nmbquota').getValue()

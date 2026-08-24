@@ -948,6 +948,7 @@ Ext.define('Sonicle.webtop.core.admin.Service', {
 								itemId: itemId,
 								domainId: domainId,
 								provider: json.data.provider,
+								apiurl: json.data.apiurl,
 								model: json.data.model,
 								apikey: json.data.apikey,
 								quota: json.data.quota,

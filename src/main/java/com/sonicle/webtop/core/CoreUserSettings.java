@@ -398,6 +398,25 @@ public class CoreUserSettings extends BaseUserSettings {
 	}
 
 	/**
+	 * Returns the user-supplied AI url if set, otherwise falls back to the
+	 * domain/system default.
+	 */
+	public String getAiApiUrl() {
+		String value = getString(AI_API_URL, null);
+		if (value != null) return value;
+		return ss.getAiApiUrl();
+	}
+
+	/**
+	 * Sets the user-supplied AI url. Pass null or empty to clear the
+	 * override and fall back to the domain default.
+	 */
+	public boolean setAiApiUrl(String value) {
+		if (value == null || value.isEmpty()) return clear(AI_API_URL);
+		return setString(AI_API_URL, value);
+	}
+
+	/**
 	 * Returns the user-supplied AI backend if set, otherwise falls back to the
 	 * domain/system default.
 	 */

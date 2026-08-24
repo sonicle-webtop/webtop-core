@@ -1396,11 +1396,15 @@ public class WebTopSession {
 				|| !java.util.Objects.equals(backend, cachedAiBackend)
 				|| !java.util.Objects.equals(token, cachedAiToken)) {
 				AIBackendType aibt = null;
+				String apiUrl = null;
 				if ("sonicle".equalsIgnoreCase(backend)) aibt = AIBackendType.SONICLE;
 				else if ("openai".equalsIgnoreCase(backend)) aibt = AIBackendType.OPENAI;
 				else if ("claude".equalsIgnoreCase(backend)) aibt = AIBackendType.CLAUDE;
-				else if ("ollama".equalsIgnoreCase(backend)) aibt = AIBackendType.OLLAMA;
-				AIManager aim = AIFactory.createAIManager(aibt, model, token, getLocale());
+				else if ("ollama".equalsIgnoreCase(backend)) {
+					aibt = AIBackendType.OLLAMA;
+					apiUrl = cus.getAiApiUrl();
+				}
+				AIManager aim = AIFactory.createAIManager(aibt, apiUrl, model, token, getLocale());
 				aim.setUserId(AIManager.hashUserId(getUserProfile().getStringId()));
 				aim.setProfileId(getUserProfile().getId());
 				aim.setBackendType(aibt != null ? aibt.name() : "UNKNOWN");

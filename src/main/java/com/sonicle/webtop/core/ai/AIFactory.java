@@ -39,16 +39,16 @@ import java.util.Locale;
  * @author gabriele.bulfon
  */
 public class AIFactory {
-    public static AIManager createAIManager(AIBackendType type, String model, String token, Locale locale) {
+    public static AIManager createAIManager(AIBackendType type, String apiUrl, String model, String token, Locale locale) {
         switch (type) {
             case OPENAI:
                 return new OpenAIManager(model, token, locale);
             case CLAUDE:
                 return new ClaudeAIManager(model, token, locale);
 /*            case SONICLE:
-                return new SonicleAIManager(token, locale);
+                return new SonicleAIManager(token, locale);*/
             case OLLAMA:
-                return new OllamaAIManager(token, locale);*/
+                return new OllamaAIManager(model, apiUrl, token, locale);
             default:
                 throw new IllegalArgumentException("Unsupported AI backend type: " + type);
         }

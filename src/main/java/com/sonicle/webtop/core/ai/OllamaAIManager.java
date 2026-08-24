@@ -55,10 +55,13 @@ public class OllamaAIManager extends AIManager {
 	String qdrantURL = "http://"+qdrantHost+":6333/collections/emails/points/search";
 	int qdrantLimit = 10;
 	
-	public OllamaAIManager(String model, String apiToken, Locale locale) {
-		super(model, "http://localhost:11434", null, locale);
-		if (StringUtils.isBlank(model)) model = "gpt-oss:20b";
-	} 
+	public OllamaAIManager(String model, String apiUrl, String apiToken, Locale locale) {
+		super(
+			StringUtils.defaultIfBlank(model, "gpt-oss:20b"),
+			StringUtils.defaultIfBlank(apiUrl, "http://localhost:11434"),
+			null, locale
+		);
+	}
 	
 	public boolean hasRag() {
 		return true;
