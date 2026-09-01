@@ -1400,8 +1400,8 @@ public class WebTopSession {
 				if ("sonicle".equalsIgnoreCase(backend)) aibt = AIBackendType.SONICLE;
 				else if ("openai".equalsIgnoreCase(backend)) aibt = AIBackendType.OPENAI;
 				else if ("claude".equalsIgnoreCase(backend)) aibt = AIBackendType.CLAUDE;
-				else if ("ollama".equalsIgnoreCase(backend)) {
-					aibt = AIBackendType.OLLAMA;
+				else if ("generic".equalsIgnoreCase(backend)) {
+					aibt = AIBackendType.GENERIC;
 					apiUrl = cus.getAiApiUrl();
 				}
 				AIManager aim = AIFactory.createAIManager(aibt, apiUrl, model, token, getLocale());

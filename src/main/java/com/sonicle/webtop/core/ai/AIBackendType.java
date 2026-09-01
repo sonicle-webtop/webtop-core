@@ -40,5 +40,5 @@ public enum AIBackendType {
     OPENAI,
     CLAUDE,
     SONICLE,
-	OLLAMA
+	GENERIC
 }

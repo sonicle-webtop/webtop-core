@@ -1045,7 +1045,7 @@ public class CoreSettings {
 	/**
 	 * [domain+system]
 	 * [string]
-	 * AI API url : use with ollama.
+	 * AI API url : use with generic chat completion.
 	 * Defaults to null.
 	 */
 	public static final String AI_API_URL = "ai.api.url";
@@ -1053,8 +1053,8 @@ public class CoreSettings {
 	/**
 	 * [domain+system]
 	 * [string]
-	 * AI API backend : ollama | openai | claude.
-	 * Defaults to ollama.
+	 * AI API backend : generic | openai | claude.
+	 * Defaults to generic.
 	 */
 	public static final String AI_API_BACKEND = "ai.api.backend";
 	

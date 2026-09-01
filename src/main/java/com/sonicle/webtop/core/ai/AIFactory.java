@@ -47,8 +47,8 @@ public class AIFactory {
                 return new ClaudeAIManager(model, token, locale);
 /*            case SONICLE:
                 return new SonicleAIManager(token, locale);*/
-            case OLLAMA:
-                return new OllamaAIManager(model, apiUrl, token, locale);
+            case GENERIC:
+                return new GenericAIManager(model, apiUrl, token, locale);
             default:
                 throw new IllegalArgumentException("Unsupported AI backend type: " + type);
         }

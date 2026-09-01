@@ -524,7 +524,7 @@ public class CoreServiceSettings extends BaseServiceSettings {
 	}
 	
 	public String getAiApiBackend() {
-		return getString(AI_API_BACKEND, "ollama");
+		return getString(AI_API_BACKEND, "generic");
 	}
 	
 	public void setAiApiBackend(String backend) {
@@ -556,13 +556,13 @@ public class CoreServiceSettings extends BaseServiceSettings {
 	}
 
 	/**
-	 * True when the AI backend looks usable: either an Ollama self-hosted
+	 * True when the AI backend looks usable: either a generic chat completion self-hosted
 	 * backend with api url set (no token required) or a token has been explicitly set to
 	 * something other than the default placeholder.
 	 */
 	public boolean isAIConfigured() {
 		String backend = getAiApiBackend();
-		if ("ollama".equalsIgnoreCase(backend)) {
+		if ("generic".equalsIgnoreCase(backend)) {
 			String apiurl = getAiApiUrl();
 			return !StringUtils.isBlank(apiurl);
 		}

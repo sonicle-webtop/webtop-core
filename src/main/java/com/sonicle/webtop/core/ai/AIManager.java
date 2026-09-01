@@ -39,6 +39,7 @@ import com.google.gson.JsonParser;
 import com.sonicle.webtop.core.bol.OAIUsage;
 import com.sonicle.webtop.core.sdk.UserProfileId;
 import com.sonicle.webtop.core.sdk.WTException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
@@ -220,7 +221,7 @@ public abstract class AIManager {
 			int durationMs = clampToInt(System.currentTimeMillis() - startMs);
 			recordUsage(cfg, null, durationMs, false, exc.getMessage());
 			exc.printStackTrace();
-			throw new WTException("AI backend request failed");
+			throw new WTException("AI backend request failed\n\n"+exc.getMessage());
 		}
 	}
 
@@ -322,21 +323,15 @@ public abstract class AIManager {
 		os.flush();
 		os.close();
 
-		// Read response
 		int responseCode = conn.getResponseCode();
-
-		answer = conn.getResponseMessage();
-		if (responseCode == 200) {
-			Scanner scanner = new Scanner(
-				conn.getInputStream(), "UTF-8"
-			).useDelimiter("\\A");
-
+		InputStream is = (responseCode == 200) ? conn.getInputStream() : conn.getErrorStream();
+		try (Scanner scanner = new Scanner(is, "UTF-8").useDelimiter("\\A")) {
 			answer = scanner.hasNext() ? scanner.next() : "";
-
-			scanner.close();
 		}
+		String reqId = conn.getHeaderField("request-id");
 		conn.disconnect();
-		if (responseCode != 200) throw new Exception("Error "+responseCode+" : "+answer);
+		if (responseCode != 200) throw new Exception("Error " + responseCode + " : " + answer
+				+ (reqId != null ? " [request-id " + reqId + "]" : ""));
 		return answer;
 	}
 

@@ -46,7 +46,7 @@ import org.apache.commons.lang3.StringUtils;
  *
  * @author gabriele.bulfon
  */
-public class OllamaAIManager extends AIManager {
+public class GenericAIManager extends AIManager {
 	
 	String embeddingModel = "bge-m3";
 	String apiEmbeddingPath = "/api/embeddings";
@@ -55,12 +55,13 @@ public class OllamaAIManager extends AIManager {
 	String qdrantURL = "http://"+qdrantHost+":6333/collections/emails/points/search";
 	int qdrantLimit = 10;
 	
-	public OllamaAIManager(String model, String apiUrl, String apiToken, Locale locale) {
+	public GenericAIManager(String model, String apiUrl, String apiToken, Locale locale) {
 		super(
 			StringUtils.defaultIfBlank(model, "gpt-oss:20b"),
 			StringUtils.defaultIfBlank(apiUrl, "http://localhost:11434"),
-			null, locale
+			apiToken, locale
 		);
+		useTemperature = false;
 	}
 	
 	public boolean hasRag() {

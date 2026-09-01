@@ -552,8 +552,6 @@ public class CoreUserSettings extends BaseUserSettings {
 	/**
 	 * True when the resolved AI backend looks usable for this user.
 	 * Either a user-supplied token is set, or the domain is configured.
-	 * Ollama is excluded here (experimental) — it must be explicitly
-	 * configured at the domain level if needed.
 	 */
 	public boolean isAIConfigured() {
 		String userToken = getString(AI_API_TOKEN, null);

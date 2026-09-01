@@ -54,6 +54,7 @@ public class ClaudeAIManager extends OpenAIManager {
 		apiEmebeddingUrl = "http://localhost:11434";
 		apiEmbeddingPath = "/api/embeddings";
 		apiEmbeddingToken = null;
+		useTemperature = false;
 	} 
 	
 	/*public JsonArray getEmbeddingVector(String jsonPayload) throws Exception {

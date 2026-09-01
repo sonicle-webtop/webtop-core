@@ -75,13 +75,13 @@ Ext.define('Sonicle.webtop.core.admin.view.AI', {
 								['',    me.res('ai.provider.none')],
 								['openai',   me.res('ai.provider.openai')],
 								['claude',  me.res('ai.provider.claude')],
-								['ollama',  me.res('ai.provider.ollama')]
+								['generic',  me.res('ai.provider.generic')]
 							]
 						},
 						listeners: {
 							
 							'change': function(c, nv, ov) {
-								me.lref('txtapiurl').setHidden( nv != 'ollama' );
+								me.lref('txtapiurl').setHidden( nv != 'generic' );
 							}
 						}
 				}),/*{
@@ -102,7 +102,7 @@ Ext.define('Sonicle.webtop.core.admin.view.AI', {
 					reference: 'txtapiurl',
 					width: 400,
 					colspan: 2,
-					hidden: me.provider != 'ollama',
+					hidden: me.provider != 'generic',
 					value: me.apiurl
 				},{
 					xtype: 'textfield',
