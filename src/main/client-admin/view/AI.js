@@ -81,7 +81,13 @@ Ext.define('Sonicle.webtop.core.admin.view.AI', {
 						listeners: {
 							
 							'change': function(c, nv, ov) {
-								me.lref('txtapiurl').setHidden( nv != 'generic' );
+								if (nv != 'generic') {
+									me.lref('txtapiurl').setValue('');
+									me.lref('txtapiurl').setHidden(true);
+									me.lref('txtmodel').setValue('');
+									me.lref('txtapikey').setValue('');
+								}
+								else me.lref('txtapiurl').setHidden(false);
 							}
 						}
 				}),/*{
