@@ -96,6 +96,22 @@ public class CoreServiceSettings extends BaseServiceSettings {
 	public int getSharedManagerMaxAge() {
 		return getInteger(SHARED_MANAGER_MAX_AGE, 0); //seconds, 0 = disabled
 	}
+
+	public boolean getSessionAbandonEnabled() {
+		return getBoolean(SESSION_ABANDON_ENABLED, true);
+	}
+
+	public int getSessionAbandonGrace() {
+		return getInteger(SESSION_ABANDON_GRACE, 120); //seconds
+	}
+
+	public int getSessionAbandonStaleGrace() {
+		return getInteger(SESSION_ABANDON_STALE_GRACE, 600); //seconds, 0 = disabled
+	}
+
+	public int getSessionAbandonSweepInterval() {
+		return getInteger(SESSION_ABANDON_SWEEP_INTERVAL, 60); //seconds
+	}
 	
 	public Boolean getDocumentServerEnabled() {
 		return getBoolean(DOCUMENT_SERVER_ENABLED, false);

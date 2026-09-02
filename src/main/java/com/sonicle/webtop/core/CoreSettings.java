@@ -125,7 +125,45 @@ public class CoreSettings {
 	 * triggers. Read at each sweep. 0 (default) disables the bound.
 	 */
 	public static final String SHARED_MANAGER_MAX_AGE = "shared.manager.max.age";
-	
+
+	/**
+	 * [system]
+	 * [boolean]
+	 * Enables early teardown of abandoned web sessions: when every browser window of a
+	 * session is gone (no live push connections and no activity beyond the grace), the
+	 * session is invalidated ahead of the container timeout, releasing its resources
+	 * (e.g. IMAP connections) while leaving any remember-me token intact. Read at each
+	 * sweep. Defaults to true.
+	 */
+	public static final String SESSION_ABANDON_ENABLED = "session.abandon.enabled";
+
+	/**
+	 * [system]
+	 * [int]
+	 * Seconds a session with no live push connections may stay inactive before being
+	 * considered abandoned and invalidated. Must comfortably exceed the 60s push
+	 * heartbeat period plus reconnect/long-polling turnaround. Read at each sweep.
+	 * Defaults to 120.
+	 */
+	public static final String SESSION_ABANDON_GRACE = "session.abandon.grace";
+
+	/**
+	 * [system]
+	 * [int]
+	 * Seconds of total inactivity (no heartbeat, long-poll or request on any transport)
+	 * after which a session is invalidated even if a push connection still appears
+	 * live — guards against zombie connections whose client died undetected. Read at
+	 * each sweep. 0 disables the guard. Defaults to 600.
+	 */
+	public static final String SESSION_ABANDON_STALE_GRACE = "session.abandon.stale.grace";
+
+	/**
+	 * [system]
+	 * [int]
+	 * Seconds between abandoned-session sweeps. Read at startup. Defaults to 60.
+	 */
+	public static final String SESSION_ABANDON_SWEEP_INTERVAL = "session.abandon.sweep.interval";
+
 	/**
 	 * [domain+system]
 	 * [int]

@@ -77,6 +77,12 @@ class PushConnection {
 		Universe.framework().removeAtmosphereHandler(broadcasterPath);
 	}
 	
+	public boolean hasBeenReady() {
+		synchronized (readyLock) {
+			return hasBeenReady;
+		}
+	}
+
 	public void ready() {
 		synchronized (readyLock) {
 			if (!hasBeenReady) {

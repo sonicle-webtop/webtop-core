@@ -250,6 +250,10 @@ public final class WebTopApp {
 	private Timer sharedManagerSweepTimer = null;
 	private static final long SHARED_MANAGER_SWEEP_INTERVAL_MS = 5 * 60 * 1000L;
 	private static final long SHARED_MANAGER_IDLE_GRACE_MS = 15 * 60 * 1000L;
+	private Timer abandonedSessionSweepTimer = null;
+	private static final long SESSION_ABANDON_SWEEP_INTERVAL_MS = 60 * 1000L;
+	private static final long SESSION_ABANDON_GRACE_MS = 120 * 1000L;
+	private static final long SESSION_ABANDON_STALE_GRACE_MS = 600 * 1000L;
 	private FileSystem fileSystem;
 	private MediaTypes mediaTypes = null;
 	private FileTypes fileTypes = null;
@@ -552,6 +556,7 @@ public final class WebTopApp {
 		this.docEditorMgr = new DocEditorManager(this, 30*1000).initialize();
 		this.svcMgr = new ServiceManager(this, this.scheduler).initialize();
 		scheduleSharedManagerSweepTask();
+		scheduleAbandonedSessionSweepTask();
 		this.dsMgr = new DataSourcesManager(this); // Initialization later...
 		
 		this.mediaTypes = MediaTypes.init(this.conMgr);
@@ -562,6 +567,7 @@ public final class WebTopApp {
 	private void internalDestroy() {
 		clearWebappVersionCheckTask();
 		clearSharedManagerSweepTask();
+		clearAbandonedSessionSweepTask();
 		this.tomcat = null;
 		
 		try {
@@ -854,6 +860,59 @@ public final class WebTopApp {
 		}
 		sharedManagerSweepTimer = null;
 		logger.info("Task 'sharedManagerSweep' destroyed");
+	}
+
+	private void scheduleAbandonedSessionSweepTask() {
+		//interval is read once here (needs a reschedule to change); the enabled
+		//flag and both graces are read at every tick so the feature can be
+		//toggled/tuned at runtime via settings
+		long configuredPeriod = SESSION_ABANDON_SWEEP_INTERVAL_MS;
+		try {
+			configuredPeriod = getCoreServiceSettings().getSessionAbandonSweepInterval() * 1000L;
+		} catch (Throwable t) {
+			logger.warn("Cannot read abandoned-session sweep interval, using default", t);
+		}
+		if (configuredPeriod <= 0) configuredPeriod = SESSION_ABANDON_SWEEP_INTERVAL_MS;
+		final long period = configuredPeriod;
+		abandonedSessionSweepTimer = new Timer("abandonedSessionSweep");
+		abandonedSessionSweepTimer.schedule(new TimerTask() {
+			@Override
+			public void run() {
+				ThreadState threadState = new SubjectThreadState(adminSubject);
+				try {
+					threadState.bind();
+					boolean enabled = true;
+					long grace = SESSION_ABANDON_GRACE_MS;
+					long staleGrace = SESSION_ABANDON_STALE_GRACE_MS;
+					try {
+						CoreServiceSettings css = getCoreServiceSettings();
+						enabled = css.getSessionAbandonEnabled();
+						grace = css.getSessionAbandonGrace() * 1000L;
+						staleGrace = css.getSessionAbandonStaleGrace() * 1000L;
+					} catch (Throwable t) {
+						logger.warn("Cannot read abandoned-session settings, using defaults", t);
+					}
+					if (!enabled) return;
+					if (grace <= 0) grace = SESSION_ABANDON_GRACE_MS;
+					if (staleGrace < 0) staleGrace = SESSION_ABANDON_STALE_GRACE_MS;
+					SessionManager sesm = instance.getSessionManager();
+					if (sesm != null) sesm.sweepAbandonedSessions(grace, staleGrace);
+				} catch (Throwable t) {
+					logger.error("Task 'abandonedSessionSweep' failed", t);
+				} finally {
+					threadState.clear();
+				}
+			}
+		}, period, period);
+		logger.info("Task 'abandonedSessionSweep' scheduled [{}sec, default grace {}sec]", period/1000, SESSION_ABANDON_GRACE_MS/1000);
+	}
+
+	private void clearAbandonedSessionSweepTask() {
+		if (abandonedSessionSweepTimer != null) {
+			abandonedSessionSweepTimer.cancel();
+		}
+		abandonedSessionSweepTimer = null;
+		logger.info("Task 'abandonedSessionSweep' destroyed");
 	}
 	
 	private void onWebappVersionCheck() {

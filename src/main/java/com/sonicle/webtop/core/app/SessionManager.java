@@ -56,12 +56,16 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.StampedLock;
 import javax.servlet.http.HttpSession;
 import org.apache.shiro.subject.Subject;
 import org.atmosphere.cpr.AtmosphereResource;
+import org.atmosphere.cpr.Broadcaster;
+import org.atmosphere.cpr.BroadcasterFactory;
 import org.atmosphere.cpr.FrameworkConfig;
+import org.atmosphere.cpr.Universe;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -88,6 +92,7 @@ public class SessionManager extends AbstractAppManager<SessionManager> implement
 	public static final String ATTRIBUTE_RME_ARMED = "webtop.RMe.armed";
 	public static final String ATTRIBUTE_GUESSING_LOCALE = "Locale";
 	public static final String ATTRIBUTE_GUESSING_USERNAME = "UserName";
+	public static final String WTSPROP_ABANDONED = "ABANDONED"; // Set by the abandoned-session sweep just before invalidating
 	
 	private final StampedLock lock = new StampedLock();
 	private final LinkedHashMap<String, WebTopSession> onlineSessions = new LinkedHashMap<>();
@@ -185,8 +190,10 @@ public class SessionManager extends AbstractAppManager<SessionManager> implement
 				String action;
 				if (otpPending) {
 					action = "OTP_ABANDONED";
+				} else if (logoutDone) {
+					action = "LOGOUT";
 				} else {
-					action = logoutDone ? "LOGOUT" : "SESSION_EXPIRED";
+					action = webtopSession.hasProperty(CoreManifest.ID, WTSPROP_ABANDONED) ? "SESSION_ABANDONED" : "SESSION_EXPIRED";
 				}
 				String clientIp = SessionContext.getClientRemoteIP(session);
 				AuditLogManager.logAuth(LogbackHelper.Level.DEBUG, clientIp, sessionId, profileId, action);
@@ -229,6 +236,101 @@ public class SessionManager extends AbstractAppManager<SessionManager> implement
 		}
 	}
 	
+	/**
+	 * Invalidates web sessions whose browser windows are all gone, releasing their
+	 * resources ahead of the container timeout. Only sessions that established a
+	 * push connection at least once are considered (sessions that never connected,
+	 * e.g. UI mini-mode, keep the plain container timeout). A session is abandoned
+	 * when either:
+	 *  - no live push resource belongs to it (one resource = one open browser
+	 *    window, any transport) and it has been inactive beyond graceMs, or
+	 *  - it has been inactive beyond staleGraceMs regardless of attached resources
+	 *    (zombie-connection guard, 0 disables).
+	 * Inactivity is measured on HttpSession lastAccessedTime, refreshed by any
+	 * request and by the 60s push heartbeat on both websocket and long-polling.
+	 * Invalidation fires the ordinary container-expiry cleanup chain (push
+	 * broadcaster, WebTopSession/services cleanup) and, unlike an explicit logout,
+	 * does NOT touch remember-me tokens: the next visit auto-logs-in again.
+	 * Candidates are snapshotted under the lock but evaluated and invalidated with
+	 * NO lock held: invalidate() re-enters onContainerSessionDestroyed, which
+	 * takes the write lock.
+	 */
+	public void sweepAbandonedSessions(long graceMs, long staleGraceMs) {
+		if (!isStateReady()) return;
+
+		final ArrayList<WebTopSession> candidates = new ArrayList<>();
+		long stamp = lock.readLock();
+		try {
+			for (Map.Entry<String, WebTopSession> entry : onlineSessions.entrySet()) {
+				PushConnection pushCon = pushConnections.get(entry.getKey());
+				if (pushCon != null && pushCon.hasBeenReady()) {
+					candidates.add(entry.getValue());
+				}
+			}
+		} finally {
+			lock.unlockRead(stamp);
+		}
+		if (candidates.isEmpty()) return;
+
+		final HashMap<String, Integer> liveCounts = snapshotLivePushResourceCounts();
+		for (WebTopSession wts : candidates) {
+			try {
+				final HttpSession session = wts.getSession();
+				if (session == null) continue;
+				final long age = System.currentTimeMillis() - session.getLastAccessedTime();
+				final Integer live = liveCounts.get(session.getId());
+				final boolean stale = (staleGraceMs > 0) && (age > staleGraceMs);
+				final boolean noWindows = (age > graceMs) && (live == null || live == 0);
+				if (!stale && !noWindows) continue;
+				wts.setProperty(CoreManifest.ID, WTSPROP_ABANDONED, true);
+				LOGGER.info("Invalidating abandoned session [{}, {}, inactive {}s, {}]", session.getId(), wts.getProfileId(), age/1000, stale ? "stale connection" : "no windows");
+				session.invalidate();
+			} catch (IllegalStateException ex) {
+				// Session invalidated concurrently: nothing to do
+			} catch (Throwable t) {
+				LOGGER.error("Error invalidating abandoned session", t);
+			}
+		}
+	}
+
+	/**
+	 * Counts the live push resources (one per connected browser window/tab, any
+	 * transport) grouped by HTTP session id. Resources are matched to sessions
+	 * through their own request (same association PushEndpoint uses on every
+	 * heartbeat), NOT through broadcaster membership: with the path-templated
+	 * @ManagedService endpoint, Atmosphere does not reliably partition resources
+	 * into per-session broadcasters (observed 2026-09-02 on 2.4.32: one
+	 * broadcaster holding resources of different sessions), so all broadcasters
+	 * are scanned. A resource may sit in more than one broadcaster (count can
+	 * overshoot) and a dying one may fail the session lookup (skipped): only the
+	 * zero-vs-nonzero distinction is consumed, and the inactivity-age condition
+	 * is the primary safety either way.
+	 */
+	private HashMap<String, Integer> snapshotLivePushResourceCounts() {
+		HashMap<String, Integer> counts = new HashMap<>();
+		try {
+			BroadcasterFactory factory = Universe.broadcasterFactory();
+			if (factory == null) return counts;
+			for (Broadcaster broadcaster : factory.lookupAll()) {
+				for (AtmosphereResource resource : broadcaster.getAtmosphereResources()) {
+					try {
+						HttpSession session = resource.getRequest().getSession(false);
+						if (session != null) {
+							String sid = session.getId();
+							Integer count = counts.get(sid);
+							counts.put(sid, (count == null) ? 1 : count + 1);
+						}
+					} catch (Throwable t) {
+						// Resource being recycled/torn down: skip it
+					}
+				}
+			}
+		} catch (Throwable t) {
+			LOGGER.error("Error counting live push resources", t);
+		}
+		return counts;
+	}
+
 	void registerWebTopSession(WebTopSession webtopSession) throws WTException {
 		ensureStateReady();
 		
