@@ -208,6 +208,11 @@ public class SessionManager extends AbstractAppManager<SessionManager> implement
 		long stamp = lock.readLock();
 		try {
 			if (onlineSessions.containsKey(sessionId)) {
+				// A heartbeat for an online session is a life sign of one of its
+				// windows: stamp it for the abandoned-session sweep (touchSession
+				// below does NOT move lastAccessedTime, see PushConnection)
+				PushConnection pushCon = pushConnections.get(sessionId);
+				if (pushCon != null) pushCon.touchSeen();
 				Subject subject = (Subject)resource.getRequest().getAttribute(FrameworkConfig.SECURITY_SUBJECT);
 				if ((subject != null) && subject.isAuthenticated()) {
 					HttpSession session = resource.session(false);
@@ -217,7 +222,7 @@ public class SessionManager extends AbstractAppManager<SessionManager> implement
 					}
 				}
 			}
-			
+
 		} finally {
 			lock.unlockRead(stamp);
 		}
@@ -229,8 +234,11 @@ public class SessionManager extends AbstractAppManager<SessionManager> implement
 		long stamp = lock.readLock();
 		try {
 			PushConnection pushCon = pushConnections.get(sessionId);
-			if (pushCon != null) pushCon.ready();
-			
+			if (pushCon != null) {
+				pushCon.touchSeen();
+				pushCon.ready();
+			}
+
 		} finally {
 			lock.unlockRead(stamp);
 		}
@@ -246,8 +254,14 @@ public class SessionManager extends AbstractAppManager<SessionManager> implement
 	 *    window, any transport) and it has been inactive beyond graceMs, or
 	 *  - it has been inactive beyond staleGraceMs regardless of attached resources
 	 *    (zombie-connection guard, 0 disables).
-	 * Inactivity is measured on HttpSession lastAccessedTime, refreshed by any
-	 * request and by the 60s push heartbeat on both websocket and long-polling.
+	 * Inactivity is measured on the LATEST of HttpSession lastAccessedTime
+	 * (refreshed by real HTTP requests: AJAX, long-poll cycles) and the push
+	 * connection's last-seen time (stamped on connection ready and on every 60s
+	 * client heartbeat, both transports). lastAccessedTime alone is NOT enough:
+	 * on websocket transport heartbeats reach touchSession, which only invokes
+	 * Tomcat's internal access() and never moves lastAccessedTime — an open but
+	 * untouched window would look inactive and be killed by the stale guard
+	 * (production incident 2026-09-03).
 	 * Invalidation fires the ordinary container-expiry cleanup chain (push
 	 * broadcaster, WebTopSession/services cleanup) and, unlike an explicit logout,
 	 * does NOT touch remember-me tokens: the next visit auto-logs-in again.
@@ -259,12 +273,14 @@ public class SessionManager extends AbstractAppManager<SessionManager> implement
 		if (!isStateReady()) return;
 
 		final ArrayList<WebTopSession> candidates = new ArrayList<>();
+		final HashMap<String, Long> lastSeenTimes = new HashMap<>();
 		long stamp = lock.readLock();
 		try {
 			for (Map.Entry<String, WebTopSession> entry : onlineSessions.entrySet()) {
 				PushConnection pushCon = pushConnections.get(entry.getKey());
 				if (pushCon != null && pushCon.hasBeenReady()) {
 					candidates.add(entry.getValue());
+					lastSeenTimes.put(entry.getKey(), pushCon.getLastSeenTime());
 				}
 			}
 		} finally {
@@ -277,7 +293,9 @@ public class SessionManager extends AbstractAppManager<SessionManager> implement
 			try {
 				final HttpSession session = wts.getSession();
 				if (session == null) continue;
-				final long age = System.currentTimeMillis() - session.getLastAccessedTime();
+				final Long lastSeen = lastSeenTimes.get(session.getId());
+				final long lastAlive = Math.max(session.getLastAccessedTime(), (lastSeen != null) ? lastSeen : 0);
+				final long age = System.currentTimeMillis() - lastAlive;
 				final Integer live = liveCounts.get(session.getId());
 				final boolean stale = (staleGraceMs > 0) && (age > staleGraceMs);
 				final boolean noWindows = (age > graceMs) && (live == null || live == 0);

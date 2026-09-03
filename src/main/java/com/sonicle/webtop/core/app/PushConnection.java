@@ -55,13 +55,15 @@ class PushConnection {
 	private final String broadcasterPath;
 	private final Object readyLock = new Object();
 	private boolean hasBeenReady;
-	
+	private volatile long lastSeenTs;
+
 	public PushConnection(MessageStorage messageStorage, String sessionId, UserProfileId profileId) {
 		this.messageStorage = messageStorage;
 		this.sessionId = sessionId;
 		this.profileId = profileId;
 		this.broadcasterPath = AtmosphereServlet.URL + "/" + sessionId;
 		this.hasBeenReady = false;
+		this.lastSeenTs = System.currentTimeMillis();
 	}
 	
 	public void cleanup() {
@@ -81,6 +83,23 @@ class PushConnection {
 		synchronized (readyLock) {
 			return hasBeenReady;
 		}
+	}
+
+	/**
+	 * Timestamp of the last life sign from any of this session's push resources
+	 * (connection ready or client heartbeat, both transports). The abandoned-session
+	 * sweep measures inactivity on this, NOT on HttpSession.getLastAccessedTime():
+	 * ServletUtils.touchSession only invokes Tomcat's internal StandardSession
+	 * .access() (refreshing the container's idle clock) and never moves
+	 * lastAccessedTime, so on websocket transport that value freezes at the last
+	 * real HTTP request even while heartbeats flow.
+	 */
+	public long getLastSeenTime() {
+		return lastSeenTs;
+	}
+
+	public void touchSeen() {
+		this.lastSeenTs = System.currentTimeMillis();
 	}
 
 	public void ready() {
