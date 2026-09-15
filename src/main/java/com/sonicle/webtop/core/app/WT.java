@@ -512,10 +512,6 @@ public class WT {
 				// keeps the historical behavior: per-call throwaway (or the
 				// session instance when a session context exists).
 				if (!RunContext.isAuthenticatedByAccessToken()) {
-					if (wts != null) {
-						BaseManager sessionInst = wts.getServiceManager(serviceId);
-						if (sessionInst != null) return sessionInst;
-					}
 					return svcm.instantiateServiceManager(serviceId, fastInit, targetProfileId);
 				}
 			}
@@ -525,9 +521,11 @@ public class WT {
 			return svcm.getOrTouchSharedManager(serviceId, targetProfileId);
 		} else {
 			WebTopSession wts = SessionContext.getCurrentWTSession(false);
-			if (wts != null) {
-				return wts.getServiceManager(serviceId);
-			}
+			//session instance only for the session's OWN profile (pre-shared
+			//contract); foreign targets always get a targeted throwaway
+			if (wts != null && targetProfileId != null && targetProfileId.equals(wts.getProfileId())) {
+					 return wts.getServiceManager(serviceId);
+			}			
 			return svcm.instantiateServiceManager(serviceId, fastInit, targetProfileId);
 		}
 	}
