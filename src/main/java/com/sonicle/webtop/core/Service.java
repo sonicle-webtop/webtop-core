@@ -399,11 +399,7 @@ public class Service extends BaseService implements EventListener {
 				vars.put("editorAttachPatterns-"+apploc.getId().substring(0,2), patterns);
 		}
 		
-		boolean rmeArmed = false;
-		Session subjectSession = SessionContext.getSubjectSession(RunContext.getSubject());
-		if (subjectSession != null) {
-			rmeArmed = Boolean.TRUE.equals((Boolean)subjectSession.getAttribute(SessionManager.ATTRIBUTE_RME_ARMED));
-		}
+		boolean rmeArmed = SessionContext.isRMeArmedInThisSession(SessionContext.getSubjectSession()) || RunContext.isRemembered();
 		
 		vars.put("rmeArmed", rmeArmed);
 		vars.put("domainInternetName", WT.getPrimaryDomainName(profile.getDomainId()));

@@ -252,7 +252,7 @@ public class RunContext {
 	 */
 	public static boolean isRemembered(final Subject subject) {
 		if (subject == null) return false;
-		return hasRole(subject, WebTopManager.REMRMBERED_USER_ROLESID);
+		return hasRole(subject, WebTopManager.REMEMBERED_USER_ROLESID);
 	}
 	
 	/**

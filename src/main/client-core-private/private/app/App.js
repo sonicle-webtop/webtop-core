@@ -224,6 +224,7 @@ Ext.define('Sonicle.webtop.core.private.app.App', {
 								}
 							});
 						} else {
+							me.mask(WT.res(WT.ID, 'info.conn.reconnecting'), true);
 							WT.reload();
 						}
 							

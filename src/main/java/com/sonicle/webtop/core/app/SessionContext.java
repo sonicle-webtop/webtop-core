@@ -116,6 +116,14 @@ public class SessionContext {
 		return (session == null) ? null : (WebTopSession)session.getAttribute(SessionManager.ATTRIBUTE_WEBTOP_SESSION);
 	}
 	
+	public static boolean isRMeArmedInThisSession(final Session session) {
+		if (session != null) {
+			Boolean bool = (Boolean)session.getAttribute(SessionManager.ATTRIBUTE_RME_ARMED);
+			if (bool != null && bool == true) return true;
+		}
+		return false;
+	}
+	
 	/**
 	 * Returns the Session object associated to the current executing Subject.
 	 * @return the Shiro session object, or null

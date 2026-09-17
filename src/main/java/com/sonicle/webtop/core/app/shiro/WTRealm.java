@@ -221,7 +221,14 @@ public class WTRealm extends AuthorizingRealm {
 			
 			LOGGER.trace("doGetAuthenticationInfo [RMe, {}, {}]", authDomainId, localUsername);
 			Principal principal = rememberUser(authDomainId, localUsername);
-			return new WTAuthenticationInfo(principal, rmet.getUsername().toCharArray(), this.getName());
+			final WTAuthenticationInfo authInfo = new WTAuthenticationInfo(principal, rmet.getUsername().toCharArray(), this.getName());
+			
+			// Forcibly clear authz info for this remembered authentication.
+			// If not done, loadAuthorizationInfo will not fire and authenticating 
+			// subject won't get recognised as Remembered due previous cached roles.
+			clearCachedAuthorizationInfo(authInfo.getPrincipals());
+			
+			return authInfo;
 		}
 		
 		return null;
@@ -623,7 +630,7 @@ public class WTRealm extends AuthorizingRealm {
 			roles.add(WebTopManager.IMPERSONATED_USER_ROLESID);
 			//perms.add(ServicePermission.permissionString(ServicePermission.namespacedName(CoreManifest.ID, "WTADMIN"), ServicePermission.ACTION_ACCESS, "*"));
 		} else if (principal.isRemembered()) {
-			roles.add(WebTopManager.REMRMBERED_USER_ROLESID);
+			roles.add(WebTopManager.REMEMBERED_USER_ROLESID);
 		}
 		
 		// Force core private service permission for any principal
