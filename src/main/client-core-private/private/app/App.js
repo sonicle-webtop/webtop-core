@@ -123,6 +123,11 @@ Ext.define('Sonicle.webtop.core.private.app.App', {
 		});
 		vpc = me.viewport.getController();
 		
+		//if not admin with core.admin interface, put admin button at the end
+		if (sids.length > 2 && (!WT.isAdmin()) && sids[1] == (WT.ID+".admin")) {
+		  sids.push(sids.splice(1, 1)[0]);    // rotate 1 - (n-1) to have 1 at end
+		}
+
 		// Instantiates remaining services
 		for (var i=1; i<sids.length; i++) {
 			me.getDescriptor(sids[i]).getInstance();

@@ -35,6 +35,7 @@ package com.sonicle.webtop.core.app;
 
 import com.sonicle.commons.Check;
 import com.sonicle.security.Principal;
+import com.sonicle.webtop.core.app.model.GenericSubject;
 import com.sonicle.webtop.core.app.shiro.ShiroUtils;
 import com.sonicle.webtop.core.app.shiro.WTRealm;
 import com.sonicle.webtop.core.model.ServicePermission;
@@ -463,7 +464,21 @@ public class RunContext {
 	public static boolean isWebTopDomainAdmin(final Subject subject, final String matchDomainId) {
 		Check.notNull(subject, "subject");
 		Check.notEmpty(matchDomainId, "matchDomainId");
-		return isSysAdmin(subject) || (isWebTopAdmin(subject) && getPrincipal(subject).hasDomainId(matchDomainId));
+		return isSysAdmin(subject) || ( 
+				(isWebTopAdmin(subject) || hasWebTopDomainAdminRole(subject, matchDomainId)) 
+					&& getPrincipal(subject).hasDomainId(matchDomainId)
+		);
+	}
+	
+	private static boolean hasWebTopDomainAdminRole(final Subject subject, final String matchDomainId) {
+		WebTopApp wta = WebTopApp.getInstance();
+		if (wta == null) return false;
+		
+		WebTopManager wtm = wta.getWebTopManager();
+		if (wtm == null) return false;
+		
+		UserProfileId domadm_role_upid = new UserProfileId(matchDomainId, WebTopManager.DOMAINADMIN_ROLEID);
+		return hasRole(subject, wtm.lookupSubjectUidQuietly(domadm_role_upid, GenericSubject.Type.ROLE));
 	}
 	
 	/**
@@ -482,7 +497,7 @@ public class RunContext {
 	 * @throws AuthException When Subject's domain does not match.
 	 */
 	public static void ensureWebTopDomainAdmin(final Subject subject, final String matchDomainId) throws AuthException {
-		ensureIsWebTopAdmin(subject);
+		//ensureIsWebTopAdmin(subject);
 		ensureProfileDomain(subject, matchDomainId, RunContext.AdminScope.DOMAINADMIN);
 	}
 	

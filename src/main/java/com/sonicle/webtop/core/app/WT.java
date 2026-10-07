@@ -779,7 +779,7 @@ public class WT {
 	 * @return The value at the key, if any
 	 */
 	public static char[] lookupSecretStoreValue(final UserProfileId profileId, final String key) {
-		RunContext.ensureProfile(profileId, RunContext.AdminScope.SYSADMIN);
+		RunContext.ensureProfile(profileId, RunContext.AdminScope.DOMAINADMIN);
 		return getWTA().getWebTopManager().lookupSecretValue(profileId, key);
 	}
 	

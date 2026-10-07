@@ -110,7 +110,7 @@ Ext.define('Sonicle.webtop.core.admin.Service', {
 						}
 					}),
 					root: {
-						id: 'root',
+						id: WT.isAdmin()?'root':'domains',
 						expanded: true
 					}
 				},
