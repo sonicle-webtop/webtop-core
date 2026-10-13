@@ -54,6 +54,15 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainUsers', {
 	dirCapPasswordWrite: false,
 	dirCapUsersWrite: false,
 	
+	otpIcons: [
+		'wtadm-icon-roles',			//admin
+		'',							//unconfigured, not required
+		'wt-icon-ok',				//configured ok
+		'wt-icon-warn',				//configuration required
+		'wt-icon-warn-red',			//configuration	requirement overdue
+		'wt-icon-critical'	//exempt
+	],
+	
 	/**
 	 * @private
 	 * @property {Object} pwdPolicies 
@@ -158,6 +167,19 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainUsers', {
 					dataIndex: 'dirDisplayName',
 					header: me.mys.res('domainUsers.gp.dirDisplayName.lbl'),
 					flex: 2
+				}, {
+					xtype: 'soiconcolumn',
+					dataIndex: 'otp',
+					header: WT.getVar('wtOtpEnabled') ? WTF.headerWithGlyphIcon('fas fa-shield') : '',
+					hidden: !WT.getVar('wtOtpEnabled'),
+					getIconCls: function(v,rec) {
+						return me.otpIcons[v];
+					},
+					getTip: function(v) {
+						return me.mys.res('domainUsers.gp.otp.'+v+'.tip');
+					},
+					iconSize: WTU.imgSizeToPx('xs'),
+					width: 40
 				}, {
 					xtype: 'soactioncolumn',
 					items: [
@@ -638,6 +660,9 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainUsers', {
 						profileDisplayName: rec.get('displayName')
 					}
 				});
+			vw.on('viewsave', function(s, success, model, op) {
+				me.lref('gp').getStore().load();
+			});
 			vw.showView();
 		},
 		

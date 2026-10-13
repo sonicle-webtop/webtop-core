@@ -160,6 +160,8 @@ public class OTPManager extends AbstractAppManager<OTPManager> {
 				cus.setOTPSecret(config.otp.getSecretKey());
 				cus.setOTPDelivery(OtpDeliveryMode.EMAIL);
 				cus.setOTPEnabled(true);
+				cus.setOTPRequirementExempt(false);
+				cus.setOTPRequirementExemptSince(null);
 				return true;
 			} else {
 				return false;
@@ -171,6 +173,8 @@ public class OTPManager extends AbstractAppManager<OTPManager> {
 				cus.setOTPSecret(config.otp.getSecretKey());
 				cus.setOTPDelivery(OtpDeliveryMode.GOOGLEAUTH);
 				cus.setOTPEnabled(true);
+				cus.setOTPRequirementExempt(false);
+				cus.setOTPRequirementExemptSince(null);
 				return true;
 			} else {
 				return false;

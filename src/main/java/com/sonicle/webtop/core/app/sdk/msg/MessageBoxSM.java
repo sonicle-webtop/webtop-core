@@ -55,6 +55,7 @@ public class MessageBoxSM extends ServiceMessage {
 	}
 	
 	public static enum MsgType {
+		@SerializedName("fatal") FATAL,
 		@SerializedName("error") ERROR,
 		@SerializedName("warn") WARN,
 		@SerializedName("info") INFO

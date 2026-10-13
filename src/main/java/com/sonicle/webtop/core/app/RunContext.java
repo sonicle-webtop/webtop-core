@@ -470,7 +470,7 @@ public class RunContext {
 		);
 	}
 	
-	private static boolean hasWebTopDomainAdminRole(final Subject subject, final String matchDomainId) {
+	public static boolean hasWebTopDomainAdminRole(final Subject subject, final String matchDomainId) {
 		WebTopApp wta = WebTopApp.getInstance();
 		if (wta == null) return false;
 		
@@ -481,6 +481,17 @@ public class RunContext {
 		return hasRole(subject, wtm.lookupSubjectUidQuietly(domadm_role_upid, GenericSubject.Type.ROLE));
 	}
 	
+	public static boolean hasWebTopDomainAdminRole(final UserProfileId upid) {
+		WebTopApp wta = WebTopApp.getInstance();
+		if (wta == null) return false;
+		
+		WebTopManager wtm = wta.getWebTopManager();
+		if (wtm == null) return false;
+		
+		UserProfileId domadm_role_upid = new UserProfileId(upid.getDomainId(), WebTopManager.DOMAINADMIN_ROLEID);
+		return hasRole(upid, wtm.lookupSubjectUidQuietly(domadm_role_upid, GenericSubject.Type.ROLE));
+	}
+
 	/**
 	 * Make sure that running Subject is an Admin and its domain ID matches with the passed one.
 	 * @param matchDomainId The domain ID to match.

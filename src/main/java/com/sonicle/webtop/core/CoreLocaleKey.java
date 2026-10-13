@@ -123,10 +123,15 @@ public class CoreLocaleKey {
 	public static final String WORD_NONE_FEMALE = "word.none.female";
 	public static final String WORD_YES = "word.yes";
 	public static final String WORD_NO = "word.no";
+	public static final String WORD_ERROR = "word.error";
+	public static final String WORD_WARNING = "word.warning";
 	public static final String INTERNETRECIPIENT_AUTO = "internetRecipient.auto";
 	public static final String INTERNETRECIPIENT_WEBTOP = "internetRecipient.webtop";
 	
 	public static final String DETECT_ATTACH_PATTERNS = "detect.attach.patterns";
+	
+	public static final String OTP_REQUIREMENT_OVER = "otp.requirement.over";
+	public static final String OTP_REQUIREMENT_WITHIN = "otp.requirement.within";
 	
 	public static String TAGS_LABEL(String label) {
 		return "tags."+label;

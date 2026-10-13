@@ -10,6 +10,7 @@ package com.sonicle.webtop.core;
 import com.sonicle.commons.LangUtils;
 import com.sonicle.commons.PathUtils;
 import com.sonicle.commons.RegexUtils;
+import com.sonicle.commons.time.JodaTimeUtils;
 import com.sonicle.commons.web.json.JsonResult;
 import com.sonicle.mail.TransportHostParams;
 import com.sonicle.mail.TransportProtocol;
@@ -27,6 +28,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.regex.Pattern;
 import org.apache.commons.lang3.StringUtils;
+import org.joda.time.LocalDate;
 import org.joda.time.LocalTime;
 
 /**
@@ -256,6 +258,10 @@ public class CoreServiceSettings extends BaseServiceSettings {
 	
 	public boolean getOTPEnabled() {
 		return getBoolean(OTP_ENABLED, false);
+	}
+	
+	public LocalDate getOTPRequiredSince() {
+		return getDate(OTP_REQUIRED_SINCE, (LocalDate) null, JodaTimeUtils.ISO_DATE_PATTERN);
 	}
 	
 	public Boolean getHideLoginDomains() {

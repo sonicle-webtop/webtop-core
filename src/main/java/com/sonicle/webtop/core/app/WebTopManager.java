@@ -4391,6 +4391,7 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 			
 			// Prepare built-in (domain) admin user
 			LOGGER.debug("[{}] Checking built-in domain admin...", domainId);
+			String DOMAINADMIN_ROLE = new UserProfileId(domainId, DOMAINADMIN_ROLEID).toString();
 			if (!usrDao.existByDomainUser(con, domainId, DOMAINADMIN_USERID)) {
 				try {
 					UserBase user = new UserBase();
@@ -4400,7 +4401,7 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 					user.setDisplayName(user.getFirstName() + " (" + domainId + ")");
 					//user.setAssignedGroups(LangUtils.asSet(new UserProfileId(domainId, GROUPID_USERS).toString()));
 					//user.getAssignedGroups().add(new UserProfileId(domainId, GROUPID_USERS).toString());
-					user.setAssignedRoles(LangUtils.asSet(new UserProfileId(domainId, DOMAINADMIN_ROLEID).toString()));
+					user.setAssignedRoles(LangUtils.asSet(DOMAINADMIN_ROLE));
 					BitFlags<UserUpdateOption> options = BitFlags.with(UserUpdateOption.ROLE_ASSOCIATIONS);
 					domainAdminResult = addUser(domainId, DOMAINADMIN_USERID, user, true, true, null, options, null);
 					//domainAdminResult = addUser(domainId, DOMAINADMIN_USERID, user, true, true, null, UserUpdateOption.internalDefaultFlags().unset(UserUpdateOption.SUBJECTS_AS_SID));
@@ -4410,6 +4411,20 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 					LOGGER.error("[{}] Unable to add built-in '{}' user", domainId, DOMAINADMIN_USERID, ex);
 					errors.add(new HomedThrowable(CoreManifest.ID, new WTException(ex, "Unable to add built-in '{}' user", DOMAINADMIN_USERID)));
 				}
+				
+			} else {
+				try {
+					BitFlags<UserGetOption> options = BitFlags.with(UserGetOption.ROLE_ASSOCIATIONS);
+					User user = getUser(domainId, DOMAINADMIN_USERID, options);
+					if (!user.getAssignedRoles().contains(DOMAINADMIN_ROLE)) {
+						user.getAssignedRoles().add(DOMAINADMIN_ROLE);
+						BitFlags<UserUpdateOption> updateOpts = BitFlags.with(UserUpdateOption.ROLE_ASSOCIATIONS);
+						updateUser(domainId, DOMAINADMIN_USERID, user, updateOpts);
+					}
+				} catch (Exception ex) {
+					LOGGER.error("[{}] Unable to assign role '{}' to '{}' user", domainId, DOMAINADMIN_ROLEID, DOMAINADMIN_USERID, ex);
+					errors.add(new HomedThrowable(CoreManifest.ID, new WTException(ex, "Unable to assign role '{}' to '{}' user", DOMAINADMIN_ROLEID, DOMAINADMIN_USERID)));
+				} 
 			}
 			
 		} catch (Exception ex) {

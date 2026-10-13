@@ -37,6 +37,7 @@ import com.sonicle.commons.EnumUtils;
 import com.sonicle.commons.LangUtils;
 import com.sonicle.commons.db.DbUtils;
 import com.sonicle.commons.flags.BitFlags;
+import com.sonicle.commons.time.JodaTimeUtils;
 import com.sonicle.commons.web.Crud;
 import com.sonicle.commons.web.json.JsonResult;
 import com.sonicle.commons.web.ServletUtils;
@@ -82,6 +83,7 @@ import javax.servlet.http.HttpServletResponse;
 import net.sf.uadetector.ReadableUserAgent;
 import org.apache.commons.lang3.StringUtils;
 import org.joda.time.DateTimeZone;
+import org.joda.time.LocalDate;
 import org.joda.time.format.DateTimeFormatter;
 import org.slf4j.Logger;
 
@@ -100,7 +102,7 @@ public class UserOptionsService extends BaseUserOptionsService {
 			String crud = ServletUtils.getStringParameter(request, "crud", true);
 			
 			CoreManager coreMgr = WT.getCoreManager(getTargetProfileId());
-			//CoreServiceSettings ss = new CoreServiceSettings(CoreManifest.ID, getTargetDomainId());
+			CoreServiceSettings ss = new CoreServiceSettings(CoreManifest.ID, getTargetDomainId());
 			CoreUserSettings us = new CoreUserSettings(getTargetProfileId());
 			
 			User user = coreMgr.getUser(BitFlags.noneOf(UserGetOption.class));
@@ -174,6 +176,8 @@ public class UserOptionsService extends BaseUserOptionsService {
 				// OTP
 				OTPManager otpMgr = coreMgr.getOTPManager();
 				jso.otpEnabled = otpMgr.isEnabled(getTargetProfileId());
+				jso.otpRequirementExempt = us.getOTPRequirementExempt();
+				jso.otpRequirementTemporarilyExempt = us.getOTPRequirementExemptSince() != null;
 				jso.otpDelivery = EnumUtils.toSerializedName(otpMgr.getDeliveryMode(getTargetProfileId()));
 				jso.otpEmailAddress = otpMgr.getEmailAddress(getTargetProfileId());
 				
@@ -193,6 +197,7 @@ public class UserOptionsService extends BaseUserOptionsService {
 				
 				jso.otpDeviceIsTrusted = isTrusted;
 				jso.otpDeviceTrustedOn = trustedOn;
+				if (ss.getOTPRequiredSince() != null) jso.otpRequiredSince = ss.getOTPRequiredSince().toString();
 				
 				// Sync
 				jso.syncAlertEnabled = us.getDevicesSyncAlertEnabled();
@@ -287,6 +292,17 @@ public class UserOptionsService extends BaseUserOptionsService {
 					if (pl.map.has("upiCustom3")) upi.setCustom03(pl.data.upiCustom3);
 					coreMgr.updateUserPersonalInfo(upi);
 				}
+				
+				//OTP
+				boolean otpRequirementTemporarilyExemptDeleted = false;
+				if (pl.map.has("otpRequirementExempt")) {
+					us.setOTPRequirementExempt(pl.data.otpRequirementExempt);
+					if (!pl.data.otpRequirementExempt) {
+						us.setOTPRequirementExemptSince(null);
+						otpRequirementTemporarilyExemptDeleted = true;
+					}
+				}
+				if (!otpRequirementTemporarilyExemptDeleted && pl.map.has("otpRequirementTemporarilyExempt")) us.setOTPRequirementExemptSince(pl.data.otpRequirementTemporarilyExempt ? LocalDate.now() : (LocalDate) null);
 				
 				// sync
 				if (pl.map.has("syncAlertEnabled")) us.setDevicesSyncAlertEnabled(pl.data.syncAlertEnabled);

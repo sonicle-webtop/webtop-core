@@ -68,7 +68,9 @@ import com.sonicle.security.auth.directory.DirectoryCapability;
 import com.sonicle.webtop.core.CoreLocaleKey;
 import com.sonicle.webtop.core.CoreManager;
 import com.sonicle.webtop.core.CoreServiceSettings;
+import com.sonicle.webtop.core.CoreSettings;
 import com.sonicle.webtop.core.CoreSettings.LauncherLink;
+import com.sonicle.webtop.core.CoreUserSettings;
 import com.sonicle.webtop.core.admin.bol.js.JsAIUsage;
 import com.sonicle.webtop.core.admin.bol.js.JsApiKey;
 import com.sonicle.webtop.core.admin.bol.js.JsDataSource;
@@ -772,10 +774,36 @@ public class Service extends BaseService {
 			String domainId = ServletUtils.getStringParameter(request, "domainId", true);
 			String crud = ServletUtils.getStringParameter(request, "crud", true);
 			CoreAdminManager admMgr = WT.getCoreAdminManager(RunContext.buildDomainAdminProfileId(domainId));
+			
 			if (Crud.READ.equals(crud)) {
+				CoreServiceSettings css = new CoreServiceSettings(CoreManifest.ID, domainId);
 				List<JsGridUser> items = new ArrayList<>();
 				for (Map.Entry<String, PlatformUser> entry : admMgr.listPlatformUsers(WebTopManager.PlatformUsersPerspective.DIRECTORY).entrySet()) {
-					items.add(new JsGridUser(entry.getKey(), entry.getValue()));
+					JsGridUser jsgu = new JsGridUser(entry.getKey(), entry.getValue());
+					UserProfileId profileId = new UserProfileId(domainId, jsgu.userId);
+					if (jsgu.exist && jsgu.enabled && css.getOTPEnabled()) {
+						if (RunContext.hasWebTopDomainAdminRole(profileId)) jsgu.otp = JsGridUser.OTP_ADMIN;
+						else if (css.getOTPRequiredSince()!=null) {
+							CoreUserSettings cus = new CoreUserSettings(profileId);
+							if (cus.getOTPEnabled()) jsgu.otp = JsGridUser.OTP_CONFIGURED;
+							else if (cus.getOTPRequirementExempt()) {
+								jsgu.otp = JsGridUser.OTP_REQUIREMENT_EXEMPT;
+								if (cus.getOTPRequirementExemptSince() != null) {
+									LocalDate lastDate = cus.getOTPRequirementExemptSince().plusDays(3);
+									LocalDate now = LocalDate.now();
+									if (now.isAfter(lastDate)) jsgu.otp = JsGridUser.OTP_CONFIGURATION_REQUIREMENT_OVERDUE;
+									else jsgu.otp = JsGridUser.OTP_CONFIGURATION_REQUIRED;
+								}
+							}
+							else {
+								LocalDate lastDate = css.getOTPRequiredSince().minusDays(1);
+								LocalDate now = LocalDate.now();
+								if (now.isAfter(lastDate)) jsgu.otp = JsGridUser.OTP_CONFIGURATION_REQUIREMENT_OVERDUE;
+								else jsgu.otp = JsGridUser.OTP_CONFIGURATION_REQUIRED;
+							}
+						}
+					}
+					items.add(jsgu);
 				}
 				new JsonResult(items).printTo(out);	
 				

@@ -152,6 +152,8 @@ import com.sonicle.webtop.core.app.model.UILookAndFeel;
 import com.sonicle.webtop.core.app.model.UIPreset;
 import com.sonicle.webtop.core.app.model.UITheme;
 import com.sonicle.webtop.core.app.sdk.WTUnsupportedOperationException;
+import com.sonicle.webtop.core.app.sdk.msg.MessageBoxSM;
+import com.sonicle.webtop.core.app.servlet.Otp;
 import com.sonicle.webtop.core.app.servlet.ServletHelper;
 import com.sonicle.webtop.core.bol.js.JsUIPreset;
 import com.sonicle.webtop.core.products.ConnectProduct;
@@ -292,12 +294,49 @@ public class Service extends BaseService implements EventListener {
 	@Override
 	public void ready() throws WTException {
 		final UserProfile profile = getEnv().getProfile();
+		Locale locale = profile.getLocale();
+		UserProfileId upid = new UserProfileId(profile.getDomainId(), profile.getUserId());
+		String dateFormat = profile.getData().toProfileI18n().getDateFormat();
 		
 		if (WT.isLicenseUsageFail(coreMgr.CUSTOM_FIELD_PRODUCT, profile.getUserId())) {
-			getEnv().notify(new LicenseUsageFailSM(profile.getLocale(), coreMgr.CUSTOM_FIELD_PRODUCT));
+			getEnv().notify(new LicenseUsageFailSM(locale, coreMgr.CUSTOM_FIELD_PRODUCT));
 		}
 		if (WT.isLicenseUsageFail(coreMgr.AUDIT_PRODUCT, profile.getUserId())) {
-			getEnv().notify(new LicenseUsageFailSM(profile.getLocale(), coreMgr.AUDIT_PRODUCT));
+			getEnv().notify(new LicenseUsageFailSM(locale, coreMgr.AUDIT_PRODUCT));
+		}
+		
+		if (ss.getOTPEnabled() && !(RunContext.isImpersonated() || RunContext.isSysAdmin() || RunContext.hasWebTopDomainAdminRole(upid)) && !us.getOTPEnabled()) {
+			LocalDate otprs = ss.getOTPRequiredSince();
+			if (otprs != null) {
+				if (!us.getOTPRequirementExempt()) {
+					notifyOTPRequriement(locale, dateFormat, otprs.minusDays(1));
+				}
+				else {
+					LocalDate since = us.getOTPRequirementExemptSince();
+					if (since != null) {
+						notifyOTPRequriement(locale, dateFormat, since.plusDays(3));
+					}
+				}
+			}
+		}
+	}
+	
+	private void notifyOTPRequriement(Locale locale, String dateFormat, LocalDate lastDate) {
+		LocalDate now = LocalDate.now();
+		if (now.isAfter(lastDate)) {
+			getEnv().notify(new MessageBoxSM(
+				MessageBoxSM.MsgType.FATAL, 
+				lookupResource(locale, CoreLocaleKey.WORD_ERROR),
+				lookupResource(locale, CoreLocaleKey.OTP_REQUIREMENT_OVER)
+			));
+		} else {
+			String fmtString = lookupResource(locale, CoreLocaleKey.OTP_REQUIREMENT_WITHIN);
+			String sdate = JodaTimeUtils.print(JodaTimeUtils.createFormatter(dateFormat), lastDate);
+			getEnv().notify(new MessageBoxSM(
+				MessageBoxSM.MsgType.WARN, 
+				lookupResource(locale, CoreLocaleKey.WORD_WARNING),
+				LangUtils.formatMessage(fmtString, sdate)
+			));
 		}
 	}
 	
@@ -458,6 +497,8 @@ public class Service extends BaseService implements EventListener {
 		if (aiToolConfig != null) {
 			vars.put("aiTool", buildClientAITool(aiToolConfig));
 		}
+		
+		if (ss.getOTPRequiredSince() != null) vars.put("wtOtpRequiredSince", ss.getOTPRequiredSince().toString());
 
 		return vars;
 	}

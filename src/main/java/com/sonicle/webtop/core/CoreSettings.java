@@ -500,6 +500,28 @@ public class CoreSettings {
 	public static final String OTP_ENABLED = "otp.enabled";
 	
 	/**
+	 * [domain+system]
+	 * [date]
+	 * 2FA required since
+	 */
+	public static final String OTP_REQUIRED_SINCE = "otp.required.since";
+	
+	/**
+	 * [user]
+	 * [boolean]
+	 * 2FA requirement exemption for a user
+	 */
+	public static final String OTP_REQUIREMENT_EXEMPT = "otp.requirement.exempt";
+
+	/**
+	 * [user]
+	 * [date]
+	 * 2FA requirement exemption for a user since
+	 * Useful to implement temporary exemption for some days after a date
+	 */
+	public static final String OTP_REQUIREMENT_EXEMPT_SINCE = "otp.requirement.exempt.since";
+
+	/**
 	 * [system]
 	 * [integer]
 	 * Overrides default provider key validation interval (KVI) in seconds.

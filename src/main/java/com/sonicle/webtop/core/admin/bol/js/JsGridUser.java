@@ -39,6 +39,14 @@ import com.sonicle.webtop.core.app.model.PlatformUser;
  * @author malbinola
  */
 public class JsGridUser {
+	
+	public static final int OTP_ADMIN = 0;
+	public static final int OTP_UNCONFIGURED = 1;
+	public static final int OTP_CONFIGURED = 2;
+	public static final int OTP_CONFIGURATION_REQUIRED = 3;
+	public static final int OTP_CONFIGURATION_REQUIREMENT_OVERDUE = 4;
+	public static final int OTP_REQUIREMENT_EXEMPT = 5;
+	
 	public String userId;
 	public String userSid;
 	public Boolean exist;
@@ -47,6 +55,7 @@ public class JsGridUser {
 	public String dirFirstName;
 	public String dirLastName;
 	public String dirDisplayName;
+	public Integer otp = OTP_UNCONFIGURED;
 	
 	public JsGridUser(String userId, PlatformUser platformUser) {
 		this.userId = userId;

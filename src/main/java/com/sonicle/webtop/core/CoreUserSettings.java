@@ -36,6 +36,7 @@ package com.sonicle.webtop.core;
 import com.sonicle.commons.EnumUtils;
 import com.sonicle.commons.LangUtils;
 import com.sonicle.commons.time.JavaTimeUtils;
+import com.sonicle.commons.time.JodaTimeUtils;
 import static com.sonicle.webtop.core.CoreSettings.*;
 import com.sonicle.webtop.core.app.CoreManifest;
 import com.sonicle.webtop.core.app.SettingsManager;
@@ -43,6 +44,7 @@ import com.sonicle.webtop.core.sdk.BaseUserSettings;
 import com.sonicle.webtop.core.sdk.UserProfileId;
 import com.sonicle.webtop.core.xmpp.PresenceStatus;
 import org.joda.time.DateTime;
+import org.joda.time.LocalDate;
 
 /**
  *
@@ -262,11 +264,29 @@ public class CoreUserSettings extends BaseUserSettings {
 	}
 	
 	public boolean getOTPEnabled() {
-		return getBoolean(OTP_ENABLED, false);
+		return getBoolean(OTP_ENABLED, false, false);
 	}
 	
 	public boolean setOTPEnabled(boolean value) {
 		return setBoolean(OTP_ENABLED, value);
+	}
+	
+	public boolean getOTPRequirementExempt() {
+		return getBoolean(OTP_REQUIREMENT_EXEMPT, false);
+	}
+	
+	public boolean setOTPRequirementExempt(boolean value) {
+		return setBoolean(OTP_REQUIREMENT_EXEMPT, value ? Boolean.TRUE : null);
+	}
+	
+	public LocalDate getOTPRequirementExemptSince() {
+		return getDate(OTP_REQUIREMENT_EXEMPT_SINCE, (LocalDate) null, JodaTimeUtils.ISO_DATE_PATTERN);
+	}
+	
+	public boolean setOTPRequirementExemptSince(LocalDate date) {
+		String sdate = null;
+		if (date != null) sdate = JodaTimeUtils.print(JodaTimeUtils.ISO_LOCALDATE_FMT, date);
+		return setString(OTP_REQUIREMENT_EXEMPT_SINCE, sdate);
 	}
 	
 	public OtpDeliveryMode getOTPDelivery() {

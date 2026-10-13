@@ -68,7 +68,25 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 			imSoundOnFriendConnect: WTF.checkboxBind('record', 'imSoundOnFriendConnect'),
 			imSoundOnFriendDisconnect: WTF.checkboxBind('record', 'imSoundOnFriendDisconnect'),
 			imSoundOnMessageReceived: WTF.checkboxBind('record', 'imSoundOnMessageReceived'),
-			imSoundOnMessageSent: WTF.checkboxBind('record', 'imSoundOnMessageSent')
+			imSoundOnMessageSent: WTF.checkboxBind('record', 'imSoundOnMessageSent'),
+			otpRequirementExempt: WTF.checkboxBind('record', 'otpRequirementExempt'),
+			otpRequirementTemporarilyExempt: WTF.checkboxBind('record', 'otpRequirementTemporarilyExempt'),
+			otpTempExemptValue: {
+				bind: {
+					exempt: '{otpRequirementExempt}',
+					tempExempt: '{otpRequirementTemporarilyExempt}'
+				},
+				get: function(data) {
+					return data.exempt ? data.tempExempt : false;
+				},
+				set: function(value) {
+					this.set('otpRequirementTemporarilyExempt', value);
+				}
+			},
+			
+			otpIsExemptHidden: WTF.foFieldGet('otpRequiredSince', function(o) {
+				return !( (WT.isAdmin() || WT.isProfileImpersonated() || WT.getApp().getService('com.sonicle.webtop.core.admin')) && o.otpRequiredSince);
+			})
 		}
 	},
 	
@@ -763,6 +781,44 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 			title: WT.res('opts.otp.tit'),
 			disabled: !WT.getVar('wtOtpEnabled'),
 			items: [{
+				xtype: 'container',
+				layout: 'form',
+				bind: { hidden: '{otpIsExemptHidden}' },
+				items: [{
+					xtype: 'checkbox',
+					boxLabel: WT.res('opts.otp.fld-requirement-exempt.tit'),
+					bind: '{otpRequirementExempt}',
+					listeners: {
+						change: {
+							fn: function(s) {
+								//TODO: workaround...il modello veniva salvato prima dell'aggionamento
+								Ext.defer(function() {
+									me.onBlurAutoSave(s);
+								}, 200);
+							},
+							scope: me
+						}
+					}
+				}, {
+					xtype: 'checkbox',
+					boxLabel: WT.res('opts.otp.fld-requirement-temporarily-exempt.tit'),
+					bind: {
+						value: '{otpTempExemptValue}',
+						disabled: '{!otpRequirementExempt}'
+					},
+					listeners: {
+						change: {
+							fn: function(s) {
+								//TODO: workaround...il modello veniva salvato prima dell'aggionamento
+								Ext.defer(function() {
+									me.onBlurAutoSave(s);
+								}, 200);
+							},
+							scope: me
+						}
+					}
+				}]
+			},{
 				xtype: 'container',
 				layout: 'form',
 				items: [{

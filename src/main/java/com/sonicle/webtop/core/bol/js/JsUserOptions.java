@@ -47,6 +47,7 @@ public class JsUserOptions extends JsUserOptionsBase {
 	public Boolean permPersonalAIManage; // Read-only
 	public Boolean dirCapPasswordWrite; // Read-only
 	public String dirPasswordPolicies; // Read-only
+	public String otpRequiredSince; // Read-only
 	
 	public String displayName;
 	public String layout;
@@ -95,6 +96,8 @@ public class JsUserOptions extends JsUserOptionsBase {
 	public Integer syncAlertTolerance;
 	
 	public Boolean otpEnabled;
+	public Boolean otpRequirementExempt;
+	public Boolean otpRequirementTemporarilyExempt;
 	public String otpDelivery;
 	public String otpEmailAddress;
 	public Boolean otpDeviceIsTrusted;

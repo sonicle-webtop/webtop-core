@@ -142,6 +142,13 @@ Ext.define('Sonicle.webtop.core.Service', {
 				WT.error(pl.message, {title: pl.title});
 			} else if ('warn' === pl.type) {
 				WT.warn(pl.message, {title: pl.title});
+			} else if ('fatal' === pl.type) {
+				WT.error(pl.message, {
+					title: pl.title,
+					fn: function() {
+						WT.logout();
+					}
+				});
 			} else {
 				WT.info(pl.message, {title: pl.title});
 			}
