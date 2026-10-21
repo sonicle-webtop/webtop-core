@@ -190,6 +190,10 @@
 .wt-icon-warn { background-image: url('warn_16.svg') !important; background-size: contain; }
 .wt-icon-warn-red { background-image: url('warn-red_16.svg') !important; background-size: contain; }
 .wt-icon-critical { background-image: url('critical_16.svg') !important; background-size: contain; }
+.wt-icon-ban { background-image: url('ban_16.svg') !important; background-size: contain; }
+.wt-icon-exempt { background-image: url('exempt_16.svg') !important; background-size: contain; }
+.wt-icon-admin-shield { background-image: url('role_16.svg') !important; background-size: contain; }
+.wt-icon-alert { background-image: url('alert_16.svg') !important; background-size: contain; }
 .wt-icon-status-up-green { background-image: url('status-up-green_16.svg') !important; background-size: contain; }
 .wt-icon-status-up-blue { background-image: url('status-up-blue_16.svg') !important; background-size: contain; }
 .wt-icon-status-down-red { background-image: url('status-down-red_16.svg') !important; background-size: contain; }

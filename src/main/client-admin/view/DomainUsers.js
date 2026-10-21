@@ -55,12 +55,12 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainUsers', {
 	dirCapUsersWrite: false,
 	
 	otpIcons: [
-		'wtadm-icon-roles',			//admin
+		'wt-icon-admin-shield',		//admin
 		'',							//unconfigured, not required
 		'wt-icon-ok',				//configured ok
-		'wt-icon-warn',				//configuration required
+		'wt-icon-alert',			//configuration required
 		'wt-icon-warn-red',			//configuration	requirement overdue
-		'wt-icon-critical'	//exempt
+		'wt-icon-exempt'			//exempt
 	],
 	
 	/**
