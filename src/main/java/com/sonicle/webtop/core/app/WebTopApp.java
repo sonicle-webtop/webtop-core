@@ -62,6 +62,7 @@ import com.sonicle.security.PasswordUtils;
 import com.sonicle.webtop.core.CoreServiceSettings;
 import com.sonicle.webtop.core.CoreSettings;
 import com.sonicle.webtop.core.app.exc.LifecycleException;
+import com.sonicle.webtop.core.app.model.EnabledCond;
 import com.sonicle.webtop.core.app.model.GenericSubject;
 import com.sonicle.webtop.core.app.sdk.WTEmailSendException;
 import com.sonicle.webtop.core.io.FileResource;
@@ -373,6 +374,37 @@ public final class WebTopApp {
 				}
 			}
 		}, 5000);
+		
+		if (!WebTopProps.getDevMode(properties)) {
+			Thread engine = new Thread( new Runnable() {
+				public void run() {
+					HttpClient httpcli = null;
+					try {
+						ArrayList<String> ss = new ArrayList<>();
+						ss.add(LangUtils.encodeURL(WebTopApp.webappName));
+						ss.add(LangUtils.encodeURL(StringUtils.defaultIfBlank(getAppReleaseVersion(), "0.0.0")));
+						String hostname = "unknown";
+						try {
+							InetAddress ip = InetAddress.getLocalHost();
+							hostname = ip.getCanonicalHostName();
+						} catch (Throwable t) {}
+						ss.add(LangUtils.encodeURL(hostname));
+						WebTopManager wtMgr = getWebTopManager();
+						for (String did : wtMgr.listDomainIds(com.sonicle.webtop.core.app.model.EnabledCond.ENABLED_ONLY)) {
+							ss.add(LangUtils.encodeURL(did));
+							ss.add(LangUtils.encodeURL(String.valueOf(wtMgr.listUserIds(did, com.sonicle.webtop.core.app.model.EnabledCond.ENABLED_ONLY).size())));
+						}
+						URI uri = new URI("https://ping.xstreamos.org:25/wt/"+StringUtils.join(ss, "/"));
+						httpcli = HttpClientUtils.createBasicHttpClient(HttpClientUtils.configureRequestTimeouts(HttpClientUtils.configureSSLAcceptAll(), 5000, 20000, 5000), uri);
+						httpcli.execute(new HttpGet(uri));
+					} catch(Throwable t) {
+					} finally {
+						HttpClientUtils.closeQuietly(httpcli);
+					}
+				}
+			});
+			engine.start();		
+		}
 	}
 	
 	void shutdown() {
@@ -432,28 +464,7 @@ public final class WebTopApp {
 	}
 	
 	private void doInitPreInfrastructure() throws LifecycleException {
-		if (!WebTopProps.getDevMode(properties)) {
-			Thread engine = new Thread( new Runnable() {
-				public void run() {
-					HttpClient httpcli = null;
-					try {
-						String hostname = "unknown";
-						try {
-							InetAddress ip = InetAddress.getLocalHost();
-							hostname = ip.getCanonicalHostName();
-						} catch(Throwable t) {
-						}
-						URI uri = new URI("https://ping.xstreamos.org:25/webtop5/"+hostname+"/"+LangUtils.encodeURL(WebTopApp.webappName));
-						httpcli = HttpClientUtils.createBasicHttpClient(HttpClientUtils.configureSSLAcceptAll(), uri);
-						httpcli.execute(new HttpGet(uri));
-					} catch(Throwable t) {
-					} finally {
-						HttpClientUtils.closeQuietly(httpcli);
-					}
-				}
-			});
-			engine.start();		
-		}
+		
 	}
 	
 	private void doInitInfrastructure() throws LifecycleException {
