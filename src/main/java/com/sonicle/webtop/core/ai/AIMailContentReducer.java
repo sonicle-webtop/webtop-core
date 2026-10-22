@@ -42,6 +42,7 @@ import org.jsoup.nodes.Comment;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.nodes.Node;
+import org.jsoup.nodes.TextNode;
 import org.jsoup.safety.Whitelist;
 import org.jsoup.select.NodeTraversor;
 import org.jsoup.select.NodeVisitor;
@@ -74,15 +75,26 @@ import org.jsoup.select.NodeVisitor;
  */
 public class AIMailContentReducer {
 
-	private static final Pattern HIDDEN_STYLE = Pattern.compile(
-		"(^|;)\\s*(display\\s*:\\s*none"
-		+ "|visibility\\s*:\\s*hidden"
-		+ "|opacity\\s*:\\s*0(?:\\.0+)?"
-		+ "|font-size\\s*:\\s*0(?:pt|px|em|rem)?"
-		+ "|height\\s*:\\s*0(?:pt|px)?"
-		+ "|width\\s*:\\s*0(?:pt|px)?"
-		+ ")\\s*(;|$)",
-		Pattern.CASE_INSENSITIVE);
+	// Styles that hide the WHOLE subtree: children inherit and cannot become visible again
+	private static final Pattern HIDDEN_SUBTREE_STYLE = Pattern.compile(
+			"(^|;)\\s*(display\\s*:\\s*none"
+			+ "|visibility\\s*:\\s*hidden"
+			+ "|opacity\\s*:\\s*0(?:\\.0+)?"
+			+ "|height\\s*:\\s*0(?:pt|px)?"
+			+ "|width\\s*:\\s*0(?:pt|px)?"
+			+ ")\\s*(;|$)",
+			Pattern.CASE_INSENSITIVE);
+		
+	// font-size:0 hides only text that does NOT get a non-zero size from a closer element:
+	// MJML/marketing mails legitimately use it on container tds/divs with real sizes inside
+	private static final Pattern FONT_ZERO_STYLE = Pattern.compile(
+			"(^|;)\\s*font-size\\s*:\\s*0(?:\\.0+)?(?:pt|px|em|rem)?\\s*(;|$)",
+			Pattern.CASE_INSENSITIVE);
+	
+	// Any font-size declaration with a NON-zero value (used to detect visibility restored on a child)
+	private static final Pattern FONT_NONZERO_STYLE = Pattern.compile(
+			"(^|;)\\s*font-size\\s*:\\s*(?!0(?:\\.0+)?(?:pt|px|em|rem)?\\s*(?:;|$))[^;]+",
+			Pattern.CASE_INSENSITIVE);
 
 	private static final Pattern COLOR_DECL = Pattern.compile(
 		"(?i)(?:^|;)\\s*(color|background-color|background)\\s*:\\s*([^;]+)");
@@ -168,16 +180,34 @@ public class AIMailContentReducer {
 		return d.equals("0") || d.equals("1");
 	}
 
+	// Removes only the text rendered at 0px: direct text nodes, and text of
+	 // descendants that don't re-declare a non-zero font-size. Subtrees that DO
+	 // re-declare one are visible and kept untouched.
+	 private static void stripZeroFontText(Element el) {
+			 for (Node child : new ArrayList<>(el.childNodes())) {
+					 if (child instanceof TextNode) {
+							 child.remove();
+					 } else if (child instanceof Element) {
+							 Element ce = (Element) child;
+							 if (!FONT_NONZERO_STYLE.matcher(ce.attr("style")).find()) {
+									 stripZeroFontText(ce);
+							 }
+					 }
+			 }
+	 }
+		
 	private static void removeHiddenElements(Document doc) {
-		for (Element el : new ArrayList<>(doc.getAllElements())) {
-			String style = el.attr("style");
-			if (style.isEmpty()) continue;
-			if (HIDDEN_STYLE.matcher(style).find()) {
-				el.remove();
+			for (Element el : new ArrayList<>(doc.getAllElements())) {
+					String style = el.attr("style");
+					if (style.isEmpty()) continue;
+					if (HIDDEN_SUBTREE_STYLE.matcher(style).find()) {
+							el.remove();
+					} else if (FONT_ZERO_STYLE.matcher(style).find()) {
+							stripZeroFontText(el);
+					}
 			}
-		}
 	}
-
+		
 	private static void removeComments(Document doc) {
 		final List<Node> toRemove = new ArrayList<>();
 		new NodeTraversor(new NodeVisitor() {

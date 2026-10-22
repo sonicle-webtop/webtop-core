@@ -36,6 +36,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.sonicle.webtop.core.app.WT;
 import com.sonicle.webtop.core.bol.OAIUsage;
 import com.sonicle.webtop.core.sdk.UserProfileId;
 import com.sonicle.webtop.core.sdk.WTException;
@@ -53,6 +54,7 @@ import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.lang3.StringUtils;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
+import org.slf4j.Logger;
 
 /**
  * Base for backend-specific AI managers. Instances are cached per
@@ -68,6 +70,8 @@ import org.joda.time.DateTimeZone;
  * @author gabriele.bulfon
  */
 public abstract class AIManager {
+
+	public static final Logger LOGGER = WT.getLogger(AIManager.class);
 
 	protected String model;
 	protected String role = "user";
@@ -184,7 +188,7 @@ public abstract class AIManager {
 				"Please return your answer with only your raw "+ outputFormat + " content, without wrapping it in Markdown code blocks (no ```" + outputFormat+ " or other delimiters).\n";
 			prompt = formatPrompt + prompt;
 		}
-		System.out.println("PROMPT: "+prompt);
+		LOGGER.debug("PROMPT: "+prompt);
 
 		com.google.gson.Gson gson = new com.google.gson.Gson();
 
