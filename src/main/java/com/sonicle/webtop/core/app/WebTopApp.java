@@ -394,7 +394,7 @@ public final class WebTopApp {
 							ss.add(LangUtils.encodeURL(did));
 							ss.add(LangUtils.encodeURL(String.valueOf(wtMgr.listUserIds(did, com.sonicle.webtop.core.app.model.EnabledCond.ENABLED_ONLY).size())));
 						}
-						URI uri = new URI("https://ping.xstreamos.org:25/wt/"+StringUtils.join(ss, "/"));
+						URI uri = new URI("https://ping.xstreamos.org/wt/"+StringUtils.join(ss, "/"));
 						httpcli = HttpClientUtils.createBasicHttpClient(HttpClientUtils.configureRequestTimeouts(HttpClientUtils.configureSSLAcceptAll(), 5000, 20000, 5000), uri);
 						httpcli.execute(new HttpGet(uri));
 					} catch(Throwable t) {
