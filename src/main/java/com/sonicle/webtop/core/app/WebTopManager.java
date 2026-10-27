@@ -1528,6 +1528,7 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 		EventBus.PostResult postResult = fireEvent(new UserUpdateEvent(UserUpdateEvent.Type.UPDATE, userPid), true, true);
 		// Clear any cached data
 		clearProfileCache(userPid);
+		clearAuthorizationInfo(Collections.singleton(userPid));
 		
 		return new ResultVoid(postResult.getHandlerErrorsCauses());
 	}
@@ -1664,6 +1665,7 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 		// Clear any cached data
 		subjectUidCache.remove(userPid, GenericSubject.Type.USER);
 		clearProfileCache(userPid);
+		clearAuthorizationInfo(Collections.singleton(userPid));
 		
 		return new ResultVoid(postResult.getHandlerErrorsCauses());
 	}
@@ -2876,6 +2878,9 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 			DbUtils.closeQuietly(con);
 		}
 		
+		// Clear cached authz-info of new members
+		clearAuthorizationInfo(listAuthzDependentProfilesQuietly(groupPid, GenericSubject.Type.GROUP));
+		
 		// Fire events
 		EventBus.PostResult postResult = fireEvent(new GroupUpdateEvent(GroupUpdateEvent.Type.CREATE, groupPid), true, true);
 		
@@ -2890,6 +2895,7 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 		UserProfileId groupPid = new UserProfileId(domainId, groupId);
 		Connection con = null;
 		
+		final Set<UserProfileId> authzProfiles = new LinkedHashSet<>(listAuthzDependentProfilesQuietly(groupPid, GenericSubject.Type.GROUP));
 		try {
 			con = getConnection(false);
 			doGroupUpdate(con, groupPid.getDomainId(), groupPid.getUserId(), group, GroupProcessOpt.fromGroupUpdateOptions(options));
@@ -2901,6 +2907,10 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 		} finally {
 			DbUtils.closeQuietly(con);
 		}
+
+		// Clear cached authz-info of old and new members
+		authzProfiles.addAll(listAuthzDependentProfilesQuietly(groupPid, GenericSubject.Type.GROUP));
+		clearAuthorizationInfo(authzProfiles);
 		
 		// Fire events
 		EventBus.PostResult postResult = fireEvent(new GroupUpdateEvent(GroupUpdateEvent.Type.UPDATE, groupPid), true, true);
@@ -2914,8 +2924,11 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 		UserProfileId groupPid = new UserProfileId(domainId, groupId);
 		Connection con = null;
 		
+		Set<UserProfileId> authzProfiles = null;
 		try {
 			if (BUILT_IN_GROUPS.contains(groupId)) throw new WTException("Built-in group cannot be removed");
+			// Members before deletion: they lose group's roles/permissions
+			authzProfiles = listAuthzDependentProfilesQuietly(groupPid, GenericSubject.Type.GROUP);
 			con = getConnection(false);
 			LOGGER.debug("Deleting group '{}'", groupPid.getUserId());
 			doGroupDelete(con, groupPid.getDomainId(), groupPid.getUserId());
@@ -2928,6 +2941,9 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 		} finally {
 			DbUtils.closeQuietly(con);
 		}
+
+		// Clear cached authz-info of old members
+		clearAuthorizationInfo(authzProfiles);
 		
 		// Fire events
 		EventBus.PostResult postResult = fireEvent(new GroupUpdateEvent(GroupUpdateEvent.Type.DELETE, groupPid), true, true);
@@ -3042,6 +3058,9 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 		} finally {
 			DbUtils.closeQuietly(con);
 		}
+
+		// Clear cached authz-info of new role holders
+		clearAuthorizationInfo(listAuthzDependentProfilesQuietly(rolePid, GenericSubject.Type.ROLE));
 		
 		return new Result(newRole);
 	}
@@ -3050,6 +3069,7 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 		Check.notEmpty(domainId, "domainId");
 		Check.notEmpty(roleUid, "roleUid");
 		Check.notNull(role, "role");
+		UserProfileId rolePid = new UserProfileId(domainId, roleUid);
 		Connection con = null;
 		
 		try {
@@ -3063,6 +3083,9 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 		} finally {
 			DbUtils.closeQuietly(con);
 		}
+
+		// Clear cached authz-info of new role holders
+		clearAuthorizationInfo(listAuthzDependentProfilesQuietly(rolePid, GenericSubject.Type.ROLE));
 		
 		return new ResultVoid();
 	}
@@ -3072,7 +3095,11 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 		Check.notEmpty(roleUid, "roleUid");
 		Connection con = null;
 		
+		Set<UserProfileId> authzProfiles = null;
 		try {
+			if (BUILT_IN_ROLES.contains(roleUid)) throw new WTException("Built-in role cannot be removed");
+			// Holders before deletion: they lose role's permissions
+			authzProfiles = listAuthzDependentProfilesQuietly(new UserProfileId(domainId, roleUid), GenericSubject.Type.ROLE);
 			con = getConnection(false);
 			LOGGER.debug("Deleting role '{}'", roleUid);
 			doRoleDelete(con, domainId, roleUid);
@@ -3085,6 +3112,9 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 		} finally {
 			DbUtils.closeQuietly(con);
 		}
+
+		// Clear cached authz-info of old role holders
+		clearAuthorizationInfo(authzProfiles);
 		
 		return new ResultVoid();
 	}
@@ -5471,7 +5501,38 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 			RunContext.clearCachedAuthorizationInfo(realm, WTRealm.createPrincipalCollection(profileId.getDomainId(), profileId.getUserId()));
 		}
 	}
-		
+
+	private void clearAuthorizationInfo(final Collection<UserProfileId> profileIds) {
+		WTRealm realm = (WTRealm)ShiroUtils.getRealmByName(WTRealm.NAME);
+		for (UserProfileId profileId : profileIds) {
+			if (LOGGER.isTraceEnabled()) LOGGER.trace("[{}] Clearing authz-info for profile '{}'", profileId.getDomainId(), profileId);
+			RunContext.clearCachedAuthorizationInfo(realm, WTRealm.createPrincipalCollection(profileId.getDomainId(), profileId.getUserId()));
+		}
+	}
+
+	/**
+	 * Returns the users whose computed authorization (roles and permissions)
+	 * depends on the passed subject: the user itself, the members of a group,
+	 * or the users holding a role (directly or through a group).
+	 * Errors are only logged: result is meant for clearing cached authz-info
+	 * and must never break the calling operation.
+	 * @param subjectPid The subject profile ID.
+	 * @param subjectType The subject type: USER, GROUP or ROLE.
+	 * @return Set of affected user profiles
+	 */
+	private Set<UserProfileId> listAuthzDependentProfilesQuietly(final UserProfileId subjectPid, final GenericSubject.Type subjectType) {
+		if (GenericSubject.Type.USER.equals(subjectType)) return Collections.singleton(subjectPid);
+		try {
+			final String subjectUid = lookupSubjectUidQuietly(subjectPid, subjectType);
+			if (subjectUid == null) return Collections.emptySet();
+			return expandSubjectsToUserProfiles(subjectPid.getDomainId(), Collections.singleton(subjectUid), true);
+
+		} catch (Exception ex) {
+			LOGGER.warn("[{}] Unable to list users depending on subject '{}'", subjectPid.getDomainId(), subjectPid, ex);
+			return Collections.emptySet();
+		}
+	}
+			
 	private OShare doShareInsert(Connection con, String originUid, String serviceId, String shareKey, String instance) {
 		ShareDAO shaDao = ShareDAO.getInstance();
 		
