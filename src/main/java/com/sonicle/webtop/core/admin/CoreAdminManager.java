@@ -1418,7 +1418,7 @@ public class CoreAdminManager extends BaseManager {
 		DomainAccessLogDAO alDao = DomainAccessLogDAO.getInstance();
 		Connection con = null;
 		
-		RunContext.ensureIsSysAdmin();
+		RunContext.ensureWebTopDomainAdmin(domainId);
 		
 		try {
 			org.jooq.Condition condition = BaseDAO.createCondition(conditionPredicate, new DomainAccessLogPredicateVisitor()
