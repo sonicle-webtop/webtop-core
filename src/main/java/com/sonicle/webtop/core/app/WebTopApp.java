@@ -715,7 +715,7 @@ public final class WebTopApp {
 		vfsMgr.addProvider("googledrive", new com.sonicle.vfs2.provider.googledrive.GDriveFileProvider());
 		vfsMgr.addProvider("webdav", new com.sonicle.vfs2.provider.webdav.WebdavFileProvider());
 		vfsMgr.addProvider("webdavs", new com.sonicle.vfs2.provider.webdavs.WebdavsFileProvider());
-		vfsMgr.addProvider("smb", new org.apache.commons.vfs2.provider.smb.SmbFileProvider());
+		vfsMgr.addProvider("smb", new com.sonicle.vfs2.provider.smb.SmbFileProvider());
 		vfsMgr.init();
 		VFS.setManager(vfsMgr);
 	}
