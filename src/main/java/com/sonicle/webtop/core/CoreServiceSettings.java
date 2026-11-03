@@ -395,6 +395,14 @@ public class CoreServiceSettings extends BaseServiceSettings {
 		return getString(PBX_PROVIDER_NETHVOICE_WEBREST_URL,null);
 	}
 	
+	public boolean getNethVoiceChatEnabled() {
+		return getBoolean(NETHVOICE_CHAT_ENABLED, false);
+	}
+	
+	public String getNethVoiceChatCtiHost() {
+		return getString(NETHVOICE_CHAT_CTI_HOST, null);
+	}
+	
 	public String getSmsProvider() {
 		return getString(SMS_PROVIDER,null);
 	}
@@ -685,6 +693,7 @@ public class CoreServiceSettings extends BaseServiceSettings {
 			value = new ServicesOrder();
 			value.add("com.sonicle.webtop.core.admin");
 			value.add("com.sonicle.webtop.mail");
+			value.add("com.sonicle.webtop.core.messages"); // NethVoice messages, below the mail
 			value.add("com.sonicle.webtop.calendar");
 			value.add("com.sonicle.webtop.contacts");
 			value.add("com.sonicle.webtop.tasks");

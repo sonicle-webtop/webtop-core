@@ -76,6 +76,7 @@ import com.sonicle.webtop.core.app.UIBoot;
 import com.sonicle.webtop.core.app.AIUsageManager;
 import com.sonicle.webtop.core.app.WT;
 import com.sonicle.webtop.core.app.WebTopManager;
+import com.sonicle.webtop.core.app.pbx.NethVoiceChat;
 import com.sonicle.webtop.core.app.WebTopSession;
 import com.sonicle.webtop.core.app.io.dbutils.FilterInfo;
 import com.sonicle.webtop.core.app.io.dbutils.RowsAndCols;
@@ -186,6 +187,7 @@ import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.SortedMap;
@@ -232,6 +234,7 @@ public class Service extends BaseService implements EventListener {
 	private CoreManager coreMgr;
 	private CoreServiceSettings ss;
 	private CoreUserSettings us;
+	private String nvChatToken = null; // the last CTI token of this session, for server-side CTI calls
 	private XMPPClient xmppCli;
 	private AIToolConfig aiToolConfig = null;
 	
@@ -465,7 +468,14 @@ public class Service extends BaseService implements EventListener {
 		vars.put("longDateFormat", us.getLongDateFormat());
 		vars.put("shortTimeFormat", us.getShortTimeFormat());
 		vars.put("longTimeFormat", us.getLongTimeFormat());
-		vars.put("imEnabled", !RunContext.isImpersonated() && RunContext.isPermitted(true, CoreManifest.ID, "WEBCHAT", "ACCESS"));
+		// NethVoice chat (chat-island): when on for the domain it replaces the XMPP IM below
+		boolean nvChatEnabled = !RunContext.isImpersonated() && ss.getNethVoiceChatEnabled() && !StringUtils.isBlank(ss.getNethVoiceChatCtiHost());
+		vars.put("nvChatEnabled", nvChatEnabled);
+		if (nvChatEnabled) {
+			vars.put("nvChatCtiHost", ss.getNethVoiceChatCtiHost());
+			vars.put("nvChatPinned", us.getNethVoiceChatPinned());
+		}
+		vars.put("imEnabled", !nvChatEnabled && !RunContext.isImpersonated() && RunContext.isPermitted(true, CoreManifest.ID, "WEBCHAT", "ACCESS"));
 		vars.put("imPresenceStatus", EnumUtils.toSerializedName(us.getIMPresenceStatus()));
 		vars.put("imStatusMessage", us.getIMStatusMessage());
 		vars.put("imUploadMaxFileSize", us.getIMUploadMaxFileSize(true));
@@ -1717,6 +1727,102 @@ public class Service extends BaseService implements EventListener {
 			new JsonResult(false,"No PBX Configured").printTo(out);
 		}
 			
+	}
+	
+	/**
+	 * NethVoice chat: a CTI token for the current user, from a CTI login with the
+	 * WebTop credentials (WebTop and NethVoice share the user base).
+	 * Answers { host, username, token }; called at start and when the chat refuses the token.
+	 */
+	public void processGetNethVoiceChatToken(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
+		try {
+			if (RunContext.isImpersonated() || !ss.getNethVoiceChatEnabled()) throw new WTException("NethVoice chat not enabled");
+			NethVoiceChat chat = new NethVoiceChat(ss.getNethVoiceChatCtiHost());
+			String username = getEnv().getProfileId().getUserId();
+			String token = chat.login(username, coreMgr.lookupSecretValue(WebTopManager.PSVKEY_PPW));
+			nvChatToken = token;
+			LinkedHashMap<String, String> data = new LinkedHashMap<>();
+			data.put("host", chat.getCtiHost());
+			data.put("username", username);
+			data.put("token", token);
+			new JsonResult(data).printTo(out);
+			
+		} catch (Exception ex) {
+			logger.error("Error in action GetNethVoiceChatToken", ex);
+			new JsonResult(false, ex.getMessage()).printTo(out);
+		}
+	}
+	
+	/**
+	 * NethVoice chat: splits email addresses into chat users and people outside.
+	 * Internal = a user of this domain (the same user base as NethVoice) who is a CTI operator;
+	 * everyone else is a guest, reached with a chat link. Me excluded.
+	 * Input: emails, a JSON array. Answers { internal: [{email, username, name}], external: [{email}] }.
+	 */
+	public void processResolveNethVoiceChatPeers(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
+		try {
+			if (RunContext.isImpersonated() || !ss.getNethVoiceChatEnabled()) throw new WTException("NethVoice chat not enabled");
+			String[] emails = JsonResult.gson().fromJson(ServletUtils.getStringParameter(request, "emails", true), String[].class);
+			UserProfileId me = getEnv().getProfileId();
+			NethVoiceChat chat = new NethVoiceChat(ss.getNethVoiceChatCtiHost());
+			Map<String, String> operators;
+			try {
+				if (nvChatToken == null) throw new NethVoiceChat.Unauthorized();
+				operators = chat.listOperators(nvChatToken);
+			} catch (NethVoiceChat.Unauthorized ex) {
+				nvChatToken = chat.login(me.getUserId(), coreMgr.lookupSecretValue(WebTopManager.PSVKEY_PPW));
+				operators = chat.listOperators(nvChatToken);
+			}
+			ArrayList<Map<String, String>> internal = new ArrayList<>(), external = new ArrayList<>();
+			LinkedHashSet<String> seen = new LinkedHashSet<>();
+			// Mailboxes of the shared user base are <uid>@<domain>: that covers who never opened WebTop too.
+			String mailDomain = StringUtils.lowerCase(WT.getPrimaryDomainName(me.getDomainId()));
+			for (String email : emails) {
+				String addr = StringUtils.lowerCase(StringUtils.trim(email));
+				if (StringUtils.isBlank(addr) || !seen.add(addr)) continue;
+				String user = null;
+				for (UserProfileId pid : coreMgr.listUserIdsByEmail(addr)) {
+					if (StringUtils.equals(pid.getDomainId(), me.getDomainId())) user = pid.getUserId();
+				}
+				if (user == null && mailDomain != null && StringUtils.endsWith(addr, "@" + mailDomain)) {
+					String local = StringUtils.substringBefore(addr, "@");
+					if (operators.containsKey(local)) user = local;
+				}
+				if (user != null && user.equals(me.getUserId())) continue;
+				LinkedHashMap<String, String> item = new LinkedHashMap<>();
+				item.put("email", addr);
+				if (user != null && operators.containsKey(user)) {
+					item.put("username", user);
+					item.put("name", operators.get(user)); // the CTI's name, as the chat shows it
+					internal.add(item);
+				} else {
+					external.add(item);
+				}
+			}
+			LinkedHashMap<String, Object> data = new LinkedHashMap<>();
+			data.put("internal", internal);
+			data.put("external", external);
+			new JsonResult(data).printTo(out);
+			
+		} catch (Exception ex) {
+			logger.error("Error in action ResolveNethVoiceChatPeers", ex);
+			new JsonResult(false, ex.getMessage()).printTo(out);
+		}
+	}
+	
+	/**
+	 * NethVoice chat: remembers whether the user keeps the chat pinned to the side panel.
+	 */
+	public void processSetNethVoiceChatPinned(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
+		try {
+			Boolean pinned = ServletUtils.getBooleanParameter(request, "pinned", true);
+			us.setNethVoiceChatPinned(pinned);
+			new JsonResult().printTo(out);
+			
+		} catch (Exception ex) {
+			logger.error("Error in action SetNethVoiceChatPinned", ex);
+			new JsonResult(false, ex.getMessage()).printTo(out);
+		}
 	}
 	
 	public void processSnoozeReminder(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {

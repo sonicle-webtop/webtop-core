@@ -733,6 +733,21 @@
 						</configuration>
 					</execution>
 					<execution>
+						<id>client-copy-messages-laf</id>
+						<phase>none</phase>
+						<goals>
+							<goal>copy-resources</goal>
+						</goals>
+						<configuration>
+							<outputDirectory>${project.build.outputDirectory}/client/${webtop.service.package}.messages/laf</outputDirectory>
+							<resources>
+								<resource>
+									<directory>src/main/client-messages/laf</directory>
+								</resource>
+							</resources>
+						</configuration>
+					</execution>
+					<execution>
 						<id>client-copy-admin-locale</id>
 						<phase>none</phase>
 						<goals>
@@ -743,6 +758,24 @@
 							<resources>
 								<resource>
 									<directory>src/main/client-admin</directory>
+									<includes>
+										<include>*.properties</include>
+									</includes>
+								</resource>
+							</resources>
+						</configuration>
+					</execution>
+					<execution>
+						<id>client-copy-messages-locale</id>
+						<phase>none</phase>
+						<goals>
+							<goal>copy-resources</goal>
+						</goals>
+						<configuration>
+							<outputDirectory>${project.build.outputDirectory}/client/${webtop.service.package}.messages</outputDirectory>
+							<resources>
+								<resource>
+									<directory>src/main/client-messages</directory>
 									<includes>
 										<include>*.properties</include>
 									</includes>
@@ -904,6 +937,23 @@
 							<nosuffix>true</nosuffix>
 							<jsSourceDir>client-admin</jsSourceDir>
 							<jsTargetDir>client/${webtop.service.package}.admin/src</jsTargetDir>
+							<jsSourceIncludes>
+								<jsSourceInclude>**/*.js</jsSourceInclude>
+							</jsSourceIncludes>
+						</configuration>
+					</execution>
+					<execution>
+						<id>client-copy-messages-src</id>
+						<phase>none</phase>
+						<goals>
+							<goal>minify</goal>
+						</goals>
+						<configuration>
+							<jsEngine>CLEANER</jsEngine>
+							<skipMerge>true</skipMerge>
+							<nosuffix>true</nosuffix>
+							<jsSourceDir>client-messages</jsSourceDir>
+							<jsTargetDir>client/${webtop.service.package}.messages/src</jsTargetDir>
 							<jsSourceIncludes>
 								<jsSourceInclude>**/*.js</jsSourceInclude>
 							</jsSourceIncludes>
@@ -1102,7 +1152,15 @@
 								<phase>process-resources</phase>
 							</execution>
 							<execution>
+								<id>client-copy-messages-laf</id>
+								<phase>process-resources</phase>
+							</execution>
+							<execution>
 								<id>client-copy-admin-locale</id>
+								<phase>process-resources</phase>
+							</execution>
+							<execution>
+								<id>client-copy-messages-locale</id>
 								<phase>process-resources</phase>
 							</execution>
 							<execution>
@@ -1142,6 +1200,10 @@
 							</execution>
 							<execution>
 								<id>client-copy-admin-src</id>
+								<phase>process-resources</phase>
+							</execution>
+							<execution>
+								<id>client-copy-messages-src</id>
 								<phase>process-resources</phase>
 							</execution>
 						</executions>
@@ -1235,7 +1297,15 @@
 								<phase>process-resources</phase>
 							</execution>
 							<execution>
+								<id>client-copy-messages-laf</id>
+								<phase>process-resources</phase>
+							</execution>
+							<execution>
 								<id>client-copy-admin-locale</id>
+								<phase>process-resources</phase>
+							</execution>
+							<execution>
+								<id>client-copy-messages-locale</id>
 								<phase>process-resources</phase>
 							</execution>
 							<execution>
@@ -1271,6 +1341,10 @@
 							</execution>
 							<execution>
 								<id>client-copy-admin-src</id>
+								<phase>process-resources</phase>
+							</execution>
+							<execution>
+								<id>client-copy-messages-src</id>
 								<phase>process-resources</phase>
 							</execution>
 						</executions>
@@ -1415,6 +1489,52 @@
 										<argument>--remove-text-references</argument>
 										<argument>--strip-comments</argument>
 										<argument>--output-file=${project.build.outputDirectory}/client/${webtop.service.package}.admin/${webtop.service.package}.admin-debug.js</argument>
+									</arguments>
+								</configuration>
+							</execution>
+							<execution>
+								<id>client-compile-messages</id>
+								<phase>compile</phase>
+								<goals>
+									<goal>exec</goal>
+								</goals>
+								<configuration>
+									<executable>${sencha.cmd}/${sencha.cmd.exec}</executable>
+									<workingDirectory>${project.basedir}/src/main</workingDirectory>
+									<arguments>
+										<argument>${sencha.cmd.exec.args}</argument>
+										<argument>--sdk-path=${sencha.workspace}/ext</argument>
+										<argument>config</argument>
+										<argument>-prop</argument>
+										<argument>toolkit.name=classic</argument>
+										<argument>-prop</argument>
+										<argument>build.id=classic</argument>
+										<argument>-prop</argument>
+										<argument>build.name=classic</argument>
+										<argument>then</argument>
+										<argument>compile</argument>
+										<argument>--classpath=${sencha.compile.classpath}</argument>
+										<argument>--classpath=${sencha.compile.wt.classpath}</argument>
+										<argument>--classpath=client-core,client-messages</argument>
+										<argument>exclude</argument>
+										<argument>-all</argument>
+										<argument>and</argument>
+										<argument>include</argument>
+										<argument>--namespace=Sonicle.webtop.core.messages.*</argument>
+										<argument>and</argument>
+										<argument>concatenate</argument>
+										<argument>--input-js-version=ANY</argument>
+										<argument>--js-version=ANY</argument>
+										<argument>--remove-text-references</argument>
+										<argument>--compress</argument>
+										<argument>--output-file=${project.build.outputDirectory}/client/${webtop.service.package}.messages/${webtop.service.package}.messages.js</argument>
+										<argument>and</argument>
+										<argument>concatenate</argument>
+										<argument>--input-js-version=ANY</argument>
+										<argument>--js-version=ANY</argument>
+										<argument>--remove-text-references</argument>
+										<argument>--strip-comments</argument>
+										<argument>--output-file=${project.build.outputDirectory}/client/${webtop.service.package}.messages/${webtop.service.package}.messages-debug.js</argument>
 									</arguments>
 								</configuration>
 							</execution>

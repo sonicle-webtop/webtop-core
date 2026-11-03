@@ -57,6 +57,7 @@ Ext.define('Sonicle.webtop.core.private.viewport.BaseAbstract', {
 		'WTA.ux.ViewWindow',
 		'WTA.ux.IMButton',
 		'WTA.ux.IMPanel',
+		'WTA.ux.NethVoiceChat',
 		'WTA.ux.app.ServicesTools',
 		'WTA.ux.app.taskbar.Bar',
 		'WTA.ux.app.launcher.PortalButton',
@@ -80,6 +81,51 @@ Ext.define('Sonicle.webtop.core.private.viewport.BaseAbstract', {
 				type: 'wtbadgenotification'
 			}
 		}
+	},
+	
+	initComponent: function() {
+		var me = this;
+		me.callParent(arguments);
+		// NethVoice chat: mounted once the rail and the panel slots exist.
+		if (!me.miniMode && me.isNVChatEnabled()) {
+			me.on('afterrender', function() {
+				me.nvChat = Ext.create('WTA.ux.NethVoiceChat', {viewport: me});
+			}, me, {single: true});
+		}
+	},
+	
+	isNVChatEnabled: function() {
+		return WT.getVar('nvChatEnabled') === true;
+	},
+	
+	/**
+	 * @return {WTA.ux.NethVoiceChat} The NethVoice chat, if enabled.
+	 */
+	getNVChat: function() {
+		return this.nvChat;
+	},
+	
+	getNVChatRailEl: function() {
+		var cmp = this.rightDockCmp();
+		return (cmp && cmp.rendered) ? cmp.getEl().dom.querySelector('.wt-nvchat-rail-slot') : null;
+	},
+	
+	getNVChatPanelEl: function() {
+		var cmp = this.eastContentCmp();
+		return (cmp && cmp.rendered) ? cmp.getEl().dom.querySelector('.wt-nvchat-panel-slot') : null;
+	},
+	
+	showNVChatRail: function(show) {
+		var cmp = this.rightDockCmp();
+		if (cmp) cmp.setHidden(!show);
+	},
+	
+	showNVChatPanel: function(show) {
+		var cmp = this.eastContentCmp(), w = window.innerWidth;
+		if (!cmp || cmp.isHidden() === !show) return;
+		// As in the CTI: 24rem, 32rem from 1280px, 40rem from 1536px.
+		if (show) cmp.setWidth(w >= 1536 ? 640 : (w >= 1280 ? 512 : 384));
+		cmp.setHidden(!show);
 	},
 	
 	getLauncher: function() {
@@ -191,7 +237,44 @@ Ext.define('Sonicle.webtop.core.private.viewport.BaseAbstract', {
 		};
 	},
 	
+	returnRightDockCfg: function() {
+		// NethVoice chat rail: the chat heads while pinned, like the CTI's right side menu.
+		if (!this.isNVChatEnabled()) return undefined;
+		return {
+			xtype: 'container',
+			// The tool panels' background, and the line that runs under the topbar (the content's top border).
+			cls: 'wt-viewport-nvchat-rail wt-tool-bg',
+			width: 50,
+			hidden: WT.getVar('nvChatPinned') === false,
+			html: '<div class="wt-nvchat-rail-slot" style="display:flex;flex-direction:column;align-items:center;padding-top:16px;"></div>',
+			listeners: {
+				afterrender: function(s) {
+					var cnt = Ext.getBody().down('.wt-viewport-content'),
+						color = cnt ? cnt.getStyle('border-top-color') : 'rgba(128,128,128,0.25)';
+					s.getEl().setStyle({borderTop: '1px solid ' + color, borderLeft: '1px solid ' + color, backgroundColor: 'var(--wt-theme-color-surface-l1)'});
+				}
+			}
+		};
+	},
+	
 	returnEastContentCfg: function() {
+		if (this.isNVChatEnabled()) {
+			// NethVoice chat panel: the open conversation (or the new chat picker) while pinned.
+			return {
+				xtype: 'panel',
+				cls: 'wt-viewport-nvchat-panel',
+				header: false,
+				border: false,
+				hidden: true,
+				width: 384,
+				// The same band that splits the tools from the content
+				split: {
+					performCollapse: false
+				},
+				// Absolute on the body: inside the auto container a 100% height follows the content instead of the panel.
+				html: '<div class="wt-nvchat-panel-slot" style="position:absolute;top:0;right:0;bottom:0;left:0;"></div>'
+			};
+		}
 		if (WT.getVar('imEnabled') === true) {
 			return {
 				xtype: 'wtimpanel',
