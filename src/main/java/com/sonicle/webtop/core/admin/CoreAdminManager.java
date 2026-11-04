@@ -1448,7 +1448,7 @@ public class CoreAdminManager extends BaseManager {
 		DomainAccessLogDAO domainAccLogDao = DomainAccessLogDAO.getInstance();
 		Connection con = null;
 		
-		RunContext.ensureIsSysAdmin();
+		RunContext.ensureWebTopDomainAdmin(domainId);
 		
 		try {			
 			con = WT.getConnection(SERVICE_ID);
