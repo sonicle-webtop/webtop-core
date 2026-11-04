@@ -484,9 +484,9 @@ public class Service extends BaseService implements EventListener {
 		}
 			
 		
-		vars.put("auditUi", WT.isLicensed(coreMgr.AUDIT_PRODUCT, profile.getUserId()) > 0);
-		//TODO: manage licensing
-		vars.put("hasAudit",coreMgr.isAuditEnabled()&&(RunContext.isImpersonated()||RunContext.isPermitted(true, CoreManifest.ID, "AUDIT")));
+		boolean hasAudit = (WT.isLicensed(coreMgr.AUDIT_PRODUCT, profile.getUserId()) > 0) && coreMgr.isAuditEnabled()&&(RunContext.isImpersonated()||RunContext.isPermitted(true, CoreManifest.ID, "AUDIT"));
+		vars.put("auditUi", hasAudit);
+		vars.put("hasAudit",hasAudit);
 		
 		boolean aiEnabled = coreMgr.isAIEnabled()&&RunContext.isPermitted(true, CoreManifest.ID, "AI_ACTIONS", "ACCESS");
 		if (aiEnabled) {
