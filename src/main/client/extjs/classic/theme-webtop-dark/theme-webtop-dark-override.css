@@ -156,6 +156,14 @@ grep -R -l -i "#e5e5e5" * | while read fname; do echo "sedding $fname"; sed -i -
     background-color: var(--wt-theme-color-surface-l1);
 }
 
+/* ---------- Ext.picker.Date */
+.x-datepicker-cell.so-datepicker-fulldate > .x-datepicker-date {
+    color: var(--wt-theme-color-1);
+}
+.x-datepicker-cell.so-datepicker-fulldate.x-datepicker-selected > .x-datepicker-date {
+    color: var(--wt-theme-color-info-on);
+}
+
 /* ---------- Sonicle.LoadMask */
 .so-mask-button-wrap {
     padding-top: 15px;
