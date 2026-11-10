@@ -122,7 +122,13 @@ Ext.define('Sonicle.webtop.core.private.viewport.BaseAbstract', {
 	
 	showNVChatPanel: function(show) {
 		var cmp = this.eastContentCmp(), w = window.innerWidth;
-		if (!cmp || cmp.isHidden() === !show) return;
+		if (!cmp) return;
+		// Collapsed by its chevron: a chat opened from the rail opens it again, a closed one leaves it expanded for the next time.
+		if (cmp.collapsed) {
+			if (show) { cmp.expand(); return; }
+			cmp.expand(false);
+		}
+		if (cmp.isHidden() === !show) return;
 		// As in the CTI: 24rem, 32rem from 1280px, 40rem from 1536px.
 		if (show) cmp.setWidth(w >= 1536 ? 640 : (w >= 1280 ? 512 : 384));
 		cmp.setHidden(!show);
@@ -267,6 +273,26 @@ Ext.define('Sonicle.webtop.core.private.viewport.BaseAbstract', {
 				border: false,
 				hidden: true,
 				width: 384,
+				// As the tool panel: its chevron collapses it to a bar with the title and the chevron to open it again at the bottom.
+				title: WT.res('nvchat.panel.title'),
+				headerPosition: 'bottom',
+				maintainTitlePosition: true,
+				dockedItems: [{
+					xtype: 'toolbar',
+					dock: 'bottom',
+					border: false,
+					cls: 'wt-tool-foo wt-tool-bg',
+					// Mirrored from the tool panel's: at the end facing the content, pointing right to collapse toward the edge.
+					items: [{
+						xtype: 'tool',
+						type: 'collapse-' + Ext.Component.DIRECTION_RIGHT,
+						cls: 'wt-tool-collapse-button',
+						tooltip: WT.res('act-collapse.lbl'),
+						handler: function(e, el, owner, tool) {
+							tool.up('panel').collapse();
+						}
+					}, '->']
+				}],
 				// The same band that splits the tools from the content
 				split: {
 					performCollapse: false
