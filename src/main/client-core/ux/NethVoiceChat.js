@@ -49,7 +49,7 @@ Ext.define('Sonicle.webtop.core.ux.NethVoiceChat', {
 	 * @cfg {String} widgetVersion
 	 * The chat-island widget bundled in core resources (vendor/chat-island/<version>).
 	 */
-	widgetVersion: '0.1.71',
+	widgetVersion: '0.1.72',
 	
 	/**
 	 * @cfg {WTA.private.viewport.BaseAbstract} viewport
