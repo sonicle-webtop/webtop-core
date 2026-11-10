@@ -259,7 +259,7 @@ Ext.define('Sonicle.webtop.core.messages.Service', {
 				if (found[h.peer]) {
 					found[h.peer].count++;
 				} else {
-					found[h.peer] = {body: h.body, count: 1};
+					found[h.peer] = {body: h.body, count: 1, id: h.id}; // newest first: the chat opens at this one
 				}
 			});
 			me.found = found;
@@ -313,8 +313,9 @@ Ext.define('Sonicle.webtop.core.messages.Service', {
 		},
 		
 		openChat: function(rec) {
-			var chat = this.getChat();
-			if (chat && rec) chat.openChat(rec.get('peer'));
+			var me = this, chat = me.getChat(), hit = rec ? me.found[rec.get('peer')] : null;
+			// As the CTI: from a search, the chat opens with it filled in, at the message found
+			if (chat && rec) chat.openChat(rec.get('peer'), hit && me.query.length >= 2 ? {query: me.query, id: hit.id} : undefined);
 		},
 		
 		isOwnedGroup: function(rec) {
@@ -359,11 +360,22 @@ Ext.define('Sonicle.webtop.core.messages.Service', {
 				+ '<br/><span class="wtmsg-sub">' + enc(sub) + '</span></span></div>';
 		},
 		
+		/**
+		 * As the CTI: only the part matching the search highlighted, the rest encoded as it is.
+		 */
+		mark: function(text) {
+			var enc = Ext.String.htmlEncode, q = this.query || '';
+			if (q.length < 2) return enc(text);
+			return Ext.Array.map(String(text).split(new RegExp('(' + Ext.String.escapeRegex(q) + ')', 'gi')), function(p, i) {
+				return i % 2 ? '<span class="wtmsg-hit">' + enc(p) + '</span>' : enc(p);
+			}).join('');
+		},
+		
 		renderLast: function(rec) {
 			var me = this, enc = Ext.String.htmlEncode,
 				hit = me.found[rec.get('peer')],
 				last = rec.get('last'), who = '', text;
-			if (hit) return '<span class="wtmsg-last"><span class="wtmsg-hit">' + enc(hit.body) + '</span></span>' + (hit.count > 1 ? ' <span class="wtmsg-sub">+' + (hit.count - 1) + '</span>' : '');
+			if (hit) return '<span class="wtmsg-last">' + me.mark(hit.body) + '</span>' + (hit.count > 1 ? ' <span class="wtmsg-sub">+' + (hit.count - 1) + '</span>' : '');
 			if (!last) return '';
 			if (last.mine) {
 				who = me.res('gpconversations.you') + ': ';

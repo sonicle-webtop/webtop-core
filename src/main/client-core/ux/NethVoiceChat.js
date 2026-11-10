@@ -113,8 +113,9 @@ Ext.define('Sonicle.webtop.core.ux.NethVoiceChat', {
 	 * Opens the chat with an operator or a group address.
 	 * @param {String} username
 	 */
-	openChat: function(username) {
-		this.send('chat-island-open', {username: username});
+	openChat: function(username, search) {
+		// search: {query, id}, as the CTI's Messages page: the chat opens on that search, at that message
+		this.send('chat-island-open', search ? {username: username, search: search} : {username: username});
 	},
 	
 	/**
