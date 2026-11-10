@@ -89,6 +89,11 @@ Ext.define('Sonicle.webtop.core.ux.NethVoiceChat', {
 				// One chat icon everywhere: the Messages launcher bubble (solid, lines cut out), painted in the text color.
 				':root{--wt-nvchat-mask:url(data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAyNCAyNCc+PG1hc2sgaWQ9J20nPjxyZWN0IHdpZHRoPScyNCcgaGVpZ2h0PScyNCcgZmlsbD0nI2ZmZicvPjxwYXRoIGQ9J002LjI1IDdoMTEuNU02LjI1IDEwLjI1aDExLjVNNi4yNSAxMy41aDcuNScgc3Ryb2tlPScjMDAwJyBzdHJva2Utd2lkdGg9JzEuNicgc3Ryb2tlLWxpbmVjYXA9J3JvdW5kJy8+PC9tYXNrPjxwYXRoIG1hc2s9J3VybCgjbSknIGQ9J000IDJoMTZhMyAzIDAgMCAxIDMgM3Y5LjVhMyAzIDAgMCAxLTMgM2gtOS4xbC00LjUgMy45YS42NS42NSAwIDAgMS0xLjA3LS41VjE3LjVINGEzIDMgMCAwIDEtMy0zVjVhMyAzIDAgMCAxIDMtM3onIGZpbGw9JyMwMDAnIHN0cm9rZT0nIzAwMCcgc3Ryb2tlLXdpZHRoPScxLjYnIHN0cm9rZS1saW5lam9pbj0ncm91bmQnLz48L3N2Zz4=);}',
 				".wt-icon-nvchat:before{content:'';display:inline-block;width:1em;height:1em;vertical-align:-0.125em;background-color:currentColor;-webkit-mask:var(--wt-nvchat-mask) center/contain no-repeat;mask:var(--wt-nvchat-mask) center/contain no-repeat;}.wt-icon-nvchat{background-image:none !important;}",
+				// Focus as WebTop's fields (nethesis LAF): a 1px border in its focus color instead of the island's 2px accent ring.
+				'html .chat-island-root .focus-within\\:ci-ring-2:focus-within, html .chat-island-root input.focus\\:ci-ring-2:focus, html .chat-island-root textarea.focus\\:ci-ring-2:focus{--tw-ring-shadow:0 0 #0000 !important;border-color:#cb5e30 !important;}',
+				'html .chat-island-root.ci-dark .focus-within\\:ci-ring-2:focus-within, html .chat-island-root.ci-dark input.focus\\:ci-ring-2:focus, html .chat-island-root.ci-dark textarea.focus\\:ci-ring-2:focus{border-color:#fa8839 !important;}',
+				'html .chat-island-root .focus-visible\\:ci-ring-2:focus-visible, html .chat-island-root button.focus\\:ci-ring-2:focus{--tw-ring-color:#cb5e30 !important;}',
+				'html .chat-island-root.ci-dark .focus-visible\\:ci-ring-2:focus-visible, html .chat-island-root.ci-dark button.focus\\:ci-ring-2:focus{--tw-ring-color:#fa8839 !important;}',
 				// The heads' tooltips open to the left of the rail: above the collapsed chat panel's bar next to it.
 				'.wt-viewport-nvchat-rail{z-index:5;overflow:visible !important;}',
 				// The rail sits right under the topbar, nothing above it to divide from.
