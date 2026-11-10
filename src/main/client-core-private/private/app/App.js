@@ -67,12 +67,12 @@ Ext.define('Sonicle.webtop.core.private.app.App', {
 	
 	/**
 	 * Compact density, as My: the class for the CSS, then the bar heights the LAF sets in JS lower
-	 * (the top bar 30%, as My's, the others 20%) and the launcher buttons one scale smaller.
+	 * (the top bar 25%, room for the search field at fractional zooms, the others 20%) and the launcher buttons one scale smaller.
 	 */
 	applyCompactDensity: function(viewCls) {
 		var proto = viewCls.prototype,
 			smaller = {large: 'medium', medium: 'small', small: 'small'},
-			factors = {topbarHeight: 0.7, bottombarHeight: 0.8, toolHeaderHeight: 0.8};
+			factors = {topbarHeight: 0.75, bottombarHeight: 0.8, toolHeaderHeight: 0.8};
 		document.documentElement.classList.add('wt-compact');
 		Ext.iterate(factors, function(name, factor) {
 			var orig = proto[name];

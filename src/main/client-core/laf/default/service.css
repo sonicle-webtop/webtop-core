@@ -431,6 +431,8 @@ html.wt-compact .x-tree-view .x-grid-cell-inner { padding-top: 2px; padding-bott
 html.wt-compact .x-grid-header-ct .x-column-header-inner { padding-top: 5px; padding-bottom: 5px; }
 html.wt-compact .x-panel-header { padding-top: 6px; padding-bottom: 6px; }
 html.wt-compact .x-toolbar { padding-top: 3px; padding-bottom: 3px; }
+/* the tool and chat footers keep room for their chevron (cut at fractional zooms with 3px) */
+html.wt-compact .x-toolbar.wt-tool-foo { padding-top: 5px; padding-bottom: 7px; }
 html.wt-compact .x-tab { padding-top: 5px; padding-bottom: 5px; }
 /* Launcher: 40px buttons (24px icon) instead of 50px, narrower bar */
 html.wt-compact .wt-viewport-navbar.x-toolbar-vertical { padding-left: 10px; padding-right: 10px; }
