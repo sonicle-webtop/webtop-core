@@ -457,3 +457,9 @@ html.wt-compact .wt-viewport-topbar .so-btn-avatar { padding: 2px 8px; }
 html.wt-compact .wt-viewport-topbar .so-btn-avatar .x-btn-icon-el,
 html.wt-compact .wt-viewport-topbar .so-btn-avatar .so-btn-avatar-wrap { width: 26px !important; height: 26px !important; line-height: 26px !important; background-size: cover; }
 html.wt-compact .wt-viewport-topbar .so-btn-avatar .so-btn-avatar-wrap > span { font-size: 13px !important; }
+/* Avatars in the lists (Mail, Contacts...): 26px, as the top bar's and the chat's in compact */
+html.wt-compact .x-grid-item .so-avatar-wrap { width: 26px !important; height: 26px !important; line-height: 26px !important; background-size: cover; }
+html.wt-compact .x-grid-item .so-avatar-wrap > span { font-size: 13px !important; line-height: 26px !important; }
+/* Lists: the avatar's cell centred on the row in both densities (grid cells are top aligned), in the middle of its two lines */
+.x-grid-item td.x-grid-cell:has(.so-avatar-wrap) { vertical-align: middle; }
+.x-grid-item td.x-grid-cell:has(.so-avatar-wrap) > .x-grid-cell-inner { padding-top: 0; padding-bottom: 0; }

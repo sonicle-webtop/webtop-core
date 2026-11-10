@@ -70,3 +70,6 @@ html.dark .wtmsg-cta, html.dark .wtmsg-more { color: #f97316; }
 /* ---------- Compact density: tighter conversation rows and filters */
 html.wt-compact .wtmsg-grid .x-grid-cell-inner { padding-top: 5px; padding-bottom: 5px; }
 html.wt-compact .wtmsg-filters .x-grid-cell-inner { padding-top: 4px; padding-bottom: 4px; }
+html.wt-compact .wtmsg-pic, html.wt-compact .wtmsg-avatar { width: 26px; height: 26px; }
+html.wt-compact .wtmsg-avatar-initials { font-size: 13px; }
+html.wt-compact .wtmsg-avatar-headset:before { width: 13px; height: 13px; }
