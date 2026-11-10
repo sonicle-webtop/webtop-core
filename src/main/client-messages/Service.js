@@ -44,7 +44,7 @@ Ext.define('Sonicle.webtop.core.messages.Service', {
 	],
 	
 	query: '',
-	kind: 'all', // the filter picked in the tool panel: all, unread, chat, group
+	kind: 'all', // the filter picked in the tool panel: all, unread, chat, group, external
 	found: null, // peer -> {body, count}: archive hits for the current query
 	
 	init: function() {
@@ -76,7 +76,9 @@ Ext.define('Sonicle.webtop.core.messages.Service', {
 						{id: 'all', text: me.res('filter.all'), icon: 'fa-comments', count: 0},
 						{id: 'unread', text: me.res('filter.unread'), icon: 'fa-comment-dots', count: 0},
 						{id: 'chat', text: me.res('filter.chat'), icon: 'fa-user', count: 0},
-						{id: 'group', text: me.res('filter.group'), icon: 'fa-users', count: 0}
+						{id: 'group', text: me.res('filter.group'), icon: 'fa-users', count: 0},
+						// The chats with people outside the PBX: the ones with the External badge
+						{id: 'external', text: me.res('filter.external'), icon: 'fa-globe', count: 0}
 					]
 				},
 				columns: [{
@@ -137,7 +139,7 @@ Ext.define('Sonicle.webtop.core.messages.Service', {
 			cls: 'wtmsg-grid',
 			border: false,
 			store: {
-				fields: ['peer', 'kind', 'name', 'avatar', 'online', 'mobile', 'inactive', 'owner', 'unread', 'members', 'last', 'muted', 'guests'],
+				fields: ['peer', 'kind', 'name', 'avatar', 'online', 'mobile', 'inactive', 'owner', 'unread', 'members', 'last', 'muted', 'guests', 'locked', 'presence'],
 				data: []
 			},
 			viewConfig: {
@@ -163,7 +165,7 @@ Ext.define('Sonicle.webtop.core.messages.Service', {
 				dataIndex: 'last',
 				width: 280,
 				renderer: function(v) {
-					return (v && v.ts) ? Ext.String.htmlEncode(me.formatWhen(v.ts)) : '';
+					return (v && v.ts) ? '<span class="wtmsg-when">' + Ext.String.htmlEncode(me.formatWhen(v.ts)) + '</span>' : '';
 				}
 			}, {
 				// As the CTI: an "Open chat" call to action, the other actions in a kebab menu.
@@ -236,10 +238,11 @@ Ext.define('Sonicle.webtop.core.messages.Service', {
 		
 		onConversations: function(chat, conversations) {
 			var me = this, sto = me.gp().getStore(), list = conversations || [],
-				counts = {all: list.length, unread: 0, chat: 0, group: 0},
+				counts = {all: list.length, unread: 0, chat: 0, group: 0, external: 0},
 				fsto = me.getToolComponent().down('grid').getStore();
 			Ext.each(list, function(c) {
 				if (c.unread) counts.unread++;
+				if (c.guests) counts.external++;
 				counts[c.kind === 'group' ? 'group' : 'chat']++;
 			});
 			fsto.each(function(rec) {
@@ -292,6 +295,7 @@ Ext.define('Sonicle.webtop.core.messages.Service', {
 					if (kind === 'unread' && !rec.get('unread')) return false;
 					if (kind === 'group' && rec.get('kind') !== 'group') return false;
 					if (kind === 'chat' && rec.get('kind') === 'group') return false;
+					if (kind === 'external' && !rec.get('guests')) return false;
 					return !lq
 						|| String(rec.get('name') || '').toLowerCase().indexOf(lq) !== -1
 						|| String(rec.get('peer') || '').indexOf(lq) !== -1
@@ -332,13 +336,24 @@ Ext.define('Sonicle.webtop.core.messages.Service', {
 				name = rec.get('name') || rec.get('peer'),
 				group = rec.get('kind') === 'group',
 				avatar = rec.get('avatar'),
-				initials = Ext.Array.map(String(name).split(/\s+/).slice(0, 2), function(w) { return w.charAt(0).toUpperCase(); }).join(''),
-				sub = group ? Ext.String.format(me.res('gpconversations.members'), (rec.get('members') || []).length)
+				queue = group && String(name).indexOf('Queue - ') === 0,
+				words = Ext.Array.filter(String(queue ? name.slice(8) : name).split(/[^0-9A-Za-z\u00C0-\u024F]+/), function(w) { return !!w; }),
+				// As the CTI: a group of one word takes its first two letters, otherwise the first letter of two words
+				initials = (group && words.length === 1 ? words[0].slice(0, 2) : Ext.Array.map(words.slice(0, 2), function(w) { return w.charAt(0); }).join('')).toUpperCase(),
+				count = (rec.get('members') || []).length,
+				sub = group ? Ext.String.format(me.res(count === 1 ? 'gpconversations.member' : 'gpconversations.members'), count)
 					: (rec.get('inactive') ? me.res('gpconversations.inactive') : '@' + rec.get('peer')),
-				pic = avatar ? '<img class="wtmsg-avatar" src="' + enc(avatar) + '"/>' : '<span class="wtmsg-avatar wtmsg-avatar-initials">' + enc(initials) + '</span>',
-				dot = group ? '' : '<span class="wtmsg-presence ' + (rec.get('online') ? 'wtmsg-presence-on' : '') + '"></span>',
-				tags = (rec.get('guests') ? ' <span class="wtmsg-tag">' + enc(me.res('gpconversations.external')) + '</span>' : '')
-					+ (rec.get('unread') ? ' <span class="wtmsg-unread">' + rec.get('unread') + '</span>' : '');
+				// As the island: a colleague without a picture gets the CTI's headset; groups blue (CTI operator group), indigo (queue) or gray
+				look = !group ? ' wtmsg-avatar-headset' : (String(rec.get('peer')).indexOf('cti-') === 0 ? ' wtmsg-avatar-blue' : (queue ? ' wtmsg-avatar-indigo' : '')),
+				pic = avatar ? '<img class="wtmsg-avatar" src="' + enc(avatar) + '"/>' : '<span class="wtmsg-avatar wtmsg-avatar-initials' + look + '">' + (group ? enc(initials) : '') + '</span>',
+				// As the island's dot: DND black, busy or ringing red, green when on the chat, on the mobile app or online for the CTI
+				presence = rec.get('presence'),
+				state = presence === 'dnd' ? 'wtmsg-presence-dnd' : (Ext.Array.contains(['busy', 'ringing', 'incoming'], presence) ? 'wtmsg-presence-busy'
+					: (rec.get('online') || rec.get('mobile') || presence === 'online' ? 'wtmsg-presence-on' : '')),
+				dot = group ? '' : '<span class="wtmsg-presence ' + state + '"></span>',
+				// As the CTI: the island's External badge, with a lock once its link no longer lets anyone in; then the muted bell
+				tags = (rec.get('guests') ? '<span class="wtmsg-tag">' + (rec.get('locked') ? '<i class="fas fa-lock"></i>' : '') + enc(me.res('gpconversations.external')) + '</span>' : '')
+					+ (rec.get('muted') ? '<i class="fas fa-bell-slash wtmsg-muted" title="' + enc(me.res('gpconversations.muted')) + '"></i>' : '');
 			return '<div class="wtmsg-conv"><span class="wtmsg-pic">' + pic + dot + '</span>'
 				+ '<span class="wtmsg-names"><span class="wtmsg-name' + (rec.get('unread') ? ' wtmsg-name-unread' : '') + '">' + enc(name) + '</span>' + tags
 				+ '<br/><span class="wtmsg-sub">' + enc(sub) + '</span></span></div>';
@@ -348,7 +363,7 @@ Ext.define('Sonicle.webtop.core.messages.Service', {
 			var me = this, enc = Ext.String.htmlEncode,
 				hit = me.found[rec.get('peer')],
 				last = rec.get('last'), who = '', text;
-			if (hit) return '<span class="wtmsg-hit">' + enc(hit.body) + '</span>' + (hit.count > 1 ? ' <span class="wtmsg-sub">+' + (hit.count - 1) + '</span>' : '');
+			if (hit) return '<span class="wtmsg-last"><span class="wtmsg-hit">' + enc(hit.body) + '</span></span>' + (hit.count > 1 ? ' <span class="wtmsg-sub">+' + (hit.count - 1) + '</span>' : '');
 			if (!last) return '';
 			if (last.mine) {
 				who = me.res('gpconversations.you') + ': ';
@@ -356,7 +371,9 @@ Ext.define('Sonicle.webtop.core.messages.Service', {
 				who = last.nick + ': ';
 			}
 			text = last.body || (last.oob ? me.res('gpconversations.attachment') : '');
-			return '<span class="wtmsg-last">' + enc(who + text) + '</span>';
+			// As the CTI: unread chats get a stronger preview and the count after it
+			return '<span class="wtmsg-last' + (rec.get('unread') ? ' wtmsg-last-unread' : '') + '">' + enc(who + text) + '</span>'
+				+ (rec.get('unread') ? '<span class="wtmsg-unread">' + rec.get('unread') + '</span>' : '');
 		},
 		
 		formatWhen: function(ts) {

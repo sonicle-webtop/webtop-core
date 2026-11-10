@@ -18,15 +18,27 @@
 .wtmsg-pic { position: relative; flex: none; width: 32px; height: 32px; margin-right: 12px; }
 .wtmsg-avatar { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; display: block; }
 .wtmsg-avatar-initials { display: flex; align-items: center; justify-content: center; background: #374151; color: #fff; font-size: 16px; font-weight: 400; }
+/* As the island: the CTI's headset for a colleague without a picture; groups of CTI operators blue, queues indigo (as their badges) */
+.wtmsg-avatar-headset:before { content: ''; width: 16px; height: 16px; background-color: currentColor; -webkit-mask: url(data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCA0NDggNTEyJz48cGF0aCBkPSdNMjI0IDY0Yy03OSAwLTE0NC43IDU3LjMtMTU3LjcgMTMyLjcgOS4zLTMgMTkuMy00LjcgMjkuNy00LjdsMTYgMGMyNi41IDAgNDggMjEuNSA0OCA0OGwwIDk2YzAgMjYuNS0yMS41IDQ4LTQ4IDQ4bC0xNiAwYy01MyAwLTk2LTQzLTk2LTk2bDAtNjRDMCAxMDAuMyAxMDAuMyAwIDIyNCAwUzQ0OCAxMDAuMyA0NDggMjI0bDAgMTY4LjFjMCA2Ni4zLTUzLjggMTIwLTEyMC4xIDEyMGwtODcuOS0uMS0zMiAwYy0yNi41IDAtNDgtMjEuNS00OC00OHMyMS41LTQ4IDQ4LTQ4bDMyIDBjMjYuNSAwIDQ4IDIxLjUgNDggNDhsMCAwIDQwIDBjMzkuOCAwIDcyLTMyLjIgNzItNzJsMC0yMC45Yy0xNC4xIDguMi0zMC41IDEyLjgtNDggMTIuOGwtMTYgMGMtMjYuNSAwLTQ4LTIxLjUtNDgtNDhsMC05NmMwLTI2LjUgMjEuNS00OCA0OC00OGwxNiAwYzEwLjQgMCAyMC4zIDEuNiAyOS43IDQuNy0xMy03NS4zLTc4LjYtMTMyLjctMTU3LjctMTMyLjd6Jy8+PC9zdmc+) center/contain no-repeat; mask: url(data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCA0NDggNTEyJz48cGF0aCBkPSdNMjI0IDY0Yy03OSAwLTE0NC43IDU3LjMtMTU3LjcgMTMyLjcgOS4zLTMgMTkuMy00LjcgMjkuNy00LjdsMTYgMGMyNi41IDAgNDggMjEuNSA0OCA0OGwwIDk2YzAgMjYuNS0yMS41IDQ4LTQ4IDQ4bC0xNiAwYy01MyAwLTk2LTQzLTk2LTk2bDAtNjRDMCAxMDAuMyAxMDAuMyAwIDIyNCAwUzQ0OCAxMDAuMyA0NDggMjI0bDAgMTY4LjFjMCA2Ni4zLTUzLjggMTIwLTEyMC4xIDEyMGwtODcuOS0uMS0zMiAwYy0yNi41IDAtNDgtMjEuNS00OC00OHMyMS41LTQ4IDQ4LTQ4bDMyIDBjMjYuNSAwIDQ4IDIxLjUgNDggNDhsMCAwIDQwIDBjMzkuOCAwIDcyLTMyLjIgNzItNzJsMC0yMC45Yy0xNC4xIDguMi0zMC41IDEyLjgtNDggMTIuOGwtMTYgMGMtMjYuNSAwLTQ4LTIxLjUtNDgtNDhsMC05NmMwLTI2LjUgMjEuNS00OCA0OC00OGwxNiAwYzEwLjQgMCAyMC4zIDEuNiAyOS43IDQuNy0xMy03NS4zLTc4LjYtMTMyLjctMTU3LjctMTMyLjd6Jy8+PC9zdmc+) center/contain no-repeat; }
+.wtmsg-avatar-blue { background: #dbeafe; color: #1e40af; }
+.wtmsg-avatar-indigo { background: #e0e7ff; color: #3730a3; }
 .wtmsg-presence { position: absolute; right: -1px; bottom: -1px; width: 12px; height: 12px; border-radius: 50%; background: #9ca3af; border: 2px solid #fff; box-sizing: border-box; }
 .wtmsg-presence-on { background: #10b981; }
+.wtmsg-presence-busy { background: #dc2626; }
+.wtmsg-presence-dnd { background: #030712; }
 .wtmsg-names { min-width: 0; overflow: hidden; text-overflow: ellipsis; line-height: 1.45; }
-/* Sizes as the Mail message list: sender 14px, preview 12px */
-.wtmsg-name { font-size: 14px; font-weight: 400; }
+/* Sizes as the Mail message list (sender 14px, preview 12px), weights and colors as the CTI's Messages page */
+.wtmsg-name { font-size: 14px; font-weight: 500; color: #111827; }
 .wtmsg-name-unread { font-weight: 600; }
 .wtmsg-sub { color: #6b7280; font-size: 12px; }
-.wtmsg-tag { display: inline-block; margin-left: 6px; padding: 0 8px; border-radius: 9999px; background: #e0e7ff; color: #3730a3; font-size: 11px; line-height: 18px; }
-.wtmsg-unread { display: inline-block; margin-left: 6px; min-width: 18px; padding: 0 5px; border-radius: 9999px; background: #c2410c; color: #fff; font-size: 11px; line-height: 18px; text-align: center; }
+/* The island's External badge (indigo, 12px medium), a lock before the label when the chat is private */
+.wtmsg-tag { display: inline-flex; align-items: center; gap: 4px; margin-left: 8px; padding: 2px 10px; border-radius: 9999px; background: #e0e7ff; color: #3730a3; font-size: 12px; font-weight: 500; line-height: 16px; white-space: nowrap; vertical-align: 1px; }
+.wtmsg-tag .fa-lock { font-size: 11px; }
+.wtmsg-muted { margin-left: 8px; color: #4338ca; font-size: 13px; }
+/* Last message and date: 14px gray-700, an unread preview medium gray-900 with the count after it */
+.wtmsg-last, .wtmsg-when { color: #374151; font-size: 14px; }
+.wtmsg-last-unread { color: #111827; font-weight: 500; }
+.wtmsg-unread { display: inline-block; margin-left: 12px; min-width: 20px; padding: 0 6px; border-radius: 9999px; background: #c2410c; color: #fff; font-size: 12px; font-weight: 500; line-height: 20px; text-align: center; box-sizing: border-box; }
 .wtmsg-hit { background: #fef08a; color: #111827; border-radius: 2px; }
 .wtmsg-badge { position: absolute; top: 2px; right: 2px; min-width: 16px; padding: 0 4px; border-radius: 9999px; background: #e11d48; color: #fff; font-size: 10px; line-height: 16px; text-align: center; pointer-events: none; }
 /* ---------- Messages tool panel: the filters */
@@ -36,11 +48,17 @@
 .wtmsg-filter-count { float: right; min-width: 20px; padding: 0 6px; border-radius: 9999px; background: rgba(128,128,128,0.18); font-size: 12px; line-height: 21px; text-align: center; }
 /* ---------- Dark WebTop (html.dark, set by WTA.ux.NethVoiceChat): its accent is #f97316 */
 html.dark .wtmsg-icon-openChat { background: #f97316 !important; }
-html.dark .wtmsg-unread { background: #f97316; }
+html.dark .wtmsg-unread { background: #f97316; color: #030712; }
+html.dark .wtmsg-name, html.dark .wtmsg-last.wtmsg-last-unread { color: #f3f4f6; }
+html.dark .wtmsg-last, html.dark .wtmsg-when { color: #e5e7eb; }
+html.dark .wtmsg-tag { background: #4338ca; color: #e0e7ff; }
+html.dark .wtmsg-muted { color: #818cf8; }
 html.dark .wtmsg-presence { border-color: #111827; }
 html.dark .wtmsg-sub { color: #9ca3af; }
 /* Avatars as WebTop's own: dark on light, light on dark (a dark one vanishes on the dark row hover) */
-html.dark .wtmsg-avatar-initials { background: #e5e7eb; color: #111827; }
+html.dark .wtmsg-avatar-initials { background: #e5e7eb; color: #030712; font-weight: 500; }
+html.dark .wtmsg-avatar-blue { background: #1d4ed8; color: #dbeafe; }
+html.dark .wtmsg-avatar-indigo { background: #4338ca; color: #e0e7ff; }
 html.dark .wtmsg-presence { border-color: #1f2937; }
 
 /* ---------- The conversation actions, as the CTI: an "Open chat" call to action in the accent, then a kebab */
