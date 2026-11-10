@@ -501,6 +501,13 @@ Ext.define('Sonicle.webtop.core.private.viewport.BaseAbstract', {
 								iconCls: 'wt-icon-options',
 								handler: 'onAccountMenuButtonClick'
 							}, {
+								// As My: less spacing, same font sizes; the page reloads to lay everything out again.
+								itemId: 'density',
+								text: WT.res(WT.getVar('uiDensity') === 'compact' ? 'accountmenu.density.standard.lbl' : 'accountmenu.density.compact.lbl'),
+								// As My: the 3x3 grid to go compact, the 2x2 one to go back to standard
+								iconCls: WT.getVar('uiDensity') === 'compact' ? 'fas fa-th-large' : 'fas fa-th',
+								handler: 'onAccountMenuButtonClick'
+							}, {
 								itemId: 'connectapp',
 								text: WT.res('accountmenu.connectapp.lbl'),
 								iconCls: 'wt-glyph-qrcode',

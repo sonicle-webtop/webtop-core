@@ -454,6 +454,7 @@ public class Service extends BaseService implements EventListener {
 		vars.put("theme", us.getUITheme());
 		vars.put("laf", us.getUILookAndFeel());
 		vars.put("layout", us.getUILayout());
+		vars.put("uiDensity", us.getUIDensity());
 		vars.put("colorScheme", UIBoot.getColorScheme(us.getUILookAndFeel()));
 		vars.put("viewportHeaderScale", EnumUtils.toSerializedName(us.getViewportHeaderScale()));
 		vars.put("startupService", us.getStartupService());
@@ -1821,6 +1822,21 @@ public class Service extends BaseService implements EventListener {
 			
 		} catch (Exception ex) {
 			logger.error("Error in action SetNethVoiceChatPinned", ex);
+			new JsonResult(false, ex.getMessage()).printTo(out);
+		}
+	}
+	
+	/**
+	 * Remembers the UI density chosen in the account menu: standard or compact (the client reloads to apply it).
+	 */
+	public void processSetUIDensity(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
+		try {
+			String density = ServletUtils.getStringParameter(request, "density", "standard");
+			us.setUIDensity(density);
+			new JsonResult().printTo(out);
+			
+		} catch (Exception ex) {
+			logger.error("Error in action SetUIDensity", ex);
 			new JsonResult(false, ex.getMessage()).printTo(out);
 		}
 	}

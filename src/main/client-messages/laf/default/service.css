@@ -67,3 +67,6 @@ html.dark .wtmsg-presence { border-color: #1f2937; }
 .wtmsg-cta:hover { text-decoration: underline; }
 .wtmsg-more { display: inline-block; width: 24px; margin-left: 18px; color: #c2410c; font-size: 16px; text-align: center; cursor: pointer; vertical-align: middle; }
 html.dark .wtmsg-cta, html.dark .wtmsg-more { color: #f97316; }
+/* ---------- Compact density: tighter conversation rows and filters */
+html.wt-compact .wtmsg-grid .x-grid-cell-inner { padding-top: 5px; padding-bottom: 5px; }
+html.wt-compact .wtmsg-filters .x-grid-cell-inner { padding-top: 4px; padding-bottom: 4px; }

@@ -1015,6 +1015,13 @@ public class CoreSettings {
 	public static final String NETHVOICE_CHAT_PINNED = "nethvoice.chat.pinned";
 	
 	/**
+	 * [user]
+	 * [string]
+	 * UI density: standard (default) or compact, less spacing with the same font sizes.
+	 */
+	public static final String UI_DENSITY = "ui.density";
+	
+	/**
 	 * [domain+system]
 	 * [string]
 	 * Specifies the SMS provider, if available. 

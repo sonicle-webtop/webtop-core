@@ -65,6 +65,23 @@ Ext.define('Sonicle.webtop.core.private.app.App', {
 		me.callParent(arguments);
 	},
 	
+	/**
+	 * Compact density, as My: the class for the CSS, then the bar heights the LAF sets in JS lower
+	 * (the top bar 30%, as My's, the others 20%) and the launcher buttons one scale smaller.
+	 */
+	applyCompactDensity: function(viewCls) {
+		var proto = viewCls.prototype,
+			smaller = {large: 'medium', medium: 'small', small: 'small'},
+			factors = {topbarHeight: 0.7, bottombarHeight: 0.8, toolHeaderHeight: 0.8};
+		document.documentElement.classList.add('wt-compact');
+		Ext.iterate(factors, function(name, factor) {
+			var orig = proto[name];
+			if (Ext.isFunction(orig)) proto[name] = function() { return Math.round(orig.apply(this, arguments) * factor); };
+		});
+		var scale = proto.navbarItemsScale;
+		if (Ext.isFunction(scale)) proto.navbarItemsScale = function() { return smaller[scale.apply(this, arguments)] || 'small'; };
+	},
+	
 	launch: function() {
 		var me = this,
 				SoSnd = Sonicle.Sound;
@@ -115,6 +132,9 @@ Ext.define('Sonicle.webtop.core.private.app.App', {
 		// Instantiates core service
 		cdesc = me.getDescriptor(sids[0]);
 		if (!cdesc.getInstance()) Ext.raise('Unable to instantiate core');
+		
+		// Compact density (account menu): set before the viewport, so every layout is measured with the tighter spacing.
+		if (WT.getVar('uiDensity') === 'compact') me.applyCompactDensity(me.getView(me.views[0]));
 		
 		// Creates main viewport
 		vp = me.viewport = me.getView(me.views[0]).create({

@@ -271,7 +271,21 @@ Ext.define('Sonicle.webtop.core.private.viewport.ViewController', {
 			case 'connectapp':
 				me.showConnectApp();
 				break;
+			case 'density':
+				me.toggleDensity();
+				break;
 		}
+	},
+	
+	toggleDensity: function() {
+		var density = WT.getVar('uiDensity') === 'compact' ? 'standard' : 'compact';
+		WT.ajaxReq(WT.ID, 'SetUIDensity', {
+			params: {density: density},
+			callback: function(success, json) {
+				if (success) window.location.reload();
+				else WT.error(json.message);
+			}
+		});
 	},
 	
 	/*
