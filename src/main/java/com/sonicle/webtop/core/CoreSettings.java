@@ -953,6 +953,20 @@ public class CoreSettings {
 	
 	/**
 	 * [domain+system]
+	 * [boolean]
+	 * Enables the NethVoice chat (chat-island) inside WebTop.
+	 */
+	public static final String NETHVOICE_CHAT_ENABLED = "nethvoice.chat.enabled";
+	
+	/**
+	 * [domain+system]
+	 * [string]
+	 * Host of the NethVoice CTI the chat connects to (e.g. cti.example.com).
+	 */
+	public static final String NETHVOICE_CHAT_CTI_HOST = "nethvoice.chat.cti.host";
+	
+	/**
+	 * [domain+system]
 	 * [string]
 	 * Specifies the SMS provider webrest URL, if available. 
 	 */
@@ -992,6 +1006,20 @@ public class CoreSettings {
 	 * Specifies the PBX password, when different from WebTop password. 
 	 */
 	public static final String PBX_PASSWORD = "pbx.password";
+	
+	/**
+	 * [user]
+	 * [boolean]
+	 * Keeps the NethVoice chat pinned to the side panel (default true).
+	 */
+	public static final String NETHVOICE_CHAT_PINNED = "nethvoice.chat.pinned";
+	
+	/**
+	 * [user]
+	 * [string]
+	 * UI density: standard (default) or compact, less spacing with the same font sizes.
+	 */
+	public static final String UI_DENSITY = "ui.density";
 	
 	/**
 	 * [domain+system]

@@ -423,3 +423,53 @@
 	height: 100%;
 	overflow: auto;
 }
+/* ---------- Compact density (account menu, html.wt-compact set before the viewport): as My, about 20% less spacing, same font sizes.
+   The viewport bar heights and the launcher button scale are set in JS (App.js); Mail's list classes are here too. */
+/* Grids, trees, column headers, panel headers, toolbars, tabs */
+html.wt-compact .x-grid-cell-inner { padding-top: 3px; padding-bottom: 3px; }
+html.wt-compact .x-tree-view .x-grid-cell-inner { padding-top: 2px; padding-bottom: 2px; }
+html.wt-compact .x-grid-header-ct .x-column-header-inner { padding-top: 5px; padding-bottom: 5px; }
+html.wt-compact .x-panel-header { padding-top: 6px; padding-bottom: 6px; }
+html.wt-compact .x-toolbar { padding-top: 3px; padding-bottom: 3px; }
+/* the tool and chat footers keep room for their chevron (cut at fractional zooms with 3px) */
+html.wt-compact .x-toolbar.wt-tool-foo { padding-top: 5px; padding-bottom: 7px; }
+html.wt-compact .x-tab { padding-top: 5px; padding-bottom: 5px; }
+/* Launcher: 40px buttons (24px icon) instead of 50px, narrower bar */
+html.wt-compact .wt-viewport-navbar.x-toolbar-vertical { padding-left: 10px; padding-right: 10px; }
+html.wt-compact .wt-viewport-navbar .x-btn.x-toolbar-item { padding: 8px; }
+html.wt-compact .wt-viewport-navbar-logo.so-tbimage .so-tbimage-image { width: 36px !important; height: 36px !important; background-size: 36px 36px; background-repeat: no-repeat; background-position: center; }
+/* Date picker of the tool panels: 24px days instead of 30px */
+html.wt-compact .x-datepicker-cell, html.wt-compact .x-datepicker-date { height: 24px; line-height: 24px; }
+html.wt-compact .x-datepicker-column-header { height: 24px; line-height: 24px; }
+/* Mail: the list header (title and count) and the reading toolbar */
+html.wt-compact .wtmail-grid-toolbar-container { padding-top: 4px; padding-bottom: 4px; }
+html.wt-compact .wtmail-messageview-toolbar-container { padding-top: 4px; }
+/* Mail list: two lines per message, closer together */
+html.wt-compact .wtmail-message-grid .x-grid-cell-inner { padding-top: 1px; padding-bottom: 1px; }
+html.wt-compact .wtmail-messagecolumn-body { margin-top: 1px; }
+/* Today's and the selected day's circle: 24px, centered in the smaller cell */
+/* its ring is placed for 30px cells: off in the compact picker, the filled circle and the week band stay */
+html.wt-compact .x-datepicker-cell::before { display: none; }
+html.wt-compact .x-datepicker-today .x-datepicker-date, html.wt-compact .x-datepicker-selected .x-datepicker-date { width: 24px; margin: 0 auto; }
+/* Top bar: smaller items, as My (28px buttons, 26px avatar) */
+html.wt-compact .wt-viewport-topbar .x-btn { padding-top: 3px; padding-bottom: 3px; }
+html.wt-compact .wt-viewport-topbar .so-btn-avatar { padding: 2px 8px; }
+html.wt-compact .wt-viewport-topbar .so-btn-avatar .x-btn-icon-el,
+html.wt-compact .wt-viewport-topbar .so-btn-avatar .so-btn-avatar-wrap { width: 26px !important; height: 26px !important; line-height: 26px !important; background-size: cover; }
+html.wt-compact .wt-viewport-topbar .so-btn-avatar .so-btn-avatar-wrap > span { font-size: 12px !important; }
+/* Avatars in the lists (Mail, Contacts...): 26px, as the top bar's and the chat's in compact */
+html.wt-compact .x-grid-item .so-avatar-wrap { width: 26px !important; height: 26px !important; line-height: 26px !important; background-size: cover; }
+html.wt-compact .x-grid-item .so-avatar-wrap > span { font-size: 12px !important; line-height: 26px !important; }
+/* Lists: the avatar's cell centred on the row in both densities (grid cells are top aligned), in the middle of its two lines */
+.x-grid-item td.x-grid-cell:has(.so-avatar-wrap) { vertical-align: middle; }
+.x-grid-item td.x-grid-cell:has(.so-avatar-wrap) > .x-grid-cell-inner { padding-top: 0; padding-bottom: 0; }
+/* Windows and dialogs (Settings, editors, message boxes): header, fields, labels, gaps and buttons about 20% tighter */
+html.wt-compact .x-window-header { padding-top: 8px; padding-bottom: 8px; }
+html.wt-compact .x-window input.x-form-text-default { min-height: 26px; padding-top: 3px; padding-bottom: 2px; }
+html.wt-compact .x-window .x-form-trigger-default { height: 26px; line-height: 26px; }
+html.wt-compact .x-window .x-form-item { margin-bottom: 10px; }
+html.wt-compact .x-window .x-form-item-label-top, html.wt-compact .x-window .x-form-item-label-top > .x-form-item-label-inner { padding-top: 4px; }
+html.wt-compact .x-window .x-form-item-label:not(.x-form-item-label-top) { padding-top: 6px; }
+html.wt-compact .x-window .x-btn { padding-top: 3px; padding-bottom: 3px; }
+/* ExtJS reads these margins for its box layouts: in a row of fields (so-fieldhgroup) only the row keeps one, not each field */
+html.wt-compact .x-window .so-fieldhgroup .x-form-item { margin-bottom: 0; }

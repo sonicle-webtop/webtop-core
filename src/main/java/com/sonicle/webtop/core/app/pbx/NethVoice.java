@@ -41,6 +41,8 @@ import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.SignatureException;
 import java.util.Formatter;
+import java.util.List;
+import java.util.Map;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 
@@ -77,6 +79,8 @@ public class NethVoice extends PbxProvider {
 					.header("Authorization", username+":"+token)
 					.field("number", number)
 					.asString();
+				// The call was ignored before: report what the PBX says instead of a silent success.
+				if (resp.getStatus() >= 300) throw new WTException("Call failed: HTTP " + resp.getStatus());
 				success=true;
 			}
 		} catch (Exception ex) {
@@ -95,7 +99,11 @@ public class NethVoice extends PbxProvider {
 			.asString();
 		
 		String nonce=null;
-		String hdr=resp.getHeaders().getFirst(HDR_WWW_AUTHENTICATE);
+		// Unirest keeps the names as received, and a proxy may send "Www-Authenticate" (Traefik, over HTTP/1.1).
+		String hdr=null;
+		for (Map.Entry<String, List<String>> entry : resp.getHeaders().entrySet()) {
+			if (HDR_WWW_AUTHENTICATE.equalsIgnoreCase(entry.getKey()) && !entry.getValue().isEmpty()) hdr=entry.getValue().get(0);
+		}
 		if (hdr!=null) {
 			if (hdr.startsWith(HDR_WWW_AUTHENTICATE_PREFIX))
 				nonce=hdr.substring(HDR_WWW_AUTHENTICATE_PREFIX.length()).trim();
