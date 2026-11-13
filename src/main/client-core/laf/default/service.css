@@ -456,10 +456,20 @@ html.wt-compact .wt-viewport-topbar .x-btn { padding-top: 3px; padding-bottom: 3
 html.wt-compact .wt-viewport-topbar .so-btn-avatar { padding: 2px 8px; }
 html.wt-compact .wt-viewport-topbar .so-btn-avatar .x-btn-icon-el,
 html.wt-compact .wt-viewport-topbar .so-btn-avatar .so-btn-avatar-wrap { width: 26px !important; height: 26px !important; line-height: 26px !important; background-size: cover; }
-html.wt-compact .wt-viewport-topbar .so-btn-avatar .so-btn-avatar-wrap > span { font-size: 13px !important; }
+html.wt-compact .wt-viewport-topbar .so-btn-avatar .so-btn-avatar-wrap > span { font-size: 12px !important; }
 /* Avatars in the lists (Mail, Contacts...): 26px, as the top bar's and the chat's in compact */
 html.wt-compact .x-grid-item .so-avatar-wrap { width: 26px !important; height: 26px !important; line-height: 26px !important; background-size: cover; }
-html.wt-compact .x-grid-item .so-avatar-wrap > span { font-size: 13px !important; line-height: 26px !important; }
+html.wt-compact .x-grid-item .so-avatar-wrap > span { font-size: 12px !important; line-height: 26px !important; }
 /* Lists: the avatar's cell centred on the row in both densities (grid cells are top aligned), in the middle of its two lines */
 .x-grid-item td.x-grid-cell:has(.so-avatar-wrap) { vertical-align: middle; }
 .x-grid-item td.x-grid-cell:has(.so-avatar-wrap) > .x-grid-cell-inner { padding-top: 0; padding-bottom: 0; }
+/* Windows and dialogs (Settings, editors, message boxes): header, fields, labels, gaps and buttons about 20% tighter */
+html.wt-compact .x-window-header { padding-top: 8px; padding-bottom: 8px; }
+html.wt-compact .x-window input.x-form-text-default { min-height: 26px; padding-top: 3px; padding-bottom: 2px; }
+html.wt-compact .x-window .x-form-trigger-default { height: 26px; line-height: 26px; }
+html.wt-compact .x-window .x-form-item { margin-bottom: 10px; }
+html.wt-compact .x-window .x-form-item-label-top, html.wt-compact .x-window .x-form-item-label-top > .x-form-item-label-inner { padding-top: 4px; }
+html.wt-compact .x-window .x-form-item-label:not(.x-form-item-label-top) { padding-top: 6px; }
+html.wt-compact .x-window .x-btn { padding-top: 3px; padding-bottom: 3px; }
+/* ExtJS reads these margins for its box layouts: in a row of fields (so-fieldhgroup) only the row keeps one, not each field */
+html.wt-compact .x-window .so-fieldhgroup .x-form-item { margin-bottom: 0; }
