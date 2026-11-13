@@ -62,6 +62,9 @@ Ext.define('Sonicle.webtop.core.messages.Service', {
 			xtype: 'panel',
 			layout: 'fit',
 			title: me.getName(),
+			// As the mail's "N messages": the total under the title, the filters count only what is unread
+			dockedItems: [{xtype: 'component', dock: 'top', reference: 'lbltotal', cls: 'wtmsg-total', html: Ext.String.format(me.res('total.many'), 0)}],
+			referenceHolder: true,
 			items: [{
 				xtype: 'grid',
 				reference: 'gpfilters',
@@ -175,13 +178,21 @@ Ext.define('Sonicle.webtop.core.messages.Service', {
 				menuDisabled: true,
 				renderer: function() {
 					return '<span class="wtmsg-cta"><i class="fas fa-comment-alt"></i>' + Ext.String.htmlEncode(me.res('act-openChat.lbl')) + '</span>'
-						+ '<span class="wtmsg-more fas fa-ellipsis-v"></span>';
+						+ '<span class="wtmsg-more fas fa-ellipsis-v" title="' + Ext.String.htmlEncode(me.res('act-more.lbl')) + '"></span>';
 				}
 			}],
 			listeners: {
 				rowclick: function(g, rec, el, ri, e) {
-					if (e.getTarget('.wtmsg-more')) me.showMoreMenu(rec, e);
+					if (e.getTarget('.wtmsg-more')) me.showMoreMenu(rec, e, el);
 					else me.openChat(rec);
+				},
+				// From the keyboard too: Enter opens the chat, the context menu key (or a right click) the other actions
+				itemkeydown: function(g, rec, el, i, e) {
+					if (e.getKey() === e.ENTER) me.openChat(rec);
+				},
+				itemcontextmenu: function(g, rec, el, i, e) {
+					e.stopEvent();
+					me.showMoreMenu(rec, e, el);
 				}
 			}
 		}));
@@ -223,13 +234,23 @@ Ext.define('Sonicle.webtop.core.messages.Service', {
 			if (toolbox) toolbox.setHidden(true);
 		},
 		
-		showMoreMenu: function(rec, e) {
+		showMoreMenu: function(rec, e, rowEl) {
 			var me = this,
-				lbl = me.isOwnedGroup(rec) ? 'act-destroyGroup.lbl' : (rec.get('kind') === 'group' ? 'act-leaveGroup.lbl' : 'act-deleteChat.lbl');
-			Ext.create('Ext.menu.Menu', {
-				items: [{text: me.res(lbl), iconCls: 'wt-icon-trash', handler: function() { me.confirmDelete(rec); }}],
-				listeners: {hide: function(m) { Ext.defer(m.destroy, 10, m); }}
-			}).showBy(e.getTarget('.wtmsg-more'), 'tr-br?');
+				leave = !me.isOwnedGroup(rec) && rec.get('kind') === 'group',
+				// A row's menu names only the verb (Nebula): the confirmation names the object
+				lbl = leave ? me.res('act-leave.lbl') : WT.res('act-delete.lbl'),
+				kebab = e.getTarget('.wtmsg-more'),
+				menu = Ext.create('Ext.menu.Menu', {
+					items: [{text: lbl, iconCls: leave ? 'fas fa-sign-out-alt' : 'wt-icon-trash', handler: function() { me.confirmDelete(rec); }}],
+					listeners: {hide: function(m) { Ext.defer(m.destroy, 10, m); }}
+				});
+			// Under the kebab, at the pointer on a right click, under the row from the keyboard (focus on its first item)
+			if (kebab) menu.showBy(kebab, 'tr-br?');
+			else if (e.getX() > 0) menu.showAt(e.getXY());
+			else {
+				menu.showBy(rowEl, 'tl-bl?');
+				menu.down('menuitem').focus();
+			}
 		},
 		
 		gp: function() {
@@ -240,14 +261,17 @@ Ext.define('Sonicle.webtop.core.messages.Service', {
 			var me = this, sto = me.gp().getStore(), list = conversations || [],
 				counts = {all: list.length, unread: 0, chat: 0, group: 0, external: 0},
 				fsto = me.getToolComponent().down('grid').getStore();
+			// As the mail folders: each filter counts only its unread chats
 			Ext.each(list, function(c) {
-				if (c.unread) counts.unread++;
+				if (!c.unread) return;
+				counts.unread++;
 				if (c.guests) counts.external++;
 				counts[c.kind === 'group' ? 'group' : 'chat']++;
 			});
 			fsto.each(function(rec) {
 				rec.set('count', rec.get('id') === 'all' ? 0 : counts[rec.get('id')], {commit: true});
 			});
+			me.getToolComponent().lookupReference('lbltotal').setHtml(Ext.String.format(me.res(list.length === 1 ? 'total.one' : 'total.many'), list.length));
 			sto.loadData(list);
 			me.applyFilter();
 		},
@@ -324,11 +348,17 @@ Ext.define('Sonicle.webtop.core.messages.Service', {
 		
 		confirmDelete: function(rec) {
 			var me = this,
-				key = me.isOwnedGroup(rec) ? 'confirm.destroyGroup' : (rec.get('kind') === 'group' ? 'confirm.leaveGroup' : 'confirm.deleteChat');
-			WT.confirm(Ext.String.format(me.res(key), Ext.String.htmlEncode(rec.get('name'))), function(bid) {
+				owned = me.isOwnedGroup(rec), leave = !owned && rec.get('kind') === 'group',
+				key = owned ? 'destroyGroup' : (leave ? 'leaveGroup' : 'deleteChat');
+			// Nebula's delete confirmation: the action as title, its consequence as text, the verb on the button and Cancel
+			WT.confirm(Ext.String.format(me.res('confirm.' + key), Ext.String.htmlEncode(rec.get('name'))), function(bid) {
 				var chat = me.getChat();
 				if (bid === 'yes' && chat) chat.deleteChat(rec.get('peer'));
-			}, me);
+			}, me, {
+				title: me.res('act-' + key + '.lbl'),
+				yesText: leave ? me.res('act-leave.lbl') : WT.res('act-delete.lbl'),
+				noText: WT.res('act-cancel.lbl')
+			});
 		},
 		
 		renderConversation: function(rec) {
@@ -349,14 +379,15 @@ Ext.define('Sonicle.webtop.core.messages.Service', {
 				pic = avatar ? '<img class="wtmsg-avatar" src="' + enc(avatar) + '"/>' : '<span class="wtmsg-avatar wtmsg-avatar-initials' + look + '">' + (group ? enc(initials) : '') + '</span>',
 				// As the island's dot: DND black, busy or ringing red, green when on the chat, on the mobile app or online for the CTI
 				presence = rec.get('presence'),
-				state = presence === 'dnd' ? 'wtmsg-presence-dnd' : (Ext.Array.contains(['busy', 'ringing', 'incoming'], presence) ? 'wtmsg-presence-busy'
-					: (rec.get('online') || rec.get('mobile') || presence === 'online' ? 'wtmsg-presence-on' : '')),
-				dot = group ? '' : '<span class="wtmsg-presence ' + state + '"></span>',
+				state = presence === 'dnd' ? 'dnd' : (Ext.Array.contains(['busy', 'ringing', 'incoming'], presence) ? 'busy'
+					: (rec.get('online') || rec.get('mobile') || presence === 'online' ? 'on' : 'off')),
+				// Not by color alone: the dot says its state (tooltip and screen readers)
+				dot = group ? '' : '<span class="wtmsg-presence wtmsg-presence-' + state + '" role="img" title="' + enc(me.res('presence.' + state)) + '" aria-label="' + enc(me.res('presence.' + state)) + '"></span>',
 				// As the CTI: the island's External badge, with a lock once its link no longer lets anyone in; then the muted bell
 				tags = (rec.get('guests') ? '<span class="wtmsg-tag">' + (rec.get('locked') ? '<i class="fas fa-lock"></i>' : '') + enc(me.res('gpconversations.external')) + '</span>' : '')
 					+ (rec.get('muted') ? '<i class="fas fa-bell-slash wtmsg-muted" title="' + enc(me.res('gpconversations.muted')) + '"></i>' : '');
 			return '<div class="wtmsg-conv"><span class="wtmsg-pic">' + pic + dot + '</span>'
-				+ '<span class="wtmsg-names"><span class="wtmsg-name' + (rec.get('unread') ? ' wtmsg-name-unread' : '') + '">' + enc(name) + '</span>' + tags
+				+ '<span class="wtmsg-names"><span class="wtmsg-name">' + enc(name) + '</span>' + tags
 				+ '<br/><span class="wtmsg-sub">' + enc(sub) + '</span></span></div>';
 		},
 		

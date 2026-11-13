@@ -22,19 +22,18 @@
 .wtmsg-avatar-headset:before { content: ''; width: 16px; height: 16px; background-color: currentColor; -webkit-mask: url(data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCA0NDggNTEyJz48cGF0aCBkPSdNMjI0IDY0Yy03OSAwLTE0NC43IDU3LjMtMTU3LjcgMTMyLjcgOS4zLTMgMTkuMy00LjcgMjkuNy00LjdsMTYgMGMyNi41IDAgNDggMjEuNSA0OCA0OGwwIDk2YzAgMjYuNS0yMS41IDQ4LTQ4IDQ4bC0xNiAwYy01MyAwLTk2LTQzLTk2LTk2bDAtNjRDMCAxMDAuMyAxMDAuMyAwIDIyNCAwUzQ0OCAxMDAuMyA0NDggMjI0bDAgMTY4LjFjMCA2Ni4zLTUzLjggMTIwLTEyMC4xIDEyMGwtODcuOS0uMS0zMiAwYy0yNi41IDAtNDgtMjEuNS00OC00OHMyMS41LTQ4IDQ4LTQ4bDMyIDBjMjYuNSAwIDQ4IDIxLjUgNDggNDhsMCAwIDQwIDBjMzkuOCAwIDcyLTMyLjIgNzItNzJsMC0yMC45Yy0xNC4xIDguMi0zMC41IDEyLjgtNDggMTIuOGwtMTYgMGMtMjYuNSAwLTQ4LTIxLjUtNDgtNDhsMC05NmMwLTI2LjUgMjEuNS00OCA0OC00OGwxNiAwYzEwLjQgMCAyMC4zIDEuNiAyOS43IDQuNy0xMy03NS4zLTc4LjYtMTMyLjctMTU3LjctMTMyLjd6Jy8+PC9zdmc+) center/contain no-repeat; mask: url(data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCA0NDggNTEyJz48cGF0aCBkPSdNMjI0IDY0Yy03OSAwLTE0NC43IDU3LjMtMTU3LjcgMTMyLjcgOS4zLTMgMTkuMy00LjcgMjkuNy00LjdsMTYgMGMyNi41IDAgNDggMjEuNSA0OCA0OGwwIDk2YzAgMjYuNS0yMS41IDQ4LTQ4IDQ4bC0xNiAwYy01MyAwLTk2LTQzLTk2LTk2bDAtNjRDMCAxMDAuMyAxMDAuMyAwIDIyNCAwUzQ0OCAxMDAuMyA0NDggMjI0bDAgMTY4LjFjMCA2Ni4zLTUzLjggMTIwLTEyMC4xIDEyMGwtODcuOS0uMS0zMiAwYy0yNi41IDAtNDgtMjEuNS00OC00OHMyMS41LTQ4IDQ4LTQ4bDMyIDBjMjYuNSAwIDQ4IDIxLjUgNDggNDhsMCAwIDQwIDBjMzkuOCAwIDcyLTMyLjIgNzItNzJsMC0yMC45Yy0xNC4xIDguMi0zMC41IDEyLjgtNDggMTIuOGwtMTYgMGMtMjYuNSAwLTQ4LTIxLjUtNDgtNDhsMC05NmMwLTI2LjUgMjEuNS00OCA0OC00OGwxNiAwYzEwLjQgMCAyMC4zIDEuNiAyOS43IDQuNy0xMy03NS4zLTc4LjYtMTMyLjctMTU3LjctMTMyLjd6Jy8+PC9zdmc+) center/contain no-repeat; }
 .wtmsg-avatar-blue { background: #dbeafe; color: #1e40af; }
 .wtmsg-avatar-indigo { background: #e0e7ff; color: #3730a3; }
-.wtmsg-presence { position: absolute; right: -1px; bottom: -1px; width: 12px; height: 12px; border-radius: 50%; background: #9ca3af; border: 2px solid #fff; box-sizing: border-box; }
-.wtmsg-presence-on { background: #10b981; }
-.wtmsg-presence-busy { background: #dc2626; }
+.wtmsg-presence { position: absolute; right: -1px; bottom: -1px; width: 12px; height: 12px; border-radius: 50%; background: #6b7280; border: 2px solid #fff; box-sizing: border-box; }
+.wtmsg-presence-on { background: #22c55e; }
+.wtmsg-presence-busy { background: #ef4444; }
 .wtmsg-presence-dnd { background: #030712; }
 .wtmsg-names { min-width: 0; overflow: hidden; text-overflow: ellipsis; line-height: 1.45; }
-/* Sizes as the Mail message list (sender 14px, preview 12px), weights and colors as the CTI's Messages page */
+/* Sizes as the Mail message list (sender 14px, preview 12px); weights and colors are Nebula tokens (only 400 and 500) */
 .wtmsg-name { font-size: 14px; font-weight: 500; color: #111827; }
-.wtmsg-name-unread { font-weight: 600; }
-.wtmsg-sub { color: #6b7280; font-size: 12px; }
+.wtmsg-sub { color: #4b5563; font-size: 12px; }
 /* The island's External badge (indigo, 12px medium), a lock before the label when the chat is private */
 .wtmsg-tag { display: inline-flex; align-items: center; gap: 4px; margin-left: 8px; padding: 2px 10px; border-radius: 9999px; background: #e0e7ff; color: #3730a3; font-size: 12px; font-weight: 500; line-height: 16px; white-space: nowrap; vertical-align: 1px; }
-.wtmsg-tag .fa-lock { font-size: 11px; }
-.wtmsg-muted { margin-left: 8px; color: #4338ca; font-size: 13px; }
+.wtmsg-tag .fa-lock { font-size: 12px; }
+.wtmsg-muted { margin-left: 8px; color: #4338ca; font-size: 12px; }
 /* Last message and date: 14px gray-700, an unread preview medium gray-900 with the count after it */
 .wtmsg-last, .wtmsg-when { color: #374151; font-size: 14px; }
 .wtmsg-last-unread { color: #111827; font-weight: 500; }
@@ -46,13 +45,15 @@
 .wtmsg-filters .x-grid-cell-inner { padding: 7px 10px 7px 12px; font-size: 14px; line-height: 21px; }
 .wtmsg-filter-ico { display: inline-block; width: 20px; margin-right: 10px; font-size: 16px; text-align: center; }
 .wtmsg-filter-count { float: right; min-width: 20px; padding: 0 6px; border-radius: 9999px; background: rgba(128,128,128,0.18); font-size: 12px; line-height: 21px; text-align: center; }
+/* The total under the title, as the mail's "N messages" line */
+.wtmsg-total { padding: 0 15px 6px; font-size: 12px; }
 /* ---------- Dark WebTop (html.dark, set by WTA.ux.NethVoiceChat): its accent is #f97316 */
 html.dark .wtmsg-icon-openChat { background: #f97316 !important; }
 html.dark .wtmsg-unread { background: #f97316; color: #030712; }
-html.dark .wtmsg-name, html.dark .wtmsg-last.wtmsg-last-unread { color: #f3f4f6; }
+html.dark .wtmsg-name, html.dark .wtmsg-last.wtmsg-last-unread { color: #f9fafb; }
 html.dark .wtmsg-last, html.dark .wtmsg-when { color: #e5e7eb; }
 html.dark .wtmsg-tag { background: #4338ca; color: #e0e7ff; }
-html.dark .wtmsg-muted { color: #818cf8; }
+html.dark .wtmsg-muted { color: #6366f1; }
 html.dark .wtmsg-presence { border-color: #111827; }
 html.dark .wtmsg-sub { color: #9ca3af; }
 /* Avatars as WebTop's own: dark on light, light on dark (a dark one vanishes on the dark row hover) */
@@ -65,11 +66,11 @@ html.dark .wtmsg-presence { border-color: #1f2937; }
 .wtmsg-cta { display: inline-flex; align-items: center; gap: 8px; color: #c2410c; font-size: 14px; font-weight: 500; cursor: pointer; vertical-align: middle; }
 .wtmsg-cta .fas { font-size: 16px; }
 .wtmsg-cta:hover { text-decoration: underline; }
-.wtmsg-more { display: inline-block; width: 24px; margin-left: 18px; color: #c2410c; font-size: 16px; text-align: center; cursor: pointer; vertical-align: middle; }
+.wtmsg-more { display: inline-block; border-radius: 4px; width: 24px; margin-left: 18px; color: #c2410c; font-size: 16px; text-align: center; cursor: pointer; vertical-align: middle; }
 html.dark .wtmsg-cta, html.dark .wtmsg-more { color: #f97316; }
 /* ---------- Compact density: tighter conversation rows and filters */
 html.wt-compact .wtmsg-grid .x-grid-cell-inner { padding-top: 5px; padding-bottom: 5px; }
 html.wt-compact .wtmsg-filters .x-grid-cell-inner { padding-top: 4px; padding-bottom: 4px; }
 html.wt-compact .wtmsg-pic, html.wt-compact .wtmsg-avatar { width: 26px; height: 26px; }
-html.wt-compact .wtmsg-avatar-initials { font-size: 13px; }
+html.wt-compact .wtmsg-avatar-initials { font-size: 12px; }
 html.wt-compact .wtmsg-avatar-headset:before { width: 13px; height: 13px; }
