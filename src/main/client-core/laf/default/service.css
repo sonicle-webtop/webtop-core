@@ -445,7 +445,7 @@ html.wt-compact .x-datepicker-column-header { height: 24px; line-height: 24px; }
 html.wt-compact .wtmail-grid-toolbar-container { padding-top: 4px; padding-bottom: 4px; }
 html.wt-compact .wtmail-messageview-toolbar-container { padding-top: 4px; }
 /* Mail list: two lines per message, closer together */
-html.wt-compact .wtmail-message-grid .x-grid-cell-inner { padding-top: 1px; padding-bottom: 1px; }
+html.wt-compact .wtmail-message-grid .x-grid-cell-inner { padding-top: 5px; padding-bottom: 3px; }
 html.wt-compact .wtmail-messagecolumn-body { margin-top: 1px; }
 /* Today's and the selected day's circle: 24px, centered in the smaller cell */
 /* its ring is placed for 30px cells: off in the compact picker, the filled circle and the week band stay */
