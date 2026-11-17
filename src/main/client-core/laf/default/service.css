@@ -473,8 +473,9 @@ html.wt-compact .x-window .x-form-item-label:not(.x-form-item-label-top) { paddi
 html.wt-compact .x-window .x-btn { padding-top: 3px; padding-bottom: 3px; }
 /* ExtJS reads these margins for its box layouts: in a row of fields (so-fieldhgroup) only the row keeps one, not each field */
 html.wt-compact .x-window .so-fieldhgroup .x-form-item { margin-bottom: 0; }
-/* List dividers (mail, messages, contacts, tasks, cloud): gray-600 in light, gray-400 in dark; html.dark comes from the page's color scheme */
-html .x-grid-item { border-top-color: #4b5563 !important; border-bottom-color: #4b5563 !important; }
-html.dark .x-grid-item { border-top-color: #9ca3af !important; border-bottom-color: #9ca3af !important; }
-/* The first row keeps no line above it, as the themes do */
-html .x-grid-item:first-child, html.dark .x-grid-item:first-child { border-top-color: transparent !important; }
+/* A stronger divider only between two rows with the indigo background (unread mail, selected rows), in every list: gray-600 in light, gray-400 in dark (html.dark comes from the page's color scheme).
+   The mail draws it at a row's bottom, other lists at its top. */
+html .x-grid-item:is(.x-grid-item-selected, .wtmail-x-grid-item-unread):has(+ .x-grid-item:is(.x-grid-item-selected, .wtmail-x-grid-item-unread)) { border-bottom-color: #4b5563 !important; }
+html .x-grid-item:is(.x-grid-item-selected, .wtmail-x-grid-item-unread) + .x-grid-item:is(.x-grid-item-selected, .wtmail-x-grid-item-unread) { border-top-color: #4b5563 !important; }
+html.dark .x-grid-item:is(.x-grid-item-selected, .wtmail-x-grid-item-unread):has(+ .x-grid-item:is(.x-grid-item-selected, .wtmail-x-grid-item-unread)) { border-bottom-color: #9ca3af !important; }
+html.dark .x-grid-item:is(.x-grid-item-selected, .wtmail-x-grid-item-unread) + .x-grid-item:is(.x-grid-item-selected, .wtmail-x-grid-item-unread) { border-top-color: #9ca3af !important; }
