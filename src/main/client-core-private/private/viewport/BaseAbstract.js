@@ -92,6 +92,45 @@ Ext.define('Sonicle.webtop.core.private.viewport.BaseAbstract', {
 				me.nvChat = Ext.create('WTA.ux.NethVoiceChat', {viewport: me});
 			}, me, {single: true});
 		}
+		// The services' split panels (mail, contacts and tasks previews) keep their share of the content when it narrows or widens
+		me.on('afterrender', function() {
+			var mains = me.getMainRegion();
+			mains.items.each(me.watchSplits, me);
+			mains.on('add', function(c, item) { me.watchSplits(item); });
+		}, me, {single: true});
+	},
+	
+	watchSplits: function(main) {
+		var me = this,
+			scan = function() {
+				Ext.each(main.query('[region=east],[region=west]'), function(r) {
+					var ow = r.ownerCt && r.ownerCt.lastBox ? r.ownerCt.lastBox.width : 0;
+					if (!r.split || r.wtShare || !ow || r.collapsed || r.isHidden()) return;
+					// The share the user picked: the service's percentage, or its pixels (restored state) over the content
+					r.wtShare = Ext.isString(r.width) && /%$/.test(r.width) ? parseFloat(r.width) / 100 : r.getWidth() / ow;
+					// Only the user's drag changes it
+					if (r.splitter && r.splitter.tracker) r.splitter.tracker.on('dragend', function() {
+						r.wtShare = r.getWidth() / r.ownerCt.lastBox.width;
+					});
+					// After the service's own resize handlers: the content narrowed or widened (chat panel, window), the split keeps its share
+					r.ownerCt.on('resize', function() { me.applySplitShare(r); });
+				});
+			};
+		if (main.rendered && main.lastBox) scan();
+		else main.on('boxready', scan, me, {single: true});
+		main.on('activate', scan, me);
+	},
+	
+	applySplitShare: function(r) {
+		// After the layout that resized the content: a size set inside it is not laid out again
+		Ext.defer(function() {
+			var ow = (!r.destroyed && r.ownerCt.lastBox) ? r.ownerCt.lastBox.width : 0,
+				center = ow && r.ownerCt.items.findBy(function(i) { return i.region === 'center'; }),
+				// The same share of the new width; the rest keeps at least its minimum (200px, as the mail's list) and the panel its own
+				px = Math.round(Math.max(r.minWidth || 0, Math.min(r.wtShare * ow, ow - ((center && center.minWidth) || 200))));
+			if (!ow || r.collapsed || r.isHidden()) return;
+			if (Math.abs(r.getWidth() - px) > 1) r.setWidth(px);
+		}, 1);
 	},
 	
 	isNVChatEnabled: function() {
