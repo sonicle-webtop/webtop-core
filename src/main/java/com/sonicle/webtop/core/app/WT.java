@@ -46,6 +46,8 @@ import com.sonicle.mail.email.EmailPopulatingBuilder;
 import com.sonicle.mail.email.Recipient;
 import com.sonicle.webtop.core.CoreManager;
 import com.sonicle.webtop.core.admin.CoreAdminManager;
+import com.sonicle.webtop.core.app.devicepush.DevicePushEvent;
+import com.sonicle.webtop.core.app.devicepush.DevicePushManager;
 import com.sonicle.webtop.core.app.model.EnabledCond;
 import com.sonicle.webtop.core.app.sdk.AuditReferenceDataEntry;
 import com.sonicle.webtop.core.app.sdk.WTEmailSendException;
@@ -988,6 +990,16 @@ public class WT {
 	
 	public static void notify(UserProfileId profileId, List<ServiceMessage> messages, boolean enqueueIfOffline) {
 		getWTA().notify(profileId, messages, enqueueIfOffline);
+	}
+
+	/**
+	 * Delivers an event to the mobile devices subscribed for the passed user.
+	 * A no-op when the user has none; never blocks, never throws.
+	 * @param profileId The target user.
+	 * @param event The event to deliver.
+	 */
+	public static void pushToDevices(UserProfileId profileId, DevicePushEvent event) {
+		DevicePushManager.getInstance().push(profileId, event);
 	}
 	
 	public static void sendEmailMessage(final UserProfileId sendingProfileId, final MimeMessage message) throws WTEmailSendException {

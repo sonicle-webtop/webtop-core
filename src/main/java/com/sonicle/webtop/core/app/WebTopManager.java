@@ -73,6 +73,7 @@ import com.sonicle.security.auth.directory.LdapDirectory;
 import com.sonicle.security.auth.directory.LdapNethDirectory;
 import com.sonicle.webtop.core.CoreServiceSettings;
 import com.sonicle.webtop.core.CoreUserSettings;
+import com.sonicle.webtop.core.app.devicepush.DevicePushManager;
 import com.sonicle.webtop.core.app.auth.DirectoryUtils;
 import com.sonicle.webtop.core.app.auth.LdapWebTopDirectory;
 import com.sonicle.webtop.core.app.auth.WebTopDirectory;
@@ -2366,6 +2367,7 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 			tokDao.revokeById(con, refreshTokenId, now, revisionTs);
 			tokDao.revokeByParentId(con, refreshTokenId, now, revisionTs);
 			authAccessTokenCache.invalidateAll();
+			DevicePushManager.getInstance().onAuthSessionsRevoked(new UserProfileId(domainId, userId));
 			return true;
 
 		} catch (Exception ex) {
@@ -2393,6 +2395,7 @@ public final class WebTopManager extends AbstractAppManager<WebTopManager> {
 			con = getConnection(true);
 			final int n = tokDao.revokeAllByUser(con, domainId, userId, JodaTimeUtils.now(), BaseDAO.createRevisionTimestamp());
 			authAccessTokenCache.invalidateAll();
+			DevicePushManager.getInstance().onAuthSessionsRevoked(new UserProfileId(domainId, userId));
 			return n;
 
 		} catch (Exception ex) {

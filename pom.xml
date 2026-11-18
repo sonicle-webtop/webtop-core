@@ -542,6 +542,12 @@
 			<artifactId>caffeine</artifactId>
 			<version>${caffeine.version}</version>
 		</dependency>
+		<!-- Mobile push gateway link (WebSocket client to external Node.js gateway) -->
+		<dependency>
+			<groupId>org.java-websocket</groupId>
+			<artifactId>Java-WebSocket</artifactId>
+			<version>1.5.7</version>
+		</dependency>
 		<dependency>
 			<groupId>com.bucket4j</groupId>
 			<artifactId>bucket4j_jdk8-core</artifactId>
