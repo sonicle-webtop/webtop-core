@@ -32,10 +32,14 @@
  */
 package com.sonicle.webtop.core.bg;
 
+import com.google.gson.JsonObject;
+import com.sonicle.commons.time.JavaTimeUtils;
 import com.sonicle.webtop.core.BackgroundService;
 import com.sonicle.webtop.core.CoreManager;
 import com.sonicle.webtop.core.app.ServiceManager;
 import com.sonicle.webtop.core.app.WT;
+import com.sonicle.webtop.core.app.devicepush.DevicePushEvent;
+import com.sonicle.webtop.core.app.devicepush.DevicePushManager;
 import com.sonicle.webtop.core.app.sdk.interfaces.IControllerRemindersHooks;
 import com.sonicle.webtop.core.bol.OSnoozedReminder;
 import com.sonicle.webtop.core.bol.js.JsReminderInApp;
@@ -50,9 +54,14 @@ import com.sonicle.webtop.core.sdk.UserProfile;
 import com.sonicle.webtop.core.sdk.UserProfileId;
 import com.sonicle.webtop.core.sdk.WTException;
 import jakarta.mail.internet.InternetAddress;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.FormatStyle;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import org.quartz.JobExecutionContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -63,6 +72,8 @@ import org.slf4j.LoggerFactory;
  */
 public class ReminderTask extends BaseBackgroundServiceTask {
 	private static final Logger LOGGER = (Logger)LoggerFactory.getLogger(ReminderTask.class);
+	private static final String DEVICE_EVENT_TYPE = "REMINDER";
+	private static final long DEVICE_EVENT_TTL_MILLIS = 60 * 60 * 1000L; // a reminder delivered hours late is noise
 	
 	@Override
 	public Logger getLogger() {
@@ -74,6 +85,7 @@ public class ReminderTask extends BaseBackgroundServiceTask {
 		BackgroundService bs = ((BackgroundService)getBackgroundService(jec));
 		CoreManager coreMgr = WT.getCoreManager();
 		HashMap<UserProfileId, ArrayList<ServiceMessage>> byProfile = new HashMap<>();
+		HashMap<UserProfileId, ArrayList<JsReminderInApp>> byProfileForDevices = new HashMap<>();
 		
 		try {
 			ArrayList<BaseReminder> alerts = new ArrayList<>();
@@ -97,11 +109,13 @@ public class ReminderTask extends BaseBackgroundServiceTask {
 						sendEmail((ReminderEmail)alert);
 
 					} else if (alert instanceof ReminderInApp) {
-						ReminderMessage msg = new ReminderMessage(new JsReminderInApp((ReminderInApp)alert));
+						JsReminderInApp js = new JsReminderInApp((ReminderInApp)alert);
+						ReminderMessage msg = new ReminderMessage(js);
 						if (!byProfile.containsKey(alert.getProfileId())) {
 							byProfile.put(alert.getProfileId(), new ArrayList<>());
 						}
 						byProfile.get(alert.getProfileId()).add(msg);
+						byProfileForDevices.computeIfAbsent(alert.getProfileId(), k -> new ArrayList<>()).add(js);
 					}
 				}
 			}
@@ -117,11 +131,13 @@ public class ReminderTask extends BaseBackgroundServiceTask {
 			List<OSnoozedReminder> prems = coreMgr.listExpiredSnoozedReminders(context.getExecuteInstant());
 			for (OSnoozedReminder prem : prems) {
 				UserProfileId pid = new UserProfileId(prem.getDomainId(), prem.getUserId());
-				ReminderMessage msg = new ReminderMessage(new JsReminderInApp(prem));
+				JsReminderInApp js = new JsReminderInApp(prem);
+				ReminderMessage msg = new ReminderMessage(js);
 				if (!byProfile.containsKey(pid)) {
 					byProfile.put(pid, new ArrayList<>());
 				}
 				byProfile.get(pid).add(msg);
+				byProfileForDevices.computeIfAbsent(pid, k -> new ArrayList<>()).add(js);
 			}
 
 		} catch (WTException ex) {
@@ -132,6 +148,49 @@ public class ReminderTask extends BaseBackgroundServiceTask {
 		for (UserProfileId pid : byProfile.keySet()) {
 			if (shouldStop()) break; // Speed-up shutdown process!
 			WT.notify(pid, byProfile.get(pid), true);
+		}
+		
+		// ...and reach the mobile devices too
+		for (UserProfileId pid : byProfileForDevices.keySet()) {
+			if (shouldStop()) break; // Speed-up shutdown process!
+			pushToDevices(pid, byProfileForDevices.get(pid));
+		}
+	}
+	
+	private void pushToDevices(UserProfileId profileId, List<JsReminderInApp> reminders) {
+		if (!DevicePushManager.getInstance().hasDevices(profileId)) return;
+		Locale locale = Locale.ENGLISH;
+		try {
+			UserProfile.Data pdata = WT.getProfileData(profileId);
+			if (pdata != null && pdata.getLocale() != null) locale = pdata.getLocale();
+		} catch (Exception ex) {
+			LOGGER.debug("Unable to get locale for '{}'", profileId, ex);
+		}
+		
+		for (JsReminderInApp js : reminders) {
+			try {
+				ZoneId tz = ZoneId.of(js.timezone);
+				ZonedDateTime when = JavaTimeUtils.parseDateTimeYMDHMS(tz, js.date);
+				JsonObject alert = new JsonObject();
+				alert.addProperty("title", js.title);
+				alert.addProperty("body", DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM, FormatStyle.SHORT).withLocale(locale).format(when));
+				JsonObject openTo = new JsonObject();
+				openTo.addProperty("service", js.serviceId);
+				openTo.addProperty("type", js.type);
+				openTo.addProperty("instanceId", js.instanceId);
+				
+				WT.pushToDevices(profileId, new DevicePushEvent(js.serviceId, DEVICE_EVENT_TYPE, DevicePushEvent.DeliveryClass.ALERT)
+					.ttl(DEVICE_EVENT_TTL_MILLIS)
+					.field("type", DEVICE_EVENT_TYPE)
+					.field("alert", alert)
+					.field("openTo", openTo)
+					.field("date", when.toInstant().toString())
+					.field("timezone", js.timezone)
+				);
+				
+			} catch (Exception ex) {
+				LOGGER.error("Unable to push reminder to devices [{}, {}]", profileId, js.instanceId, ex);
+			}
 		}
 	}
 	

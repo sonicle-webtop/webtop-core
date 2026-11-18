@@ -34,6 +34,7 @@ package com.sonicle.webtop.core;
 
 import com.sonicle.webtop.core.app.CoreManifest;
 import com.sonicle.webtop.core.app.WT;
+import com.sonicle.webtop.core.app.devicepush.DevicePushManager;
 import com.sonicle.webtop.core.app.sdk.interfaces.IControllerRemindersHooks;
 import com.sonicle.webtop.core.bg.AIReportTask;
 import com.sonicle.webtop.core.bg.AuthTokenCleanupTask;
@@ -63,10 +64,12 @@ public class BackgroundService extends BaseBackgroundService {
 		sidsHandlingReminders = WT.getCoreManager()
 			.getServiceManager()
 			.listServicesWhichControllerImplements(IControllerRemindersHooks.class);
+		DevicePushManager.getInstance().start();
 	}
 
 	@Override
 	public void cleanup() throws Exception {
+		DevicePushManager.getInstance().stop();
 		if (sidsHandlingReminders != null) sidsHandlingReminders.clear();
 	}
 	
