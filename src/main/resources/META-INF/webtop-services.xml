@@ -139,4 +139,20 @@
 		<manager className=".CoreAdminManager" />
 		<serviceClassName>Service</serviceClassName>
 	</service>
+	<service>
+		<!-- NethVoice messages: the NethVoice chat conversations, a page in the launcher (the chat itself is mounted by the core) -->
+		<package>com.sonicle.webtop.core.messages</package>
+		<jsPackage>Sonicle.webtop.core.messages</jsPackage>
+		<shortName>wtmsg</shortName>
+		<version>@@webtop.service.version@@</version>
+		<buildDate>@@webtop.service.buildDate@@</buildDate>
+		<buildType>@@webtop.service.buildType@@</buildType>
+		
+		<company>Sonicle S.r.l.</company>
+		<companyEmail>sonicle@sonicle.com</companyEmail>
+		<companyWebSite>http://www.sonicle.com</companyWebSite>
+		<supportEmail>sonicle@sonicle.com</supportEmail>
+		
+		<serviceClassName>Service</serviceClassName>
+	</service>
 </services>

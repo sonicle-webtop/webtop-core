@@ -57,6 +57,7 @@ Ext.define('Sonicle.webtop.core.private.viewport.BaseAbstract', {
 		'WTA.ux.ViewWindow',
 		'WTA.ux.IMButton',
 		'WTA.ux.IMPanel',
+		'WTA.ux.NethVoiceChat',
 		'WTA.ux.app.ServicesTools',
 		'WTA.ux.app.taskbar.Bar',
 		'WTA.ux.app.launcher.PortalButton',
@@ -80,6 +81,96 @@ Ext.define('Sonicle.webtop.core.private.viewport.BaseAbstract', {
 				type: 'wtbadgenotification'
 			}
 		}
+	},
+	
+	initComponent: function() {
+		var me = this;
+		me.callParent(arguments);
+		// NethVoice chat: mounted once the rail and the panel slots exist.
+		if (!me.miniMode && me.isNVChatEnabled()) {
+			me.on('afterrender', function() {
+				me.nvChat = Ext.create('WTA.ux.NethVoiceChat', {viewport: me});
+			}, me, {single: true});
+		}
+		// The services' split panels (mail, contacts and tasks previews) keep their share of the content when it narrows or widens
+		me.on('afterrender', function() {
+			var mains = me.getMainRegion();
+			mains.items.each(me.watchSplits, me);
+			mains.on('add', function(c, item) { me.watchSplits(item); });
+		}, me, {single: true});
+	},
+	
+	watchSplits: function(main) {
+		var me = this,
+			scan = function() {
+				Ext.each(main.query('[region=east],[region=west]'), function(r) {
+					var ow = r.ownerCt && r.ownerCt.lastBox ? r.ownerCt.lastBox.width : 0;
+					if (!r.split || r.wtShare || !ow || r.collapsed || r.isHidden()) return;
+					// The share the user picked: the service's percentage, or its pixels (restored state) over the content
+					r.wtShare = Ext.isString(r.width) && /%$/.test(r.width) ? parseFloat(r.width) / 100 : r.getWidth() / ow;
+					// Only the user's drag changes it
+					if (r.splitter && r.splitter.tracker) r.splitter.tracker.on('dragend', function() {
+						r.wtShare = r.getWidth() / r.ownerCt.lastBox.width;
+					});
+					// After the service's own resize handlers: the content narrowed or widened (chat panel, window), the split keeps its share
+					r.ownerCt.on('resize', function() { me.applySplitShare(r); });
+				});
+			};
+		if (main.rendered && main.lastBox) scan();
+		else main.on('boxready', scan, me, {single: true});
+		main.on('activate', scan, me);
+	},
+	
+	applySplitShare: function(r) {
+		// After the layout that resized the content: a size set inside it is not laid out again
+		Ext.defer(function() {
+			var ow = (!r.destroyed && r.ownerCt.lastBox) ? r.ownerCt.lastBox.width : 0,
+				center = ow && r.ownerCt.items.findBy(function(i) { return i.region === 'center'; }),
+				// The same share of the new width; the rest keeps at least its minimum (200px, as the mail's list) and the panel its own
+				px = Math.round(Math.max(r.minWidth || 0, Math.min(r.wtShare * ow, ow - ((center && center.minWidth) || 200))));
+			if (!ow || r.collapsed || r.isHidden()) return;
+			if (Math.abs(r.getWidth() - px) > 1) r.setWidth(px);
+		}, 1);
+	},
+	
+	isNVChatEnabled: function() {
+		return WT.getVar('nvChatEnabled') === true;
+	},
+	
+	/**
+	 * @return {WTA.ux.NethVoiceChat} The NethVoice chat, if enabled.
+	 */
+	getNVChat: function() {
+		return this.nvChat;
+	},
+	
+	getNVChatRailEl: function() {
+		var cmp = this.rightDockCmp();
+		return (cmp && cmp.rendered) ? cmp.getEl().dom.querySelector('.wt-nvchat-rail-slot') : null;
+	},
+	
+	getNVChatPanelEl: function() {
+		var cmp = this.eastContentCmp();
+		return (cmp && cmp.rendered) ? cmp.getEl().dom.querySelector('.wt-nvchat-panel-slot') : null;
+	},
+	
+	showNVChatRail: function(show) {
+		var cmp = this.rightDockCmp();
+		if (cmp) cmp.setHidden(!show);
+	},
+	
+	showNVChatPanel: function(show) {
+		var cmp = this.eastContentCmp(), w = window.innerWidth;
+		if (!cmp) return;
+		// Collapsed by its chevron: a chat opened from the rail opens it again, a closed one leaves it expanded for the next time.
+		if (cmp.collapsed) {
+			if (show) { cmp.expand(); return; }
+			cmp.expand(false);
+		}
+		if (cmp.isHidden() === !show) return;
+		// As in the CTI: 24rem, 32rem from 1280px, 40rem from 1536px.
+		if (show) cmp.setWidth(w >= 1536 ? 640 : (w >= 1280 ? 512 : 384));
+		cmp.setHidden(!show);
 	},
 	
 	getLauncher: function() {
@@ -191,7 +282,64 @@ Ext.define('Sonicle.webtop.core.private.viewport.BaseAbstract', {
 		};
 	},
 	
+	returnRightDockCfg: function() {
+		// NethVoice chat rail: the chat heads while pinned, like the CTI's right side menu.
+		if (!this.isNVChatEnabled()) return undefined;
+		return {
+			xtype: 'container',
+			// The tool panels' background, and the line that runs under the topbar (the content's top border).
+			cls: 'wt-viewport-nvchat-rail wt-tool-bg',
+			width: 50,
+			hidden: WT.getVar('nvChatPinned') === false,
+			html: '<div class="wt-nvchat-rail-slot" style="display:flex;flex-direction:column;align-items:center;padding-top:16px;"></div>',
+			listeners: {
+				afterrender: function(s) {
+					var cnt = Ext.getBody().down('.wt-viewport-content'),
+						color = cnt ? cnt.getStyle('border-top-color') : 'rgba(128,128,128,0.25)';
+					s.getEl().setStyle({borderTop: '1px solid ' + color, borderLeft: '1px solid ' + color, backgroundColor: 'var(--wt-theme-color-surface-l1)'});
+				}
+			}
+		};
+	},
+	
 	returnEastContentCfg: function() {
+		if (this.isNVChatEnabled()) {
+			// NethVoice chat panel: the open conversation (or the new chat picker) while pinned.
+			return {
+				xtype: 'panel',
+				cls: 'wt-viewport-nvchat-panel',
+				header: false,
+				border: false,
+				hidden: true,
+				width: 384,
+				// As the tool panel: its chevron collapses it to a bar with the title and the chevron to open it again at the bottom.
+				title: WT.res('nvchat.panel.title'),
+				headerPosition: 'bottom',
+				maintainTitlePosition: true,
+				dockedItems: [{
+					xtype: 'toolbar',
+					dock: 'bottom',
+					border: false,
+					cls: 'wt-tool-foo wt-tool-bg',
+					// Mirrored from the tool panel's: at the end facing the content, pointing right to collapse toward the edge.
+					items: [{
+						xtype: 'tool',
+						type: 'collapse-' + Ext.Component.DIRECTION_RIGHT,
+						cls: 'wt-tool-collapse-button',
+						tooltip: WT.res('act-collapse.lbl'),
+						handler: function(e, el, owner, tool) {
+							tool.up('panel').collapse();
+						}
+					}, '->']
+				}],
+				// The same band that splits the tools from the content
+				split: {
+					performCollapse: false
+				},
+				// Absolute on the body: inside the auto container a 100% height follows the content instead of the panel.
+				html: '<div class="wt-nvchat-panel-slot" style="position:absolute;top:0;right:0;bottom:0;left:0;"></div>'
+			};
+		}
 		if (WT.getVar('imEnabled') === true) {
 			return {
 				xtype: 'wtimpanel',
@@ -416,6 +564,13 @@ Ext.define('Sonicle.webtop.core.private.viewport.BaseAbstract', {
 								itemId: 'options',
 								text: WT.res('accountmenu.options.lbl'),
 								iconCls: 'wt-icon-options',
+								handler: 'onAccountMenuButtonClick'
+							}, {
+								// As My: less spacing, same font sizes; the page reloads to lay everything out again.
+								itemId: 'density',
+								text: WT.res(WT.getVar('uiDensity') === 'compact' ? 'accountmenu.density.standard.lbl' : 'accountmenu.density.compact.lbl'),
+								// As My: the 3x3 grid to go compact, the 2x2 one to go back to standard
+								iconCls: WT.getVar('uiDensity') === 'compact' ? 'fas fa-th-large' : 'fas fa-th',
 								handler: 'onAccountMenuButtonClick'
 							}, {
 								itemId: 'connectapp',

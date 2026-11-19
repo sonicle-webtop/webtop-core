@@ -481,9 +481,14 @@ public class WebTopSession {
 			ids.add("com.sonicle.webtop.vfs");
 			
 		} else {
+			// NethVoice messages follow the domain's NethVoice chat setting, not a service grant
+			boolean nvChat = new CoreServiceSettings(CoreManifest.ID, profile.getDomainId()).getNethVoiceChatEnabled() && !RunContext.isImpersonated();
 			for (String id : svcm.listRegisteredServices()) {
+				if (CoreMessagesManifest.ID.equals(id)) continue;
 				if (RunContext.isPermitted(true, CoreManifest.ID, "SERVICE", "ACCESS", id)) ids.add(id);
 			}
+			// (its launcher place, below the mail, comes from the default services order)
+			if (nvChat && svcm.listRegisteredServices().contains(CoreMessagesManifest.ID)) ids.add(CoreMessagesManifest.ID);
 		}
 		return ids;
 	}

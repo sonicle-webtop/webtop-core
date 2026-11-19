@@ -259,6 +259,22 @@ public class CoreUserSettings extends BaseUserSettings {
 		return setInteger(VIEWPORT_TOOL_WIDTH, value);
 	}
 	
+	public boolean getNethVoiceChatPinned() {
+		return getBoolean(NETHVOICE_CHAT_PINNED, true);
+	}
+	
+	public boolean setNethVoiceChatPinned(boolean value) {
+		return setBoolean(NETHVOICE_CHAT_PINNED, value);
+	}
+	
+	public String getUIDensity() {
+		return "compact".equals(getString(UI_DENSITY, null)) ? "compact" : "standard";
+	}
+	
+	public boolean setUIDensity(String value) {
+		return setString(UI_DENSITY, "compact".equals(value) ? "compact" : "standard");
+	}
+	
 	public boolean getWhatsnewNeeded() {
 		return getBoolean(WHATSNEW_NEEDED, true);
 	}

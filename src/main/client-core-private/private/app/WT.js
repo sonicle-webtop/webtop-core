@@ -799,6 +799,26 @@ Ext.define('Sonicle.webtop.core.private.app.WT', {
 	},
 	
 	/**
+	 * @return {Boolean} True if the NethVoice chat is on for this user.
+	 */
+	isNVChatEnabled: function() {
+		var vp = WT.getApp().viewport;
+		return !!(vp && vp.getNVChat && vp.getNVChat());
+	},
+	
+	/**
+	 * Convenience function to chat with people through the NethVoice chat, if enabled:
+	 * colleagues get a direct chat or a group, people outside a chat link (see WTA.ux.NethVoiceChat#chatWith).
+	 * @param {Object[]|String[]} people Items with `email` and `name`, or bare emails.
+	 * @param {Object} [opts] title, onLink(link, info), scope.
+	 */
+	handleNewChat: function(people, opts) {
+		var vp = WT.getApp().viewport,
+			chat = (vp && vp.getNVChat) ? vp.getNVChat() : null;
+		if (chat) chat.chatWith(people, opts);
+	},
+	
+	/**
 	 * Convenience function to run a phone call through the configured Call provider, if configured.
 	 * @param {String} number The number to call.
 	 */
