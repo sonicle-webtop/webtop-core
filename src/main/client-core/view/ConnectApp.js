@@ -72,6 +72,35 @@ Ext.define('Sonicle.webtop.core.view.ConnectApp', {
 					margin: '20 0 0 0',
 					style: 'font-weight:bold;text-align:center',
 					html: Ext.String.htmlEncode(WT.getVar('wtConnectQrUser'))
+				}, {
+					xtype: 'container',
+					layout: { type: 'hbox', align: 'middle' },
+					defaults: {
+						xtype: 'component',
+						margin: '32 8 0 0',
+						style: { cursor: 'pointer' }
+					},
+					items: [{
+						cls: 'wt-store-badge wt-icon-google-playstore',
+						width: 135, height: 40,
+						autoEl: {
+							tag: 'a',
+							href: 'https://play.google.com/store/apps/details?id=com.sonicle.webtop',
+							target: '_blank',
+							rel: 'noopener noreferrer',
+							'aria-label': 'Get it on Google Play'
+						}
+					}, {
+						cls: 'wt-store-badge wt-icon-apple-appstore',
+						width: 120, height: 40,
+						autoEl: {
+							tag: 'a',
+							href: 'https://apps.apple.com/app/webtop-mobile/id6770574790',
+							target: '_blank',
+							rel: 'noopener noreferrer',
+							'aria-label': 'Download on the App Store'
+						}
+					}]
 				}
 			]
 		});

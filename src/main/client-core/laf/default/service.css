@@ -91,6 +91,8 @@
 .wt-icon-resource-equipment { background-image: url('resource-equipment_16.svg') !important; background-size: contain; }
 .wt-icon-tags { background-image: url('tags_16.svg') !important; background-size: contain; }
 .wt-icon-tag { background-image: url('tag_16.svg') !important; background-size: contain; }
+.wt-icon-apple-appstore { background-image: url('apple-appstore.svg') !important; background-size: contain; }
+.wt-icon-google-playstore { background-image: url('google-playstore.svg') !important; background-size: contain; }
 /* ---------- Icons (glyphs) */
 .wt-glyph-add:before { content: '\f055'; font: var(--fa-font-solid); }
 .wt-glyph-ai:before { content: '\f5dc'; font: var(--fa-font-solid); }
@@ -422,4 +424,12 @@
 	width: 100%;
 	height: 100%;
 	overflow: auto;
+}
+
+.wt-store-badge {
+    display: block;
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: contain;   /* scales the SVG to fit the box, keeping its proportions */
+    cursor: pointer;
 }
